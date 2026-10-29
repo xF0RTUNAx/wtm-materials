@@ -79,11 +79,14 @@ export function createAccount(C) {
   function renderRail() {
     const box = $('accBox'), g = gameAcc();
     const p = siteStatus(); if (p && p.then && !S.pend) { S.pend = true; p.then(() => { S.pend = false; renderRail(); if (root.classList.contains('on')) draw(); }); } // «Перенести прогресс» — по ответу сервера
-    const h = (g ? `<button data-a="open" title="${tr('Аккаунт игры')}">${ico('players')}<span class="nm">${esc(g.nick || g.login)}</span></button>` : `<button class="in" data-a="open">${tr('Войти в аккаунт игры')}</button>`)
+    const h = (g ? `<button data-a="open" title="${tr('Профиль')}">${ico('players')}<span class="nm">${esc(g.nick || g.login)}</span></button>` : `<button class="in" data-a="open">${tr('Войти в аккаунт игры')}</button>`)
       + (transferOk() ? `<button class="xf" data-a="xfer">${tr('Перенести прогресс')}</button>` : '');
     if (box.innerHTML !== h) box.innerHTML = h;
   }
-  $('accBox').onclick = (e) => { const t = e.target.closest && e.target.closest('[data-a]'); if (!t) return; if (C.snd && C.snd.click) C.snd.click(); api.open(t.dataset.a === 'xfer' ? 'xfer' : 'login'); };
+  // ник вошедшего — сразу свой профиль (окно рейтинга, rating-ui.js openMe: то же, что из таблицы, + «Аккаунт»; Mark 2026-10-29), без аккаунта игры — вход
+  $('accBox').onclick = (e) => { const t = e.target.closest && e.target.closest('[data-a]'); if (!t) return; if (C.snd && C.snd.click) C.snd.click();
+    if (t.dataset.a === 'open' && gameAcc() && C.rating && C.rating.openMe && C.rating.openMe()) return;
+    api.open(t.dataset.a === 'xfer' ? 'xfer' : 'login'); };
 
   // кнопка «Войти или создать аккаунт» в других местах игры (итог боя, исследования): data-accopen="reg" | "login"
   document.addEventListener('click', (e) => { const t = e.target && e.target.closest && e.target.closest('[data-accopen]'); if (!t) return; if (C.snd && C.snd.click) C.snd.click(); api.open(t.dataset.accopen); });
@@ -277,11 +280,11 @@ export function createAccount(C) {
   addEventListener('keydown', (e) => { if (e.code === 'Escape' && root.classList.contains('on')) { api.close(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); } }); // поверх окна рейтинга: Esc закрывает только это окно
 
   const api = {
-    // tab: 'xfer' — «Перенос с сайта»; 'login' / 'reg' — вход / регистрация. «Старый» игрок с прогрессом сайта, ещё без аккаунта игры, по умолчанию попадает на перенос
+    // tab: 'xfer' — «Перенос с сайта»; 'login' / 'reg' — вход / регистрация; 'rename' — сразу смена ника (кнопка в своём профиле). «Старый» игрок с прогрессом сайта, ещё без аккаунта игры, по умолчанию попадает на перенос
     // (регистрация ему не нужна: перенос сам создаёт аккаунт игры), на вход — только если просили 'login'
     open(tab) {
       const g = gameAcc(); S.err = S.ok = S.done = ''; S.busy = false; S.rename = false; S.nickSite = false; S.m = newM();
-      if (g) S.tab = tab === 'xfer' ? 'xfer' : 'acc';
+      if (g) { S.tab = tab === 'xfer' ? 'xfer' : 'acc'; S.rename = tab === 'rename'; }
       else if (tab === 'xfer' || (legacySite() && tab !== 'login')) S.tab = 'xfer';
       else S.tab = tab === 'reg' ? 'reg' : 'login';
       S.f.slogin = S.f.slogin || (siteAcc() || {}).login || '';
@@ -291,6 +294,8 @@ export function createAccount(C) {
     },
     close() { root.classList.remove('on', 'kb'); Object.assign(root.style, { top: '', left: '', width: '', height: '', right: '', bottom: '' }); redraw = false; S.f.pass = S.f.gpass = S.f.spass = S.f.npass = S.f.npw = ''; S.busy = false; },
     isOpen: () => root.classList.contains('on'),
+    // выход из своего профиля (rating-ui.js): в комнате и в бою нельзя — окно аккаунта с причиной; true — вышли
+    logout() { if (lock()) { api.open('acc'); return false; } clearGameAcc(); S.f = {}; changed(); return true; },
     refresh() { if (root.classList.contains('on')) drawSoon(); }, // в комнату зашли или вышли — перерисовать (кнопки смены аккаунта)
     render: renderRail,
   };

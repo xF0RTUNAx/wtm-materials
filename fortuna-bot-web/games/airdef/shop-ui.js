@@ -162,6 +162,15 @@ export function createShop(C) {
     const hw = Math.min(vw * 0.74, vh * 1.5), hh = hw * 0.5625, cx = vw * (vw / vh > 1.9 ? 0.62 : 0.6), cy = vh * 0.5;
     r.setProperty('--hw', hw + 'px'); r.setProperty('--hx', cx - hw / 2 + 'px'); r.setProperty('--hy', cy - hh / 2 + 'px');
     r.setProperty('--extra-top', Math.max(0, (vh - 430 * k) * 0.25) + 'px');
+    fitInfo();
+  }
+  // название, кнопка и подсказка — над плитками (Mark 2026-10-29: длинное название — два-три слова строками — уводило кнопку под плитки, тем более
+  // с отступом Telegram сверху и строкой «Окраска на выбор» снизу): не влезает по высоте или слово шире блока — название мельче, до 55 %
+  function fitInfo() {
+    const info = q('.sinfo'), tray = q('.tray'), nm = q('.name'); if (!info || !tray || !nm || !api.isOpen()) return;
+    nm.style.fontSize = '';
+    const k = parseFloat(root.style.getPropertyValue('--k')) || 1, room = () => tray.getBoundingClientRect().top - 8 * k - info.getBoundingClientRect().top;
+    for (let f = 0.92; f >= 0.55 && (info.getBoundingClientRect().height > room() || nm.scrollWidth > nm.clientWidth + 1); f -= 0.08) nm.style.fontSize = `calc(52px * var(--k) * ${f.toFixed(2)})`;
   }
 
   // ── окно: каркас (раз на набор окрасок), затем сведения о выбранной ──
@@ -244,6 +253,7 @@ export function createShop(C) {
       sm.className = cls; sm.innerHTML = txt;
     });
     q('.shint').classList.toggle('open', S.hint); q('.sq.q').setAttribute('aria-expanded', S.hint);
+    fitInfo();
     // название и кнопка проявляются без обрезки букв (Mark: нижнее слово обрезалось на миг)
     if (anim && !RM && q('.name').animate) {
       q('.name').animate([{ opacity: 0, transform: 'translateX(-14px)' }, { opacity: 1, transform: 'none' }], { duration: 480, easing: 'cubic-bezier(.2,.8,.2,1)' });
@@ -304,6 +314,7 @@ export function createShop(C) {
   const api = {
     open() {
       S.hint = false; root.classList.add('on'); layout(); draw(false);
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitInfo); // Oswald пришёл позже — размеры другие
       if (!S.busy && Date.now() - S.at > 10000) { S.at = 0; load(); }
     },
     close() { root.classList.remove('on'); S.hint = false; },

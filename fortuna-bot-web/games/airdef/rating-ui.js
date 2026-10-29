@@ -5,10 +5,12 @@
 // Профиль игрока (Mark 2026-10-28, макет tools/airdef-ui/profile-mock.html): нажатие на строку таблицы (свой — на свой ник в карточке) — профиль
 // в том же окне, «Назад» — к таблице. Данные — get-airdef-profile по нику (sql/029): шапка, онлайн по режимам (сезон / всё время), любимые
 // самолёт и ЗРК, лучшие бои сезона без разбора, места за сезоны. В горизонтали телефона — две колонки, каждая листается сама.
+// Свой профиль (Mark 2026-10-29: «через профиль главного меню — то же окно, что в рейтинге, чтобы не нажимать сто раз»): ник в меню (account-ui.js)
+// открывает его сразу (openMe), «Назад» — к таблице рейтинга; в нём же «Аккаунт» — логин, смена ника, выход (что было в окне аккаунта).
 /* global CONFIG */
 import { ico } from './icons.js?v=20261029a';
 import { tr, trIf, LANG } from './i18n.js?v=20261029a';
-import { activeAcc, rating as fetchRating, profile as fetchProfile, transferOk } from './account.js?v=20261029a';
+import { activeAcc, gameAcc, rating as fetchRating, profile as fetchProfile, transferOk } from './account.js?v=20261029a';
 import { NODE } from './progress.js?v=20261029a';
 
 const LOC = LANG === 'en' ? 'en-US' : 'ru-RU';
@@ -105,6 +107,7 @@ const CSS = `
 #ratWin .bd .ic { width: 24px; height: 24px; grid-row: span 2; color: #6b7363; } #ratWin .bd b { font: 500 14px 'Oswald', sans-serif; } #ratWin .bd small { font-size: 12px; color: var(--dim); }
 #ratWin .bd.g1 .ic { color: #f5d06a; } #ratWin .bd.g2 .ic { color: #dadcd2; } #ratWin .bd.g3 .ic { color: #d29a62; } #ratWin .bd.t10 .ic { color: var(--amber2); }
 #ratWin .empty { font-size: 13.5px; color: var(--dim); }
+#ratWin .acts { display: flex; gap: 8px; flex-wrap: wrap; } #ratWin .msg + .sec { flex: none; }
 @media (max-width: 420px) { #ratWin .hero { grid-template-columns: 48px minmax(0, 1fr) auto; gap: 2px 10px; } #ratWin .ava { width: 48px; height: 48px; font-size: 18px; } #ratWin .hero .nick { font-size: 21px; } #ratWin .place .pn { font-size: 30px; }
   #ratWin .mt td, #ratWin .mt th { padding-left: 4px; } #ratWin .mt td:first-child .ic { display: none; } }
 /* телефон горизонтально: окно во всю высоту, две колонки — каждая листается сама */
@@ -221,9 +224,9 @@ export function createRating(C) {
   // ── профиль игрока (get-airdef-profile, sql/029): по нику, кэш на минуту ──
   const PROF = new Map(); // ник (строчными) + сезон → { data, at }
   const pkey = (nick, season) => String(nick).toLowerCase() + '|' + season;
-  async function openProfile(nick, own) {
+  async function openProfile(nick, own, menu = false) { // menu — открыт ником в меню: «Назад» ведёт в таблицу и подписан «Рейтинг»
     const season = S.data ? S.data.season : 0;
-    S.view = 'prof'; S.p = { nick, own: !!own, season, data: null, err: '', busy: true };
+    S.view = 'prof'; S.p = { nick, own: !!own, menu, season, data: null, err: '', busy: true };
     const c = PROF.get(pkey(nick, season));
     if (c && Date.now() - c.at < FRESH) { S.p.data = c.data; S.p.busy = false; draw(); return; }
     draw();
@@ -268,21 +271,28 @@ export function createRating(C) {
     const awards = `<div class="sec"><div class="sh"><b>${tr('Награды')}</b><small>${tr('места за сезоны')}</small></div>${aw ? `<div class="aw">${aw}</div>` : `<span class="empty">${tr('Наград пока нет. Место за сезон появляется после его конца.')}</span>`}</div>`;
     return { hero, modes, fav, best, awards };
   }
+  // свой профиль: аккаунт игры — логин, смена ника, выход (раньше — только в окне аккаунта)
+  function accSec() {
+    const g = gameAcc(); if (!g) return '';
+    return `<div class="sec"><div class="sh"><b>${tr('Аккаунт')}</b><small>${tr('Логин: {0}', [esc(g.login)])}</small></div>
+      <span class="acts"><button class="btnm alt" data-a="rename">${tr('Сменить ник')}</button><button class="btnm alt" data-a="logout">${tr('Выйти из аккаунта')}</button></span>
+      <span class="empty">${tr('Ник виден в рейтинге и в онлайн-боях. Меняется раз в сезон.')}</span></div>`;
+  }
   function viewProfile() {
-    const p = S.p, d = p.data, head = (s) => `<div class="whead"><button class="back" data-a="back">${ico('triL')}${tr('Назад')}</button><span class="t">${ico('rating')}${tr('Профиль')}</span><span class="s">${s}</span><button class="rx" data-a="close" aria-label="${tr('Закрыть')}" title="${tr('Закрыть')}">${ico('close')}</button></div>`;
+    const p = S.p, d = p.data, head = (s) => `<div class="whead"><button class="back" data-a="back">${ico('triL')}${p.menu ? tr('Рейтинг') : tr('Назад')}</button><span class="t">${ico('rating')}${tr('Профиль')}</span><span class="s">${s}</span><button class="rx" data-a="close" aria-label="${tr('Закрыть')}" title="${tr('Закрыть')}">${ico('close')}</button></div>`;
     if (!d) {
       const msg = p.busy ? `<span>${tr('Загружаем…')}</span>` : p.err === 'soon' ? `<b>${tr('Профили скоро откроются')}</b><span>${tr('Профиль появится, как только сервер рейтинга обновится.')}</span>`
         : `<b>${esc(p.err)}</b><button class="btnm" data-a="pretry">${tr('Повторить')}</button>`;
-      return `<div class="win prof">${head('')}<div class="msg">${msg}</div></div>`;
+      return `<div class="win prof">${head('')}<div class="msg">${msg}</div>${p.own ? accSec() : ''}</div>`;
     }
     const x = profParts(d.profile, d.season, p.own);
-    return `<div class="win prof">${head(esc(tr('сезон {0}', [d.season])))}<div class="pbody"><div class="col">${x.hero}${x.modes}</div><div class="col">${x.fav}${x.best}${x.awards}</div></div></div>`;
+    return `<div class="win prof">${head(esc(tr('сезон {0}', [d.season])))}<div class="pbody"><div class="col">${x.hero}${p.own ? accSec() : ''}${x.modes}</div><div class="col">${x.fav}${x.best}${x.awards}</div></div></div>`;
   }
   function draw() {
     const q = (s) => (root.querySelectorAll ? [...root.querySelectorAll(s)] : []);
     const sc = q('.rows')[0]; if (sc) S.listTop = sc.scrollTop || 0; // таблица: место прокрутки — и после профиля («Назад»)
     const pv = S.view === 'prof' && S.p ? q('.pbody, .pbody .col').map((el) => el.scrollTop || 0) : null, pnick = S.p && S.p.nick; // профиль: прокрутка — при смене «Сезон / Всё время»
-    root.innerHTML = !S.data ? noData() : S.view === 'prof' && S.p ? viewProfile() : S.view === 'mine' && mine() ? viewMine() : viewList();
+    root.innerHTML = S.view === 'prof' && S.p ? viewProfile() : !S.data ? noData() : S.view === 'mine' && mine() ? viewMine() : viewList(); // профиль — и до таблицы (открыт из меню)
     if (S.view === 'list') { const r = q('.rows')[0]; if (r && S.listTop) r.scrollTop = S.listTop; }
     if (pv && S.view === 'prof' && S.p && S.p.nick === pnick) q('.pbody, .pbody .col').forEach((el, i) => { if (pv[i]) el.scrollTop = pv[i]; });
   }
@@ -304,7 +314,9 @@ export function createRating(C) {
     }
     else if (a === 'profme') { const m = mine(), acc = activeAcc(), nk = (m && m.nick) || (acc && acc.nick); if (nk) openProfile(nk, true); }
     else if (a === 'per') { S.per = t.dataset.per === 'all' ? 'all' : 'season'; draw(); }
-    else if (a === 'pretry') { if (S.p) openProfile(S.p.nick, S.p.own); }
+    else if (a === 'pretry') { if (S.p) openProfile(S.p.nick, S.p.own, S.p.menu); }
+    else if (a === 'rename') { if (C.account) C.account.open('rename'); } // окно аккаунта — поверх профиля
+    else if (a === 'logout') { if (C.account && C.account.logout()) api.close(); } // в комнате и в бою выйти нельзя — откроется окно аккаунта с причиной
   });
   addEventListener('keydown', (e) => { if (e.code === 'Escape' && root.classList.contains('on') && !(C.account && C.account.isOpen())) { if (S.q) { S.q = false; draw(); } else api.close(); } });
 
@@ -313,6 +325,13 @@ export function createRating(C) {
       S.view = 'list'; S.q = false; root.classList.add('on'); draw();
       const f = root.querySelector && root.querySelector('.rx'); if (f && f.focus && !(typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches)) try { f.focus(); } catch (_) { /* нет */ }
       if (!S.busy && Date.now() - S.at > 10000) { S.at = 0; load(); } // открыли окно — свежие данные
+    },
+    // свой профиль сразу (ник в меню, account-ui.js); таблица подгружается следом — для «Назад»
+    openMe() {
+      const a = activeAcc(); if (!a || a.kind !== 'airdef') return false;
+      S.q = false; root.classList.add('on'); openProfile(a.nick, true, true);
+      if (!S.busy && Date.now() - S.at > 10000) { S.at = 0; load(); }
+      return true;
     },
     close() { root.classList.remove('on'); S.q = false; },
     isOpen: () => root.classList.contains('on'),
@@ -326,7 +345,11 @@ export function createRating(C) {
     },
     touch, paint,
     // сменился аккаунт / засчитан бой: данные устарели
-    reset() { if (S.key !== keyNow()) S.data = null; S.at = 0; paint(); if (root.classList.contains('on')) { draw(); load(); } else touch(); },
+    reset() {
+      if (S.key !== keyNow()) S.data = null; S.at = 0; paint();
+      if (S.view === 'prof' && S.p && S.p.own) { const a = activeAcc(); if (!a || a.kind !== 'airdef') { S.view = 'list'; api.close(); } else if (a.nick !== S.p.nick && root.classList.contains('on')) openProfile(a.nick, true, S.p.menu); } // свой профиль: вышли — закрыть, сменили ник — заново
+      if (root.classList.contains('on')) { draw(); load(); } else touch();
+    },
   };
   return api;
 }
