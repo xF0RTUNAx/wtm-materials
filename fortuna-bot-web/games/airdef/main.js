@@ -48,6 +48,7 @@ import { createEndScreen } from './endscr.js?v=20261029b';
 import { createHints } from './hints.js?v=20261029b';
 import { motorOf, makeFlame } from './plume.js?v=20261029b';
 import { createShell } from './shell.js?v=20261029b';
+import { createDoors } from './doors.js?v=20261029b';
 import { createCrashRep } from './crashrep.js?v=20261029b';
 import { createTraining, LESSONS } from './training.js?v=20261029b';
 import { createPhoto } from './photo.js?v=20261029b';
@@ -981,6 +982,8 @@ if (Q.get('prtest') === '1') {
 C.setFov = (f) => { if (Math.abs(camera.fov - f) < 0.01) return; camera.fov = f; resize(); };
 // Telegram: кнопки поверх страницы — отступ сверху
 C.shell = createShell(C, { IS_TOUCH, ls });
+// створки при входе в бой и выходе в меню (doors.js): стиль — случайно на каждый переход; картинки — заранее, через 4 с после загрузки
+C.doors = createDoors('20261029b'); setTimeout(() => C.doors.preload(), 4000);
 C.crash = createCrashRep(C); // прошлый бой оборвался без выхода (вылет вкладки) — после меню предложим отправить отчёт
 document.body.classList.toggle('nopad', !C.sens.pad); // крестовина выключена в настройках
 document.body.classList.toggle('nobino', C.sens.bino === false); // «Бинокль» вылета выключен в настройках
@@ -1055,12 +1058,12 @@ C.openLesson = function (title, body, sub) {
 C.closeLesson = function () { $('lesson').classList.remove('on'); C.paused = document.body.classList.contains('lsnOpen'); /* панель «Урок» открыта — пауза остаётся */ if (C.onLessonClose) { const f = C.onLessonClose; C.onLessonClose = null; f(); } };
 $('lessonClose').onclick = () => C.closeLesson();
 $('resumeBtn').onclick = () => C.togglePause();
-$('pauseExit').onclick = () => C.toMenu();
+$('pauseExit').onclick = () => C.doors.run(() => C.toMenu());
 $('pauseEnd').onclick = () => { C.togglePause(); if (C.ctrl.finish) C.ctrl.finish(tr('Бой завершён досрочно')); };
 $('pause').onclick = () => C.togglePause();
-$('againBtn').onclick = () => orientGate(() => { C.ended = false; C.start(C.lastGame || 'air'); }, IS_TOUCH);
-$('closeBtn').onclick = () => { C.ended = false; C.toMenu(); };
-$('exit').onclick = () => C.toMenu();
+$('againBtn').onclick = () => orientGate(() => C.doors.run(() => { C.ended = false; C.start(C.lastGame || 'air'); }), IS_TOUCH);
+$('closeBtn').onclick = () => C.doors.run(() => { C.ended = false; C.toMenu(); });
+$('exit').onclick = () => C.doors.run(() => C.toMenu());
 // кнопки-иконки (games/airdef/icons.js): прежняя надпись — во всплывающей подсказке и для экранного диктора
 const ICO = { tBino: ['bino', tr('Бинокль: цель и своё оружие (B)')], tFlare: ['flares', tr('Ловушки')], tMap: ['map', tr('Карта')], tLock: ['target', tr('Цель')], tAuto: ['auto', tr('Авто — помощник')], tLook: ['camera', tr('Обзор — свободная камера')], tCam: ['camera', tr('Камера: следующий союзник')],
   tHelp: ['help', tr('Нужна помощь')], tPop: ['popUp', tr('Подскок')], opMap: ['map', tr('Карта')], opAuto: ['auto', tr('Авто — расчёт сам')], opCam: ['camera', tr('Камера')], opBino: ['bino', tr('Бинокль')], opRadar: ['radar', tr('РЛС: включить / выключить')],

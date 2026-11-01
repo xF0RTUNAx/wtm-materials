@@ -965,7 +965,7 @@ export function createTraining(C, ctrls) {
   $('lessonX').addEventListener('click', () => C.closeLesson());
   $('lesson').addEventListener('click', (e) => { if (e.target === $('lesson')) C.closeLesson(); });
   $('lessonAgain').addEventListener('click', () => { C.onLessonClose = null; extraBtns(false, false); C.closeLesson(); run(); });
-  $('lessonMenu').addEventListener('click', () => { C.onLessonClose = null; extraBtns(false, false); C.closeLesson(); C.toMenu(); });
+  $('lessonMenu').addEventListener('click', () => { C.onLessonClose = null; extraBtns(false, false); C.closeLesson(); C.doors.run(() => C.toMenu()); });
   // свернули вкладку / повернули телефон — пауза; в уроке (проиграть нельзя) её снимает первое касание мимо кнопок
   document.addEventListener('pointerdown', (e) => {
     if (C.ctrl !== api || !C.paused || C.ended || !$('pauseScr').classList.contains('on') || $('lesson').classList.contains('on') || document.body.classList.contains('portrait')) return;

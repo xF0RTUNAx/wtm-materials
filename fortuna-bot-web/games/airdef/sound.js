@@ -24,6 +24,8 @@ export function createSound() {
   //   2026-10-21): далёкий взрыв, винты Ту-95, пуск Patriot, пуск и взрыв «Искандера»
   // третья партия (mk3.py; лицензия не подтверждена — файлов может не быть, тогда синтез): двигатель F-16 и форсаж, тоны ГСН AIM-9, отстрел ЛТЦ
   for (const [k, f] of [['engIdle', 'eng_idle.wav'], ['engAB', 'eng_ab.wav'], ['abOn', 'ab_on.mp3'], ['seekSearch', 'seek_search.wav'], ['seekTone', 'seek_tone.wav'], ['seekLock', 'seek_lock.wav'], ['flareRec', 'flare.mp3']]) A.loadSample(k, `airdef/sounds/${f}?v=20261029b`);
+  // экран подбора онлайна (Mark 2026-11-01): щелчок «Отменить» — Kolombooo «Button click» (CC0), пинг поиска — SamsterBirdies «Sonar Ping» (CC0)
+  A.loadSample('uiClick', 'airdef/sounds/ui_click.mp3?v=20261029b'); A.loadSample('mmPing', 'airdef/sounds/mm_ping.mp3?v=20261029b');
   A.setEngineLoops({ idle: 'engIdle', ab: 'engAB', tprop: 'tu95' }); // tprop — свой Ту-95: та же запись винтов, что у голосов
   A.setVoiceLoops({ heli: ['heliLo', 'heliHi', 'heliFar'], jet: ['jetFront', 'jetRear'], tprop: ['tu95'], tbm: ['rocketFar'] });
   const delayOf = (d) => Math.min(2.5, d / 343);
@@ -247,6 +249,8 @@ export function createSound() {
     whistle(d) { const k = near(d, 300); if (k < 0.15) return; A.tone('sine', 1500, 500, 2.4, 0.04 * k, 0, 0.3); },
     // бортовые сигналы
     click() { A.tone('square', 1800, 1800, 0.025, 0.03, 0, 0, true); },
+    cancelClick() { S.unlock(); if (!A.sample('uiClick', 0.8)) S.click(); }, // «Отменить» на экране подбора — запись
+    mmPing() { A.sample('mmPing', 0.3, 0, 1, 9000, 0.25); }, // пинг поиска боя (раз в 4 с)
     lock() { A.beep(1300, 0.08, 'square', 0.05); A.beep(1700, 0.1, 'square', 0.05); },
     unlock2() { A.beep(700, 0.12, 'square', 0.04); },
     deny() { A.beep(240, 0.18, 'square', 0.05); },

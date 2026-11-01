@@ -13,6 +13,7 @@ import { MODES } from './sim/strike.js?v=20261029b';
 import { ICON, ico } from './icons.js?v=20261029b';
 import { activeAcc, siteAcc, siteNoProgress } from './account.js?v=20261029b';
 import { boardOl, boardMw } from './endscr.js?v=20261029b';
+import { createMM } from './mm.js?v=20261029b';
 
 const pnm = (p) => esc(p.bot ? trIf(p.name) : p.name); // позывные ботов приходят с сервера по-русски
 const ROLES = [['air', tr('Авиация')], ['pvo', tr('ПВО')], ['any', tr('Любая')]];
@@ -117,19 +118,20 @@ export function createOnline(C, ctrls) {
     try { navigator.clipboard.writeText(url); C.say(tr('Ссылка скопирована'), 2); } catch (_) { C.say(tr('Код комнаты: {0}', [N.room.code]), 3); }
   }
 
-  // ═════════════ Ожидание поиска — поверх живого фона меню ═════════════
-  const waitEl = $('netWait');
+  // ═════════════ Ожидание поиска — экран подбора поверх живого фона меню (mm.js: техника, кольцо, «Отменить»; без ников) ═════════════
+  const mm = createMM(C, () => N.unqueue());
   function waitText() {
     const q = N.queued; if (!q) return '';
     const sec = Math.floor((performance.now() - q.t) / 1000), w = N.qwait ? Math.max(0, Math.ceil((N.qwait - performance.now()) / 1000)) : 0;
     return tr('{0}{1}{2} · ищем {3}:{4}{5}', [q.kind === 'multi' ? tr('Мульти-волна · ') : '', MODES[q.mode].name, q.kind === 'multi' ? '' : tr(' · роль: {0}', [ROLES.find((r) => r[0] === ui.role)[1]]), Math.floor(sec / 60), String(sec % 60).padStart(2, '0'), w ? tr(' · набралось 2 на 2 — старт через {0} с', [w]) : '']);
   }
   function renderWait() {
-    const on = !!N.queued && C.state === 'menu';
-    waitEl.style.display = on ? 'flex' : 'none';
-    if (on) waitEl.querySelector('.t').textContent = waitText();
+    const q = N.queued;
+    if (!q || C.state !== 'menu') { if (C.state !== 'menu' || !C.doors.busy) mm.hide(); return; } // бой нашёлся — экран подбора уходит за створками, не раньше
+    const w = N.qwait ? Math.max(0, Math.ceil((N.qwait - performance.now()) / 1000)) : 0, srch = N.search || {}, n = srch[(q.kind === 'multi' ? 'm' : '') + q.mode] || 0;
+    mm.show({ t0: q.t, mode: `${q.kind === 'multi' ? tr('Мульти-волна · ') : ''}${MODES[q.mode].name}${q.kind === 'multi' ? '' : tr(' · роль: {0}', [ROLES.find((r) => r[0] === ui.role)[1]])}`,
+      info: w ? tr('Набралось 2 на 2 — старт через <b>{0}</b> с', [w]) : n > 1 ? tr('Сейчас ищут: <b>{0}</b>', [n]) : tr('Ждём соперников') });
   }
-  waitEl.querySelector('button').onclick = () => { N.unqueue(); snd.click(); };
   setInterval(() => { if (N.queued) { renderWait(); if (inMenu()) C.menu.render(); } }, 1000);
 
   // ═════════════ Бой ═════════════
@@ -191,12 +193,15 @@ export function createOnline(C, ctrls) {
     const u = new URL(location.href); u.searchParams.delete('ad'); u.searchParams.set('mp', '1'); if (k === 'air') u.searchParams.set('omap', ls.get('fortuna_ad_omap') || map || 'city'); else u.searchParams.delete('omap'); location.replace(u.href);
     return true;
   }
-  N.on('start', () => { if (N.battle && mapFix(N.battle.kind, N.battle.map || null)) return; enterBattle(); });
+  // бой нашёлся: створки (doors.js) — экран подбора уходит за ними; повторный вызов, пока створки идут, — сразу (бой уже на сервере)
+  // (с экрана итогов, C.state === 'play', — сразу, как было)
+  const enterNow = () => { if (C.state === 'play') return; enterBattle(); if (N.battle && (team() === 'pvo' || N.battle.kind === 'multi')) ctrls.defense.netSync(); renderPlan(); };
+  N.on('start', () => { if (N.battle && mapFix(N.battle.kind, N.battle.map || null)) return; if (C.state === 'play') enterBattle(); else C.doors.run(enterNow, true); });
   N.on('room', (was) => {
     if (N.room && !(C.ended && N.room.state === 'lobby') && mapFix(N.room.kind, N.room.map || 'city')) return; // на экране итогов — не перезагружаться: карту новой комнаты — по «В комнату» (again)
     rerender();
     const r = N.room; if (!r || !N.battle || r.state === 'end' || r.state === 'lobby') return; // итоги и лобби — не бой
-    if (C.state !== 'play') enterBattle();
+    if (C.state !== 'play') { if (!C.doors.busy) C.doors.run(enterNow, true); if (C.state !== 'play') return; } // створки идут — синхронизация в enterNow, когда бой откроется
     if (team() === 'pvo' || N.battle.kind === 'multi') ctrls.defense.netSync();
     renderPlan();
     if (was !== r.state && r.state === 'play' && N.battle.kind !== 'multi') { C.say(tr('Волна {0}!', [r.wave]), 2.5); snd.alarm(); }

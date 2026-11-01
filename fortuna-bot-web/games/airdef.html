@@ -412,10 +412,6 @@
   .adp { font-size: 12.5px; padding: 3px 0; } .adp.me b { color: #fdba74; } .adp .dim { opacity: .6; font-size: 11px; } .okc { color: #4ade80; font-weight: 800; }
   .adcode { letter-spacing: .15em; color: #fde68a; font-size: 15px; }
   .mini { border: 1px solid rgba(255,255,255,.25); background: rgba(255,255,255,.07); color: #fff; border-radius: 7px; padding: 3px 8px; font-size: 11.5px; cursor: pointer; margin: 3px 2px 0 0; }
-  #netWait { position: fixed; z-index: 32; left: 50%; bottom: max(14px, var(--sa-b)); transform: translateX(-50%); display: none; align-items: center; gap: 10px;
-    background: rgba(15,23,42,.92); border: 1px solid rgba(251,146,60,.6); border-radius: 12px; padding: 8px 10px 8px 14px; font-size: 12.5px; color: #e2e8f0; max-width: calc(100vw - 24px); }
-  #netWait .dot { width: 9px; height: 9px; border-radius: 50%; background: #fb923c; animation: nwp 1s infinite alternate; flex: none; } @keyframes nwp { from { opacity: .3; } to { opacity: 1; } }
-  #netWait button { border: 0; background: rgba(255,255,255,.12); color: #fff; border-radius: 8px; padding: 6px 10px; cursor: pointer; }
   #netPlan { position: fixed; z-index: 14; top: calc(var(--top) + 10px); left: max(12px, var(--sa-l)); width: min(360px, calc(100vw - 24px)); max-height: calc(100% - var(--top) - 24px); overflow-y: auto; display: none;
     background: rgba(15,23,34,.92); border: 1px solid rgba(255,255,255,.14); border-radius: 14px; padding: 10px; font-size: 12.5px; -webkit-overflow-scrolling: touch; }
   #netPlan h3 { margin: 2px 0 6px; font-size: 14px; } #netPlan .opt.no { opacity: .45; } #netPlan .pr { font-weight: 800; color: #fde68a; }
@@ -768,7 +764,6 @@
 <button id="plBtn" aria-label="Игроки" title="Игроки: кто в сети и кто готов"></button><div id="netChip"></div><button id="fsBtn" aria-label="Полный экран" title="Полный экран"></button><div id="fsSwipe"></div>
 <div id="plPanel"></div>
 
-<div id="netWait"><span class="dot"></span><span class="t">Ищем бой…</span><button>Отмена</button></div>
 <div id="netPlan"></div>
 <div id="photoZone"></div>
 <div id="photoUi"><div id="phCap"></div><div class="phRow" id="phSubj"></div><div class="phRow" id="phAng"></div>

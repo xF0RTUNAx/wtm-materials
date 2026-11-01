@@ -367,6 +367,8 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
         ['https://freesound.org/people/qubodup/sounds/211617/', 'Far Away Rocket Launch', 'qubodup', 'CC0'],
         ['https://freesound.org/people/Fenodyrie/sounds/565911/', 'Flock of Crows', 'Fenodyrie', 'CC0'],
         ['https://freesound.org/people/invadium/sounds/824805/', 'Cruise missiles interception and fly-by', 'Invadium', 'CC0'],
+        ['https://freesound.org/people/SamsterBirdies/sounds/539957/', 'Sonar Ping', 'SamsterBirdies', 'CC0'],
+        ['https://freesound.org/people/Kolombooo/sounds/629020/', 'Button click', 'Kolombooo', 'CC0'],
         ['https://www.youtube.com/watch?v=kAVnPGU8CYw', 'F16 Fighter Jet Engine Idle', 'Sound Effect Database', tr('лицензия куплена')],
         ['https://www.youtube.com/watch?v=8VIxcncNPVA', 'Flares Sound Effect', 'Sound Effect Database', tr('лицензия куплена')],
       ].map(([u, t, a, l]) => `${A(u, `«${t}»`)} — ${a} (${l})`).join(' · ')])}</p>`;
@@ -434,7 +436,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
   setInterval(() => { if (C.state === 'menu' && (tipT += 1) > 12) { tipT = 0; showTip(true); } }, 1000);
   $('startBtn').onclick = () => orientGate(() => { if (setup.game === 'online') { C.online.primary(); return; }
     if (C.realBlock && setup.game === 'air') { snd.deny && snd.deny(); C.research.open(); return; } // «Реализм»: нет купленной подвески — в «Исследования»
-    setup.evd = false; C.lastGame = setup.game; C.start(setup.game); }); // на телефоне вертикально — сначала совет повернуть
+    setup.evd = false; C.lastGame = setup.game; C.doors.run(() => C.start(setup.game)); }); // на телефоне вертикально — сначала совет повернуть; вход в бой — за створками
   // опыт и серебро над режимами (тап — «Исследования»); гость — пусто (вход — в строке аккаунта выше)
   function renderPg() {
     const P = C.progress && C.progress.P; if (!P) { $('pgBar').innerHTML = ''; return; }
