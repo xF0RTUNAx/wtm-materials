@@ -3,17 +3,17 @@
 // переход в бой (лётчик — air.js, ПВО — defense.js в режиме онлайна), итоги волн и боя, журнал сбитий (6 с) и
 // «Мне нужна помощь!» союзникам (метка в кадре и на карте). Связь и зеркало боя — net.js.
 /* global THREE, CONFIG */
-import { tr, trIf, LANG } from './i18n.js?v=20261029b';
-import { trFmt } from './i18n-fmt.js?v=20261029b';
-import { createNet } from './net.js?v=20261029b';
-import * as O from './sim/online.js?v=20261029b';
-import * as MW from './sim/online-multi.js?v=20261029b';
-import { AG, SAM, CARRIERS, LOADOUTS, PLANES, ERAS, loadoutRole } from './arsenal.js?v=20261029b';
-import { MODES } from './sim/strike.js?v=20261029b';
-import { ICON, ico } from './icons.js?v=20261029b';
-import { activeAcc, siteAcc, siteNoProgress } from './account.js?v=20261029b';
-import { boardOl, boardMw } from './endscr.js?v=20261029b';
-import { createMM } from './mm.js?v=20261029b';
+import { tr, trIf, LANG } from './i18n.js?v=20261101a';
+import { trFmt } from './i18n-fmt.js?v=20261101a';
+import { createNet } from './net.js?v=20261101a';
+import * as O from './sim/online.js?v=20261101a';
+import * as MW from './sim/online-multi.js?v=20261101a';
+import { AG, SAM, CARRIERS, LOADOUTS, PLANES, ERAS, loadoutRole } from './arsenal.js?v=20261101a';
+import { MODES } from './sim/strike.js?v=20261101a';
+import { ICON, ico } from './icons.js?v=20261101a';
+import { activeAcc, siteAcc, siteNoProgress } from './account.js?v=20261101a';
+import { boardOl, boardMw } from './endscr.js?v=20261101a';
+import { createMM } from './mm.js?v=20261101a';
 
 const pnm = (p) => esc(p.bot ? trIf(p.name) : p.name); // позывные ботов приходят с сервера по-русски
 const ROLES = [['air', tr('Авиация')], ['pvo', tr('ПВО')], ['any', tr('Любая')]];
@@ -127,10 +127,11 @@ export function createOnline(C, ctrls) {
   }
   function renderWait() {
     const q = N.queued;
-    if (!q || C.state !== 'menu') { if (C.state !== 'menu' || !C.doors.busy) mm.hide(); return; } // бой нашёлся — экран подбора уходит за створками, не раньше
-    const w = N.qwait ? Math.max(0, Math.ceil((N.qwait - performance.now()) / 1000)) : 0, srch = N.search || {}, n = srch[(q.kind === 'multi' ? 'm' : '') + q.mode] || 0;
+    // бой нашёлся: сервер шлёт room раньше start — экран подбора держим, пока не закроются створки (уберёт enterBattle, уже в 'play')
+    if (!q || C.state !== 'menu') { if (C.state !== 'menu' || !(C.doors.busy || (mm.on && N.room && N.room.state !== 'lobby'))) mm.hide(); return; }
+    const w = N.qwait ? Math.max(0, Math.ceil((N.qwait - performance.now()) / 1000)) : 0;
     mm.show({ t0: q.t, mode: `${q.kind === 'multi' ? tr('Мульти-волна · ') : ''}${MODES[q.mode].name}${q.kind === 'multi' ? '' : tr(' · роль: {0}', [ROLES.find((r) => r[0] === ui.role)[1]])}`,
-      info: w ? tr('Набралось 2 на 2 — старт через <b>{0}</b> с', [w]) : n > 1 ? tr('Сейчас ищут: <b>{0}</b>', [n]) : tr('Ждём соперников') });
+      info: w ? tr('Соперники найдены — старт через <b>{0}</b> с', [w]) : tr('Ждём соперников') }); // живого числа ищущих сервер не шлёт — без него
   }
   setInterval(() => { if (N.queued) { renderWait(); if (inMenu()) C.menu.render(); } }, 1000);
 
@@ -195,13 +196,16 @@ export function createOnline(C, ctrls) {
   }
   // бой нашёлся: створки (doors.js) — экран подбора уходит за ними; повторный вызов, пока створки идут, — сразу (бой уже на сервере)
   // (с экрана итогов, C.state === 'play', — сразу, как было)
-  const enterNow = () => { if (C.state === 'play') return; enterBattle(); if (N.battle && (team() === 'pvo' || N.battle.kind === 'multi')) ctrls.defense.netSync(); renderPlan(); };
-  N.on('start', () => { if (N.battle && mapFix(N.battle.kind, N.battle.map || null)) return; if (C.state === 'play') enterBattle(); else C.doors.run(enterNow, true); });
+  // wave — бой открылся за створками позже (не в этом же вызове): надпись «Волна N!», если волна уже идёт (возврат в бой)
+  const enterNow = (wave) => { if (C.state === 'play') return; enterBattle(); if (N.battle && (team() === 'pvo' || N.battle.kind === 'multi')) ctrls.defense.netSync(); renderPlan();
+    const r = N.room; if (wave && r && r.state === 'play' && N.battle && N.battle.kind !== 'multi') { C.say(tr('Волна {0}!', [r.wave]), 2.5); snd.alarm(); } };
+  const enterDoors = () => { let now = true; C.doors.run(() => enterNow(!now), true); now = false; };
+  N.on('start', () => { if (N.battle && mapFix(N.battle.kind, N.battle.map || null)) return; if (C.state === 'play') enterBattle(); else enterDoors(); });
   N.on('room', (was) => {
     if (N.room && !(C.ended && N.room.state === 'lobby') && mapFix(N.room.kind, N.room.map || 'city')) return; // на экране итогов — не перезагружаться: карту новой комнаты — по «В комнату» (again)
     rerender();
     const r = N.room; if (!r || !N.battle || r.state === 'end' || r.state === 'lobby') return; // итоги и лобби — не бой
-    if (C.state !== 'play') { if (!C.doors.busy) C.doors.run(enterNow, true); if (C.state !== 'play') return; } // створки идут — синхронизация в enterNow, когда бой откроется
+    if (C.state !== 'play') { if (!C.doors.busy) enterDoors(); if (C.state !== 'play') return; } // створки идут — синхронизация в enterNow, когда бой откроется
     if (team() === 'pvo' || N.battle.kind === 'multi') ctrls.defense.netSync();
     renderPlan();
     if (was !== r.state && r.state === 'play' && N.battle.kind !== 'multi') { C.say(tr('Волна {0}!', [r.wave]), 2.5); snd.alarm(); }

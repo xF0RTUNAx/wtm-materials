@@ -15,12 +15,12 @@ const CSS = `
 #doors .sh { position: absolute; inset: 0; background: #000; opacity: 0; width: auto; }
 #doors .sh::after { display: none; }`;
 
-export function createDoors(ver) {
+export function createDoors() {
   const st = document.createElement('style'); st.textContent = CSS; if (document.head) document.head.appendChild(st); // (заглушка DOM стенда — без head/body)
   const el = document.createElement('div'); el.id = 'doors'; if (el.setAttribute) el.setAttribute('aria-hidden', 'true');
   el.innerHTML = '<div class="sh"></div><div class="dl"></div><div class="dr"></div>'; if (document.body) document.body.appendChild(el);
   const sh = el.querySelector('.sh'), L = el.querySelector('.dl'), R = el.querySelector('.dr');
-  const url = (s, h) => `airdef/ui/doors/${s}_${h}.webp?v=${ver}`;
+  const url = (s, h) => `airdef/ui/doors/${s}_${h}.webp?v=20261101a`; // ?v= — версия модулей (поднимается при деплое)
   let pre = false, busy = false;
   // картинки — заранее, в простое меню (4 × 70–90 КБ): к первому нажатию «Начать» уже в кэше
   const preload = () => { if (pre || typeof Image !== 'function') return; pre = true; for (const s of STY) for (const h of ['l', 'r']) { const i = new Image(); i.decoding = 'async'; i.src = url(s, h); } };
@@ -34,6 +34,7 @@ export function createDoors(ver) {
     if (RM || !el.animate || document.hidden || navigator.webdriver) { fn(); return; }
     busy = true; preload();
     let did = false; const go = () => { if (did) return; did = true; try { fn(); } catch (e) { console.error(e); } }; // экран меняется ровно один раз, даже если анимацию сорвали
+    const safety = setTimeout(go, 2500); // вкладку свернули посреди хода створок (анимации и кадры стоят) — экран всё равно меняется: бой онлайна не ждёт
     const s = STY[Math.floor(Math.random() * STY.length)];
     L.style.backgroundImage = `url(${url(s, 'l')})`; R.style.backgroundImage = `url(${url(s, 'r')})`;
     el.classList.add('on');
@@ -55,7 +56,7 @@ export function createDoors(ver) {
         A(L, [{ transform: 'translateX(-0.8%)' }, { transform: 'translateX(-101%)' }], { duration: 1100, easing: 'cubic-bezier(.55,0,.35,1)' }),
         A(R, [{ transform: 'translateX(0.8%)' }, { transform: 'translateX(101%)' }], { duration: 1100, easing: 'cubic-bezier(.55,0,.35,1)' })]);
     } catch (e) { console.error(e); } finally {
-      go(); el.classList.remove('on'); for (const x of [el, sh, L, R]) if (x.getAnimations) x.getAnimations().forEach((a) => a.cancel()); busy = false;
+      clearTimeout(safety); go(); el.classList.remove('on'); for (const x of [el, sh, L, R]) if (x.getAnimations) x.getAnimations().forEach((a) => a.cancel()); busy = false;
     }
   }
   return { run, preload, get busy() { return busy; } };
