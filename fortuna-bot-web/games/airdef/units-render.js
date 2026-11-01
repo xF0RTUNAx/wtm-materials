@@ -613,6 +613,12 @@ export function createFx(scene, P) {
         if (t.startsWith('launch_')) { LZ[t] = () => mkBook(t, j, u, true); continue; } // старт С-300 / С-400 — только в бою с ними (api.wantLaunch)
         mkBook(t, j, u, false);
       }
+      // ?wts=try — пробный лист клубов следа (tools/airdef-fx/trail-try, trail.py до чистового запекания): посмотреть в бою локально
+      if (!PT && /[?&]wts=try/.test(location.search)) fetch(new URL('../../tools/airdef-fx/trail-try/trail.json', import.meta.url)).then((r) => r.json()).then(({ trail: j }) => {
+        PT = makePuffs(scene, P.fxLo ? 1500 : 4000, { url: new URL(`../../tools/airdef-fx/trail-try/ex_trail.webp?t=${Date.now()}`, import.meta.url).href, cols: j.cols, rows: j.rows, frames: j.frames, variants: j.variants, times: j.times, fadeIn: 0.05, sqrtGrow: true, k: 1.3, onTex });
+        PT.mat.uniforms.scale.value = smoke.mat.uniforms.scale.value; api.mats.push(PT.mat); PT.points.renderOrder = lo ? 1 : 0.46; if (LY) PT.points.layers.set(LY[0]); setTrailPuffs(PT);
+        if (api.onNewMats) api.onNewMats();
+      }).catch(() => {});
       if (LZ.want) api.wantLaunch(); else if (api && api.onNewMats) api.onNewMats(); // новые материалы листов — скомпилировать сразу
     }).catch(() => { /* нет листов — прежние раскадровки */ });
   }
