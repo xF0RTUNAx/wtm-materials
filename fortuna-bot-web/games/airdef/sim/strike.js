@@ -126,6 +126,15 @@ export function createStrike(ctx) {
     if (d > R) return false;
     return city.los(u.pos.x, u.pos.y + 1.5, u.pos.z, t.pos.x, t.pos.y, t.pos.z, 15);
   }
+  // летящее оружие уже взято другими комплексами: их ракет в полёте (не потерявших цель) — 1 (баллистика — 2). Самолёт — нет: одна ЗУР по
+  // манёвренной цели с ловушками попадает редко, вторая от соседа его и добивает (без неё в «Обороне» попаданий 21 → 14, а в «Вылете» по
+  // игроку стреляли бы реже); по сбитому самолёту ракеты не летят «в никуда» — самоликвидатор
+  function covered(u, t) {
+    if (!t.isMun) return false;
+    const cap = t.W && t.W.kind === 'tbm' ? 2 : 1; let n = 0;
+    for (const m of sams) if (!m.dead && !m.lost && m.target === t && m.unit !== u && ++n >= cap) return true;
+    return false;
+  }
   function inZone(u, t) {
     const S = u.S, d = u.pos.distanceTo(t.pos), h = aglOf(t);
     return d > S.rmin && d < S.rmax && h > S.hmin && h < S.hmax || meetSoon(u, t);
@@ -167,14 +176,19 @@ export function createStrike(ctx) {
     // выбор и сопровождение цели; сбитая цель снимается с захвата — новую берут заново, с временем захвата и реакции
     // (2026-10-24: сбитая оставалась в u.track — комплекс пускал ракеты по обломкам, в sim-test востока эпохи 1 — 20 из 49 пусков)
     if (u.track && u.track.dead) { u.track = null; u.reactT = 0; u.seeT = 0; fx.radarState(u); }
+    // сеть ПВО (Mark 2026-11-01: «пуски впустую» — с фильтром целей и без, в «Обороне» и «Мульти-волне»): цель, по которой уже летят ракеты других
+    // комплексов (covered), — другим; держал такую и своих ракет по ней нет — отпускает, если есть свободная (стенд: 80–100 % ракет «в никуда» —
+    // пущены, когда в цель уже летела ракета; первая перехватывала, остальные шли по прямой до конца полёта)
+    if (u.track && covered(u, u.track) && !sams.some((m) => !m.dead && !m.lost && m.unit === u && m.target === u.track) && targets.some((a) => !a.dead && a !== u.track && !covered(u, a) && inZone(u, a))) { u.track = null; u.reactT = 0; u.seeT = 0; fx.radarState(u); }
     let t = u.track;
     if (!t) {
-      // многоканальный комплекс сначала берёт цели, по которым ещё не летят его ракеты
+      // многоканальный комплекс сначала берёт цели, по которым ещё не летят его ракеты; любой — не те, что уже взяли другие (covered)
       let best = null, bd = 1e12;
       for (const a of targets) {
         if (a.dead) continue;
         let d = a.pos.distanceToSquared(u.pos);
         if ((S.channels || 1) > 1 && sams.some((m) => !m.dead && !m.lost && m.unit === u && m.target === a)) d *= 9;
+        if (covered(u, a)) d *= 100;
         if (d < bd) { bd = d; best = a; }
       }
       t = best;
@@ -207,7 +221,7 @@ export function createStrike(ctx) {
     if (inZone(u, tr) && u.ammo > 0 && u.reloadT <= 0) {
       u.reactT += dt;
       const inAir = sams.filter((m) => !m.dead && m.unit === u && m.target === tr).length;
-      if (u.reactT > S.react * (M.reactK || 1) && u.cool <= 0 && inAir < (S.salvo || 1)) {
+      if (u.reactT > S.react * (M.reactK || 1) && u.cool <= 0 && inAir < (S.salvo || 1) && (inAir > 0 || !covered(u, tr))) { // свой залп — до конца; первую — если цель не взята другими
         // ИК: ГСН должна захватить цель до пуска (кроме захвата после пуска — IRIS-T)
         if (S.type === 'ir' && !S.loal && !irSees(S, tr, u.pos, null, 999)) return;
         if (!launcherReady(u)) return; // пусковая ещё разворачивается
@@ -572,6 +586,7 @@ export function createStrike(ctx) {
       if (dmin < a.r * 0.5 + M_.blast * 0.85) { m.pos.set(a.pos.x - rx, a.pos.y - ry, a.pos.z - rz); samDetonate(m, true); return; }
     }
     if (m.decoy && m.pos.distanceTo(m.decoy.pos) < 15) { samDetonate(m, false); return; }
+    if (T && T.dead && !m.decoy && (m.goneT = (m.goneT || 0) + dt) > 1.5) { samDetonate(m, false); return; } // цель погибла (перехватили другие, долетела) — самоликвидатор, а не полёт «в никуда»
     // первые 1,5 с ракета уходит вверх из застройки — дома вокруг пусковой не учитываем (пусковая не стреляет в стену)
     if (m.pos.y < (m.t < 1.5 ? city.groundH(m.pos.x, m.pos.z) : city.topAt(m.pos.x, m.pos.z)) || m.t > M_.life || (m.tb > M_.burn + 2 && m.speed < (M_.vmin || 200) * 0.6)) samDetonate(m, false);
   }
