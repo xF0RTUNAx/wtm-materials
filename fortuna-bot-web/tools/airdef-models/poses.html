@@ -3,12 +3,12 @@
 <style>body{margin:0;background:#10140f;color:#e9e6dc;font:12px sans-serif}#g{display:flex;flex-wrap:wrap;gap:6px;padding:6px}#g figure{margin:0;width:240px}#g img{width:240px;height:135px;background:#1a2016;display:block}#g figcaption{padding:2px 0}</style></head>
 <body><div id="g"></div>
 <!-- Ракурсы единиц для заставок (экран подбора и т. п.): то же, что thumbs.html (модель как в бою, прозрачный фон), но ракурс задаётся.
-     ?s=имя~id~az~el~крен~тангаж~рыск~fov;…  id — как в дереве прокачки (air:e_su34, pvo:s400, wpn:kh59m);
+     ?s=имя~id~az~el~крен~тангаж~рыск~fov;…  id — как в дереве прокачки (air:e_su34, pvo:s400, wpn:kh59m), самолёт в окраске — air:e_f15e@inferno;
      az, el — откуда смотрит камера (радианы, как в thumbs.html), крен/тангаж/рыск — поворот самой модели (градусы), fov — угол камеры.
      window.__thumbs — { имя: dataURL webp }, window.__names — { id: короткое имя }. Сохраняет tools/airdef-headless/poses-bake.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script type="module">
-import { loadModels, planeModel, unitModelGlb, unitMissileGlb, launcherGlb, wantUnit, wantModel, anyModel, weaponMesh, wantWeapon, weaponPending, setWings } from '../../games/airdef/models.js?v=20261029b';
+import { loadModels, planeModel, unitModelGlb, unitMissileGlb, launcherGlb, wantUnit, wantModel, anyModel, weaponMesh, wantWeapon, weaponPending, setWings, wantCamo } from '../../games/airdef/models.js?v=20261029b';
 import { unitModel, weaponGeo } from '../../games/airdef/units-render.js?v=20261029b';
 import { AG, SAM } from '../../games/airdef/arsenal.js?v=20261029b';
 import { cylPose } from '../../games/airdef/launchers.js?v=20261029b';
@@ -53,7 +53,8 @@ async function unitObj(key) {
   }
   return g;
 }
-async function objOf(n) {
+async function objOf(n, skin) {
+  if (n.branch === 'air' && skin) { wantModel(n.key); await wait(() => anyModel(n.key)); await wait(() => wantCamo(n.key, skin)); const pm = planeModel(n.side, 'strike', n.key, skin); return pm && pm.obj; } // окраска из магазина: models/camo/<самолёт>.<окраска>.glb
   if (n.branch === 'air') { wantModel(n.key); await wait(() => anyModel(n.key)); const pm = planeModel(n.side, 'strike', n.key); return pm && pm.obj; }
   if (n.branch === 'heli') { wantModel(n.key); return wait(() => anyModel(n.key)); } // вертолёт — лопасти неподвижные (spinProps не вызываем: без призраков и диска)
   if (n.branch === 'pvo') return unitObj(n.key);
@@ -78,8 +79,8 @@ const sc = new THREE.Scene(); sc.add(new THREE.HemisphereLight(0xe2ecff, 0x9a958
   sc.environment = new THREE.PMREMGenerator(r).fromScene(es, 0.04).texture; }
 const out = {}, names = {}, cache = {}, grid = document.getElementById('g');
 for (const sh of SHOTS) {
-  const id = sh.id, n = NODE[id]; if (!n) { console.warn('нет в дереве', id); continue; }
-  let o = cache[id]; if (!o) { try { o = await objOf(n); } catch (e) { console.warn(id, e); } if (o && o.isObject3D) cache[id] = o; } // модель собирается раз на юнит — ракурсов у него много
+  const id = sh.id, [bid, skin] = id.split('@'), n = NODE[bid]; if (!n) { console.warn('нет в дереве', id); continue; } // id@окраска — самолёт в окраске магазина
+  let o = cache[id]; if (!o) { try { o = await objOf(n, skin); } catch (e) { console.warn(id, e); } if (o && o.isObject3D) cache[id] = o; } // модель собирается раз на юнит — ракурсов у него много
   if (!o || !o.isObject3D) { console.warn('нет модели', id); continue; }
   // запечённое затенение в стыках (AO) — вдвое мягче: снизу машину в карточке видно, в бою — почти нет
   o.traverse((q) => { const c = q.isMesh && q.material && q.material.vertexColors && q.geometry.attributes.color; if (!c || c.itemSize !== 4 || q.geometry.userData.aoSoft) return; // AO моделей — байты RGBA; у фигур из кода в вершинах настоящий цвет
@@ -101,7 +102,7 @@ for (const sh of SHOTS) {
     for (let i = 0; i < a.count; i += st) { V.fromBufferAttribute(a, i).applyMatrix4(m.matrixWorld).project(cam); x0 = Math.min(x0, V.x); x1 = Math.max(x1, V.x); y0 = Math.min(y0, V.y); y1 = Math.max(y1, V.y); } });
   const z = Math.min(1.74 / Math.max(0.01, x1 - x0), 1.64 / Math.max(0.01, y1 - y0)); cam.zoom = z; cam.updateProjectionMatrix();
   cam.setViewOffset(W, H, (x0 + x1) / 2 * z * W / 2, -(y0 + y1) / 2 * z * H / 2, W, H);
-  r.render(sc, cam); out[sh.name] = r.domElement.toDataURL('image/webp', 0.9); sc.remove(o); names[id] = n.short; piv.remove(piv.children[0]);
+  r.render(sc, cam); out[sh.name] = r.domElement.toDataURL('image/webp', 0.9); sc.remove(o); names[id] = n.short + (skin ? ' · ' + skin : ''); piv.remove(piv.children[0]);
   const f = document.createElement('figure'); f.innerHTML = `<img src="${out[sh.name]}"><figcaption>${sh.name} · ${id}</figcaption>`; grid.appendChild(f);
 }
 window.__thumbs = out; window.__names = names; window.__ok = 1;
