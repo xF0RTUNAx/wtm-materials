@@ -711,14 +711,60 @@ export function unitModelGlb(key) {
     th: seq('th'), ca: seq('ca'), turret1: get('turret1'), cs: seq('cs'), // расчёт ПЗРК: позы наводчика (головы, руки) и второй номер
     jacks: seq('jack'), cyl: seq('cyl') }; // С-300: штоки домкратов и гидроцилиндр подъёма (корпус, два штока)
 }
+// летящая ракета — без деталей пусковой, прилипших к ней при подготовке модели (prepare.js: детали пакета у ракеты-образца): связный кусок
+// сетки уходит, если он целиком в одной из коробок [x0, x1, y0, y1, z0, z1] (оси ракеты в группе: +Z — к хвосту). На пусковой — как в модели.
+// С-125 (Mark 2026-11-01: «у летящей ракеты лишние детали пусковой»): балка направляющей под ускорителем, обрезки за соплом, брусок под
+// хвостом, коробка разъёма под серединой, вилка под носом, полоса вдоль низа (наполовину — в ускорителе, улетала бы с ним)
+const FLY_CUT = {
+  s125: [[0.3, 0.56, -0.6, -0.25, 0.05, 3.1], [0, 0.56, -0.5, -0.15, 2.95, 3.3], [-0.12, 0.12, -0.8, -0.5, 2.2, 2.8], [-0.2, 0.52, -0.75, -0.42, -0.25, 0.3],
+    [-0.16, 0.14, -0.65, -0.12, -1.66, -1.0], [-0.1, 0.06, -0.25, -0.15, -1.2, 2.6], [-0.16, 0.13, -0.19, -0.14, -1.2, 2.95]],
+  // «Куб»: кронштейны и рельсы направляющей справа снизу, рама-ручка, механизм крепления под брюхом, перья и стойки соседней ракеты, стойка под хвостом
+  kub: [[0.05, 0.56, -0.565, -0.235, 2.585, 2.72], [0.05, 0.56, -0.565, -0.235, 2.03, 2.16], [0.05, 0.56, -0.565, -0.235, 0.43, 0.58], [0.05, 0.56, -0.565, -0.235, -0.12, 0.03],
+    [0.3, 0.53, -0.525, -0.335, 2.05, 2.7], [0.3, 0.53, -0.525, -0.335, -0.08, 0.53], [0.44, 0.56, -0.6, 0.75, -0.6, 0.6], [-0.22, 0.22, -0.565, 0.03, -0.55, 0.45],
+    [-1.0, -0.5, -0.75, 0.6, -0.6, 2.8], [-0.3, -0.1, -0.735, -0.005, 2.38, 2.72]],
+  // С-75: ролики пусковой под ускорителем и под серединой (ракета в модели наклонена на ≈ 4°)
+  s75: [[-0.25, 0.25, -0.85, -0.2, 3.55, 4.25], [-0.22, 0.22, -0.55, -0.25, 2.4, 2.62], [-0.2, 0.2, -0.9, -0.5, 0.4, 0.65]],
+};
+// ось летящей ракеты: [поворот вокруг X, рад; сдвиг по Y, м] — ракета в модели лежит с наклоном. С-75 (Mark 2026-11-01: «у С-75 тоже неправильное
+// расположение огня»): ≈ 4° носом вниз, ось на 7 см ниже центра (по кольцам корпуса) — корпус шёл под углом к траектории и к факелу, сопло маршевой
+// ступени (соосно ускорителю, units-render.js) уезжало на 17 см вверх
+const FLY_AXIS = { s75: [0.0694, 0.072], s125: [0, -0.046] }; // С-125: наклона нет, ось на 4,6 см выше центра (поиск сопла по модели ставил факел на 4 см ниже)
+
+const CUT_GEO = new Map(); // геометрия без лишнего — одна на модель (атрибуты общие, свой индекс)
+function cutFly(root, boxes) {
+  root.updateMatrixWorld(true); const v = new THREE.Vector3();
+  root.traverse((o) => {
+    if (!o.isMesh) return;
+    let g = CUT_GEO.get(o.geometry.uuid);
+    if (!g) {
+      const src = o.geometry, P = src.attributes.position, N = P.count, I = src.index ? src.index.array : Uint32Array.from({ length: N }, (_, i) => i);
+      const up = new Int32Array(N).map((_, i) => i), root_ = (i) => { while (up[i] !== i) i = up[i] = up[up[i]]; return i; };
+      for (let t = 0; t < I.length; t += 3) { const a = root_(I[t]); up[root_(I[t + 1])] = a; up[root_(I[t + 2])] = a; }
+      const bb = new Map();
+      for (let i = 0; i < N; i++) {
+        v.fromBufferAttribute(P, i).applyMatrix4(o.matrixWorld); const r = root_(i); let b = bb.get(r);
+        if (!b) bb.set(r, b = [1e9, -1e9, 1e9, -1e9, 1e9, -1e9]);
+        b[0] = Math.min(b[0], v.x); b[1] = Math.max(b[1], v.x); b[2] = Math.min(b[2], v.y); b[3] = Math.max(b[3], v.y); b[4] = Math.min(b[4], v.z); b[5] = Math.max(b[5], v.z);
+      }
+      const drop = new Set(); for (const [r, b] of bb) if (boxes.some((q) => b[0] >= q[0] && b[1] <= q[1] && b[2] >= q[2] && b[3] <= q[3] && b[4] >= q[4] && b[5] <= q[5])) drop.add(r);
+      const keep = []; for (let t = 0; t < I.length; t += 3) if (!drop.has(root_(I[t]))) keep.push(I[t], I[t + 1], I[t + 2]);
+      if (keep.length === I.length) g = src;
+      else { g = new THREE.BufferGeometry(); for (const k in src.attributes) g.setAttribute(k, src.attributes[k]); g.setIndex(keep); }
+      CUT_GEO.set(o.geometry.uuid, g);
+    }
+    o.geometry = g;
+  });
+}
 // ракета комплекса из его модели (маршевая ступень + ускоритель) или null; noLoad — не заказывать подробную модель (прогрев шейдеров, main.js warmNow)
 export function unitMissileGlb(key, noLoad) {
   const sm = SAMMSL[key]; if (sm && LOADED[sm]) return { missile: LOADED[sm].clone(), booster: null };
   const n = UMODEL[key]; if (n && BASE && !LOADING.has(n) && !noLoad) start(n); // телефон: подробная модель ещё не грузилась — ракеты из неё со следующего пуска
   const G = n && (LOADED[n] || LOADED[n + '_lo']); if (!G) return null;
   const m = G.children.find((c) => c.name === 'missile'); if (!m) return null;
-  const b = G.children.find((c) => c.name === 'booster');
-  return { missile: m.clone(), booster: b ? b.clone() : null };
+  const b = G.children.find((c) => c.name === 'booster'), mc = m.clone(), bc = b ? b.clone() : null;
+  if (FLY_CUT[key]) { cutFly(mc, FLY_CUT[key]); if (bc) cutFly(bc, FLY_CUT[key]); }
+  const fx = FLY_AXIS[key]; if (fx) { const M = new THREE.Matrix4().makeTranslation(0, fx[1], 0).multiply(new THREE.Matrix4().makeRotationX(fx[0])); mc.applyMatrix4(M); if (bc) bc.applyMatrix4(M); }
+  return { missile: mc, booster: bc, ax: fx ? [0, 0] : undefined }; // ax — ось известна (после поправки X = Y = 0): поиск сопла (units-render.js nozzleOf) — по ней, стабилизаторы ускорителя сбивали медиану
 }
 export const isObjModel = (name) => !!(META[name] && META[name].obj);
 export function objModel(name) { return LOADED[name] ? LOADED[name].clone() : null; }

@@ -12,7 +12,7 @@ import { ktxOn, ktxLoadUrl } from './ktx.js?v=20261101a';
 export function makePuffs(scene, N, cfg) {
   const web = typeof document !== 'undefined' && document.createElementNS, st = { ready: false };
   const pos = new Float32Array(N * 3), col = new Float32Array(N * 3), alp = new Float32Array(N), siz = new Float32Array(N), pf = new Float32Array(N * 2);
-  const vel = new Float32Array(N * 3), life = new Float32Array(N), max = new Float32Array(N), a0 = new Float32Array(N), grow = new Float32Array(N), drag = new Float32Array(N), grav = new Float32Array(N), t0 = new Float32Array(N), s0 = new Float32Array(N);
+  const vel = new Float32Array(N * 3), life = new Float32Array(N), max = new Float32Array(N), a0 = new Float32Array(N), grow = new Float32Array(N), drag = new Float32Array(N), grav = new Float32Array(N), t0 = new Float32Array(N), s0 = new Float32Array(N), xs = new Float32Array(N), xt = new Float32Array(N);
   for (let i = 0; i < N; i++) pos[i * 3 + 1] = -99999;
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.BufferAttribute(pos, 3)); geo.setAttribute('pcolor', new THREE.BufferAttribute(col, 3));
@@ -66,12 +66,13 @@ export function makePuffs(scene, N, cfg) {
   const frameAt = (u) => { const t = u * T1; let k = 0; while (k < F - 2 && TM[k + 1] <= t) k++; return Math.min(F - 1, k + (t - TM[k]) / (TM[k + 1] - TM[k])); };
   return {
     mat, points, get ready() { return st.ready; },
-    // как makeParticles.emit; st — с какого места клуба (0…1: 0 — свежий, 0,5 — уже рваный)
-    emit(x, y, z, vx, vy, vz, r, g, b, a, s, gr, l, dr, gv, start = 0) {
+    // как makeParticles.emit; st — с какого места клуба (0…1: 0 — свежий, 0,5 — уже рваный); ex — прибавка размера, набираемая за ≈ et с
+    // (след ракеты: из факела клуб выходит узким и раздаётся; sqrtGrow), ag — клуб уже прожил ag с (ракета прошла эту точку раньше)
+    emit(x, y, z, vx, vy, vz, r, g, b, a, s, gr, l, dr, gv, start = 0, ex = 0, et = 0.3, ag = 0) {
       const i = head = (head + 1) % N, i3 = i * 3, v = Math.floor(Math.random() * cfg.variants);
       pos[i3] = x; pos[i3 + 1] = y; pos[i3 + 2] = z; vel[i3] = vx; vel[i3 + 1] = vy; vel[i3 + 2] = vz;
       // клуб занимает меньше клетки, чем мягкое пятно своей точки, — размер × K: видимый — как был (иначе след издали — цепочка «бусин»)
-      col[i3] = r; col[i3 + 1] = g; col[i3 + 2] = b; a0[i] = alp[i] = a; s0[i] = siz[i] = s * K; grow[i] = gr * K; max[i] = life[i] = l; drag[i] = dr; grav[i] = gv; t0[i] = start;
+      col[i3] = r; col[i3 + 1] = g; col[i3 + 2] = b; a0[i] = alp[i] = a; s0[i] = siz[i] = s * K; grow[i] = gr * K; max[i] = l; life[i] = Math.max(0.01, l - ag); xs[i] = ex * K; xt[i] = et; drag[i] = dr; grav[i] = gv; t0[i] = start;
       pf[i * 2] = frameAt(start); pf[i * 2 + 1] = (v * F + 1) * (Math.random() < 0.5 ? -1 : 1);
       emitted = true;
     },
@@ -84,7 +85,7 @@ export function makePuffs(scene, N, cfg) {
         life[i] -= dt;
         pos[i3] += vel[i3] * dt; pos[i3 + 1] += vel[i3 + 1] * dt; pos[i3 + 2] += vel[i3 + 2] * dt;
         const k = Math.max(0, 1 - drag[i] * dt); vel[i3] *= k; vel[i3 + 1] = vel[i3 + 1] * k + grav[i] * dt; vel[i3 + 2] *= k;
-        if (SQ) siz[i] = s0[i] + grow[i] * Math.sqrt(max[i] - life[i]); else siz[i] += grow[i] * dt;
+        if (SQ) { const ag = max[i] - life[i]; siz[i] = s0[i] + grow[i] * Math.sqrt(ag) + (xs[i] ? xs[i] * (1 - Math.exp(-ag / xt[i])) : 0); } else siz[i] += grow[i] * dt;
         const u = Math.max(0, life[i] / max[i]), age = 1 - u, e = Math.min(1, u * 4);
         alp[i] = a0[i] * e * e * (3 - 2 * e) * (FI ? Math.min(1, (max[i] - life[i]) / FI) : 1); // клуб тает сам (кадры листа) — общая прозрачность уходит только в последней четверти жизни, по S-кривой
         pf[i * 2] = frameAt(t0[i] + (1 - t0[i]) * age);

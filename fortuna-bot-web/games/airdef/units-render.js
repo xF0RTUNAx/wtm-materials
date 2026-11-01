@@ -419,8 +419,10 @@ export function samMissileMesh(m, gm, wMat) {
   }
   g.userData.flame = rocketFlame(g, L / 2, hasBoost ? r * m.ln.stageR : r, motorOf(m.unit.key, 'sam', false)); g.userData.flame.owner = m; // факел — по типу двигателя (plume.js); конец ленты дыма — в его сопле
   if (gm) { // готовая модель: сопло ищем по самой модели (один раз на комплекс), а не по паспортной длине
-    const key = m.unit.key, nm = NZC['sam:' + key] || (NZC['sam:' + key] = nozzleOf(gm.missile, r));
-    const nb = hasBoost ? NZC['samb:' + key] || (NZC['samb:' + key] = nozzleOf(gm.booster, r * m.ln.stageR)) : null;
+    // ось известна (models.js FLY_AXIS: С-75, С-125) — по ней; иначе маршевая ступень соосна ускорителю (у С-125 к модели ракеты прилипли детали направляющей — ось по ней уходила
+    // на 0,35 м вниз и вбок, факел после отделения висел под корпусом — Mark 2026-11-01)
+    const key = m.unit.key, ax = gm.ax, nb = hasBoost ? NZC['samb:' + key] || (NZC['samb:' + key] = nozzleOf(gm.booster, r * m.ln.stageR, ax)) : null;
+    const nm = NZC['sam:' + key] || (NZC['sam:' + key] = nozzleOf(gm.missile, r, ax || (nb ? [nb.x, nb.y] : undefined)));
     g.userData.nzM = nm; const n0 = nb || nm; g.userData.flame.at(n0.x, n0.y, n0.z);
   }
   return g;
@@ -598,7 +600,7 @@ export function createFx(scene, P) {
           continue;
         }
         if (t === 'trail') { // клубы следов ракет (Mark 2026-11-01, «по подобию War Thunder»; tools/airdef-fx/explode/trail.py): свой лист и пул — длинные следы ЗУР
-          // не вытесняют дым подбитых; рост ∝ √t, как ширина следа (plume.js puffAlong); ?wts=0 — как было (лента и мягкие шары)
+          // не вытесняют дым подбитых; рост ∝ √t, как ширина следа (plume.js puffTo); ?wts=0 — как было (лента и мягкие шары)
           if (/[?&]wts=0/.test(location.search)) continue;
           PT = makePuffs(scene, P.fxLo ? 1500 : 4000, { ktx: u('ktx2'), url: u('webp'), cols: j.cols, rows: j.rows, frames: j.frames, variants: j.variants, times: j.times, fadeIn: 0.05, sqrtGrow: true, k: 1.7, onTex });
           PT.mat.uniforms.scale.value = smoke.mat.uniforms.scale.value; api.mats.push(PT.mat); PT.points.renderOrder = lo ? 1 : 0.46; if (LY) PT.points.layers.set(LY[0]); setTrailPuffs(PT);
