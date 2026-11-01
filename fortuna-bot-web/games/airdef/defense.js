@@ -37,6 +37,11 @@ export function createDefense(C) {
   const dside = () => st.defSide || C.setup.side; // сторона ПВО (в «Мульти-волне» за удар — противник)
   const attSide = () => (dside() === 'east' ? 'west' : 'east');
   const atk = () => st.multi === 'atk';
+  // волна n «Обороны» — «Мульти-волна»: последняя, если в меню «Последняя волна» не «Обычный налёт» и у атакующей стороны в этой эпохе есть чем (arsenal.js COMBINED)
+  const combinedWave = (n) => !st.opts.wave && !st.net && C.setup.cs !== false && n === st.waves && combinedOk(attSide(), C.setup.era);
+  // режим строки «Цели» и плашек «что сбивает» (icons.js): 'multi' — «Мульти-волна», а в «Обороне» — её последняя волна ударом (и расстановка перед ней:
+  // Mark 2026-11-02 — в последней волне не было кнопки «дроны»), иначе 'def'
+  const tmode = () => (st.multi || (st.phase === 'wave' ? !!C.ev : combinedWave(st.wave + 1)) ? 'multi' : 'def');
   // цена комплекса: в онлайне ведущая ПВО платит за дальние больше (sim/online.js LEAD_K)
   const costOf = (k) => (st.net ? samCostFor(k, st.net.room && st.net.room.lead) : samCost(k));
   // «Мульти-волна» (Mark 2026-10-28): свои цены ЗРК по замеру силы и потолки на игрока — комплексов одного типа (samLeft, null — без потолка)
@@ -473,14 +478,14 @@ export function createDefense(C) {
   // фильтр целей комплекса (Mark 2026-10-25): k — вид из строки «Цели»; 'all' — все. Выключить все виды нельзя (последний остаётся).
   // Онлайн: команда серверу (t: 'tgt', c — список включённых видов; пустой — все), сервер проверяет сам
   function setTgtCat(u, k) {
-    const mode = st.multi ? 'multi' : 'def', ch = tgtChoices(u.S, mode).map((q) => q.k); if (!ch.length) return;
+    const ch = tgtChoices(u.S, tmode()).map((q) => q.k); if (!ch.length) return;
     let cur = new Set(u.tgt ? ch.filter((q) => u.tgt.has(q)) : ch);
     if (k === 'all') cur = new Set(ch);
     else if (!ch.includes(k)) return;
     else if (!cur.has(k)) cur.add(k);
     else if (cur.size > 1) cur.delete(k);
     else { say(tr('Хотя бы один вид целей должен остаться')); snd.deny(); return; }
-    // виды, которых нет среди кнопок (в «Обороне» — дроны, крылатые и ложные цели её последней волны), не выключаются: фильтр — только то, что игрок видит (ревью)
+    // виды, которых нет среди кнопок (в налётах «Обороны» — дроны и крылатые, в её последней волне ударом — самолёты и бомбы), не выключаются: фильтр — только то, что игрок видит (ревью)
     const all = cur.size === ch.length, list = [...cur, ...TGT_CATS.filter((q) => !ch.includes(q))]; C.S.setTgt(u, all ? null : list);
     if (st.net) st.net.send({ t: 'tgt', id: u.id, c: all ? [] : list });
   }
@@ -502,7 +507,7 @@ export function createDefense(C) {
     if (u.S.radar) a.push(u.emit ? tr('РЛС излучает') : u.ambush ? tr('засада: РЛС молчит') : tr('РЛС выключена'));
     if (u.track) a.push(`<b style="color:#fde047">${tr('захват цели')}</b>`);
     if (u.S.type !== 'guns') a.push(u.reloadT > 0 ? tr('перезарядка {0} с', [Math.ceil(u.reloadT)]) : tr('ракет {0}/{1}', [u.ammo, u.S.ammo]));
-    const tl = tgtLabel(u, st.multi ? 'multi' : 'def'); if (tl) a.push(tl);
+    const tl = tgtLabel(u, tmode()); if (tl) a.push(tl);
     return a.join(' · ');
   }
   // онлайн: мои комплексы, лимит первой волны по классам, сторона ПВО и эпоха — из боя
@@ -730,7 +735,7 @@ export function createDefense(C) {
       if (st.multi) h += multiDefHint();
       if (st.sel && !st.sel.dead) {
         const u = st.sel;
-        h += `<div class="dcard on"><div class="nm"><b>${u.S.name}${capsHtml(u.S, st.multi ? 'multi' : 'def')}</b><span>${tr('{0} · до {1} км · {2}', [SAM_TYPE[u.S.type], (u.S.rmax / 1000).toFixed(1), unitStatus(u)])}</span></div></div>${tgtRowHtml(u, st.multi ? 'multi' : 'def')}
+        h += `<div class="dcard on"><div class="nm"><b>${u.S.name}${capsHtml(u.S, tmode())}</b><span>${tr('{0} · до {1} км · {2}', [SAM_TYPE[u.S.type], (u.S.rmax / 1000).toFixed(1), unitStatus(u)])}</span></div></div>${tgtRowHtml(u, tmode())}
           <div class="dact">${moveBtns(u)}<button class="btn alt" data-a="sell">${tr('Продать +{0}', [Math.round((u.paid || priceOf(u.key)) * 0.7)])}</button>
           ${u.S.radar && u.S.type !== 'guns' ? `<button class="btn alt" data-a="amb">${u.ambush ? tr('Засада: вкл') : tr('Засада: выкл')}</button>` : ''}${st.moving ? '' : `<button class="btn alt" data-a="desel">${tr('Готово')}</button>`}</div>${moveHint()}`;
       }
@@ -740,7 +745,7 @@ export function createDefense(C) {
       for (const [k, s] of cat) {
         if (s.side !== dside() || (!st.multi && s.era > C.setup.era) || (st.multi && !multiSamOk(k))) continue; // «Мульти-волна» — все комплексы своей стороны, кроме бесполезных в режиме (замки «Реализма» — lockedSam ниже); «Оборона» — по эпохе (ревью)
         const c = priceOf(k), shut = st.opts.allow && !st.opts.allow.has(k), lk = lockedSam(k), sl = samLeft(k); // урок: покупать только то, о чём он
-        h += `<div class="dcard ${st.placing === k ? 'on' : ''} ${c > st.budget || shut || lk || (sl !== null && sl <= 0) ? 'no' : ''}" data-buy="${k}"><div class="nm"><b>${lk ? ico('lock') + ' ' : ''}${s.short}${capsHtml(s, st.multi ? 'multi' : 'def')}</b><span>${shut ? tr('не в этом уроке') : tr('{0} · {1} км / {2} км', [SAM_TYPE[s.type], (s.rmax / 1000).toFixed(1), (s.hmax / 1000).toFixed(1)])}${sl !== null ? tr(' · не больше {0}', [multiSamCap(k)]) : ''}</span></div><span class="pr">${c}</span></div>`;
+        h += `<div class="dcard ${st.placing === k ? 'on' : ''} ${c > st.budget || shut || lk || (sl !== null && sl <= 0) ? 'no' : ''}" data-buy="${k}"><div class="nm"><b>${lk ? ico('lock') + ' ' : ''}${s.short}${capsHtml(s, tmode())}</b><span>${shut ? tr('не в этом уроке') : tr('{0} · {1} км / {2} км', [SAM_TYPE[s.type], (s.rmax / 1000).toFixed(1), (s.hmax / 1000).toFixed(1)])}${sl !== null ? tr(' · не больше {0}', [multiSamCap(k)]) : ''}</span></div><span class="pr">${c}</span></div>`;
       }
       h += `<p class="hint">${st.placing ? (IS_TOUCH ? tr('Касайтесь карты, пока место не устроит, затем «Подтвердить». Зелёная тень — зона комплекса на высоте 300 м, просветы — то, что закрывают дома. «Отмена» — не покупать.') : tr('Ведите мышь по карте: зелёная тень — зона комплекса на высоте 300 м, просветы — то, что закрывают дома. Щелчок выбирает место (можно менять), затем «Подтвердить» или Enter. «Отмена», Esc или правая кнопка — не покупать.')) : tr('Выберите комплекс в каталоге и коснитесь карты. Коснитесь своего комплекса: тень его зоны на высоте 300 м, перенос (новое место и «Подтвердить») или продажа.')}</p>`;
       h += `<button class="btn" data-a="go" ${S.units.filter((u) => !u.dead).length ? '' : 'disabled'}>${tr('В бой — {0}', [st.multi ? tr('Мульти-волна') : tr('волна {0}', [st.wave + 1])])}</button>`;
@@ -749,7 +754,7 @@ export function createDefense(C) {
       h += `<h3>${tr('Волна {0}/{1}', [st.wave, st.waves])}</h3><div>${tr('В воздухе: <b>{0}</b> · сбито: <b>{1}</b>', [air, st.waveDowns])}</div>`;
       if (st.sel && !st.sel.dead) {
         const u = st.sel;
-        h += `<div class="dcard on"><div class="nm"><b>${u.S.name}${capsHtml(u.S, st.multi ? 'multi' : 'def')}</b><span>${unitStatus(u)}</span></div></div>${tgtRowHtml(u, st.multi ? 'multi' : 'def')}<div class="dact">
+        h += `<div class="dcard on"><div class="nm"><b>${u.S.name}${capsHtml(u.S, tmode())}</b><span>${unitStatus(u)}</span></div></div>${tgtRowHtml(u, tmode())}<div class="dact">
           ${u.S.type === 'jammer' ? '' : `<button class="btn" data-a="op">${tr('Управлять')}</button>`}
           ${u.S.radar ? `<button class="btn alt" data-a="emit">${u.emit ? tr('РЛС: выключить') : tr('РЛС: включить')}</button>` : ''}
           <button class="btn alt" data-a="desel">${tr('Снять выбор')}</button></div>`;
@@ -872,7 +877,7 @@ export function createDefense(C) {
     const att = attSide();
     C.ev = null;
     if (atk()) { st.tsel = null; st.edKey = null; st.pick = null; const T = tgtObjs().filter((o) => !o.dead); if (T.length) st.targets = T; placeAiDef(); } // цели — из наряда; ИИ-ПВО — по уровню наряда
-    if (st.multi || (!st.opts.wave && !st.net && C.setup.cs !== false && st.wave === st.waves && combinedOk(att, C.setup.era))) {
+    if (st.multi || combinedWave(st.wave)) {
       const o = atk() ? { comp: planComp(), plan: st.plan.cfg } : st.opts.comp ? { comp: st.opts.comp } : {}; // opts.comp — свой состав удара (урок)
       C.ev = createCombined(C.S, city, st.rnd, { side: att, era: st.multi && !atk() ? aiWaveLevel() : C.setup.era, raid: C.raid, ...o }); C.ev.start(st.targets);
       if (C.evReady) C.evReady(C.ev); // модели ракет, дронов и пусковых — загрузить
@@ -1156,7 +1161,7 @@ export function createDefense(C) {
     const trk = u.track || u.desig, d = trk ? trk.pos.distanceTo(u.pos) : 0, h = trk ? trk.pos.y - city.groundH(trk.pos.x, trk.pos.z) : 0;
     const zone = !trk ? '' : trk.W && trk.W.kind === 'tbm' && C.S.inZone(u, trk) && (d > S.rmax || h > S.hmax) ? tr('Пуск в упреждение') : d > S.rmax ? tr('Далеко') : d < S.rmin ? tr('Близко') : h > S.hmax ? tr('Высоко') : h < S.hmin ? tr('Низко') : tr('В зоне');
     // название со значками «что сбивает» — только при смене комплекса (ревью 2026-10-25: разбор SVG каждый кадр — нагрев), строка состояния — каждый кадр
-    const oi = $('opInfo'); if (oi._S !== S || oi._m !== st.multi || !oi.lastChild) { oi._S = S; oi._m = st.multi; oi.innerHTML = `<div class="oc"><b>${S.name}</b>${capsHtml(S, st.multi ? 'multi' : 'def')} · ${SAM_TYPE[S.type]}</div><div class="ot"></div>`; }
+    const oi = $('opInfo'), tm = tmode(); if (oi._S !== S || oi._m !== tm || !oi.lastChild) { oi._S = S; oi._m = tm; oi.innerHTML = `<div class="oc"><b>${S.name}</b>${capsHtml(S, tm)} · ${SAM_TYPE[S.type]}</div><div class="ot"></div>`; }
     oi.lastChild.innerHTML = `${clock()}${C.auto ? `${tr('<b style="color:#86efac">Авто</b> ·')} ` : ''}${unitStatus(u)}${S.type === 'command' ? tr(' · метод: {0}', [u.method === 'half' ? tr('половинное спрямление') : tr('три точки')]) : ''}` +
       (trk ? tr('<br>цель: {0} км, {1} м — <b>{2}</b>{3}', [(d / 1000).toFixed(1), Math.round(h), zone, !u.track && u.desig ? tr(' · захват {0}%', [Math.round(clamp(u.seeT / ((S.radar ? S.radar.acq : 2) * (C.MODE().reactK || 1)), 0, 1) * 100)]) : '']) : S.type === 'ir' ? tr('<br>наведите перекрестие на самолёт — ГСН «зарычит» и захватит') : S.type === 'guns' ? tr('<br>ведите ствол в жёлтый кружок упреждения и держите «Огонь»') : tr('<br>коснитесь отметки цели на экране или на круговом обзоре'))
       + (arm ? `<br><span class="st">${ico('hazard', 'ii')}${tr('ПРР ЛЕТИТ В ВАС — выключите РЛС!')}</span>` : '') + (op.msgT > 0 ? `<br><span class="st">${op.msg}</span>` : '');
