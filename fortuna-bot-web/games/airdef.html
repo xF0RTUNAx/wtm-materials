@@ -649,6 +649,18 @@
   #dside h3, #evPanel h3, #netPlan h3 { font: 500 15px 'Oswald', sans-serif; letter-spacing: .02em; color: #f4f1e8; }
   #dside .btn.mini, #evPanel .btn.mini2, #dside .btn.mini2 { border-radius: 0; }
   #dtop { color: var(--th-tx); } #dtop b { color: #f3c96f; }
+  /* окно сводки волны «Обороны» (Mark 2026-11-02, вариант А «Табло», defense.js wavePanel): клетки — волна, сбито, объекты, очки; ниже — что впереди */
+  #dtop .dpan { display: inline-flex; flex-direction: column; background: var(--th-bg); border: 1px solid rgba(233,230,220,.22); box-shadow: 0 6px 18px rgba(0,0,0,.35); text-shadow: none; }
+  #dtop .dpan .r { display: flex; align-items: stretch; }
+  #dtop .dpan .c { display: flex; flex-direction: column; justify-content: center; gap: 2px; padding: 5px 12px; border-left: 1px solid rgba(233,230,220,.16); }
+  #dtop .dpan .c:first-child { border-left: 0; padding: 5px 14px 5px 10px; }
+  #dtop .dpan .c span { font: 600 9px 'Golos Text', -apple-system, sans-serif; letter-spacing: .14em; text-transform: uppercase; color: var(--th-dim); }
+  #dtop .dpan .c b { font: 500 18px/1 'Oswald', 'Arial Narrow', sans-serif; color: var(--th-tx); }
+  #dtop .dpan .c.w b { font-weight: 600; font-size: 24px; color: #f3c96f; } #dtop .dpan .c.w b i { font-style: normal; font-size: 15px; color: var(--th-dim); }
+  #dtop .dpan .c b.ok { color: #86efac; } #dtop .dpan .c b.mid { color: #fbbf24; } #dtop .dpan .c b.low { color: #f87171; }
+  #dtop .dpan .ah { display: flex; align-items: center; gap: 12px; padding: 4px 10px; border-top: 1px solid rgba(232,176,74,.35); background: rgba(232,176,74,.1); font-size: 12px; white-space: nowrap; }
+  #dtop .dpan .ah > span { display: inline-flex; align-items: center; gap: 5px; } #dtop .dpan .ah > i { width: 1px; height: 12px; background: rgba(233,230,220,.25); }
+  #dtop .dpan .ah svg { width: 16px; height: 16px; color: #f3c96f; flex: none; } #dtop .dpan .ah b { font-weight: 600; color: #f3c96f; }
   #opInfo { color: var(--th-tx); } #opInfo b { color: #f3c96f; }
   #opBtns .tb { border-radius: 0; } #mnFit, #mnZ, #evBtn, #wBar button { border-radius: 0 !important; }
   #wBar .wb, #wInfo { border-radius: 0; }
