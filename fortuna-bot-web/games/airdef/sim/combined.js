@@ -335,5 +335,18 @@ export function createCombined(S, city, rnd, opts = {}) {
     }
     return out;
   }
-  return { start, step, pending, events, applyPlan, unitInfo, extend, launchers, carriers, log, get t() { return t; }, get comp() { return comp; }, side, era };
+  // что впереди — строка «Обороны» в последней волне ударом (Mark 2026-11-02: после дронов долгая тишина — пусть игрок знает, что ещё будет):
+  // drones — дронов в воздухе и ещё не вылетевших; next — через сколько секунд первый пуск крылатых или баллистики (с носителя — не раньше его выхода
+  // на рубеж пуска), 0 — уже летят, null — их нет; kr / b — какие ещё будут (ложные цели — к крылатым)
+  function ahead() {
+    const air = S.wpns.filter((w) => w.ev && !w.dead && mineW(w) && !w.W.recon);
+    const drones = air.filter((w) => w.W.uav).length + queue.filter((q) => AG[q.key].uav && !AG[q.key].recon).length;
+    let next = null, kr = false, b = false;
+    const see = (k, e) => { if (AG[k].kind === 'tbm') b = true; else kr = true; next = next === null ? e : Math.min(next, e); };
+    for (const w of air) if (!w.W.uav) see(w.key, 0);
+    for (const q of queue) if (!AG[q.key].uav && !AG[q.key].recon) see(q.key, Math.max(0, q.t - t));
+    for (const a of carriers) if (!a.dead && !a.out && a.salvo.length) { const e = Math.max(0, Math.max(a.salvo[0].t, carrierEarliest(a)) - t); for (const q of a.salvo) see(q.key, e); }
+    return { drones, next, kr, b };
+  }
+  return { start, step, pending, events, ahead, applyPlan, unitInfo, extend, launchers, carriers, log, get t() { return t; }, get comp() { return comp; }, side, era };
 }

@@ -1162,7 +1162,8 @@ export function createDefense(C) {
     const zone = !trk ? '' : trk.W && trk.W.kind === 'tbm' && C.S.inZone(u, trk) && (d > S.rmax || h > S.hmax) ? tr('Пуск в упреждение') : d > S.rmax ? tr('Далеко') : d < S.rmin ? tr('Близко') : h > S.hmax ? tr('Высоко') : h < S.hmin ? tr('Низко') : tr('В зоне');
     // название со значками «что сбивает» — только при смене комплекса (ревью 2026-10-25: разбор SVG каждый кадр — нагрев), строка состояния — каждый кадр
     const oi = $('opInfo'), tm = tmode(); if (oi._S !== S || oi._m !== tm || !oi.lastChild) { oi._S = S; oi._m = tm; oi.innerHTML = `<div class="oc"><b>${S.name}</b>${capsHtml(S, tm)} · ${SAM_TYPE[S.type]}</div><div class="ot"></div>`; }
-    oi.lastChild.innerHTML = `${clock()}${C.auto ? `${tr('<b style="color:#86efac">Авто</b> ·')} ` : ''}${unitStatus(u)}${S.type === 'command' ? tr(' · метод: {0}', [u.method === 'half' ? tr('половинное спрямление') : tr('три точки')]) : ''}` +
+    const ah = aheadText();
+    oi.lastChild.innerHTML = `${ah ? `${ah}<br>` : ''}${clock()}${C.auto ? `${tr('<b style="color:#86efac">Авто</b> ·')} ` : ''}${unitStatus(u)}${S.type === 'command' ? tr(' · метод: {0}', [u.method === 'half' ? tr('половинное спрямление') : tr('три точки')]) : ''}` +
       (trk ? tr('<br>цель: {0} км, {1} м — <b>{2}</b>{3}', [(d / 1000).toFixed(1), Math.round(h), zone, !u.track && u.desig ? tr(' · захват {0}%', [Math.round(clamp(u.seeT / ((S.radar ? S.radar.acq : 2) * (C.MODE().reactK || 1)), 0, 1) * 100)]) : '']) : S.type === 'ir' ? tr('<br>наведите перекрестие на самолёт — ГСН «зарычит» и захватит') : S.type === 'guns' ? tr('<br>ведите ствол в жёлтый кружок упреждения и держите «Огонь»') : tr('<br>коснитесь отметки цели на экране или на круговом обзоре'))
       + (arm ? `<br><span class="st">${ico('hazard', 'ii')}${tr('ПРР ЛЕТИТ В ВАС — выключите РЛС!')}</span>` : '') + (op.msgT > 0 ? `<br><span class="st">${op.msg}</span>` : '');
     $('opRadar').classList.toggle('on', !!u.emit); $('opRadar').title = u.emit ? tr('РЛС включена — выключить') : tr('РЛС выключена — включить'); // иконка закрашена — излучает
@@ -1583,6 +1584,19 @@ export function createDefense(C) {
     if (st.opts.onTick) st.opts.onTick(dt);
     if ((sideT -= dt) <= 0) { sideT = 0.5; if (st.view === 'map' && !sideHold) renderSide(); renderEv(); }
   }
+  // «Оборона», последняя волна ударом «Мульти-волны» (Mark 2026-11-02): после дронов до крылатых и баллистики долгая тишина — строка «что впереди»,
+  // без точных чисел: «≈ 15 дронов · ≈ КР и Б через 1–2 мин» (дронов — до 5 точно, дальше кратно 5; время — диапазоном); раз в 0,5 с
+  const approxN = (n) => (n <= 5 ? n : Math.round(n / 5) * 5);
+  const approxT = (s) => (s < 60 ? tr('20–60 с') : s < 120 ? tr('1–2 мин') : s < 180 ? tr('2–3 мин') : tr('3–5 мин'));
+  let ahT = 0, ahS = '';
+  function aheadText() {
+    if (st.multi || st.net || st.phase !== 'wave' || !C.ev || !C.ev.ahead) return '';
+    if (C.t - ahT < 0.5 && C.t >= ahT) return ahS; ahT = C.t;
+    const a = C.ev.ahead(), out = [], what = a.kr && a.b ? tr('КР и Б') : a.kr ? tr('КР') : tr('Б');
+    if (a.drones) { const n = approxN(a.drones), d = n % 10, h = n % 100; out.push(tr(d === 1 && h !== 11 ? '≈ {0} дрон' : d >= 2 && d <= 4 && (h < 12 || h > 14) ? '≈ {0} дрона' : '≈ {0} дронов', [n])); }
+    if (a.next !== null && a.next > 0) out.push(a.next < 20 ? tr('≈ {0} — вот-вот', [what]) : tr('≈ {0} через {1}', [what, approxT(a.next)]));
+    return (ahS = out.join(' · '));
+  }
   // часы волны: с начала боя (мульти-волна — и за удар, и за оборону; видны и на карте, и в 3D, и за пультом)
   const clock = () => { if (!st.multi || st.phase !== 'wave' || !C.ev) return ''; const t = Math.max(0, C.ev.t); return `<b>${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}</b> · `; };
   function hud(dt, t) {
@@ -1593,8 +1607,8 @@ export function createDefense(C) {
       $('dtop').innerHTML = st.phase === 'plan' ? tr('Расстановка · волна {0}/{1}{2} · очки <b>{3}</b>', [st.wave, st.waves, left, st.budget]) : tr('Волна <b>{0}/{1}</b>{2} · объекты целы <b>{3}%</b>', [st.wave, st.waves, left, Math.round((1 - ((N.battle && N.battle.valueK) || 0)) * 100)]); }
     else if (atk()) $('dtop').innerHTML = st.phase === 'plan' ? tr('План волны · очки угрозы <b>{0}</b>', [st.budget - planCost()]) : tr('{0}Волна · цели разрушены <b>{1}%</b>{2}', [clock(), Math.round((1 - targetsValue()) * 100), st.timeK > 1 ? tr(' · время ×{0}', [st.timeK]) : '']);
     else if (st.multi && st.phase === 'wave') $('dtop').innerHTML = tr('{0}Мульти-волна · сбито <b>{1}</b> · цели целы <b>{2}%</b>{3}', [clock(), st.downs, Math.round(targetsValue() * 100), st.timeK > 1 ? tr(' · время ×{0}', [st.timeK]) : '']);
-    else $('dtop').innerHTML = st.phase === 'plan' ? tr('Расстановка · очки обороны <b>{0}</b>', [st.budget]) :
-      tr('Волна <b>{0}/{1}</b> · сбито <b>{2}</b> · объекты целы <b>{3}%</b> · очки {4}', [st.wave, st.waves, st.downs, Math.round(cityValue() * 100), st.score]);
+    else { const ah = aheadText(); $('dtop').innerHTML = st.phase === 'plan' ? tr('Расстановка · очки обороны <b>{0}</b>', [st.budget]) :
+      tr('Волна <b>{0}/{1}</b> · сбито <b>{2}</b> · объекты целы <b>{3}%</b> · очки {4}', [st.wave, st.waves, st.downs, Math.round(cityValue() * 100), st.score]) + (ah ? `<br>${ah}` : ''); }
     if (st.view === 'op' && st.op) opHud(dt, t); else if (st.view === 'watch') watchHud(); else drawMap(t);
     if (st.view !== 'map' && st.alertT > 0) drawAlert(C.hx); // плашка тревоги — и в 3D
   }

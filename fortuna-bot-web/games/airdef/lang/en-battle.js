@@ -614,6 +614,8 @@ export default {
   ' · время ×{0}': ' · time ×{0}',
   '{0}Мульти-волна · сбито <b>{1}</b> · цели целы <b>{2}%</b>{3}': '{0}Multi-Wave · shot down <b>{1}</b> · targets intact <b>{2}%</b>{3}',
   'Расстановка · очки обороны <b>{0}</b>': 'Deployment · defense points <b>{0}</b>',
+  '≈ {0} дрон': '≈ {0} drone', '≈ {0} дрона': '≈ {0} drones', '≈ {0} дронов': '≈ {0} drones', '≈ {0} через {1}': '≈ {0} in {1}', '≈ {0} — вот-вот': '≈ {0} any moment', 'КР и Б': 'cruise & ballistic', 'Б': 'ballistic',
+  '20–60 с': '20–60 s', '1–2 мин': '1–2 min', '2–3 мин': '2–3 min', '3–5 мин': '3–5 min',
   'Волна <b>{0}/{1}</b> · сбито <b>{2}</b> · объекты целы <b>{3}%</b> · очки {4}': 'Wave <b>{0}/{1}</b> · shot down <b>{2}</b> · facilities intact <b>{3}%</b> · points {4}',
   'Карта: тянуть — сдвиг, щипок — масштаб, касание — выбор. Оператор: тянуть — поворот, касание отметки или ИКО — назначить цель. «Кам.» — вид снаружи (тянуть — облёт).': 'Map: drag to pan, pinch to zoom, tap to select. Operator: drag to turn, tap a mark or the scope to assign a target. "Cam.": external view (drag to orbit).',
   'Карта: тянуть — сдвиг, колесо — масштаб, щелчок — выбор и постановка, Пробел — начать волну.<br>Оператор: тянуть мышью или стрелки/WASD — поворот, колесо или Z — увеличение, щелчок по отметке — цель, Tab — следующая цель,<br>Пробел/F — пуск (у пушек — держать), E — РЛС, M — метод, V — камера (оператор / снаружи), Q — на карту, Esc — пауза.': 'Map: drag to pan, wheel to zoom, click to select and place, Space to start the wave.<br>Operator: drag the mouse or arrows/WASD to turn, wheel or Z to zoom, click a mark to target, Tab: next target,<br>Space/F: fire (guns: hold), E: radar, M: method, V: camera (operator / external), Q: back to map, Esc: pause.',
