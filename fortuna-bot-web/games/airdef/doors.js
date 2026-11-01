@@ -5,7 +5,7 @@
 // Новая карта — перезагрузка страницы (Mark: «анимация створок прерывается»): carry() перед перезагрузкой запоминает стиль, новая страница
 // открывается уже с закрытыми створками (airdef.html: #doorsBoot до загрузки модулей, потом — эти), на шве — ход загрузки; расходятся,
 // когда карта загружена (gate) или бой онлайна открылся.
-import { tr } from './i18n.js?v=20261101a';
+import { tr } from './i18n.js?v=20261102a';
 
 const STY = ['has', 'hangar'], KEY = 'fortuna_ad_doors';
 const CSS = `
@@ -28,9 +28,9 @@ export function createDoors() {
   const el = document.createElement('div'); el.id = 'doors'; if (el.setAttribute) el.setAttribute('aria-hidden', 'true');
   el.innerHTML = '<div class="sh"></div><div class="dl"></div><div class="dr"></div><div class="dt"></div>'; if (document.body) document.body.appendChild(el);
   const sh = el.querySelector('.sh'), L = el.querySelector('.dl'), R = el.querySelector('.dr'), T = el.querySelector('.dt');
-  const url = (s, h) => `airdef/ui/doors/${s}_${h}.webp?v=20261101a`; // ?v= — версия модулей (поднимается при деплое)
+  const url = (s, h) => `airdef/ui/doors/${s}_${h}.webp?v=20261102a`; // ?v= — версия модулей (поднимается при деплое)
   const look = (s) => { cur = s; L.style.backgroundImage = `url(${url(s, 'l')})`; R.style.backgroundImage = `url(${url(s, 'r')})`; };
-  let pre = false, busy = false, cur = STY[0], held = null, failT = 0;
+  let pre = false, busy = false, cur = STY[0], held = null, failT = 0, leaving = false;
   // картинки — заранее, в простое меню (4 × 70–90 КБ): к первому нажатию «Начать» уже в кэше
   const preload = () => { if (pre || typeof Image !== 'function') return; pre = true; for (const s of STY) for (const h of ['l', 'r']) { const i = new Image(); i.decoding = 'async'; i.src = url(s, h); } };
   const RM = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -47,7 +47,9 @@ export function createDoors() {
   } else if (held) { held = null; const hb = document.getElementById && document.getElementById('doorsBoot'); if (hb && hb.remove) hb.remove(); }
   function note(t) { if (T) T.textContent = t || tr('Загрузка…'); }
   // перед перезагрузкой страницы: створки закрыты — новая страница начнётся с них же
-  function carry(k) { if (!busy && !held) return; try { sessionStorage.setItem(KEY, JSON.stringify({ s: cur, t: Date.now(), k })); } catch (_) { /* нет хранилища — без створок */ } }
+  // уход: страница перезагружается (fn вызвал location.replace) — створки на ней больше не открываем (ревью 2026-11-02: при медленном ответе сети они трогались
+  // и показывали меню, потом новая страница снова начиналась с закрытых); не перезагрузилась за 10 с — открыть
+  function carry(k) { if (!busy && !held) return; leaving = true; setTimeout(() => { if (leaving) { leaving = false; open().then(clean, clean); } }, 10000); try { sessionStorage.setItem(KEY, JSON.stringify({ s: cur, t: Date.now(), k })); } catch (_) { /* нет хранилища — без створок */ } }
   // расход: рывок замка, створки уезжают
   async function open() {
     el.classList.remove('wait');
@@ -65,10 +67,12 @@ export function createDoors() {
     held = null; clearTimeout(failT); busy = true;
     try { if (fn) fn(); } catch (e) { console.error(e); }
     try {
+      if (leaving) return;
       await frame(); await frame(); await wait(380);
       for (let t = 0; t < 8000 && api.gate && !api.gate(); t += 200) await wait(200);
+      if (leaving) return;
       await open();
-    } catch (e) { console.error(e); } finally { clean(); }
+    } catch (e) { console.error(e); } finally { if (!leaving) clean(); }
   }
   // открыть створки, закрытые с перезагрузки; any — и для онлайна (там их откроет вход в бой, это — лобби или страховка)
   function release(any = false) { if (held && (any || held.k !== 'online')) fromHeld(null); }
@@ -91,9 +95,11 @@ export function createDoors() {
       A(L, [{ transform: 'translateX(0)' }, { transform: 'translateX(-0.4%)' }, { transform: 'translateX(0)' }], { duration: 240 });
       A(R, [{ transform: 'translateX(0)' }, { transform: 'translateX(0.4%)' }, { transform: 'translateX(0)' }], { duration: 240 });
       await frame(); go();
+      if (leaving) return; // страница перезагружается — створки остаются закрытыми до её выгрузки
       await frame(); await frame(); await wait(380); // первые кадры нового экрана (сборка шейдеров) — за створками
+      if (leaving) return;
       await open();
-    } catch (e) { console.error(e); } finally { clearTimeout(safety); go(); clean(); }
+    } catch (e) { console.error(e); } finally { clearTimeout(safety); go(); if (!leaving) clean(); }
   }
   return api;
 }

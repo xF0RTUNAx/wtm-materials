@@ -9,7 +9,7 @@
 //    НАР — плотный короткий; жидкостный (С-75, «Скад») — прозрачный рыжеватый (окислитель на азотной кислоте), факел
 //    оранжевый; прямоточный («Куб», Х-31) — почти без дыма, факел слабый голубоватый; турбореактивный (крылатые) — дымки нет.
 //    Густота и ширина дыма — от площади сечения (расход топлива ∝ r²), время жизни — от размера ракеты.
-import { FOG_LIN, FOG_U, FXU, SOFT_GLSL } from '../drone/world.js?v=20261101a';
+import { FOG_LIN, FOG_U, FXU, SOFT_GLSL } from '../drone/world.js?v=20261102a';
 
 const url = (f) => new URL(`./fx/${f}`, import.meta.url).href;
 const WEB = typeof document !== 'undefined' && !!document.createElement && typeof Image !== 'undefined'; // стенды Deno — без картинок
@@ -248,7 +248,9 @@ const SM_F = `#include <common>
     #include <tonemapping_fragment>
     #include <encodings_fragment>
   }`;
+let P_FXLO = false; // пресет телефона: клубов следа вдвое реже (createPlumes P.fxLo)
 export function createPlumes(scene, P = {}) {
+  P_FXLO = !!P.fxLo;
   texs();
   const MAXV = P.fxLo ? 8000 : 20000, MAXP = 260, NP = MAXV >> 1; // NP — пар вершин (пара = два края ленты в одной точке следа)
   const geo = new THREE.BufferGeometry();
@@ -283,7 +285,7 @@ export function createPlumes(scene, P = {}) {
     const ax = c.x, ay = c.y, az = c.z, at = c.t; c.x = x; c.y = y; c.z = z; c.t = time;
     const D = Math.hypot(x - ax, y - ay, z - az); if (D < 1e-3) return;
     const cd = PCAM ? Math.hypot(x - PCAM.position.x, y - PCAM.position.y, z - PCAM.position.z) : 600;
-    const step = Math.max(1.5, P.w * 0.4) * Math.min(5, Math.max(1, cd / 800)), wv = mat.uniforms.uWind.value, j = P.w * 0.25; // клубы перекрываются — след сплошной; вдали — реже
+    const step = (P.step || Math.max(1.5, P.w * 0.4)) * Math.min(5, Math.max(1, cd / 800)), wv = mat.uniforms.uWind.value, j = P.w * 0.25; // клубы перекрываются — след сплошной; вдали — реже
     // из факела клуб выходит узким (≈ ширина конца факела) и за τ (≈ 2 длины факела пути ракеты) раздаётся до ширины следа; возраст — с момента, когда ракета была в этой точке
     const S = P.w * 1.35, nr = WTF ? Math.min(0.8, Math.max(0.15, 3.6 / m.w)) : 1, dtp = time - at;
     T.pd = (T.pd || 0) + D;
@@ -333,8 +335,12 @@ export function createPlumes(scene, P = {}) {
         tau: sp > 5 ? Math.min(0.6, Math.max(0.04, rr * m.len[0] * 3 / sp)) : 0.6 }; // tau — за сколько клуб у сопла раздаётся до ширины следа (puffTo)
       // с клубами лента — только у сопла (≈ 30 м за срезом: на 1 км/с — 0,03 с, на 100 м/с — 0,3 с): сердцевина, пока клубы проявляются;
       // дальше след — одни клубы (Mark: шире клубов лента читалась вблизи полупрозрачной «подложкой»)
-      const pu = PUF && PUF.ready && m.a >= PUFF_MIN, pa = p.a, pl = p.life; if (pu) { p.a *= 0.85; p.life = Math.min(p.life, Math.max(0.06, Math.min(0.4, 30 / Math.max(sp, 1)))); }
-      T.noRib = pu && WTF; // факел War Thunder: клубы идут от самого среза сопла (puffTo из tip) — ленты нет совсем (вблизи её прямые края читались «подложкой»)
+      // клубов на след — не больше 120 в секунду (на телефоне 60; ревью 2026-11-02: залп НАР на 700 м/с давал сотни клубов в секунду на ракету — пул переполнялся,
+      // хвосты следов пропадали, телефон грелся): шаг ≥ скорость / темп. Тонкий быстрый след (НАР, ПЗРК на скорости), где клубы шли бы точками, — только лентой;
+      // клубы реже своей ширины — лента остаётся сердцевиной. ЛТЦ (свой набор m.ramp) — своей лентой, как выверено с Mark
+      const S = p.w * 1.35; p.step = Math.max(1.5, p.w * 0.4, sp / (P_FXLO ? 60 : 120));
+      const pu = PUF && PUF.ready && m.a >= PUFF_MIN && !m.ramp && p.step <= S * 2.5, pa = p.a, pl = p.life; if (pu) { p.a *= 0.85; p.life = Math.min(p.life, Math.max(0.06, Math.min(0.4, 30 / Math.max(sp, 1)))); }
+      T.noRib = pu && WTF && p.step < S * 1.2; // факел War Thunder: клубы идут от самого среза сопла (puffTo из tip) — ленты нет (вблизи её прямые края читались «подложкой»)
       T.pts.push(p); T.end = Math.max(T.end, time + p.life); T.tip = null;
       if (pu) { T.pp = p; T.pm = m; T.qa = pa; T.ql = pl; puffTo(T, x, y, z, p, m, pa, pl); } T.pu = pu;
       if (T.pts.length > MAXP) { const o = T.pts; T.pts = o.filter((q, i) => i >= o.length / 2 || i % 2 === 0); T.rebuild = true; } // длинная лента — старая половина реже (звенья перенарезаются)
@@ -353,7 +359,7 @@ export function createPlumes(scene, P = {}) {
     },
     clear() { trails.clear(); nFree = 0; bump = 0; amin = NP; amax = -1; geo.setDrawRange(0, 0); },
     update(dt, light, wind, sun) {
-      time += dt; mat.uniforms.uTime.value = time; if (light) { mat.uniforms.uLight.value.copy(light); FL_LIGHT.value.copy(light); } // дымка в факеле — под тем же светом if (sun) mat.uniforms.uSun.value.copy(sun); if (wind) mat.uniforms.uWind.value.set(wind.x, 0, wind.z);
+      time += dt; mat.uniforms.uTime.value = time; if (light) { mat.uniforms.uLight.value.copy(light); FL_LIGHT.value.copy(light); } if (sun) mat.uniforms.uSun.value.copy(sun); if (wind) mat.uniforms.uWind.value.set(wind.x, 0, wind.z); // дымка в факеле — под тем же светом
       let ii = 0; dmin = NP; dmax = -1;
       for (const [k, T] of trails) {
         if (time > T.end) { freeAll(T); trails.delete(k); continue; }

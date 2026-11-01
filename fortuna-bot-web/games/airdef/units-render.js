@@ -1,14 +1,14 @@
 // Модели и эффекты «Воздушного превосходства»: зенитные комплексы (процедурные, по мотивам реальных машин),
 // бомбы и ракеты, взрывы, дымные следы ЗУР, трассы зенитных пушек, ловушки, пожары на разрушенных объектах.
 /* global THREE */
-import { part, mergeParts, M, latheZ, plateXZ, plateZY, buildMissileGeo } from '../drone/models.js?v=20261101a';
-import { makeParticles, radialTex } from '../drone/world.js?v=20261101a';
-import { createPlumes, makeFlame, flameTick, motorOf, setFlameLayer, setTrailPuffs, trailPuffsOn, PUFF_MIN, setIgnition } from './plume.js?v=20261101a';
-import { FLAME_KIND, makeJetFlame, setJetLayer } from './jetflame.js?v=20261101a';
-import { createCmFx } from './cmfx.js?v=20261101a';
-import { LNCH } from './launchers.js?v=20261101a';
-import { createBook } from './flipbook.js?v=20261101a';
-import { makePuffs } from './puffs.js?v=20261101a';
+import { part, mergeParts, M, latheZ, plateXZ, plateZY, buildMissileGeo } from '../drone/models.js?v=20261102a';
+import { makeParticles, radialTex } from '../drone/world.js?v=20261102a';
+import { createPlumes, makeFlame, flameTick, motorOf, setFlameLayer, setTrailPuffs, trailPuffsOn, PUFF_MIN, setIgnition } from './plume.js?v=20261102a';
+import { FLAME_KIND, makeJetFlame, setJetLayer } from './jetflame.js?v=20261102a';
+import { createCmFx } from './cmfx.js?v=20261102a';
+import { LNCH } from './launchers.js?v=20261102a';
+import { createBook } from './flipbook.js?v=20261102a';
+import { makePuffs } from './puffs.js?v=20261102a';
 
 const OLIVE = 0x4f5c3c, OLIVE_D = 0x3c4630, SAND = 0x6e6a4c, NATO = 0x3f4a35, DARK = 0x1d2024, WHITE = 0xd8d8d0, STEEL = 0x707478;
 
@@ -364,7 +364,7 @@ export function rocketFlame(group, z, r, motor) { return makeFlame(group, z, r, 
 const NV = new THREE.Vector3();
 export function nozzleOf(g, r, ax) { // ax — ось сопла [x, y], если медиана врёт (крыло сверху у Storm Shadow)
   g.updateMatrixWorld(true); const P = [];
-  g.traverse((m) => { if (!m.isMesh) return; const p = m.geometry.attributes.position; for (let i = 0; i < p.count; i++) { NV.fromBufferAttribute(p, i).applyMatrix4(m.matrixWorld); P.push(NV.x, NV.y, NV.z); } });
+  g.traverse((m) => { if (!m.isMesh) return; const p = m.geometry.attributes.position, I = m.geometry.index, use = I ? new Set(I.array) : null; for (let i = 0; i < p.count; i++) { if (use && !use.has(i)) continue; NV.fromBufferAttribute(p, i).applyMatrix4(m.matrixWorld); P.push(NV.x, NV.y, NV.z); } }); // use — только вершины в индексе: у летящих ЗУР вырезанные детали пусковой (models.js cutFly) остаются в атрибутах
   let z0 = 1e9, z1 = -1e9; for (let i = 2; i < P.length; i += 3) { z0 = Math.min(z0, P[i]); z1 = Math.max(z1, P[i]); }
   const L = z1 - z0, xs = [], ys = [];
   for (let i = 0; i < P.length; i += 3) if (P[i + 2] > z0 + L / 3 && P[i + 2] < z1 - L / 3) { xs.push(P[i]); ys.push(P[i + 1]); }
@@ -588,9 +588,9 @@ export function createFx(scene, P) {
   // столб дыма пожара (fx/ex_burn — снят в Blender как петля): высота — по размеру очага; начинается с разной фазы
   const colAdd = (b) => CB.add(b.pos, XJ.burn.height * Math.min(1.6, Math.max(0.35, b.r / XJ.burn.ref)), 1, { t0: -Math.random() * 4 });
   if (!(typeof location !== 'undefined' && /[?&]exnew=0/.test(location.search)) && typeof fetch === 'function' && typeof document !== 'undefined') {
-    fetch(new URL('./fx/explode.json?v=20261101a', import.meta.url)).then((r) => r.json()).then((J) => {
+    fetch(new URL('./fx/explode.json?v=20261102a', import.meta.url)).then((r) => r.json()).then((J) => {
       for (const [t, j] of Object.entries(J)) {
-        const u = (e) => new URL(`./fx/ex_${t}${P.fxLo || P.halfFx ? '_lo' : ''}.${e}?v=20261101a`, import.meta.url).href; // телефон и слабые пресеты — вдвое меньше (память)
+        const u = (e) => new URL(`./fx/ex_${t}${P.fxLo || P.halfFx ? '_lo' : ''}.${e}?v=20261102a`, import.meta.url).href; // телефон и слабые пресеты — вдвое меньше (память)
         if (t === 'puff') { // клубы дыма следов подбитых (tools/airdef-fx/explode/puff.py)
           // по умолчанию (2026-10-24: лист перепечён — клуб заполняет клетку, шаг следа fx.trailStep — «бусин» вдали нет); ?puff=0 — прежние пятна
           if (/[?&]puff=0/.test(location.search)) continue;

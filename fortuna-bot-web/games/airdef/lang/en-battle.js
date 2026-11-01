@@ -614,6 +614,7 @@ export default {
   ' · время ×{0}': ' · time ×{0}',
   '{0}Мульти-волна · сбито <b>{1}</b> · цели целы <b>{2}%</b>{3}': '{0}Multi-Wave · shot down <b>{1}</b> · targets intact <b>{2}%</b>{3}',
   'Расстановка · очки обороны <b>{0}</b>': 'Deployment · defense points <b>{0}</b>',
+  '≈ КР — вот-вот': '≈ cruise any moment', '≈ КР через {0}': '≈ cruise in {0}', 'КР <b>≈ вот-вот</b>': 'cruise <b>≈ any moment</b>', 'КР <b>≈ через {0}</b>': 'cruise <b>≈ in {0}</b>',
   'волна': 'wave', 'объекты': 'facilities', 'очки': 'points', '{0} <b>≈ через {1}</b>': '{0} <b>≈ in {1}</b>', '{0} <b>≈ вот-вот</b>': '{0} <b>≈ any moment</b>',
   '≈ {0} дрон': '≈ {0} drone', '≈ {0} дрона': '≈ {0} drones', '≈ {0} дронов': '≈ {0} drones', '≈ {0} через {1}': '≈ {0} in {1}', '≈ {0} — вот-вот': '≈ {0} any moment', 'КР и Б': 'cruise & ballistic', 'Б': 'ballistic',
   '20–60 с': '20–60 s', '1–2 мин': '1–2 min', '2–3 мин': '2–3 min', '3–5 мин': '3–5 min',

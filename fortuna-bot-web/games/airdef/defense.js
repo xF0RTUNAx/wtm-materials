@@ -9,20 +9,20 @@
 // start(opts) — для обучения: { budget, waves, units: [[ключ, x, z, roof]], op: индекс комплекса, plan: false, wave(raid, rnd, n),
 //   noEnd, hold (волна не кончается сама — урок подаёт цели), onTick(dt), on: { place, waveStart, waveEnd, designate, track, launch, planeDown, arm, radar } }.
 /* global THREE */
-import { tr, trIf } from './i18n.js?v=20261101a';
-import { trFmt } from './i18n-fmt.js?v=20261101a';
-import { CITY, mulberry32 } from './city.js?v=20261101a';
-import { weaponHasModel } from './models.js?v=20261101a';
-import { LNCH, lnchToWorld, trainable } from './launchers.js?v=20261101a';
-import { ico, iconize, capsHtml, tgtRowHtml, tgtLabel, tgtChoices } from './icons.js?v=20261101a';
-import { SAM, SAM_COST, SAM_TYPE, AG, eqOf, MULTI, CARRIERS, THREAT, COMBINED, DEFENSE, multiBudget, multiItems, threatOf, multiCap, multiSamCost, multiSamCap, multiSamOk, multiSamFree } from './arsenal.js?v=20261101a';
-import { samClass, samCost, samCostFor, LIMIT1 } from './sim/online.js?v=20261101a';
-import { TEAM_NAME, TBM_RULE, TBM_EXCL, tbmOf, tbmCheck, sumN } from './sim/online-multi.js?v=20261101a';
+import { tr, trIf } from './i18n.js?v=20261102a';
+import { trFmt } from './i18n-fmt.js?v=20261102a';
+import { CITY, mulberry32 } from './city.js?v=20261102a';
+import { weaponHasModel } from './models.js?v=20261102a';
+import { LNCH, lnchToWorld, trainable } from './launchers.js?v=20261102a';
+import { ico, iconize, capsHtml, tgtRowHtml, tgtLabel, tgtChoices } from './icons.js?v=20261102a';
+import { SAM, SAM_COST, SAM_TYPE, AG, eqOf, MULTI, CARRIERS, THREAT, COMBINED, DEFENSE, multiBudget, multiItems, threatOf, multiCap, multiSamCost, multiSamCap, multiSamOk, multiSamFree } from './arsenal.js?v=20261102a';
+import { samClass, samCost, samCostFor, LIMIT1 } from './sim/online.js?v=20261102a';
+import { TEAM_NAME, TBM_RULE, TBM_EXCL, tbmOf, tbmCheck, sumN } from './sim/online-multi.js?v=20261102a';
 const esc = (x) => String(x ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-import { clamp, D2R, angleBetween, fwdOf } from '../drone/sim/core.js?v=20261101a';
-import { TGT_CATS, tgtCat } from './sim/strike.js?v=20261101a';
-import { freeGround, buildingAt, roofOk, pickTargets, placeDefense } from './mission.js?v=20261101a';
-import { createCombined, combinedOk, COMBINED_NAME, levelIn, levelOfPlan, levelOfSams, samKnown, planDefaults, unitCfg, carrierOf, CARRIER_WAIT, LAUNCH_R, LIM_ON } from './sim/combined.js?v=20261101a';
+import { clamp, D2R, angleBetween, fwdOf } from '../drone/sim/core.js?v=20261102a';
+import { TGT_CATS, tgtCat } from './sim/strike.js?v=20261102a';
+import { freeGround, buildingAt, roofOk, pickTargets, placeDefense } from './mission.js?v=20261102a';
+import { createCombined, combinedOk, COMBINED_NAME, levelIn, levelOfPlan, levelOfSams, samKnown, planDefaults, unitCfg, carrierOf, CARRIER_WAIT, LAUNCH_R, LIM_ON } from './sim/combined.js?v=20261102a';
 
 export const WAVES = 6;
 const WAVE_N = [3, 4, 6, 7, 9, 11];
@@ -1409,7 +1409,7 @@ export function createDefense(C) {
   function start(opts = {}) {
     st.opts = opts; st.aiPlace = null; C.ended = false; C.lastGame = opts.lastGame || 'defense';
     st.rnd = mulberry32((Date.now() & 0xffffff) ^ 0x2468);
-    st.multi = opts.multi || null; st.defSide = null; st.flash = new Map(); st.watch = null; st.timeK = 1; st.cue = null; st.watchNextAt = null; st.edKey = null; st.edUnit = null; st.addQ = {}; st.addT = 0; st.alertT = 0;
+    topH = ''; st.multi = opts.multi || null; st.defSide = null; st.flash = new Map(); st.watch = null; st.timeK = 1; st.cue = null; st.watchNextAt = null; st.edKey = null; st.edUnit = null; st.addQ = {}; st.addT = 0; st.alertT = 0;
     if (st.multi) { st.defSide = st.multi === 'atk' ? (C.setup.side === 'east' ? 'west' : 'east') : C.setup.side; opts.waves = 1; }
     C.newBattle({ defSide: dside(), era: C.setup.era, rnd: st.rnd, game: st.multi ? 'multi' : null });
     C.hooks = atk() ? atkHooks() : defHooks();
@@ -1543,6 +1543,7 @@ export function createDefense(C) {
     chatEl.querySelector('.log').innerHTML = N.chat.slice(-7).map((m) => `<div><b data-mute="${m.id}" class="${m.id === me ? 'me' : ''}">${esc(m.name)}</b>: ${esc(m.text)}</div>`).join('') || `<div class="dim">${tr('Чат команды — договоритесь, кто что бьёт или прикрывает. Касание имени — заглушить.')}</div>`;
   }
   function stop() {
+    topH = ''; // шапку очистим ниже — запомненный текст тоже (иначе на следующей расстановке с тем же бюджетом она оставалась пустой — ревью 2026-11-02)
     if (st.op) leaveOp();
     st.net = null; if (chatEl) chatEl.style.display = 'none';
     if (st.setupSave) { C.setup.era = st.setupSave.era; C.setup.diff = st.setupSave.diff; st.setupSave = null; }
@@ -1593,11 +1594,16 @@ export function createDefense(C) {
   function aheadParts() {
     if (st.multi || st.net || st.phase !== 'wave' || !C.ev || !C.ev.ahead) return { d: '', n: '', nb: '' };
     if (C.t - ahT < 0.5 && C.t >= ahT) return ahP; ahT = C.t;
-    const a = C.ev.ahead(), what = a.kr && a.b ? tr('КР и Б') : a.kr ? tr('КР') : tr('Б'), p = { d: '', n: '', nb: '' };
+    const a = C.ev.ahead(), what = a.kr && a.b ? tr('КР и Б') : tr('Б'), p = { d: '', n: '', nb: '' };
     if (a.drones) { const n = approxN(a.drones), d = n % 10, h = n % 100; p.d = tr(d === 1 && h !== 11 ? '≈ {0} дрон' : d >= 2 && d <= 4 && (h < 12 || h > 14) ? '≈ {0} дрона' : '≈ {0} дронов', [n]); }
     if (a.next !== null && a.next > 0) {
-      p.n = a.next < 20 ? tr('≈ {0} — вот-вот', [what]) : tr('≈ {0} через {1}', [what, approxT(a.next)]);
-      p.nb = a.next < 20 ? tr('{0} <b>≈ вот-вот</b>', [what]) : tr('{0} <b>≈ через {1}</b>', [what, approxT(a.next)]);
+      if (a.kr && !a.b) { // только крылатые — свои фразы (общий ключ «КР» в английском — заглавная подпись «CRUISE»)
+        p.n = a.next < 20 ? tr('≈ КР — вот-вот') : tr('≈ КР через {0}', [approxT(a.next)]);
+        p.nb = a.next < 20 ? tr('КР <b>≈ вот-вот</b>') : tr('КР <b>≈ через {0}</b>', [approxT(a.next)]);
+      } else {
+        p.n = a.next < 20 ? tr('≈ {0} — вот-вот', [what]) : tr('≈ {0} через {1}', [what, approxT(a.next)]);
+        p.nb = a.next < 20 ? tr('{0} <b>≈ вот-вот</b>', [what]) : tr('{0} <b>≈ через {1}</b>', [what, approxT(a.next)]);
+      }
     }
     return (ahP = p);
   }
