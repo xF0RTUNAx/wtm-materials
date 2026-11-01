@@ -180,7 +180,9 @@ D.onKey({ code: 'KeyQ', repeat: false, preventDefault: noop }, true);
 D.enterOp(C.S.units.find((u) => u.key === 'm163')); D.onKey({ code: 'Space', repeat: false, preventDefault: noop }, true); frames(30 * 3); D.onKey({ code: 'Space' }, false);
 D.enterOp(C.S.units.find((u) => u.key === 'igla')); frames(30 * 2); D.leaveOp();
 C.setAuto(true); D.enterOp(C.S.units[0]); frames(30 * 15); D.leaveOp(); D.enterOp(C.S.units.find((u) => u.key === 'm163')); frames(30 * 10); D.leaveOp(); C.setAuto(false);
-let guard = 0; while (D.st.phase === 'wave' && guard++ < 30 * 240) frames(1);
+// до 420 с (было 240): после баланса удара (cloud/strike-balance, sim/raid.js) бомбардировщики с лазерными и ТВ-бомбами кружат до 330 с и заходят
+// по бомбе — волна в этом сценарии ≈ 390 с (Mark 2026-11-02: «поднимем до 420 с»)
+let guard = 0; while (D.st.phase === 'wave' && guard++ < 30 * 420) frames(1);
 
 check(`оборона: волна закончилась (${D.st.phase}, сбито ${D.st.downs})`, D.st.phase === 'debrief' || D.st.over);
 // оборона эпохи III: «Тор» оператором против летящего оружия
