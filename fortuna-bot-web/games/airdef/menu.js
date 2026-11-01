@@ -1,21 +1,21 @@
 // Главное меню: слева — режимы, справа — «папка задания» (настройки режима и старт), Арсенал / Справка / Настройки /
 // Об игре — панель поверх. Фон — готовые кадры (menubg.js), пока их нет — живой бой (director.js).
-import { LANG, LANGS, setLang, tr, trIf, trDom } from './i18n.js?v=20261029a';
-import { CITY, ZONE } from './city.js?v=20261029a';
-import { AG, SAM, ERAS, LOADOUTS, DEFENSE, SAM_TYPE, AG_KIND, SAM_COST, PLANES, loadoutsOf, loadoutRole, ROLE_NAME, COMBINED, CARRIERS, MULTI, multiBudget, multiItems } from './arsenal.js?v=20261029a';
-import { combinedOk, COMBINED_NAME, levelIn, levelOfSams } from './sim/combined.js?v=20261029a';
-import { MODES } from './sim/strike.js?v=20261029a';
-import { WEATHERS } from '../drone/world.js?v=20261029a';
-import { WINTER_KEYS } from './winter-render.js?v=20261029a';
-import { LESSONS } from './training.js?v=20261029a';
-import { MODEL_CREDITS, modelUrls } from './models.js?v=20261029a';
-import { storageInfo, prefetchAll, prefetchSize, offlineOk } from './offline.js?v=20261029a';
-import { openLayoutEditor } from './layout.js?v=20261029a';
+import { LANG, LANGS, setLang, tr, trIf, trDom } from './i18n.js?v=20261029b';
+import { CITY, ZONE } from './city.js?v=20261029b';
+import { AG, SAM, ERAS, LOADOUTS, DEFENSE, SAM_TYPE, AG_KIND, SAM_COST, PLANES, loadoutsOf, loadoutRole, ROLE_NAME, COMBINED, CARRIERS, MULTI, multiBudget, multiItems } from './arsenal.js?v=20261029b';
+import { combinedOk, COMBINED_NAME, levelIn, levelOfSams } from './sim/combined.js?v=20261029b';
+import { MODES } from './sim/strike.js?v=20261029b';
+import { WEATHERS } from '../drone/world.js?v=20261029b';
+import { WINTER_KEYS } from './winter-render.js?v=20261029b';
+import { LESSONS } from './training.js?v=20261029b';
+import { MODEL_CREDITS, modelUrls } from './models.js?v=20261029b';
+import { storageInfo, prefetchAll, prefetchSize, offlineOk } from './offline.js?v=20261029b';
+import { openLayoutEditor } from './layout.js?v=20261029b';
 import { orientGate } from '../orient-warn.js?v=20261011a';
-import { ECO_SELECT, setAudioEcoMode } from '../drone/audio.js?v=20261029a';
-import { photoItems } from './photo.js?v=20261029a';
-import { guideChapters } from './guide.js?v=20261029a';
-import { iconize, ico, capsHtml } from './icons.js?v=20261029a';
+import { ECO_SELECT, setAudioEcoMode } from '../drone/audio.js?v=20261029b';
+import { photoItems } from './photo.js?v=20261029b';
+import { guideChapters } from './guide.js?v=20261029b';
+import { iconize, ico, capsHtml } from './icons.js?v=20261029b';
 
 const LOC = LANG === 'en' ? 'en-US' : 'ru-RU'; // разделитель тысяч в числах
 const GAMES = [
@@ -36,7 +36,7 @@ const TIPS = [
   tr('В обороне смотрите на «тени» зон: здание рядом с комплексом может закрыть целый сектор на малой высоте.'),
   tr('Оператору командного ЗРК: «три точки» надёжнее по манёвренной цели, «половинное спрямление» экономит энергию ракеты по быстрой цели, идущей поперёк.'),
   tr('Опытный расчёт выключает РЛС при пуске противорадиолокационной ракеты. В обороне это делаете вы — кнопка «РЛС».'),
-  tr('ТВ-головки ночью не видят: в вечерних и ночных вылетах берите лазерные бомбы или ПРР.'),
+  // «ТВ-головки ночью не видят…» — вернуть вместе с ночью (сейчас темнота боя только у ночи: main.js NIGHT; вечером совет был бы неверен)
   tr('Засада: комплекс с выключенной РЛС не виден на СПО и включается, только когда сеть ПВО сообщит о цели рядом.'),
   tr('Пушкам нужно упреждение: ведите ствол в кружок впереди самолёта, а не на сам самолёт.'),
 ];
@@ -329,6 +329,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
       ${C.shell.canFs() ? `<label class="chk"><input type="checkbox" id="sFs" ${C.shell.fsPref ? 'checked' : ''}> ${tr('полный экран')}</label>` : ''}
       ${C.shell.hintKind() ? `<label class="chk"><input type="checkbox" id="sFsHint" ${C.shell.fsHint ? 'checked' : ''}> ${C.shell.hintKind() === 'swipe' ? tr('плашка «Потяните вверх», когда панели Safari видны в бою') : tr('кнопка возврата, когда полный экран слетел в бою')}</label>` : ''}
       <label class="chk"><input type="checkbox" id="sBino" ${C.sens.bino !== false ? 'checked' : ''}> ${tr('кнопка «Бинокль» в вылете (B): вид на цель и на своё оружие, самолёт держит курс')}</label>
+      <label class="chk"><input type="checkbox" id="sBinoThr" ${C.sens.binoThreat ? 'checked' : ''}${C.sens.bino === false ? ' disabled' : ''}> ${tr('бинокль работает и при пуске ракеты по вам')}</label>
       <div class="sub">${tr('Самолёт')}</div>
       <label class="chk">${tr('ручка (тангаж и крен)')} <input type="range" id="sStick" min="0.4" max="1.8" step="0.05" value="${C.sens.stick}"> <b id="vStick">×${C.sens.stick.toFixed(2)}</b></label>
       <label class="chk"><input type="checkbox" id="sInv" ${C.sens.invert ? 'checked' : ''}> ${tr('инверсия тангажа: вверх — нос вниз (как в авиасимуляторах)')}</label>
@@ -395,7 +396,8 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
     if (e.target.id === 'sPerf') { C.perfHud = e.target.checked; ls.set('fortuna_airdef_perfhud', C.perfHud ? '1' : '0'); document.body.classList.toggle('perfhud', C.perfHud); }
     if (e.target.id === 'sFull') { C.GO.fullRes = e.target.checked; ls.set('fortuna_airdef_gfxo', JSON.stringify(C.GO)); }
     if (e.target.id === 'sInv') { C.sens.invert = e.target.checked; C.saveSens(); }
-    if (e.target.id === 'sBino') { C.sens.bino = e.target.checked; C.saveSens(); document.body.classList.toggle('nobino', !e.target.checked); }
+    if (e.target.id === 'sBino') { C.sens.bino = e.target.checked; C.saveSens(); document.body.classList.toggle('nobino', !e.target.checked); const t = C.$('sBinoThr'); if (t) t.disabled = !e.target.checked; }
+    if (e.target.id === 'sBinoThr') { C.sens.binoThreat = e.target.checked; C.saveSens(); } // бинокль не гаснет при пуске ракеты по самолёту (по умолчанию — гаснет; air.js binoThreat)
     if (e.target.id === 'sAim') { C.sens.aim = e.target.checked; C.saveSens(); }
     if (e.target.id === 'sCmBurst') { C.sens.cmBurst = e.target.checked; C.saveSens(); }
     if (e.target.id === 'sKeys') { C.sens.keys = e.target.checked; C.saveSens(); }

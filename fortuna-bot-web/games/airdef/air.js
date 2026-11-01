@@ -2,23 +2,23 @@
 // лазер), прицел точки падения, СПО и датчик пуска, метки целей, итоги. start(opts) — опции для обучения:
 // { items, pod, targets: [ключи], defense(S, rnd), invuln, spawn: {x,y,z,yaw}, noEnd, onTick(dt) }.
 /* global THREE */
-import { tr } from './i18n.js?v=20261029a';
-import { CITY, ZONE_NAME, mulberry32, riverX, objAimXZ, objDist } from './city.js?v=20261029a';
-import { strikerGeo, attachFlames } from './units-render.js?v=20261029a';
-import { planeModel, classOf, weaponMesh, pylonMesh, podModel, weaponHasModel, planeMeta, spinProps, wantWeapon } from './models.js?v=20261029a';
-import { ico, drawIco } from './icons.js?v=20261029a';
-import { applyLayout } from './layout.js?v=20261029a';
-import { clamp, makeCraft, pilotStep, fwdOf, D2R, angleBetween } from '../drone/sim/core.js?v=20261029a';
-import { DRONE } from '../drone/sim/modes.js?v=20261029a';
-import { AG, SAM, ERAS, LOADOUTS, HELI_LOADOUTS, loadoutsOf, loadoutRole } from './arsenal.js?v=20261029a';
-import { predictBomb, predictRocket } from './sim/strike.js?v=20261029a';
-import { flightModel, loadOf } from './sim/flight.js?v=20261029a';
-import { heliModel, heliStep, heliInit, heliLand, touchVerdict, tmaxAcc, isHeli } from './sim/heli.js?v=20261029a';
-import { cmOf, cmKey } from './sim/cm.js?v=20261029a';
-import { initDamage, hitZones, dmgUnpack, burnRate, hullState, dmgBrief } from './sim/damage.js?v=20261029a';
-import { planeDamageVis } from './plane-damage.js?v=20261029a';
-import { placeDefense, pickTargets } from './mission.js?v=20261029a';
-import { ZONE, newZone, zoneStep } from './sim/online.js?v=20261029a';
+import { tr } from './i18n.js?v=20261029b';
+import { CITY, ZONE_NAME, mulberry32, riverX, objAimXZ, objDist } from './city.js?v=20261029b';
+import { strikerGeo, attachFlames } from './units-render.js?v=20261029b';
+import { planeModel, classOf, weaponMesh, pylonMesh, podModel, weaponHasModel, planeMeta, spinProps, wantWeapon } from './models.js?v=20261029b';
+import { ico, drawIco } from './icons.js?v=20261029b';
+import { applyLayout } from './layout.js?v=20261029b';
+import { clamp, makeCraft, pilotStep, fwdOf, D2R, angleBetween } from '../drone/sim/core.js?v=20261029b';
+import { DRONE } from '../drone/sim/modes.js?v=20261029b';
+import { AG, SAM, ERAS, LOADOUTS, HELI_LOADOUTS, loadoutsOf, loadoutRole } from './arsenal.js?v=20261029b';
+import { predictBomb, predictRocket } from './sim/strike.js?v=20261029b';
+import { flightModel, loadOf } from './sim/flight.js?v=20261029b';
+import { heliModel, heliStep, heliInit, heliLand, touchVerdict, tmaxAcc, isHeli } from './sim/heli.js?v=20261029b';
+import { cmOf, cmKey } from './sim/cm.js?v=20261029b';
+import { initDamage, hitZones, dmgUnpack, burnRate, hullState, dmgBrief } from './sim/damage.js?v=20261029b';
+import { planeDamageVis } from './plane-damage.js?v=20261029b';
+import { placeDefense, pickTargets } from './mission.js?v=20261029b';
+import { ZONE, newZone, zoneStep } from './sim/online.js?v=20261029b';
 
 export function createAir(C) {
   const { $, city, scene, camera, renderer, snd, IS_TOUCH, P, W } = C;
@@ -1050,7 +1050,8 @@ export function createAir(C) {
   // кнопка #tBino / B: выкл → цель → оружие (пока в полёте; за разрывом — следующее) → выкл. Цель — захват контейнера, иначе ближайшая цель задания;
   // приближение — цель ≈ 1/6 высоты кадра (у оператора ЗРК — ¼; Mark: «чуть меньший масштаб»). Автопилот — курс и высота на момент включения, не ниже
   // рельефа впереди + 300 м, у границы района — к центру (planeFly). Выход — кнопкой, ручкой / крестовиной / клавишами / пальцем по экрану и сам —
-  // при пуске ракеты по самолёту. Выключается в настройках («Экран и кнопки»: C.sens.bino) — тогда кнопки нет
+  // при пуске ракеты по самолёту (настройка C.sens.binoThreat — не выключать, Mark 2026-10-29; по умолчанию выключает). Выключается в настройках
+  // («Экран и кнопки»: C.sens.bino) — тогда кнопки нет
   const bino = { on: false, mode: 'tgt', w: null, ap: { yaw: 0, alt: 0 }, fov: 30, why: '' }, BT = V3();
   const binoOk = () => C.sens.bino !== false && !craft.heli && !craft.dead && !game.over;
   function binoTgt() {
@@ -1060,7 +1061,7 @@ export function createAir(C) {
   }
   const binoWpns = () => C.S.wpns.filter((w) => !w.dead && w.owner === craft && weaponHasModel(w.key, w.W));
   // ракета летит именно в самолёт (датчик пуска или ЗУР с целью — он): плашка «ПУСК РАКЕТЫ» бывает и от пусков по своим бомбам («Тор», «Панцирь»)
-  const binoThreat = (mw) => (mw && mw.length > 0) || C.S.sams.some((m) => !m.dead && m.target === craft);
+  const binoThreat = (mw) => !C.sens.binoThreat && ((mw && mw.length > 0) || C.S.sams.some((m) => !m.dead && m.target === craft));
   function binoSet(mode) {
     bino.mode = mode; wc.obj = null; wc.init = false; wc.endT = 0;
     if (mode === 'wpn') { const ws = binoWpns(); bino.w = ws.find((w) => w.id > (bino.w ? bino.w.id : -1)) || ws[0] || null; wc.obj = bino.w; wc.kind = 'w'; }

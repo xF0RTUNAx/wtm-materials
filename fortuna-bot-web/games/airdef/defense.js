@@ -9,20 +9,20 @@
 // start(opts) — для обучения: { budget, waves, units: [[ключ, x, z, roof]], op: индекс комплекса, plan: false, wave(raid, rnd, n),
 //   noEnd, hold (волна не кончается сама — урок подаёт цели), onTick(dt), on: { place, waveStart, waveEnd, designate, track, launch, planeDown, arm, radar } }.
 /* global THREE */
-import { tr, trIf } from './i18n.js?v=20261029a';
-import { trFmt } from './i18n-fmt.js?v=20261029a';
-import { CITY, mulberry32 } from './city.js?v=20261029a';
-import { weaponHasModel } from './models.js?v=20261029a';
-import { LNCH, lnchToWorld } from './launchers.js?v=20261029a';
-import { ico, iconize, capsHtml, tgtRowHtml, tgtLabel, tgtChoices } from './icons.js?v=20261029a';
-import { SAM, SAM_COST, SAM_TYPE, AG, MULTI, CARRIERS, THREAT, COMBINED, DEFENSE, multiBudget, multiItems, threatOf, multiCap, multiSamCost, multiSamCap, multiSamOk, multiSamFree } from './arsenal.js?v=20261029a';
-import { samClass, samCost, samCostFor, LIMIT1 } from './sim/online.js?v=20261029a';
-import { TEAM_NAME, TBM_RULE, TBM_EXCL, tbmOf, tbmCheck, sumN } from './sim/online-multi.js?v=20261029a';
+import { tr, trIf } from './i18n.js?v=20261029b';
+import { trFmt } from './i18n-fmt.js?v=20261029b';
+import { CITY, mulberry32 } from './city.js?v=20261029b';
+import { weaponHasModel } from './models.js?v=20261029b';
+import { LNCH, lnchToWorld, trainable } from './launchers.js?v=20261029b';
+import { ico, iconize, capsHtml, tgtRowHtml, tgtLabel, tgtChoices } from './icons.js?v=20261029b';
+import { SAM, SAM_COST, SAM_TYPE, AG, MULTI, CARRIERS, THREAT, COMBINED, DEFENSE, multiBudget, multiItems, threatOf, multiCap, multiSamCost, multiSamCap, multiSamOk, multiSamFree } from './arsenal.js?v=20261029b';
+import { samClass, samCost, samCostFor, LIMIT1 } from './sim/online.js?v=20261029b';
+import { TEAM_NAME, TBM_RULE, TBM_EXCL, tbmOf, tbmCheck, sumN } from './sim/online-multi.js?v=20261029b';
 const esc = (x) => String(x ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-import { clamp, D2R, angleBetween, fwdOf } from '../drone/sim/core.js?v=20261029a';
-import { TGT_CATS, tgtCat } from './sim/strike.js?v=20261029a';
-import { freeGround, buildingAt, roofOk, pickTargets, placeDefense } from './mission.js?v=20261029a';
-import { createCombined, combinedOk, COMBINED_NAME, levelIn, levelOfPlan, levelOfSams, samKnown, planDefaults, unitCfg, carrierOf, CARRIER_WAIT, LAUNCH_R, LIM_ON } from './sim/combined.js?v=20261029a';
+import { clamp, D2R, angleBetween, fwdOf } from '../drone/sim/core.js?v=20261029b';
+import { TGT_CATS, tgtCat } from './sim/strike.js?v=20261029b';
+import { freeGround, buildingAt, roofOk, pickTargets, placeDefense } from './mission.js?v=20261029b';
+import { createCombined, combinedOk, COMBINED_NAME, levelIn, levelOfPlan, levelOfSams, samKnown, planDefaults, unitCfg, carrierOf, CARRIER_WAIT, LAUNCH_R, LIM_ON } from './sim/combined.js?v=20261029b';
 
 export const WAVES = 6;
 const WAVE_N = [3, 4, 6, 7, 9, 11];
@@ -1187,6 +1187,12 @@ export function createDefense(C) {
   // (по одной ракете, с задержкой реакции), на перезарядке и с остывающей пусковой не пробует (в онлайне каждый отказ — сообщение серверу);
   // пушка и ПЗРК — расчёт сам доворачивает прицел с запаздыванием и дрожанием, огонь — когда ствол около точки упреждения
   const AO = { t: 0, launchT: 0 };
+  // поворотная пусковая навелась на сопровождаемую цель (онлайн: доворот считает сервер, угол lyaw — из снимка; порог — как у сервера, с запасом)
+  function lnAimed(u) {
+    const LN = LNCH[u.key], t = u.track; if (!LN || !t || !trainable(LN)) return true;
+    TMP.copy(t.pos).sub(u.pos); let d = Math.atan2(-TMP.x, -TMP.z) - u.yaw - u.lyaw; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI;
+    return Math.abs(d) < 0.15;
+  }
   function autoOp(dt) {
     const u = st.op, S = u.S; if (!u || u.dead) return;
     const f = u.tgt, d = (a) => a.pos.distanceTo(u.pos), // баллистику пускают и раньше зоны — в упреждённую точку (launch решает сам)
@@ -1207,9 +1213,13 @@ export function createDefense(C) {
     }
     if (tgt && (!u.desig || u.desig.dead || !vis.includes(u.desig) || (zone(tgt) && !zone(u.desig)))) designate(tgt);
     const up = !LNCH[u.key] || !LNCH[u.key].erect || u.lel >= LNCH[u.key].el - 0.01; // С-300 / С-400: пакет ещё поднимается — не пробовать (угол приходит и с сервера)
-    if (u.track && !(u.reloadT > 0) && u.ammo > 0 && !(u.cool > 0) && up && zone(u.track)) { // у сетевого клиента cool нет — undefined
+    // онлайн (Mark 2026-11-01: «ПВО делают пуски впустую»): пуск решает сервер, а клиент считал просьбу пуском — «Авто: пуск» без ракеты и отказы
+    // «пусковая разворачивается / не готова» каждые 0,6 с (лог 2026-10-29: десятки подряд). Теперь: поворотная пусковая по углу из снимка (lyaw)
+    // ещё не на цели — не просить; попросил — ракету покажет снимок сервера, отказ — его сообщение; следующая просьба — через 2 с
+    const net = !!st.net, aimed = !net || lnAimed(u);
+    if (u.track && !(u.reloadT > 0) && u.ammo > 0 && !(u.cool > 0) && up && aimed && zone(u.track)) { // у сетевого клиента cool нет — undefined
       const inAir = C.S.sams.filter((m) => !m.dead && m.unit === u && m.target === u.track).length;
-      if (inAir < 1 && (AO.launchT += dt) > 0.6) { const why = C.S.launch(u); if (!why) { opSay(tr('Авто: пуск')); on('launch', u); } AO.launchT = why ? -0.6 : 0; } // отказ — следующая попытка через 1,2 с
+      if (inAir < 1 && (AO.launchT += dt) > 0.6) { const why = C.S.launch(u); if (!why && !net) { opSay(tr('Авто: пуск')); on('launch', u); } AO.launchT = why ? -0.6 : net ? -1.4 : 0; } // отказ — следующая попытка через 1,2 с
     } else AO.launchT = 0;
   }
   function opCamera(dt) {
