@@ -19,7 +19,7 @@ const LAYOUTS = [
 ];
 const H169 = 9 / 16 * 932 / 430; // высота картинки 16:9 в % экрана на 1 % его ширины
 const CSS = `
-body.mmOn #menu { opacity: 0; pointer-events: none; transition: opacity .35s; }
+body.mmOn #menu, body.mmOn #mute { opacity: 0; pointer-events: none; transition: opacity .35s; } /* кнопка звука в меню — поверх меню (слой 31): на поиске её тоже убрать (Mark 2026-11-02) */
 #mmScr { position: fixed; inset: 0; z-index: 33; display: none; color: #e9e6dc; font-family: 'Golos Text', -apple-system, 'Segoe UI', sans-serif; }
 #mmScr.on { display: block; }
 #mmScr .dim { position: absolute; inset: 0; background: #0a0d08; }
@@ -56,7 +56,7 @@ export function createMM(C, onCancel) {
   if (document.body) document.body.appendChild(el);
   const $ = (s) => el.querySelector(s), stage = $('.stage'), tm = $('.tm'), info = $('.info'), mode = $('.mode');
   const RM = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches, can = !RM && !!el.animate;
-  const menuEl = document.getElementById ? document.getElementById('menu') : null;
+  const menuEl = document.getElementById ? document.getElementById('menu') : null, muteEl = document.getElementById ? document.getElementById('mute') : null;
   let on = false, t0 = 0, anims = [], pingT = 0, tick = 0, hideT = 0;
   $('.cx').onclick = () => { snd.cancelClick ? snd.cancelClick() : snd.click(); onCancel(); };
   // картинки — заранее и раскодированные: следующая раскладка выбирается сразу и грузится в простое меню (иначе техника «выскакивает» поздно)
@@ -69,8 +69,8 @@ export function createMM(C, onCancel) {
   const sceneOf = (L) => L.s.map(([f, x, y, w, b, h, d, fl], i) => `<div class="it" data-d="${d}" data-i="${i}" data-f="${f}" style="left:${x}%;top:${y}%;width:${w}%;opacity:${can ? 0 : 1};` +
     `transform:translate(-50%,-50%)${fl === 'f' ? ' scaleX(-1)' : ''};filter:brightness(${b}) saturate(${(1 - h * 0.35).toFixed(2)}) blur(${(h * 0.12).toFixed(3)}cqw)${h < 0.3 ? ' drop-shadow(0 1.6cqw 1.4cqw rgba(0,0,0,.55))' : ''}"><img src="${url(f)}" alt="" decoding="async"></div>`).join('');
   const clock = () => { const s = Math.max(0, Math.floor((performance.now() - t0) / 1000)); tm.textContent = Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
-  // меню уходит и возвращается плавно в обе стороны (переход — на время смены, потом снимается)
-  const menuFade = () => { if (!menuEl) return; menuEl.style.transition = 'opacity .5s ease'; clearTimeout(menuFade.t); menuFade.t = setTimeout(() => { menuEl.style.transition = ''; }, 650); };
+  // меню и кнопка звука уходят и возвращаются плавно в обе стороны (переход — на время смены, потом снимается)
+  const menuFade = () => { const els = [menuEl, muteEl].filter(Boolean); if (!els.length) return; for (const e of els) e.style.transition = 'opacity .5s ease'; clearTimeout(menuFade.t); menuFade.t = setTimeout(() => { for (const e of els) e.style.transition = ''; }, 650); };
   const ui = () => ['.ring', '.info', '.mode', '.cx'].map($);
   function done() { el.classList.remove('on'); anims.forEach((a) => a.cancel()); anims = []; if (el.getAnimations) for (const x of [el, ...el.querySelectorAll('*')]) x.getAnimations().forEach((a) => a.cancel()); stage.innerHTML = ''; hideT = 0; }
   function show(o) { // o: { t0 — начало поиска (performance.now), mode — строка режима, info — строка под кольцом (HTML: <b> — цифры) }
