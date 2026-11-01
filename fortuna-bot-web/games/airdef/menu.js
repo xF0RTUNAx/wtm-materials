@@ -1,21 +1,21 @@
 // Главное меню: слева — режимы, справа — «папка задания» (настройки режима и старт), Арсенал / Справка / Настройки /
 // Об игре — панель поверх. Фон — готовые кадры (menubg.js), пока их нет — живой бой (director.js).
-import { LANG, LANGS, setLang, tr, trIf, trDom } from './i18n.js?v=20261029b';
-import { CITY, ZONE } from './city.js?v=20261029b';
-import { AG, SAM, ERAS, LOADOUTS, DEFENSE, SAM_TYPE, AG_KIND, SAM_COST, PLANES, loadoutsOf, loadoutRole, loadoutTargets, ROLE_NAME, COMBINED, CARRIERS, MULTI, multiBudget, multiItems } from './arsenal.js?v=20261029b';
-import { combinedOk, COMBINED_NAME, levelIn, levelOfSams } from './sim/combined.js?v=20261029b';
-import { MODES } from './sim/strike.js?v=20261029b';
-import { WEATHERS } from '../drone/world.js?v=20261029b';
-import { WINTER_KEYS } from './winter-render.js?v=20261029b';
-import { LESSONS } from './training.js?v=20261029b';
-import { MODEL_CREDITS, modelUrls } from './models.js?v=20261029b';
-import { storageInfo, prefetchAll, prefetchSize, offlineOk } from './offline.js?v=20261029b';
-import { openLayoutEditor } from './layout.js?v=20261029b';
+import { LANG, LANGS, setLang, tr, trIf, trDom } from './i18n.js?v=20261101a';
+import { CITY, ZONE } from './city.js?v=20261101a';
+import { AG, SAM, ERAS, LOADOUTS, DEFENSE, SAM_TYPE, AG_KIND, SAM_COST, PLANES, loadoutsOf, loadoutRole, loadoutTargets, ROLE_NAME, COMBINED, CARRIERS, MULTI, multiBudget, multiItems } from './arsenal.js?v=20261101a';
+import { combinedOk, COMBINED_NAME, levelIn, levelOfSams } from './sim/combined.js?v=20261101a';
+import { MODES } from './sim/strike.js?v=20261101a';
+import { WEATHERS } from '../drone/world.js?v=20261101a';
+import { WINTER_KEYS } from './winter-render.js?v=20261101a';
+import { LESSONS } from './training.js?v=20261101a';
+import { MODEL_CREDITS, modelUrls } from './models.js?v=20261101a';
+import { storageInfo, prefetchAll, prefetchSize, offlineOk } from './offline.js?v=20261101a';
+import { openLayoutEditor } from './layout.js?v=20261101a';
 import { orientGate } from '../orient-warn.js?v=20261011a';
-import { ECO_SELECT, setAudioEcoMode } from '../drone/audio.js?v=20261029b';
-import { photoItems } from './photo.js?v=20261029b';
-import { guideChapters } from './guide.js?v=20261029b';
-import { iconize, ico, capsHtml } from './icons.js?v=20261029b';
+import { ECO_SELECT, setAudioEcoMode } from '../drone/audio.js?v=20261101a';
+import { photoItems } from './photo.js?v=20261101a';
+import { guideChapters } from './guide.js?v=20261101a';
+import { iconize, ico, capsHtml } from './icons.js?v=20261101a';
 
 const LOC = LANG === 'en' ? 'en-US' : 'ru-RU'; // разделитель тысяч в числах
 const GAMES = [
@@ -367,6 +367,8 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
         ['https://freesound.org/people/qubodup/sounds/211617/', 'Far Away Rocket Launch', 'qubodup', 'CC0'],
         ['https://freesound.org/people/Fenodyrie/sounds/565911/', 'Flock of Crows', 'Fenodyrie', 'CC0'],
         ['https://freesound.org/people/invadium/sounds/824805/', 'Cruise missiles interception and fly-by', 'Invadium', 'CC0'],
+        ['https://freesound.org/people/SamsterBirdies/sounds/539957/', 'Sonar Ping', 'SamsterBirdies', 'CC0'],
+        ['https://freesound.org/people/Kolombooo/sounds/629020/', 'Button click', 'Kolombooo', 'CC0'],
         ['https://www.youtube.com/watch?v=kAVnPGU8CYw', 'F16 Fighter Jet Engine Idle', 'Sound Effect Database', tr('лицензия куплена')],
         ['https://www.youtube.com/watch?v=8VIxcncNPVA', 'Flares Sound Effect', 'Sound Effect Database', tr('лицензия куплена')],
       ].map(([u, t, a, l]) => `${A(u, `«${t}»`)} — ${a} (${l})`).join(' · ')])}</p>`;
@@ -434,7 +436,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
   setInterval(() => { if (C.state === 'menu' && (tipT += 1) > 12) { tipT = 0; showTip(true); } }, 1000);
   $('startBtn').onclick = () => orientGate(() => { if (setup.game === 'online') { C.online.primary(); return; }
     if (C.realBlock && setup.game === 'air') { snd.deny && snd.deny(); C.research.open(); return; } // «Реализм»: нет купленной подвески — в «Исследования»
-    setup.evd = false; C.lastGame = setup.game; C.start(setup.game); }); // на телефоне вертикально — сначала совет повернуть
+    setup.evd = false; C.lastGame = setup.game; C.doors.run(() => C.start(setup.game)); }); // на телефоне вертикально — сначала совет повернуть; вход в бой — за створками
   // опыт и серебро над режимами (тап — «Исследования»); гость — пусто (вход — в строке аккаунта выше)
   function renderPg() {
     const P = C.progress && C.progress.P; if (!P) { $('pgBar').innerHTML = ''; return; }

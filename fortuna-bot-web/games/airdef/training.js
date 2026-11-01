@@ -2,12 +2,12 @@
 // подвеска пополняется). На каждом шаге — подсказка; кнопка «?» ставит игру на паузу и объясняет комплекс или оружие.
 // Урок сам запускает режим air.js или defense.js со своими опциями и следит за шагами через tick(T).
 /* global THREE */
-import { SAM, AG, SAM_TYPE, AG_KIND, THREAT, HELI_LOADOUTS, multiSamCost, eqOf } from './arsenal.js?v=20261029b';
-import { samKnown } from './sim/combined.js?v=20261029b';
-import { spotNear, freeGround } from './mission.js?v=20261029b';
-import { riverX } from './city.js?v=20261029b';
-import { iconize } from './icons.js?v=20261029b';
-import { tr } from './i18n.js?v=20261029b';
+import { SAM, AG, SAM_TYPE, AG_KIND, THREAT, HELI_LOADOUTS, multiSamCost, eqOf } from './arsenal.js?v=20261101a';
+import { samKnown } from './sim/combined.js?v=20261101a';
+import { spotNear, freeGround } from './mission.js?v=20261101a';
+import { riverX } from './city.js?v=20261101a';
+import { iconize } from './icons.js?v=20261101a';
+import { tr } from './i18n.js?v=20261101a';
 
 const K = (k) => `<kbd>${k}</kbd>`;
 // подписи управления: ПК или телефон
@@ -965,7 +965,7 @@ export function createTraining(C, ctrls) {
   $('lessonX').addEventListener('click', () => C.closeLesson());
   $('lesson').addEventListener('click', (e) => { if (e.target === $('lesson')) C.closeLesson(); });
   $('lessonAgain').addEventListener('click', () => { C.onLessonClose = null; extraBtns(false, false); C.closeLesson(); run(); });
-  $('lessonMenu').addEventListener('click', () => { C.onLessonClose = null; extraBtns(false, false); C.closeLesson(); C.toMenu(); });
+  $('lessonMenu').addEventListener('click', () => { C.onLessonClose = null; extraBtns(false, false); C.closeLesson(); C.doors.run(() => C.toMenu()); });
   // свернули вкладку / повернули телефон — пауза; в уроке (проиграть нельзя) её снимает первое касание мимо кнопок
   document.addEventListener('pointerdown', (e) => {
     if (C.ctrl !== api || !C.paused || C.ended || !$('pauseScr').classList.contains('on') || $('lesson').classList.contains('on') || document.body.classList.contains('portrait')) return;

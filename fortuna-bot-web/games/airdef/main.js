@@ -8,52 +8,53 @@
 // Параметры адреса: ?gfx=low|medium|high|ultra, ?weather=…, ?touch=1, ?test=1 (window.__a), ?go=air|defense — сразу в бой,
 // ?view=x,y,z,курс°,тангаж° — неподвижная камера (снимки города).
 /* global THREE */
-import { localizeTree } from './lang/data.js?v=20261029b'; // язык: названия и описания из данных (arsenal, flight, heli) — до progress.js, который строит по ним дерево
-import { TREE, BRANCHES } from './progress.js?v=20261029b';
-import { trDom, tr, trIf, LANG, askLang } from './i18n.js?v=20261029b';
-import { ktxInit, ktxRestore, ktxBusy } from './ktx.js?v=20261029b';
-import { buildCity, CITY, SITES, bldMask } from './city.js?v=20261029b';
-import { buildWinter } from './map-winter.js?v=20261029b';
-import { WINTER_KEYS } from './winter-render.js?v=20261029b';
-import { buildAutumn } from './map-autumn.js?v=20261029b';
-import { AUTUMN_KEYS } from './autumn-render.js?v=20261029b';
-import { buildCityScene, updateCityScene, UPX, ENV, texStats, freezeTree, SITE_ANIMS, farFlat } from './city-render.js?v=20261029b';
-import { mergeLocal } from './merge.js?v=20261029b';
-import { createPipeline } from '../drone/post.js?v=20261029b';
-import { setGround, D2R, clamp, fwdOf } from '../drone/sim/core.js?v=20261029b';
-import { WEATHERS, FXU, FX_LAYER, FX_ADD_LAYER } from '../drone/world.js?v=20261029b';
-import { AG, SAM, LOADOUTS, DEFENSE, raidPlane } from './arsenal.js?v=20261029b';
-import { createStrike, MODES } from './sim/strike.js?v=20261029b';
-import { createRaid } from './sim/raid.js?v=20261029b';
-import { POD, RAIL, podLift } from './sim/combined.js?v=20261029b';
-import { unitModel, weaponGeo, samMissileMesh, mountWpnFlame, narMesh, flameOf, wpnNozzle, strikerGeo, createFx, attachFlames } from './units-render.js?v=20261029b';
-import { slotCount, LNCH, lnchToWorld, cylPose } from './launchers.js?v=20261029b';
-import { spinProps as spinRotors, spinSails, modelStats, loadModels, planeModel, heliModel, classOfRole, weaponMesh, pylonMesh, unitModelGlb, unitMissileGlb, samNose, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, wantUnitNear, bldModel, wantBuildings, wantModel, wantWeapon, weaponPending, anyModel, setWings, glideWings, planeMeta } from './models.js?v=20261029b';
-import { planeDamageVis, updateDebris, clearDebris } from './plane-damage.js?v=20261029b';
-import { createSound } from './sound.js?v=20261029b';
-import { ico, iconize } from './icons.js?v=20261029b';
-import { createAir } from './air.js?v=20261029b';
-import { createDefense } from './defense.js?v=20261029b';
-import { createDirector } from './director.js?v=20261029b';
-import { createMenuBg } from './menubg.js?v=20261029b';
-import { createOnline } from './online.js?v=20261029b';
-import { createProgress } from './progress-net.js?v=20261029b';
-import { createDifficulty } from './difficulty.js?v=20261029b';
-import { createResearch } from './research.js?v=20261029b';
-import { createEvent } from './event.js?v=20261029b';
-import { createAccount } from './account-ui.js?v=20261029b';
-import { createRating } from './rating-ui.js?v=20261029b';
-import { createShop } from './shop-ui.js?v=20261029b';
-import { createEndScreen } from './endscr.js?v=20261029b';
-import { createHints } from './hints.js?v=20261029b';
-import { motorOf, makeFlame } from './plume.js?v=20261029b';
-import { createShell } from './shell.js?v=20261029b';
-import { createCrashRep } from './crashrep.js?v=20261029b';
-import { createTraining, LESSONS } from './training.js?v=20261029b';
-import { createPhoto } from './photo.js?v=20261029b';
-import { createMenu } from './menu.js?v=20261029b';
-import { registerSW } from './offline.js?v=20261029b';
-import { detectGpu, sharpFor, sharpCeil } from './gpu.js?v=20261029b';
+import { localizeTree } from './lang/data.js?v=20261101a'; // язык: названия и описания из данных (arsenal, flight, heli) — до progress.js, который строит по ним дерево
+import { TREE, BRANCHES } from './progress.js?v=20261101a';
+import { trDom, tr, trIf, LANG, askLang } from './i18n.js?v=20261101a';
+import { ktxInit, ktxRestore, ktxBusy } from './ktx.js?v=20261101a';
+import { buildCity, CITY, SITES, bldMask } from './city.js?v=20261101a';
+import { buildWinter } from './map-winter.js?v=20261101a';
+import { WINTER_KEYS } from './winter-render.js?v=20261101a';
+import { buildAutumn } from './map-autumn.js?v=20261101a';
+import { AUTUMN_KEYS } from './autumn-render.js?v=20261101a';
+import { buildCityScene, updateCityScene, UPX, ENV, texStats, freezeTree, SITE_ANIMS, farFlat } from './city-render.js?v=20261101a';
+import { mergeLocal } from './merge.js?v=20261101a';
+import { createPipeline } from '../drone/post.js?v=20261101a';
+import { setGround, D2R, clamp, fwdOf } from '../drone/sim/core.js?v=20261101a';
+import { WEATHERS, FXU, FX_LAYER, FX_ADD_LAYER } from '../drone/world.js?v=20261101a';
+import { AG, SAM, LOADOUTS, DEFENSE, raidPlane } from './arsenal.js?v=20261101a';
+import { createStrike, MODES } from './sim/strike.js?v=20261101a';
+import { createRaid } from './sim/raid.js?v=20261101a';
+import { POD, RAIL, podLift } from './sim/combined.js?v=20261101a';
+import { unitModel, weaponGeo, samMissileMesh, mountWpnFlame, narMesh, flameOf, wpnNozzle, strikerGeo, createFx, attachFlames } from './units-render.js?v=20261101a';
+import { slotCount, LNCH, lnchToWorld, cylPose } from './launchers.js?v=20261101a';
+import { spinProps as spinRotors, spinSails, modelStats, loadModels, planeModel, heliModel, classOfRole, weaponMesh, pylonMesh, unitModelGlb, unitMissileGlb, samNose, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, wantUnitNear, bldModel, wantBuildings, wantModel, wantWeapon, weaponPending, anyModel, setWings, glideWings, planeMeta } from './models.js?v=20261101a';
+import { planeDamageVis, updateDebris, clearDebris } from './plane-damage.js?v=20261101a';
+import { createSound } from './sound.js?v=20261101a';
+import { ico, iconize } from './icons.js?v=20261101a';
+import { createAir } from './air.js?v=20261101a';
+import { createDefense } from './defense.js?v=20261101a';
+import { createDirector } from './director.js?v=20261101a';
+import { createMenuBg } from './menubg.js?v=20261101a';
+import { createOnline } from './online.js?v=20261101a';
+import { createProgress } from './progress-net.js?v=20261101a';
+import { createDifficulty } from './difficulty.js?v=20261101a';
+import { createResearch } from './research.js?v=20261101a';
+import { createEvent } from './event.js?v=20261101a';
+import { createAccount } from './account-ui.js?v=20261101a';
+import { createRating } from './rating-ui.js?v=20261101a';
+import { createShop } from './shop-ui.js?v=20261101a';
+import { createEndScreen } from './endscr.js?v=20261101a';
+import { createHints } from './hints.js?v=20261101a';
+import { motorOf, makeFlame, setPuffCam } from './plume.js?v=20261101a';
+import { createShell } from './shell.js?v=20261101a';
+import { createDoors } from './doors.js?v=20261101a';
+import { createCrashRep } from './crashrep.js?v=20261101a';
+import { createTraining, LESSONS } from './training.js?v=20261101a';
+import { createPhoto } from './photo.js?v=20261101a';
+import { createMenu } from './menu.js?v=20261101a';
+import { registerSW } from './offline.js?v=20261101a';
+import { detectGpu, sharpFor, sharpCeil } from './gpu.js?v=20261101a';
 import { orientGate } from '../orient-warn.js?v=20261011a';
 
 const $ = (id) => document.getElementById(id);
@@ -981,6 +982,10 @@ if (Q.get('prtest') === '1') {
 C.setFov = (f) => { if (Math.abs(camera.fov - f) < 0.01) return; camera.fov = f; resize(); };
 // Telegram: кнопки поверх страницы — отступ сверху
 C.shell = createShell(C, { IS_TOUCH, ls });
+// створки при входе в бой и выходе в меню (doors.js): стиль — случайно на каждый переход; картинки — заранее, через 4 с после загрузки
+C.doors = createDoors(); setTimeout(() => C.doors.preload(), 4000);
+setPuffCam(camera); // клубы следов ракет: вдали от камеры — реже (plume.js)
+C.doors.gate = () => C.assetsDone === true; // после перезагрузки под карту створки расходятся, когда модели и текстуры пришли (не дольше 8 с)
 C.crash = createCrashRep(C); // прошлый бой оборвался без выхода (вылет вкладки) — после меню предложим отправить отчёт
 document.body.classList.toggle('nopad', !C.sens.pad); // крестовина выключена в настройках
 document.body.classList.toggle('nobino', C.sens.bino === false); // «Бинокль» вылета выключен в настройках
@@ -991,10 +996,10 @@ C.start = function (game) {
   if (game === 'online') { C.online.again(); return; } // «Ещё раз» после онлайн-боя — снова в поиск
   // самолёт ↔ вертолёт: у них разные карты (город / «Туманная топь») — карта строится при загрузке: перезагрузка сразу в вылет
   // «Ещё раз» после потери контекста WebGL (текстуры моделей не вернуть): новый бой — с перезагрузкой, адрес страницы тот же (карта, вертолёт — как были)
-  if (C.reloadAfterBattle && (game === 'air' || game === 'defense' || game === 'training')) { ls.set('fortuna_airdef_setup', JSON.stringify(C.setup)); const u = new URL(location.href); u.searchParams.set('go', game); u.searchParams.set('weather', W_KEY); if (game === 'air' && MAP === 'autumn') u.searchParams.set('hlo', C.setup.lo); /* hlo и weather при загрузке из адреса убраны — вернуть: вертолёт «Топи» и её погода */ location.replace(u.href); return; }
+  if (C.reloadAfterBattle && (game === 'air' || game === 'defense' || game === 'training')) { ls.set('fortuna_airdef_setup', JSON.stringify(C.setup)); C.doors.carry('go'); const u = new URL(location.href); u.searchParams.set('go', game); u.searchParams.set('weather', W_KEY); if (game === 'air' && MAP === 'autumn') u.searchParams.set('hlo', C.setup.lo); /* hlo и weather при загрузке из адреса убраны — вернуть: вертолёт «Топи» и её погода */ location.replace(u.href); return; }
   const contOp = game === 'air' && C.op && C.op.next; // второй вылет «Операции» — на той же карте (цели и уцелевшая ПВО — оттуда)
   if ((game === 'air' || game === 'defense' || game === 'training') && !Q.get('map') && !contOp && wantMap(game, C.setup.pmap, C.setup.era, C.setup.lo, C.setup.evd, C.setup.tside) !== MAP) {
-    ls.set('fortuna_airdef_setup', JSON.stringify(C.setup)); const u = new URL(location.href); u.searchParams.set('go', game); u.searchParams.delete('heli'); u.searchParams.delete('hlo'); u.searchParams.delete('weather'); location.replace(u.href); return;
+    ls.set('fortuna_airdef_setup', JSON.stringify(C.setup)); C.doors.carry('go'); /* створки закрыты — новая страница начнётся с них */ const u = new URL(location.href); u.searchParams.set('go', game); u.searchParams.delete('heli'); u.searchParams.delete('hlo'); u.searchParams.delete('weather'); location.replace(u.href); return;
   }
   if ((game === 'air' || game === 'defense') && RAND_MAPS.includes(MAP) && !contOp && wantMap(game, C.setup.pmap, C.setup.era, C.setup.lo, C.setup.evd, C.setup.tside) === MAP) rerollMap(); // следующему бою — новая случайная карта
   snd.unlock();
@@ -1010,7 +1015,7 @@ C.start = function (game) {
   resize();
 };
 C.toMenu = function () {
-  if (C.reloadAfterBattle) { location.reload(); return; } // контекст WebGL терялся в онлайн-бою — текстуры моделей вернёт только перезагрузка
+  if (C.reloadAfterBattle) { C.doors.carry('menu'); location.reload(); return; } // контекст WebGL терялся в онлайн-бою — текстуры моделей вернёт только перезагрузка
   C.op = null; // «Операция» прервана
   C.endScr.reset();
   if (C.ctrl && C.ctrl.stop) C.ctrl.stop();
@@ -1055,12 +1060,12 @@ C.openLesson = function (title, body, sub) {
 C.closeLesson = function () { $('lesson').classList.remove('on'); C.paused = document.body.classList.contains('lsnOpen'); /* панель «Урок» открыта — пауза остаётся */ if (C.onLessonClose) { const f = C.onLessonClose; C.onLessonClose = null; f(); } };
 $('lessonClose').onclick = () => C.closeLesson();
 $('resumeBtn').onclick = () => C.togglePause();
-$('pauseExit').onclick = () => C.toMenu();
+$('pauseExit').onclick = () => C.doors.run(() => C.toMenu());
 $('pauseEnd').onclick = () => { C.togglePause(); if (C.ctrl.finish) C.ctrl.finish(tr('Бой завершён досрочно')); };
 $('pause').onclick = () => C.togglePause();
-$('againBtn').onclick = () => orientGate(() => { C.ended = false; C.start(C.lastGame || 'air'); }, IS_TOUCH);
-$('closeBtn').onclick = () => { C.ended = false; C.toMenu(); };
-$('exit').onclick = () => C.toMenu();
+$('againBtn').onclick = () => orientGate(() => C.doors.run(() => { C.ended = false; C.start(C.lastGame || 'air'); }), IS_TOUCH);
+$('closeBtn').onclick = () => C.doors.run(() => { C.ended = false; C.toMenu(); });
+$('exit').onclick = () => C.doors.run(() => C.toMenu());
 // кнопки-иконки (games/airdef/icons.js): прежняя надпись — во всплывающей подсказке и для экранного диктора
 const ICO = { tBino: ['bino', tr('Бинокль: цель и своё оружие (B)')], tFlare: ['flares', tr('Ловушки')], tMap: ['map', tr('Карта')], tLock: ['target', tr('Цель')], tAuto: ['auto', tr('Авто — помощник')], tLook: ['camera', tr('Обзор — свободная камера')], tCam: ['camera', tr('Камера: следующий союзник')],
   tHelp: ['help', tr('Нужна помощь')], tPop: ['popUp', tr('Подскок')], opMap: ['map', tr('Карта')], opAuto: ['auto', tr('Авто — расчёт сам')], opCam: ['camera', tr('Камера')], opBino: ['bino', tr('Бинокль')], opRadar: ['radar', tr('РЛС: включить / выключить')],
@@ -1238,7 +1243,7 @@ function warmNow() {
 const pendingObj = [];
 registerSW(); // файлы игры — из кэша устройства (только на сайте; offline.js)
 // замер частей кадра на телефоне (?probe=1): таблица мс поверх игры через 12 с боя (probe.js)
-if (Q.get('probe') === '1') { C.perfScale = perf.scale; C.probeMap = MAP; import('./probe.js?v=20261029b').then((m) => m.startProbe(C, { renderer, scene, pipe })); }
+if (Q.get('probe') === '1') { C.perfScale = perf.scale; C.probeMap = MAP; import('./probe.js?v=20261101a').then((m) => m.startProbe(C, { renderer, scene, pipe })); }
 loadModels(new URL('./', import.meta.url).href, (name) => {
   warmSoon(); // шейдеры пришедшей модели — сразу, а не когда она впервые попадёт в кадр
   if (C.G && C.G.attachBld && bldModel(name)) C.G.attachBld(name, bldModel(name)); // дома города вблизи (и цеха — та же модель, что у целей)
@@ -1249,7 +1254,7 @@ loadModels(new URL('./', import.meta.url).href, (name) => {
   if (C.ctrl && C.ctrl.modelsReady) C.ctrl.modelsReady();
 });
 // запуск по этапам: между ними экран успевает показать, что сейчас строится (полоса и подпись)
-const ldStep = (txt, k) => new Promise((r) => { const t = $('ldTxt'), b = $('ldBar'); if (t) t.textContent = txt; if (b) b.style.width = Math.round(k * 100) + '%'; setTimeout(r, 30); });
+const ldStep = (txt, k) => new Promise((r) => { const t = $('ldTxt'), b = $('ldBar'); if (t) t.textContent = txt; C.doors.note(`${txt} ${Math.round(k * 100)} %`); /* створки с прошлой страницы — подпись на шве */ if (b) b.style.width = Math.round(k * 100) + '%'; setTimeout(r, 30); });
 // догрузка после старта: модели техники и домов, текстуры — статус внизу, пока не придёт всё
 let alShown = false;
 setInterval(() => {
@@ -1258,7 +1263,7 @@ setInterval(() => {
   if (!e || !need) return;
   if (left > 0 && C.state !== 'loading') {
     alShown = true; e.classList.add('on');
-    $('alTxt').textContent = tr('Загружаем город: модели {0} из {1}{2}', [m.done, m.req, t.req ? tr(', текстуры {0} из {1}', [t.done, t.req]) : '']);
+    $('alTxt').textContent = tr('Загружаем город: модели {0} из {1}{2}', [m.done, m.req, t.req ? tr(', текстуры {0} из {1}', [t.done, t.req]) : '']); C.doors.note(`${tr('Загружаем карту')} ${Math.round(100 * got / need)} %`);
     $('alBar').style.width = Math.round(100 * got / need) + '%';
   } else if (alShown && left <= 0) { alShown = false; $('alTxt').textContent = tr('Город загружен'); $('alBar').style.width = '100%'; setTimeout(() => { if (!alShown) e.classList.remove('on'); }, 1500); }
 }, 400);
@@ -1312,7 +1317,8 @@ setInterval(() => {
   // (смена режима, карты) снова запустит вылет на вертолёте или не тот режим
   { const u = new URL(location.href); let ch = false; for (const k of ['go', 'hlo', 'weather']) if (u.searchParams.has(k)) { u.searchParams.delete(k); ch = true; } if (ch) try { history.replaceState(history.state, '', u.href); } catch (_) { /* нет */ } }
   const em = Q.get('endmock'); if (em) { C.endScr.mock(em); } // ?endmock=solo-win | solo-lose | ol-win | ol-lose | mw-win | mw-lose — показать экран итога с примерными данными
-  const go = Q.get('go'); if (go && ctrls[go]) { setup.game = go === 'training' ? 'training' : go; if (go === 'air' && HLO >= 0) setup.lo = HLO; /* меню при показе подменило вертолётную подвеску самолётной */ C.lastGame = go; C.start(go); }
+  const go = Q.get('go'); if (go && ctrls[go]) { setup.game = go === 'training' ? 'training' : go; if (go === 'air' && HLO >= 0) setup.lo = HLO; /* меню при показе подменило вертолётную подвеску самолётной */ C.lastGame = go; C.doors.run(() => C.start(go)); }
+  else C.doors.release(); // створки с прошлой страницы (выход в меню после потери контекста) — открыть; онлайн их откроет сам — вход в бой или лобби
   setTimeout(() => C.crash.offer(), 2000); // окно «Игра закрылась с ошибкой» — когда меню уже на экране
 })();
 if (Q.get('test') === '1') { window.__a = C; window.__frame = frame; C.ctrls = ctrls; C.resize = resize; C.lessons = LESSONS; } // проверка: доступ к игре и шаг кадра вручную (страница в фоне)
