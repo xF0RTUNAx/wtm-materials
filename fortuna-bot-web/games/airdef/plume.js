@@ -205,16 +205,16 @@ export function createPlumes(scene, P = {}) {
   const TQ = { x: 0, y: 0, z: 0, t: 0, w: 0, g: 0, life: 0, a: 0, rise: 0, u: 0, ramp: 0, c: null }; // конец ленты у факела (на лету, не точка следа)
   const SEGS = [];
   // клубы между двумя точками следа: шаг ≈ ширины следа у сопла, вдали — реже; разброс поперёк — четверть ширины, снос — ветер и всплытие, как у ленты
-  const puffAlong = (T, a, b, m) => {
+  const puffAlong = (T, a, b, m, al, life) => { // al, life — плотность и жизнь следа без укорота ленты
     const D = Math.hypot(b.x - a.x, b.y - a.y, b.z - a.z); if (D < 1e-3) return;
     const cd = PCAM ? Math.hypot(b.x - PCAM.position.x, b.y - PCAM.position.y, b.z - PCAM.position.z) : 600;
-    const step = Math.max(2, b.w * 0.5) * Math.min(5, Math.max(1, cd / 800)), wv = mat.uniforms.uWind.value, j = b.w * 0.25; // клубы перекрываются — след сплошной; вдали — реже
+    const step = Math.max(1.5, b.w * 0.4) * Math.min(5, Math.max(1, cd / 800)), wv = mat.uniforms.uWind.value, j = b.w * 0.25; // клубы перекрываются — след сплошной; вдали — реже
     T.pd = (T.pd || 0) + D;
     for (let n = 0; T.pd >= step && n < 24; n++) {
       T.pd -= step; const f = 1 - T.pd / D;
       PUF.emit(a.x + (b.x - a.x) * f + (Math.random() - 0.5) * j, a.y + (b.y - a.y) * f + (Math.random() - 0.5) * j, a.z + (b.z - a.z) * f + (Math.random() - 0.5) * j,
         wv.x + (Math.random() - 0.5) * 0.6, b.rise + (Math.random() - 0.5) * 0.4, wv.z + (Math.random() - 0.5) * 0.6, m.c[0], m.c[1], m.c[2],
-        Math.min(1, b.a / 0.4 * 0.9), b.w * 1.15, b.g * 1.1, b.life * 0.95, 0, 0, 0.06); // размер и рост — как у ленты: w + g·√t (пул клубов следа — sqrtGrow)
+        Math.min(1, al * 0.9), b.w * 1.35, b.g * 1.2, life * 0.95, 0, 0, 0.06); // размер и рост — как у ленты: w + g·√t (пул клубов следа — sqrtGrow)
     }
   };
   // точки следа редкие (0,03–0,08 с: на 600 м/с — 24 м) — между ними лента режется на короткие звенья (узор клубов и изгиб считаются по вершинам)
@@ -253,9 +253,11 @@ export function createPlumes(scene, P = {}) {
       const ramp = m.ramp || (sp > 5 ? Math.min(0.035, Math.max(0.004, rr * m.len[0] * 1.2 / sp)) : 0.035); // m.ramp — свой набор плотности (ЛТЦ: дым густеет за хвостом пламени)
       const p = { x, y, z, t: time, w: Math.max(0.15, rr * m.w) * (1 + 1.2 * e), g: (m.g[0] + rr * m.g[1]) * (1 + 0.6 * e), life: (m.life[0] + rr * m.life[1]) * (0.7 + 0.3 * (1 - e)),
         a: Math.min(1, m.a * Math.min(1.2, 0.8 + rr * 2)) * (1 - 0.45 * e), rise: 0.25 + rr * 1.5, c: m.c, u: L ? L.u + Math.hypot(x - L.x, y - L.y, z - L.z) : 0, ramp };
-      const pu = PUF && PUF.ready && m.a >= 0.4; if (pu) p.a *= 0.4; // с клубами лента — сердцевина и связка, объём — клубы
+      // с клубами лента — только у сопла (≈ 30 м за срезом: на 1 км/с — 0,03 с, на 100 м/с — 0,3 с): сердцевина, пока клубы проявляются;
+      // дальше след — одни клубы (Mark: шире клубов лента читалась вблизи полупрозрачной «подложкой»)
+      const pu = PUF && PUF.ready && m.a >= 0.4, pa = p.a, pl = p.life; if (pu) { p.a *= 0.85; p.life = Math.min(p.life, Math.max(0.06, Math.min(0.4, 30 / Math.max(sp, 1)))); }
       T.pts.push(p); T.end = Math.max(T.end, time + p.life); T.tip = null;
-      if (pu && L) puffAlong(T, L, p, m);
+      if (pu && L) puffAlong(T, L, p, m, pa, pl);
       if (T.pts.length > MAXP) { const o = T.pts; T.pts = o.filter((q, i) => i >= o.length / 2 || i % 2 === 0); T.rebuild = true; } // длинная лента — старая половина реже (звенья перенарезаются)
     },
     // свежий конец ленты — в срезе сопла прямо сейчас (зовёт факел каждый кадр); между точками следа (до 24 м при 600 м/с) лента тянется к нему
