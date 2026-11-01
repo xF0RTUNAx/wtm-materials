@@ -12,6 +12,7 @@ tools: Bash, Read
 2. Если просили конкретные тесты — только их. Иначе по очереди:
    - `deno run -A tools/airdef-headless/ui-test.js` (сервер не нужен; итог — «ошибок нет»)
    - `deno run -A tools/airdef-headless/sim-test.js`
+   - `deno run -A tools/airdef-headless/strike-balance-stand.js check` (баланс удара по объектам, итог — «ошибок нет»)
    - `deno run -A tools/airdef-headless/progress-stand.js` и `deno run -A tools/airdef-headless/progress-server-test.js`
    - в папке game-server: `deno run -A airdef-smoke.js`, `deno run -A airdef-full.js`, `deno run -A airdef-multi-test.js`
    - если в `git status` есть правки в games/drone/: `bash tools/drone-headless/regress.sh`

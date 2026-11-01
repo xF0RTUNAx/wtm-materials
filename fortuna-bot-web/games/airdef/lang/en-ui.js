@@ -800,6 +800,7 @@ export default {
   "Уже исследовано": "Already researched",
   "Уже куплено": "Already bought",
   "Урон": "Damage",
+  "Удар (ФАБ-500 = 100)": "Strike (FAB-500 = 100)",
   "Форсаж": "Afterburner",
   "Целей сразу": "Targets at once",
   "Цели задания": "Mission targets",

@@ -2,7 +2,7 @@
 // подвеска пополняется). На каждом шаге — подсказка; кнопка «?» ставит игру на паузу и объясняет комплекс или оружие.
 // Урок сам запускает режим air.js или defense.js со своими опциями и следит за шагами через tick(T).
 /* global THREE */
-import { SAM, AG, SAM_TYPE, AG_KIND, THREAT, HELI_LOADOUTS, multiSamCost } from './arsenal.js?v=20261029b';
+import { SAM, AG, SAM_TYPE, AG_KIND, THREAT, HELI_LOADOUTS, multiSamCost, eqOf } from './arsenal.js?v=20261029b';
 import { samKnown } from './sim/combined.js?v=20261029b';
 import { spotNear, freeGround } from './mission.js?v=20261029b';
 import { riverX } from './city.js?v=20261029b';
@@ -114,7 +114,7 @@ function WL(c) {
       const a = C.ctrl.inner, W = AG[c.key(C)], dO = objOf(C, c.demo[0]), pO = objOf(C, c.prac[0]);
       const fly = C.S.wpns.some((w) => w.owner === a.craft), empty = !a.loadout.some((l) => l.n > 0) && !fly;
       if (T.s === 0) { // показ
-        if (!T.d.demo) { T.d.demo = 1; for (const o of [dO, pO]) o.hp = Math.min(o.hp, W.dmg * 0.25); /* учебные цели — с одного попадания */ a.retarget([dO]); a.place(approach(C, dO, c.demo[1], c.demo[2], c.demo[3])); a.demo({ pt: dO, alt: c.demo[2] }); }
+        if (!T.d.demo) { T.d.demo = 1; for (const o of [dO, pO]) o.hp = Math.min(o.hp, eqOf(W) * 0.25); /* учебные цели — с одного попадания (eqOf — урон по объекту прямым) */ a.retarget([dO]); a.place(approach(C, dO, c.demo[1], c.demo[2], c.demo[3])); a.demo({ pt: dO, alt: c.demo[2] }); }
         if (fly) a.setCam(3);
         if (empty) a.rearm();
         T.hint(tr('<b>Показ.</b> {0} <span class="dim">Автопилот и «Авто» всё делают сами.</span>', [fly ? tr('Оружие ушло — камера следит за ним.') : c.demoHint(C, W, a)]));
@@ -144,7 +144,7 @@ const hl = (C, key) => objOf(C, key);
 function HWL(c) {
   return { id: c.id, sec: c.sec || tr('Оружие'), name: c.name, desc: c.desc, diff: c.diff,
     intro: c.intro,
-    air: (C) => { const o = hl(C, c.tgt); return { items: [[c.key(C), c.n || 4]], plane: HELI(C), pod: true, targets: [c.tgt], hpK: c.hpK || 0.25, defense: c.defense ? (S, rnd) => c.defense(C, S, rnd, o) : () => {}, spawn: approach(C, o, c.d || 4000, c.agl || 50, c.ang ?? angHome(o)) }; },
+    air: (C) => { const o = hl(C, c.tgt); return { items: [[c.key(C), c.n || 4]], plane: HELI(C), pod: true, targets: [c.tgt], hpK: c.hpK || 0.14, /* доля прочности учебной цели: с эквивалентом (ПТУР 30, НАР 8 — 2026-11-01) попаданий столько же, сколько раньше */ defense: c.defense ? (S, rnd) => c.defense(C, S, rnd, o) : () => {}, spawn: approach(C, o, c.d || 4000, c.agl || 50, c.ang ?? angHome(o)) }; },
     tick(T, C) {
       const { a, c: cr } = hst(C), o = hl(C, c.tgt), k = c.key(C), fly = C.S.wpns.some((w) => w.owner === cr && w.key === k);
       if (o.dead) { T.hint(`<b>${c.win}</b>`); T.d.win = T.d.win || T.t; if (T.t - T.d.win > 3) T.done(); return; }
@@ -213,7 +213,7 @@ const heliLessons = [
       [tr('Отвернуть сразу после пуска — ракета теряет цель.'), tr('Пускать с открытого места, когда рядом ЗРК, — за время полёта ракеты вас успеют сбить.')]); },
     hint: (T, C, a, c, o, fly) => (fly ? tr('<b>Ракета летит — держите марку на цели</b>, не отворачивайте.') : tr('Цель — <b>{0}</b>, {1} км. Выберите ПТУР ({2}), подойдите на дальность пуска, захват и пуск.', [o.name, (hdist(c, o) / 1000).toFixed(1), ctl(C, K('Q'), tr('строка оружия'))])),
     win: tr('Попадание! ПТУР ведёте до конца — потом уходите.') }),
-  HWL({ id: 'h_cover', sec: tr('Выживание'), name: tr('Укрытия и подскок'), desc: tr('подойти оврагом, подскочить, пустить, уйти вниз'), key: ATGM, n: 4, tgt: 'a_wreck', d: 7000, agl: 25, hpK: 0.2, ang: Math.PI / 3, // с северо-востока: с 3–4 км из оврага видно после подскока
+  HWL({ id: 'h_cover', sec: tr('Выживание'), name: tr('Укрытия и подскок'), desc: tr('подойти оврагом, подскочить, пустить, уйти вниз'), key: ATGM, n: 4, tgt: 'a_wreck', d: 7000, agl: 25, hpK: 0.14, ang: Math.PI / 3, // с северо-востока: с 3–4 км из оврага видно после подскока
     defense: (C, S, rnd, o) => { const [x, z] = near(C, o, 1600); const u = S.addUnit(pv(C, 'osa', 'roland'), x, z, { skill: 0.7 }); u.emit = true; u.ambush = false; },
     intro: (C) => card(tr('Укрытия и подскок'), [
       tr('Вертолёт живёт, пока его не видно. Склоны оврагов, лес и холмы закрывают от РЛС и прицелов — держитесь <b>ниже 30 м</b> за рельефом.'),
@@ -243,7 +243,7 @@ const heliLessons = [
   { id: 'h_final', sec: tr('Выживание'), name: tr('Контрольный вылет'), desc: tr('две цели под огнём ПВО — всё вместе'),
     intro: () => card(tr('Контрольный вылет'), [tr('Две цели: гарнизон «Пугало» и склад «Фонарь Джека». Вокруг — пушки, ПЗРК и ЗРК.'), tr('Всё вместе: низко за рельефом, подскок, ПТУР и НАР, ловушки по датчику пуска, пополнение посадкой на своей площадке.'), tr('Комплекс, открывший по вам огонь, появляется на карте с зоной поражения — обходите её.')],
       [tr('Лететь прямо через поле к цели.'), tr('Забыть о топливе и подвеске — площадка далеко.')]),
-    air: (C) => ({ items: heliItems(C), plane: HELI(C), pod: true, targets: ['a_vil', 'a_farm'], hpK: 0.35, spawn: approach(C, hl(C, 'a_vil'), 6000, 40, angHome(hl(C, 'a_vil'))),
+    air: (C) => ({ items: heliItems(C), plane: HELI(C), pod: true, targets: ['a_vil', 'a_farm'], hpK: 0.2, spawn: approach(C, hl(C, 'a_vil'), 6000, 40, angHome(hl(C, 'a_vil'))),
       defense: (S) => { for (const [k, key, r] of [[pv(C, 'zsu234', 'm163'), 'a_vil', 700], [pv(C, 'igla', 'stinger'), 'a_vil', 1100], [pv(C, 'osa', 'roland'), 'a_farm', 1500], [pv(C, 'igla', 'stinger'), 'a_farm', 900]]) { const [x, z] = near(C, hl(C, key), r); const u = S.addUnit(k, x, z, { skill: 0.7 }); u.ambush = false; } } }),
     tick(T, C) {
       const { a, c } = hst(C), t1 = hl(C, 'a_vil'), t2 = hl(C, 'a_farm');

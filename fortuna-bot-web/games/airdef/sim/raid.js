@@ -67,7 +67,7 @@ export function createRaid(S, city, rnd, opts = {}) {
       else if (loads.cruise && i % 4 === 2) role = 'cruise';
       else if (wave >= 3 && i % 4 === 2) role = 'low';
       else if (loads.tv && i % 3 === 2) role = 'tv';
-      const tgt = targets[(i + g) % targets.length];
+      const tgt = targets[g % targets.length]; // пара (одно направление) — одна цель, пары — по целям по очереди (было (i + g): при 2 целях и 3–4 самолётах все шли на первую)
       const br = bearing0 + g * step + (rnd() - 0.5) * Math.min(0.4, step * 0.3); // разброс в паре — не дальше трети промежутка до соседней
       spawn(role, tgt, br, (g % 3) * 25 + rnd() * 8, R);
     }
@@ -378,13 +378,18 @@ export function createRaid(S, city, rnd, opts = {}) {
         let al = null, cr = 1e9;
         if (!guided && tImp > 0) { const vh = Math.hypot(a.vel.x, a.vel.z) || 1, ex = TMP2.x - aim.x, ez = TMP2.z - aim.z; al = (ex * a.vel.x + ez * a.vel.z) / vh; cr = Math.abs(ex * a.vel.z - ez * a.vel.x) / vh; }
         const cross = al !== null && a.pa !== null && a.pa !== undefined && a.pa < 0 && al >= 0 && cr < tol; a.pa = al;
-        if (ser || miss < tol || cross) {
+        // лазерная / ТВ: ГСН должна видеть точку сразу после сброса (лазерная — в поле зрения, ТВ — вдвое шире; запас 0,8). Ближе (после
+        // подсвета — вокруг цели в 3–6 км, с 5 км высоты до неё 50–60° вниз) бомба теряла цель и падала за 4–6 км (2026-11-01, облако
+        // cloud/strike-balance: КАБ-500Кр — 99 % сбросов, GBU-12 — 62 %) — теперь новый заход издалека
+        const seek = W.kind !== 'lgb' && W.kind !== 'tvb' || angleBetween(a.vel, PR.copy(aim).sub(a.pos)) < W.fov * (W.kind === 'tvb' ? 2 : 1) * 0.8 * D2R;
+        if (!seek && !a.sOut && d < (a.pos.y - aim.y) * 2.4) a.sOut = 1;
+        if (ser || (miss < tol || cross) && seek) {
           a.ser = false; L.n--; setLoad(a); S.release(a, L.key, guided ? { aim } : {}); a.relT = guided ? 1.2 : 0.25; if (fx.release) fx.release(a, L.key);
           if (W.kind === 'lgb') { a.lockPt = aim.clone(); a.phase = 'lase'; }
           else if (!guided && !ser && L.n > 0) a.ser = true;
         }
         if (!a.sOut && d < 3000 && ahead(a, aim) < 0) a.sOut = 1;
-        if (!reattack(a, aim, d, a.cruise, guided ? 6000 : 10000, dt)) steerToward(a, aim, a.cruise, dt);
+        if (!reattack(a, aim, d, a.cruise, guided ? Math.max(6000, (a.pos.y - aim.y) * 2.6) : 10000, dt)) steerToward(a, aim, a.cruise, dt);
         if (a.t - a.tW > 220) a.phase = 'egress';
       } else if (W.kind === 'rocket') {
         // НАР с самолёта: подход на ~900 м над целью, пологое пикирование (до 17°) носом на цель с поправкой на снижение ракет

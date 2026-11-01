@@ -13,7 +13,7 @@ description: Деплой «Воздушного превосходства» (f
   Незнакомые несохранённые файлы — спросить Mark.
 
 ## 2. Проверки (до любых изменений на боевом)
-В `fortuna-bot-web`: `ui-test.js` (итог «ошибок нет»; «пауза» / «съёмка волны» — повторить раз), `sim-test.js`, `progress-stand.js`,
+В `fortuna-bot-web`: `ui-test.js` (итог «ошибок нет»; «пауза» / «съёмка волны» — повторить раз), `sim-test.js`, `strike-balance-stand.js check` (баланс удара по объектам), `progress-stand.js`,
 `progress-server-test.js`; в `game-server`: `airdef-smoke.js`, `airdef-full.js`, `airdef-multi-test.js`; если трогали `games/drone/` —
 `tools/drone-headless/regress.sh`. Можно поручить помощнику `airdef-tester`. Упало — не деплоить, сообщить Mark.
 Перед крупным деплоем — ревью помощником `airdef-reviewer` (или `/code-review`).

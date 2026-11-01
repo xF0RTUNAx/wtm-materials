@@ -2,7 +2,7 @@
 // Об игре — панель поверх. Фон — готовые кадры (menubg.js), пока их нет — живой бой (director.js).
 import { LANG, LANGS, setLang, tr, trIf, trDom } from './i18n.js?v=20261029b';
 import { CITY, ZONE } from './city.js?v=20261029b';
-import { AG, SAM, ERAS, LOADOUTS, DEFENSE, SAM_TYPE, AG_KIND, SAM_COST, PLANES, loadoutsOf, loadoutRole, ROLE_NAME, COMBINED, CARRIERS, MULTI, multiBudget, multiItems } from './arsenal.js?v=20261029b';
+import { AG, SAM, ERAS, LOADOUTS, DEFENSE, SAM_TYPE, AG_KIND, SAM_COST, PLANES, loadoutsOf, loadoutRole, loadoutTargets, ROLE_NAME, COMBINED, CARRIERS, MULTI, multiBudget, multiItems } from './arsenal.js?v=20261029b';
 import { combinedOk, COMBINED_NAME, levelIn, levelOfSams } from './sim/combined.js?v=20261029b';
 import { MODES } from './sim/strike.js?v=20261029b';
 import { WEATHERS } from '../drone/world.js?v=20261029b';
@@ -106,7 +106,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
       const can = ([L]) => !realLock() || C.progress.loadoutOk(L), open = mine.filter(can);
       if (!open.some(([, i]) => i === setup.lo)) setup.lo = (open[0] || mine[0])[1];
       const loBtn = ([L, i], attr, on) => { const miss = can([L]) ? [] : C.progress.loadoutMissing(L);
-        return `<button class="opt ${on && !miss.length ? 'on' : ''} ${miss.length ? 'lock' : ''}" ${miss.length ? `data-need="${miss[0].id}"` : `${attr}="${i}"`}><div class="nm"><b>${miss.length ? ico('lock') + ' ' : ''}${trIf(PLANES[L.plane])} · ${trIf(L.name)}</b><span class="role ${loadoutRole(L)}">${trIf(ROLE_NAME[loadoutRole(L)])}</span><span>${L.items.map(([k, n]) => `${trIf(AG[k].short)} ×${n}`).join(' · ')}${L.pod ? tr(' · контейнер') : ''}</span>${miss.length ? `<span class="need">${tr('{0} — открыть в «Исследованиях»', [C.progress.needText(miss)])}</span>` : ''}</div>${L.items.map(([k]) => tags(AG[k].kind, trIf(AG_KIND[AG[k].kind]).split(',')[0].split(' ')[0])).filter((v, j, a) => a.indexOf(v) === j).join(' ')}</button>`; };
+        return `<button class="opt ${on && !miss.length ? 'on' : ''} ${miss.length ? 'lock' : ''}" ${miss.length ? `data-need="${miss[0].id}"` : `${attr}="${i}"`}><div class="nm"><b>${miss.length ? ico('lock') + ' ' : ''}${trIf(PLANES[L.plane])} · ${trIf(L.name)}</b><span class="role ${loadoutRole(L)}">${trIf(ROLE_NAME[loadoutRole(L)])}</span><span>${L.items.map(([k, n]) => `${trIf(AG[k].short)} ×${n}`).join(' · ')}${L.pod ? tr(' · контейнер') : ''}</span>${loadoutRole(L) !== 'sead' ? `<span class="tgn">${tr('целей: {0} — по силе подвески', [loadoutTargets(L)])}</span>` : ''}${miss.length ? `<span class="need">${tr('{0} — открыть в «Исследованиях»', [C.progress.needText(miss)])}</span>` : ''}</div>${L.items.map(([k]) => tags(AG[k].kind, trIf(AG_KIND[AG[k].kind]).split(',')[0].split(' ')[0])).filter((v, j, a) => a.indexOf(v) === j).join(' ')}</button>`; };
       C.realBlock = !open.length;
       if (!open.length) h += `<p class="hint need">${tr('В «Реализме» эпохи {0} нет подвески за эту сторону. Купите самолёт и оружие в «Исследованиях» или играйте в «Аркаде».', [ERAS[setup.era - 1].short])}</p>`;
       // «Операция»: два вылета — сначала охота за ПВО, потом удар (у стороны нет охотничьей подвески — только одиночный вылет)
@@ -151,7 +151,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
       const mine = loadoutsOf(setup.era, att).filter(([L]) => !L.heli); // вертолёты — в событии «Туманная топь»
       if (!mine.some(([, i]) => i === setup.lo)) setup.lo = mine[0][1];
       h += `<div class="prow"><span>${tr('Высота')}</span>${seg('palt', setup.palt || 'mid', [['low', tr('250 м')], ['mid', tr('1,5 км')], ['high', tr('4 км')]])}</div><div class="cat-h">${tr('Самолёт и подвеска')}</div>` +
-        mine.map(([L, i]) => `<button class="opt ${i === setup.lo ? 'on' : ''}" data-lo="${i}"><div class="nm"><b>${trIf(PLANES[L.plane])} · ${trIf(L.name)}</b><span>${L.items.map(([k, n]) => `${trIf(AG[k].short)} ×${n}`).join(' · ')}${L.pod ? tr(' · контейнер') : ''}</span></div></button>`).join('') +
+        mine.map(([L, i]) => `<button class="opt ${i === setup.lo ? 'on' : ''}" data-lo="${i}"><div class="nm"><b>${trIf(PLANES[L.plane])} · ${trIf(L.name)}</b><span>${L.items.map(([k, n]) => `${trIf(AG[k].short)} ×${n}`).join(' · ')}${L.pod ? tr(' · контейнер') : ''}</span>${loadoutRole(L) !== 'sead' ? `<span class="tgn">${tr('целей: {0} — по силе подвески', [loadoutTargets(L)])}</span>` : ''}</div></button>`).join('') +
         '<p class="hint">' + tr('Самолёт сам летит от цели к цели, сбрасывает, пускает и ставит ловушки. Урона нет, подвеска пополняется. Камеру можно привязать к любому оружию на пилоне: сход с подвески и полёт до разрыва. На 250 м контейнер не берёт цели, лазерные и ТВ не пускаются.') + '</p>';
     } else if (ps === 'def') {
       const list = Object.entries(SAM).filter(([, s]) => s.side === setup.side && s.era <= setup.era && s.type !== 'jammer'); // глушилки GPS не пускают — в съёмке снимать нечего (Mark 2026-10-27)

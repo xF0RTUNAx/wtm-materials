@@ -564,7 +564,10 @@ export function objAimXZ(o, n = -1, u = 0, v = 0, out = { x: 0, z: 0 }) {
 // по горизонтали от точки до ближайшей постройки объекта на земле (0 — над ней; стрелы кранов над рекой не в счёт)
 export const objDist = (o, x, z) => (o.gparts || o.parts).reduce((m, q) => Math.min(m, partDist(q, x, z)), 1e9);
 // parts — простые тела для отрисовки и сетки высот: box {x,z,w,d,h,y0}, cyl {x,z,r,h,y0}, cone (градирня) {x,z,r,h}
-// value — «ценность» для счёта, hp — прочность (кг тротила-эквивалента условно: сколько урона выдерживает)
+// value — «ценность» для счёта, hp — прочность в единицах удара (ЕУ, arsenal.js eqOf: ФАБ-500 прямым попаданием — 100) по размеру объекта
+// (Mark 2026-11-01, облако cloud/strike-balance): S — малый (РЛС, узел связи, вертолётная площадка), M — средний (склады, парки, городки),
+// F — укреплённый (КП), L — крупный (аэродромы, ГЭС, ж/д узел, ВМБ)
+export const OBJ_HP = { S: 150, M: 200, F: 250, L: 300 };
 function makeObjects() {
   const O = [];
   const add = (o) => { O.push(Object.assign({ id: O.length, value: 100, hp: 100 }, o)); };
@@ -573,25 +576,25 @@ function makeObjects() {
   // узел связи: своя сцена (city.js SITES site_tv_city) — башня связи 192,5 м, техздание, бункер, антенные поля; квартал городка и бывший парк к югу
   // (FLATS.tv; улица z −2800 между ними под объектом убрана); gk — застройка как прежде (те же кварталы закрыты)
   { const { x, z, w, d } = FLATS.tv;
-    add({ key: 'tv', name: tr('Узел связи'), x, z, w, d, gk: [w / 2, d / 2], value: 120, hp: 140, lawn: true, site: 'site_tv_city', parts: siteParts('site_tv_city', x, z) }); }
+    add({ key: 'tv', name: tr('Узел связи'), x, z, w, d, gk: [w / 2, d / 2], value: 120, hp: OBJ_HP.S, lawn: true, site: 'site_tv_city', parts: siteParts('site_tv_city', x, z) }); }
   // командный пункт: своя сцена (city.js SITES site_cp_city) — штаб в административном здании, бункер и узел связи во дворе; двойной квартал
   // (FLATS.gov) — улица x 1200 под ним убрана
   { const { x, z, w, d } = FLATS.gov;
-    add({ key: 'gov', name: tr('Командный пункт'), x, z, w, d, gk: [w / 2, d / 2], value: 160, hp: 260, lawn: true, site: 'site_cp_city', parts: siteParts('site_cp_city', x, z) }); }
+    add({ key: 'gov', name: tr('Командный пункт'), x, z, w, d, gk: [w / 2, d / 2], value: 160, hp: OBJ_HP.F, lawn: true, site: 'site_cp_city', parts: siteParts('site_cp_city', x, z) }); }
   // склад боеприпасов: своя сцена (city.js SITES site_ammo_city) — семь обвалованных хранилищ, навес, штабели, мастерская, КПП, ж/д тупик
   // lawn — внутри ограды трава, не серый пустырь промзоны (city-render zoneTexture)
   { const { x, z, w, d } = TPP;
-    add({ key: 'tpp', name: tr('Склад боеприпасов'), x, z, w, d, value: 180, hp: 220, lawn: true, site: 'site_ammo_city', parts: siteParts('site_ammo_city', x, z) }); }
+    add({ key: 'tpp', name: tr('Склад боеприпасов'), x, z, w, d, value: 180, hp: OBJ_HP.M, lawn: true, site: 'site_ammo_city', parts: siteParts('site_ammo_city', x, z) }); }
   // склад горючего: своя сцена (city.js SITES site_fuel_city) — три группы резервуаров в обваловании, сливная ж/д эстакада, насосная, налив
   { const { x, z, w, d } = FLATS.oil;
-    add({ key: 'oil', name: tr('Склад горючего'), x, z, w, d, value: 170, hp: 200, lawn: true, site: 'site_fuel_city', parts: siteParts('site_fuel_city', x, z) }); }
+    add({ key: 'oil', name: tr('Склад горючего'), x, z, w, d, value: 170, hp: OBJ_HP.M, lawn: true, site: 'site_fuel_city', parts: siteParts('site_fuel_city', x, z) }); }
   // парк бронетехники: своя сцена (city.js SITES site_park_city) — боксы, навесы, ПТО, заправка; жилая зона с казармами и штабом
   { const { x, z, w, d } = FLATS.stad;
-    add({ key: 'stad', name: tr('Парк бронетехники'), x, z, w, d, value: 90, hp: 140, lawn: true, site: 'site_park_city', parts: siteParts('site_park_city', x, z) }); }
+    add({ key: 'stad', name: tr('Парк бронетехники'), x, z, w, d, value: 90, hp: OBJ_HP.M, lawn: true, site: 'site_park_city', parts: siteParts('site_park_city', x, z) }); }
   // военный аэродром: своя сцена (city.js SITES site_air) южнее ВПП — укрытия, ТЭЧ, КДП, ГСМ, авиабоеприпасы; самолёты — лёгкие копии моделей игры
   // (ВПП рисуется на земле); рамка — по сцене (x ±495, z −470…+225: rz −122); gk — прежняя рамка застройки (900 × 260 + 30 м)
   { const { x, z } = AIRPORT;
-    add({ key: 'air', name: tr('Военный аэродром'), x, z: z + 500, w: 990, d: 695, rz: -122.5, gk: [480, 160], value: 150, hp: 220, site: 'site_air', parts: siteParts('site_air', x, z + 500),
+    add({ key: 'air', name: tr('Военный аэродром'), x, z: z + 500, w: 990, d: 695, rz: -122.5, gk: [480, 160], value: 150, hp: OBJ_HP.L, site: 'site_air', parts: siteParts('site_air', x, z + 500),
       // zones — только для урона (sim/strike.js blast): ВПП в 540 м от ангаров — бомбы по полосе засчитывались «мимо» (Mark 2026-10-22); ×0,7 — воронки, не постройки
       zones: [{ t: 'box', x, z, w: AIRPORT.rwyL, d: AIRPORT.rwyW, h: 1, k: 0.7 }] }); }
   // мосты через реку — по проспектам
@@ -605,7 +608,7 @@ function makeObjects() {
   // хранилища ракет, штаб; рамка — по сцене (x −200…+130 → rx −35); gk и rk — прежние рамки застройки и дорог (база была 260 × 2700 вдоль берега, центр
   // (781,8, 6500)): кварталы и улицы вокруг — как были
   { const { x, z, h } = FLATS.port, cx = x + 35;
-    add({ key: 'port', name: tr('Военно-морская база'), x: cx, z, w: 330, d: 800, rx: -35, gk: [-218.2, 101.8, -1180, 1580], rk: [-188.2, 71.8, -1150, 1550], value: 110, hp: 180,
+    add({ key: 'port', name: tr('Военно-морская база'), x: cx, z, w: 330, d: 800, rx: -35, gk: [-218.2, 101.8, -1180, 1580], rk: [-188.2, 71.8, -1150, 1550], value: 110, hp: OBJ_HP.L,
       site: 'site_port', parts: siteParts('site_port', cx, z, groundH, h) }); }
   return O;
 }
