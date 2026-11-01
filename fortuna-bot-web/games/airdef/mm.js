@@ -24,7 +24,8 @@ body.mmOn #menu { opacity: 0; pointer-events: none; transition: opacity .35s; }
 #mmScr.on { display: block; }
 #mmScr .dim { position: absolute; inset: 0; background: #0a0d08; }
 #mmScr .box { position: absolute; left: 50%; top: 50%; width: min(100vw, calc(100vh * 932 / 430)); aspect-ratio: 932 / 430; transform: translate(-50%, -50%); container-type: inline-size; }
-#mmScr .it { position: absolute; aspect-ratio: 16 / 9; background: center / contain no-repeat; pointer-events: none; }
+#mmScr .it { position: absolute; aspect-ratio: 16 / 9; pointer-events: none; will-change: transform, opacity; }
+#mmScr .it img { display: block; width: 100%; height: 100%; object-fit: contain; will-change: translate; }
 #mmScr .ring { position: absolute; left: 81%; top: 43%; width: 21%; aspect-ratio: 1; transform: translate(-50%, -50%); }
 #mmScr .ring::before { content: ""; position: absolute; inset: -46%; background: radial-gradient(closest-side, rgba(10,13,9,.86) 40%, rgba(10,13,9,0)); } /* под кольцом — тёмное пятно: живой фон меню бывает ярким */
 #mmScr .ring svg { position: relative; width: 100%; height: 100%; overflow: visible; }
@@ -54,32 +55,57 @@ export function createMM(C, onCancel) {
     <div class="info"></div><div class="mode"></div><button class="cx">${tr('Отменить')}</button></div>`;
   if (document.body) document.body.appendChild(el);
   const $ = (s) => el.querySelector(s), stage = $('.stage'), tm = $('.tm'), info = $('.info'), mode = $('.mode');
-  const RM = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
-  let on = false, last = -1, t0 = 0, anims = [], pingT = 0, tick = 0, hideT = 0;
+  const RM = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches, can = !RM && !!el.animate;
+  const menuEl = document.getElementById ? document.getElementById('menu') : null;
+  let on = false, t0 = 0, anims = [], pingT = 0, tick = 0, hideT = 0;
   $('.cx').onclick = () => { snd.cancelClick ? snd.cancelClick() : snd.click(); onCancel(); };
-  const sceneOf = (L) => L.s.map(([f, x, y, w, b, h, d, fl], i) => `<div class="it" data-d="${d}" data-i="${i}" style="left:${x}%;top:${y}%;width:${w}%;background-image:url(airdef/ui/mm/${f}.webp?v=${ver});` +
-    `transform:translate(-50%,-50%)${fl === 'f' ? ' scaleX(-1)' : ''};filter:brightness(${b}) saturate(${(1 - h * 0.35).toFixed(2)}) blur(${(h * 0.12).toFixed(3)}cqw)${h < 0.3 ? ' drop-shadow(0 1.6cqw 1.4cqw rgba(0,0,0,.55))' : ''}"></div>`).join('');
+  // картинки — заранее и раскодированные: следующая раскладка выбирается сразу и грузится в простое меню (иначе техника «выскакивает» поздно)
+  const url = (f) => `airdef/ui/mm/${f}.webp?v=${ver}`, pre = {};
+  const load = (f) => pre[f] || (pre[f] = new Promise((ok) => { if (typeof Image !== 'function') { ok(); return; } const im = new Image(); im.decoding = 'async'; im.src = url(f); (im.decode ? im.decode() : Promise.resolve()).then(ok, ok); }));
+  let last = -1; const pick = () => { let i = Math.floor(Math.random() * LAYOUTS.length); if (LAYOUTS.length > 1 && i === last) i = (i + 1) % LAYOUTS.length; return i; };
+  let nextI = pick(); const warm = () => LAYOUTS[nextI].s.forEach(([f]) => load(f));
+  setTimeout(warm, 5000);
+  // юнит: внешний слой — место, вид и появление/уход; внутренняя картинка — покачивание (разные элементы: анимации не перебивают друг друга)
+  const sceneOf = (L) => L.s.map(([f, x, y, w, b, h, d, fl], i) => `<div class="it" data-d="${d}" data-i="${i}" data-f="${f}" style="left:${x}%;top:${y}%;width:${w}%;opacity:${can ? 0 : 1};` +
+    `transform:translate(-50%,-50%)${fl === 'f' ? ' scaleX(-1)' : ''};filter:brightness(${b}) saturate(${(1 - h * 0.35).toFixed(2)}) blur(${(h * 0.12).toFixed(3)}cqw)${h < 0.3 ? ' drop-shadow(0 1.6cqw 1.4cqw rgba(0,0,0,.55))' : ''}"><img src="${url(f)}" alt="" decoding="async"></div>`).join('');
   const clock = () => { const s = Math.max(0, Math.floor((performance.now() - t0) / 1000)); tm.textContent = Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+  // меню уходит и возвращается плавно в обе стороны (переход — на время смены, потом снимается)
+  const menuFade = () => { if (!menuEl) return; menuEl.style.transition = 'opacity .5s ease'; clearTimeout(menuFade.t); menuFade.t = setTimeout(() => { menuEl.style.transition = ''; }, 650); };
+  const ui = () => ['.ring', '.info', '.mode', '.cx'].map($);
+  function done() { el.classList.remove('on'); anims.forEach((a) => a.cancel()); anims = []; if (el.getAnimations) for (const x of [el, ...el.querySelectorAll('*')]) x.getAnimations().forEach((a) => a.cancel()); stage.innerHTML = ''; hideT = 0; }
   function show(o) { // o: { t0 — начало поиска (performance.now), mode — строка режима, info — строка под кольцом (HTML: <b> — цифры) }
     t0 = o.t0 || performance.now(); mode.innerHTML = `<b>${tr('ОНЛАЙН')}</b>${o.mode || ''}`; info.innerHTML = o.info || ''; clock();
     if (on) return;
-    on = true; clearTimeout(hideT);
-    let i = Math.floor(Math.random() * LAYOUTS.length); if (LAYOUTS.length > 1 && i === last) i = (i + 1) % LAYOUTS.length; last = i;
-    const L = LAYOUTS[i]; stage.innerHTML = sceneOf(L); $('.dim').style.opacity = String(0.25 + L.dim * 0.6);
-    el.classList.add('on'); document.body.classList.add('mmOn');
-    if (!RM && el.animate) {
-      el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 400, fill: 'both' });
-      stage.querySelectorAll('.it').forEach((e, k) => { // техника выезжает слоями, потом слегка покачивается — у дальних меньше
-        e.animate([{ opacity: 0, translate: '5cqw 0' }, { opacity: 1, translate: '0 0' }], { duration: 800, delay: 150 + k * 90, easing: 'cubic-bezier(.2,.8,.2,1)', fill: 'backwards' });
-        const d = +e.dataset.d; if (d > 0) anims.push(e.animate([{ translate: '0 0' }, { translate: `${(k % 2 ? 0.6 : -0.7) * d}cqw ${-0.8 * d}cqw` }, { translate: '0 0' }], { duration: 4600 + k * 900, delay: 1000 - k * 700, iterations: Infinity, easing: 'ease-in-out' }));
+    if (hideT) { clearTimeout(hideT); done(); } // снова в поиск, пока прошлый экран ещё уходил
+    on = true; const L = LAYOUTS[nextI]; last = nextI; nextI = pick();
+    stage.innerHTML = sceneOf(L); $('.dim').style.opacity = String(0.25 + L.dim * 0.6);
+    el.classList.add('on'); menuFade(); document.body.classList.add('mmOn');
+    if (can) {
+      anims.push(el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 500, easing: 'ease-out', fill: 'both' }));
+      ui().forEach((e, k) => anims.push(e.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 600, delay: 250 + k * 60, easing: 'ease-out', fill: 'both' })));
+      const t = performance.now();
+      stage.querySelectorAll('.it').forEach((e, k) => { // техника выезжает слоями — каждая, когда её картинка готова (не раньше своей очереди)
+        Promise.race([load(e.dataset.f), new Promise((ok) => setTimeout(ok, 1500))]).then(() => {
+          if (!on || !e.isConnected) return;
+          const wait = Math.max(0, 250 + k * 140 - (performance.now() - t));
+          anims.push(e.animate([{ opacity: 0, translate: '6cqw 0', scale: 0.97 }, { opacity: 1, translate: '0 0', scale: 1 }], { duration: 1100, delay: wait, easing: 'cubic-bezier(.22,.7,.2,1)', fill: 'forwards' }));
+          const d = +e.dataset.d, im = e.firstElementChild; // покачивание — у картинки, после выезда, с нуля
+          if (d > 0 && im) anims.push(im.animate([{ translate: '0 0' }, { translate: `${(k % 2 ? 0.6 : -0.7) * d}cqw ${-0.8 * d}cqw` }, { translate: '0 0' }], { duration: 4600 + k * 900, delay: wait + 1100, iterations: Infinity, easing: 'ease-in-out' }));
+        });
       });
     }
+    setTimeout(warm, 3000); // следующая раскладка — в кэш, пока идёт поиск
     pingT = 0; tick = setInterval(() => { clock(); if ((pingT += 1) % 4 === 1 && snd.mmPing) snd.mmPing(); }, 1000); // первый пинг — через секунду, дальше раз в 4 с
   }
   function hide() {
-    if (!on) return; on = false; clearInterval(tick); document.body.classList.remove('mmOn');
-    const done = () => { el.classList.remove('on'); anims.forEach((a) => a.cancel()); anims = []; if (el.getAnimations) el.getAnimations().forEach((a) => a.cancel()); stage.innerHTML = ''; };
-    if (!RM && el.animate) { el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 300, fill: 'forwards' }); hideT = setTimeout(done, 300); } else done();
+    if (!on) return; on = false; clearInterval(tick); menuFade(); document.body.classList.remove('mmOn');
+    if (!can) { done(); return; }
+    // уход: техника уплывает влево и тает (покачивание не останавливаем), кольцо и подписи гаснут, потом затемнение
+    const its = [...stage.querySelectorAll('.it')];
+    its.forEach((e, k) => { const cs = getComputedStyle(e); anims.push(e.animate([{ opacity: +cs.opacity, translate: cs.translate === 'none' ? '0 0' : cs.translate }, { opacity: 0, translate: '-5cqw 0' }], { duration: 550, delay: (its.length - 1 - k) * 60, easing: 'cubic-bezier(.5,0,.75,.4)', fill: 'forwards' })); });
+    ui().forEach((e) => anims.push(e.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 400, easing: 'ease-in', fill: 'forwards' })));
+    anims.push(el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 550, delay: 250, easing: 'ease-in-out', fill: 'forwards' }));
+    hideT = setTimeout(done, 820);
   }
   return { show, hide, get on() { return on; } };
 }
