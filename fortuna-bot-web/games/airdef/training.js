@@ -144,7 +144,7 @@ const hl = (C, key) => objOf(C, key);
 function HWL(c) {
   return { id: c.id, sec: c.sec || tr('Оружие'), name: c.name, desc: c.desc, diff: c.diff,
     intro: c.intro,
-    air: (C) => { const o = hl(C, c.tgt); return { items: [[c.key(C), c.n || 4]], plane: HELI(C), pod: true, targets: [c.tgt], hpK: c.hpK || 0.14, /* доля прочности учебной цели: с эквивалентом (ПТУР 30, НАР 8 — 2026-11-01) попаданий столько же, сколько раньше */ defense: c.defense ? (S, rnd) => c.defense(C, S, rnd, o) : () => {}, spawn: approach(C, o, c.d || 4000, c.agl || 50, c.ang ?? angHome(o)) }; },
+    air: (C) => { const o = hl(C, c.tgt); return { items: [[c.key(C), c.n || 4]], plane: HELI(C), pod: true, targets: [c.tgt], hpK: c.hpK || 0.08, /* доля прочности учебной цели: с эквивалентом (ПТУР 30, НАР 8 — 2026-11-01) попаданий и допуск промаха — как раньше */ defense: c.defense ? (S, rnd) => c.defense(C, S, rnd, o) : () => {}, spawn: approach(C, o, c.d || 4000, c.agl || 50, c.ang ?? angHome(o)) }; },
     tick(T, C) {
       const { a, c: cr } = hst(C), o = hl(C, c.tgt), k = c.key(C), fly = C.S.wpns.some((w) => w.owner === cr && w.key === k);
       if (o.dead) { T.hint(`<b>${c.win}</b>`); T.d.win = T.d.win || T.t; if (T.t - T.d.win > 3) T.done(); return; }
@@ -205,7 +205,7 @@ const heliLessons = [
       ? tr('Цель — <b>{0}</b> ({1} км). Выберите НАР ({2}) и сбавьте скорость до висения — нос и марка наведутся сами; «в зоне — залп» — {3}.', [o.name, (hdist(c, o) / 1000).toFixed(1), ctl(C, K('Q'), tr('тап по строке оружия')), ctl(C, K(tr('Пробел')), tr('«Пуск»'))])
       : tr('Нос на <b>{0}</b> ({1} км). Выберите НАР ({2}), марка прицела — на цель, залп — {3}.', [o.name, (hdist(c, o) / 1000).toFixed(1), ctl(C, K('Q'), tr('тап по строке оружия')), ctl(C, K(tr('Пробел')), tr('«Пуск»'))])),
     win: tr('Цель накрыта! НАР — по площади, с 1,5–3 км.') }),
-  HWL({ id: 'h_atgm', name: tr('ПТУР'), desc: tr('захват, пуск, подсвет до попадания'), key: ATGM, n: 4, tgt: 'a_farm', d: 4000, agl: 70, hpK: 0.12, // со стороны нашей площадки ферма видна (прицел — на крышу корпуса)
+  HWL({ id: 'h_atgm', name: tr('ПТУР'), desc: tr('захват, пуск, подсвет до попадания'), key: ATGM, n: 4, tgt: 'a_farm', d: 4000, agl: 70, hpK: 0.08, // со стороны нашей площадки ферма видна (прицел — на крышу корпуса)
     intro: (C) => { const W = AG[ATGM(C)]; return card(W.name, [
       tr('Противотанковая управляемая ракета летит туда, куда смотрит прицел: <b>держите марку на цели до попадания</b>.'),
       tr('Захват — {0}, пуск — {1}. Дальность — до {2} км.', [ctl(C, K('R'), tr('«Цель»')), ctl(C, K(tr('Пробел')), tr('«Пуск»')), Math.round((W.rmax || 6000) / 1000)]),
@@ -213,7 +213,7 @@ const heliLessons = [
       [tr('Отвернуть сразу после пуска — ракета теряет цель.'), tr('Пускать с открытого места, когда рядом ЗРК, — за время полёта ракеты вас успеют сбить.')]); },
     hint: (T, C, a, c, o, fly) => (fly ? tr('<b>Ракета летит — держите марку на цели</b>, не отворачивайте.') : tr('Цель — <b>{0}</b>, {1} км. Выберите ПТУР ({2}), подойдите на дальность пуска, захват и пуск.', [o.name, (hdist(c, o) / 1000).toFixed(1), ctl(C, K('Q'), tr('строка оружия'))])),
     win: tr('Попадание! ПТУР ведёте до конца — потом уходите.') }),
-  HWL({ id: 'h_cover', sec: tr('Выживание'), name: tr('Укрытия и подскок'), desc: tr('подойти оврагом, подскочить, пустить, уйти вниз'), key: ATGM, n: 4, tgt: 'a_wreck', d: 7000, agl: 25, hpK: 0.14, ang: Math.PI / 3, // с северо-востока: с 3–4 км из оврага видно после подскока
+  HWL({ id: 'h_cover', sec: tr('Выживание'), name: tr('Укрытия и подскок'), desc: tr('подойти оврагом, подскочить, пустить, уйти вниз'), key: ATGM, n: 4, tgt: 'a_wreck', d: 7000, agl: 25, hpK: 0.08, ang: Math.PI / 3, // с северо-востока: с 3–4 км из оврага видно после подскока
     defense: (C, S, rnd, o) => { const [x, z] = near(C, o, 1600); const u = S.addUnit(pv(C, 'osa', 'roland'), x, z, { skill: 0.7 }); u.emit = true; u.ambush = false; },
     intro: (C) => card(tr('Укрытия и подскок'), [
       tr('Вертолёт живёт, пока его не видно. Склоны оврагов, лес и холмы закрывают от РЛС и прицелов — держитесь <b>ниже 30 м</b> за рельефом.'),
@@ -243,7 +243,7 @@ const heliLessons = [
   { id: 'h_final', sec: tr('Выживание'), name: tr('Контрольный вылет'), desc: tr('две цели под огнём ПВО — всё вместе'),
     intro: () => card(tr('Контрольный вылет'), [tr('Две цели: гарнизон «Пугало» и склад «Фонарь Джека». Вокруг — пушки, ПЗРК и ЗРК.'), tr('Всё вместе: низко за рельефом, подскок, ПТУР и НАР, ловушки по датчику пуска, пополнение посадкой на своей площадке.'), tr('Комплекс, открывший по вам огонь, появляется на карте с зоной поражения — обходите её.')],
       [tr('Лететь прямо через поле к цели.'), tr('Забыть о топливе и подвеске — площадка далеко.')]),
-    air: (C) => ({ items: heliItems(C), plane: HELI(C), pod: true, targets: ['a_vil', 'a_farm'], hpK: 0.2, spawn: approach(C, hl(C, 'a_vil'), 6000, 40, angHome(hl(C, 'a_vil'))),
+    air: (C) => ({ items: heliItems(C), plane: HELI(C), pod: true, targets: ['a_vil', 'a_farm'], hpK: 0.12, spawn: approach(C, hl(C, 'a_vil'), 6000, 40, angHome(hl(C, 'a_vil'))),
       defense: (S) => { for (const [k, key, r] of [[pv(C, 'zsu234', 'm163'), 'a_vil', 700], [pv(C, 'igla', 'stinger'), 'a_vil', 1100], [pv(C, 'osa', 'roland'), 'a_farm', 1500], [pv(C, 'igla', 'stinger'), 'a_farm', 900]]) { const [x, z] = near(C, hl(C, key), r); const u = S.addUnit(k, x, z, { skill: 0.7 }); u.ambush = false; } } }),
     tick(T, C) {
       const { a, c } = hst(C), t1 = hl(C, 'a_vil'), t2 = hl(C, 'a_farm');
@@ -678,7 +678,7 @@ export const LESSONS = {
         tr('<b>«⚙ все»</b> — те же настройки сразу для всех единиц этого типа на цели. Время сдвигается у всех вместе, порядок сохраняется.'),
         tr('Без маршрута ракета идёт к цели прямо, со своей стороны.')],
         [tr('Пустить все ракеты одним путём над одним ЗРК: он собьёт их по очереди.'), tr('Пустить всё в одну секунду или растянуть на 10 минут: лучше — несколькими плотными группами.')]),
-      def: () => ({ multi: 'atk', budget: 40, items: new Set(['kalibr']), prep: (st) => give(st, 'kalibr', 2, st.targets[0]) }),
+      def: () => ({ multi: 'atk', budget: Math.max(40, 2 * THREAT.kalibr + 18), items: new Set(['kalibr']), prep: (st) => give(st, 'kalibr', 2, st.targets[0]) }),
       tick(T, C) {
         const D = DS(C), t0 = D.targets[0], key = t0 && 'o' + t0.id, u = (i) => (D.plan.cfg.kalibr.units[i] || {}), d = T.d;
         const card0 = D.tsel === key || D.edKey === 'kalibr';
@@ -699,7 +699,7 @@ export const LESSONS = {
         tr('Дроны и баллистика ждать могут: дроны — до 10 мин, баллистика — до 15.'),
         tr('<b>«☰ Ход волны»</b> слева — что летит и когда. <b>«Ждать»</b> — время ×4 до события, за 4 с камера переключится к нему. <b>«Смотреть»</b> — камера сразу.')],
         [tr('Растянуть пуски одного носителя дольше 90 с — игра не даст.'), tr('Пустить крылатые раньше дронов: ПВО ещё не отвлечена.')]),
-      def: () => ({ multi: 'atk', budget: 40, items: new Set(['kalibr']), prep: (st) => give(st, 'kalibr', 4, st.targets[0]) }),
+      def: () => ({ multi: 'atk', budget: Math.max(40, 4 * THREAT.kalibr), items: new Set(['kalibr']), prep: (st) => give(st, 'kalibr', 4, st.targets[0]) }), // бюджет — от цены: 4 «Калибра» выданы (Пуск — при остатке ≥ 0)
       tick(T, C) {
         const D = DS(C), d = T.d, cr = C.S.wpns.filter((w) => w.ev && w.key === 'kalibr');
         if (cr.length) d.seen = true;

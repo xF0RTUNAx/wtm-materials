@@ -371,6 +371,9 @@ export function createRaid(S, city, rnd, opts = {}) {
         // серия по две: вторая — через 0,25 с после первой без нового прогноза (раньше ждала прогноза, а он за 0,25 с уходил за допуск —
         // вторая не падала, самолёт кружил над целью и терял скорость до сваливания); проскочили цель — повторный заход (reattack)
         const guided = W.kind !== 'bomb', ser = a.ser && a.relT <= 0;
+        // лазерная / ТВ-бомба: заход ниже — с 5 км бомба не долетает, пока точка в поле зрения ГСН (лазерная — 24°: дальше 2,25 высоты;
+        // ТВ — 40°), с 1,8 / 3,5 км долетает и видит (ревью 2026-11-01: иначе половина бомб оставалась на борту)
+        const hAtk = W.kind === 'lgb' ? Math.min(a.cruise, 1800) : W.kind === 'tvb' ? Math.min(a.cruise, 3500) : a.cruise;
         const tImp = a.relT <= 0 && d < 16000 && !ser ? predictBomb(city, W, a.pos, a.vel, guided ? aim : null, TMP2) : -1;
         const miss = tImp > 0 ? TMP2.distanceTo(aim) : 1e9, tol = guided ? 14 : Math.max(18, W.blast * 0.5);
         // свободная бомба: точка падения за кадр уходит на ~25 м (больше допуска) — сброс и по переходу точки падения через цель
@@ -389,8 +392,8 @@ export function createRaid(S, city, rnd, opts = {}) {
           else if (!guided && !ser && L.n > 0) a.ser = true;
         }
         if (!a.sOut && d < 3000 && ahead(a, aim) < 0) a.sOut = 1;
-        if (!reattack(a, aim, d, a.cruise, guided ? Math.max(6000, (a.pos.y - aim.y) * 2.6) : 10000, dt)) steerToward(a, aim, a.cruise, dt);
-        if (a.t - a.tW > 220) a.phase = 'egress';
+        if (!reattack(a, aim, d, hAtk, guided ? Math.max(6000, (a.pos.y - aim.y) * 2.6) : 10000, dt)) steerToward(a, aim, hAtk, dt);
+        if (a.t - a.tW > (hAtk < a.cruise ? 330 : 220)) a.phase = 'egress'; // лазерная / ТВ — подсвет и новые заходы: дольше
       } else if (W.kind === 'rocket') {
         // НАР с самолёта: подход на ~900 м над целью, пологое пикирование (до 17°) носом на цель с поправкой на снижение ракет
         // (a.rk — как у вертолёта, копится только когда нос уже на линии), залп — когда точка падения у цели; ниже 350 м над землёй

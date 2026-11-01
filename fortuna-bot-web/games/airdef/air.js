@@ -1221,14 +1221,16 @@ export function createAir(C) {
       game.tgtN = opts.targets || opts.items ? 0 : (() => {
         const att = opts.side || (setup.side === 'east' ? 'west' : 'east'), all = LOADOUTS[setup.era];
         let lo = C.op ? setup.lo2 : setup.lo; if (!all[lo] || all[lo].side !== att) lo = (loadoutsOf(setup.era, att).find(([L]) => !C.op || loadoutRole(L) !== 'sead') || [])[1];
-        const L = (isHeli(HELI_Q) && HELI_LOADOUTS.find((q) => q.plane === HELI_Q)) || all[lo];
+        const L = isHeli(HELI_Q) ? HELI_LOADOUTS.find((q) => q.plane === HELI_Q) || (all[lo] && { ...all[lo], heli: true }) : all[lo]; // ?heli= без своей подвески — НАР по-вертолётному, как в полёте
         return L && loadoutRole(L) !== 'sead' ? loadoutTargets(L) : 0;
       })();
       game.targets = opts.targets ? opts.targets.map((k) => S.objects.find((o) => o.key === k)).filter(Boolean) : pickTargets(S, rnd, game.tgtN || 3);
       const kn = setup.game === 'air' && C.diff ? C.diff.knobs('air', setup.diff) : null; // сложность: режим + скрытая подстройка (не в обучении и «Съёмке»)
       // против вертолёта (craft.heli тут ещё от прошлого вылета): только ближние комплексы и реже — «Аркада» ×0,35, «Реализм» ×0,5 (Mark 2026-10-22: было ×0,6 и весь набор эпохи)
       const vsHeli = !opts.items && (isHeli(HELI_Q) || (LOADOUTS[setup.era][setup.lo] || {}).heli);
-      if (opts.defense) opts.defense(S, rnd); else placeDefense(S, city, rnd, setup.side, setup.era, game.targets, (kn ? kn.density : 1) * (vsHeli ? (setup.diff === 'real' ? 0.5 : 0.35) : 1), { ...(kn || {}), heli: vsHeli, same: setup.game !== 'air' }); // состав — случайный только в «Вылете» (уроки и «Съёмка» — как в arsenal)
+      // ПВО — у трёх объектов, как раньше: цели задания и ещё объекты карты до трёх (при одной цели всё ближнее стояло бы у неё — втрое плотнее)
+      const defT = !game.tgtN || game.targets.length >= 3 ? game.targets : [...game.targets, ...pickTargets({ objects: S.objects.filter((o) => !game.targets.includes(o)) }, rnd, 3 - game.targets.length)];
+      if (opts.defense) opts.defense(S, rnd); else placeDefense(S, city, rnd, setup.side, setup.era, defT, (kn ? kn.density : 1) * (vsHeli ? (setup.diff === 'real' ? 0.5 : 0.35) : 1), { ...(kn || {}), heli: vsHeli, same: setup.game !== 'air' }); // состав — случайный только в «Вылете» (уроки и «Съёмка» — как в arsenal)
       if (C.op) C.op.targets = game.targets;
     }
     C.syncUnits();

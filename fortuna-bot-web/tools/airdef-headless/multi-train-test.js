@@ -45,6 +45,7 @@ const errors = [];
 const origErr = console.error; console.error = (...a) => { errors.push(a.join(' ')); };
 await import('../../games/airdef/main.js');
 const { samKnown } = await import('../../games/airdef/sim/combined.js?v=20261029b');
+const { THREAT } = await import('../../games/airdef/arsenal.js?v=20261029b');
 for (let i = 0; i < 300 && !(globalThis.__a && globalThis.__a.state === 'menu'); i++) await new Promise((r) => setTimeout(r, 100)); // запуск по этапам (экран загрузки)
 const C = globalThis.__a;
 let now = 1000;
@@ -75,7 +76,11 @@ function runLesson(side, i, bot, sec) {
   const tg = (st, i = 0) => 'o' + st.targets[Math.min(i, st.targets.length - 1)].id;
   const add = (D, k, n, key) => { const st = D.st; for (let j = 0; j < n; j++) { const i = (st.plan.n[k] = (st.plan.n[k] || 0) + 1) - 1; D.setTkey(k, i, key); if (st.phase === 'wave') { st.addQ[k] = (st.addQ[k] || 0) + 1; st.addT = 0.05; } } };
   const once = (T, tag, f) => { if (T.d['b' + tag]) return; T.d['b' + tag] = 1; f(); };
-  const go = (D) => { if (D.st.phase === 'plan') { D.st.edKey = null; D.st.tsel = null; D.startWave(); } D.st.timeK = 4; };
+  // «Пуск» как кнопка: наряд — в бюджете урока (defense.js: кнопка выключена при перерасходе; ревью 2026-11-01 — урок с 4 «Калибрами» после смены цен)
+  // за ПВО план — волна противника; бюджет 0 — состояние прошлого урока в первые кадры
+  const go = (D) => { if (D.st.phase === 'plan') { const cost = Object.entries(D.st.plan.n).reduce((s, [k, n]) => s + (THREAT[k] ?? 3) * n, 0);
+    if (D.st.multi === 'atk' && D.st.budget > 0 && cost > D.st.budget) check(`наряд ${cost} — в бюджете урока ${D.st.budget}`, false);
+    D.st.edKey = null; D.st.tsel = null; D.startWave(); } D.st.timeK = 4; };
   const B = {
     m_scout: (D, T) => { const st = D.st; if (T.s === 0) st.tsel = tg(st); else if (T.s === 1) once(T, 1, () => add(D, 'shahed', 3, st.tsel)); else go(D); },
     m_alloc: (D, T) => { const st = D.st; if (T.s === 0) st.tsel = tg(st); else if (T.s === 1) { once(T, 1, () => add(D, 'shahed', 2, st.tsel)); if (!T.d.k || T.d.k < T.t) { T.d.k = T.t + 0.2; add(D, 'kh555', 1, st.tsel); } } else if (T.s === 2) once(T, 2, () => { st.plan.n.shahed--; }); else if (T.s === 3) once(T, 3, () => { const o = C.S.objects.find((q) => !q.noTarget && !q.dead && 'o' + q.id !== st.tsel); st.tsel = 'o' + o.id; add(D, 'shahed', 2, st.tsel); }); },
