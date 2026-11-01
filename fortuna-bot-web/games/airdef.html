@@ -7,6 +7,12 @@
 <!-- значок на экране «Домой» — лого превью (img/og-logo.jpg, квадрат; Mark 2026-10-27), Android — манифест -->
 <link rel="apple-touch-icon" href="../img/airdef-icon-180.png"><link rel="icon" type="image/png" sizes="192x192" href="../img/airdef-icon-192.png"><link rel="manifest" href="airdef.webmanifest">
 <title>Air Superiority Online</title>
+<!-- перезагрузка под новую карту (doors.js carry): страница открывается уже с закрытыми створками — до загрузки модулей; потом их сменяют створки doors.js -->
+<style>#doorsBoot { display: none; } html.dboot #doorsBoot { display: block; position: fixed; inset: 0; z-index: 2147482900; background: #171b14; }
+  #doorsBoot > div { position: absolute; top: 0; bottom: 0; width: 50.2%; background: #171b14 center / cover no-repeat; }
+  #doorsBoot .dl { left: 0; background-image: var(--dbl); background-position: right center; } #doorsBoot .dr { right: 0; background-image: var(--dbr); background-position: left center; }</style>
+<script>try { var dd = JSON.parse(sessionStorage.getItem('fortuna_ad_doors') || 'null'); if (dd && Date.now() - dd.t < 60000 && /^(has|hangar)$/.test(dd.s) && !matchMedia('(prefers-reduced-motion: reduce)').matches) { var dr = document.documentElement; dr.classList.add('dboot');
+  dr.style.setProperty('--dbl', 'url(airdef/ui/doors/' + dd.s + '_l.webp?v=20261101a)'); dr.style.setProperty('--dbr', 'url(airdef/ui/doors/' + dd.s + '_r.webp?v=20261101a)'); } } catch (e) { /* нет хранилища */ }</script>
 <!-- превью ссылки (то же, что у fortunawtm.com/airsuperiority — Mark 2026-10-27) -->
 <meta name="description" content="Современная авиация, вооружение и комплексы ПВО прямо в браузере! Специальный режим мульти-волны против баллистики, крылатых ракет, дронов и бомб по обе стороны. Онлайн, рейтинг, камуфляжи и многое другое. Попробуй прямо сейчас!"><meta property="og:type" content="website"><meta property="og:site_name" content="xFORTUNAx"><meta property="og:title" content="Air Superiority Online">
 <meta property="og:description" content="Современная авиация, вооружение и комплексы ПВО прямо в браузере! Специальный режим мульти-волны против баллистики, крылатых ракет, дронов и бомб по обе стороны. Онлайн, рейтинг, камуфляжи и многое другое. Попробуй прямо сейчас!"><meta property="og:image" content="https://fortunawtm.com/fortuna-bot-web/img/og-logo.jpg"><meta property="og:url" content="https://fortunawtm.com/airsuperiority"><meta name="twitter:card" content="summary_large_image">
@@ -694,6 +700,7 @@
 </style>
 </head>
 <body>
+<div id="doorsBoot"><div class="dl"></div><div class="dr"></div></div>
 <canvas id="c"></canvas>
 <div id="fade"></div>
 <div id="loading"><div class="ldb"><b>AIR SUPERIORITY</b><span id="ldTxt">Генерируем город: улицы, кварталы, река…</span><div class="ldbar"><i id="ldBar"></i></div></div></div>

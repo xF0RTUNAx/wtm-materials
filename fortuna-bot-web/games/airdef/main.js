@@ -984,6 +984,7 @@ C.setFov = (f) => { if (Math.abs(camera.fov - f) < 0.01) return; camera.fov = f;
 C.shell = createShell(C, { IS_TOUCH, ls });
 // створки при входе в бой и выходе в меню (doors.js): стиль — случайно на каждый переход; картинки — заранее, через 4 с после загрузки
 C.doors = createDoors(); setTimeout(() => C.doors.preload(), 4000);
+C.doors.gate = () => C.assetsDone === true; // после перезагрузки под карту створки расходятся, когда модели и текстуры пришли (не дольше 8 с)
 C.crash = createCrashRep(C); // прошлый бой оборвался без выхода (вылет вкладки) — после меню предложим отправить отчёт
 document.body.classList.toggle('nopad', !C.sens.pad); // крестовина выключена в настройках
 document.body.classList.toggle('nobino', C.sens.bino === false); // «Бинокль» вылета выключен в настройках
@@ -994,10 +995,10 @@ C.start = function (game) {
   if (game === 'online') { C.online.again(); return; } // «Ещё раз» после онлайн-боя — снова в поиск
   // самолёт ↔ вертолёт: у них разные карты (город / «Туманная топь») — карта строится при загрузке: перезагрузка сразу в вылет
   // «Ещё раз» после потери контекста WebGL (текстуры моделей не вернуть): новый бой — с перезагрузкой, адрес страницы тот же (карта, вертолёт — как были)
-  if (C.reloadAfterBattle && (game === 'air' || game === 'defense' || game === 'training')) { ls.set('fortuna_airdef_setup', JSON.stringify(C.setup)); const u = new URL(location.href); u.searchParams.set('go', game); u.searchParams.set('weather', W_KEY); if (game === 'air' && MAP === 'autumn') u.searchParams.set('hlo', C.setup.lo); /* hlo и weather при загрузке из адреса убраны — вернуть: вертолёт «Топи» и её погода */ location.replace(u.href); return; }
+  if (C.reloadAfterBattle && (game === 'air' || game === 'defense' || game === 'training')) { ls.set('fortuna_airdef_setup', JSON.stringify(C.setup)); C.doors.carry('go'); const u = new URL(location.href); u.searchParams.set('go', game); u.searchParams.set('weather', W_KEY); if (game === 'air' && MAP === 'autumn') u.searchParams.set('hlo', C.setup.lo); /* hlo и weather при загрузке из адреса убраны — вернуть: вертолёт «Топи» и её погода */ location.replace(u.href); return; }
   const contOp = game === 'air' && C.op && C.op.next; // второй вылет «Операции» — на той же карте (цели и уцелевшая ПВО — оттуда)
   if ((game === 'air' || game === 'defense' || game === 'training') && !Q.get('map') && !contOp && wantMap(game, C.setup.pmap, C.setup.era, C.setup.lo, C.setup.evd, C.setup.tside) !== MAP) {
-    ls.set('fortuna_airdef_setup', JSON.stringify(C.setup)); const u = new URL(location.href); u.searchParams.set('go', game); u.searchParams.delete('heli'); u.searchParams.delete('hlo'); u.searchParams.delete('weather'); location.replace(u.href); return;
+    ls.set('fortuna_airdef_setup', JSON.stringify(C.setup)); C.doors.carry('go'); /* створки закрыты — новая страница начнётся с них */ const u = new URL(location.href); u.searchParams.set('go', game); u.searchParams.delete('heli'); u.searchParams.delete('hlo'); u.searchParams.delete('weather'); location.replace(u.href); return;
   }
   if ((game === 'air' || game === 'defense') && RAND_MAPS.includes(MAP) && !contOp && wantMap(game, C.setup.pmap, C.setup.era, C.setup.lo, C.setup.evd, C.setup.tside) === MAP) rerollMap(); // следующему бою — новая случайная карта
   snd.unlock();
@@ -1013,7 +1014,7 @@ C.start = function (game) {
   resize();
 };
 C.toMenu = function () {
-  if (C.reloadAfterBattle) { location.reload(); return; } // контекст WebGL терялся в онлайн-бою — текстуры моделей вернёт только перезагрузка
+  if (C.reloadAfterBattle) { C.doors.carry('menu'); location.reload(); return; } // контекст WebGL терялся в онлайн-бою — текстуры моделей вернёт только перезагрузка
   C.op = null; // «Операция» прервана
   C.endScr.reset();
   if (C.ctrl && C.ctrl.stop) C.ctrl.stop();
@@ -1252,7 +1253,7 @@ loadModels(new URL('./', import.meta.url).href, (name) => {
   if (C.ctrl && C.ctrl.modelsReady) C.ctrl.modelsReady();
 });
 // запуск по этапам: между ними экран успевает показать, что сейчас строится (полоса и подпись)
-const ldStep = (txt, k) => new Promise((r) => { const t = $('ldTxt'), b = $('ldBar'); if (t) t.textContent = txt; if (b) b.style.width = Math.round(k * 100) + '%'; setTimeout(r, 30); });
+const ldStep = (txt, k) => new Promise((r) => { const t = $('ldTxt'), b = $('ldBar'); if (t) t.textContent = txt; C.doors.note(`${txt} ${Math.round(k * 100)} %`); /* створки с прошлой страницы — подпись на шве */ if (b) b.style.width = Math.round(k * 100) + '%'; setTimeout(r, 30); });
 // догрузка после старта: модели техники и домов, текстуры — статус внизу, пока не придёт всё
 let alShown = false;
 setInterval(() => {
@@ -1261,7 +1262,7 @@ setInterval(() => {
   if (!e || !need) return;
   if (left > 0 && C.state !== 'loading') {
     alShown = true; e.classList.add('on');
-    $('alTxt').textContent = tr('Загружаем город: модели {0} из {1}{2}', [m.done, m.req, t.req ? tr(', текстуры {0} из {1}', [t.done, t.req]) : '']);
+    $('alTxt').textContent = tr('Загружаем город: модели {0} из {1}{2}', [m.done, m.req, t.req ? tr(', текстуры {0} из {1}', [t.done, t.req]) : '']); C.doors.note(`${tr('Загружаем карту')} ${Math.round(100 * got / need)} %`);
     $('alBar').style.width = Math.round(100 * got / need) + '%';
   } else if (alShown && left <= 0) { alShown = false; $('alTxt').textContent = tr('Город загружен'); $('alBar').style.width = '100%'; setTimeout(() => { if (!alShown) e.classList.remove('on'); }, 1500); }
 }, 400);
@@ -1315,7 +1316,8 @@ setInterval(() => {
   // (смена режима, карты) снова запустит вылет на вертолёте или не тот режим
   { const u = new URL(location.href); let ch = false; for (const k of ['go', 'hlo', 'weather']) if (u.searchParams.has(k)) { u.searchParams.delete(k); ch = true; } if (ch) try { history.replaceState(history.state, '', u.href); } catch (_) { /* нет */ } }
   const em = Q.get('endmock'); if (em) { C.endScr.mock(em); } // ?endmock=solo-win | solo-lose | ol-win | ol-lose | mw-win | mw-lose — показать экран итога с примерными данными
-  const go = Q.get('go'); if (go && ctrls[go]) { setup.game = go === 'training' ? 'training' : go; if (go === 'air' && HLO >= 0) setup.lo = HLO; /* меню при показе подменило вертолётную подвеску самолётной */ C.lastGame = go; C.start(go); }
+  const go = Q.get('go'); if (go && ctrls[go]) { setup.game = go === 'training' ? 'training' : go; if (go === 'air' && HLO >= 0) setup.lo = HLO; /* меню при показе подменило вертолётную подвеску самолётной */ C.lastGame = go; C.doors.run(() => C.start(go)); }
+  else C.doors.release(); // створки с прошлой страницы (выход в меню после потери контекста) — открыть; онлайн их откроет сам — вход в бой или лобби
   setTimeout(() => C.crash.offer(), 2000); // окно «Игра закрылась с ошибкой» — когда меню уже на экране
 })();
 if (Q.get('test') === '1') { window.__a = C; window.__frame = frame; C.ctrls = ctrls; C.resize = resize; C.lessons = LESSONS; } // проверка: доступ к игре и шаг кадра вручную (страница в фоне)

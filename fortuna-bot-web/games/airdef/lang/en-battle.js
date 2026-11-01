@@ -629,6 +629,8 @@ export default {
   'Повторить': 'Retry',
   'Поиск боя': 'Matchmaking',
   'Отменить': 'Cancel',
+  'Загрузка…': 'Loading…',
+  'Загружаем карту': 'Loading the map',
   'ОНЛАЙН': 'ONLINE',
   'поиск соперников': 'finding opponents',
   'Ждём соперников': 'Waiting for opponents',

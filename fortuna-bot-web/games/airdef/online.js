@@ -174,6 +174,7 @@ export function createOnline(C, ctrls) {
 
   // ═════════════ События сети ═════════════
   N.on('conn', rerender);
+  N.on('conn', () => { if (N.conn === 'on' && C.doors.held) setTimeout(() => { if (!N.room && !N.battle) C.doors.release(true); }, 4000); }); // после перезагрузки под карту комнаты, а комнаты уже нет
   N.on('room', () => { if (C.account && C.account.refresh) C.account.refresh(); }); // зашли в комнату / вышли — окно аккаунта открыто: кнопки смены аккаунта закрыть / открыть
   N.on('queue', rerender);
   N.on('err', (m) => { C.say(trFmt(m), 3); rerender(); }); // сообщения сервера — по-русски: переводим на клиенте
@@ -183,7 +184,8 @@ export function createOnline(C, ctrls) {
   // сервер держит место (в лобби — 30 с, в бою — как при обрыве) и тот же аккаунт возвращает в комнату.
   // map — карта комнаты из сообщения сервера; null — комнаты нет (выбор игры в меню): подходит любая из случайных, что уже загружена
   let mapGo = false;
-  function mapFix(kind, map) {
+  // doors — бой нашёлся: перезагрузка за закрытыми створками (новая страница начнётся с них, doors.js carry)
+  function mapFix(kind, map, doors = false) {
     if (mapGo) return true; // уже уходим на другую карту
     const k = kind === 'multi' ? 'multi' : 'air'; ls.set('fortuna_ad_kind', k);
     if (k === 'air') ls.set('fortuna_ad_omap', map !== null ? (C.RAND_MAPS.includes(map) ? map : 'city') : C.RAND_MAPS.includes(C.MAP) ? C.MAP : 'city');
@@ -191,7 +193,8 @@ export function createOnline(C, ctrls) {
     C.setup.game = 'online'; C.saveSetup(); // после перезагрузки — снова раздел онлайна, карта — комнаты
     mapGo = true; N.quit = true; // уходящая страница не переподключается (иначе две вкладки одного аккаунта отнимают место друг у друга)
     N.clog('map_reload', k); C.say(tr('Загружаем карту комнаты…'), 5);
-    const u = new URL(location.href); u.searchParams.delete('ad'); u.searchParams.set('mp', '1'); if (k === 'air') u.searchParams.set('omap', ls.get('fortuna_ad_omap') || map || 'city'); else u.searchParams.delete('omap'); location.replace(u.href);
+    const u = new URL(location.href); u.searchParams.delete('ad'); u.searchParams.set('mp', '1'); if (k === 'air') u.searchParams.set('omap', ls.get('fortuna_ad_omap') || map || 'city'); else u.searchParams.delete('omap');
+    if (doors) C.doors.run(() => { C.doors.carry('online'); location.replace(u.href); }, true); else location.replace(u.href);
     return true;
   }
   // бой нашёлся: створки (doors.js) — экран подбора уходит за ними; повторный вызов, пока створки идут, — сразу (бой уже на сервере)
@@ -200,9 +203,10 @@ export function createOnline(C, ctrls) {
   const enterNow = (wave) => { if (C.state === 'play') return; enterBattle(); if (N.battle && (team() === 'pvo' || N.battle.kind === 'multi')) ctrls.defense.netSync(); renderPlan();
     const r = N.room; if (wave && r && r.state === 'play' && N.battle && N.battle.kind !== 'multi') { C.say(tr('Волна {0}!', [r.wave]), 2.5); snd.alarm(); } };
   const enterDoors = () => { let now = true; C.doors.run(() => enterNow(!now), true); now = false; };
-  N.on('start', () => { if (N.battle && mapFix(N.battle.kind, N.battle.map || null)) return; if (C.state === 'play') enterBattle(); else enterDoors(); });
+  N.on('start', () => { if (N.battle && mapFix(N.battle.kind, N.battle.map || null, true)) return; if (C.state === 'play') enterBattle(); else enterDoors(); });
   N.on('room', (was) => {
-    if (N.room && !(C.ended && N.room.state === 'lobby') && mapFix(N.room.kind, N.room.map || 'city')) return; // на экране итогов — не перезагружаться: карту новой комнаты — по «В комнату» (again)
+    if (N.room && !(C.ended && N.room.state === 'lobby') && mapFix(N.room.kind, N.room.map || 'city', N.room.state !== 'lobby')) return;
+    if (N.room && N.room.state === 'lobby') C.doors.release(true); // створки с перезагрузки, а впереди лобби — открыть // на экране итогов — не перезагружаться: карту новой комнаты — по «В комнату» (again)
     rerender();
     const r = N.room; if (!r || !N.battle || r.state === 'end' || r.state === 'lobby') return; // итоги и лобби — не бой
     if (C.state !== 'play') { if (!C.doors.busy) enterDoors(); if (C.state !== 'play') return; } // створки идут — синхронизация в enterNow, когда бой откроется

@@ -148,7 +148,10 @@ export function createEvent(C) {
   // карта и погода строятся при загрузке: нужна осенняя карта и выбранная погода — иначе перезагрузка сразу в бой (go=…, weather=…)
   function launch(game) {
     setup.evd = game === 'defense'; C.saveSetup(); C.lastGame = game;
-    if (C.MAP === 'autumn' && C.W_KEY === S.wx) { api.hide(); C.start(game); return; }
+    if (C.MAP === 'autumn' && C.W_KEY === S.wx) { C.doors.run(() => { api.hide(); C.start(game); }); return; }
+    C.doors.run(() => { C.doors.carry('go'); go(game); }); // другая карта — перезагрузка за закрытыми створками
+  }
+  function go(game) {
     const u = new URL(location.href); u.searchParams.set('go', game); u.searchParams.set('weather', S.wx); if (game === 'air') u.searchParams.set('hlo', setup.lo); // подвеска вертолёта: меню на загрузке подменяет её самолётной
     for (const k of ['heli', 'mp', 'ad']) u.searchParams.delete(k);
     if (u.searchParams.get('map') !== 'autumn') u.searchParams.delete('map');
