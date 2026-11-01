@@ -39,6 +39,7 @@ const BY_KEY = {
   sampt: 'lowsmoke', iris: 'lowsmoke', nasams: 'lowsmoke', camm: 'lowsmoke', pac3: 'lowsmoke', bukm3: 'lowsmoke', s400: 'lowsmoke',
   w_kh31: 'ramjet', kh31: 'ramjet', kh31p: 'ramjet', agm88: 'lowsmoke', aargm: 'lowsmoke', hellfire: 'atgm', shturm: 'atgm', ataka: 'atgm', tow: 'atgm',
   s8: 'rocket', hydra: 'rocket', s5: 'rocket', s13: 'rocket', scud: 'liquid', r17: 'liquid', lance: 'liquid', // Lance — жидкостный двигатель; PrSM и ARRW — твёрдое топливо (по умолчанию)
+  kh28: 'liquid', mald: 'jet', decoy_e: 'jet', // Х-28 — ЖРД (азотнокислотный окислитель: рыжеватый); MALD и восточная ложная цель — турбореактивные (2026-11-01: были «смесевые» с густым дымом)
 };
 // sustain — маршевый режим после стартового: у С-75 маршевый двигатель жидкостный, у «Куба» — прямоточный
 const SUSTAIN = { s75: 'liquid', kub: 'ramjet', kvadrat: 'ramjet', w_kh31: 'ramjet', kh31: 'ramjet', kh31p: 'ramjet' };
@@ -108,7 +109,8 @@ export function makeFlame(group, z, r, motor = MOTOR.solid) {
       const was = mesh.visible; mesh.visible = glow.visible = k > 0;
       if (!k) { if (was && this.owner && live) live.finish(this.owner); return; }
       // розжиг (Mark 2026-10-22): струя не сразу во всю длину — за ≈ 0,35 с (быстро в начале), свечение у сопла — с первого кадра, но меньше
-      if (!was) t0 = frameT; const x = Math.min(1, (frameT - t0) / 30 / 0.35), ig = 1 - (1 - x) * (1 - x);
+      if (!was) { t0 = frameT; if (IGN) { group.updateMatrixWorld(true); mesh.getWorldPosition(WP); AX.set(0, 0, 1).transformDirection(group.matrixWorld); IGN(WP, AX, rr, mot, k, y); } } // розжиг: вспышка и выхлоп
+      const x = Math.min(1, (frameT - t0) / 30 / 0.35), ig = 1 - (1 - x) * (1 - x);
       const e = 1 - air(y), f = 0.9 + Math.random() * 0.2, w = rr * (k > 1 ? 3.2 : 2.4) * (1 + 1.6 * e) * (0.45 + 0.55 * ig), L = rr * mot.len[k > 1 ? 0 : 1] * 1.5 * (1 + 0.8 * e) * f * (0.12 + 0.88 * ig);
       mesh.scale.set(w, 1, L); glow.scale.setScalar(rr * (k > 1 ? 5 : 3.6) * (1 + e) * (0.9 + Math.random() * 0.2) * (0.5 + 0.5 * ig)); glow.material.opacity = Math.min(0.8, 0.4 * mot.br + 0.1) * (0.6 + 0.4 * ig);
       if (this.owner && live) { group.updateMatrixWorld(true); mesh.getWorldPosition(WP); live.tip(this.owner, WP.x, WP.y, WP.z); }
@@ -122,11 +124,15 @@ export function makeFlame(group, z, r, motor = MOTOR.solid) {
 // ═════════════ Клубы вдоль следа ═════════════
 // Mark 2026-11-01 — «шлейфы по подобию War Thunder»: у них след — не гладкая полоса, а бугристые клубы с освещённым верхом и тенью снизу.
 // Поверх ленты — клубы из Blender (puffs.js, лист ex_puff: свет, самозатенение, рваный край) через шаг ≈ ширины следа; лента остаётся
-// сердцевиной у сопла и связкой между клубами. Вдали от камеры шаг реже (до ×5). Только дымные двигатели (густота ≥ 0,4). ?wts=0 — как было.
+// сердцевиной у сопла и связкой между клубами. Вдали от камеры шаг реже (до ×5). Только дымные двигатели (густота ≥ PUFF_MIN). ?wts=0 — как было.
 let PUF = null, PCAM = null;
 export function setTrailPuffs(pf) { PUF = pf; }
 export function setPuffCam(cam) { PCAM = cam; }
 export const trailPuffsOn = () => !!(PUF && PUF.ready);
+export const PUFF_MIN = 0.3; // клубы — у двигателей с густотой дыма от этой (смесевые, ПЗРК, НАР, ПТУР, малодымные — едва заметной дымкой); жидкостные и реактивные — лентой
+// вспышка запуска двигателя (units-render.js: огонь и клубы выхлопа по калибру) — зовёт факел при розжиге
+let IGN = null; export function setIgnition(fn) { IGN = fn; }
+const AX = new THREE.Vector3();
 
 // ═════════════ Дымная лента ═════════════
 const SM_V = `#include <common>
@@ -255,7 +261,7 @@ export function createPlumes(scene, P = {}) {
         a: Math.min(1, m.a * Math.min(1.2, 0.8 + rr * 2)) * (1 - 0.45 * e), rise: 0.25 + rr * 1.5, c: m.c, u: L ? L.u + Math.hypot(x - L.x, y - L.y, z - L.z) : 0, ramp };
       // с клубами лента — только у сопла (≈ 30 м за срезом: на 1 км/с — 0,03 с, на 100 м/с — 0,3 с): сердцевина, пока клубы проявляются;
       // дальше след — одни клубы (Mark: шире клубов лента читалась вблизи полупрозрачной «подложкой»)
-      const pu = PUF && PUF.ready && m.a >= 0.4, pa = p.a, pl = p.life; if (pu) { p.a *= 0.85; p.life = Math.min(p.life, Math.max(0.06, Math.min(0.4, 30 / Math.max(sp, 1)))); }
+      const pu = PUF && PUF.ready && m.a >= PUFF_MIN, pa = p.a, pl = p.life; if (pu) { p.a *= 0.85; p.life = Math.min(p.life, Math.max(0.06, Math.min(0.4, 30 / Math.max(sp, 1)))); }
       T.pts.push(p); T.end = Math.max(T.end, time + p.life); T.tip = null;
       if (pu && L) puffAlong(T, L, p, m, pa, pl);
       if (T.pts.length > MAXP) { const o = T.pts; T.pts = o.filter((q, i) => i >= o.length / 2 || i % 2 === 0); T.rebuild = true; } // длинная лента — старая половина реже (звенья перенарезаются)

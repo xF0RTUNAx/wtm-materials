@@ -7,7 +7,7 @@
      ?wts=0 — без клубов Blender вдоль следа (как было до 2026-11-01). -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script type="module">
-import { createPlumes, makeFlame, flameTick, MOTOR, setTrailPuffs, setPuffCam } from '../../games/airdef/plume.js?v=20261101a';
+import { createPlumes, makeFlame, flameTick, MOTOR, setTrailPuffs, setPuffCam, setIgnition, PUFF_MIN } from '../../games/airdef/plume.js?v=20261101a';
 import { makePuffs } from '../../games/airdef/puffs.js?v=20261101a';
 const Q = new URLSearchParams(location.search), T = +(Q.get('t') || 8), dusk = Q.get('sky') === 'dusk', ALT = +(Q.get('alt') || 0);
 const r = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true }); r.setPixelRatio(1); r.setSize(innerWidth, innerHeight);
@@ -23,10 +23,15 @@ if (Q.get('wts') !== '0') {
   // ?sheet=try — пробный лист клубов следа (trail-try/, trail.py до запекания набело); иначе — лист игры (trail, нет — puff)
   const TRY = Q.get('sheet') === 'try', J = await (await fetch(TRY ? 'trail-try/trail.json' : '../../games/airdef/fx/explode.json?v=20261101a')).json();
   const key = TRY ? 'trail' : J.trail ? 'trail' : 'puff', j = J[key], u = (e) => TRY ? `trail-try/ex_trail.${e}?t=${Date.now()}` : `../../games/airdef/fx/ex_${key}.${e}?v=20261101a`;
-  PT = makePuffs(sc, 4000, { url: u('webp'), cols: j.cols, rows: j.rows, frames: j.frames, variants: j.variants, times: j.times, fadeIn: 0.05, sqrtGrow: true, k: key === 'trail' ? 1.3 : 2 }); // клуб следа заполняет клетку — множитель меньше
+  PT = makePuffs(sc, 4000, { url: u('webp'), cols: j.cols, rows: j.rows, frames: j.frames, variants: j.variants, times: j.times, fadeIn: 0.05, sqrtGrow: true, k: key === 'trail' ? (TRY ? 1.3 : 1.7) : 2 }); // клуб следа заполняет клетку — множитель меньше
   PT.mat.uniforms.scale.value = innerHeight / (2 * Math.tan(25 * Math.PI / 180)); setTrailPuffs(PT); setPuffCam(Q.get('cam') === 'chase' ? null : cam); // погоня: камера рядом с ракетой весь полёт — шаг клубов как вблизи
   for (let i = 0; i < 100 && !PT.ready; i++) await new Promise((ok) => setTimeout(ok, 100));
   window.__PT = PT; window.__cam = cam;
+  // розжиг — выброс выхлопа назад, как в игре (units-render.js setIgnition; вспышки огня на стенде нет — нет пула огня)
+  setIgnition((p, ax, rr, m, k, y) => { if (m.a < PUFF_MIN) return; const n = Math.round(Math.min(14, 3 + rr * 42)), w = Math.max(0.15, rr * m.w), g = (m.g[0] + rr * m.g[1]) * 0.8, life = (m.life[0] + rr * m.life[1]) * 0.45;
+    for (let i = 0; i < n; i++) { const sp = (6 + rr * 110) * (0.4 + Math.random() * 0.8), j = sp * 0.35;
+      PT.emit(p.x + ax.x * rr * 2, p.y + ax.y * rr * 2, p.z + ax.z * rr * 2, ax.x * sp + (Math.random() - 0.5) * j, ax.y * sp + (Math.random() - 0.5) * j + 0.5, ax.z * sp + (Math.random() - 0.5) * j,
+        m.c[0], m.c[1], m.c[2], Math.min(1, m.a * 1.05), w * (1.1 + Math.random() * 0.6), g, life * (0.7 + Math.random() * 0.6), 2.2, 0.15, 0.02); } });
 }
 // [имя, двигатель старт, маршевый, радиус, длина, разгон м/с², время работы старт, маршевый]
 const LIST = [['С-300 (смесевое)', 'solid', null, 0.25, 7.5, 160, 6, 0], ['ПЗРК «Игла»', 'manpads', null, 0.036, 1.6, 300, 2, 0], ['С-75: старт + жидкостный маршевый', 'solid', 'liquid', 0.25, 10.6, 90, 4, 20],
@@ -51,7 +56,8 @@ function step() {
 cam.position.set(0, ALT + +(Q.get('h') || 350), +(Q.get('d') || 1500)); // до полёта: шаг клубов — по расстоянию до камеры
 while (t < T) step();
 const c0 = R[0].pos;
-if (Q.get('cam') === 'chase') { cam.position.copy(c0).add(new THREE.Vector3(-60, -20, 90)); cam.lookAt(c0); }
+if (Q.get('cam') === 'launch') { cam.position.set(-900, ALT + 25, 150); cam.lookAt(-780, ALT + 35, 0); } // старт С-300 сбоку: выброс при розжиге
+else if (Q.get('cam') === 'chase') { cam.position.copy(c0).add(new THREE.Vector3(-60, -20, 90)); cam.lookAt(c0); }
 else { const D = +(Q.get('d') || 1500), H2 = +(Q.get('h') || 350); cam.position.set(0, ALT + H2, D); cam.lookAt(0, ALT + H2, 0); }
 document.getElementById('i').textContent = LIST.map((l) => l[0]).join(' · ') + ` · ${T} с`;
 if (PT) for (const at of Object.values(PT.points.geometry.attributes)) { at.updateRange.count = -1; at.needsUpdate = true; } // стенд считает полёт без кадров: буферы клубов — целиком (в игре — по кадрам)

@@ -3,7 +3,7 @@
 /* global THREE */
 import { part, mergeParts, M, latheZ, plateXZ, plateZY, buildMissileGeo } from '../drone/models.js?v=20261101a';
 import { makeParticles, radialTex } from '../drone/world.js?v=20261101a';
-import { createPlumes, makeFlame, flameTick, motorOf, setFlameLayer, setTrailPuffs, trailPuffsOn } from './plume.js?v=20261101a';
+import { createPlumes, makeFlame, flameTick, motorOf, setFlameLayer, setTrailPuffs, trailPuffsOn, PUFF_MIN, setIgnition } from './plume.js?v=20261101a';
 import { FLAME_KIND, makeJetFlame, setJetLayer } from './jetflame.js?v=20261101a';
 import { createCmFx } from './cmfx.js?v=20261101a';
 import { LNCH } from './launchers.js?v=20261101a';
@@ -600,7 +600,7 @@ export function createFx(scene, P) {
         if (t === 'trail') { // клубы следов ракет (Mark 2026-11-01, «по подобию War Thunder»; tools/airdef-fx/explode/trail.py): свой лист и пул — длинные следы ЗУР
           // не вытесняют дым подбитых; рост ∝ √t, как ширина следа (plume.js puffAlong); ?wts=0 — как было (лента и мягкие шары)
           if (/[?&]wts=0/.test(location.search)) continue;
-          PT = makePuffs(scene, P.fxLo ? 1500 : 4000, { ktx: u('ktx2'), url: u('webp'), cols: j.cols, rows: j.rows, frames: j.frames, variants: j.variants, times: j.times, fadeIn: 0.05, sqrtGrow: true, k: 1.3, onTex });
+          PT = makePuffs(scene, P.fxLo ? 1500 : 4000, { ktx: u('ktx2'), url: u('webp'), cols: j.cols, rows: j.rows, frames: j.frames, variants: j.variants, times: j.times, fadeIn: 0.05, sqrtGrow: true, k: 1.7, onTex });
           PT.mat.uniforms.scale.value = smoke.mat.uniforms.scale.value; api.mats.push(PT.mat); PT.points.renderOrder = lo ? 1 : 0.46; if (LY) PT.points.layers.set(LY[0]); setTrailPuffs(PT);
           continue;
         }
@@ -628,6 +628,25 @@ export function createFx(scene, P) {
   const exType = (R, kind) => (kind === 'plane' ? 'plane' : kind === 'air' ? 'air' : R < 20 ? 'light' : R < 40 ? 'medium' : R < 60 ? 'heavy' : 'super');
   const CR = makeCraters(scene, P.craters || 150);
   const PL = createPlumes(scene, P); // дымные ленты ракет (plume.js)
+  // розжиг двигателя (Mark 2026-11-01, «огонь запуска — уместно и красиво, как в War Thunder»): короткая вспышка цвета факела и выброс
+  // выхлопа назад — клубы, которые ракета оставляет на месте старта; всё по калибру (радиус корпуса rr): у ПЗРК вспышка ≈ 1 м и 3 клуба,
+  // у С-300 — ≈ 8 м и 14 клубов; стартовый режим (k = 2) — ярче и больше маршевого; на высоте выхлоп шире и реже (меньше плотность воздуха)
+  setIgnition((p, ax, rr, m, k, y) => {
+    const e = 1 - Math.exp(-Math.max(0, y) / 8500), big = k > 1 ? 1.25 : 1, fs = Math.max(0.5, rr * 30 * big) * (1 + 0.6 * e);
+    fire.emit(p.x, p.y, p.z, 0, 0, 0, m.fl[0], m.fl[1], m.fl[2], Math.min(1, 0.55 + 0.45 * m.br), fs, fs * 3, 0.14 + Math.min(0.2, rr * 0.5), 0, 0); // вспышка
+    fire.emit(p.x + ax.x * rr * 3, p.y + ax.y * rr * 3, p.z + ax.z * rr * 3, ax.x * rr * 40, ax.y * rr * 40, ax.z * rr * 40, m.fl[0], m.fl[1] * 0.9, m.fl[2] * 0.8, 0.8, fs * 0.6, fs * 2, 0.22, 3, 0); // язык огня назад
+    if (!(PT && PT.ready) || m.a < PUFF_MIN) return; // реактивные и прямоточные — без дымного выброса
+    const n = Math.max(2, Math.round(Math.min(14, 3 + rr * 42) * (P.fxLo ? 0.5 : 1))), w = Math.max(0.15, rr * m.w) * (1 + 1.2 * e), g = (m.g[0] + rr * m.g[1]) * 0.8, life = (m.life[0] + rr * m.life[1]) * 0.45;
+    // у земли (наземный пуск, струя вниз) выхлоп бьёт в землю и растекается кольцом — иначе клубы уходили бы под рельеф
+    const gh = api.groundH ? api.groundH(p.x, p.z) : -1e9, low = ax.y < -0.2 && p.y - gh < 25;
+    for (let i = 0; i < n; i++) {
+      const sp = (6 + rr * 110) * (0.4 + Math.random() * 0.8), j = sp * 0.35;
+      if (low) { const a = Math.random() * 6.283, h = sp * 0.8; PT.emit(p.x + Math.cos(a) * rr * 4, gh + 1 + rr * 3, p.z + Math.sin(a) * rr * 4, Math.cos(a) * h, 0.6 + Math.random() * 1.5, Math.sin(a) * h,
+        m.c[0], m.c[1], m.c[2], Math.min(1, m.a * 1.05), w * (1.2 + Math.random() * 0.6), g, life * (0.8 + Math.random() * 0.6), 1.8, 0.1, 0.02); continue; }
+      PT.emit(p.x + ax.x * rr * 2, p.y + ax.y * rr * 2, p.z + ax.z * rr * 2, ax.x * sp + (Math.random() - 0.5) * j, ax.y * sp + (Math.random() - 0.5) * j + 0.5, ax.z * sp + (Math.random() - 0.5) * j,
+        m.c[0], m.c[1], m.c[2], Math.min(1, m.a * 1.05), w * (1.1 + Math.random() * 0.6), g, life * (0.7 + Math.random() * 0.6), 2.2, 0.15, 0.02);
+    }
+  });
   const CMF = createCmFx(scene, P, PL); // ЛТЦ и облака диполей — запечённые спрайты (cmfx.js)
   let hemi = null, sunL = null;
   const V = new THREE.Vector3();
@@ -741,7 +760,7 @@ export function createFx(scene, P) {
       if (m.trailY !== undefined) { if (y < m.trailY && m.tb < 1.2) return; m.trailY = undefined; } // С-300: первые ≈ 40 м дым — в листе запуска двигателя (main.js samIgnite); ушла вбок — не дольше 1,2 с
       const mo = motorOf(m.unit && m.unit.key, 'sam', m.tb >= m.M.burn), rr = LN && LN.stage && !sus ? m.M.r * (LN.stageR || 1) : m.M.r;
       PL.add(m, x, y, z, mo, rr); // сплошная лента дыма по траектории; клубы-частицы ниже — объём (видны и вдоль ленты)
-      if (!(trailPuffsOn() && mo.a >= 0.4)) smoke.emit(x, y, z, (Math.random() - 0.5) * 2, 1, (Math.random() - 0.5) * 2, mo.c[0], mo.c[1], mo.c[2], (big ? 0.4 : 0.28) * (sus ? 0.45 : 1) * Math.min(1, mo.a / 0.6), s, s * 0.9, big ? 9 : 5, 0.3, 0.3); // с клубами Blender (plume.js) мягкие шары не нужны
+      if (!(trailPuffsOn() && mo.a >= PUFF_MIN)) smoke.emit(x, y, z, (Math.random() - 0.5) * 2, 1, (Math.random() - 0.5) * 2, mo.c[0], mo.c[1], mo.c[2], (big ? 0.4 : 0.28) * (sus ? 0.45 : 1) * Math.min(1, mo.a / 0.6), s, s * 0.9, big ? 9 : 5, 0.3, 0.3); // с клубами Blender (plume.js) мягкие шары не нужны
     },
     // старт С-300 / С-400 (своя пусковая): листы Blender — 'launch_eject' (облако из устья, точка — устье) и 'launch_ignite' (запуск двигателя,
     // точка — срез сопла); размер и время — как снято (лист 44 и 80 м; ракета первую секунду идёт по соплу листа — launchers.js ej.up).
@@ -831,7 +850,7 @@ export function createFx(scene, P) {
       const x = p ? p.x : w.pos.x - w.dir.x * 2, y = p ? p.y : w.pos.y - w.dir.y * 2, z = p ? p.z : w.pos.z - w.dir.z * 2, k = p && w.W.vis ? Math.min(1, (w.W.kind === 'rocket' ? narVis(w.key, w.W).r : w.W.vis.r) * 2.5) : 1;
       const W = w.W, kind = W.kind === 'tbm' ? 'tbm' : W.kind, mo = motorOf(w.key, kind, false), r = kind === 'rocket' ? narVis(w.key, W).r : W.vis ? W.vis.r : 0.15; // у НАР — калибр ракеты, а не блока
       PL.add(w, x, y, z, mo, r);
-      if (mo.a > 0.1 && !(trailPuffsOn() && mo.a >= 0.4)) smoke.emit(x, y, z, 0, 0.5, 0, mo.c[0], mo.c[1], mo.c[2], 0.25 * Math.min(1, mo.a / 0.6) * (kind === 'rocket' ? 0.4 : 1), 3 * k, kind === 'rocket' ? 0.4 : 3, kind === 'rocket' ? 3 : 4, 0.3, 0.2); // НАР — мелкие клубы, ≤ 1,5 м (залп 4–20 ракет: большие шары закрывали вертолёт; Mark 2026-10-22 — всё ещё велики)
+      if (mo.a > 0.1 && !(trailPuffsOn() && mo.a >= PUFF_MIN)) smoke.emit(x, y, z, 0, 0.5, 0, mo.c[0], mo.c[1], mo.c[2], 0.25 * Math.min(1, mo.a / 0.6) * (kind === 'rocket' ? 0.4 : 1), 3 * k, kind === 'rocket' ? 0.4 : 3, kind === 'rocket' ? 3 : 4, 0.3, 0.2); // НАР — мелкие клубы, ≤ 1,5 м (залп 4–20 ракет: большие шары закрывали вертолёт; Mark 2026-10-22 — всё ещё велики)
     },
     // ЛТЦ — каждый кадр, пока горит (спрайт с мерцанием и дымная лента — cmfx.js); пул — самые свежие 64 (32 на слабых)
     flareTick(f, dt) { CMF.tick(f, dt); },
