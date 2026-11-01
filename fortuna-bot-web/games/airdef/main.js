@@ -46,7 +46,7 @@ import { createRating } from './rating-ui.js?v=20261101a';
 import { createShop } from './shop-ui.js?v=20261101a';
 import { createEndScreen } from './endscr.js?v=20261101a';
 import { createHints } from './hints.js?v=20261101a';
-import { motorOf, makeFlame, setPuffCam } from './plume.js?v=20261101a';
+import { motorOf, makeFlame, setPuffCam, trailPuffsOn } from './plume.js?v=20261101a';
 import { createShell } from './shell.js?v=20261101a';
 import { createDoors } from './doors.js?v=20261101a';
 import { createCrashRep } from './crashrep.js?v=20261101a';
@@ -592,9 +592,11 @@ const simFx = {
   },
   samIgnite(m) {
     if (m.visIgn !== undefined) return; // под запись — вспышка в отрисовке
-    // С-300 / С-400: лист Blender — вспышка, огненный хвост и столб дыма первой секунды (≈ 42 м над точкой зажигания); свой след игры — выше него (trailY)
-    const p = LP.copy(m.pos).addScaledVector(m.dir, -m.M.L / 2);
-    if (m.ln && m.ln.ej && m.ln.ej.acc && C.fx.launchSheet('launch_ignite', p)) m.trailY = p.y + 38; else C.fx.ignite(p, m.dir, m.M.L > 5);
+    // С-300 / С-400: с клубами следа (plume.js) — розжиг самого факела (вспышка, язык огня, выхлоп клубами по калибру) и след от сопла по настоящему
+    // пути ракеты (Mark 2026-11-01: лист «столб первой секунды» снят вертикально и плоский — ракета клонится к цели, а столб стоит). Без клубов (?wts=0) —
+    // лист Blender: вспышка, огненный хвост и столб дыма первой секунды (≈ 42 м над точкой зажигания); свой след игры — выше него (trailY)
+    const p = LP.copy(m.pos).addScaledVector(m.dir, -m.M.L / 2), own = m.ln && m.ln.ej && m.ln.ej.acc;
+    if (own && trailPuffsOn()) { /* всё — в факеле (plume.js setIgnition) */ } else if (own && C.fx.launchSheet('launch_ignite', p)) m.trailY = p.y + 38; else C.fx.ignite(p, m.dir, m.M.L > 5);
     if (!m.coldRec) snd.samLaunch(dist(m.pos), m.M.L > 5, m.unit.key);
   },
   samJet(m) { C.fx.jet(m.pos, m.dir); },

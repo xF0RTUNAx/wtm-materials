@@ -2,7 +2,9 @@
 //   deno run --allow-read --allow-env tools/airdef-headless/tgt-filter-test.js
 // 1) разбор видов целей: самолёт, ложная цель, бомба, дрон, крылатая, баллистика; cleanTgt (мусор, пустой и полный набор — «все»);
 // 2) «Мульти-волна»: С-400 без дронов не пускает по дронам и пускает по крылатым, без фильтра — по обоим;
-// 3) оборона: «Панцирь» только по «бомбам» не стреляет по самолёту (ни ракетой, ни пушкой), без фильтра — стреляет; оператор (manual) фильтра не знает.
+// 3) оборона: «Панцирь» только по «бомбам» не стреляет по самолёту (ни ракетой, ни пушкой), без фильтра — стреляет; оператор (manual) фильтра не знает;
+// 4) строка «Цели» в «Обороне» (вся игра на заглушках страницы, как ui-test.js): в налёте — «самолёты» и «бомбы», последняя волна «Мульти-волной»
+//    (расстановка перед ней и сама волна) — «дроны» и «крылатые» (Mark 2026-11-02: кнопки «дроны» не было), «Обычный налёт» последней — как в налёте.
 const dir = new URL('.', import.meta.url).pathname;
 (0, eval)(Deno.readTextFileSync(dir + '../drone-headless/three.min.js'));
 const { buildCity } = await import('../../games/airdef/city.js');
@@ -106,6 +108,61 @@ check('«Панцирь» только по самолётам бомбу не �
   S.setTgt(u, null);
   for (let t = 0; t < 10 && !u.track; t += 0.05) { a.pos.addScaledVector(a.vel, 0.05); S.step(0.05); }
   check('«Все» — самолёт снова берётся', u.track === a);
+}
+
+// ── 4. «Оборона»: строка «Цели» в последней волне «Мульти-волной» (defense.js tmode) ──
+{
+  const noop = () => {};
+  const ctx2d = () => new Proxy({ createRadialGradient: () => ({ addColorStop: noop }), createLinearGradient: () => ({ addColorStop: noop }), measureText: () => ({ width: 10 }), getImageData: () => ({ data: new Uint8ClampedArray(4) }) },
+    { get: (t, p) => (p in t ? t[p] : noop), set: (t, p, v) => { t[p] = v; return true; } });
+  const els = new Map();
+  const el = (id) => { const e = {
+    id, style: {}, dataset: {}, innerHTML: '', textContent: '', width: 300, height: 150, _cls: new Set(), children: [],
+    classList: { add: (...c) => c.forEach((x) => e._cls.add(x)), remove: (...c) => c.forEach((x) => e._cls.delete(x)), toggle: (c, on) => { const v = on === undefined ? !e._cls.has(c) : on; if (v) e._cls.add(c); else e._cls.delete(c); return v; }, contains: (c) => e._cls.has(c) },
+    addEventListener: (t, f) => { (e._ev ||= {})[t] = f; }, removeEventListener: noop, setPointerCapture: noop, releasePointerCapture: noop,
+    lastChild: { innerHTML: '', textContent: '' }, querySelector: () => el('q'), querySelectorAll: () => [], getContext: () => ctx2d(), getBoundingClientRect: () => ({ left: 0, top: 0, width: 300, height: 300 }),
+    appendChild: noop, insertBefore: noop, remove: noop, closest: () => null, focus: noop, offsetWidth: 1, parentNode: null, toBlob: noop, toDataURL: () => '' }; return e; };
+  const byId = (id) => { if (!els.has(id)) els.set(id, el(id)); return els.get(id); };
+  const store = {};
+  Object.assign(globalThis, {
+    window: globalThis, devicePixelRatio: 1, innerWidth: 1280, innerHeight: 720,
+    document: { getElementById: byId, createElement: () => el('new'), body: el('body'), documentElement: el('html'), addEventListener: noop, hidden: false },
+    matchMedia: () => ({ matches: false }), addEventListener: noop, removeEventListener: noop,
+    location: { search: '?test=1&gfx=low&weather=day&map=city', href: 'http://x/airdef.html' },
+  });
+  Object.defineProperty(globalThis, 'localStorage', { value: { getItem: (k) => store[k] ?? null, setItem: (k, v) => { store[k] = String(v); } }, configurable: true, writable: true });
+  let rafCb = null; globalThis.requestAnimationFrame = (f) => { rafCb = f; return 1; };
+  THREE.WebGLRenderer = class { // рендерер-заглушка: все вызовы WebGL — пустые
+    constructor() { this.shadowMap = { enabled: false, autoUpdate: true }; this.capabilities = { isWebGL2: true, getMaxAnisotropy: () => 4 }; this.toneMapping = 0; this.outputEncoding = 0; this.toneMappingExposure = 1; this.autoClear = true; this._pr = 1; this.domElement = el('c'); this.info = { memory: {}, programs: [], render: { calls: 0, triangles: 0 }, reset() {} }; }
+    setPixelRatio(p) { this._pr = p; } getPixelRatio() { return this._pr; } setSize() {} render() {} compile() {} setRenderTarget() {} getRenderTarget() { return null; }
+    setScissor() {} setScissorTest() {} setViewport() {} clear() {} getContext() { return {}; } getClearColor(c) { return c; } getClearAlpha() { return 1; } setClearColor() {}
+  };
+  const errors = []; console.error = (...a) => { errors.push(a.join(' ')); };
+  await import('../../games/airdef/main.js');
+  for (let i = 0; i < 300 && !(globalThis.__a && globalThis.__a.state === 'menu'); i++) await new Promise((r) => setTimeout(r, 100)); // запуск по этапам (экран загрузки)
+  const C = globalThis.__a; let now = 1000;
+  const frames = (n) => { for (let i = 0; i < n; i++) { now += 1000 / 30; const f = rafCb; rafCb = null; try { f(now); } catch (e) { errors.push(`кадр: ${e.stack}`); return; } } };
+  const kinds = () => [...byId('dside').innerHTML.matchAll(/data-a="tg" data-k="(\w+)"/g)].map((m) => m[1]).join(',');
+  const press = (a, k) => byId('dside').onclick({ target: { closest: (s) => (s === '[data-a]' ? { dataset: { a, k } } : null) } }); // нажатие кнопки боковой панели
+  C.toMenu(); frames(5);
+  Object.assign(C.setup, { era: 4, lo: 0, side: 'east', cs: true, game: 'defense' }); C.start('defense');
+  const D = C.ctrl, st = D.st, t = C.S.objects.find((o) => o.key === 'tpp');
+  const u = C.S.addUnit('pantsir', t.x + 500, t.z + 200, {}); u.paid = 100; C.syncUnits(); frames(3);
+  const show = () => { st.sel = u; D.renderSide(); return kinds(); };
+  const k1 = show();
+  st.wave = st.waves - 1; // как будто прошли все волны, кроме последней
+  C.setup.cs = false; const kPlain = show(); C.setup.cs = true; const kPlan = show();
+  D.startWave(); frames(10); const kWave = show();
+  console.log(`  «Панцирь», кнопки «Цели»: налёт — ${k1} · перед последней «Мульти-волной» — ${kPlan} · в ней — ${kWave} · «Обычный налёт» последней — ${kPlain}`);
+  check('«Оборона», налёт: «самолёты» и «бомбы»', k1 === 'air,bomb');
+  check('«Оборона», расстановка перед последней волной «Мульти-волной»: «дроны» и «крылатые»', kPlan === 'drone,cruise');
+  check('«Оборона», последняя волна «Мульти-волной» идёт: «дроны» и «крылатые»', !!C.ev && kWave === 'drone,cruise', C.ev ? '' : 'удара нет');
+  check('«Оборона», последняя волна «Обычным налётом»: как в налёте', kPlain === 'air,bomb');
+  press('tg', 'cruise');
+  check('последняя волна: «крылатые» выключены — дроны берутся, самолёты (кнопки нет) не выключаются', u.tgt && u.tgt.has('drone') && !u.tgt.has('cruise') && u.tgt.has('air'), u.tgt ? [...u.tgt].join(',') : 'все');
+  check('последняя волна: в сводке комплекса — «цели: дроны»', byId('dside').innerHTML.includes('цели: дроны'));
+  press('tgall'); check('последняя волна: «Все» — снова все', !u.tgt);
+  check('ошибок выполнения нет', !errors.length, errors.slice(0, 3).join(' | '));
 }
 console.log(fails ? `ИТОГ: ошибок ${fails}` : 'ИТОГ: всё прошло');
 Deno.exit(fails ? 1 : 0);

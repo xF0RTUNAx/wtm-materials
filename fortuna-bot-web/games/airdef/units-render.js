@@ -612,6 +612,7 @@ export function createFx(scene, P) {
           for (const b of burning) if (!b.col) b.col = colAdd(b); // пожары, начавшиеся до прихода листа
           continue;
         }
+        if (t === 'launch_ignite' && !/[?&]wts=0/.test(location.search)) continue; // запуск двигателя С-300 — розжиг факела и клубы следа (main.js samIgnite): лист не нужен (1,6 МБ)
         if (t.startsWith('launch_')) { LZ[t] = () => mkBook(t, j, u, true); continue; } // старт С-300 / С-400 — только в бою с ними (api.wantLaunch)
         mkBook(t, j, u, false);
       }
