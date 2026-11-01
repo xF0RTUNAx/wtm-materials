@@ -642,10 +642,10 @@ export const COMBINED = {
     3: [['scout', 1, 1], ['uav_w', 4, 1], ['tomahawk', 3, 2, 'e_b1b'], ['slam', 2, 2, 'f18'], ['jsow', 2, 2, 'f18'], ['atacms', 2, 3]],
     4: [['scout', 1, 1], ['uav_w', 4, 1], ['quail', 6, 2, 'f16'], ['sdb', 4, 2, 'f16'], ['tomahawk', 3, 2, 'e_b1b'], ['jassm', 3, 2, 'e_b52'], ['storm', 2, 2, 'e_typhoon'], ['prsm', 2, 3]] }, // IV: PrSM вместо ATACMS, SDB 6 → 4 — очков угрозы столько же (16)
 };
-// очки угрозы — цена единицы в «Мульти-волне» из бюджета 100 (Mark 2026-10-28: «цена = измеренная сила», один бюджет на все бои): сила — на сколько
+// очки угрозы — цена единицы в «Мульти-волне» из бюджета 150 (2026-11-01; Mark 2026-10-28: «цена = измеренная сила», один бюджет на все бои): сила — на сколько
 // больше ценности объектов разрушает типовая волна с этой единицей против типовой ПВО противника (стенд tools/airdef-headless/multi-price-stand.js,
 // CLOUD_NOTES_multiwave.md); масштаб — волна в среднем разрушает столько же, сколько при прежних ценах (дрон и ложная цель — 1, крылатая — 3 … из 50)
-export const THREAT = { scout: 0, scout_e: 0, shahed: 2, uav_w: 1, kh55d: 1, quail: 2, sdb: 5, kh55: 8, kh555: 9, kh101: 9, kalibr: 10, tomahawk: 7, agm86: 5, slam: 5, jsow: 5, jassm: 7, storm: 5, r17: 4, tochka: 6, atacms: 12, lance: 4, prsm: 12, iskander: 12, kinzhal: 12, arrw: 13 };
+export const THREAT = { scout: 0, scout_e: 0, shahed: 2, uav_w: 1, kh55d: 1, quail: 1, sdb: 5, kh55: 9, kh555: 11, kh101: 11, kalibr: 11, tomahawk: 6, agm86: 6, slam: 4, jsow: 5, jassm: 8, storm: 5, r17: 5, tochka: 4, atacms: 9, lance: 3, prsm: 9, iskander: 12, kinzhal: 16, arrw: 13 };
 export const threatOf = (comp) => comp.reduce((n, [k, c]) => n + (THREAT[k] ?? 3) * c, 0);
 // отдельный режим «Мульти-волна» — без эпох и рангов (Mark 2026-10-25: «для каждой нации — градация импакта, от самой начальной баллистики до самой
 // современной; цена и опыт формируются из этого принципа, но напрямую не упоминаются; всё унифицировано и может использоваться вместе — главное открыть»).
@@ -666,17 +666,18 @@ export const MULTI_LINES = {
 };
 // что можно заказать за удар: [ключ, носитель, ступень, ветка, место в ветке (0 — стартовый)]; бюджет удара — один на обе стороны и любой состав
 // (надбавки западу больше нет: у него теперь есть и баллистика, и ложные цели), очки обороны на расстановку под одну волну — одни
-// Цены и потолки — по замеру силы (Mark 2026-10-28, стенд multi-price-stand.js): бюджет удара 100 (цены — THREAT), ПВО 2500 по своим ценам
+// Цены и потолки — по замеру силы (Mark 2026-10-28, стенд multi-price-stand.js; пересчёт 2026-11-01 — баланс удара по объектам: эквивалент
+// оружия, прочность по размеру, сеть ПВО; бюджет 100 → 150 — случайный состав разрушает столько же, сколько раньше): бюджет удара 150 (цены — THREAT), ПВО 2500 по своим ценам
 // (samCost; в «Обороне» — SAM_COST, не меняются). Потолки на игрока за бой: cap — единиц удара одного типа (баллистика — правило tbmCheck),
 // samCap — комплексов одного типа: дальние 2, ПЗРК 12, остальные 6. samOff — в «Мульти-волне» почти бесполезны (по крылатым на малой высоте
 // не стреляют, РЭБ действует только на авиабомбы с GPS) — в расстановку режима не идут (Mark 2026-10-28: «убери их»)
 export const MULTI = {
   items: Object.fromEntries(Object.entries(MULTI_LINES).map(([side, lines]) => [side, lines.flatMap(([line, , list]) => list.map(([k, via, step], i) => [k, via, step, line, i]))])),
-  budget: 100, sam: 2500,
+  budget: 150, sam: 2500,
   cap: { shahed: 12, uav_w: 12, kh55d: 8, quail: 8, kh55: 10, kh555: 10, kalibr: 10, kh101: 10, agm86: 10, slam: 10, tomahawk: 10, storm: 10, jassm: 10, jsow: 10, sdb: 10 },
-  samCost: { s75: 60, s125: 110, kub: 100, osa: 210, strela10: 60, strela2: 30, igla: 90, s300: 310, buk: 210, tor: 350, iglas: 110, s400: 400, bukm3: 440, torm2: 330,
-    pantsir: 330, verba: 140, tunguska: 320, hawk: 220, m163: 80, roland: 310, gepard: 260, stinger: 160, patriot: 350, avenger: 230, pac3: 360, nasams: 580, rapier: 240,
-    skyguard: 260, sampt: 640, hawk21: 340, chaparral: 80, phalanx: 80 },
+  samCost: { s75: 50, s125: 100, kub: 130, osa: 270, strela10: 70, strela2: 30, igla: 130, s300: 300, buk: 240, tor: 420, iglas: 160, s400: 360, bukm3: 420, torm2: 280,
+    pantsir: 230, verba: 200, tunguska: 230, hawk: 250, m163: 80, roland: 370, gepard: 210, stinger: 160, patriot: 400, avenger: 250, pac3: 330, nasams: 550, rapier: 190,
+    skyguard: 200, sampt: 630, hawk21: 370, chaparral: 120, phalanx: 80 },
   samCap: { s75: 2, s300: 2, s400: 2, hawk: 2, patriot: 2, pac3: 2, sampt: 2, strela2: 12, igla: 12, iglas: 12, verba: 12, stinger: 12 },
   samOff: ['gpsjam', 'gpsjamw', 'strela1', 'zu23', 'zsu234', 'redeye'],
 };

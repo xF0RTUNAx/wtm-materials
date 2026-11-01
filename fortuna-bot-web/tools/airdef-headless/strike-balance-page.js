@@ -135,7 +135,7 @@ const html = `<!doctype html>
 
 <section><h2>Главное</h2>
 <div class="sum">
-  <div><span class="big">${oneShot(B.table).length} → ${one1.length}</span><small>видов оружия сносят любую цель одним попаданием${one1.length ? ' (' + esc(one1.join(', ')) + ')' : ''}</small></div>
+  <div><span class="big">${oneShot(B.table).length} → ${one1.length}</span><small>видов оружия сносят любую цель одним попаданием${one1.length ? ' (' + esc(one1.join(', ')) + ')' : ''}; GBU-57 — ${Object.values(N.table.gbu57.obj).filter((c) => c.exact === 1).length} из 22 (малые и средние)</small></div>
   <div><span class="big">${f1(heli(B.loads, 'loads'))} → ${f1(heli(N.loads, 'mission'))}</span><small>боекомплекта вертолёта на задание (было — 3 цели, стало — по силе подвески)</small></div>
   <div><span class="big">${f1(Math.min(...raidK(B.loads)))}–${f1(Math.max(...raidK(B.loads)))} → ${f1(Math.min(...raidK(N.loads)))}–${f1(Math.max(...raidK(N.loads)))}</span><small>объекта сносит один бомбардировщик налёта, если долетел</small></div>
   <div><span class="big">${pc(lost(B, 'tvb'))} → ${pc(lost(N, 'tvb'))}</span><small>ТВ-бомб ИИ налёта падает мимо (лазерных — ${pc(lost(B, 'lgb'))} → ${pc(lost(N, 'lgb'))})</small></div>
