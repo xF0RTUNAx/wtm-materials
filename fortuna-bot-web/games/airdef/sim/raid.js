@@ -67,7 +67,7 @@ export function createRaid(S, city, rnd, opts = {}) {
       else if (loads.cruise && i % 4 === 2) role = 'cruise';
       else if (wave >= 3 && i % 4 === 2) role = 'low';
       else if (loads.tv && i % 3 === 2) role = 'tv';
-      const tgt = targets[(i + g) % targets.length];
+      const tgt = targets[g % targets.length]; // пара (одно направление) — одна цель, пары — по целям по очереди (было (i + g): при 2 целях и 3–4 самолётах все шли на первую)
       const br = bearing0 + g * step + (rnd() - 0.5) * Math.min(0.4, step * 0.3); // разброс в паре — не дальше трети промежутка до соседней
       spawn(role, tgt, br, (g % 3) * 25 + rnd() * 8, R);
     }
@@ -371,6 +371,9 @@ export function createRaid(S, city, rnd, opts = {}) {
         // серия по две: вторая — через 0,25 с после первой без нового прогноза (раньше ждала прогноза, а он за 0,25 с уходил за допуск —
         // вторая не падала, самолёт кружил над целью и терял скорость до сваливания); проскочили цель — повторный заход (reattack)
         const guided = W.kind !== 'bomb', ser = a.ser && a.relT <= 0;
+        // лазерная / ТВ-бомба: заход ниже — с 5 км бомба не долетает, пока точка в поле зрения ГСН (лазерная — 24°: дальше 2,25 высоты;
+        // ТВ — 40°), с 1,8 / 3,5 км долетает и видит (ревью 2026-11-01: иначе половина бомб оставалась на борту)
+        const hAtk = W.kind === 'lgb' ? Math.min(a.cruise, 1800) : W.kind === 'tvb' ? Math.min(a.cruise, 3500) : a.cruise;
         const tImp = a.relT <= 0 && d < 16000 && !ser ? predictBomb(city, W, a.pos, a.vel, guided ? aim : null, TMP2) : -1;
         const miss = tImp > 0 ? TMP2.distanceTo(aim) : 1e9, tol = guided ? 14 : Math.max(18, W.blast * 0.5);
         // свободная бомба: точка падения за кадр уходит на ~25 м (больше допуска) — сброс и по переходу точки падения через цель
@@ -378,14 +381,19 @@ export function createRaid(S, city, rnd, opts = {}) {
         let al = null, cr = 1e9;
         if (!guided && tImp > 0) { const vh = Math.hypot(a.vel.x, a.vel.z) || 1, ex = TMP2.x - aim.x, ez = TMP2.z - aim.z; al = (ex * a.vel.x + ez * a.vel.z) / vh; cr = Math.abs(ex * a.vel.z - ez * a.vel.x) / vh; }
         const cross = al !== null && a.pa !== null && a.pa !== undefined && a.pa < 0 && al >= 0 && cr < tol; a.pa = al;
-        if (ser || miss < tol || cross) {
+        // лазерная / ТВ: ГСН должна видеть точку сразу после сброса (лазерная — в поле зрения, ТВ — вдвое шире; запас 0,8). Ближе (после
+        // подсвета — вокруг цели в 3–6 км, с 5 км высоты до неё 50–60° вниз) бомба теряла цель и падала за 4–6 км (2026-11-01, облако
+        // cloud/strike-balance: КАБ-500Кр — 99 % сбросов, GBU-12 — 62 %) — теперь новый заход издалека
+        const seek = W.kind !== 'lgb' && W.kind !== 'tvb' || angleBetween(a.vel, PR.copy(aim).sub(a.pos)) < W.fov * (W.kind === 'tvb' ? 2 : 1) * 0.8 * D2R;
+        if (!seek && !a.sOut && d < (a.pos.y - aim.y) * 2.4) a.sOut = 1;
+        if (ser || (miss < tol || cross) && seek) {
           a.ser = false; L.n--; setLoad(a); S.release(a, L.key, guided ? { aim } : {}); a.relT = guided ? 1.2 : 0.25; if (fx.release) fx.release(a, L.key);
           if (W.kind === 'lgb') { a.lockPt = aim.clone(); a.phase = 'lase'; }
           else if (!guided && !ser && L.n > 0) a.ser = true;
         }
         if (!a.sOut && d < 3000 && ahead(a, aim) < 0) a.sOut = 1;
-        if (!reattack(a, aim, d, a.cruise, guided ? 6000 : 10000, dt)) steerToward(a, aim, a.cruise, dt);
-        if (a.t - a.tW > 220) a.phase = 'egress';
+        if (!reattack(a, aim, d, hAtk, guided ? Math.max(6000, (a.pos.y - aim.y) * 2.6) : 10000, dt)) steerToward(a, aim, hAtk, dt);
+        if (a.t - a.tW > (hAtk < a.cruise ? 330 : 220)) a.phase = 'egress'; // лазерная / ТВ — подсвет и новые заходы: дольше
       } else if (W.kind === 'rocket') {
         // НАР с самолёта: подход на ~900 м над целью, пологое пикирование (до 17°) носом на цель с поправкой на снижение ракет
         // (a.rk — как у вертолёта, копится только когда нос уже на линии), залп — когда точка падения у цели; ниже 350 м над землёй

@@ -10,7 +10,7 @@ import { ico, drawIco } from './icons.js?v=20261101a';
 import { applyLayout } from './layout.js?v=20261101a';
 import { clamp, makeCraft, pilotStep, fwdOf, D2R, angleBetween } from '../drone/sim/core.js?v=20261101a';
 import { DRONE } from '../drone/sim/modes.js?v=20261101a';
-import { AG, SAM, ERAS, LOADOUTS, HELI_LOADOUTS, loadoutsOf, loadoutRole } from './arsenal.js?v=20261101a';
+import { AG, SAM, ERAS, LOADOUTS, HELI_LOADOUTS, loadoutsOf, loadoutRole, loadoutTargets } from './arsenal.js?v=20261101a';
 import { predictBomb, predictRocket } from './sim/strike.js?v=20261101a';
 import { flightModel, loadOf } from './sim/flight.js?v=20261101a';
 import { heliModel, heliStep, heliInit, heliLand, touchVerdict, tmaxAcc, isHeli } from './sim/heli.js?v=20261101a';
@@ -1218,11 +1218,21 @@ export function createAir(C) {
     };
     if (cont) game.targets = C.op.targets;
     else {
-      game.targets = opts.targets ? opts.targets.map((k) => S.objects.find((o) => o.key === k)).filter(Boolean) : pickTargets(S, rnd);
+      // целей задания — по силе подвески удара (arsenal.js loadoutTargets, Mark 2026-11-01: 1–3): «Операция» — по подвеске второго вылета,
+      // охота за ПВО и обучение — 3, как раньше
+      game.tgtN = opts.targets || opts.items ? 0 : (() => {
+        const att = opts.side || (setup.side === 'east' ? 'west' : 'east'), all = LOADOUTS[setup.era];
+        let lo = C.op ? setup.lo2 : setup.lo; if (!all[lo] || all[lo].side !== att) lo = (loadoutsOf(setup.era, att).find(([L]) => !C.op || loadoutRole(L) !== 'sead') || [])[1];
+        const L = isHeli(HELI_Q) ? HELI_LOADOUTS.find((q) => q.plane === HELI_Q) || (all[lo] && { ...all[lo], heli: true }) : all[lo]; // ?heli= без своей подвески — НАР по-вертолётному, как в полёте
+        return L && loadoutRole(L) !== 'sead' ? loadoutTargets(L) : 0;
+      })();
+      game.targets = opts.targets ? opts.targets.map((k) => S.objects.find((o) => o.key === k)).filter(Boolean) : pickTargets(S, rnd, game.tgtN || 3);
       const kn = setup.game === 'air' && C.diff ? C.diff.knobs('air', setup.diff) : null; // сложность: режим + скрытая подстройка (не в обучении и «Съёмке»)
       // против вертолёта (craft.heli тут ещё от прошлого вылета): только ближние комплексы и реже — «Аркада» ×0,35, «Реализм» ×0,5 (Mark 2026-10-22: было ×0,6 и весь набор эпохи)
       const vsHeli = !opts.items && (isHeli(HELI_Q) || (LOADOUTS[setup.era][setup.lo] || {}).heli);
-      if (opts.defense) opts.defense(S, rnd); else placeDefense(S, city, rnd, setup.side, setup.era, game.targets, (kn ? kn.density : 1) * (vsHeli ? (setup.diff === 'real' ? 0.5 : 0.35) : 1), { ...(kn || {}), heli: vsHeli, same: setup.game !== 'air' }); // состав — случайный только в «Вылете» (уроки и «Съёмка» — как в arsenal)
+      // ПВО — у трёх объектов, как раньше: цели задания и ещё объекты карты до трёх (при одной цели всё ближнее стояло бы у неё — втрое плотнее)
+      const defT = !game.tgtN || game.targets.length >= 3 ? game.targets : [...game.targets, ...pickTargets({ objects: S.objects.filter((o) => !game.targets.includes(o)) }, rnd, 3 - game.targets.length)];
+      if (opts.defense) opts.defense(S, rnd); else placeDefense(S, city, rnd, setup.side, setup.era, defT, (kn ? kn.density : 1) * (vsHeli ? (setup.diff === 'real' ? 0.5 : 0.35) : 1), { ...(kn || {}), heli: vsHeli, same: setup.game !== 'air' }); // состав — случайный только в «Вылете» (уроки и «Съёмка» — как в arsenal)
       if (C.op) C.op.targets = game.targets;
     }
     C.syncUnits();
@@ -1258,7 +1268,8 @@ export function createAir(C) {
     layoutTouch(); layoutPod();
     const entT = ent ? ' · ' + tr('Заход {0}, {1}', [ENT_DIR[ent.dir], ENT_ALT[ent.prof]]) : ''; // откуда и на какой высоте — в строке начала вылета
     if (C.op) { const left = S.units.filter((u) => !u.dead && u.S.radar).length; say((cont ? tr('Вылет 2 из 2 — удар: {0}. Комплексов с РЛС осталось: {1}', [game.targets.filter((o) => !o.dead).map((o) => o.name).join(', '), left]) : tr('Операция, вылет 1 из 2 — охота за ПВО: уничтожьте {0} комплекса с РЛС. Вторым вылетом — удар по целям города.', [game.hunt ? game.hunt.need : 1])) + entT, 7); }
-    else if (!opts.noIntro) say((game.hunt ? tr('Охота за ПВО: уничтожьте {0} из {1} комплексов с РЛС (цели города — по желанию).', [game.hunt.need, game.hunt.total]) : tr('Цели: {0}. ПВО: {1}, эпоха {2}', [game.targets.map((o) => o.name).join(', '), setup.side === 'east' ? tr('советская') : tr('западная'), ERAS[setup.era - 1].short])) + entT, 7);
+    else if (!opts.noIntro) say((game.hunt ? tr('Охота за ПВО: уничтожьте {0} из {1} комплексов с РЛС (цели города — по желанию).', [game.hunt.need, game.hunt.total]) : game.tgtN ? tr('Цели ({0} — по силе подвески): {1}. ПВО: {2}, эпоха {3}', [game.tgtN, game.targets.map((o) => o.name).join(', '), setup.side === 'east' ? tr('советская') : tr('западная'), ERAS[setup.era - 1].short])
+      : tr('Цели: {0}. ПВО: {1}, эпоха {2}', [game.targets.map((o) => o.name).join(', '), setup.side === 'east' ? tr('советская') : tr('западная'), ERAS[setup.era - 1].short])) + entT, 7);
   }
   // подвеска: тяжёлое — ближе к фюзеляжу (обучение перезаряжает этой же функцией)
   function rearm() {
@@ -1372,7 +1383,10 @@ export function createAir(C) {
     C.bev(craft.dead ? 'r' : '', craft.dead ? why : game.done ? (craft.heli ? tr('посадка') : tr('выход из района')) : tr('вылет окончен')); // последняя метка ленты
     const dead = game.targets.filter((o) => o.dead).length, real = C.setup.diff === 'real';
     // прокачка: что сделано за вылет → airdef-solo (длительность меряет сервер); цели — по одной, комплексы, вернулся ли
-    const claim = () => C.progress && C.progress.runClaim({ targets: Array(dead).fill(1), sams: game.kills, back: !craft.dead, win: !!game.done && !craft.dead }, game.used);
+    // опыт за цели (progress.js battleReward: 60 × вес 0,5…2 за цель): целей по силе подвески 1–3 — всё задание стоит как прежние 3 цели
+    // (вес цели 3 / N, кусками до 2), иначе слабые подвески ранга I качались бы втрое медленнее
+    const tw = [], wN = 3 / Math.max(1, game.targets.length); for (let i = 0; i < dead; i++) for (let w = wN; w > 1e-6; w -= 2) tw.push(Math.round(Math.min(2, w) * 100) / 100);
+    const claim = () => C.progress && C.progress.runClaim({ targets: tw, sams: game.kills, back: !craft.dead, win: !!game.done && !craft.dead }, game.used);
     if (C.op && C.op.stage === 1) { // операция: итоги первого вылета — дальше удар
       C.op.s1 = { score: game.score, kills: game.kills, hunt: game.hunt, alive: !craft.dead }; C.op.next = true;
       const h = game.hunt || { n: 0, need: 0 };

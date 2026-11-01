@@ -7,7 +7,7 @@
 // Детерминированный генератор с интерфейсом buildCity / buildWinter (симуляция и сервер): сетка высот 50 м, groundH —
 // билинейно; вода — одна отметка (уровень болота AUTUMN.WY), waterAt — где она. Оси как в city.js: −Z — север.
 import { tr } from './i18n.js?v=20261101a';
-import { CITY, ZONE, KIND, SITES, mulberry32, clamp, smooth, mp, mbox, siteParts, mapRuntime } from './city.js?v=20261101a';
+import { CITY, ZONE, KIND, SITES, mulberry32, clamp, smooth, mp, mbox, siteParts, mapRuntime, OBJ_HP } from './city.js?v=20261101a';
 import { perlin, fbm, ridged, heap } from './map-winter.js?v=20261101a';
 
 const H = CITY.HALF, RES = 50, N = Math.round(2 * H / RES) + 1;
@@ -298,19 +298,19 @@ export function buildAutumn(seed = 1) {
   // дома на самой сцене не ставятся (put: onScene)
   { const p = PK.mon; // КП в заброшенном монастыре — своя сцена (city.js SITES site_cp_a): бункеры и штаб за стеной, погост в углу двора (SITES props);
     // храма нет (Mark: объект военный); въезд с гати — с юга; рамка — по сцене (x −210…+230, z −200…+180)
-    add({ key: 'a_mon', name: tr('КП «Погост»'), x: p.x, z: p.z, w: 460, d: 380, rz: -10, gk: [190, 170], value: 180, hp: 260, site: 'site_cp_a', parts: siteParts('site_cp_a', p.x, p.z) }); }
+    add({ key: 'a_mon', name: tr('КП «Погост»'), x: p.x, z: p.z, w: 460, d: 380, rz: -10, gk: [190, 170], value: 180, hp: OBJ_HP.F, site: 'site_cp_a', parts: siteParts('site_cp_a', p.x, p.z) }); }
   { const x = -1040, z = 5300; // гарнизон в деревне — своя сцена (city.js SITES site_garr_a) на своей террасе (pads: garr); через неё идут две улицы деревни
-    add({ key: 'a_vil', name: tr('Гарнизон «Пугало»'), x, z, w: 350, d: 290, rz: -20, gk: [160, 140], value: 120, hp: 170, site: 'site_garr_a', parts: siteParts('site_garr_a', x, z) }); }
+    add({ key: 'a_vil', name: tr('Гарнизон «Пугало»'), x, z, w: 350, d: 290, rz: -20, gk: [160, 140], value: 120, hp: OBJ_HP.M, site: 'site_garr_a', parts: siteParts('site_garr_a', x, z) }); }
   { const p = PK.farm; // склад на ферме — своя сцена (city.js SITES site_ammo_a): хранилища, бывшие коровники, штабели; к югу (z +220…+380) — хутор карты
     // рамка объекта — по сцене (z −270…+180 от центра: rz — сдвиг рамки), иначе запрет леса и реквизита (keep ниже) уходил на хутор: пропадали дома,
     // и сдвигалась вся случайная расстановка карты (на хуторе rnd() тратится только на поставленные дома)
-    add({ key: 'a_farm', name: tr('Склад «Фонарь Джека»'), x: p.x, z: p.z, w: 540, d: 450, rz: -45, value: 150, hp: 200, site: 'site_ammo_a', parts: siteParts('site_ammo_a', p.x, p.z) }); }
+    add({ key: 'a_farm', name: tr('Склад «Фонарь Джека»'), x: p.x, z: p.z, w: 540, d: 450, rz: -45, value: 150, hp: OBJ_HP.M, site: 'site_ammo_a', parts: siteParts('site_ammo_a', p.x, p.z) }); }
   { const p = PK.wreck; // рембаза на кладбище техники — своя сцена (city.js SITES site_wreck_a) на дне оврага; через неё по диагонали — кольцевая грунтовка
-    add({ key: 'a_wreck', name: tr('Рембаза «Костяной овраг»'), x: p.x, z: p.z, w: 430, d: 330, gk: [240, 200], value: 150, hp: 200, site: 'site_wreck_a', parts: siteParts('site_wreck_a', p.x, p.z) }); }
+    add({ key: 'a_wreck', name: tr('Рембаза «Костяной овраг»'), x: p.x, z: p.z, w: 430, d: 330, gk: [240, 200], value: 150, hp: OBJ_HP.M, site: 'site_wreck_a', parts: siteParts('site_wreck_a', p.x, p.z) }); }
   { const p = PK.heli; // вертолётная площадка — своя сцена (city.js SITES): ангар, КДП, ГСМ и склад боеприпасов в обваловке, штаб, стоянки
-    add({ key: 'a_heli', name: tr('Вертолётная площадка «Ведьмина поляна»'), x: p.x, z: p.z, w: 520, d: 520, value: 160, hp: 220, site: 'site_heli', parts: siteParts('site_heli', p.x, p.z) }); }
+    add({ key: 'a_heli', name: tr('Вертолётная площадка «Ведьмина поляна»'), x: p.x, z: p.z, w: 520, d: 520, value: 160, hp: OBJ_HP.S, site: 'site_heli', parts: siteParts('site_heli', p.x, p.z) }); }
   { const p = PK.peat, x = p.x - 145, z = p.z - 20; // склад ГСМ на торфоразработках — своя сцена (city.js SITES site_fuel_a) западнее грунтовки, что идёт через площадку
-    add({ key: 'a_peat', name: tr('Склад ГСМ «Болотный огонь»'), x, z, w: 370, d: 480, value: 160, hp: 200, site: 'site_fuel_a', parts: siteParts('site_fuel_a', x, z) }); }
+    add({ key: 'a_peat', name: tr('Склад ГСМ «Болотный огонь»'), x, z, w: 370, d: 480, value: 160, hp: OBJ_HP.M, site: 'site_fuel_a', parts: siteParts('site_fuel_a', x, z) }); }
   { // РЛС на Лысой горе: вершина (самая высокая точка в круге), площадка срезана на 6 м
     const BA = A.BALD; let bx = BA.x, bz = BA.z, bh = -1e9;
     for (let a = 0; a < 1600; a += 100) for (let t = 0; t < 6.283; t += 0.25) { const x = BA.x + Math.cos(t) * a, z = BA.z + Math.sin(t) * a, h = groundH(x, z); if (h > bh) { bh = h; bx = x; bz = z; } }
@@ -318,7 +318,7 @@ export function buildAutumn(seed = 1) {
     for (let j = cj - 6; j <= cj + 6; j++) for (let i = ci - 6; i <= ci + 6; i++) { const d = Math.hypot(i - ci, j - cj) * RES; if (d < 300) HM[j * N + i] += (y - HM[j * N + i]) * (1 - smooth(70, 300, d)); }
     BA.top = { x: bx, z: bz, y };
     const MM = [mp('obj_mill', bx - 70, bz + 45)]; // старая мельница на вершине (Tim0) — рядом с антеннами
-    add({ key: 'a_radar', name: tr('РЛС «Лысая гора»'), x: bx, z: bz, w: 160, d: 120, value: 150, hp: 160, peak: true, models: MM, site: 'site_radar', // своя сцена «РЛС на вершине» (city.js SITES), место мельницы в ней свободно
+    add({ key: 'a_radar', name: tr('РЛС «Лысая гора»'), x: bx, z: bz, w: 160, d: 120, value: 150, hp: OBJ_HP.S, peak: true, models: MM, site: 'site_radar', // своя сцена «РЛС на вершине» (city.js SITES), место мельницы в ней свободно
       parts: [...MM.map(mbox), ...siteParts('site_radar', bx, bz)] }); }
   const objects = O;
   const keep = [...objects.map((o) => (o.gk ? { x0: o.x - o.gk[0], x1: o.x + o.gk[0], z0: o.z - o.gk[1], z1: o.z + o.gk[1] } // gk — прежняя рамка (выше)

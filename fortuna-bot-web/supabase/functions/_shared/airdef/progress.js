@@ -5,7 +5,7 @@
 // для «Реализма». Ветки: air — самолёты вылета, wpn — оружие подвесок, pvo — комплексы, strike — удары «Мульти-волны».
 // «Удары» — без рангов (Mark 2026-10-25): ветки по нации (баллистика, крылатые…) от начальной до самой современной, первый в ветке — стартовый;
 // ступень (3-е поле MULTI.items) задаёт только цену и опыт, напрямую не показывается; рангов и паритета сторон у этой ветки нет.
-import { AG, SAM, LOADOUTS, MULTI, MULTI_LINES, SAM_COST, CARRIERS, PLANES, AG_KIND, SAM_TYPE, THREAT, loadoutRole } from './arsenal.js';
+import { AG, SAM, LOADOUTS, MULTI, MULTI_LINES, SAM_COST, CARRIERS, PLANES, AG_KIND, SAM_TYPE, THREAT, loadoutRole, eqOf } from './arsenal.js';
 import { SPECS, SPEED_K } from './flight.js';
 import { HSPECS } from './heli.js';
 
@@ -238,7 +238,7 @@ export function cardStats(n) {
   else if (w.rmax) o.push(['Дальность', km(w.rmax)]);
   if (w.speed) o.push(['Скорость', kmh(w.speed * 3.6)]);
   if (w.jam) o.push(['Помехи', `${Math.round(w.jam * 100)} %`]);
-  if (w.dmg) o.push(['Урон', String(w.dmg)]);
+  if (w.dmg) o.push(w.kind === 'arm' ? ['Урон', String(w.dmg)] : ['Удар (ФАБ-500 = 100)', String(eqOf(w))]); // эквивалент по объектам (arsenal.js eqOf); ПРР бьёт только РЛС
   if (w.blast) o.push(['Радиус', `${w.blast} м`]);
   if (n.branch === 'wpn' && w.mass) o.push(['Масса', `${w.mass} кг`]);
   if (n.branch === 'strike') { if (n.carrier && CARRIERS[n.carrier]) o.push(['Носитель', CARRIERS[n.carrier].name]); if (THREAT[n.item] != null) o.push(['Очки угрозы', String(THREAT[n.item])]); }

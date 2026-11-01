@@ -11,24 +11,26 @@ const dir = new URL('.', import.meta.url).pathname;
 const { buildCity, objAimXZ, objDist, inWater } = await import('../../games/airdef/city.js');
 const { buildWinter } = await import('../../games/airdef/map-winter.js');
 const { buildAutumn } = await import('../../games/airdef/map-autumn.js');
-const { createStrike, MODES } = await import('../../games/airdef/sim/strike.js');
+const { createStrike, MODES, guidedOf } = await import('../../games/airdef/sim/strike.js');
+const { AG, eqOf } = await import('../../games/airdef/arsenal.js');
 
 let seed = 3; const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
 const fx = new Proxy({}, { get: () => () => {} });
 // урон объекту id от разрыва в точке (x, z) над крышей или землёй (как оружие: на верху препятствия, над водой — на её уровне)
-function dmgAt(city, id, x, z, dmg, R, y) {
+// W — оружие из arsenal.js: урон объекту — его эквивалент (eqOf), вид разрушения — управляемое или нет (2026-11-01, cloud/strike-balance)
+function dmgAt(city, id, x, z, W, y) {
   const S = createStrike({ city, rnd, mode: () => MODES.real, aircraft: () => [], laserSpot: () => null, night: 0, hurt() {}, fx });
   const o = S.objects.find((q) => q.id === id), hp0 = o.hp;
-  S.blast(new THREE.Vector3(x, y ?? Math.max(city.topAt(x, z), -4) + 0.5, z), dmg, R, 'тест'); return hp0 - o.hp;
+  S.blast(new THREE.Vector3(x, y ?? Math.max(city.topAt(x, z), -4) + 0.5, z), W.dmg, W.blast, 'тест', null, W.ap || 1, eqOf(W), guidedOf(W)); return hp0 - o.hp;
 }
-const W = [['ПТУР', 45, 14], ['НАР', 22, 14], ['Х-55', 200, 54]];
+const W = [['ПТУР', AG.hellfire], ['НАР', AG.s8], ['Х-55', AG.kh55]];
 let bad = 0; const fail = (t) => { bad++; console.log('  ОШИБКА: ' + t); };
 for (const [name, city] of [['Речной узел', buildCity(1)], ['Зимняя долина', buildWinter(1)], ['Туманная топь', buildAutumn(1)]]) {
   console.log(`\n== ${name}`);
   for (const o of city.objects) {
     if (o.noTarget) continue;
-    const a = objAimXZ(o), got = W.map(([k, d, R]) => [k, dmgAt(city, o.id, a.x, a.z, d, R)]);
-    let ok = 0; for (let n = 0; n < 20; n++) { const p = objAimXZ(o, n, rnd() - 0.5, rnd() - 0.5); if (dmgAt(city, o.id, p.x, p.z, 45, 14) > 0) ok++; }
+    const a = objAimXZ(o), got = W.map(([k, w]) => [k, dmgAt(city, o.id, a.x, a.z, w)]);
+    let ok = 0; for (let n = 0; n < 20; n++) { const p = objAimXZ(o, n, rnd() - 0.5, rnd() - 0.5); if (dmgAt(city, o.id, p.x, p.z, AG.hellfire) > 0) ok++; }
     console.log(`${o.name.padEnd(40)} ${got.map(([k, v]) => `${k} ${v.toFixed(0)}`).join(' · ')} · разлёт ${ok}/20`);
     for (const [k, v] of got) if (!(v > 0)) fail(`${o.name}: ${k} точно в точку прицела — без урона`);
     if (ok < 20) fail(`${o.name}: разлёт — ${20 - ok} точек без урона`);
@@ -43,7 +45,7 @@ for (const [name, city] of [['Речной узел', buildCity(1)], ['Зимн�
   if (name === 'Речной узел') {
     const o = city.objects.find((q) => q.key === 'port'), hq = o.parts.find((q) => q.b === 'hq'), fp = o.parts.find((q) => q.b === 'fuelpump'); // штаб, насосная налива
     const qx = o.x - 50, qz = o.z - 560, rx = fp.x - 85, rz = fp.z - 60; // пустой берег бывшей базы севернее сцены; река западнее насосной
-    const wall = dmgAt(city, o.id, hq.x + hq.w / 2 + 15, hq.z, 22, 14), quay = dmgAt(city, o.id, qx, qz, 200, 54), river = dmgAt(city, o.id, rx, rz, 200, 54, -4);
+    const wall = dmgAt(city, o.id, hq.x + hq.w / 2 + 15, hq.z, AG.s8), quay = dmgAt(city, o.id, qx, qz, AG.kh55), river = dmgAt(city, o.id, rx, rz, AG.kh55, -4);
     const far = objDist(o, qx, qz), rfar = objDist(o, rx, rz);
     console.log(`порт: НАР в 15 м от стены штаба — ${wall.toFixed(0)}; Х-55 на пустом берегу (до построек ${far.toFixed(0)} м) — ${quay.toFixed(0)}; Х-55 в реке (до построек ${rfar.toFixed(0)} м) — ${river.toFixed(0)}`);
     if (!inWater(rx, rz)) fail('точка «в реке» оказалась на берегу — поправить тест');

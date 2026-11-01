@@ -15,7 +15,7 @@ import { CITY, mulberry32 } from './city.js?v=20261101a';
 import { weaponHasModel } from './models.js?v=20261101a';
 import { LNCH, lnchToWorld, trainable } from './launchers.js?v=20261101a';
 import { ico, iconize, capsHtml, tgtRowHtml, tgtLabel, tgtChoices } from './icons.js?v=20261101a';
-import { SAM, SAM_COST, SAM_TYPE, AG, MULTI, CARRIERS, THREAT, COMBINED, DEFENSE, multiBudget, multiItems, threatOf, multiCap, multiSamCost, multiSamCap, multiSamOk, multiSamFree } from './arsenal.js?v=20261101a';
+import { SAM, SAM_COST, SAM_TYPE, AG, eqOf, MULTI, CARRIERS, THREAT, COMBINED, DEFENSE, multiBudget, multiItems, threatOf, multiCap, multiSamCost, multiSamCap, multiSamOk, multiSamFree } from './arsenal.js?v=20261101a';
 import { samClass, samCost, samCostFor, LIMIT1 } from './sim/online.js?v=20261101a';
 import { TEAM_NAME, TBM_RULE, TBM_EXCL, tbmOf, tbmCheck, sumN } from './sim/online-multi.js?v=20261101a';
 const esc = (x) => String(x ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -584,11 +584,11 @@ export function createDefense(C) {
   const idxOf = (k, key) => { const out = []; for (let i = 0; i < (st.plan.n[k] || 0); i++) if (tkeyOf(k, i) === key) out.push(i); return out; };
   const tgtObjs = () => { const ids = new Set(); for (const [k] of planComp()) for (let i = 0; i < (st.plan.n[k] || 0); i++) { const t = tkeyOf(k, i); if (t && t[0] === 'o') ids.add(+t.slice(1)); } return C.S.objects.filter((o) => ids.has(o.id)); };
   const tName = (key) => { if (key === 'sam') return tr('ПВО противника'); const o = key[0] === 'o' ? C.S.objects.find((q) => q.id === +key.slice(1)) : null; if (o) return o.name; const u = C.S.units.find((q) => q.id === +key.slice(1)); return u ? tr('{0} (засечён)', [u.S.short]) : '?'; };
-  // прогноз: ожидаемый урон наряда (боевая часть × доля долетевших) против оставшейся прочности объекта
+  // прогноз: ожидаемый урон наряда (эквивалент — arsenal.js eqOf × доля долетевших) против оставшейся прочности объекта
   const pSurv = (W) => (W.decoyMun || !W.dmg ? 0 : W.uav ? 0.45 : W.kind === 'tbm' ? (W.man ? 0.9 : 0.85) : (W.rcs ?? 1) <= 0.06 ? 0.7 : 0.6);
   function forecast(key) {
     const o = key[0] === 'o' ? C.S.objects.find((q) => q.id === +key.slice(1)) : null; if (!o) return null;
-    let E = 0; for (const [k] of planComp()) for (const i of idxOf(k, key)) if (!launchedU(k, i)) E += (AG[k].dmg || 0) * 0.9 * pSurv(AG[k]);
+    let E = 0; for (const [k] of planComp()) for (const i of idxOf(k, key)) if (!launchedU(k, i)) E += (AG[k].dmg ? eqOf(AG[k]) : 0) * 0.9 * pSurv(AG[k]);
     return { o, k: o.dead ? 1 : Math.min(1, E / Math.max(1, o.hp)), over: E / Math.max(1, o.hp), hp: o.hp, hpMax: o.hpMax };
   }
   const fcCol = (f) => (f >= 1 ? '#4ade80' : f >= 0.75 ? '#fde047' : '#f87171');

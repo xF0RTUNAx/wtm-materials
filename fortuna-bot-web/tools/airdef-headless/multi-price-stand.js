@@ -240,13 +240,15 @@ if (!IS_WORKER && import.meta.main) {
   // ЗРК — ∝ полусумме «сбитое по силе» и «сберёг» в ослабленной ПВО, сумма цен как у SAM_COST, шаг 10, не дешевле 30; потолки — как предложено Mark 2026-10-28
   if (mode === 'price') {
     const A = JSON.parse(Deno.readTextFileSync(Deno.env.get('ATK') || dir + 'multi-price-atk.json')), Sm = JSON.parse(Deno.readTextFileSync(Deno.env.get('SAMJ') || dir + 'multi-price-sam.json'));
-    const KA = +(Deno.env.get('KA') || 0.9), { THREAT } = await G('arsenal.js');
-    const c = A.rows.reduce((s, r) => s + r.v, 0) / (2 * A.rows.reduce((s, r) => s + THREAT[r.k], 0)) / KA, atk = {}, cap = {};
+    // масштаб: сумма новых цен = сумме нынешних (THREAT — уже из бюджета 100; 2026-10-28 переводили из 50 — было ×2 и KA 0,9);
+    // BUDGET — бюджет волны (2026-11-01, баланс удара: объекты крепче — бюджет поднят, чтобы волна разрушала столько же, см. fair)
+    const KA = +(Deno.env.get('KA') || 1), BUDGET = +(Deno.env.get('BUDGET') || 100), { THREAT } = await G('arsenal.js');
+    const c = A.rows.reduce((s, r) => s + r.v, 0) / A.rows.reduce((s, r) => s + THREAT[r.k], 0) / KA, atk = {}, cap = {};
     for (const r of A.rows) { atk[r.k] = Math.max(1, Math.round(r.v / c)); cap[r.k] = AG[r.k].uav ? 12 : AG[r.k].decoyMun ? 8 : 10; }
     const w = (r) => Math.max(0, (r.kxV + r.add) / 2), cs = Sm.rows.reduce((s, r) => s + w(r), 0) / Sm.rows.reduce((s, r) => s + r.cost, 0), sam = {}, samCap = {};
     for (const r of Sm.rows) { sam[r.k] = Math.max(30, Math.round(w(r) / cs / 10) * 10); samCap[r.k] = SAM[r.k].rmax >= 25000 && r.k !== 'nasams' && r.k !== 'hawk21' && r.k !== 'bukm3' && r.k !== 'buk' ? 2 : SAM[r.k].type === 'ir' && SAM[r.k].hp <= 15 ? 12 : 6; }
-    Deno.writeTextFileSync(OUT.replace('multi-price-price.json', 'multi-prices.json'), JSON.stringify({ budget: 100, samBudget: 2500, atk, cap, sam, samCap }, null, 1));
-    for (const r of A.rows) console.log(`${r.att.padEnd(5)} ${r.k.padEnd(9)} было ${THREAT[r.k]}/50  сила ${r.v.toFixed(0).padStart(4)}  → ${atk[r.k]}/100, не больше ${cap[r.k]}`);
+    Deno.writeTextFileSync(OUT.replace('multi-price-price.json', 'multi-prices.json'), JSON.stringify({ budget: BUDGET, samBudget: 2500, atk, cap, sam, samCap }, null, 1));
+    for (const r of A.rows) console.log(`${r.att.padEnd(5)} ${r.k.padEnd(9)} было ${THREAT[r.k]}  сила ${r.v.toFixed(0).padStart(4)}  → ${atk[r.k]} (бюджет ${BUDGET}), не больше ${cap[r.k]}`);
     for (const r of Sm.rows) console.log(`${r.def.padEnd(5)} ${r.k.padEnd(9)} было ${r.cost}  сила ${w(r).toFixed(0).padStart(4)}  → ${sam[r.k]}, не больше ${samCap[r.k]}`);
   }
   // ── честность при равном бюджете: случайные «игроцкие» волны и расстановки по ценам из PRICES (JSON: budget, atk, cap, samBudget, sam, samCap),

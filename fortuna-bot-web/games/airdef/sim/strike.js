@@ -14,11 +14,11 @@
 // }
 /* global THREE */
 import { tr } from '../i18n.js?v=20261101a';
-import { AG, SAM } from '../arsenal.js?v=20261101a';
+import { AG, SAM, eqOf } from '../arsenal.js?v=20261101a';
 import { LNCH, lnchToWorld, lnchDir, slotOf, trainable } from '../launchers.js?v=20261101a';
 import { clamp, D2R, G0, rhoAt, angleBetween, seekerHeat, offTailDeg, turnToward } from '../../drone/sim/core.js?v=20261101a';
 import { cmOf, cmKey, cmBoost, cmWorld } from './cm.js?v=20261101a';
-import { partDist, siteBld, bldDie, bldMainsDead, bldKillMains } from '../city.js?v=20261101a';
+import { partDist, siteBld, bldDie, bldKillMains } from '../city.js?v=20261101a';
 
 // Режимы: Аркада прощает (медленнее реакция ПВО, меньше урона, больше ловушек и диполей), Реализм — как есть
 // ind — доля индуктивного сопротивления в лётной модели самолётов (sim/flight.js): в «Аркаде» в вираже скорость теряется вдвое меньше
@@ -60,6 +60,9 @@ const TMP = new THREE.Vector3(), TMP2 = new THREE.Vector3(), AIM = new THREE.Vec
 const SF_A = new THREE.Vector3(), SF_B = new THREE.Vector3(), SF_M = new THREE.Vector3();
 const wrapPi = (a) => Math.atan2(Math.sin(a), Math.cos(a));
 
+// управляемое оружие (объекты: удар — в постройку под точкой прицела): ГСН, спутник, крылатые и дроны, точная баллистика (КВО до 30 м);
+// свободные бомбы, НАР, баллистика с большим КВО (Р-17, «Точка-У», Lance) — по области разрыва
+export const guidedOf = (W) => (W.kind === 'tbm' ? (W.cep || 0) <= 30 : W.kind !== 'bomb' && W.kind !== 'rocket');
 export function createStrike(ctx) {
   const fx = { ...NOOP_FX, ...(ctx.fx || {}) };
   const rnd = ctx.rnd || Math.random;
@@ -655,7 +658,7 @@ export function createStrike(ctx) {
   // opts: { aim — точка захвата (ТВ, лазер — для расчёта), target — комплекс (ПРР) }
   function release(a, key, opts = {}) {
     let W = AG[key];
-    if (W.planeDmg && !a.heli) W = { ...W, dmg: W.planeDmg, blast: W.planeBlast || W.blast }; // НАР с самолёта — свой урон (усиление — только вертолётам)
+    if (W.planeDmg && !a.heli) W = { ...W, dmg: W.planeDmg, blast: W.planeBlast || W.blast, eq: W.planeEq ?? eqOf(W) }; // НАР с самолёта — свой урон (усиление — только вертолётам)
     const w = { id: mid++, key, W, owner: a, pos: a.pos.clone().addScaledVector(TMP.set(0, -1, 0), 2.5), vel: a.vel.clone(), dir: a.vel.clone().normalize(),
       speed: a.speed, t: 0, flown: 0, dead: false, aim: opts.aim ? opts.aim.clone() : null, target: opts.target || null, mem: null, lost: false, homing: false, trailT: 0 };
     if (W.kind === 'arm' && w.target) w.mem = w.target.pos.clone();
@@ -917,14 +920,17 @@ export function createStrike(ctx) {
     if (w.dead) return;
     w.dead = true;
     if (w.decoy || !w.W.dmg) { fx.wpnEnd(w, { objects: [], units: [], intercepted: false }); fx.explosion(w.pos, 4, 'ground'); return; } // ложная цель — без боевой части
-    const res = blast(w.pos, w.W.dmg, w.W.blast, w.W.short, w.owner, w.W.ap || 1);
+    const res = blast(w.pos, w.W.dmg, w.W.blast, w.W.short, w.owner, w.W.ap || 1, eqOf(w.W), guidedOf(w.W));
     fx.wpnEnd(w, res);
     fx.explosion(w.pos, w.W.blast, w.W.kind === 'tbm' ? 'tbm' : w.W.vis && w.W.vis.kind !== 'missile' ? 'bomb' : 'ground'); // бомба — крупнее, со вспышкой и пылью; баллистика — ещё крупнее (удар сверху на 2–6 М)
   }
   // урон взрывом по объектам и комплексам; возвращает, кого задело
   // ap — бронебойность по технике (ПТУР: кумулятивная часть — прямое попадание выводит из строя любой комплекс; по зданиям — как есть)
-  const BH = []; // постройки объекта-сцены, задетые разрывом: имя, доля урона
-  function blast(p, dmg, R, by, owner = null, ap = 1) { // owner — самолёт, чьё оружие (онлайн: кому засчитать)
+  // Объекты (Mark 2026-11-01, облако cloud/strike-balance): eq — эквивалент оружия (arsenal.js eqOf, ЕУ: прямое попадание — eq, рядом —
+  // 0,8 eq (1 − d/R)^0,6, площадка ×0,4) в общую прочность; объект уничтожен, только когда она кончилась. Постройки — вид: неуправляемое
+  // (guided нет) — каждая в радиусе копит свою долю, управляемое — только ближняя (под точкой прицела). Без eq — как раньше: eq = dmg · 1,25
+  const BH = []; // постройки объекта-сцены, задетые разрывом: имя, доля урона, расстояние по горизонтали, верх (по 4 числа)
+  function blast(p, dmg, R, by, owner = null, ap = 1, eq = dmg * 1.25, guided = false) { // owner — самолёт, чьё оружие (онлайн: кому засчитать)
     const res = { objects: [], units: [] };
     for (const o of objects) {
       if (o.dead) continue;
@@ -940,16 +946,19 @@ export function createStrike(ctx) {
         else if (q.t === 'box') dh = Math.hypot(Math.max(0, Math.abs(p.x - q.x) - q.w / 2), Math.max(0, Math.abs(p.z - q.z) - q.d / 2));
         else dh = Math.max(0, Math.hypot(p.x - q.x, p.z - q.z) - q.r);
         const dv = p.y > top ? p.y - top : p.y < base ? base - p.y : 0, d = Math.hypot(dh, dv);
-        if (d < R) { const f = (d < 2 ? 1.25 : Math.pow(1 - d / R, 0.6)) * (q.k ?? 1); best = Math.max(best, f);
-          if (q.b && o.bld) { let k = 0; while (k < BH.length && BH[k] !== q.b) k += 2; if (k < BH.length) BH[k + 1] = Math.max(BH[k + 1], f); else BH.push(q.b, f); } } // постройка из нескольких коробок (штаб «П») — урон один раз, по ближней
+        if (d < R) { const f = (d < 2 ? 1 : 0.8 * Math.pow(1 - d / R, 0.6)) * (q.k ?? 1); best = Math.max(best, f);
+          if (q.b && o.bld) { let k = 0; while (k < BH.length && BH[k] !== q.b) k += 4; // постройка из нескольких коробок (штаб «П») — урон один раз, по ближней
+            if (k < BH.length) { BH[k + 1] = Math.max(BH[k + 1], f); BH[k + 2] = Math.min(BH[k + 2], dh); BH[k + 3] = Math.max(BH[k + 3], top); } else BH.push(q.b, f, dh, top); } }
       }
       if (best > 0) {
-        const amount = dmg * best;
+        const amount = eq * best;
         o.hp -= amount; o.dmgTaken += amount; res.objects.push(o);
         fx.objectHit(o, amount, p);
-        // объект-сцена: урон и той постройке, в которую пришлось (своя прочность — доля объекта); разбиты все главные — объект уничтожен
-        for (let i = 0; i < BH.length; i += 2) { const B = o.bld[BH[i]]; if (B.dead) continue; B.hp -= dmg * BH[i + 1]; if (B.hp <= 0) bldDie(o, BH[i], fx); }
-        if (o.hp <= 0 || (o.bld && bldMainsDead(o))) { o.dead = true; o.hp = 0; bldKillMains(o, fx); fx.objectDestroyed(o, by, owner); }
+        // объект-сцена, вид: неуправляемое разбивает постройки в радиусе (своя прочность — доля объекта), управляемое — одну, под точкой прицела
+        // (под прицелом — ближняя по горизонтали; над несколькими сразу — та, что выше: вагоны эшелона цистерн и эстакада между ними)
+        let k0 = 0; if (guided) for (let i = 4; i < BH.length; i += 4) if (BH[i + 2] < BH[k0 + 2] - 0.01 || (Math.abs(BH[i + 2] - BH[k0 + 2]) <= 0.01 && BH[i + 3] > BH[k0 + 3])) k0 = i;
+        for (let i = guided ? k0 : 0; i < (guided ? Math.min(k0 + 4, BH.length) : BH.length); i += 4) { const B = o.bld[BH[i]]; if (B.dead) continue; B.hp -= eq * BH[i + 1]; if (B.hp <= 0) bldDie(o, BH[i], fx); }
+        if (o.hp <= 0) { o.dead = true; o.hp = 0; bldKillMains(o, fx); fx.objectDestroyed(o, by, owner); }
       }
     }
     for (const u of units) {

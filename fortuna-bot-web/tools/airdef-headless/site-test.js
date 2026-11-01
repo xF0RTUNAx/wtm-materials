@@ -2,21 +2,25 @@
 //   deno run -A tools/airdef-headless/site-test.js
 // Проверки: (1) части объекта — постройки сцены с именами, у боя — их прочность (доли сумма 1); (2) ПТУР в малый купол разбивает его
 // (fx.bldDestroyed), объект цел; (3) разбитая постройка — больше не точка прицела (objAimXZ); (4) мельница «Лысой горы» — урон объекту,
-// постройки целы; (5) объект уничтожен — главные разрушены; разбиты все главные при запасе прочности — объект уничтожен;
-// (6) онлайн: маска разбитых построек (bldMask) → клиент (bldFromMask) — то же.
+// постройки целы; (5) объект уничтожен — главные разрушены; разбиты все главные при запасе прочности — объект цел (2026-11-01, облако
+// cloud/strike-balance: гибель — только по общей прочности); (6) онлайн: маска разбитых построек (bldMask) → клиент (bldFromMask) — то же;
+// (7) вид разрушения: свободная бомба разбивает постройки в радиусе, управляемая с тем же эквивалентом — только ту, что под прицелом.
 const dir = new URL('.', import.meta.url).pathname;
 (0, eval)(Deno.readTextFileSync(dir + '../drone-headless/three.min.js'));
 const { objAimXZ, partDist, bldMask, bldFromMask, SITES, YARD_K, CITY, buildCity } = await import('../../games/airdef/city.js');
 const { buildWinter } = await import('../../games/airdef/map-winter.js');
 const { buildAutumn } = await import('../../games/airdef/map-autumn.js');
-const { createStrike, MODES } = await import('../../games/airdef/sim/strike.js');
+const { createStrike, MODES, guidedOf } = await import('../../games/airdef/sim/strike.js');
+const { AG, eqOf } = await import('../../games/airdef/arsenal.js');
 
 let seed = 3; const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
 let bad = 0; const fail = (t) => { bad++; console.log('  ОШИБКА: ' + t); };
 const ev = [];
 const fx = { bldDestroyed: (o, b) => ev.push('b:' + b), objectDestroyed: () => ev.push('dead') }; // остальные хуки — пустые (strike.js NOOP_FX)
 const mk = (city) => createStrike({ city, rnd, mode: () => MODES.real, aircraft: () => [], laserSpot: () => null, night: 0, hurt() {}, fx });
-const hit = (S, city, x, z, dmg = 45, R = 14) => S.blast(new THREE.Vector3(x, Math.max(city.topAt(x, z), -4) + 0.5, z), dmg, R, 'тест');
+// разрыв оружия W (по умолчанию — ПТУР Hellfire: эквивалент 30, управляемое) или «голый» урон dmg / R (как раньше: эквивалент dmg · 1,25, область)
+const ATGM = AG.hellfire;
+const hit = (S, city, x, z, dmg = ATGM, R) => { const p = new THREE.Vector3(x, Math.max(city.topAt(x, z), -4) + 0.5, z); return typeof dmg === 'object' ? S.blast(p, dmg.dmg, dmg.blast, 'тест', null, dmg.ap || 1, eqOf(dmg), guidedOf(dmg)) : S.blast(p, dmg, R, 'тест'); };
 
 for (const [name, city, key] of [['Зимняя долина', buildWinter(1), 'w_radar'], ['Туманная топь', buildAutumn(1), 'a_radar']]) {
   console.log(`\n== ${name}: ${key}`);
@@ -34,18 +38,21 @@ for (const [name, city, key] of [['Зимняя долина', buildWinter(1), '
   const other = names.filter((b) => b !== 'dome2' && o.bld[b].dead); if (other.length) fail(`задеты и другие постройки: ${other.join(', ')}`);
   console.log(`ПТУР в малый купол: прочность ${o.hp.toFixed(0)}, разбиты: ${names.filter((b) => o.bld[b].dead).join(', ')}`);
   // (3) прицел: главная точка — на большом куполе; разобьём его — прицел уходит на целую постройку
-  const d1 = c.parts.find((q) => q.b === 'dome1'); hit(S, city, d1.x, d1.z);
-  if (!o.bld.dome1.dead) fail('ПТУР в большой купол — купол цел');
+  const d1 = c.parts.find((q) => q.b === 'dome1'); let n1 = 0; while (n1 < 3 && !o.bld.dome1.dead) { hit(S, city, d1.x, d1.z); n1++; }
+  if (!o.bld.dome1.dead) fail('3 ПТУР в большой купол — купол цел');
+  console.log(`большой купол — ПТУР: ${n1}`);
   for (let n = -1; n < 30; n++) { const a = objAimXZ(o, n, 0, 0); const q = c.parts.filter((p) => p.b).find((p) => partDist(p, a.x, a.z) <= 0.5); if (q && o.bld[q.b].dead) { fail(`прицел ${n} — в разбитую постройку ${q.b}`); break; } }
   // (6) маска для онлайна
   const m = bldMask(o), S2 = mk(city), o2 = S2.objects.find((q) => q.id === c.id); bldFromMask(o2, m, fx);
   if (names.some((b) => o2.bld[b].dead !== o.bld[b].dead)) fail('маска построек: у клиента не то же');
   console.log(`маска ${m.toString(2)} — у клиента: ${names.filter((b) => o2.bld[b].dead).join(', ')}`);
-  // (5) домик — третий главный: объект уничтожен, главные — разрушены
-  const h = c.parts.find((q) => q.b === 'house'); hit(S, city, h.x, h.z);
-  if (!o.dead) fail('разбиты все главные — объект цел');
-  if (!ev.includes('dead')) fail('нет fx.objectDestroyed');
-  console.log(`домик: объект ${o.dead ? 'уничтожен' : 'цел'}, разбиты: ${names.filter((b) => o.bld[b].dead).join(', ')}`);
+  // (5) домик — третий главный: объект цел, пока есть общая прочность; добить — главные руины, fx.objectDestroyed
+  const h = c.parts.find((q) => q.b === 'house'); let nh = 0; while (nh < 3 && !o.bld.house.dead) { hit(S, city, h.x, h.z); nh++; }
+  if (names.some((b) => o.bld[b].main && !o.bld[b].dead)) fail('ПТУР по главным — не все разбиты');
+  if (o.dead !== (o.dmgTaken >= o.hpMax - 1e-6)) fail(`разбиты все главные: объект ${o.dead ? 'уничтожен' : 'цел'} при уроне ${o.dmgTaken.toFixed(0)} из ${o.hpMax}`);
+  let nk = 0; while (!o.dead && nk < 40) { hit(S, city, h.x, h.z); nk++; }
+  if (!o.dead) fail('40 ПТУР — объект цел'); if (!ev.includes('dead')) fail('нет fx.objectDestroyed');
+  console.log(`главные разбиты (урон ${Math.round(o.dmgTaken - nk * eqOf(ATGM))} из ${o.hpMax}), объект добит ещё ${nk} ПТУР; разбиты: ${names.filter((b) => o.bld[b].dead).join(', ')}`);
   // (5) общий запас кончился от разрывов на площадке — главные всё равно разрушены
   S = mk(city); o = S.objects.find((q) => q.id === c.id);
   for (let k = 0; k < 40 && !o.dead; k++) hit(S, city, c.x + 20, c.z - 30, 80, 30);
@@ -70,20 +77,21 @@ for (const [name, city, key, site] of [['Туманная топь', buildAutumn
     if (Math.abs(sum - 1) > 1e-6) fail(`доли прочности: сумма ${sum}`);
     if (names.length > 31) fail(`построек ${names.length} — маска онлайна (bldMask) держит 31`);
     const S = mk(city), o = S.objects.find((q) => q.id === c.id); ev.length = 0;
-    const hp0 = o.hp; o.hp = 1e9; // общий запас — без предела: проверяем именно гибель по главным (иначе склад гибнет по прочности на 4-м ПТУР)
+    const hp0 = o.hp; o.hp = 1e9; // общий запас — без предела: разбить все главные — объект цел (гибель — только по прочности)
     console.log(`прочность ${hp0}; постройки: ${names.map((b) => `${b} ${o.bld[b].hp.toFixed(1)}${o.bld[b].main ? '*' : ''}${B[b].chain ? '!' : ''}`).join(', ')}`);
     const mains = names.filter((b) => B[b].main);
     mains.forEach((b, i) => {
-      const q = c.parts.find((p) => p.b === b); let k = 0; while (k < 3 && !o.bld[b].dead && !o.dead) { hit(S, city, q.x, q.z); k++; } // большая (штаб в городе) — до трёх ПТУР
+      const q = c.parts.find((p) => p.b === b); let k = 0; while (k < 4 && !o.bld[b].dead && !o.dead) { hit(S, city, q.x, q.z); k++; } // большая (штаб в городе, корабль) — до четырёх ПТУР
       if (!o.bld[b].dead) fail(`${k} ПТУР в ${b} — цел`);
       // задеть можно только постройку, что стоит внутри (эстакада ГСМ — между составами эшелона цистерн): явные пары по сцене
       const near = (n) => (({ site_rail_w: { tanktrain: ['rack'] } })[site] || {})[b]?.includes(n);
       const extra = names.filter((n) => n !== b && o.bld[n].dead && !mains.slice(0, i).includes(n) && !near(n)); if (extra.length && !o.dead) fail(`ПТУР в ${b} задел ${extra.join(', ')}`);
-      if (!o.dead) for (let n = -1; n < 20; n++) { const a = objAimXZ(o, n, 0, 0), p = c.parts.filter((x) => x.b).find((x) => partDist(x, a.x, a.z) <= 0.5); if (p && o.bld[p.b].dead) { fail(`прицел ${n} — в разбитую ${p.b}`); break; } }
+      // все постройки прицела разбиты, а прочность есть — прицел на руинах главной (урон идёт): проверять, пока есть целая
+      if (!o.dead && o.aims.some((x) => !x.b || !o.bld[x.b].dead)) for (let n = -1; n < 20; n++) { const a = objAimXZ(o, n, 0, 0), p = c.parts.filter((x) => x.b).find((x) => partDist(x, a.x, a.z) <= 0.5); if (p && o.bld[p.b].dead) { fail(`прицел ${n} — в разбитую ${p.b}`); break; } }
       if (i < mains.length - 1 && o.dead) fail(`объект уничтожен до последней главной (${b})`);
       console.log(`ПТУР в ${b} (${k}): объект ${o.dead ? 'уничтожен' : 'цел'}`);
     });
-    if (!o.dead) fail('разбиты все главные — объект цел');
+    if (o.dead) fail('разбиты все главные при запасе прочности — объект уничтожен (гибель — только по прочности)');
     // запретный декор (SITES keep): водоём и рельсы — не свободная земля; рядом с ними — свободная
     if (SITES[site].keep) {
       const { freeGround } = await import('../../games/airdef/mission.js');
@@ -105,7 +113,7 @@ for (const [name, city, key, site] of [['Туманная топь', buildAutumn
       // препятствие — не постройка: прочность построек не тронута; урон объекту — разве что осколками по двору (зона yard у построек: до YARD_K)
       if (Object.values(o2.bld).some((B, i) => B.hp < bh[i])) fail('разрыв на препятствии задел постройку');
       const px = c.x + sx + w / 4, pz = c.z + sz - d / 4, near = c.parts.some((q) => q.b && partDist(q, px, pz) < 25 + 14); // зона двора (YARD_PAD) + радиус разрыва
-      if (hp1 - o2.hp > (near ? 45 * 1.25 * YARD_K : 0) + 0.01) fail(`разрыв на препятствии — урон объекту ${(hp1 - o2.hp).toFixed(0)}`);
+      if (hp1 - o2.hp > (near ? eqOf(ATGM) * YARD_K : 0) + 0.01) fail(`разрыв на препятствии — урон объекту ${(hp1 - o2.hp).toFixed(0)}`);
       for (let n = -1; n < 30; n++) { const a = objAimXZ(o2, n, 0, 0); if (Math.abs(a.x - c.x - sx) < w / 2 && Math.abs(a.z - c.z - sz) < d / 2) { fail(`прицел ${n} — в препятствие`); break; } }
       for (const b of Object.keys(SITES[site].b).filter((k) => /^adit/.test(k))) {
         const q = c.parts.find((p) => p.b === b), S3 = mk(city), o3 = S3.objects.find((x) => x.id === c.id); hit(S3, city, q.x, q.z);
@@ -114,6 +122,19 @@ for (const [name, city, key, site] of [['Туманная топь', buildAutumn
       console.log(`препятствие (solid): верх ${top.toFixed(1)} м, урон от разрыва на ней ${(hp1 - o2.hp).toFixed(0)}`);
     }
   }
+}
+// (7) вид разрушения: ФАБ-500 (свободная, область) в резервуар склада горючего — разбит он и соседние в радиусе; КАБ-500С (управляемая,
+// тот же эквивалент 100) в ту же точку — только он; урон объекту — одинаковый
+{
+  console.log('\n== вид разрушения: склад горючего (oil), резервуар t1');
+  const city = buildCity(1), c = city.objects.find((q) => q.key === 'oil'), t1 = c.parts.find((q) => q.b === 't1');
+  const run = (W) => { const S = mk(city), o = S.objects.find((q) => q.id === c.id), hp0 = o.hp; hit(S, city, t1.x, t1.z, W); return { dmg: hp0 - o.hp, dead: Object.keys(o.bld).filter((b) => o.bld[b].dead) }; };
+  const fab = run(AG.fab500), kab = run(AG.kab500s);
+  console.log(`ФАБ-500: урон ${fab.dmg.toFixed(0)}, разбиты ${fab.dead.join(', ')}; КАБ-500С: урон ${kab.dmg.toFixed(0)}, разбиты ${kab.dead.join(', ')}`);
+  if (eqOf(AG.fab500) !== eqOf(AG.kab500s)) fail('эквивалент ФАБ-500 и КАБ-500С разный — проверка не про вид');
+  if (Math.abs(fab.dmg - kab.dmg) > 0.01) fail('урон объекту от ФАБ-500 и КАБ-500С с тем же эквивалентом — разный');
+  if (!fab.dead.includes('t1') || fab.dead.length < 2) fail('ФАБ-500 в резервуар — не разбита область');
+  if (kab.dead.join() !== 't1') fail(`КАБ-500С в резервуар — разбиты ${kab.dead.join(', ') || 'нет'} (ждём только t1)`);
 }
 console.log(bad ? `\nОШИБОК: ${bad}` : '\nошибок нет');
 if (bad) Deno.exit(1);

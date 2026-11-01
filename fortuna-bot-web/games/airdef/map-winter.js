@@ -4,7 +4,7 @@
 // Долина с севера на юг: водохранилище за плотиной ГЭС на севере, замёрзшая река, авиабаза посередине, посёлок и
 // военный городок, ж/д узел, арсенал в восточном ущелье, РЛС на вершине хребта, озеро на юге. Оси как в city.js: −Z — север.
 import { tr } from './i18n.js?v=20261101a';
-import { CITY, ZONE, KIND, mulberry32, clamp, smooth, vnoise, siteParts, mapRuntime } from './city.js?v=20261101a';
+import { CITY, ZONE, KIND, mulberry32, clamp, smooth, vnoise, siteParts, mapRuntime, OBJ_HP } from './city.js?v=20261101a';
 
 const H = CITY.HALF, RES = 50, N = Math.round(2 * H / RES) + 1; // узлов по стороне
 export const WINTER = {
@@ -208,15 +208,15 @@ export function buildWinter(seed = 1) {
   { // авиабаза — своя сцена (city.js SITES site_air_w) восточнее ВПП: укрытия, ТЭЧ, КДП, ГСМ, авиабоеприпасы, самолёты — лёгкие копии моделей игры;
     // рамка — по сцене (x −230…+290 → ±290), gk — прежняя рамка запрета генератора (420 × 2700 + 40): казармы у перрона (x +320) — как были
     const x = rwx + 260, z = R.z;
-    add({ key: 'w_air', name: tr('Авиабаза'), x, z, w: 580, d: 1100, gk: [250, 1390], value: 170, hp: 240, site: 'site_air_w', parts: siteParts('site_air_w', x, z, groundH),
+    add({ key: 'w_air', name: tr('Авиабаза'), x, z, w: 580, d: 1100, gk: [250, 1390], value: 170, hp: OBJ_HP.L, site: 'site_air_w', parts: siteParts('site_air_w', x, z, groundH),
       zones: [{ t: 'box', x: rwx, z: R.z, w: R.W, d: R.L, h: 1, k: 0.7 }] }); // ВПП — зона урона (sim/strike.js blast), как у городского аэродрома
   }
   { const p = P[4]; // склад ГСМ у озера — своя сцена (city.js SITES site_fuel_w): РВС в обвалованиях, береговая насосная, налив; въезд с запада
-    add({ key: 'w_fuel', name: tr('Склад ГСМ'), x: p.x, z: p.z, w: 600, d: 480, value: 160, hp: 200, site: 'site_fuel_w', parts: siteParts('site_fuel_w', p.x, p.z) }); }
+    add({ key: 'w_fuel', name: tr('Склад ГСМ'), x: p.x, z: p.z, w: 600, d: 480, value: 160, hp: OBJ_HP.M, site: 'site_fuel_w', parts: siteParts('site_fuel_w', p.x, p.z) }); }
   { const p = P[3]; // арсенал — своя сцена (city.js SITES site_ammo_w): хранилища, штольни в останце, навес, штабели; дно ущелья ровное ±330 м
-    add({ key: 'w_ammo', name: tr('Арсенал в ущелье'), x: p.x, z: p.z, w: 560, d: 470, value: 180, hp: 220, site: 'site_ammo_w', parts: siteParts('site_ammo_w', p.x, p.z) }); }
+    add({ key: 'w_ammo', name: tr('Арсенал в ущелье'), x: p.x, z: p.z, w: 560, d: 470, value: 180, hp: OBJ_HP.M, site: 'site_ammo_w', parts: siteParts('site_ammo_w', p.x, p.z) }); }
   { const p = P[5]; // командный пункт в котловине — своя сцена (city.js SITES site_cp_w): бункеры, узел связи, антенные поля; въезд с востока
-    add({ key: 'w_cp', name: tr('Командный пункт'), x: p.x, z: p.z, w: 560, d: 500, value: 160, hp: 260, site: 'site_cp_w', parts: siteParts('site_cp_w', p.x, p.z) }); }
+    add({ key: 'w_cp', name: tr('Командный пункт'), x: p.x, z: p.z, w: 560, d: 500, value: 160, hp: OBJ_HP.F, site: 'site_cp_w', parts: siteParts('site_cp_w', p.x, p.z) }); }
   { // РЛС на вершине восточного хребта: самая высокая точка в круге
     let bx = 0, bz = 0, bh = -1e9; const cx = valleyX(-6500) + 6200, cz = -6500; // северо-восточный хребет
     for (let a = 0; a < 2000; a += 100) for (let t = 0; t < 6.283; t += 0.25) { const x = cx + Math.cos(t) * a, z = cz + Math.sin(t) * a, h = groundH(x, z); if (h > bh) { bh = h; bx = x; bz = z; } }
@@ -224,7 +224,7 @@ export function buildWinter(seed = 1) {
       const [ci, cj] = node(bx, bz), y = bh - 8; bh = y;
       for (let j = cj - 6; j <= cj + 6; j++) for (let i = ci - 6; i <= ci + 6; i++) { const d = Math.hypot(i - ci, j - cj) * RES; if (d < 300) HM[j * N + i] += (y - HM[j * N + i]) * (1 - smooth(80, 300, d)); }
     }
-    add({ key: 'w_radar', name: tr('РЛС на вершине'), x: bx, z: bz, w: 120, d: 100, value: 150, hp: 160, peak: true, site: 'site_radar', parts: siteParts('site_radar', bx, bz) }); } // своя сцена (city.js SITES): купола, домик, мачта, генераторная…
+    add({ key: 'w_radar', name: tr('РЛС на вершине'), x: bx, z: bz, w: 120, d: 100, value: 150, hp: OBJ_HP.S, peak: true, site: 'site_radar', parts: siteParts('site_radar', bx, bz) }); } // своя сцена (city.js SITES): купола, домик, мачта, генераторная…
   { // ГЭС — своя сцена (city.js SITES site_dam_w) над руслом: своя плотина на x ±400 от (−1125, −9200), водосброс, водоприёмник, машинный зал, ОРУ на террасе
     // (P[8], P[9]); ноль сцены (sy) — 181,2 м, низ стены. Стена игры — от склона до склона, как была; на месте сцены вырезана: два куска по краям
     // (wall — видны всегда, без вида разрушения; solid — не цель и не урон). Рамка — по сцене (z −180…+400 → rz +110), gk — прежняя рамка запрета генератора
@@ -232,13 +232,13 @@ export function buildWinter(seed = 1) {
     while (l < 6000 && groundH(vx - l, z + 40) < lakeNY + 4) l += 25; while (r < 6000 && groundH(vx + r, z + 40) < lakeNY + 4) r += 25; // стена — от склона до склона
     const x0 = vx - l - 20, x1 = vx + r + 20, top = lakeNY + 5, base = floorY(z) - 6, sx = -1125, sz = z + 100;
     const wall = (a, b) => ({ t: 'box', x: (a + b) / 2, z, w: b - a, d: 34, h: top - base, y0: base, solid: true, wall: true });
-    add({ key: 'w_dam', name: tr('ГЭС на плотине'), x: sx, z: sz, w: 800, d: 580, rz: 110, gk: [x0 - 40 - sx, x1 + 40 - sx, -220, 220], sy: base, value: 190, hp: 300,
+    add({ key: 'w_dam', name: tr('ГЭС на плотине'), x: sx, z: sz, w: 800, d: 580, rz: 110, gk: [x0 - 40 - sx, x1 + 40 - sx, -220, 220], sy: base, value: 190, hp: OBJ_HP.L,
       site: 'site_dam_w', parts: [...siteParts('site_dam_w', sx, sz, groundH, base), wall(x0, sx - 400), wall(sx + 400, x1)] }); }
   { const p = P[2]; // ж/д узел — своя сцена (city.js SITES site_rail_w) на полосе вдоль долины (P[2] + P[7]): пути, рампа, эшелоны, депо западнее главной дороги,
     // склады и ГСМ восточнее; рамка — по сцене (x −160…+240 → ±240), gk — прежняя рамка запрета генератора (220 × 3000 + 40)
-    add({ key: 'w_rail', name: tr('Железнодорожный узел'), x: p.x, z: p.z, w: 480, d: 1200, gk: [150, 1540], value: 120, hp: 180, site: 'site_rail_w', parts: siteParts('site_rail_w', p.x, p.z, groundH) }); }
+    add({ key: 'w_rail', name: tr('Железнодорожный узел'), x: p.x, z: p.z, w: 480, d: 1200, gk: [150, 1540], value: 120, hp: OBJ_HP.L, site: 'site_rail_w', parts: siteParts('site_rail_w', p.x, p.z, groundH) }); }
   { const p = P[6]; // военный городок — своя сцена (city.js SITES site_garr_w) на своей террасе, южнее дороги посёлка; въезд с севера
-    add({ key: 'w_garr', name: tr('Военный городок'), x: p.x, z: p.z, w: 430, d: 390, value: 110, hp: 160, site: 'site_garr_w', parts: siteParts('site_garr_w', p.x, p.z) }); }
+    add({ key: 'w_garr', name: tr('Военный городок'), x: p.x, z: p.z, w: 430, d: 390, value: 110, hp: OBJ_HP.M, site: 'site_garr_w', parts: siteParts('site_garr_w', p.x, p.z) }); }
   const objects = O;
   const keep = objects.map((o) => (o.gk ? (o.gk.length === 4 ? { x0: o.x + o.gk[0], x1: o.x + o.gk[1], z0: o.z + o.gk[2], z1: o.z + o.gk[3] } // gk — прежняя рамка (расстановка как была;
     : { x0: o.x - o.gk[0], x1: o.x + o.gk[0], z0: o.z - o.gk[1], z1: o.z + o.gk[1] }) // из четырёх чисел — [x0, x1, z0, z1] от центра: у ГЭС не по центру сцены)
