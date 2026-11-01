@@ -46,7 +46,7 @@ import { createRating } from './rating-ui.js?v=20261101a';
 import { createShop } from './shop-ui.js?v=20261101a';
 import { createEndScreen } from './endscr.js?v=20261101a';
 import { createHints } from './hints.js?v=20261101a';
-import { motorOf, makeFlame } from './plume.js?v=20261101a';
+import { motorOf, makeFlame, setPuffCam } from './plume.js?v=20261101a';
 import { createShell } from './shell.js?v=20261101a';
 import { createDoors } from './doors.js?v=20261101a';
 import { createCrashRep } from './crashrep.js?v=20261101a';
@@ -984,6 +984,7 @@ C.setFov = (f) => { if (Math.abs(camera.fov - f) < 0.01) return; camera.fov = f;
 C.shell = createShell(C, { IS_TOUCH, ls });
 // створки при входе в бой и выходе в меню (doors.js): стиль — случайно на каждый переход; картинки — заранее, через 4 с после загрузки
 C.doors = createDoors(); setTimeout(() => C.doors.preload(), 4000);
+setPuffCam(camera); // клубы следов ракет: вдали от камеры — реже (plume.js)
 C.doors.gate = () => C.assetsDone === true; // после перезагрузки под карту створки расходятся, когда модели и текстуры пришли (не дольше 8 с)
 C.crash = createCrashRep(C); // прошлый бой оборвался без выхода (вылет вкладки) — после меню предложим отправить отчёт
 document.body.classList.toggle('nopad', !C.sens.pad); // крестовина выключена в настройках

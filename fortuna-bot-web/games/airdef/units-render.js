@@ -3,7 +3,7 @@
 /* global THREE */
 import { part, mergeParts, M, latheZ, plateXZ, plateZY, buildMissileGeo } from '../drone/models.js?v=20261101a';
 import { makeParticles, radialTex } from '../drone/world.js?v=20261101a';
-import { createPlumes, makeFlame, flameTick, motorOf, setFlameLayer } from './plume.js?v=20261101a';
+import { createPlumes, makeFlame, flameTick, motorOf, setFlameLayer, setTrailPuffs, trailPuffsOn } from './plume.js?v=20261101a';
 import { FLAME_KIND, makeJetFlame, setJetLayer } from './jetflame.js?v=20261101a';
 import { createCmFx } from './cmfx.js?v=20261101a';
 import { LNCH } from './launchers.js?v=20261101a';
@@ -570,7 +570,7 @@ export function createFx(scene, P) {
   // свои симуляции Mantaflow в Blender (tools/airdef-fx/explode: огненный шар, тёмный дым, «гриб», волна пыли, выброс грунта и комья со шлейфами)
   // → fx/ex_<тип>.ktx2 (сжатые) или .webp, описание листов — fx/explode.json. Тип — по радиусу поражения и виду подрыва (exType); кадр — по
   // ширине съёмки × R / ref, время — по подобию (крупнее — медленнее, √). Пока описание не пришло (или ?exnew=0) — прежние раскадровки и частицы
-  const XB = {}, XJ = {}; let LY = null, CB = null, PF = null, lo = true; // PF — клубы дыма следов подбитых (puffs.js, лист ex_puff)
+  const XB = {}, XJ = {}; let LY = null, CB = null, PF = null, PT = null, lo = true; // PF — клубы дыма следов подбитых (puffs.js, лист ex_puff); PT — клубы следов ракет (свой пул, plume.js)
   // дым следа: клуб из Blender, пока лист не пришёл — прежнее пятно (тот же emit; st — с какого места клуба: 0 — свежий, 0,5 — уже рваный)
   // дым повреждений самолётов (zoneTrail, damageSmoke): размер и рост клуба (2026-10-25, Mark: «достаточно великоват» — при росте 4–10 м/с ×2
   // за 3–6 с жизни клуб выходил до 30–120 м, вдвое-вчетверо больше самолёта; теперь ≈ ×0,55: меньше и перерисовки на экране)
@@ -595,6 +595,13 @@ export function createFx(scene, P) {
           // пул: шаг следа 2,5 м — частиц вдвое больше, чем при 5 м: на «Высоком» и выше до 3000 (быстрый сильно подбитый самолёт с 3–4 зонами не укорачивает следы), на телефонных — как было
           PF = makePuffs(scene, P.fxLo ? Math.min(1500, Math.round((P.particles || 3000) * 0.5)) : Math.min(3000, Math.round((P.particles || 3000) * 0.6)), { ktx: u('ktx2'), url: u('webp'), cols: j.cols, rows: j.rows, frames: j.frames, variants: j.variants, times: j.times, onTex });
           PF.mat.uniforms.scale.value = smoke.mat.uniforms.scale.value; api.mats.push(PF.mat); PF.points.renderOrder = lo ? 1 : 0.46; if (LY) PF.points.layers.set(LY[0]);
+          continue;
+        }
+        if (t === 'trail') { // клубы следов ракет (Mark 2026-11-01, «по подобию War Thunder»; tools/airdef-fx/explode/trail.py): свой лист и пул — длинные следы ЗУР
+          // не вытесняют дым подбитых; рост ∝ √t, как ширина следа (plume.js puffAlong); ?wts=0 — как было (лента и мягкие шары)
+          if (/[?&]wts=0/.test(location.search)) continue;
+          PT = makePuffs(scene, P.fxLo ? 1500 : 4000, { ktx: u('ktx2'), url: u('webp'), cols: j.cols, rows: j.rows, frames: j.frames, variants: j.variants, times: j.times, fadeIn: 0.05, sqrtGrow: true, k: 1.3, onTex });
+          PT.mat.uniforms.scale.value = smoke.mat.uniforms.scale.value; api.mats.push(PT.mat); PT.points.renderOrder = lo ? 1 : 0.46; if (LY) PT.points.layers.set(LY[0]); setTrailPuffs(PT);
           continue;
         }
         if (t === 'burn') { // столб дыма пожара — петля, стоит вертикально (поворот только вокруг вертикали)
@@ -623,8 +630,8 @@ export function createFx(scene, P) {
     mats: [smoke.mat, fire.mat, linger.mat, ...CMF.mats], // хозяин выставляет uniforms.scale по высоте кадра
     // порядок с облаками (у облаков 0,5): камера ниже облаков — дым и взрывы после них (облака — фон; было: у частиц дыма порядок 0 —
     // далёкое облако ложилось поверх близкого дыма белыми клубками); выше облаков — раньше них (облако между камерой и дымом закрывает его)
-    setView(camY) { lo = camY < 2250; smoke.points.renderOrder = fire.points.renderOrder = linger.points.renderOrder = lo ? 1 : 0.46; if (PF) PF.points.renderOrder = lo ? 1 : 0.46; PL.mesh.renderOrder = lo ? 2 : 0.47; for (const b of books) b.mesh.renderOrder = lo ? 0.8 : 0.44; }, // низ облаков — от 2300 м (city-render buildClouds)
-    setLayers(fxL, addL) { LY = [fxL, addL]; smoke.points.layers.set(fxL); linger.points.layers.set(fxL); if (PF) PF.points.layers.set(fxL); fire.points.layers.set(addL); PL.mesh.layers.set(fxL); setFlameLayer(addL); setJetLayer(addL); CMF.setLayers(fxL, addL); for (const b of books) { b.mesh.layers.set(fxL); b.pre.layers.set(fxL); } }, // раскадровки огня и взрывов — в проходе дыма: после облаков (фон), до дыма (он закрывает огонь) // дым — в половине разрешения, огонь — поверх (post.js); раскадровки — в основном проходе (там глубина кадра: дома их загораживают)
+    setView(camY) { lo = camY < 2250; smoke.points.renderOrder = fire.points.renderOrder = linger.points.renderOrder = lo ? 1 : 0.46; if (PF) PF.points.renderOrder = lo ? 1 : 0.46; if (PT) PT.points.renderOrder = lo ? 1 : 0.46; PL.mesh.renderOrder = lo ? 2 : 0.47; for (const b of books) b.mesh.renderOrder = lo ? 0.8 : 0.44; }, // низ облаков — от 2300 м (city-render buildClouds)
+    setLayers(fxL, addL) { LY = [fxL, addL]; smoke.points.layers.set(fxL); linger.points.layers.set(fxL); if (PF) PF.points.layers.set(fxL); if (PT) PT.points.layers.set(fxL); fire.points.layers.set(addL); PL.mesh.layers.set(fxL); setFlameLayer(addL); setJetLayer(addL); CMF.setLayers(fxL, addL); for (const b of books) { b.mesh.layers.set(fxL); b.pre.layers.set(fxL); } }, // раскадровки огня и взрывов — в проходе дыма: после облаков (фон), до дыма (он закрывает огонь) // дым — в половине разрешения, огонь — поверх (post.js); раскадровки — в основном проходе (там глубина кадра: дома их загораживают)
     // kind: 'air' — в воздухе (подрыв ЗУР, сбитый самолёт), 'ground' — ракета, падение; 'bomb' — бомба (крупнее, вспышка с кольцом, пыль)
     explosion(p, R, kind) {
       if (R < 6) { // мелочь (обломки) — частицами
@@ -728,7 +735,7 @@ export function createFx(scene, P) {
       if (m.trailY !== undefined) { if (y < m.trailY && m.tb < 1.2) return; m.trailY = undefined; } // С-300: первые ≈ 40 м дым — в листе запуска двигателя (main.js samIgnite); ушла вбок — не дольше 1,2 с
       const mo = motorOf(m.unit && m.unit.key, 'sam', m.tb >= m.M.burn), rr = LN && LN.stage && !sus ? m.M.r * (LN.stageR || 1) : m.M.r;
       PL.add(m, x, y, z, mo, rr); // сплошная лента дыма по траектории; клубы-частицы ниже — объём (видны и вдоль ленты)
-      smoke.emit(x, y, z, (Math.random() - 0.5) * 2, 1, (Math.random() - 0.5) * 2, mo.c[0], mo.c[1], mo.c[2], (big ? 0.4 : 0.28) * (sus ? 0.45 : 1) * Math.min(1, mo.a / 0.6), s, s * 0.9, big ? 9 : 5, 0.3, 0.3);
+      if (!(trailPuffsOn() && mo.a >= 0.4)) smoke.emit(x, y, z, (Math.random() - 0.5) * 2, 1, (Math.random() - 0.5) * 2, mo.c[0], mo.c[1], mo.c[2], (big ? 0.4 : 0.28) * (sus ? 0.45 : 1) * Math.min(1, mo.a / 0.6), s, s * 0.9, big ? 9 : 5, 0.3, 0.3); // с клубами Blender (plume.js) мягкие шары не нужны
     },
     // старт С-300 / С-400 (своя пусковая): листы Blender — 'launch_eject' (облако из устья, точка — устье) и 'launch_ignite' (запуск двигателя,
     // точка — срез сопла); размер и время — как снято (лист 44 и 80 м; ракета первую секунду идёт по соплу листа — launchers.js ej.up).
@@ -818,7 +825,7 @@ export function createFx(scene, P) {
       const x = p ? p.x : w.pos.x - w.dir.x * 2, y = p ? p.y : w.pos.y - w.dir.y * 2, z = p ? p.z : w.pos.z - w.dir.z * 2, k = p && w.W.vis ? Math.min(1, (w.W.kind === 'rocket' ? narVis(w.key, w.W).r : w.W.vis.r) * 2.5) : 1;
       const W = w.W, kind = W.kind === 'tbm' ? 'tbm' : W.kind, mo = motorOf(w.key, kind, false), r = kind === 'rocket' ? narVis(w.key, W).r : W.vis ? W.vis.r : 0.15; // у НАР — калибр ракеты, а не блока
       PL.add(w, x, y, z, mo, r);
-      if (mo.a > 0.1) smoke.emit(x, y, z, 0, 0.5, 0, mo.c[0], mo.c[1], mo.c[2], 0.25 * Math.min(1, mo.a / 0.6) * (kind === 'rocket' ? 0.4 : 1), 3 * k, kind === 'rocket' ? 0.4 : 3, kind === 'rocket' ? 3 : 4, 0.3, 0.2); // НАР — мелкие клубы, ≤ 1,5 м (залп 4–20 ракет: большие шары закрывали вертолёт; Mark 2026-10-22 — всё ещё велики)
+      if (mo.a > 0.1 && !(trailPuffsOn() && mo.a >= 0.4)) smoke.emit(x, y, z, 0, 0.5, 0, mo.c[0], mo.c[1], mo.c[2], 0.25 * Math.min(1, mo.a / 0.6) * (kind === 'rocket' ? 0.4 : 1), 3 * k, kind === 'rocket' ? 0.4 : 3, kind === 'rocket' ? 3 : 4, 0.3, 0.2); // НАР — мелкие клубы, ≤ 1,5 м (залп 4–20 ракет: большие шары закрывали вертолёт; Mark 2026-10-22 — всё ещё велики)
     },
     // ЛТЦ — каждый кадр, пока горит (спрайт с мерцанием и дымная лента — cmfx.js); пул — самые свежие 64 (32 на слабых)
     flareTick(f, dt) { CMF.tick(f, dt); },
@@ -844,7 +851,7 @@ export function createFx(scene, P) {
     burn(pos, r) {
       const b = { pos: pos.clone(), r, t: 0 }; if (CB) b.col = colAdd(b); burning.push(b);
     },
-    clearBurning() { LATER.length = 0; if (PF) PF.clear();for (let i = 0; i < LINGER_N; i++) linger.emit(0, -1e5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1e-4, 0, 0); /* остаточный дым прошлого боя — долой (у пула нет clear: все места — мёртвыми частицами) */ burning.length = 0; PL.clear(); CMF.clear(); if (CB) CB.clear(); }, // новый бой — без пожаров и дымных лент прошлого
+    clearBurning() { LATER.length = 0; if (PF) PF.clear(); if (PT) PT.clear(); for (let i = 0; i < LINGER_N; i++) linger.emit(0, -1e5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1e-4, 0, 0); /* остаточный дым прошлого боя — долой (у пула нет clear: все места — мёртвыми частицами) */ burning.length = 0; PL.clear(); CMF.clear(); if (CB) CB.clear(); }, // новый бой — без пожаров и дымных лент прошлого
     // след взрыва у земли или на крыше: gh — высота земли (city.groundH), bh — высота здания (city.bldAt); kind 'bomb' — яма с
     // бруствером, 'ground' (ракета, снаряд) — ямка поменьше; на крыше — только копоть. Размер — от радиуса поражения R (≈ ∛ массы ВВ).
     // Земля за городом — с холмами: пятно чуть приподнято (на склоне край уходит в грунт)
@@ -868,6 +875,7 @@ export function createFx(scene, P) {
       if (sunL) LT.x += sunL.color.r * sunL.intensity * 0.35, LT.y += sunL.color.g * sunL.intensity * 0.35, LT.z += sunL.color.b * sunL.intensity * 0.35;
       for (const b of books) b.update(dt, LT, scene.fog);
       if (PF) PF.update(dt, LT);
+      if (PT) PT.update(dt, LT);
       PL.update(dt, LT, null, sunL ? V.copy(sunL.position).sub(sunL.target.position).normalize() : null);
       CMF.update(dt, LT);
       CR.mat.uniforms.uLight.value.copy(LT).multiplyScalar(0.8); if (sunL) CR.mat.uniforms.uSun.value.copy(sunL.position).sub(sunL.target.position).normalize(); // свет ходит за камерой

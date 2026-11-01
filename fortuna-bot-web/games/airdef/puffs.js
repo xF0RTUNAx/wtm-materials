@@ -12,14 +12,14 @@ import { ktxOn, ktxLoadUrl } from './ktx.js?v=20261101a';
 export function makePuffs(scene, N, cfg) {
   const web = typeof document !== 'undefined' && document.createElementNS, st = { ready: false };
   const pos = new Float32Array(N * 3), col = new Float32Array(N * 3), alp = new Float32Array(N), siz = new Float32Array(N), pf = new Float32Array(N * 2);
-  const vel = new Float32Array(N * 3), life = new Float32Array(N), max = new Float32Array(N), a0 = new Float32Array(N), grow = new Float32Array(N), drag = new Float32Array(N), grav = new Float32Array(N), t0 = new Float32Array(N);
+  const vel = new Float32Array(N * 3), life = new Float32Array(N), max = new Float32Array(N), a0 = new Float32Array(N), grow = new Float32Array(N), drag = new Float32Array(N), grav = new Float32Array(N), t0 = new Float32Array(N), s0 = new Float32Array(N);
   for (let i = 0; i < N; i++) pos[i * 3 + 1] = -99999;
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.BufferAttribute(pos, 3)); geo.setAttribute('pcolor', new THREE.BufferAttribute(col, 3));
   geo.setAttribute('alpha', new THREE.BufferAttribute(alp, 1)); geo.setAttribute('size', new THREE.BufferAttribute(siz, 1)); geo.setAttribute('pf', new THREE.BufferAttribute(pf, 2));
   for (const k of ['position', 'pcolor', 'alpha', 'size', 'pf']) geo.attributes[k].setUsage(THREE.DynamicDrawUsage);
   geo.setDrawRange(0, 0);
-  const F = cfg.frames, TM = cfg.times, T1 = TM[F - 1], K = cfg.k || 2;
+  const F = cfg.frames, TM = cfg.times, T1 = TM[F - 1], K = cfg.k || 2, FI = cfg.fadeIn || 0, SQ = !!cfg.sqrtGrow; // sqrtGrow — рост ∝ √возраста (как ширина следа ракеты: турбулентная диффузия) // fadeIn — проявление, с (клубы следа ракеты у сопла не «выскакивают»)
   const mat = new THREE.ShaderMaterial({
     uniforms: { map: { value: new THREE.Texture() }, uGrid: { value: new THREE.Vector2(cfg.cols, cfg.rows) }, uLight: { value: new THREE.Vector3(1, 1, 1) },
       scale: { value: 500 }, fogColor: { value: FOG_LIN }, fogDensity: FOG_U, ...FXU },
@@ -71,7 +71,7 @@ export function makePuffs(scene, N, cfg) {
       const i = head = (head + 1) % N, i3 = i * 3, v = Math.floor(Math.random() * cfg.variants);
       pos[i3] = x; pos[i3 + 1] = y; pos[i3 + 2] = z; vel[i3] = vx; vel[i3 + 1] = vy; vel[i3 + 2] = vz;
       // клуб занимает меньше клетки, чем мягкое пятно своей точки, — размер × K: видимый — как был (иначе след издали — цепочка «бусин»)
-      col[i3] = r; col[i3 + 1] = g; col[i3 + 2] = b; a0[i] = alp[i] = a; siz[i] = s * K; grow[i] = gr * K; max[i] = life[i] = l; drag[i] = dr; grav[i] = gv; t0[i] = start;
+      col[i3] = r; col[i3 + 1] = g; col[i3 + 2] = b; a0[i] = alp[i] = a; s0[i] = siz[i] = s * K; grow[i] = gr * K; max[i] = life[i] = l; drag[i] = dr; grav[i] = gv; t0[i] = start;
       pf[i * 2] = frameAt(start); pf[i * 2 + 1] = (v * F + 1) * (Math.random() < 0.5 ? -1 : 1);
       emitted = true;
     },
@@ -84,9 +84,9 @@ export function makePuffs(scene, N, cfg) {
         life[i] -= dt;
         pos[i3] += vel[i3] * dt; pos[i3 + 1] += vel[i3 + 1] * dt; pos[i3 + 2] += vel[i3 + 2] * dt;
         const k = Math.max(0, 1 - drag[i] * dt); vel[i3] *= k; vel[i3 + 1] = vel[i3 + 1] * k + grav[i] * dt; vel[i3 + 2] *= k;
-        siz[i] += grow[i] * dt;
+        if (SQ) siz[i] = s0[i] + grow[i] * Math.sqrt(max[i] - life[i]); else siz[i] += grow[i] * dt;
         const u = Math.max(0, life[i] / max[i]), age = 1 - u, e = Math.min(1, u * 4);
-        alp[i] = a0[i] * e * e * (3 - 2 * e); // клуб тает сам (кадры листа) — общая прозрачность уходит только в последней четверти жизни, по S-кривой
+        alp[i] = a0[i] * e * e * (3 - 2 * e) * (FI ? Math.min(1, (max[i] - life[i]) / FI) : 1); // клуб тает сам (кадры листа) — общая прозрачность уходит только в последней четверти жизни, по S-кривой
         pf[i * 2] = frameAt(t0[i] + (1 - t0[i]) * age);
         if (i < lo) lo = i; hi = i;
       }

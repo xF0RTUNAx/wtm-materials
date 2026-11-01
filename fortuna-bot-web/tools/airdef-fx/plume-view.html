@@ -3,10 +3,12 @@
 <style>body{margin:0;background:#000;overflow:hidden}#i{position:fixed;left:8px;top:6px;color:#fff;font:12px sans-serif;text-shadow:0 0 3px #000}</style></head>
 <body><div id="i"></div>
 <!-- Стенд шлейфов (games/airdef/plume.js): ракеты разных двигателей летят дугой вверх, камера сбоку. ?t=8 — секунд полёта
-     до стоп-кадра (window.__ok), ?sky=dusk — сумерки, ?cam=chase — камера за первой ракетой, ?alt=9000 — пуск на высоте. -->
+     до стоп-кадра (window.__ok), ?sky=dusk — сумерки, ?cam=chase — камера за первой ракетой, ?alt=9000 — пуск на высоте,
+     ?wts=0 — без клубов Blender вдоль следа (как было до 2026-11-01). -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script type="module">
-import { createPlumes, makeFlame, flameTick, MOTOR } from '../../games/airdef/plume.js?v=20261101a';
+import { createPlumes, makeFlame, flameTick, MOTOR, setTrailPuffs, setPuffCam } from '../../games/airdef/plume.js?v=20261101a';
+import { makePuffs } from '../../games/airdef/puffs.js?v=20261101a';
 const Q = new URLSearchParams(location.search), T = +(Q.get('t') || 8), dusk = Q.get('sky') === 'dusk', ALT = +(Q.get('alt') || 0);
 const r = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true }); r.setPixelRatio(1); r.setSize(innerWidth, innerHeight);
 r.outputEncoding = THREE.sRGBEncoding; r.toneMapping = THREE.ACESFilmicToneMapping; document.body.appendChild(r.domElement);
@@ -14,7 +16,18 @@ const sc = new THREE.Scene(), sky = dusk ? 0x6c6474 : 0x8fb3d9; sc.background = 
 const cam = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 1, 60000);
 sc.add(new THREE.HemisphereLight(dusk ? 0x8a7f99 : 0xcfe0f5, 0x6b6250, dusk ? 0.8 : 1.1)); const sun = new THREE.DirectionalLight(dusk ? 0xffb27a : 0xffffff, dusk ? 0.6 : 1.2); sun.position.set(-1, 2, 1); sc.add(sun);
 const gnd = new THREE.Mesh(new THREE.PlaneGeometry(60000, 60000).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: dusk ? 0x2a2a20 : 0x4f5a3a })); gnd.position.y = ALT; sc.add(gnd);
-const PL = createPlumes(sc, {});
+const PL = createPlumes(sc, {}); if (Q.get('ribbon') === '0') PL.mesh.visible = false; // ?ribbon=0 — только клубы (проверка)
+// клубы следа (как в игре: units-render.js PT) — лист ex_puff; без ?wts=0
+let PT = null;
+if (Q.get('wts') !== '0') {
+  // ?sheet=try — пробный лист клубов следа (trail-try/, trail.py до запекания набело); иначе — лист игры (trail, нет — puff)
+  const TRY = Q.get('sheet') === 'try', J = await (await fetch(TRY ? 'trail-try/trail.json' : '../../games/airdef/fx/explode.json?v=20261101a')).json();
+  const key = TRY ? 'trail' : J.trail ? 'trail' : 'puff', j = J[key], u = (e) => TRY ? `trail-try/ex_trail.${e}?t=${Date.now()}` : `../../games/airdef/fx/ex_${key}.${e}?v=20261101a`;
+  PT = makePuffs(sc, 4000, { url: u('webp'), cols: j.cols, rows: j.rows, frames: j.frames, variants: j.variants, times: j.times, fadeIn: 0.05, sqrtGrow: true, k: key === 'trail' ? 1.3 : 2 }); // клуб следа заполняет клетку — множитель меньше
+  PT.mat.uniforms.scale.value = innerHeight / (2 * Math.tan(25 * Math.PI / 180)); setTrailPuffs(PT); setPuffCam(Q.get('cam') === 'chase' ? null : cam); // погоня: камера рядом с ракетой весь полёт — шаг клубов как вблизи
+  for (let i = 0; i < 100 && !PT.ready; i++) await new Promise((ok) => setTimeout(ok, 100));
+  window.__PT = PT; window.__cam = cam;
+}
 // [имя, двигатель старт, маршевый, радиус, длина, разгон м/с², время работы старт, маршевый]
 const LIST = [['С-300 (смесевое)', 'solid', null, 0.25, 7.5, 160, 6, 0], ['ПЗРК «Игла»', 'manpads', null, 0.036, 1.6, 300, 2, 0], ['С-75: старт + жидкостный маршевый', 'solid', 'liquid', 0.25, 10.6, 90, 4, 20],
   ['«Куб»: старт + прямоточный', 'solid', 'ramjet', 0.17, 5.8, 120, 3, 15], ['НАР С-8', 'rocket', null, 0.04, 1.6, 500, 0.7, 0], ['ПТУР «Атака»', 'atgm', null, 0.065, 1.8, 200, 3, 0], ['Aster 30 (малодымное)', 'lowsmoke', null, 0.09, 4.9, 260, 4, 0]];
@@ -33,12 +46,14 @@ function step() {
     m.g.position.copy(m.pos); m.g.lookAt(m.pos.clone().sub(dir)); m.fl.motor(mo); m.fl.set(on ? (boost ? 2 : 1) : 0, m.rad, m.pos.y);
     if (on && (m.tt -= dt) <= 0) { m.tt = 0.04; const p = m.pos.clone().addScaledVector(dir, -m.L / 2); PL.add(m, p.x, p.y, p.z, mo, m.rad); }
   }
-  flameTick(dt); PL.update(dt, new THREE.Vector3(1, 1, 1).multiplyScalar(dusk ? 0.75 : 1.05));
+  const LT = new THREE.Vector3(1, 1, 1).multiplyScalar(dusk ? 0.75 : 1.05); flameTick(dt); PL.update(dt, LT); if (PT) PT.update(dt, LT);
 }
+cam.position.set(0, ALT + +(Q.get('h') || 350), +(Q.get('d') || 1500)); // до полёта: шаг клубов — по расстоянию до камеры
 while (t < T) step();
 const c0 = R[0].pos;
 if (Q.get('cam') === 'chase') { cam.position.copy(c0).add(new THREE.Vector3(-60, -20, 90)); cam.lookAt(c0); }
 else { const D = +(Q.get('d') || 1500), H2 = +(Q.get('h') || 350); cam.position.set(0, ALT + H2, D); cam.lookAt(0, ALT + H2, 0); }
 document.getElementById('i').textContent = LIST.map((l) => l[0]).join(' · ') + ` · ${T} с`;
+if (PT) for (const at of Object.values(PT.points.geometry.attributes)) { at.updateRange.count = -1; at.needsUpdate = true; } // стенд считает полёт без кадров: буферы клубов — целиком (в игре — по кадрам)
 setTimeout(() => { r.render(sc, cam); window.__ok = true; }, 2500); // текстуры факела и дыма грузятся
 </script></body></html>
