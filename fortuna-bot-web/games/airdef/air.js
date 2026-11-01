@@ -17,7 +17,7 @@ import { heliModel, heliStep, heliInit, heliLand, touchVerdict, tmaxAcc, isHeli 
 import { cmOf, cmKey } from './sim/cm.js?v=20261029b';
 import { initDamage, hitZones, dmgUnpack, burnRate, hullState, dmgBrief } from './sim/damage.js?v=20261029b';
 import { planeDamageVis } from './plane-damage.js?v=20261029b';
-import { placeDefense, pickTargets } from './mission.js?v=20261029b';
+import { placeDefense, pickTargets, entrySpawn } from './mission.js?v=20261029b';
 import { ZONE, newZone, zoneStep } from './sim/online.js?v=20261029b';
 
 export function createAir(C) {
@@ -1168,6 +1168,8 @@ export function createAir(C) {
   }
 
   // ═════════════ Начало и конец вылета ═════════════
+  const ENT_DIR = { s: tr('с юга'), se: tr('с юго-востока'), e: tr('с востока'), ne: tr('с северо-востока'), n: tr('с севера'), nw: tr('с северо-запада'), w: tr('с запада'), sw: tr('с юго-запада') };
+  const ENT_ALT = { low: tr('низко'), mid: tr('на средней высоте'), high: tr('высоко') };
   function start(opts = {}) {
     dmgDt = 0; // время для дыма из зон — с нового вылета (updateCamera; в «Съёмке» и при ?view= камера своя — копилось)
     const setup = C.setup;
@@ -1236,7 +1238,10 @@ export function createAir(C) {
     const z0 = opts.photo && C.MAP === 'city' ? 9000 : 14000; // «Съёмка» в городе — ближе: с 14 км в кадре край карты
     // вертолёт — ближе к целям (9 км; на «Туманной топи» — наша площадка city.home) и низко: 120 м над землёй, 25 м/с вперёд
     const hz = city.home ? city.home.z : 9000, hx = city.home ? city.home.x : riverX(hz) + 1500;
-    const sp = opts.spawn || (craft.heli ? { x: hx, y: city.groundH(hx, hz) + 120, z: hz, yaw: 0 } : { x: riverX(z0) + 1500, y: opts.photo && C.MAP === 'city' ? 1800 : 3200, z: z0, yaw: 0 });
+    // самолёт в «Вылете» — одна из 8 точек захода карты (mission.js entrySpawn; Mark 2026-11-01), не та, что в прошлый раз; уроки, «Съёмка», вертолёт — как было
+    const ek = 'fortuna_airdef_entry_' + city.kind, ent = !opts.spawn && !craft.heli && !opts.photo && C.lastGame === 'air' ? entrySpawn(city, S, game.targets, rnd, +(C.ls.get(ek) ?? -1)) : null;
+    if (ent) C.ls.set(ek, String(ent.i));
+    const sp = opts.spawn || ent || (craft.heli ? { x: hx, y: city.groundH(hx, hz) + 120, z: hz, yaw: 0 } : { x: riverX(z0) + 1500, y: opts.photo && C.MAP === 'city' ? 1800 : 3200, z: z0, yaw: 0 });
     home.set(sp.x, city.groundH(sp.x, sp.z), sp.z); homeT = 0;
     craft.pos.set(sp.x, sp.y, sp.z); craft.yaw = sp.yaw; craft.pitch = 0; craft.roll = 0; craft.speed = craft.heli ? 25 : startV(240); thrI = 2; craft.thr = THR_STEPS[thrI]; craft.ab = false; craft.fuel = 1; fuelWarn = 0;
     craft.q = null; craft.wp = craft.wr = craft.wz = 0; craft.hp = 100; fwdOf(craft, craft.vel).multiplyScalar(craft.speed); aimSync(); aim.id = null;
@@ -1251,8 +1256,9 @@ export function createAir(C) {
     ship.visible = true; camMode = 0; camInit = false; snd.resetRwr(); cmReset(); rwrAckReset();
     $('hud').style.display = 'block'; document.body.classList.add('flying'); document.body.classList.toggle('aimmode', aimOn());
     layoutTouch(); layoutPod();
-    if (C.op) { const left = S.units.filter((u) => !u.dead && u.S.radar).length; say(cont ? tr('Вылет 2 из 2 — удар: {0}. Комплексов с РЛС осталось: {1}', [game.targets.filter((o) => !o.dead).map((o) => o.name).join(', '), left]) : tr('Операция, вылет 1 из 2 — охота за ПВО: уничтожьте {0} комплекса с РЛС. Вторым вылетом — удар по целям города.', [game.hunt ? game.hunt.need : 1]), 7); }
-    else if (!opts.noIntro) say(game.hunt ? tr('Охота за ПВО: уничтожьте {0} из {1} комплексов с РЛС (цели города — по желанию).', [game.hunt.need, game.hunt.total]) : tr('Цели: {0}. ПВО: {1}, эпоха {2}', [game.targets.map((o) => o.name).join(', '), setup.side === 'east' ? tr('советская') : tr('западная'), ERAS[setup.era - 1].short]), 6);
+    const entT = ent ? ' · ' + tr('Заход {0}, {1}', [ENT_DIR[ent.dir], ENT_ALT[ent.prof]]) : ''; // откуда и на какой высоте — в строке начала вылета
+    if (C.op) { const left = S.units.filter((u) => !u.dead && u.S.radar).length; say((cont ? tr('Вылет 2 из 2 — удар: {0}. Комплексов с РЛС осталось: {1}', [game.targets.filter((o) => !o.dead).map((o) => o.name).join(', '), left]) : tr('Операция, вылет 1 из 2 — охота за ПВО: уничтожьте {0} комплекса с РЛС. Вторым вылетом — удар по целям города.', [game.hunt ? game.hunt.need : 1])) + entT, 7); }
+    else if (!opts.noIntro) say((game.hunt ? tr('Охота за ПВО: уничтожьте {0} из {1} комплексов с РЛС (цели города — по желанию).', [game.hunt.need, game.hunt.total]) : tr('Цели: {0}. ПВО: {1}, эпоха {2}', [game.targets.map((o) => o.name).join(', '), setup.side === 'east' ? tr('советская') : tr('западная'), ERAS[setup.era - 1].short])) + entT, 7);
   }
   // подвеска: тяжёлое — ближе к фюзеляжу (обучение перезаряжает этой же функцией)
   function rearm() {

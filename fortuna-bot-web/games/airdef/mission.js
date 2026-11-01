@@ -108,3 +108,32 @@ export function placeDefense(S, city, rnd, side, era, targets, k = 1, o = {}) {
     S.addUnit(key, xz[0], xz[1], { roof: xz[2], ambush: !!Sx.radar && Sx.type !== 'guns' && rnd() < (o.ambush ?? 0.3), skill: Math.min(1, Math.max(0.35, 0.5 + rnd() * 0.45 + (o.skill || 0))), yaw: rnd() * 6.28 });
   }
 }
+
+// ═════════════ Точки захода «Вылета» (офлайн) ═════════════
+// Mark 2026-11-01 (вариант «А», страница https://claude.ai/artifact/KC9eNvjXNTquq7VefD2QJ4): вместо одной точки (14 км к югу, 3200 м, нос на север) —
+// по 8 на карту: [x, z, высота, сторона]; высота: low — 300–600 м над землёй (рельеф прикрывает от РЛС), mid — 2–3,5 км, high — 5–6 км.
+// Онлайн — как было (кольцо 14,5 км, airdef-rooms.js spawnAir)
+export const ENTRIES = {
+  city: [[-200, 13500, 'low', 's'], [9500, 9500, 'mid', 'se'], [13500, 0, 'high', 'e'], [9500, -9500, 'low', 'ne'],
+    [-1060, -13500, 'low', 'n'], [-9500, -9500, 'high', 'nw'], [-13500, -5000, 'mid', 'w'], [-9500, 9500, 'low', 'sw']],
+  winter: [[500, 14000, 'low', 's'], [11000, 12000, 'high', 'se'], [14500, 5500, 'low', 'e'], [12000, -11000, 'mid', 'ne'],
+    [-1300, -14500, 'low', 'n'], [-11000, -11000, 'mid', 'nw'], [-14500, -1500, 'low', 'w'], [-11000, 11000, 'mid', 'sw']],
+};
+// точка захода: не та, что в прошлый раз (last), разброс ±2 км вдоль края; не в зоне ближнего ПВО — дальше дальности каждого комплекса до 15 км
+// («Тор», «Оса», «Панцирь», ПЗРК) на 3 км: средние и дальние (С-75, «Бук», Hawk…) от центра достают до края карты почти везде — их не считаем;
+// не вышло ни у одной — та, что дальше всех от их зон; нос — на первую цель;
+// высота «низко» — над землёй под точкой и не ниже гребней на 4 км вперёд + 150 м. null — у карты точек нет (осень — вертолёт со своей площадки)
+export function entrySpawn(city, S, targets, rnd, last = -1) {
+  const L = ENTRIES[city.kind]; if (!L) return null;
+  const t0 = targets.find((o) => !o.dead) || { x: 0, z: 0 };
+  const cand = L.map(([x, z, prof, dir], i) => {
+    const r = Math.hypot(x, z) || 1, j = (rnd() * 2 - 1) * 2000, px = x - (z / r) * j, pz = z + (x / r) * j;
+    let m = 1e9; for (const u of S.units) if (!u.dead && u.S.rmax < 15000) m = Math.min(m, Math.hypot(u.pos.x - px, u.pos.z - pz) - u.S.rmax - 3000);
+    return { i, x: px, z: pz, prof, dir, m };
+  }).filter((c) => c.i !== last);
+  const ok = cand.filter((c) => c.m > 0), c = ok.length ? ok[Math.floor(rnd() * ok.length)] : cand.sort((a, b) => b.m - a.m)[0];
+  const yaw = Math.atan2(c.x - t0.x, c.z - t0.z), g = city.groundH(c.x, c.z); // нос на цель: yaw 0 — на север (−z)
+  let ahead = g; for (let d = 500; d <= 4000; d += 500) ahead = Math.max(ahead, city.groundH(c.x - Math.sin(yaw) * d, c.z - Math.cos(yaw) * d));
+  const y = c.prof === 'low' ? Math.max(g + 300 + rnd() * 300, ahead + 150) : c.prof === 'mid' ? Math.max(2000 + rnd() * 1500, ahead + 800) : 5000 + rnd() * 1000;
+  return { x: c.x, y, z: c.z, yaw, i: c.i, prof: c.prof, dir: c.dir };
+}
