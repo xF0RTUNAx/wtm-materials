@@ -322,7 +322,7 @@ export default {
   "ИК, всеракурсная": "IR, all-aspect",
   "ФРГ / Франция": "West Germany / France",
   "ФРГ": "West Germany",
-  "С-300ПМУ-1": "S-300PMU-1",
+  "С-300ПМУ": "S-300PMU",
   "С-300": "S-300",
   "командное + через ракету": "command + track-via-missile",
   "Целевых каналов": "Target channels",
