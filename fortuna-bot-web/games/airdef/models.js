@@ -278,7 +278,8 @@ const META = {
   tor: { units: ['tor', 'torm2'], matte: true, stations: [] }, // «Тор-М1» — своя модель (сборщик, Свои/Тор-М1; камуфляж запечён в цвете): обе версии «Тора» пока на ней
   msl_tor: { samMissile: ['tor', 'torm2'], matte: true, stations: [] }, // ракета 9М331 — своя (Свои/9М331), 2,9 м, нос −Z
   pantsir: { units: ['pantsir'], matte: true, stations: [] }, // «Панцирь-С1» на КамАЗ-6560 — SanderWolf (CC BY 4.0), переделан в Blender (Свои/Панцирь): камуфляж, затенение и карта нормалей запечены — шейдерного узора нет
-  s300: { units: ['s300', 's400'], matte: true, stations: [] }, // С-300 и С-400 — своя пусковая 5П85 на МАЗ-543 (сборщик, Свои/С-300, 2026-10-28) вместо скана Chenzoss: пакет поднимается от РЛС, крышки, домкраты, цилиндр
+  s300: { units: ['s300'], matte: true, stations: [] }, // С-300 — своя пусковая 5П85 на МАЗ-543 (сборщик, Свои/С-300, 2026-10-28) вместо скана Chenzoss: пакет поднимается от РЛС, крышки, домкраты, цилиндр
+  s400: { units: ['s400'], matte: true, stations: [] }, // С-400 — копия нашей С-300 (сборщик объектов, Свои/С-400, 2026-11-02): запаска в корзине за кабинами, окраска почти чёрная зелень, фары; части и шарниры — те же
   msl_5v55: { samMissile: ['s300'], inTube: true, lazy: true, matte: true, stations: [] }, // ракета 5В55Р — своя (Свои/5В55Р, 2026-11-02), 6,9 м, Ø 0,488, нос −Z; рули fin0…3 — как у 9М83
   msl_9m83: { samMissile: ['s400'], inTube: true, lazy: true, matte: true, stations: [] }, // ракета 9М83 — своя (Свои/9М83), 6,9 м, нос −Z; рули fin0…3 (в контейнере сложены); inTube — носовые части в контейнерах пусковой
   patriot: { units: ['patriot', 'pac3'], stations: [] }, // Patriot M901 — Muhamad Mirza Arrafi
@@ -336,8 +337,10 @@ const GLB_V_OWN = {
   w_prsm: '20261025p',
   w_arrw: '20261025q',
   w_lance: '20261025r',
-  s300: '20261028b', // С-300 / С-400 — своя пусковая 5П85 (сборщик, Свои/С-300) вместо скана Chenzoss, 2026-10-28
+  s300: '20261028b', // С-300 — своя пусковая 5П85 (сборщик, Свои/С-300) вместо скана Chenzoss, 2026-10-28
   s300_lo: '20261028b',
+  s400: '20261102a', // С-400 — своя (Свои/С-400, 2026-11-02)
+  s400_lo: '20261102a',
   site_radar: '20261028c', // объект «РЛС на вершине» (своя сцена, 2026-10-28)
   site_radar_lo: '20261028c',
   site_heli: '20261028d', // объект «Вертолётная площадка „Ведьмина поляна“» (своя сцена, 2026-10-28)
@@ -695,7 +698,7 @@ async function load(name, base) {
 // готовая модель комплекса: { body, turret, cradle } (копии) или null — тогда процедурная
 const UMODEL = Object.fromEntries(Object.entries(META).filter(([, m]) => m.units).flatMap(([n, m]) => m.units.map((k) => [k, n])));
 // у тяжёлых моделей ПВО — дальняя копия <имя>_lo: каждая часть (корпус, башня, пакет) — THREE.LOD, ближе 400 м — подробная
-const UNIT_LO = new Set(['nasams', 'bukm3', 's125', 'gepard', 'ew_e', 'ew_w', 's300', 'tor', 'pantsir', 'sampt', 'tunguska', 'skyguard', 'rapier', 'zsu234', 'm163', 'chaparral', 'avenger', 'strela1']);
+const UNIT_LO = new Set(['nasams', 'bukm3', 's125', 'gepard', 'ew_e', 'ew_w', 's300', 's400', 'tor', 'pantsir', 'sampt', 'tunguska', 'skyguard', 'rapier', 'zsu234', 'm163', 'chaparral', 'avenger', 'strela1']);
 export function unitModelGlb(key) {
   const n = UMODEL[key], G = n && (LOADED[n] || LOADED[n + '_lo']), GL = n && LOADED[n] && LOADED[n + '_lo']; if (!G) return null;
   const find = (M, k) => M.children.find((c) => c.name === k);
