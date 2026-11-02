@@ -13,7 +13,7 @@ import { tr, trIf } from './i18n.js?v=20261102a';
 import { trFmt } from './i18n-fmt.js?v=20261102a';
 import { CITY, mulberry32 } from './city.js?v=20261102a';
 import { weaponHasModel } from './models.js?v=20261102a';
-import { LNCH, lnchToWorld, trainable } from './launchers.js?v=20261102a';
+import { LNCH, lnchToWorld, trainable, yawGoal } from './launchers.js?v=20261102a';
 import { ico, iconize, capsHtml, tgtRowHtml, tgtLabel, tgtChoices } from './icons.js?v=20261102a';
 import { SAM, SAM_COST, SAM_TYPE, AG, eqOf, MULTI, CARRIERS, THREAT, COMBINED, DEFENSE, multiBudget, multiItems, threatOf, multiCap, multiSamCost, multiSamCap, multiSamOk, multiSamFree } from './arsenal.js?v=20261102a';
 import { samClass, samCost, samCostFor, LIMIT1 } from './sim/online.js?v=20261102a';
@@ -1196,7 +1196,7 @@ export function createDefense(C) {
   // поворотная пусковая навелась на сопровождаемую цель (онлайн: доворот считает сервер, угол lyaw — из снимка; порог — как у сервера, с запасом)
   function lnAimed(u) {
     const LN = LNCH[u.key], t = u.track; if (!LN || !t || !trainable(LN)) return true;
-    TMP.copy(t.pos).sub(u.pos); let d = Math.atan2(-TMP.x, -TMP.z) - u.yaw - u.lyaw; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI;
+    TMP.copy(t.pos).sub(u.pos); let d = yawGoal(LN, Math.atan2(-TMP.x, -TMP.z) - u.yaw, u.lyaw) - u.lyaw; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI; // Patriot: цель за пределом поворота — на упоре
     return Math.abs(d) < 0.15;
   }
   function autoOp(dt) {

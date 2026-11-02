@@ -15,7 +15,7 @@
 /* global THREE */
 import { tr } from '../i18n.js?v=20261102a';
 import { AG, SAM, eqOf } from '../arsenal.js?v=20261102a';
-import { LNCH, lnchToWorld, lnchDir, slotOf, trainable } from '../launchers.js?v=20261102a';
+import { LNCH, lnchToWorld, lnchDir, slotOf, trainable, yawGoal } from '../launchers.js?v=20261102a';
 import { clamp, D2R, G0, rhoAt, angleBetween, seekerHeat, offTailDeg, turnToward } from '../../drone/sim/core.js?v=20261102a';
 import { cmOf, cmKey, cmBoost, cmWorld } from './cm.js?v=20261102a';
 import { partDist, siteBld, bldDie, bldKillMains } from '../city.js?v=20261102a';
@@ -376,8 +376,8 @@ export function createStrike(ctx) {
     if (u.ammo <= 0) u.ammo = S.ammo;
     if (S.gun) u.gunForce = 0.8; // «Панцирь», «Тунгуска»: пушки вместе с ракетой
     if (launcherReady(u)) return forcedShot(u, t);
-    const E = LNCH[u.key] && LNCH[u.key].erect; // С-300 / С-400: ждать и подъём пакета (иначе через 6 с — рывком)
-    u.force = { t, left: 6 + (E ? E.jk + E.up - u.dep : 0) }; u.cool = 99; // своим ходом комплекс не пускает, пока ждёт наводки (иначе — две ракеты)
+    const LN = LNCH[u.key], E = LN && LN.erect; // С-300 / С-400: ждать и подъём пакета (иначе через 6 с — рывком); Patriot — и разворот плиты до упора (110° — 7,3 с)
+    u.force = { t, left: 6 + (E ? E.jk + E.up - u.dep : 0) + (LN && LN.yawLim ? LN.yawLim / LN.slewY : 0) }; u.cool = 99; // своим ходом комплекс не пускает, пока ждёт наводки (иначе — две ракеты)
     return 'pending';
   }
   function forcedShot(u, t) { const m = launchSam(u, t); u.cool = 1.6; if (u.ammo <= 0) u.reloadT = u.reload0 = reloadOf(u.S) * (ctx.reloadK ? ctx.reloadK() : 1); return m; }
@@ -424,14 +424,16 @@ export function createStrike(ctx) {
     // «Тор», NASAMS, С-300: крышка следующей ячейки открывается, пока цель сопровождается и есть ракеты (как по команде на пуск), иначе закрывается; у С-300 — только у поднятого пакета
     if (LN.lids) { const want = !!(t && !t.dead && u.track === t) && u.ammo > 0 && u.reloadT <= 0 && erected(u, LN); u.lid = clamp(u.lid + (want ? dt / LN.lids.tOpen : -dt / LN.lids.tClose), 0, 1); }
     if (!trainable(LN)) return;
+    // Patriot: поворачивается только поднятый пакет при включённой РЛС; иначе плита возвращается на 0° (сворачивание — сначала поворот, потом пакет ложится)
+    if (LN.erect && LN.yawLim && (!u.emit || !erected(u, LN))) { const ky = LN.slewY * dt; u.lyaw += clamp(-u.lyaw, -ky, ky); u.lnErr = 9; return; }
     let dx, dy, dz;
     if (t && !t.dead) { dx = t.pos.x - u.pos.x; dy = t.pos.y - u.pos.y; dz = t.pos.z - u.pos.z; }
     else if (u.manual && u.aimDir) { dx = u.aimDir.x; dy = u.aimDir.y; dz = u.aimDir.z; }
     else { u.lnErr = 9; return; } // цели нет — пусковая не наведена (иначе в кадр захвата пуск шёл с прежней ошибкой 0 — до разворота; стенд sam-launch.js)
-    const hd = Math.hypot(dx, dz) || 1, yawT = Math.atan2(-dx, -dz) - u.yaw;
+    const hd = Math.hypot(dx, dz) || 1, yawT = yawGoal(LN, Math.atan2(-dx, -dz) - u.yaw, u.lyaw);
     let elT = Math.atan2(dy, hd);
     if (LN.mode === 'rail' && S.msl) { if ((u.lnT -= dt) <= 0 || u.lnEl === null) { u.lnT = 0.3; u.lnEl = launchEl(u, dx / hd, dz / hd, elT); } elT = u.lnEl; }
-    const dyaw = wrapPi(yawT - u.lyaw), ky = LN.slewY * dt;
+    const dyaw = LN.yawLim ? yawT - u.lyaw : wrapPi(yawT - u.lyaw), ky = LN.slewY * dt; // с пределами — только через сектор, не через корму
     u.lyaw = wrapPi(u.lyaw + clamp(dyaw, -ky, ky));
     let de = 0;
     if (LN.el == null) { elT = clamp(elT, LN.elMin, LN.elMax); const ke = LN.slewE * dt; de = elT - u.lel; u.lel += clamp(de, -ke, ke); de = elT - u.lel; }
@@ -442,6 +444,7 @@ export function createStrike(ctx) {
   const s5 = (x) => x * x * x * (x * (6 * x - 15) + 10);
   function erectStep(u, LN, dt) {
     const E = LN.erect;
+    if (!u.emit && LN.yawLim && Math.abs(u.lyaw) > 0.005 && u.dep > E.jk) return; // Patriot: пакет ложится только после поворота плиты на 0°
     u.dep = clamp(u.dep + (u.emit ? dt : -dt * (u.dep > E.jk ? E.up / E.down : 1)), 0, E.jk + E.up);
     u.lel = LN.el * s5(clamp((u.dep - E.jk) / E.up, 0, 1));
   }

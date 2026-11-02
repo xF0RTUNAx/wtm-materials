@@ -758,14 +758,15 @@ function s300Part(c, near) {
   const Y = [...p.matchAll(/(?:^|\/)cyl_(barrel|rod1|rod2)/g)].pop(); if (Y) return 'cyl' + ['barrel', 'rod1', 'rod2'].indexOf(Y[1]); // штоки — дети корпуса цилиндра: по последнему узлу пути
   return /(^|\/)pack_/.test(p) ? 'cradle' : 'body';
 }
-// Patriot: как С-300; гидроцилиндр подъёма cyl_* → cyl0…2, подкос cyl_strut_* → cyl3…5 (штоки — дети корпусов: по последнему узлу пути), мачта mast_s2…4 → mast0…2
+// Patriot: как С-300; гидроцилиндр подъёма cyl_* → cyl0…2, подкос cyl_strut_* → cyl3…5 (штоки — дети корпусов: по последнему узлу пути), мачта mast_s2…4 → mast0…2;
+// ревизия 2 (поворот): turn_* — поворотная плита, шланги, основание мачты → turret (цилиндры и мачта — свои части, main.js вешает их на башню)
 function patriotPart(c, near) {
   const p = c.path, L = p.match(/(^|\/)lid_c([12])([12])/);
   if (L) return near ? 'lid' + ((+L[2] - 1) * 2 + (+L[3] - 1)) : 'cradle';
   const J = p.match(/(^|\/)jack_(\d)/); if (J) return 'jack' + J[2];
   const M = p.match(/(^|\/)mast_s(\d)/); if (M) return 'mast' + (+M[2] - 2);
   const Y = [...p.matchAll(/(?:^|\/)cyl_(strut_)?(barrel|rod1|rod2)/g)].pop(); if (Y) return 'cyl' + ((Y[1] ? 3 : 0) + ['barrel', 'rod1', 'rod2'].indexOf(Y[2]));
-  return /(^|\/)pack_/.test(p) ? 'cradle' : 'body';
+  return /(^|\/)pack_/.test(p) ? 'cradle' : /(^|\/)turn_/.test(p) ? 'turret' : 'body';
 }
 // ПВО: дальние копии (_lo) — main.js рисует их дальше 400 м (THREE.LOD по частям: корпус, башня, пакет)
 const SAM_LO = ['osa', 'bukm3', 's125', 'gepard', 'ew_e', 'tor', 'pantsir', 'sampt', 'tunguska', 'skyguard', 'rapier', 'zsu234', 'm163', 'chaparral', 'avenger'];
@@ -789,9 +790,10 @@ CONFIG.s400_lo = { ...CONFIG.s300_lo, src: `${DL}/Свои/С-400/s400_lo.glb`, 
 // Patriot — своя пусковая на MAN 8×8 (сборщик, Свои/Patriot, 2026-11-02; Mark: «пак-2 готов»): метры, нос −Z, земля y = 0, оси сборщика как есть;
 // пакет на шарнире PACK_PIVOT (0; 2,6; 5,4) лежит, игра поднимает его на 38° (launchers.js PATRIOT); части — patriotPart: как у С-300 + подкос
 // cyl_strut_* → cyl3…5 и секции мачты mast_s2…s4 → mast0…2 (в файле опущены); крышки lid_c<ряд><столбец> — рвущиеся (срываются при пуске).
-// Атласы A, B — цвет 2048 / нормали 1024, C (мелочь) и W (колёса) — вдвое меньше; стекло кабины у сборщика непрозрачное — стеклом, как у С-300
+// Атласы A, B — цвет 2048 / нормали 1024, C (мелочь) и W (колёса) — вдвое меньше; стекло кабины у сборщика непрозрачное — стеклом, как у С-300.
+// Ревизия 2 (Mark: «модель Patriot (поворот) готова»): поворотная плита TURN_PIVOT (0; 2,125; 4,4) — ось башни tp, шарнир пакета — cp от неё (0; 0,475; 1)
 CONFIG.patriot = { src: `${DL}/Свои/Patriot/patriot.glb`, scale: 1, nose: '-z', rulesIn: 'game', unit: true, own: true, tex: (m) => (/^PT_[CW]$/.test(m.name) ? 1024 : 2048),
-  nTex: (m) => (/^PT_[CW]$/.test(m.name) ? 512 : 1024), pickMesh: /./, axisX: 0, axisZ: 0, ground: 0, hinge: [0, 2.6, 5.4], tpFix: [0, 2.6, 5.4], pack0: 0, tube: [0.85, 1.15],
+  nTex: (m) => (/^PT_[CW]$/.test(m.name) ? 512 : 1024), pickMesh: /./, axisX: 0, axisZ: 0, ground: 0, hinge: [0, 2.6, 5.4], tpFix: [0, 2.125, 4.4], pack0: 0, tube: [0.85, 1.15],
   groups: (c) => patriotPart(c, true), alpha: { '^PT_glassF$': 0.85 } };
 CONFIG.patriot_lo = { ...CONFIG.patriot, src: `${DL}/Свои/Patriot/patriot_lo.glb`, tex: () => 512, nTex: null, groups: (c) => patriotPart(c, false) }; // дальняя сборщика (82 тыс.)
 // «РЛС на вершине»: дальняя копия сборщика (25 тыс., без мелочи deco_props), цвет 512, без нормалей; узлы — те же

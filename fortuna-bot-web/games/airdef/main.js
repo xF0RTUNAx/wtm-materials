@@ -437,19 +437,22 @@ C.syncUnits = function () {
             (LD.onPack ? cg : tg).add(pv); return pv;
           });
         }
-        if (gm && gm.lids.length && md.LN.blowLids) g.userData.blow = gm.lids.map((lid) => lid && obj(lid, cg)); // Patriot: рвущиеся крышки — в осях пакета, как в модели
+        // Patriot: рвущиеся крышки — на пакете; prepare.js кладёт lid* в оси башни (от tp), пакет стоит в cp от неё — сдвиг на −cp (у С-300 cp = 0)
+        if (gm && gm.lids.length && md.LN.blowLids) g.userData.blow = gm.lids.map((lid) => { if (!lid) return null; lid.position.set(-Ld.cp[0], -Ld.cp[1], -Ld.cp[2]); return obj(lid, cg); });
       }
       // С-300: штоки домкратов (вниз до земли) и гидроцилиндр подъёма — корпус на шарнире cylA смотрит на проушину стрелы, штоки выдвигаются (erectView)
       if (md.LN && md.LN.erect && md.LN.mode === 'cold' && C.fx && C.fx.wantLaunch) C.fx.wantLaunch(); // листы старта С-300 / С-400 — только в бою с ними
-      // Patriot — так же, плюс подкос (cyl3…5, erect.cyl2) и секции мачты (в модели опущены, поднимаются на erect.mast м)
+      // Patriot — так же, плюс подкос (cyl3…5, erect.cyl2) и секции мачты (в модели опущены, поднимаются на erect.mast м); цилиндры и мачта — на
+      // поворотной плите (onTur: в группе башни, координаты частей — в осях машины при повороте 0, поэтому сдвиг на −tp)
       if (gm && md.LN && md.LN.erect) {
-        const E = md.LN.erect; g.userData.jacks = gm.jacks.filter(Boolean).map((j) => obj(j, g));
+        const E = md.LN.erect, onT = E.onTur && tur.length, host = onT ? tur[0].tg : g, T0 = onT ? md.LN.L[0].tp : [0, 0, 0];
+        g.userData.jacks = gm.jacks.filter(Boolean).map((j) => obj(j, g));
         g.userData.cyl = [E, E.cyl2].filter(Boolean).map((c, k) => {
           const ps = gm.cyl.slice(k * 3, k * 3 + 3), A = c.cylA; if (ps.length < 3 || !ps.every(Boolean)) return null;
-          const pv = new THREE.Group(); pv.position.fromArray(A); g.add(pv);
+          const pv = new THREE.Group(); pv.position.set(A[0] - T0[0], A[1] - T0[1], A[2] - T0[2]); host.add(pv);
           return { c, pv, parts: ps.map((p) => { const q = new THREE.Group(); obj(p, q); p.position.set(-A[0], -A[1], -A[2]); pv.add(q); return q; }) };
         }).filter(Boolean);
-        if (E.mast) g.userData.mast = gm.mast.map((m) => m && obj(m, g));
+        if (E.mast) { const mg = new THREE.Group(); mg.position.set(-T0[0], -T0[1], -T0[2]); host.add(mg); g.userData.mast = gm.mast.map((m) => m && obj(m, mg)); }
         g.userData.erect = true;
       }
       // антенна обзора (готовая модель): на первой башне (без башни — на машине, Sentinel), ось вращения — центр её опоры (нижние 15 % по высоте)

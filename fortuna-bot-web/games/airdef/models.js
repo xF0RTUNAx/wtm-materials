@@ -402,8 +402,8 @@ const GLB_V_OWN = {
   site_port_lo: '20261029d',
   msl_9m83: '20261028b',
   msl_5v55: '20261102a',
-  patriot: '20261102a', // Patriot — своя (Свои/Patriot) вместо M901 Muhamad Mirza Arrafi (та теперь pac3.glb)
-  patriot_lo: '20261102a',
+  patriot: '20261102b', // Patriot — своя (Свои/Patriot) вместо M901 Muhamad Mirza Arrafi (та теперь pac3.glb); b — ревизия 2 с поворотной плитой
+  patriot_lo: '20261102b',
   msl_pac2: '20261102a',
   l_lance: '20261025s', // M752 — своя пусковая Lance (сборщик, Свои/M752 ревизия 2): трап и стрела поднимаются перед пуском (sim/combined.js POD.l_lance)
 };
