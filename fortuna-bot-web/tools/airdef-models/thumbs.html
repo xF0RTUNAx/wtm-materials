@@ -73,22 +73,21 @@ async function objOf(n) {
 r.toneMapping = THREE.ACESFilmicToneMapping; r.toneMappingExposure = 1.1; r.physicallyCorrectLights = false;
 // материалы моделей — Phong (отражения неба им не нужны): мягкий «студийный» свет — небо сверху, светлая земля снизу, солнце, заполняющий и контровой
 const sc = new THREE.Scene();
-// проба: sat — насыщенность готового кадра (ACES насыщает тёмные и уводит коричневый в рыжий; Blender у сборщиков — наоборот, приглушает)
-const SAT = Q.get('sat') ? +Q.get('sat') : 1;
+// два света: прежний (все миниатюры) и естественный — NATURAL (Mark 2026-11-02: «новые миниатюры только для… петриот и с-400»): солнце со стороны
+// камеры (она справа сзади), нейтральное, мягкое небо и тёмная земля, без тёплой подсветки снизу; кадр приглушён на 20 % (ACES насыщает тёмные
+// и уводит коричневый в рыжий, а Blender у сборщиков, наоборот, приглушает). ?light=2 — естественный всем (проба); exp / hemi / sun / sat — подбор
+const NATURAL = new Set(['pvo:patriot', 'pvo:s400']), ALLNAT = Q.get('light') === '2';
 function desat(src, s) {
   const c = document.createElement('canvas'); c.width = src.width; c.height = src.height; const x = c.getContext('2d'); x.drawImage(src, 0, 0);
   const d = x.getImageData(0, 0, c.width, c.height), a = d.data;
   for (let i = 0; i < a.length; i += 4) { const l = 0.2126 * a[i] + 0.7152 * a[i + 1] + 0.0722 * a[i + 2]; for (let k = 0; k < 3; k++) a[i + k] = l + (a[i + k] - l) * s; }
   x.putImageData(d, 0, 0); return c.toDataURL('image/webp', 0.92);
 }
-if (Q.get('tm') === 'lin') r.toneMapping = THREE.LinearToneMapping;
-if (Q.get('light') === '2') { // проба: естественнее — солнце со стороны камеры (камера справа сзади), нейтральное; мягкое небо и тёмная земля; без тёплой подсветки снизу
-  r.toneMappingExposure = +(Q.get('exp') || 1.0); sc.add(new THREE.HemisphereLight(0xe6edf5, 0x6e6a5f, +(Q.get('hemi') || 1.15))); const dl = new THREE.DirectionalLight(0xfff8ee, +(Q.get('sun') || 1.45)); dl.position.set(4, 7, 6); sc.add(dl);
-  const f = new THREE.DirectionalLight(0xe8eef5, 0.4); f.position.set(-6, 2, 2); sc.add(f);
-} else {
-sc.add(new THREE.HemisphereLight(0xe2ecff, 0x9a9584, 1.05)); const dl = new THREE.DirectionalLight(0xfff0d8, 1.9); dl.position.set(-4, 7, 5); sc.add(dl);
-{ const f = new THREE.DirectionalLight(0xdfe8ff, 0.6); f.position.set(5, 1, 3); sc.add(f); const b = new THREE.DirectionalLight(0xffffff, 0.45); b.position.set(0, 3, -6); sc.add(b); const u = new THREE.DirectionalLight(0xe8e2d0, 0.35); u.position.set(1, -4, 3); sc.add(u); }
-}
+const rigOld = new THREE.Group(), rigNat = new THREE.Group(); sc.add(rigOld, rigNat);
+rigOld.add(new THREE.HemisphereLight(0xe2ecff, 0x9a9584, 1.05)); { const dl = new THREE.DirectionalLight(0xfff0d8, 1.9); dl.position.set(-4, 7, 5); rigOld.add(dl); }
+{ const f = new THREE.DirectionalLight(0xdfe8ff, 0.6); f.position.set(5, 1, 3); rigOld.add(f); const b = new THREE.DirectionalLight(0xffffff, 0.45); b.position.set(0, 3, -6); rigOld.add(b); const u = new THREE.DirectionalLight(0xe8e2d0, 0.35); u.position.set(1, -4, 3); rigOld.add(u); }
+rigNat.add(new THREE.HemisphereLight(0xe6edf5, 0x6e6a5f, +(Q.get('hemi') || 1.35))); { const dl = new THREE.DirectionalLight(0xfff8ee, +(Q.get('sun') || 1.6)); dl.position.set(4, 7, 6); rigNat.add(dl); }
+{ const f = new THREE.DirectionalLight(0xe8eef5, 0.4); f.position.set(-6, 2, 2); rigNat.add(f); }
 { const es = new THREE.Scene(), g = new THREE.SphereGeometry(50, 32, 16), col = [], pos = g.attributes.position;
   for (let i = 0; i < pos.count; i++) { const y = pos.getY(i) / 50, c = new THREE.Color(y > 0 ? 0x9cc2e8 : 0x5d6450).lerp(new THREE.Color(0xdfe6ea), Math.max(0, 1 - Math.abs(y) * 3)); col.push(c.r, c.g, c.b); }
   g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3)); es.add(new THREE.Mesh(g, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.BackSide })));
@@ -117,7 +116,8 @@ for (const id of IDS) {
     for (let i = 0; i < a.count; i += st) { V.fromBufferAttribute(a, i).applyMatrix4(m.matrixWorld).project(cam); x0 = Math.min(x0, V.x); x1 = Math.max(x1, V.x); y0 = Math.min(y0, V.y); y1 = Math.max(y1, V.y); } });
   const z = Math.min(1.74 / Math.max(0.01, x1 - x0), 1.64 / Math.max(0.01, y1 - y0)); cam.zoom = z; cam.updateProjectionMatrix();
   cam.setViewOffset(W, H, (x0 + x1) / 2 * z * W / 2, -(y0 + y1) / 2 * z * H / 2, W, H);
-  r.render(sc, cam); out[id] = SAT === 1 ? r.domElement.toDataURL('image/webp', 0.92) : desat(r.domElement, SAT); sc.remove(o);
+  const nat = ALLNAT || NATURAL.has(id), sat = nat ? +(Q.get('sat') || 0.8) : 1; rigOld.visible = !nat; rigNat.visible = nat; r.toneMappingExposure = nat ? +(Q.get('exp') || 1.2) : 1.1;
+  r.render(sc, cam); out[id] = sat === 1 ? r.domElement.toDataURL('image/webp', 0.92) : desat(r.domElement, sat); sc.remove(o);
   const f = document.createElement('figure'); f.innerHTML = `<img src="${out[id]}"><figcaption>${n.short} · ${id}</figcaption>`; grid.appendChild(f);
 }
 window.__thumbs = out; window.__ok = 1;
