@@ -434,15 +434,7 @@ const CONFIG = {
       if (c.max[1] < 1.3 * 1.2) return 'body#conc'; // диск, болты и тумба
       return c.mat === 1 ? 'turret' : 'turret#steel'; // башня с осью-цапфой
     } },
-  // PAC-3 — пусковая M901 Muhamad Mirza Arrafi (до 2026-11-02 — и у Patriot; Patriot теперь своя, CONFIG.patriot ниже), пока сборщик не сдаст свою PAC-3
-  pac3: { src: `${DL}/mim-104_patriot_surface-to-air_missile_sam.glb`, scale: 1, nose: '+x', rulesIn: 'game', unit: true, tex: () => 1024, hinge: [0, 3.95, 12.81], tube: [0.5, 1.2],
-    groups: (c) => {
-      if (c.size[1] > 3 && c.size[2] < 0.6 && c.size[0] < 0.6) return null; // мачта антенны: в модели стоит на поднятом пакете — у нас висела в воздухе
-      if (Math.abs(c.ctr[0] + 1.33) < 0.35 && Math.abs(c.ctr[2] - 10.1) < 0.35 && c.ctr[1] > 4.2) return null; // и её крепёж: колпак наверху (≈ 10 м) и хомуты — без мачты висели в воздухе
-      if (axis(c, [12.81, 3.95], [-0.781, 0.625], 1.25, -0.3, 10.8)) return 'cradle';
-      if (c.min[1] > 4.5 && axis(c, [12.81, 3.95], [-0.781, 0.625], 2.2, 6, 11.5)) return 'cradle'; // рамка на верхнем (переднем) конце пакета — едет с пакетом (была «корпусом» и висела в воздухе)
-      return c.min[1] > 2.4 && c.ctr[2] > 6.5 && c.ctr[2] < 13.6 && Math.abs(c.ctr[0]) < 1.6 ? 'turret' : 'body';
-    } },
+  // PAC-3 — своя пусковая (CONFIG.pac3 ниже, у Patriot); M901 Muhamad Mirza Arrafi (была у Patriot, потом у PAC-3) больше не нужна — 2026-11-02
   // ── комплексы с ракетами на направляющих: ракета модели — образец для слотов и полёта (missile), stage — доля маршевой ступени
   s75: { src: `${DL}/sam_s-75_dvina.glb`, scale: 2.83, nose: '+x', rulesIn: 'game', unit: true, tex: () => 256, hinge: [0, 1.65, 4.06], stage: 0.64,
     groups: (c) => {
@@ -511,9 +503,14 @@ const CONFIG = {
     hinge: [-0.035, 2.33, 0.075], turretYaw: Math.PI, colors: { '#msl': [0.55, 0.55, 0.52] }, // пусковая у автора смотрит назад; ракеты — белые
     groups: (c) => { if (c.mat === 0) return 'body'; if (c.ctr[1] < 1.36) return null; if (c.ctr[1] < 1.6) return 'turret';
       const ax = Math.abs(c.ctr[0]), y = c.ctr[1]; return ax > 0.72 && ax < 1.18 && ((y > 1.82 && y < 2.22) || (y > 2.42 && y < 2.82)) ? 'cradle#msl' : 'cradle'; } }, // ракеты — по двум рядам направляющих
-  gepard: { src: new URL('./own/gepard.glb', import.meta.url).pathname, scale: 1, nose: '-z', rulesIn: 'game', unit: true, own: true, tex: () => 1024, nTex: () => 1024, pickMesh: /./, hinge: [0, 2.316, 0.0077], pack0: 0,
-    // Flakpanzer Gepard: своя модель (Blender, own/gepard.glb): цвет (краска, песок, сколы, затенение) и карта нормалей (скруглённые рёбра, зерно) запечены в 1024; части — по именам объектов
-    groups: (c) => (/(^|\/)cradle/.test(c.path) ? 'cradle' : /(^|\/)radar/.test(c.path) ? 'radar' : /(^|\/)turret/.test(c.path) ? 'turret' : 'body') },
+  // ревизия 2 (сборщик объектов, Свои/Гепард_rev2, 2026-11-02; Mark: «модель Гепард готова»): заново по чертежам и фото, 151 тыс., гусеницы звеньями,
+  // запечённый трёхцветный камуфляж бундесвера (шейдерный узор в models.js снят); оси сборщика без центровки: погон tp (0; 1,589; 0,05), качание пушек
+  // (0; 2,316; 0,431), антенна сопровождения dish_track — своя часть «dish» на шарнире (0; 2,24; −1,8) (launchers.js tdish, как у «Тора»).
+  // Атласы H (корпус), T (башня) — цвет 2048 / нормали 1024, R (ходовая) — 1024 / 512. Ревизия 1 — own/gepard.glb (ниже не используется)
+  gepard: { src: `${DL}/Свои/Гепард_rev2/gepard.glb`, scale: 1, nose: '-z', rulesIn: 'game', unit: true, own: true, tex: (m) => (m.name === 'GP_R' ? 1024 : 2048),
+    nTex: (m) => (m.name === 'GP_R' ? 512 : 1024), pickMesh: /./, axisX: 0, axisZ: 0, ground: 0, hinge: [0, 2.316, 0.4309], tpFix: [0, 1.589, 0.05], pack0: 0,
+    // части — по именам объектов: cradle_* — пушки, radar_* — антенна обзора, dish_track — антенна сопровождения, turret_* — башня, остальное — корпус
+    groups: (c) => gepardPart(c, true) },
   // NASAMS — своя пусковая (сборщик, Свои/NASAMS, 2026-10-24; Mark 2026-10-25: «внедряй насамс, его ракету и всё, что с этим связано») вместо
   // Muhamad Mirza Arrafi («сделано ИИ»). Метры, нос −Z, земля y = 0; части — по первому слову имени (nasamsPart): body_* — рама, опоры, пьедестал,
   // ящики; turret_* — погон и вилка; cradle_*, missile_c* (шесть контейнеров 4,5 × 0,68 × 0,64 м — сами ракеты игра ставит из msl_aim120) — блок
@@ -759,21 +756,29 @@ function s300Part(c, near) {
   return /(^|\/)pack_/.test(p) ? 'cradle' : 'body';
 }
 // Patriot: как С-300; гидроцилиндр подъёма cyl_* → cyl0…2, подкос cyl_strut_* → cyl3…5 (штоки — дети корпусов: по последнему узлу пути), мачта mast_s2…4 → mast0…2;
-// ревизия 2 (поворот): turn_* — поворотная плита, шланги, основание мачты → turret (цилиндры и мачта — свои части, main.js вешает их на башню)
+// ревизия 2 (поворот): turn_* — поворотная плита, шланги, основание мачты → turret (цилиндры и мачта — свои части, main.js вешает их на башню).
+// PAC-3 — та же схема; крышки ячеек lid_c<ряд><столбец><ячейка> → lid((контейнер) · 4 + ячейка − 1) — порядок слотов launchers.js PAC3_SLOTS;
+// опоры jack_i с дочерней стойкой jack_i_leg — одна часть jack<i>
 function patriotPart(c, near) {
-  const p = c.path, L = p.match(/(^|\/)lid_c([12])([12])/);
-  if (L) return near ? 'lid' + ((+L[2] - 1) * 2 + (+L[3] - 1)) : 'cradle';
+  const p = c.path, L = p.match(/(^|\/)lid_c([12])([12])([1-4])?/);
+  if (L) return near ? 'lid' + (L[4] ? ((+L[2] - 1) * 2 + (+L[3] - 1)) * 4 + (+L[4] - 1) : (+L[2] - 1) * 2 + (+L[3] - 1)) : 'cradle';
   const J = p.match(/(^|\/)jack_(\d)/); if (J) return 'jack' + J[2];
   const M = p.match(/(^|\/)mast_s(\d)/); if (M) return 'mast' + (+M[2] - 2);
   const Y = [...p.matchAll(/(?:^|\/)cyl_(strut_)?(barrel|rod1|rod2)/g)].pop(); if (Y) return 'cyl' + ((Y[1] ? 3 : 0) + ['barrel', 'rod1', 'rod2'].indexOf(Y[2]));
   return /(^|\/)pack_/.test(p) ? 'cradle' : /(^|\/)turn_/.test(p) ? 'turret' : 'body';
 }
+// Гепард ревизии 2: антенна сопровождения dish_track — своя часть «dish» (вблизи; вдали — в башне), до проверки «turret»
+function gepardPart(c, near) {
+  const p = c.path;
+  if (/(^|\/)dish/.test(p)) return near ? 'dish' : 'turret';
+  return /(^|\/)cradle/.test(p) ? 'cradle' : /(^|\/)radar/.test(p) ? 'radar' : /(^|\/)turret/.test(p) ? 'turret' : 'body';
+}
 // ПВО: дальние копии (_lo) — main.js рисует их дальше 400 м (THREE.LOD по частям: корпус, башня, пакет)
 const SAM_LO = ['osa', 'bukm3', 's125', 'gepard', 'ew_e', 'tor', 'pantsir', 'sampt', 'tunguska', 'skyguard', 'rapier', 'zsu234', 'm163', 'chaparral', 'avenger'];
 for (const k of SAM_LO) CONFIG[k + '_lo'] = { ...CONFIG[k], target: k === 'tor' || k === 'pantsir' ? 15000 : 20000, simpErr: 0.05, tex: () => 256, nTex: null };
 CONFIG.bukm3_lo.tracks = { ...CONFIG.bukm3.tracks, links: false }; // дальняя копия: лента — гладкая, без звеньев
-// Гепард (своя модель, 23 тыс.): дальняя копия — 8 тыс. треугольников, цвет 256, без карты нормалей
-CONFIG.gepard_lo = { ...CONFIG.gepard, target: 8000, simpErr: 0.05, tex: () => 256, nTex: null };
+// Гепард ревизии 2: дальняя копия сборщика (gepard_lo.glb, без мелочи), цвет 512, без нормалей; антенна сопровождения — в башне (вдали не качается)
+CONFIG.gepard_lo = { ...CONFIG.gepard, src: `${DL}/Свои/Гепард_rev2/gepard_lo.glb`, tex: () => 512, nTex: null, groups: (c) => gepardPart(c, false) };
 // «Стрела-1» (основа 130 тыс., почти всё — колёса): дальняя копия — 15 тыс., цвет 512, без нормалей
 CONFIG.strela1_lo = { ...CONFIG.strela1, target: 15000, simpErr: 0.05, tex: () => 512, nTex: null };
 // Sentinel (67 тыс., почти всё — «Хамви» основы): дальняя копия — 15 тыс., цвет 512, без нормалей
@@ -796,6 +801,15 @@ CONFIG.patriot = { src: `${DL}/Свои/Patriot/patriot.glb`, scale: 1, nose: '-
   nTex: (m) => (/^PT_[CW]$/.test(m.name) ? 512 : 1024), pickMesh: /./, axisX: 0, axisZ: 0, ground: 0, hinge: [0, 2.6, 5.4], tpFix: [0, 2.125, 4.4], pack0: 0, tube: [0.85, 1.15],
   groups: (c) => patriotPart(c, true), alpha: { '^PT_glassF$': 0.85 } };
 CONFIG.patriot_lo = { ...CONFIG.patriot, src: `${DL}/Свои/Patriot/patriot_lo.glb`, tex: () => 512, nTex: null, groups: (c) => patriotPart(c, false) }; // дальняя сборщика (82 тыс.)
+// PAC-3 — своя пусковая (сборщик Patriot, Свои/PAC-3_пусковая, 2026-11-02; Mark: «модель PAC-3 готова»): тягач HEMTT M983 + полуприцеп с M903,
+// опоры раскинуты (в файле — боевое положение), плита TURN_PIVOT (0; 1,7; 7,15), пакет PACK_PIVOT — (0; 0,45; 1) от неё (в мире 0; 2,15; 8,15), 4 контейнера
+// по 4 ячейки, у каждой своя рвущаяся крышка; окраска «Б» (смешанная: зелёные тягач, рама, левая пара; песочные правая пара и опоры). Атласы — как у Patriot
+CONFIG.pac3 = { ...CONFIG.patriot, src: `${DL}/Свои/PAC-3_пусковая/pac3.glb`, tex: (m) => (/^P3_[CW]$/.test(m.name) ? 1024 : 2048), nTex: (m) => (/^P3_[CW]$/.test(m.name) ? 512 : 1024),
+  hinge: [0, 2.15, 8.15], tpFix: [0, 1.7, 7.15], tube: [0.85, 1.15], alpha: { '^P3_glassF$': 0.85 } };
+CONFIG.pac3_lo = { ...CONFIG.pac3, src: `${DL}/Свои/PAC-3_пусковая/pac3_lo.glb`, tex: () => 512, nTex: null, groups: (c) => patriotPart(c, false) };
+// ракета PAC-3 MSE (Свои/PAC-3): 5,2 м, Ø 0,29, нос −Z; рули P3_fin0…3 «+» → fin0…3 (не складываются)
+CONFIG.msl_pac3 = { src: `${DL}/Свои/PAC-3/msl_pac3.glb`, scale: 1, nose: '-z', own: true, tex: () => 1024, nTex: () => 512, pickMesh: /./,
+  groups: (c) => { const f = c.path.match(/(^|\/)P3_fin(\d)/); return f ? 'fin' + f[2] : 'body'; } };
 // «РЛС на вершине»: дальняя копия сборщика (25 тыс., без мелочи deco_props), цвет 512, без нормалей; узлы — те же
 CONFIG.site_radar_lo = { ...CONFIG.site_radar, src: `${DL}/Свои/РЛС на вершине/radar_site_lo.glb`, tex: () => 512, nTex: null };
 CONFIG.site_heli_lo = { ...CONFIG.site_heli, src: `${DL}/Свои/Вертолётная площадка/heli_site_lo.glb`, tex: () => 512, nTex: null }; // «Ведьмина поляна»: дальняя сборщика (21 тыс., без ограды и палаток)

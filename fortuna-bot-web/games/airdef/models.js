@@ -261,7 +261,7 @@ const META = {
   strela10: { units: ['strela10'], matte: true, stations: [], camo: { scheme: 'soviet', size: 1.5 } }, // «Стрела-10» на МТ-ЛБ — ScurvyWoof
   avenger: { units: ['avenger'], stations: [], matte: true, camo: { scheme: 'nato', size: 1.1 } }, // AN/TWQ-1 Avenger — KillCaptureDestroy
   chaparral: { units: ['chaparral'], stations: [], matte: true, camo: { scheme: 'nato', size: 1.2 } }, // MIM-72 Chaparral — TankLord (Thingiverse)
-  gepard: { units: ['gepard'], matte: true, stations: [], camo: { scheme: 'nato', size: 1.4, tex: true, detail: true } }, // Flakpanzer Gepard — собственная модель (tools/airdef-models/own/gepard): камуфляж — по зелёной краске текстуры
+  gepard: { units: ['gepard'], matte: true, stations: [] }, // Flakpanzer Gepard — своя модель, ревизия 2 (Свои/Гепард_rev2, 2026-11-02): трёхцветный камуфляж бундесвера запечён (шейдерный узор снят), антенна сопровождения качается за целью
   roland: { units: ['roland'], matte: true, stations: [], camo: { scheme: 'nato', size: 1.4 } },
   tunguska: { units: ['tunguska'], matte: true, stations: [] }, // 2К22 «Тунгуска» — SIpriv (CC BY 4.0), переделана в Blender (Свои/Тунгуска): камуфляж, затенение и карта нормалей запечены — шейдерного узора нет
   msl_9m311: { samMissile: ['tunguska'], matte: true, stations: [] }, // ракета 9М311 — своя (Свои/Тунгуска), 2,56 м, нос −Z
@@ -284,7 +284,8 @@ const META = {
   msl_9m83: { samMissile: ['s400'], inTube: true, lazy: true, matte: true, stations: [] }, // ракета 9М83 — своя (Свои/9М83), 6,9 м, нос −Z; рули fin0…3 (в контейнере сложены); inTube — носовые части в контейнерах пусковой
   patriot: { units: ['patriot'], matte: true, stations: [] }, // Patriot — своя пусковая на MAN 8×8 (сборщик, Свои/Patriot, 2026-11-02): пакет поднимается на 38°, домкраты, мачта, два цилиндра, рвущиеся крышки
   msl_pac2: { samMissile: ['patriot'], lazy: true, matte: true, stations: [] }, // ракета PAC-2 — своя (Свои/PAC-2, 2026-11-02), 5,3 м, Ø 0,41, нос −Z; рули fin0…3 не складываются
-  pac3: { units: ['pac3'], stations: [] }, // PAC-3 — пусковая M901 Muhamad Mirza Arrafi (бывшая patriot), пока нет своей PAC-3
+  pac3: { units: ['pac3'], matte: true, stations: [] }, // PAC-3 — своя пусковая (Свои/PAC-3_пусковая, 2026-11-02): тягач HEMTT + полуприцеп M903, поворот ±110°, 16 ячеек с рвущимися крышками, смешанная окраска
+  msl_pac3: { samMissile: ['pac3'], lazy: true, matte: true, stations: [] }, // ракета PAC-3 MSE — своя (Свои/PAC-3), 5,2 м, Ø 0,29, нос −Z; рули fin0…3 не складываются
 };
 // самолёты — и для «Симулятора Летки» (выбор самолёта игрока; точки подвески — те же 8, что у его «Изделия»)
 export const PLANE_META = Object.fromEntries(Object.entries(META).filter(([, m]) => m.side && !m.heli)); // вертолёты (heli) — не самолёты «Летки»
@@ -309,8 +310,8 @@ const GLB_V = Object.fromEntries(['w_gbu10', 'w_ecm', 'gepard', 'gepard_lo', 'ro
 const GLB_V_OWN = {
   w_kh29t: '20261024c',
   w_kh31p: '20261024d',
-  gepard: '20261024d',
-  gepard_lo: '20261024d',
+  gepard: '20261102a', // ревизия 2 (Свои/Гепард_rev2)
+  gepard_lo: '20261102a',
   w_nar_s8: '20261024e',
   w_nar_hydra: '20261024f',
   w_gbu57: '20261024g',
@@ -402,9 +403,12 @@ const GLB_V_OWN = {
   site_port_lo: '20261029d',
   msl_9m83: '20261028b',
   msl_5v55: '20261102a',
-  patriot: '20261102b', // Patriot — своя (Свои/Patriot) вместо M901 Muhamad Mirza Arrafi (та теперь pac3.glb); b — ревизия 2 с поворотной плитой
+  patriot: '20261102b', // Patriot — своя (Свои/Patriot) вместо M901 Muhamad Mirza Arrafi; b — ревизия 2 с поворотной плитой
   patriot_lo: '20261102b',
   msl_pac2: '20261102a',
+  pac3: '20261102a', // своя PAC-3 вместо M901 Muhamad Mirza Arrafi
+  pac3_lo: '20261102a',
+  msl_pac3: '20261102a',
   l_lance: '20261025s', // M752 — своя пусковая Lance (сборщик, Свои/M752 ревизия 2): трап и стрела поднимаются перед пуском (sim/combined.js POD.l_lance)
 };
 GLB_V.e_f15e = '20261024g'; // заглушки в соплах — тёмные (prepare.js #soot), 2026-10-22
@@ -703,7 +707,7 @@ async function load(name, base) {
 // готовая модель комплекса: { body, turret, cradle } (копии) или null — тогда процедурная
 const UMODEL = Object.fromEntries(Object.entries(META).filter(([, m]) => m.units).flatMap(([n, m]) => m.units.map((k) => [k, n])));
 // у тяжёлых моделей ПВО — дальняя копия <имя>_lo: каждая часть (корпус, башня, пакет) — THREE.LOD, ближе 400 м — подробная
-const UNIT_LO = new Set(['nasams', 'bukm3', 's125', 'gepard', 'ew_e', 'ew_w', 's300', 's400', 'patriot', 'tor', 'pantsir', 'sampt', 'tunguska', 'skyguard', 'rapier', 'zsu234', 'm163', 'chaparral', 'avenger', 'strela1']);
+const UNIT_LO = new Set(['nasams', 'bukm3', 's125', 'gepard', 'ew_e', 'ew_w', 's300', 's400', 'patriot', 'pac3', 'tor', 'pantsir', 'sampt', 'tunguska', 'skyguard', 'rapier', 'zsu234', 'm163', 'chaparral', 'avenger', 'strela1']);
 export function unitModelGlb(key) {
   const n = UMODEL[key], G = n && (LOADED[n] || LOADED[n + '_lo']), GL = n && LOADED[n] && LOADED[n + '_lo']; if (!G) return null;
   const find = (M, k) => M.children.find((c) => c.name === k);

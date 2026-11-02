@@ -503,10 +503,11 @@ function erectView(u, g, dt) {
     C.parts[1].position.fromArray(q.dir).multiplyScalar(q.ext / 2); C.parts[2].position.fromArray(q.dir).multiplyScalar(q.ext);
   }
 }
-// Patriot: крышка контейнера срывается при пуске — ушедших ракет крышек нет до перезарядки (по порядку слотов, как torLids)
+// Patriot, PAC-3: крышка ячейки срывается при пуске — ушедших ракет крышек нет до перезарядки (по порядку слотов, как torLids; у PAC-3 слоты
+// в порядке пуска — номер крышки слота в LN.lidOf)
 function blowLids(u, g) {
-  const L = g.userData.blow, nf = u.S.ammo - Math.max(0, Math.round(u.ammo));
-  L.forEach((l, k) => { if (l) l.visible = k >= nf; });
+  const L = g.userData.blow, ord = LNCH[u.key].lidOf, nf = u.S.ammo - Math.max(0, Math.round(u.ammo));
+  L.forEach((l, j) => { if (l) l.visible = (ord ? ord.indexOf(j) : j) >= nf; });
 }
 // «Тор»: антенна сопровождения — по углу места цели (от положения покоя el0, в пределах lo…hi, не быстрее w рад/с); без цели — в покой
 function torDish(u, g, dt) {

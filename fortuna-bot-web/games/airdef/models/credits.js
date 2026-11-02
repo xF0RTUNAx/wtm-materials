@@ -1155,15 +1155,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "MIM-104 Patriot Surface-To-Air Missile (SAM)",
-  "author": "Muhamad Mirza Arrafi",
-  "url": "https://sketchfab.com/3d-models/mim-104-patriot-surface-to-air-missile-sam-7a64d0af78514a159877edab1ab2bccb",
-  "license": "CC-BY-4.0",
-  "files": [
-   "pac3"
-  ]
- },
- {
   "title": "SAM S-75 \"Dvina\"",
   "author": "manyakasia",
   "url": "https://sketchfab.com/3d-models/sam-s-75-dvina-ed7d4831832d499482a6aa9620a858e4",
