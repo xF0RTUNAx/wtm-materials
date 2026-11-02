@@ -345,7 +345,8 @@ const CONFIG = {
   // jack_0…3 → jack0…3 — штоки домкратов; cyl_barrel / cyl_rod1 / cyl_rod2 → cyl0…2 — гидроцилиндр подъёма (main.js erectView). Контейнеры полые:
   // ракеты 9М83 — своя модель msl_9m83. Дальняя копия — s300_lo.glb сборщика (без протектора, ступиц, рамы: 61 тыс.), крышки в пакете
   s300: { src: `${DL}/Свои/С-300/s300.glb`, scale: 1, nose: '-z', rulesIn: 'game', unit: true, own: true, tex: () => 2048, nTex: () => 1024, pickMesh: /./,
-    axisX: 0, axisZ: 0, ground: 0, hinge: [0, 1.264, 5.694], tpFix: [0, 1.264, 5.694], pack0: 0, tube: [0.8, 1.1], groups: (c) => s300Part(c, true) },
+    axisX: 0, axisZ: 0, ground: 0, hinge: [0, 1.264, 5.694], tpFix: [0, 1.264, 5.694], pack0: 0, tube: [0.8, 1.1], groups: (c) => s300Part(c, true),
+    alpha: { '^S3_glassF$': 0.85, '^S3_lensF$': 0.9 } }, // стёкла кабин и фар — стекло с бликом, как у С-400 (Mark 2026-11-02; в файле сборщика непрозрачные — в игре были чёрные)
   // объект «РЛС на вершине» (w_radar зимой, a_radar осенью) — своя сцена сборщика (Свои/РЛС на вершине, 2026-10-28): оси игры (x — восток,
   // −z — север, y = 0 — площадка), начало — центр объекта; части — узлы b_<постройка> (целая) и b_<постройка>_ruin (разрушенная, на том же
   // месте), deco_site / deco_props — неразрушаемое (props — только вблизи); пустышки place:* — без мешей (места — city.js SITES)
@@ -769,8 +770,8 @@ CONFIG.tor_lo = { ...CONFIG.tor, target: 12000, simpErr: 0.05, tex: () => 512, n
 CONFIG.s300_lo = { ...CONFIG.s300, src: `${DL}/Свои/С-300/s300_lo.glb`, tex: () => 512, nTex: null, groups: (c) => s300Part(c, false) };
 // С-400 — копия нашей С-300 (сборщик объектов, Свои/С-400, 2026-11-02; Mark: «с-400 готов»): те же узлы и шарниры (ПАСПОРТ.json), + запаска в корзине
 // за кабинами (body_spare*), фары; окраска почти чёрная зелень; стёкла кабин и фар — BLEND. Ракета — 9М83 (models.js samMissile). Дальняя — s400_lo (76 тыс.)
-CONFIG.s400 = { ...CONFIG.s300, src: `${DL}/Свои/С-400/s400.glb` };
-CONFIG.s400_lo = { ...CONFIG.s300_lo, src: `${DL}/Свои/С-400/s400_lo.glb` };
+CONFIG.s400 = { ...CONFIG.s300, src: `${DL}/Свои/С-400/s400.glb`, alpha: null }; // стёкла у сборщика уже BLEND
+CONFIG.s400_lo = { ...CONFIG.s300_lo, src: `${DL}/Свои/С-400/s400_lo.glb`, alpha: null };
 // «РЛС на вершине»: дальняя копия сборщика (25 тыс., без мелочи deco_props), цвет 512, без нормалей; узлы — те же
 CONFIG.site_radar_lo = { ...CONFIG.site_radar, src: `${DL}/Свои/РЛС на вершине/radar_site_lo.glb`, tex: () => 512, nTex: null };
 CONFIG.site_heli_lo = { ...CONFIG.site_heli, src: `${DL}/Свои/Вертолётная площадка/heli_site_lo.glb`, tex: () => 512, nTex: null }; // «Ведьмина поляна»: дальняя сборщика (21 тыс., без ограды и палаток)
@@ -1157,7 +1158,10 @@ async function prepare(name, views) {
     // стекло — только полупрозрачное с «стеклянным» именем (фонарь, окна, линзы): многие авторы ставят BLEND на всё подряд (гусеницы «Тора»,
     // корпус «Вербы», крыша хаты) — без этого правила такие части выходили белыми «стёклами» без текстуры. cfg.glass — свои имена стёкол
     const GLASS = /glass|стекл|canopy|window|visor|lens|fonar|фонар/i, nm = src.name || '';
-    const blend = src.alphaMode === 'BLEND', solid = !!(cfg.opaque && cfg.opaque.test(nm));
+    // alpha — { имя: α }: непрозрачный материал сборщика — стеклом с этой прозрачностью (С-300: стёкла кабин и фар — как у С-400)
+    const AL = cfg.alpha && Object.entries(cfg.alpha).find(([re]) => new RegExp(re).test(nm));
+    if (AL) pbr.baseColorFactor = [...(pbr.baseColorFactor || [1, 1, 1]).slice(0, 3), AL[1]];
+    const blend = src.alphaMode === 'BLEND' || !!AL, solid = !!(cfg.opaque && cfg.opaque.test(nm));
     const glass = m.forceGlass || !!(cfg.glassAny && cfg.glassAny.test(nm)) || (blend && !solid && !cfg.cutout && (GLASS.test(nm) || !!(cfg.glass && cfg.glass.test(nm))));
     const cut = blend && !solid && !glass; // остальное полупрозрачное — вырезкой по альфе: заборы и наклейки сохраняют дыры, корпуса — текстуру
     // colors — свои цвета материалов по имени (у модели без текстур цвета бывают «служебные»)
