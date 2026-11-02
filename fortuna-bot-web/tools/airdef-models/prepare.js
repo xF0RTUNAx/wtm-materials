@@ -777,8 +777,12 @@ function gepardPart(c, near) {
 const SAM_LO = ['osa', 'bukm3', 's125', 'gepard', 'ew_e', 'tor', 'pantsir', 'sampt', 'tunguska', 'skyguard', 'rapier', 'zsu234', 'm163', 'chaparral', 'avenger'];
 for (const k of SAM_LO) CONFIG[k + '_lo'] = { ...CONFIG[k], target: k === 'tor' || k === 'pantsir' ? 15000 : 20000, simpErr: 0.05, tex: () => 256, nTex: null };
 CONFIG.bukm3_lo.tracks = { ...CONFIG.bukm3.tracks, links: false }; // дальняя копия: лента — гладкая, без звеньев
-// Гепард ревизии 2: дальняя копия сборщика (gepard_lo.glb, без мелочи), цвет 512, без нормалей; антенна сопровождения — в башне (вдали не качается)
-CONFIG.gepard_lo = { ...CONFIG.gepard, src: `${DL}/Свои/Гепард_rev2/gepard_lo.glb`, tex: () => 512, nTex: null, groups: (c) => gepardPart(c, false) };
+// Гепард ревизии 2: дальняя копия сборщика (gepard_lo.glb, без мелочи), цвет 512, без нормалей; антенна сопровождения — в башне (вдали не качается).
+// На телефоне она видна и вблизи (грузится только _lo) — ходовая (материал GP_R: гусеницы, катки — 2/3 из 48,8 тыс.) упрощена до доли 0,2 с ошибкой
+// не больше 0,6 % размера, башня и корпус (GP_T, GP_H) — как у сборщика: 22,9 тыс.; стенд в режиме телефона — кадры совпадают с исходной копией до
+// пикселя (отличие — только угол крутящейся антенны обзора; Mark 2026-11-02: «облегчи, но так, чтобы не было визуальных артефактов»)
+CONFIG.gepard_lo = { ...CONFIG.gepard, src: `${DL}/Свои/Гепард_rev2/gepard_lo.glb`, tex: () => 512, nTex: null, groups: (c) => gepardPart(c, false),
+  simplify: 0.2, simpErr: 0.006, simpKeep: /^GP_(T|H|glassF)$/ };
 // «Стрела-1» (основа 130 тыс., почти всё — колёса): дальняя копия — 15 тыс., цвет 512, без нормалей
 CONFIG.strela1_lo = { ...CONFIG.strela1, target: 15000, simpErr: 0.05, tex: () => 512, nTex: null };
 // Sentinel (67 тыс., почти всё — «Хамви» основы): дальняя копия — 15 тыс., цвет 512, без нормалей
