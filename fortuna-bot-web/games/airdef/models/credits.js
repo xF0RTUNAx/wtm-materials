@@ -1160,7 +1160,7 @@ export const CREDITS = [
   "url": "https://sketchfab.com/3d-models/mim-104-patriot-surface-to-air-missile-sam-7a64d0af78514a159877edab1ab2bccb",
   "license": "CC-BY-4.0",
   "files": [
-   "patriot"
+   "pac3"
   ]
  },
  {

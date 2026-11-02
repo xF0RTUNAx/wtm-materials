@@ -369,6 +369,10 @@ const CONFIG = {
   // по таблице Mark; 9М83 (ракета С-300В) остаётся у С-400
   msl_5v55: { src: `${DL}/Свои/5В55Р/msl_5v55.glb`, scale: 1, nose: '-z', own: true, tex: () => 1024, nTex: () => 512, pickMesh: /./,
     groups: (c) => { const f = c.path.match(/(^|\/)V55_fin(\d)/); return f ? 'fin' + f[2] : 'body'; } },
+  // ракета PAC-2 (MIM-104) у Patriot — своя (сборщик, Свои/PAC-2, 2026-11-02): 5,3 м, Ø 0,41, нос −Z; рули P2_fin0…3 → fin0…3 (не складываются:
+  // в квадратном канале контейнера крылья и рули «×» уходят в углы), неподвижные крылья P2_wings — в корпусе
+  msl_pac2: { src: `${DL}/Свои/PAC-2/msl_pac2.glb`, scale: 1, nose: '-z', own: true, tex: () => 1024, nTex: () => 512, pickMesh: /./,
+    groups: (c) => { const f = c.path.match(/(^|\/)P2_fin(\d)/); return f ? 'fin' + f[2] : 'body'; } },
   // «Стрела-1» (9П31 на БРДМ-2) — основной чат по просьбе Mark 2026-10-24 (Свои/Стрела-1: build.py, bake.py, deliver.py): основа — БРДМ-2 zhek
   // (CC BY 4.0, масштаб до 5,75 м, пулемётная башенка снята), пусковая и ракета 9М31 — свои (окраска запечена в атлас 1024, нормали — Bevel).
   // Метры, нос −Z, земля y = 0; части — по первому слову имени объекта: body_*, turret_* (основание, окно оператора, стойка), cradle_* (ось и
@@ -430,7 +434,8 @@ const CONFIG = {
       if (c.max[1] < 1.3 * 1.2) return 'body#conc'; // диск, болты и тумба
       return c.mat === 1 ? 'turret' : 'turret#steel'; // башня с осью-цапфой
     } },
-  patriot: { src: `${DL}/mim-104_patriot_surface-to-air_missile_sam.glb`, scale: 1, nose: '+x', rulesIn: 'game', unit: true, tex: () => 1024, hinge: [0, 3.95, 12.81], tube: [0.5, 1.2],
+  // PAC-3 — пусковая M901 Muhamad Mirza Arrafi (до 2026-11-02 — и у Patriot; Patriot теперь своя, CONFIG.patriot ниже), пока сборщик не сдаст свою PAC-3
+  pac3: { src: `${DL}/mim-104_patriot_surface-to-air_missile_sam.glb`, scale: 1, nose: '+x', rulesIn: 'game', unit: true, tex: () => 1024, hinge: [0, 3.95, 12.81], tube: [0.5, 1.2],
     groups: (c) => {
       if (c.size[1] > 3 && c.size[2] < 0.6 && c.size[0] < 0.6) return null; // мачта антенны: в модели стоит на поднятом пакете — у нас висела в воздухе
       if (Math.abs(c.ctr[0] + 1.33) < 0.35 && Math.abs(c.ctr[2] - 10.1) < 0.35 && c.ctr[1] > 4.2) return null; // и её крепёж: колпак наверху (≈ 10 м) и хомуты — без мачты висели в воздухе
@@ -753,6 +758,15 @@ function s300Part(c, near) {
   const Y = [...p.matchAll(/(?:^|\/)cyl_(barrel|rod1|rod2)/g)].pop(); if (Y) return 'cyl' + ['barrel', 'rod1', 'rod2'].indexOf(Y[1]); // штоки — дети корпуса цилиндра: по последнему узлу пути
   return /(^|\/)pack_/.test(p) ? 'cradle' : 'body';
 }
+// Patriot: как С-300; гидроцилиндр подъёма cyl_* → cyl0…2, подкос cyl_strut_* → cyl3…5 (штоки — дети корпусов: по последнему узлу пути), мачта mast_s2…4 → mast0…2
+function patriotPart(c, near) {
+  const p = c.path, L = p.match(/(^|\/)lid_c([12])([12])/);
+  if (L) return near ? 'lid' + ((+L[2] - 1) * 2 + (+L[3] - 1)) : 'cradle';
+  const J = p.match(/(^|\/)jack_(\d)/); if (J) return 'jack' + J[2];
+  const M = p.match(/(^|\/)mast_s(\d)/); if (M) return 'mast' + (+M[2] - 2);
+  const Y = [...p.matchAll(/(?:^|\/)cyl_(strut_)?(barrel|rod1|rod2)/g)].pop(); if (Y) return 'cyl' + ((Y[1] ? 3 : 0) + ['barrel', 'rod1', 'rod2'].indexOf(Y[2]));
+  return /(^|\/)pack_/.test(p) ? 'cradle' : 'body';
+}
 // ПВО: дальние копии (_lo) — main.js рисует их дальше 400 м (THREE.LOD по частям: корпус, башня, пакет)
 const SAM_LO = ['osa', 'bukm3', 's125', 'gepard', 'ew_e', 'tor', 'pantsir', 'sampt', 'tunguska', 'skyguard', 'rapier', 'zsu234', 'm163', 'chaparral', 'avenger'];
 for (const k of SAM_LO) CONFIG[k + '_lo'] = { ...CONFIG[k], target: k === 'tor' || k === 'pantsir' ? 15000 : 20000, simpErr: 0.05, tex: () => 256, nTex: null };
@@ -772,6 +786,14 @@ CONFIG.s300_lo = { ...CONFIG.s300, src: `${DL}/Свои/С-300/s300_lo.glb`, tex
 // за кабинами (body_spare*), фары; окраска почти чёрная зелень; стёкла кабин и фар — BLEND. Ракета — 9М83 (models.js samMissile). Дальняя — s400_lo (76 тыс.)
 CONFIG.s400 = { ...CONFIG.s300, src: `${DL}/Свои/С-400/s400.glb`, alpha: null }; // стёкла у сборщика уже BLEND
 CONFIG.s400_lo = { ...CONFIG.s300_lo, src: `${DL}/Свои/С-400/s400_lo.glb`, alpha: null };
+// Patriot — своя пусковая на MAN 8×8 (сборщик, Свои/Patriot, 2026-11-02; Mark: «пак-2 готов»): метры, нос −Z, земля y = 0, оси сборщика как есть;
+// пакет на шарнире PACK_PIVOT (0; 2,6; 5,4) лежит, игра поднимает его на 38° (launchers.js PATRIOT); части — patriotPart: как у С-300 + подкос
+// cyl_strut_* → cyl3…5 и секции мачты mast_s2…s4 → mast0…2 (в файле опущены); крышки lid_c<ряд><столбец> — рвущиеся (срываются при пуске).
+// Атласы A, B — цвет 2048 / нормали 1024, C (мелочь) и W (колёса) — вдвое меньше; стекло кабины у сборщика непрозрачное — стеклом, как у С-300
+CONFIG.patriot = { src: `${DL}/Свои/Patriot/patriot.glb`, scale: 1, nose: '-z', rulesIn: 'game', unit: true, own: true, tex: (m) => (/^PT_[CW]$/.test(m.name) ? 1024 : 2048),
+  nTex: (m) => (/^PT_[CW]$/.test(m.name) ? 512 : 1024), pickMesh: /./, axisX: 0, axisZ: 0, ground: 0, hinge: [0, 2.6, 5.4], tpFix: [0, 2.6, 5.4], pack0: 0, tube: [0.85, 1.15],
+  groups: (c) => patriotPart(c, true), alpha: { '^PT_glassF$': 0.85 } };
+CONFIG.patriot_lo = { ...CONFIG.patriot, src: `${DL}/Свои/Patriot/patriot_lo.glb`, tex: () => 512, nTex: null, groups: (c) => patriotPart(c, false) }; // дальняя сборщика (82 тыс.)
 // «РЛС на вершине»: дальняя копия сборщика (25 тыс., без мелочи deco_props), цвет 512, без нормалей; узлы — те же
 CONFIG.site_radar_lo = { ...CONFIG.site_radar, src: `${DL}/Свои/РЛС на вершине/radar_site_lo.glb`, tex: () => 512, nTex: null };
 CONFIG.site_heli_lo = { ...CONFIG.site_heli, src: `${DL}/Свои/Вертолётная площадка/heli_site_lo.glb`, tex: () => 512, nTex: null }; // «Ведьмина поляна»: дальняя сборщика (21 тыс., без ограды и палаток)

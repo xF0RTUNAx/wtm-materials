@@ -47,9 +47,12 @@ async function unitObj(key) {
   }
   if (gm && gm.radar) (tur.length ? tur[0] : g).add(gm.radar.clone()); // без башни (Sentinel) — антенна на машине
   if (gm && md.LN && md.LN.erect) { // С-300: как в бою — домкраты на земле, цилиндр выдвинут к поднятому пакету
-    const E = md.LN.erect, A = E.cylA, q = cylPose(md.LN, md.LN.el); for (const j of gm.jacks) if (j) { j.position.y = -E.jack; g.add(j); }
-    const pv = new THREE.Group(); pv.position.fromArray(A); pv.rotation.x = q.rot; g.add(pv);
-    gm.cyl.forEach((c, i) => { if (!c) return; c.position.set(-A[0], -A[1], -A[2]); const w = new THREE.Group(); w.add(c); w.position.fromArray(q.dir).multiplyScalar(q.ext * i / 2); pv.add(w); });
+    const E = md.LN.erect; for (const j of gm.jacks) if (j) { j.position.y = -E.jack; g.add(j); }
+    [E, E.cyl2].filter(Boolean).forEach((cy, k) => { // Patriot — ещё подкос (cyl3…5)
+      const A = cy.cylA, q = cylPose(md.LN, md.LN.el, cy), pv = new THREE.Group(); pv.position.fromArray(A); pv.rotation.x = q.rot; g.add(pv);
+      gm.cyl.slice(k * 3, k * 3 + 3).forEach((c, i) => { if (!c) return; c.position.set(-A[0], -A[1], -A[2]); const w = new THREE.Group(); w.add(c); w.position.fromArray(q.dir).multiplyScalar(q.ext * i / 2); pv.add(w); });
+    });
+    if (E.mast && gm.mast) gm.mast.forEach((m, i) => { if (m) { m.position.y = E.mast[i]; g.add(m); } }); // Patriot: мачта поднята
   }
   return g;
 }

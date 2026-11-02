@@ -282,7 +282,9 @@ const META = {
   s400: { units: ['s400'], matte: true, bright: 2.0, stations: [] }, // С-400 — копия нашей С-300 (сборщик объектов, Свои/С-400, 2026-11-02): запаска в корзине за кабинами, окраска почти чёрная зелень, фары; части и шарниры — те же; bright 2 — почти чёрная краска в игре (ACES давит тёмные) была втрое темнее превью Blender, у С-300 — на 20 %: ×2 даёт то же соотношение (Mark: «почему миниатюра такая чёрная?»)
   msl_5v55: { samMissile: ['s300'], inTube: true, lazy: true, matte: true, stations: [] }, // ракета 5В55Р — своя (Свои/5В55Р, 2026-11-02), 6,9 м, Ø 0,488, нос −Z; рули fin0…3 — как у 9М83
   msl_9m83: { samMissile: ['s400'], inTube: true, lazy: true, matte: true, stations: [] }, // ракета 9М83 — своя (Свои/9М83), 6,9 м, нос −Z; рули fin0…3 (в контейнере сложены); inTube — носовые части в контейнерах пусковой
-  patriot: { units: ['patriot', 'pac3'], stations: [] }, // Patriot M901 — Muhamad Mirza Arrafi
+  patriot: { units: ['patriot'], matte: true, stations: [] }, // Patriot — своя пусковая на MAN 8×8 (сборщик, Свои/Patriot, 2026-11-02): пакет поднимается на 38°, домкраты, мачта, два цилиндра, рвущиеся крышки
+  msl_pac2: { samMissile: ['patriot'], lazy: true, matte: true, stations: [] }, // ракета PAC-2 — своя (Свои/PAC-2, 2026-11-02), 5,3 м, Ø 0,41, нос −Z; рули fin0…3 не складываются
+  pac3: { units: ['pac3'], stations: [] }, // PAC-3 — пусковая M901 Muhamad Mirza Arrafi (бывшая patriot), пока нет своей PAC-3
 };
 // самолёты — и для «Симулятора Летки» (выбор самолёта игрока; точки подвески — те же 8, что у его «Изделия»)
 export const PLANE_META = Object.fromEntries(Object.entries(META).filter(([, m]) => m.side && !m.heli)); // вертолёты (heli) — не самолёты «Летки»
@@ -400,6 +402,9 @@ const GLB_V_OWN = {
   site_port_lo: '20261029d',
   msl_9m83: '20261028b',
   msl_5v55: '20261102a',
+  patriot: '20261102a', // Patriot — своя (Свои/Patriot) вместо M901 Muhamad Mirza Arrafi (та теперь pac3.glb)
+  patriot_lo: '20261102a',
+  msl_pac2: '20261102a',
   l_lance: '20261025s', // M752 — своя пусковая Lance (сборщик, Свои/M752 ревизия 2): трап и стрела поднимаются перед пуском (sim/combined.js POD.l_lance)
 };
 GLB_V.e_f15e = '20261024g'; // заглушки в соплах — тёмные (prepare.js #soot), 2026-10-22
@@ -698,7 +703,7 @@ async function load(name, base) {
 // готовая модель комплекса: { body, turret, cradle } (копии) или null — тогда процедурная
 const UMODEL = Object.fromEntries(Object.entries(META).filter(([, m]) => m.units).flatMap(([n, m]) => m.units.map((k) => [k, n])));
 // у тяжёлых моделей ПВО — дальняя копия <имя>_lo: каждая часть (корпус, башня, пакет) — THREE.LOD, ближе 400 м — подробная
-const UNIT_LO = new Set(['nasams', 'bukm3', 's125', 'gepard', 'ew_e', 'ew_w', 's300', 's400', 'tor', 'pantsir', 'sampt', 'tunguska', 'skyguard', 'rapier', 'zsu234', 'm163', 'chaparral', 'avenger', 'strela1']);
+const UNIT_LO = new Set(['nasams', 'bukm3', 's125', 'gepard', 'ew_e', 'ew_w', 's300', 's400', 'patriot', 'tor', 'pantsir', 'sampt', 'tunguska', 'skyguard', 'rapier', 'zsu234', 'm163', 'chaparral', 'avenger', 'strela1']);
 export function unitModelGlb(key) {
   const n = UMODEL[key], G = n && (LOADED[n] || LOADED[n + '_lo']), GL = n && LOADED[n] && LOADED[n + '_lo']; if (!G) return null;
   const find = (M, k) => M.children.find((c) => c.name === k);
@@ -714,7 +719,7 @@ export function unitModelGlb(key) {
   return { body: get('body'), turret: get('turret'), cradle: get('cradle'), missile: get('missile'), booster: get('booster'), radar: get('radar'), // radar — антенна обзора на башне (крутится)
     tdish: near('dish'), lids, // «Тор»: антенна сопровождения (качается по углу места цели) и крышки ячеек (lid0…7, открываются к пуску)
     th: seq('th'), ca: seq('ca'), turret1: get('turret1'), cs: seq('cs'), // расчёт ПЗРК: позы наводчика (головы, руки) и второй номер
-    jacks: seq('jack'), cyl: seq('cyl') }; // С-300: штоки домкратов и гидроцилиндр подъёма (корпус, два штока)
+    jacks: seq('jack'), cyl: seq('cyl'), mast: seq('mast') }; // С-300: штоки домкратов и гидроцилиндр подъёма (корпус, два штока); Patriot — ещё подкос (cyl3…5) и секции мачты
 }
 // летящая ракета — без деталей пусковой, прилипших к ней при подготовке модели (prepare.js: детали пакета у ракеты-образца): связный кусок
 // сетки уходит, если он целиком в одной из коробок [x0, x1, y0, y1, z0, z1] (оси ракеты в группе: +Z — к хвосту). На пусковой — как в модели.
