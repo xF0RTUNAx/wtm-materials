@@ -373,21 +373,9 @@ export function createAir(C) {
   const NAR_TOL_U = 15; // «в зоне» / «ПУСК» по машине ПВО — точка падения ближе 15 м (урон по машине — до ~18 м: blast, R 14 + 4)
   // помощь «Аркады» довела нос до расчётного направления (< 2°): залп пойдёт точно по нему (fire: opts.dir)
   const narAligned = () => { if (!nar.on) return false; const cp = Math.cos(nar.pitch); NAR_D.set(-Math.sin(nar.yaw) * cp, Math.sin(nar.pitch), -Math.cos(nar.yaw) * cp); return fwdOf(craft, NV).angleTo(NAR_D) < 0.035; };
-  // подсказка к оружию вертолёта — при первом переключении на него в вылете (Mark 2026-10-22: «непонятно, как пускать НАР и ПТУР»; 2026-10-28 —
-  // в начале боя не показывать); hintSeen — за вылет
-  const hintSeen = new Set();
+  // длинных подсказок к оружию вертолёта в бою нет (Mark 2026-11-02: мешают); НАР и ПТУР объясняют уроки обучения и «?» на паузе
   let samMe = false; // по игроку пускали ЗУР, а ловушки ещё не бросал — лента боя («Разбор», C.bev)
   const logFire = (key) => { const W = AG[key]; if (W && W.kind !== 'ecm') C.bev('', BOMBK.has(W.kind) ? tr('сброс {0}', [W.short]) : tr('пуск {0}', [W.short]), 'fire:' + key, 1e9); }; // первый пуск / сброс каждого вида оружия
-  function weaponHint(key) {
-    const W = AG[key], fireK = IS_TOUCH ? tr('«Пуск»') : tr('Пробел'), nextK = IS_TOUCH ? tr('«Цель»') : 'R', km = (W.rmax / 1000).toFixed(1), F = fcs();
-    if (W.kind === 'rocket') return (craft.hm.arcade
-      ? tr('НАР: круг на земле — куда лягут ракеты. Цель впереди — нос сам доворачивает на неё, а на висении доводит и круг; «в зоне — залп» — жмите {0}. Дальность до {1} км.', [fireK, km])
-      : tr('НАР: опускайте нос, пока круг на земле не ляжет на цель, и залп — {0}. Круг ближе цели — нос выше, дальше — ниже. Дальность до {1} км.', [fireK, km]))
-      + (F === 1 ? ' ' + tr('Прицел механический: кольцо — точка попадания на 1,5 км.') : F >= 4 ? ' ' + tr('Можно нажать пуск заранее — залп уйдёт сам.') : '') + ' ' + tr('С высоты 100–200 м ракеты падают круче и ложатся кучнее.');
-    if (W.kind === 'agm') return tr('ПТУР: контейнер сам захватывает цель впереди ({0} — следующая). Пуск — {1}, затем держите цель в рамке до попадания. Приём: из-за укрытия подскок, пуск и снова вниз — у земли ПВО берёт вас не сразу (≈ 3 с).', [nextK, fireK])
-      + ' ' + (craft.hm.arcade ? tr('{0} — подскок сам: вверх, пуск и вниз.', [IS_TOUCH ? tr('«Подскок»') : 'E']) : tr('{0} — на сколько подняться до цели.', [IS_TOUCH ? tr('«Подскок»') : 'E']));
-    return '';
-  }
 
   // ═════════════ Подскок (вертолёт; Mark 2026-10-22) ═════════════
   // E / «ПОДСКОК»: «Аркада» — сам вверх, пока контейнер не увидит цель, захват, пуск ПТУР (НАР — когда круг на цели), висит, пока
@@ -1238,7 +1226,7 @@ export function createAir(C) {
     C.syncUnits();
     // подвеска: тяжёлое — ближе к фюзеляжу
     rearm(); initDamage(craft); if (craft.dmgVis) craft.dmgVis.sync(craft); // новый вылет — самолёт целый
-    hintSeen.clear(); nar.key = null; nar.has = nar.on = false; pop.st = 0; // подсказки к оружию — снова в каждом вылете; подскока нет
+    nar.key = null; nar.has = nar.on = false; pop.st = 0; // подскока нет
     // задача по подвеске: «охота за ПВО» — половина комплексов с РЛС (1…4), «штурмовка» — объекты города
     game.hunt = null;
     if (!opts.items && !opts.targets && loadoutRole(LOADOUTS[setup.era][setup.lo]) === 'sead') {
@@ -1256,9 +1244,7 @@ export function createAir(C) {
     craft.pos.set(sp.x, sp.y, sp.z); craft.yaw = sp.yaw; craft.pitch = 0; craft.roll = 0; craft.speed = craft.heli ? 25 : startV(240); thrI = 2; craft.thr = THR_STEPS[thrI]; craft.ab = false; craft.fuel = 1; fuelWarn = 0;
     craft.q = null; craft.wp = craft.wr = craft.wz = 0; craft.hp = 100; fwdOf(craft, craft.vel).multiplyScalar(craft.speed); aimSync(); aim.id = null;
     { const ha = craft.heli && craft.hm.arcade; if (padArms.l) { padArms.l.innerHTML = ico(ha ? 'sideL' : 'rollL'); padArms.r.innerHTML = ico(ha ? 'sideR' : 'rollR'); } } // крестовина: вертолёт («Аркада») — шаг вбок, самолёт — крен
-    if (craft.heli) { craft.landed = false; craft.col = null; heliInit(craft); craft.col = 9.81 / tmaxAcc(craft.hm, craft.pos.y, 25); hSpd = 0.25;
-      if (craft.hm.arcade && !opts.photo) setTimeout(() => say(C.IS_TOUCH ? tr('Ручка слева: вперёд — разгон, назад — тормоз, вбок — поворот · ▲▼ — высота · «газ» — ступени')
-        : tr('W / S — разгон и торможение · A / D — поворот · ↑ / ↓ — высота · ← / → — вбок · мышь — прицел'), 7), 600); } // как управлять — сразу при взлёте
+    if (craft.heli) { craft.landed = false; craft.col = null; heliInit(craft); craft.col = 9.81 / tmaxAcc(craft.hm, craft.pos.y, 25); hSpd = 0.25; } // управление при взлёте не подсказываем (Mark 2026-11-02: длинные подсказки в бою мешают) — оно в «?» на паузе
     document.body.classList.toggle('heli', !!craft.heli); padReset(); // фиксированные кнопки крестовины — выключены
     updLoad();
     podSet(null); pod.show = hasPod && !IS_TOUCH; pod.laserMan = null; pod.pickT = 0; pod.dir.set(0, -0.45, -1).normalize(); // окно на телефоне — по «ТВ»
@@ -1668,9 +1654,6 @@ export function createAir(C) {
     const lw = curW(), wrapA = (v) => Math.atan2(Math.sin(v), Math.cos(v)), brgT = Math.atan2(-(nar.pt.x - craft.pos.x), -(nar.pt.z - craft.pos.z));
     const narW = arc && nar.has && Math.abs(HU.yaw) < 0.2 && !(aimOn() && Math.abs(wrapA(aim.yaw - brgT)) > 0.21) && !!lw && AG[lw.key].kind === 'rocket' && usable(lw);
     nar.slow = Math.abs(HU.cy) < 0.12 && vh < 25; nar.on = narW && nar.slow;
-    // подсказка к оружию — при первом переключении на него в вылете (первое оружие боя — без неё: Mark 2026-10-28, большая подсказка
-    // в начале боя мешает); в уроках оружие объясняет карточка урока
-    if (lw && !hintSeen.has(lw.key)) { if (!hintSeen.size) hintSeen.add(lw.key); else if (!craft.landed && game.opts.lastGame !== 'training') { hintSeen.add(lw.key); const h = weaponHint(lw.key); if (h) C.say(h, 8); } }
     if (narW) {
       const dx = nar.pt.x - craft.pos.x, dz = nar.pt.z - craft.pos.z;
       HU.yawTo = Math.atan2(-dx, -dz); if (nar.on) HU.pitchTo = nar.pitch; // наклон — подобран по расчёту точки падения (updateLar)

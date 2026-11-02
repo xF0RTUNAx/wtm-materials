@@ -250,7 +250,7 @@ export function createSound() {
     // бортовые сигналы
     click() { A.tone('square', 1800, 1800, 0.025, 0.03, 0, 0, true); },
     cancelClick() { S.unlock(); if (!A.sample('uiClick', 0.8)) S.click(); }, // «Отменить» на экране подбора — запись
-    mmPing() { A.sample('mmPing', 0.3, 0, 1, 9000, 0.25); }, // пинг поиска боя (раз в 4 с)
+    mmPing() { A.sample('mmPing', 0.3, 0, 1, 9000, 0.25); }, // пинг поиска боя (один раз в начале поиска)
     lock() { A.beep(1300, 0.08, 'square', 0.05); A.beep(1700, 0.1, 'square', 0.05); },
     unlock2() { A.beep(700, 0.12, 'square', 0.04); },
     deny() { A.beep(240, 0.18, 'square', 0.05); },

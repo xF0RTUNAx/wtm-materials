@@ -1,7 +1,7 @@
 // Экран подбора онлайн-боя (Mark 2026-11-01): меню уходит, на его месте — техника в разных ракурсах (одна из раскладок, которые Mark
 // собрал в прототипах v3 — https://claude.ai/artifact/GYSERtUd6bB2gHdcyPhCZD, коллекция layouts; случайно на каждый поиск), справа —
 // кольцо с временем поиска (цифры Oswald), под ним — сколько ищут и когда старт, внизу — «Отменить». Ников нет: соперник до боя не виден.
-// Картинки — модели игры (tools/airdef-models/poses.html → ui/mm/<юнит>_<ракурс>.webp). Звук: пинг раз в 4 с, щелчок «Отменить».
+// Картинки — модели игры (tools/airdef-models/poses.html → ui/mm/<юнит>_<ракурс>.webp). Звук: пинг один раз в начале поиска, щелчок «Отменить».
 import { tr } from './i18n.js?v=20261102a';
 
 // раскладка: dim — затемнение фона; s — [картинка, x, y — центр в % экрана 932 × 430, w — ширина %, яркость, дымка, покачивание, ('f' — зеркально)]
@@ -19,7 +19,9 @@ const LAYOUTS = [
 ];
 const H169 = 9 / 16 * 932 / 430; // высота картинки 16:9 в % экрана на 1 % его ширины
 const CSS = `
-body.mmOn #menu, body.mmOn #mute { opacity: 0; pointer-events: none; transition: opacity .35s; } /* кнопка звука в меню — поверх меню (слой 31): на поиске её тоже убрать (Mark 2026-11-02) */
+body.mmOn #menu { pointer-events: none; }
+body.mmOn #menu > :not(#menuBg), body.mmOn #mute { opacity: 0; pointer-events: none; transition: opacity .35s; } /* кнопка звука в меню — поверх меню (слой 31): на поиске её тоже убрать (Mark 2026-11-02) */
+/* кадры фона меню (#menuBg — внутри #menu) остаются: под затемнением поиска — живой фон, а не чёрный экран (Mark 2026-11-02) */
 #mmScr { position: fixed; inset: 0; z-index: 33; display: none; color: #e9e6dc; font-family: 'Golos Text', -apple-system, 'Segoe UI', sans-serif; }
 #mmScr.on { display: block; }
 #mmScr .dim { position: absolute; inset: 0; background: #0a0d08; }
@@ -70,7 +72,7 @@ export function createMM(C, onCancel) {
     `transform:translate(-50%,-50%)${fl === 'f' ? ' scaleX(-1)' : ''};filter:brightness(${b}) saturate(${(1 - h * 0.35).toFixed(2)}) blur(${(h * 0.12).toFixed(3)}cqw)${h < 0.3 ? ' drop-shadow(0 1.6cqw 1.4cqw rgba(0,0,0,.55))' : ''}"><img src="${url(f)}" alt="" decoding="async"></div>`).join('');
   const clock = () => { const s = Math.max(0, Math.floor((performance.now() - t0) / 1000)); tm.textContent = Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
   // меню и кнопка звука уходят и возвращаются плавно в обе стороны (переход — на время смены, потом снимается)
-  const menuFade = () => { const els = [menuEl, muteEl].filter(Boolean); if (!els.length) return; for (const e of els) e.style.transition = 'opacity .5s ease'; clearTimeout(menuFade.t); menuFade.t = setTimeout(() => { for (const e of els) e.style.transition = ''; }, 650); };
+  const menuFade = () => { const els = [...(menuEl && menuEl.children ? [...menuEl.children].filter((e) => e.id !== 'menuBg') : []), muteEl].filter(Boolean); if (!els.length) return; for (const e of els) e.style.transition = 'opacity .5s ease'; clearTimeout(menuFade.t); menuFade.t = setTimeout(() => { for (const e of els) e.style.transition = ''; }, 650); };
   const ui = () => ['.ring', '.info', '.mode', '.cx'].map($);
   function done() { el.classList.remove('on'); anims.forEach((a) => a.cancel()); anims = []; if (el.getAnimations) for (const x of [el, ...el.querySelectorAll('*')]) x.getAnimations().forEach((a) => a.cancel()); stage.innerHTML = ''; hideT = 0; }
   function show(o) { // o: { t0 — начало поиска (performance.now), mode — строка режима, info — строка под кольцом (HTML: <b> — цифры) }
@@ -95,7 +97,7 @@ export function createMM(C, onCancel) {
       });
     }
     setTimeout(warm, 3000); // следующая раскладка — в кэш, пока идёт поиск
-    pingT = 0; tick = setInterval(() => { clock(); if ((pingT += 1) % 4 === 1 && snd.mmPing) snd.mmPing(); }, 1000); // первый пинг — через секунду, дальше раз в 4 с
+    pingT = 0; tick = setInterval(() => { clock(); if ((pingT += 1) === 1 && snd.mmPing) snd.mmPing(); }, 1000); // пинг — один раз, через секунду после начала поиска (Mark 2026-11-02: не повторять)
   }
   function hide() {
     if (!on) return; on = false; clearInterval(tick); menuFade(); document.body.classList.remove('mmOn');
