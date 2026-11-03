@@ -2,7 +2,7 @@
 // бой «волна против ПВО» на «Северном рубеже» по правилам онлайна (sim/combined.js LIM_ON, strike game 'multi', «Реализм»).
 //   deno run -A tools/airdef-headless/multi-price-stand.js atk  [N=40] [J=4]   — сила каждой единицы удара
 //   deno run -A tools/airdef-headless/multi-price-stand.js sam  [N=40] [J=4]   — сила каждого ЗРК
-//   deno run -A tools/airdef-headless/multi-price-stand.js sam  N=40 NA=100     — (NA — боёв для вклада в ослабленной ПВО)
+//   deno run -A tools/airdef-headless/multi-price-stand.js sam  N=40 NA=100     — (NA — боёв для вклада в ослабленной ПВО); SAMK=hawk21 OUT=… — только эти ЗРК
 //   deno run -A tools/airdef-headless/multi-price-stand.js price                — цены и потолки из замеров → multi-prices.json
 //   deno run -A tools/airdef-headless/multi-price-stand.js fair [N=150] [J=4]  — честность: восток против запада при равном бюджете
 //   deno run -A tools/airdef-headless/multi-price-stand.js mono [N=30]         — вся волна (или вся ПВО) из одного типа: где нужен потолок
@@ -190,7 +190,9 @@ if (!IS_WORKER && import.meta.main) {
     const NA = arg('NA', N), jobs = [];
     const VA = {}; try { for (const r of JSON.parse(Deno.readTextFileSync(Deno.env.get('ATK') || dir + 'multi-price-atk.json')).rows) VA[r.k] = r.v; } catch (_) { console.error('нет ATK — сбитое без цены'); }
     for (const def of ['east', 'west']) {
-      const att = OTHER[def], sams = Object.keys(SAM).filter((k) => SAM[k].side === def && SAM_COST[k]);
+      const ONLY = Deno.env.get('SAMK') ? Deno.env.get('SAMK').split(',') : null; // SAMK=hawk21 — перемерить только эти (остальные строки — из прежнего замера)
+      const att = OTHER[def], sams = Object.keys(SAM).filter((k) => SAM[k].side === def && SAM_COST[k] && (!ONLY || ONLY.includes(k)));
+      if (ONLY && !sams.length) continue;
       for (const lvl of LVLS) for (let s = 1; s <= Math.max(N, NA); s++) {
         const seed = s * 1000 + lvl * 10 + (def === 'east' ? 3 : 4), list = COMBINED[att][lvl].filter(([k]) => !AG[k].recon).map(([k, n]) => [k, n]);
         if (s <= N) jobs.push({ att, seed, def: null, list, tag: { kind: 'none', def, lvl, s } });

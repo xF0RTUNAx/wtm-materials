@@ -418,8 +418,8 @@ const GLB_V_OWN = {
   buk_lo: '20261103a',
   msl_buk: '20261103a',
   msl_buk_lo: '20261103b', // 9М38М1 на пусковой издали (1,2 тыс. треугольников)
-  chaparral: '20261103d', // MIM-72 Chaparral — своя (Свои/Chaparral + Свои/MIM-72) вместо STL TankLord
-  chaparral_lo: '20261103d',
+  chaparral: '20261103e', // MIM-72 Chaparral — своя (Свои/Chaparral + Свои/MIM-72) вместо STL TankLord; e — бортовые экраны снаружи гусеницы (перевыпуск сборщика)
+  chaparral_lo: '20261103e',
   msl_chaparral: '20261103d',
   msl_chaparral_lo: '20261103d',
   hawk21: '20261103d', // Hawk XXI — своя пусковая с 8 AIM-120 (Свои/Hawk XXI)
