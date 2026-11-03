@@ -188,9 +188,10 @@ if (!IS_WORKER && import.meta.main) {
   if (mode === 'sam') {
     // NA — боёв на точку для вклада в ослабленной ПВО (он шумнее одиночного); ATK — итог замера удара (сила единиц — цена сбитого)
     const NA = arg('NA', N), jobs = [];
+    const ONLY = Deno.env.get('SAMK') ? Deno.env.get('SAMK').split(',') : null; // SAMK=hawk21 — перемерить только эти; остальные строки и эталоны — из прежнего замера (multi-price-sam.json)
+    let OLD = null; if (ONLY) try { OLD = JSON.parse(Deno.readTextFileSync(dir + 'multi-price-sam.json')); } catch (_) { console.error('SAMK: нет прежнего multi-price-sam.json — в итоге будут только перемеренные'); }
     const VA = {}; try { for (const r of JSON.parse(Deno.readTextFileSync(Deno.env.get('ATK') || dir + 'multi-price-atk.json')).rows) VA[r.k] = r.v; } catch (_) { console.error('нет ATK — сбитое без цены'); }
     for (const def of ['east', 'west']) {
-      const ONLY = Deno.env.get('SAMK') ? Deno.env.get('SAMK').split(',') : null; // SAMK=hawk21 — перемерить только эти (остальные строки — из прежнего замера)
       const att = OTHER[def], sams = Object.keys(SAM).filter((k) => SAM[k].side === def && SAM_COST[k] && (!ONLY || ONLY.includes(k)));
       if (ONLY && !sams.length) continue;
       for (const lvl of LVLS) for (let s = 1; s <= Math.max(N, NA); s++) {
@@ -209,6 +210,7 @@ if (!IS_WORKER && import.meta.main) {
     jobs.forEach((j, i) => { if (j.tag.kind === 'none' || j.tag.kind === 'half') ref.set(key(j.tag, j.tag.kind), res[i]); });
     const rows = [];
     for (const def of ['east', 'west']) for (const k of Object.keys(SAM).filter((q) => SAM[q].side === def && SAM_COST[q])) {
+      if (ONLY && !ONLY.includes(k)) { const o = OLD && OLD.rows.find((r) => r.k === k); if (o) rows.push(o); continue; }
       const row = { def, k, cost: SAM_COST[k], era: SAM[k].era, lvl: {} };
       for (const lvl of LVLS) {
         const kill = [], car = [], save = [], add = [], lost = [], ik = {}, kxN = [], kxV = [], kxCar = [];
@@ -232,7 +234,7 @@ if (!IS_WORKER && import.meta.main) {
       row.save = mean(LVLS.map((l) => row.lvl[l].save)); row.add = mean(LVLS.map((l) => row.lvl[l].add)); row.kxV = mean(LVLS.map((l) => row.lvl[l].kxV));
       rows.push(row);
     }
-    const refs = {}; for (const def of ['east', 'west']) for (const lvl of LVLS) for (const kind of ['none', 'half']) { const a = [...ref].filter(([q]) => q.startsWith(`${kind}|${def}|${lvl}|`)).map(([, r]) => r.value); refs[`${kind}-${def}${lvl}`] = { v: mean(a), sd: sd(a) }; }
+    const refs = { ...(OLD && OLD.refs) }; for (const def of ['east', 'west']) for (const lvl of LVLS) for (const kind of ['none', 'half']) { const a = [...ref].filter(([q]) => q.startsWith(`${kind}|${def}|${lvl}|`)).map(([, r]) => r.value); if (a.length) refs[`${kind}-${def}${lvl}`] = { v: mean(a), sd: sd(a) }; } // сторону без перемеренных ЗРК (SAMK) не гоняли — эталон прежний
     Deno.writeTextFileSync(OUT, JSON.stringify({ N, rows, refs }, null, 1));
     console.log('без ПВО / половина ПВО уровня:', Object.entries(refs).map(([k, b]) => `${k} ${b.v.toFixed(0)}`).join(' · '));
     console.log('ПВО    ключ       цена  один: сбил(2/3/4) носит. сберёг(2/3/4)   | в ослабленной ПВО: сбил (2/3/4), их сила (2/3/4), сберёг (2/3/4)');

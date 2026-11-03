@@ -418,10 +418,10 @@ Object.assign(SAM, {
   // Hawk XXI (2026-10-22 вместо Sevom Khordad — модель 42manako «не своя»): модернизация Hawk — ракеты MIM-23K, РЛС обнаружения Sentinel,
   // цифровое управление; модель — пусковая Hawk (Dominik Biały), место в дереве и балансе — как у «Хордада»
   hawk21: { name: 'Hawk XXI', short: 'Hawk XXI', side: 'west', era: 4, type: 'sarh', rwr: 'H21', hp: 45, channels: 2,
-    radar: { range: 40000, acq: 3, doppler: true, clutter: 15, mast: 5, band: 'J' }, rmin: 2500, rmax: 30000, hmin: 30, hmax: 18000, react: 5, salvo: 2, ammo: 3, reload: 50, eccm: 0.65,
+    radar: { range: 40000, acq: 3, doppler: true, clutter: 15, mast: 5, band: 'J' }, rmin: 2500, rmax: 30000, hmin: 30, hmax: 18000, react: 5, salvo: 2, ammo: 8 /* своя пусковая с 8 направляющими (Mark 2026-11-03: «8 ракет, остальное как есть»); было 3 */, reload: 50, eccm: 0.65,
     msl: { acc: 110, burn: 5, sustain: { acc: 18, t: 18 }, kd: 0.9, g: 18, vmin: 260, life: 45, blast: 30, dmg: 105, L: 5.1, r: 0.18, color: 0xe6e6e6 },
-    guide: 'Модернизированный Hawk: те же три ракеты на пусковой, но новые MIM-23K, РЛС Sentinel и цифровое управление — два канала, лучше против помех и низколетящих целей. Полуактивная ГСН — цель нужно подсвечивать до попадания.',
-    specs: [['Страна', 'США / Норвегия'], ['Наведение', 'полуактивное, непрерывный подсвет'], ['Ракеты', 'MIM-23K'], ['Дальность', 'до ≈ 45 км (в игре меньше)']] },
+    guide: 'Модернизированный Hawk: восемь ракет на пусковой, РЛС Sentinel и цифровое управление — два канала, лучше против помех и низколетящих целей. Полуактивная ГСН — цель нужно подсвечивать до попадания.',
+    specs: [['Страна', 'США / Норвегия'], ['Наведение', 'полуактивное, непрерывный подсвет'], ['Ракет на пусковой', '8'], ['Дальность', 'до ≈ 45 км (в игре меньше)']] },
   tunguska: { name: '2К22 «Тунгуска»', short: 'Тунгуска', side: 'east', era: 3, type: 'command', rwr: 'ТНГ', hp: 45, channels: 1, optTrack: 8000,
     radar: { range: 18000, acq: 2.5, doppler: true, clutter: 5, mast: 4, band: 'E' }, rmin: 2500, rmax: 8000, hmin: 15, hmax: 3500, react: 6, salvo: 1, ammo: 8, reload: 60, eccm: 0.55,
     msl: { acc: 250, burn: 2.6, kd: 1.3, g: 18, vmin: 300, life: 16, blast: 9, dmg: 55, L: 2.56, r: 0.085, color: 0xd8d8d0 },
@@ -678,7 +678,7 @@ export const MULTI = {
   cap: { shahed: 12, uav_w: 12, kh55d: 8, quail: 8, kh55: 10, kh555: 10, kalibr: 10, kh101: 10, agm86: 10, slam: 10, tomahawk: 10, storm: 10, jassm: 10, jsow: 10, sdb: 10 },
   samCost: { s75: 50, s125: 100, kub: 130, osa: 270, strela10: 70, strela2: 30, igla: 130, s300: 300, buk: 240, tor: 420, iglas: 160, s400: 360, bukm3: 420, torm2: 280,
     pantsir: 230, verba: 200, tunguska: 230, hawk: 250, m163: 80, roland: 370, gepard: 210, stinger: 160, patriot: 400, avenger: 250, pac3: 330, nasams: 550, rapier: 190,
-    skyguard: 200, sampt: 630, hawk21: 370, chaparral: 120, phalanx: 80 },
+    skyguard: 200, sampt: 630, hawk21: 430 /* замер стенда с 8 ракетами (SAMK=hawk21): сила 56,5 → 65,5 (+16 %), было 370 (Mark 2026-11-03: «430 и 370 по замеру») */, chaparral: 120, phalanx: 80 },
   samCap: { s75: 2, s300: 2, s400: 2, hawk: 2, patriot: 2, pac3: 2, sampt: 2, strela2: 12, igla: 12, iglas: 12, verba: 12, stinger: 12 },
   samOff: ['gpsjam', 'gpsjamw', 'strela1', 'zu23', 'zsu234', 'redeye'],
 };
@@ -766,7 +766,7 @@ export function loadoutEq(L) {
 }
 export const loadoutTargets = (L) => Math.max(1, Math.min(3, Math.round(loadoutEq(L) / STRIKE_TGT_EU)));
 // индексы подвесок стороны и первая подходящая (если выбранная — чужой стороны)
-export const loadoutsOf = (era, side) => LOADOUTS[era].map((L, i) => [L, i]).filter(([L]) => L.side === side);Object.assign(SAM_COST, { s300: 420, buk: 300, tor: 230, iglas: 65, patriot: 420, avenger: 120, s400: 480, bukm3: 340, torm2: 260, pantsir: 280, verba: 75, pac3: 460, nasams: 320, iris: 330, skynex: 180, gpsjam: 150, gpsjamw: 150 , tunguska: 230, sampt: 470, hawk21: 320, skyguard: 120, rapier: 170 });
+export const loadoutsOf = (era, side) => LOADOUTS[era].map((L, i) => [L, i]).filter(([L]) => L.side === side);Object.assign(SAM_COST, { s300: 420, buk: 300, tor: 230, iglas: 65, patriot: 420, avenger: 120, s400: 480, bukm3: 340, torm2: 260, pantsir: 280, verba: 75, pac3: 460, nasams: 320, iris: 330, skynex: 180, gpsjam: 150, gpsjamw: 150 , tunguska: 230, sampt: 470, hawk21: 370 /* 8 ракет вместо 3: +16 % по замеру силы (было 320) */, skyguard: 120, rapier: 170 });
 // комплексы без готовых моделей — выведены из игры (вернутся, если найдутся модели; их описание и пусковые остались)
 // MIM-72 Chaparral (модель TankLord, 2026-10-19): Sidewinder на гусеничном M730 — запад, эпоха I
 Object.assign(SAM, { chaparral: { name: 'MIM-72 Chaparral', short: 'Chaparral', side: 'west', era: 1, type: 'ir', rwr: null, hp: 28, optical: 8000,
