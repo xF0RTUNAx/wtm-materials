@@ -453,7 +453,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
   };
   $('mbFold').onclick = () => { snd.click(); mbOpen(!$('mbtns').classList.contains('open')); };
   mbOpen(false);
-  function render() { renderModeSel(); renderPlay(); renderStats(); renderPg(); if (C.account) C.account.render(); if (C.rating) C.rating.touch(); if (C.shop) C.shop.touch(); } // аккаунт игры и рейтинг — в углу меню
+  function render() { renderModeSel(); renderPlay(); renderStats(); renderPg(); if (C.account) C.account.render(); if (C.rating) C.rating.touch(); if (C.shop) C.shop.touch(); if (C.quests) C.quests.touch(); } // аккаунт игры и рейтинг — в углу меню
   $('weatherChip').textContent = `${trIf(C.W.name)} · ${C.P.name}`;
   render(); renderRef(); renderGuide(); showTip(false);
   // подложка карт: районы и крупные дома (общая для карты вылета и тактической карты обороны)

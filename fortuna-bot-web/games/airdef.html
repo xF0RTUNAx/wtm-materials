@@ -63,6 +63,11 @@
     background: rgba(16,20,15,.88); border: 1px solid #e8b04a; color: #f3c96f; font: 500 15px 'Oswald', -apple-system, sans-serif; letter-spacing: .03em; cursor: pointer; }
   #resBtn:hover { background: #232a1c; } #resBtn .ic { width: 30px; height: 30px; }
   /* событие «Туманная топь» (event.js): оранжевая кнопка рядом с «Исследованиями», после конца события скрыта */
+  #qstBtn { display: none; position: relative; flex-direction: row; align-items: center; gap: 9px; text-align: left; padding: 6px 12px 6px 10px; background: rgba(16,20,15,.88); border: 1px solid #e8b04a; color: #f3c96f; font: 500 15px 'Oswald', -apple-system, sans-serif; letter-spacing: .03em; cursor: pointer; }
+  #qstBtn .tx { display: flex; flex-direction: column; } #qstBtn .ic { width: 30px; height: 30px; flex: none; } #qstBtn small { font: 600 11.5px 'Golos Text', sans-serif; letter-spacing: 0; color: #d9d6cb; margin-top: 2px; white-space: nowrap; font-variant-numeric: tabular-nums; } #qstBtn:hover { background: #232a1c; }
+  #qstBtn .sg3 { display: flex; flex-direction: column; gap: 2px; } #qstBtn .sg3 i { display: block; width: 18px; height: 8px; background: url(airdef/ui/quests/seg_off.webp) center / 100% 100%; } #qstBtn .sg3 i.on { background-image: url(airdef/ui/quests/seg_on.webp); } #qstBtn .sg3 i.ok { background-image: url(airdef/ui/quests/seg_green.webp); }
+  #qstBtn .dot { display: none; position: absolute; right: -7px; top: -7px; min-width: 18px; height: 18px; padding: 0 4px; background: #c8372d; color: #fff; font: 700 11.5px/18px 'Golos Text', sans-serif; text-align: center; border-radius: 9px; box-shadow: 0 1px 3px rgba(0,0,0,.6); }
+  @media (max-height: 460px) { #qstBtn { padding: 4px 9px 4px 8px; font-size: 13px; gap: 7px; } #qstBtn .ic { width: 24px; height: 24px; } #qstBtn small { font-size: 10.5px; } #qstBtn .sg3 i { width: 14px; height: 6px; } }
   #evtBtn { display: none; flex-direction: row; align-items: center; gap: 9px; text-align: left; padding: 6px 16px 6px 10px; background: rgba(28,17,10,.9); border: 1px solid #e2762c; color: #ff9a3c; font: 500 15px 'Oswald', -apple-system, sans-serif; letter-spacing: .03em; cursor: pointer; }
   #evtBtn .tx { display: flex; flex-direction: column; } #evtBtn .ic { width: 30px; height: 30px; flex: none; } #evtBtn small { font: 600 11.5px 'Golos Text', sans-serif; letter-spacing: 0; color: #e9c9a8; margin-top: 2px; } #evtBtn:hover { background: #3a2210; }
   /* «Рейтинг» (rating-ui.js): верхняя в столбике, разметка как у соседних; справа — место сезона */
@@ -793,9 +798,10 @@
   <div id="menuBg" aria-hidden="true"><div class="mbi"></div><div class="mbi"></div></div>
   <div id="mbtns"><button id="mbFold" aria-expanded="false" title="Разделы: исследования, событие, рейтинг, магазин"><span id="mbFoldIco"></span></button>
     <button id="resBtn" style="--i:1" title="Исследования: дерево техники"><span id="resIco"></span><b>Исследования</b></button>
-    <button id="evtBtn" style="--i:2" title="Событие: вертолёты над «Туманной топью»"><span id="evtIco"></span><span class="tx"><b>Туманная топь</b><small id="evtLeft"></small></span></button>
-    <button id="ratBtn" style="--i:3" title="Рейтинг: таблица сезона"><span id="ratIco"></span><span class="tx"><b>Рейтинг</b><small id="ratSub"></small></span><i class="pl" id="ratPl"></i></button>
-    <button id="shopBtn" style="--i:4" title="Магазин: окраски сезона за кристаллы"><span id="shopIco"></span><span class="tx"><b>Магазин</b><small id="shopSub">окраски сезона</small></span><img class="thumb" src="airdef/shop/e_mig31_dragon_s.webp" alt=""></button></div>
+    <button id="qstBtn" style="--i:2" title="Задания: ежедневные и еженедельные"><span id="qstIco"></span><span class="tx"><b>Задания</b><small id="qstSub"></small></span><span class="sg3" id="qstSeg"></span><i class="dot" id="qstDot"></i></button>
+    <button id="evtBtn" style="--i:3" title="Событие: вертолёты над «Туманной топью»"><span id="evtIco"></span><span class="tx"><b>Туманная топь</b><small id="evtLeft"></small></span></button>
+    <button id="ratBtn" style="--i:4" title="Рейтинг: таблица сезона"><span id="ratIco"></span><span class="tx"><b>Рейтинг</b><small id="ratSub"></small></span><i class="pl" id="ratPl"></i></button>
+    <button id="shopBtn" style="--i:5" title="Магазин: окраски сезона за кристаллы"><span id="shopIco"></span><span class="tx"><b>Магазин</b><small id="shopSub">окраски сезона</small></span><img class="thumb" src="airdef/shop/e_mig31_dragon_s.webp" alt=""></button></div>
   <nav class="mrail" aria-label="Режимы игры">
     <div class="mlogo">AIR SUPERIORITY</div>
     <div class="accBox" id="accBox"></div>
