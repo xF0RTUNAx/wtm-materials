@@ -821,6 +821,8 @@ CONFIG.nasams_lo = { ...CONFIG.nasams, target: 12000, simpErr: 0.05, tex: () => 
 CONFIG.tor_lo = { ...CONFIG.tor, target: 12000, simpErr: 0.05, tex: () => 512, nTex: null, perTriComp: false, groups: (c) => torPart(c, false) };
 CONFIG.torm2_lo = { ...CONFIG.torm2, src: `${DL}/Свои/Тор-М2/torm2_lo.glb`, tex: () => 512, nTex: null, groups: (c) => torm2Part(c, false) }; // «Тор-М2»: дальняя сборщика (60 тыс.)
 CONFIG.buk_lo = { ...CONFIG.buk, src: `${DL}/Свои/Бук-М1/buk_lo.glb`, tex: () => 512, nTex: null }; // «Бук-М1»: дальняя сборщика (69 тыс.)
+// 9М38М1 на пусковой издали (дальше 400 м, как buk_lo; Mark 2026-11-03: «облегченные модели ракет бука для дальнего плана»): 8,9 тыс. → ≈ 1,2 тыс., цвет 256, без нормалей
+CONFIG.msl_buk_lo = { ...CONFIG.msl_buk, target: 1200, simpErr: 0.01, tex: () => 256, nTex: null };
 // С-300 (своя): дальняя копия — облегчённая сборщиком (61 тыс.), цвет 512, без нормалей; домкраты и цилиндр — свои части (двигаются и вдали)
 CONFIG.s300_lo = { ...CONFIG.s300, src: `${DL}/Свои/С-300/s300_lo.glb`, tex: () => 512, nTex: null, groups: (c) => s300Part(c, false) };
 // С-400 — копия нашей С-300 (сборщик объектов, Свои/С-400, 2026-11-02; Mark: «с-400 готов»): те же узлы и шарниры (ПАСПОРТ.json), + запаска в корзине

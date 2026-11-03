@@ -415,6 +415,7 @@ const GLB_V_OWN = {
   buk: '20261103a', // «Бук-М1» — своя СОУ 9А310М1 (Свои/Бук-М1) вместо колёсного «Бука» azlan; ракета 9М38М1 — своя (Свои/9М38М1)
   buk_lo: '20261103a',
   msl_buk: '20261103a',
+  msl_buk_lo: '20261103b', // 9М38М1 на пусковой издали (1,2 тыс. треугольников)
   torm2: '20261103a', // «Тор-М2» — своя БМ (Свои/Тор-М2), натуральный размер; ракета 9М338К (Свои/9М338К)
   torm2_lo: '20261103a',
   msl_torm2: '20261103a',
@@ -793,6 +794,8 @@ export function unitMissileGlb(key, noLoad) {
 export const isObjModel = (name) => !!(META[name] && META[name].obj);
 export function objModel(name) { return LOADED[name] ? LOADED[name].clone() : null; }
 export const isUnitModel = (name) => { const b = name.replace(/_lo$/, ''); return !!(META[b] && (META[b].units || META[b].launcher || META[b].inTube || META[b].onRail)); }; // пришла — пересобрать машины (inTube — ракеты в их контейнерах, onRail — на направляющих)
+// ракета на направляющей издали («Бук-М1»: дальняя копия msl_buk_lo — машина дальше 400 м) — копия или null (ещё не пришла)
+export function samMissileLo(key) { const n = SAMMSL[key], M = n && LOADED[n + '_lo']; return M ? M.clone() : null; }
 // ракета в контейнере (С-300: видна сверху через открытую крышку) — только носовая часть len м от носа (−Z): геометрия общая с моделью,
 // треугольников — доля (4 целые 9М83 на пусковую — 75 тыс.). Копия или null (модель ракеты ещё не пришла)
 const NOSE = {};
@@ -849,7 +852,7 @@ export const anyModel = (name) => (LOADED[name] ? LOADED[name].clone() : null);
 // расчёт ПЗРК — тяжёлый (6–7 МБ, ~50 тыс. треугольников на экране; ревью 2026-10-27): на телефоне — только когда камера близко (wantUnitNear),
 // издали — процедурные солдаты (ПЗРК там почти не видно)
 const NEAR_ONLY = new Set(['crew_e', 'crew_w']);
-export function wantUnit(key) { const n = UMODEL[key], sm = SAMMSL[key]; if (sm && BASE && META[sm].lazy) start(sm); if (n && BASE) { if (UNIT_LO.has(n)) start(n + '_lo'); if (!TOUCH || !(UNIT_LO.has(n) || NEAR_ONLY.has(n))) start(n); } } // сначала лёгкая дальняя копия; lazy-ракета комплекса (9М83) — только в бою с ним
+export function wantUnit(key) { const n = UMODEL[key], sm = SAMMSL[key]; if (sm && BASE && META[sm].lazy) start(sm); if (sm && BASE && META[sm].onRail) start(sm + '_lo'); if (n && BASE) { if (UNIT_LO.has(n)) start(n + '_lo'); if (!TOUCH || !(UNIT_LO.has(n) || NEAR_ONLY.has(n))) start(n); } } // сначала лёгкая дальняя копия; lazy-ракета комплекса (9М83) — только в бою с ним
 export function wantUnitNear(key) { const n = UMODEL[key]; if (n && BASE && !LOADING.has(n)) start(n); }
 // дома города вблизи — по запросу (на слабом пресете не грузятся); bldModel — загруженная модель (общая, не копия)
 export function wantBuildings(names) { if (BASE) for (const [n, m] of Object.entries(META)) if (m.bld && (!names || names.includes(n))) start(n); } // names — только модели этой карты (зимний лес городу не нужен и наоборот)

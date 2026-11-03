@@ -28,7 +28,7 @@ import { createRaid } from './sim/raid.js?v=20261102b';
 import { POD, RAIL, podLift } from './sim/combined.js?v=20261102b';
 import { unitModel, weaponGeo, samMissileMesh, mountWpnFlame, narMesh, flameOf, wpnNozzle, strikerGeo, createFx, attachFlames } from './units-render.js?v=20261102b';
 import { slotCount, LNCH, lnchToWorld, cylPose } from './launchers.js?v=20261102b';
-import { spinProps as spinRotors, spinSails, modelStats, loadModels, planeModel, heliModel, classOfRole, weaponMesh, pylonMesh, unitModelGlb, unitMissileGlb, samNose, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, wantUnitNear, bldModel, wantBuildings, wantModel, wantWeapon, weaponPending, anyModel, setWings, glideWings, planeMeta } from './models.js?v=20261102b';
+import { spinProps as spinRotors, spinSails, modelStats, loadModels, planeModel, heliModel, classOfRole, weaponMesh, pylonMesh, unitModelGlb, unitMissileGlb, samMissileLo, samNose, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, wantUnitNear, bldModel, wantBuildings, wantModel, wantWeapon, weaponPending, anyModel, setWings, glideWings, planeMeta } from './models.js?v=20261102b';
 import { planeDamageVis, updateDebris, clearDebris } from './plane-damage.js?v=20261102b';
 import { createSound } from './sound.js?v=20261102b';
 import { ico, iconize } from './icons.js?v=20261102b';
@@ -424,8 +424,13 @@ C.syncUnits = function () {
         }
         // ракеты модели на направляющих — в слотах (пустой слот прячется, как у процедурных)
         if (gm && gm.missile) for (const sp of Ld.slots) { const q = new THREE.Group(); obj(gm.missile.clone(), q); if (gm.booster) obj(gm.booster.clone(), q); q.position.fromArray(sp); cg.add(q); slots.push(q); }
-        // «Бук-М1»: в модели пусковой ракет нет — целая своя ракета (msl_buk) в каждом слоте; пришла позже — машина пересоберётся (models.js isUnitModel)
-        if (gm && !gm.missile && md.LN.railMsl) for (const sp of Ld.slots) { const q = unitMissileGlb(u.key, true); if (!q) break; obj(q.missile, cg); q.missile.position.fromArray(sp); slots.push(q.missile); }
+        // «Бук-М1»: в модели пусковой ракет нет — целая своя ракета (msl_buk) в каждом слоте, дальше 400 м — облегчённая (msl_buk_lo, как сама машина);
+        // пришла позже — машина пересоберётся (models.js isUnitModel)
+        if (gm && !gm.missile && md.LN.railMsl) for (const sp of Ld.slots) {
+          const q = unitMissileGlb(u.key, true); if (!q) break; const lo = samMissileLo(u.key);
+          let o = q.missile; if (lo) { o = new THREE.LOD(); o.addLevel(q.missile, 0); o.addLevel(lo, 400); }
+          obj(o, cg); o.position.fromArray(sp); slots.push(o);
+        }
         // С-300: ракеты 9М83 в контейнерах — носы (видны через открытую крышку); дальше 400 м — пусто (как крышки: models.js near)
         if (gm && md.LN.inTube) for (const sp of Ld.slots) { const q = samNose(u.key, 2.2); if (!q) break; const L = new THREE.LOD(); obj(q, L); L.addLevel(q, 0); L.addLevel(new THREE.Object3D(), 400); L.position.fromArray(sp); cg.add(L); slots.push(L); }
         if (md.slotGeo && !gm) for (const sp of Ld.slots) { const sm = new THREE.Mesh(md.slotGeo, md.LN.box ? unitMat : wMat); sm.position.fromArray(sp); cg.add(sm); slots.push(sm); }
