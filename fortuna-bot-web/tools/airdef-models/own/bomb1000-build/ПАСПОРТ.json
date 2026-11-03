@@ -1,0 +1,17 @@
+{
+ "key": "w_bomb1000",
+ "weapon": "bomb1000",
+ "name": "AN-M65A1",
+ "rev": 1,
+ "files": {
+  "glb": "bomb1000.glb",
+  "blend": "bomb1000.blend",
+  "build": [
+   "build.py",
+   "m65_geo.py",
+   "bake.py",
+   "_collide.py",
+   "deliver.py"
+  ]
+ }
+}

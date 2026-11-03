@@ -9,7 +9,6 @@
 - "FAB-100-120" (https://sketchfab.com/3d-models/fab-100-120-38f8bd043c854b9ab648e824ed812ffd) by 4ikalka — CC-BY-4.0 — `w_fab100.glb`
 - "OFAB-250-270" (https://sketchfab.com/3d-models/ofab-250-270-7276306219f5499296979764c3c50fe2) by 4ikalka — CC-BY-4.0 — `w_ofab250.glb`
 - "Fab-250| The soviet aviation bomb" (https://sketchfab.com/3d-models/fab-250-the-soviet-aviation-bomb-a85096c0d7594e5e9cc4551fcd59fdfd) by CATholic — CC-BY-4.0 — `w_fab250.glb`
-- "FAB-1000" (https://sketchfab.com/3d-models/fab-1000-c4db2a615b35417ca4f620af8658d97f) by United4192 — CC-BY-4.0 — `w_fab1000.glb`
 - "Low Poly GBU-24 laser guided bomb (окраска и запекание)" (https://sketchfab.com/3d-models/low-poly-gbu-24-laser-guided-bomb-8dcd4a634e924a52ab05d4e90b3e3e82) by AnirudhRao — CC-BY-4.0 — `w_gbu24.glb`
 - "US Weapon Pack" (https://sketchfab.com/3d-models/us-weapon-pack-c0783151b0024554a97d8ed6e5082745) by Rhine_Lab_Muelsyse — CC-BY-4.0 — `aam_aim7.glb`, `aam_aim9x.glb`
 - "Russian weapon pack" (https://sketchfab.com/3d-models/russian-weapon-pack-af00b7135a184ecfb2812a0e54458a8a) by Rhine_Lab_Muelsyse — CC-BY-4.0 — `aam_r73.glb`, `aam_r77.glb`, `aam_r27.glb`, `aam_r33.glb`
@@ -68,7 +67,6 @@
 - "Avro698" (https://sketchfab.com/3d-models/avro698-5259b4b3852a4cb4ad4b1745913ed039) by manilov.ap — CC-BY-4.0 — `e_vulcan.glb`
 - "J35" (https://sketchfab.com/3d-models/j35-3d6ddbf606dc4047a15d37f4d5ac56ca) by manilov.ap — CC-BY-4.0 — `e_draken.glb`
 - "Ja37" (https://sketchfab.com/3d-models/ja37-de85a256699d44d486ea3560f47ce3a1) by manilov.ap — CC-BY-4.0 — `e_viggen.glb`
-- "AN-M65A1" (https://sketchfab.com/3d-models/an-m65a1-11ece2bb4a4f4716bc02402d616ffc19) by United4192 — CC-BY-4.0 — `w_bomb1000.glb`
 - "Sukhoi Su-33 Сухой Су-33" (https://sketchfab.com/3d-models/sukhoi-su-33-33-d80603a8a13b49bda90f19d80cac61d4) by andertan — CC-BY-4.0 — `e_su33.glb`
 - "M4" (https://sketchfab.com/3d-models/m4-65059c25184c48c5b6a1b9ac27d34db6) by manilov.ap — CC-BY-4.0 — `e_m4.glb`
 - "Mikoyan-Gurevich MiG-19" (https://sketchfab.com/3d-models/mikoyan-gurevich-mig-19-9204188bf7114b90904c35f64a110ed3) by Tom Zimmermann — CC-BY-4.0 — `e_mig19.glb`

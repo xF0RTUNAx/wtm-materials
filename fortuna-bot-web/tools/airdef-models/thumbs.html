@@ -65,7 +65,7 @@ async function objOf(n) {
   const k = n.item || n.key;
   if (BALL[k]) { wantModel(BALL[k]); const o = await wait(() => anyModel(BALL[k])); if (o) return o; }
   if (ICON[k]) { wantModel(ICON[k]); const o = await wait(() => anyModel(ICON[k])); if (o) return o; }
-  wantWeapon(k); await wait(() => !weaponPending(k), 60); const w = weaponMesh(k, AG[k], weaponGeo, wMat); setWings(w, 1); // планирующие — с раскрытыми крыльями
+  wantWeapon(k); await wait(() => !weaponPending(k), 60); const w = weaponMesh(k, AG[k], weaponGeo, wMat); setWings(w, 1); if (w.userData.flip) w.rotateZ(Math.PI); // планирующие — с раскрытыми крыльями; УМПК висит крыльями вниз, а летит вверх (glideWings) — на значке крыльями вверх
   // НАР со своей моделью ракеты (w_nar_<ключ>): блок и ракета под ним — как ПЗРК: труба и ракета рядом
   if (AG[k] && AG[k].kind === 'rocket') { wantModel('w_nar_' + k); const rk = await wait(() => anyModel('w_nar_' + k), 40);
     if (rk) { const g = new THREE.Group(); g.add(w); w.updateMatrixWorld(true); const b = new THREE.Box3().setFromObject(w), rb = new THREE.Box3().setFromObject(rk);

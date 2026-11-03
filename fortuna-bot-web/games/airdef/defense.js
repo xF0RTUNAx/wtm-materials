@@ -1657,7 +1657,9 @@ export function createDefense(C) {
     focus: () => (st.op ? st.op.pos : st.watch ? st.watch.pos : camera.position),
     skip3D: () => st.view !== 'op' && st.view !== 'watch',
     fps60: true, // оборона и «Мульти-волна» (одиночные и онлайн) — предел кадров как во всей игре (Mark 2026-10-25), без 30 к/с для 3D
-    near: () => (st.view === 'watch' ? 1 : 0),
+    // сопровождение — ближняя плоскость по расстоянию до цели (камера в 15–140 м): с постоянным 1 м баллистика с высоты в десятки км теряла точность глубины — вода «Туманной топи» мерцала;
+    // и не дальше половины высоты над крышей / склоном (камера проходит в 2 м над ними — край кадра не срезать)
+    near: () => (st.view === 'watch' && st.watch ? clamp(Math.min(camera.position.distanceTo(WCAM.at || st.watch.pos) * 0.2, (camera.position.y - city.topAt(camera.position.x, camera.position.z)) * 0.5), 1, 20) : 0),
     timeK: () => (st.phase === 'wave' && !st.over && !st.net ? st.timeK : 1),
     resize() { sizeMap(); },
     finish: (why) => finish(why, null),

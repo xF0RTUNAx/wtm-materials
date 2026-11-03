@@ -194,7 +194,7 @@ const META = {
   w_fab100: { weapon: 'fab100', stations: [], matte: true }, // ФАБ-100 — 4ikalka
   w_ofab250: { weapon: 'ofab250', stations: [], matte: true }, // ОФАБ-250-270 — 4ikalka
   w_fab250: { weapon: 'fab250', stations: [], matte: true }, // ФАБ-250 — CATholic
-  w_fab1000: { weapon: 'fab1000', stations: [], matte: true }, // ФАБ-1000 — United4192
+  w_fab1000: { weapon: 'fab1000', stations: [], matte: true }, // ФАБ-1000 — собственная модель (tools/airdef-models/own/fab1000)
   w_gbu24: { weapon: 'gbu24', stations: [] }, // GBU-24 Paveway III — AnirudhRao, своя окраска и запекание (Свои/GBU-24)
   w_gbu57: { weapon: 'gbu57', stations: [] }, // GBU-57 — собственная модель (tools/airdef-models/own/gbu57)
   w_umpk: { weapon: 'umpk', wings: 'fold', flip: true, stations: [] }, // ФАБ-500 с УМПК — собственная модель (tools/airdef-models/own/umpk)
@@ -204,7 +204,7 @@ const META = {
   w_kh25ml: { weapon: 'kh25ml', stations: [] }, // Х-29 (Novia556) в размер Х-25МЛ (прежняя Х-38 — из War Thunder)
   w_kh58: { weapon: 'kh58', stations: [] }, // Х-58У — Narni_Tchereskov
   w_agm65b: { weapon: 'agm65b', stations: [], recolor: { GREEN: 0x252912, SILVER: 0x6e6e6e, BROWN: 0x2a1a0e, BLACK: 0x0c0c0c } }, // AGM-65 — HEAVYCLOUD (одна из трёх, 60 тыс. треугольников); у авторов цвета почти чёрные (recolor, линейные)
-  w_bomb1000: { weapon: 'bomb1000', stations: [], matte: true }, // AN-M65A1 1000 lb — United4192
+  w_bomb1000: { weapon: 'bomb1000', stations: [], matte: true }, // AN-M65A1 — собственная модель (tools/airdef-models/own/bomb1000)
   w_mk82: { weapon: 'mk82', stations: [] }, // Mk 83 → размер Mk 82 — набор NETRUNNER_pl
   w_jassm: { weapon: 'jassm', stations: [] }, // AGM-158 JASSM
   w_agm88: { weapon: ['agm88', 'aargm'], stations: [] }, // AGM-88 HARM (с тележки) — и для AARGM
@@ -429,6 +429,8 @@ const GLB_V_OWN = {
   torm2_lo: '20261103a',
   msl_torm2: '20261103a',
   l_lance: '20261025s', // M752 — своя пусковая Lance (сборщик, Свои/M752 ревизия 2): трап и стрела поднимаются перед пуском (sim/combined.js POD.l_lance)
+  w_bomb1000: '20261103f',
+  w_fab1000: '20261103g',
 };
 GLB_V.e_f15e = '20261024g'; // заглушки в соплах — тёмные (prepare.js #soot), 2026-10-22
 // «Оса-М» ЗИФ-122 (KoreanNavy) и «Бук-М3» (Valera121) вместо моделей Jeyhun1985 (2026-10-22): новые файлы
@@ -688,6 +690,12 @@ async function load(name, base) {
     const c = part.userData.hub ? new THREE.Vector3(...part.userData.hub) : new THREE.Box3().setFromObject(part).getCenter(new THREE.Vector3());
     for (const m of part.children) m.geometry.translate(-c.x, -c.y, -c.z);
     part.position.copy(c); part.userData.sail = 1;
+  }
+  // крыльчатки взрывателей бомбы (части vane / vane2 — AN-M65A1): ось — продольная (Z) через центр крыльчатки; после сброса крутит spinVanes
+  for (const part of group.children.filter((c) => /^vane2?$/.test(c.name))) {
+    const c = new THREE.Box3().setFromObject(part).getCenter(new THREE.Vector3());
+    for (const m of part.children) m.geometry.translate(-c.x, -c.y, -c.z);
+    part.position.copy(c); part.userData.vane = part.name === 'vane2' ? -1 : 1; group.userData.vanes = true;
   }
   // крылья планирующих бомб (части wing*): своя ось поворота (вертикальная) — у корня по передней кромке; у цельного крыла
   // поперёк бомбы (УМПК) — посередине. wa — [угол на подвеске, угол в полёте]: сложенное лежит вдоль бомбы назад,
@@ -966,6 +974,11 @@ function propSetup(obj) {
   return L;
 }
 // крылья мельницы: w — рад/с (по умолчанию ≈ 1 оборот за 18 с); вызывать для группы постройки (obj_mill) — крутятся все части sail внутри
+// крыльчатки взрывателей сброшенной бомбы: набегающий поток раскручивает их за 1,5 с до 5 об/с (носовая и хвостовая — в разные стороны)
+export function spinVanes(obj, dt) {
+  const u = obj.userData, w = 31 * Math.min(1, (u.vaneT = (u.vaneT || 0) + dt) / 1.5);
+  obj.traverse((o) => { if (o.userData.vane) o.rotation.z += o.userData.vane * w * dt; });
+}
 export function spinSails(obj, dt, w = 0.35) { obj.traverse((o) => { if (o.userData.sail) o.rotation.z -= dt * w; }); }
 // thr — газ 0…1 (у вертолёта винт крутится и на малом газу); рулевой винт — вдвое быстрее несущего
 export function spinProps(obj, dt, thr = 1) {

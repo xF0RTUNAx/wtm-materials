@@ -1459,6 +1459,9 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
   // река: тёмная вода, волны, отражение неба, блик солнца
   const WM = AUT ? autumnWaterMask(city) : null; // осень: вода болота — по маске (где вода), а не вдоль реки
   const wm = new THREE.MeshPhongMaterial({ color: lin(AUT ? 0x141710 : 0x1a2e3a), specular: lin(W.sun).multiplyScalar(W.sunVis ? 1.2 : 0.2), shininess: 260 });
+  // болото: дно в 1,5 м под водой, берег — в 0,5 м над ней; издалека (камера за баллистикой в десятках км) шаг глубины — метры, вода и дно мерцали.
+  // Сдвиг глубины на несколько шагов к камере: вблизи — доли миллиметра (не видно), вдали — вода всегда поверх дна (берег — по маске воды)
+  if (WM) Object.assign(wm, { polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -4 });
   wm.onBeforeCompile = (s) => {
     Object.assign(s.uniforms, ENV, { tWN: TEX.tWN, uTexOn: TEX.uTexOn }, WM ? { tWM: { value: WM.tex }, uWM: { value: WM.rect } } : {});
     s.vertexShader = 'varying vec3 vWp;\n' + s.vertexShader.replace('#include <project_vertex>', '#include <project_vertex>\n vWp = (modelMatrix * vec4(transformed, 1.0)).xyz;');
