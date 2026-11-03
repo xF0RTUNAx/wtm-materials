@@ -32,6 +32,7 @@ async function unitObj(key) {
   await wait(() => unitModelGlb(key), 60); const gm = unitModelGlb(key), g = new THREE.Group();
   const mesh = (geo, p) => p.add(new THREE.Mesh(geo, unitMat));
   if (gm) g.add(gm.body); else if (md.body) mesh(md.body, g);
+  if (gm && md.LN && md.LN.shut) gm.sh.forEach((s, i) => { const P = md.LN.shut.piv[i]; if (!s || !P) return; const pv = new THREE.Group(); s.position.set(-P[0], -P[1], -P[2]); pv.add(s); pv.position.fromArray(P); pv.rotation.x = md.LN.shut.open; g.add(pv); }); // «Тор-М2»: шторки окон открыты, как в бою
   if (md.dish && !gm) { const d = new THREE.Mesh(md.dish, unitMat); d.position.set(md.dishXZ[0], md.dishY, md.dishXZ[1]); g.add(d); }
   const tur = [];
   if (md.LN) for (const Ld of md.LN.L) {
@@ -39,16 +40,18 @@ async function unitObj(key) {
     if (gm) { if (gm.turret) tg.add(gm.turret.clone()); if (gm.cradle) cg.add(gm.cradle.clone()); }
     else { if (md.turret) mesh(md.turret, tg); const lg = launcherGlb(key); if (lg) { cg.add(lg); lg.position.set(Ld.slots[0][0], Ld.slots[0][1] - 0.06, Ld.slots[0][2]); } else if (md.cradle) mesh(md.cradle, cg); }
     if (gm && gm.missile) for (const sp of Ld.slots) { const q = new THREE.Group(); q.add(gm.missile.clone()); if (gm.booster) q.add(gm.booster.clone()); q.position.fromArray(sp); cg.add(q); }
+    if (gm && !gm.missile && md.LN.railMsl && await wait(() => unitMissileGlb(key, true), 60)) for (const sp of Ld.slots) { const q = unitMissileGlb(key, true).missile; q.position.fromArray(sp); cg.add(q); } // «Бук-М1»: своя ракета msl_buk на направляющих
     if (md.slotGeo && !gm) for (const sp of Ld.slots) { const sm = new THREE.Mesh(md.slotGeo, md.LN.box ? unitMat : wMat); sm.position.fromArray(sp); cg.add(sm); }
     if (gm && gm.lids) for (const l of gm.lids) if (l) { const q = l.clone(); if (md.LN.blowLids) q.position.set(-Ld.cp[0], -Ld.cp[1], -Ld.cp[2]); ((md.LN.lids && md.LN.lids.onPack) || md.LN.blowLids ? cg : tg).add(q); } // крышки ячеек «Тора» и контейнеров NASAMS — закрыты, в осях башни; С-300 и Patriot — на пакете (Patriot: lid* в осях башни — сдвиг на −cp)
     if (gm && gm.tdish) tg.add(gm.tdish.clone()); // антенна сопровождения «Тора» — в положении покоя
     tg.rotation.y = md.LN.yaw0 || 0; cg.rotation.x = md.LN.el ?? 0.35; tg.add(cg); g.add(tg); tur.push(tg); // как стоит в бою (sim/strike.js: lyaw, lel)
   }
   if (gm && gm.radar) (tur.length ? tur[0] : g).add(gm.radar.clone()); // без башни (Sentinel) — антенна на машине
-  if (gm && md.LN && md.LN.erect) { // С-300: как в бою — домкраты на земле, цилиндр выдвинут к поднятому пакету
-    const E = md.LN.erect; for (const j of gm.jacks) if (j) { j.position.y = -E.jack; g.add(j); }
+  const F = md.LN && md.LN.fold; if (gm && F && gm.rfold && tur.length) { const H = F.hinge, fp = new THREE.Group(); gm.rfold.position.set(-H[0], -H[1], -H[2]); fp.add(gm.rfold); fp.position.fromArray(H); fp.rotation.x = F.angle; tur[0].add(fp); } // «Тор-М2»: антенна обнаружения поднята
+  if (gm && md.LN && (md.LN.erect || md.LN.lift)) { // С-300: как в бою — домкраты на земле, цилиндр выдвинут к поднятому пакету; «Бук-М1» — цилиндр к пакету под углом значка
+    const E = md.LN.erect || md.LN.lift; for (const j of gm.jacks) if (j) { j.position.y = -E.jack; g.add(j); }
     [E, E.cyl2].filter(Boolean).forEach((cy, k) => { // Patriot — ещё подкос (cyl3…5)
-      const A = cy.cylA, q = cylPose(md.LN, md.LN.el, cy), pv = new THREE.Group(); pv.position.fromArray(A); pv.rotation.x = q.rot; g.add(pv);
+      const A = cy.cylA, q = cylPose(md.LN, md.LN.el ?? 0.35, cy), pv = new THREE.Group(); pv.position.fromArray(A); pv.rotation.x = q.rot; g.add(pv);
       gm.cyl.slice(k * 3, k * 3 + 3).forEach((c, i) => { if (!c) return; c.position.set(-A[0], -A[1], -A[2]); const w = new THREE.Group(); w.add(c); w.position.fromArray(q.dir).multiplyScalar(q.ext * i / 2); pv.add(w); });
     });
     if (E.mast && gm.mast) gm.mast.forEach((m) => { if (m) g.add(m); }); // Patriot: мачта на значке опущена — тонкий штырь 11 м мельчит машину в кадре

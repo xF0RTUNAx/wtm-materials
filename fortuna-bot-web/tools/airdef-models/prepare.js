@@ -332,6 +332,15 @@ const CONFIG = {
   tor: { src: new URL('./own/tor.glb', import.meta.url).pathname, scale: 1, nose: '-z', rulesIn: 'game', unit: true, own: true, perTri: true, tex: () => 2048, nTex: () => 1024, pickMesh: /./,
     tpFix: [0, 2.523, -0.37], perTriComp: true, groups: (c) => torPart(c, true) },
   msl_tor: { src: new URL('./own/msl_tor.glb', import.meta.url).pathname, scale: 1, nose: '-z', own: true, tex: () => 512, nTex: () => 512, pickMesh: /./ }, // ракета 9М331 — своя (сборщик, Свои/9М331), корпус 2,9 м
+  // «Тор-М2» — своя БМ 9А331М (сборщик, Свои/Тор-М2, 2026-11-03; Mark: «модель Тор-М2 готова»), натуральный размер (корпус 7,6 м). Оси сборщика без
+  // центровки; части — torm2Part: turret/* — башня (ось tp (0; 1,95; 0,5)), radar — стакан антенны обнаружения (крутится), radar_fold → rfold —
+  // сама антенна: в файле сложена, поднимается на −96° вокруг X на шарнире 0,22 м над осью стакана (main.js radarFold); dish_track → dish —
+  // антенна сопровождения (tdish); lid0…15 — крышки 16 ячеек (петля по переднему краю, launchers.js TORM2.lids); shutter0/1 → sh0/sh1 —
+  // броне-шторки окон кабины (в бою открыты — main.js). Дальняя — torm2_lo сборщика (60 тыс.): антенна сопровождения и крышки — в башне
+  torm2: { src: `${DL}/Свои/Тор-М2/torm2.glb`, scale: 1, nose: '-z', rulesIn: 'game', unit: true, own: true, tex: (m) => (m.name === 'TM_R' ? 1024 : 2048),
+    nTex: (m) => (m.name === 'TM_R' ? 512 : 1024), pickMesh: /./, axisX: 0, axisZ: 0, ground: 0, tpFix: [0, 1.95, 0.5], groups: (c) => torm2Part(c, true) },
+  // ракета 9М338К — своя (сборщик, Свои/9М338К): 2,85 м, Ø 0,175, нос −Z; рули раскрыты (в ячейке не видна)
+  msl_torm2: { src: `${DL}/Свои/9М338К/msl_torm2.glb`, scale: 1, nose: '-z', own: true, tex: () => 512, pickMesh: /./ },
   // «Панцирь-С1» на КамАЗ-6560 — SanderWolf (CC BY 4.0), переделан в Blender (Свои/Панцирь, README.md): цвет и карта нормалей запечены в 2048 (материал PS_paint), 87 тыс. треугольников — без упрощения вблизи (pantsir_lo — дальняя);
   // pantsir_game.glb = pantsir_baked.glb + asset.extras оригинала (для титров; python3 -I glb_extras.py). Метры, нос −Z, начало — ось симметрии, середина длины, низ колёс y = 0; части — по именам объектов:
   // body — шасси и кунг, turret — башня (погон: ось x 0, y 2,805, z 2,218), cradle — две 2А38М и рамы люлек, missile — 12 ТПК 57Э6 (6 на борт: две колонки × 3 ряда; в игре — часть cradle: контейнеры остаются на месте после пуска, ракета вылетает из них, а «missile» у игры — модель самой ракеты), radar — антенна обзора на мачте (ось 0; 2,878; 3,419);
@@ -596,10 +605,16 @@ const CONFIG = {
   pr_wbins: { src: `${DL}/garbage_bin.glb`, scale: 0.01, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, target: 3000, groups: () => 'body' }, // баки у дома
   // ── зенитные комплексы: unit — земля в y = 0, центр по корпусу; groups — корпус / башня (азимут) / пакет (угол места);
   // hinge — ось качания пакета в осях модели; simplify — доля треугольников после упрощения (meshoptimizer)
-  // 9К37 «Бук» (колёсный, на шасси МЗКТ) — azlan (CC BY; 2026-10-19): одна текстура на всё; пусковая у автора поднята и смотрит назад
-  buk: { src: `${DL}/buk_missile_system.glb`, scale: 1, nose: '-z', unit: true, tex: () => 1024, hinge: [0, 4.0, 4.7], // правила — в осях автора (кабина в −z, палуба y 3,4)
-    groups: (c) => ((c.size[0] < 0.5 && c.size[1] > 4 && c.size[2] > 4.5) || (c.size[0] < 0.25 && c.ctr[1] > 4.5 && c.ctr[2] > 3.4 && Math.max(...c.size) < 2) ? 'missile' /* четыре 9М38 с крыльями */
-      : c.min[1] > 3.5 && c.ctr[1] > 4.4 && c.ctr[2] > 1.5 && (c.size[0] > 2.5 || Math.abs(Math.abs(c.ctr[0]) - 1.5) < 0.1) ? 'cradle' /* пусковая рама и её цапфы */ : 'body') },
+  // 9К37М1 «Бук-М1» — своя СОУ 9А310М1 на ГМ-569 (сборщик, Свои/Бук-М1, 2026-11-03; Mark: «модель Бук-М1 готова») вместо колёсного «Бука» azlan.
+  // Метры, нос −Z, земля y = 0, оси сборщика без центровки; части — bukPart: turret_* — башня с РЛС 9С35 (ось tp (0; 2,064; 0,85)), cradle_* — пакет
+  // на шарнире (0; 3,16; 5,05), в файле лежит (угол места 0, pack0); cyl_barrel / cyl_rod1 / cyl_rod2 → cyl0…2 — гидроцилиндр подъёма на башне
+  // (launchers.js buk.lift, main.js как у Patriot). Ракет в модели нет — 9М38М1 своя (msl_buk), игра ставит её в слоты. Окраска — побелка потёртая (4а).
+  // Атласы H (корпус), T (башня, пакет) — цвет 2048 / нормали 1024, R (ходовая) — вдвое меньше; дальняя — buk_lo сборщика (69 тыс.)
+  buk: { src: `${DL}/Свои/Бук-М1/buk.glb`, scale: 1, nose: '-z', rulesIn: 'game', unit: true, own: true, tex: (m) => (m.name === 'BK_R' ? 1024 : 2048),
+    nTex: (m) => (m.name === 'BK_R' ? 512 : 1024), pickMesh: /./, axisX: 0, axisZ: 0, ground: 0, hinge: [0, 3.16, 5.05], tpFix: [0, 2.064, 0.85], pack0: 0,
+    groups: (c) => bukPart(c) },
+  // ракета 9М38М1 — своя (сборщик, Свои/9М38М1): 6,2 м, Ø 0,4, нос −Z, крылья и рули «×» неподвижны; на пусковой — 4 в слотах (main.js railMsl)
+  msl_buk: { src: `${DL}/Свои/9М38М1/msl_buk.glb`, scale: 1, nose: '-z', own: true, tex: () => 1024, nTex: () => 512, pickMesh: /./ },
   // ЗУ-23-2 — LuckySkink9661 (CC BY; 2026-10-19), в боевом положении (колёса подняты); без упрощения (256 тыс.); правила — в осях автора
   // (стволы — в +x, платформа y 0,26–0,38): верхний станок с сиденьями крутится, качающаяся часть — спарка с магазинами на цапфах y 1,05
   zu23: { src: `${DL}/fdae5a37901941fea3a02578506072a3.glb`, scale: 1, nose: '+x', unit: true, tex: () => 512, hinge: [0.02, 1.05, 0],
@@ -773,6 +788,20 @@ function gepardPart(c, near) {
   if (/(^|\/)dish/.test(p)) return near ? 'dish' : 'turret';
   return /(^|\/)cradle/.test(p) ? 'cradle' : /(^|\/)radar/.test(p) ? 'radar' : /(^|\/)turret/.test(p) ? 'turret' : 'body';
 }
+// «Бук-М1»: пакет и цилиндр — дети башни (turret_main/cradle_*, turret_main/cyl_*): сначала они, потом башня; штоки — по последнему узлу пути
+function bukPart(c) {
+  const p = c.path, Y = [...p.matchAll(/(?:^|\/)cyl_(barrel|rod1|rod2)/g)].pop(); if (Y) return 'cyl' + ['barrel', 'rod1', 'rod2'].indexOf(Y[1]);
+  return /(^|\/)cradle_/.test(p) ? 'cradle' : /(^|\/)turret_/.test(p) ? 'turret' : 'body';
+}
+// «Тор-М2»: антенна обнаружения — стакан radar и сама антенна radar_fold (ребёнок стакана: сначала она); вдали тарелка и крышки — в башне
+function torm2Part(c, near) {
+  const p = c.path, S = p.match(/(^|\/)shutter(\d)/); if (S) return 'sh' + S[2];
+  if (/(^|\/)radar_fold/.test(p)) return 'rfold';
+  if (/(^|\/)radar/.test(p)) return 'radar';
+  if (/(^|\/)dish_track/.test(p)) return near ? 'dish' : 'turret';
+  const L = p.match(/(^|\/)lid(\d+)/); if (L) return near ? 'lid' + L[2] : 'turret';
+  return /(^|\/)turret/.test(p) ? 'turret' : 'body';
+}
 // ПВО: дальние копии (_lo) — main.js рисует их дальше 400 м (THREE.LOD по частям: корпус, башня, пакет)
 const SAM_LO = ['osa', 'bukm3', 's125', 'gepard', 'ew_e', 'tor', 'pantsir', 'sampt', 'tunguska', 'skyguard', 'rapier', 'zsu234', 'm163', 'chaparral', 'avenger'];
 for (const k of SAM_LO) CONFIG[k + '_lo'] = { ...CONFIG[k], target: k === 'tor' || k === 'pantsir' ? 15000 : 20000, simpErr: 0.05, tex: () => 256, nTex: null };
@@ -790,6 +819,8 @@ CONFIG.ew_w_lo = { ...CONFIG.ew_w, target: 15000, simpErr: 0.05, tex: () => 512,
 // «Тор-М1» (своя, 68 тыс.): дальняя копия — 12 тыс., цвет 512 (камуфляж — в цвете), без нормалей, тарелка и крышки — в башне
 CONFIG.nasams_lo = { ...CONFIG.nasams, target: 12000, simpErr: 0.05, tex: () => 512, nTex: null, groups: (c) => nasamsPart(c, false) }; // NASAMS: дальняя — 12 тыс., крышки закрыты
 CONFIG.tor_lo = { ...CONFIG.tor, target: 12000, simpErr: 0.05, tex: () => 512, nTex: null, perTriComp: false, groups: (c) => torPart(c, false) };
+CONFIG.torm2_lo = { ...CONFIG.torm2, src: `${DL}/Свои/Тор-М2/torm2_lo.glb`, tex: () => 512, nTex: null, groups: (c) => torm2Part(c, false) }; // «Тор-М2»: дальняя сборщика (60 тыс.)
+CONFIG.buk_lo = { ...CONFIG.buk, src: `${DL}/Свои/Бук-М1/buk_lo.glb`, tex: () => 512, nTex: null }; // «Бук-М1»: дальняя сборщика (69 тыс.)
 // С-300 (своя): дальняя копия — облегчённая сборщиком (61 тыс.), цвет 512, без нормалей; домкраты и цилиндр — свои части (двигаются и вдали)
 CONFIG.s300_lo = { ...CONFIG.s300, src: `${DL}/Свои/С-300/s300_lo.glb`, tex: () => 512, nTex: null, groups: (c) => s300Part(c, false) };
 // С-400 — копия нашей С-300 (сборщик объектов, Свои/С-400, 2026-11-02; Mark: «с-400 готов»): те же узлы и шарниры (ПАСПОРТ.json), + запаска в корзине
@@ -1271,7 +1302,7 @@ function articulate(cfg, byMat, shift, ax) {
   // расчёт ПЗРК: th0…5 — головы наводчика по позам угла места (части башни), ca0…5 — его руки (части пакета, уже в осях пакета при угле 0);
   // второй номер — своя башня turret1 (ось tp1) и рука cs0…2 (шарнир hinge1) — в осях модели, без центровки (axisX, ground, axisZ — 0)
   if (cfg.tp1) for (const m of byMat.values()) if (m.group === 'turret1' || /^cs\d+$/.test(m.group)) { const o = m.group === 'turret1' ? cfg.tp1 : cfg.hinge1; for (let i = 0; i < m.pos.length; i += 3) { m.pos[i] -= o[0]; m.pos[i + 1] -= o[1]; m.pos[i + 2] -= o[2]; } }
-  const T = [...byMat.values()].filter((m) => m.group === 'turret' || m.group === 'radar' || m.group === 'dish' || /^lid\d/.test(m.group) || /^th\d+$/.test(m.group)), K = [...byMat.values()].filter((m) => m.group === 'cradle' || m.group === 'missile' || /^ca\d+$/.test(m.group));
+  const T = [...byMat.values()].filter((m) => m.group === 'turret' || m.group === 'radar' || m.group === 'dish' || m.group === 'rfold' || /^lid\d/.test(m.group) || /^th\d+$/.test(m.group)), K = [...byMat.values()].filter((m) => m.group === 'cradle' || m.group === 'missile' || /^ca\d+$/.test(m.group));
   if (!T.length && !K.length) return; // машина целиком
   if (!K.length && T.every((m) => m.group === 'radar')) return; // только антенна обзора без башни (Sentinel): в осях модели, игра крутит её вокруг оси опоры
   // основание башни: нижние 0,5 м её вершин

@@ -398,6 +398,8 @@ C.syncUnits = function () {
       const obj = (o, parent) => { o.traverse((q) => { if (q.isMesh && !q.userData.glass) { q.castShadow = !!P.shadows; q.receiveShadow = !!P.shadows; } }); parent.add(o); return o; };
       // готовая модель (корпус, башня, пакет — РЛС на башне) или процедурная
       if (gm) obj(gm.body, g); else if (md.body) mesh(md.body, g);
+      // «Тор-М2»: броне-шторки окон кабины в бою открыты — поворот вокруг X на петлях shut.piv (в осях машины)
+      if (gm && md.LN && md.LN.shut) gm.sh.forEach((s, i) => { const P = md.LN.shut.piv[i]; if (!s || !P) return; const pv = new THREE.Group(); obj(s, pv); pv.position.fromArray(P); s.position.set(-P[0], -P[1], -P[2]); pv.rotation.x = md.LN.shut.open; g.add(pv); });
       if (md.dish && !gm) { const d = mesh(md.dish, g); d.position.set(md.dishXZ[0], md.dishY, md.dishXZ[1]); g.userData.dish = d; }
       // пусковые: башня (азимут) → качающаяся часть (угол места) → ракеты / крышки контейнеров по слотам
       const tur = [], slots = [];
@@ -422,6 +424,8 @@ C.syncUnits = function () {
         }
         // ракеты модели на направляющих — в слотах (пустой слот прячется, как у процедурных)
         if (gm && gm.missile) for (const sp of Ld.slots) { const q = new THREE.Group(); obj(gm.missile.clone(), q); if (gm.booster) obj(gm.booster.clone(), q); q.position.fromArray(sp); cg.add(q); slots.push(q); }
+        // «Бук-М1»: в модели пусковой ракет нет — целая своя ракета (msl_buk) в каждом слоте; пришла позже — машина пересоберётся (models.js isUnitModel)
+        if (gm && !gm.missile && md.LN.railMsl) for (const sp of Ld.slots) { const q = unitMissileGlb(u.key, true); if (!q) break; obj(q.missile, cg); q.missile.position.fromArray(sp); slots.push(q.missile); }
         // С-300: ракеты 9М83 в контейнерах — носы (видны через открытую крышку); дальше 400 м — пусто (как крышки: models.js near)
         if (gm && md.LN.inTube) for (const sp of Ld.slots) { const q = samNose(u.key, 2.2); if (!q) break; const L = new THREE.LOD(); obj(q, L); L.addLevel(q, 0); L.addLevel(new THREE.Object3D(), 400); L.position.fromArray(sp); cg.add(L); slots.push(L); }
         if (md.slotGeo && !gm) for (const sp of Ld.slots) { const sm = new THREE.Mesh(md.slotGeo, md.LN.box ? unitMat : wMat); sm.position.fromArray(sp); cg.add(sm); slots.push(sm); }
@@ -444,8 +448,9 @@ C.syncUnits = function () {
       if (md.LN && md.LN.erect && md.LN.mode === 'cold' && C.fx && C.fx.wantLaunch) C.fx.wantLaunch(); // листы старта С-300 / С-400 — только в бою с ними
       // Patriot — так же, плюс подкос (cyl3…5, erect.cyl2) и секции мачты (в модели опущены, поднимаются на erect.mast м); цилиндры и мачта — на
       // поворотной плите (onTur: в группе башни, координаты частей — в осях машины при повороте 0, поэтому сдвиг на −tp)
-      if (gm && md.LN && md.LN.erect) {
-        const E = md.LN.erect, onT = E.onTur && tur.length, host = onT ? tur[0].tg : g, T0 = onT ? md.LN.L[0].tp : [0, 0, 0];
+      // «Бук-М1» — только цилиндр подъёма на башне (lift: без домкратов, угол пакета — наведение)
+      if (gm && md.LN && (md.LN.erect || md.LN.lift)) {
+        const E = md.LN.erect || md.LN.lift, onT = E.onTur && tur.length, host = onT ? tur[0].tg : g, T0 = onT ? md.LN.L[0].tp : [0, 0, 0];
         g.userData.jacks = gm.jacks.filter(Boolean).map((j) => obj(j, g));
         g.userData.cyl = [E, E.cyl2].filter(Boolean).map((c, k) => {
           const ps = gm.cyl.slice(k * 3, k * 3 + 3), A = c.cylA; if (ps.length < 3 || !ps.every(Boolean)) return null;
@@ -453,10 +458,14 @@ C.syncUnits = function () {
           return { c, pv, parts: ps.map((p) => { const q = new THREE.Group(); obj(p, q); p.position.set(-A[0], -A[1], -A[2]); pv.add(q); return q; }) };
         }).filter(Boolean);
         if (E.mast) { const mg = new THREE.Group(); mg.position.set(-T0[0], -T0[1], -T0[2]); host.add(mg); g.userData.mast = gm.mast.map((m) => m && obj(m, mg)); }
-        g.userData.erect = true;
+        g.userData.erect = !!md.LN.erect;
       }
       // антенна обзора (готовая модель): на первой башне (без башни — на машине, Sentinel), ось вращения — центр её опоры (нижние 15 % по высоте)
-      if (gm && gm.radar) { const rd = gm.radar.clone(), pv = new THREE.Group(); obj(rd, pv); (tur.length ? tur[0].tg : g).add(pv); const ax = radarAxis(rd); pv.position.set(ax[0], 0, ax[1]); rd.position.set(-ax[0], 0, -ax[1]); g.userData.radar = pv; }
+      // «Тор-М2»: ось стакана — из паспорта (fold.axis), сама антенна (rfold) — на шарнире fold.hinge в стакане, в модели сложена (radarFold)
+      if (gm && gm.radar) {
+        const rd = gm.radar.clone(), pv = new THREE.Group(), F = md.LN && md.LN.fold; obj(rd, pv); (tur.length ? tur[0].tg : g).add(pv); const ax = F ? F.axis : radarAxis(rd); pv.position.set(ax[0], 0, ax[1]); rd.position.set(-ax[0], 0, -ax[1]); g.userData.radar = pv;
+        if (F && gm.rfold) { const H = F.hinge, fp = new THREE.Group(); obj(gm.rfold, fp); fp.position.set(H[0] - ax[0], H[1], H[2] - ax[1]); gm.rfold.position.set(-H[0], -H[1], -H[2]); pv.add(fp); g.userData.rfold = fp; }
+      }
       g.userData.tur = tur; g.userData.slots = slots; g.userData.nSlots = md.LN ? slotCount(md.LN) : 0;
       if (!P.shadows) addBlob(g); // без карты теней — мягкое пятно под машиной (иначе «висит» над землёй)
       g.rotation.y = u.yaw; scene.add(g); unitMeshes.set(u.id, g); warmSoon(); // его ракета — собрать шейдеры заранее (оборона и онлайн ставят комплексы по ходу)
@@ -491,17 +500,30 @@ function torLids(u, g, dt) {
 }
 // С-300 / С-400: домкраты и гидроцилиндр подъёма (только вид; угол пакета u.lel — из симуляции или снимка сервера). Домкраты внизу, пока РЛС
 // включена или пакет не лёг (как график sim/strike.js erectStep: сначала домкраты, потом пакет; обратно — наоборот), ход — за jk с.
-// Цилиндр — launchers.js cylPose: корпус поворачивается к проушине на стреле, штоки выдвигаются на половину и на всё удлинение
+// Цилиндр — cylView ниже
 function erectView(u, g, dt) {
   const LN = LNCH[u.key], E = LN.erect;
   u.jkV = clamp((u.jkV ?? (u.emit ? 1 : 0)) + ((u.emit && !u.dead) || u.lel > 0.001 ? dt : -dt) / E.jk, 0, 1);
   const s = E.jack * sstep(u.jkV); for (const j of g.userData.jacks) j.position.y = -s;
   const M = g.userData.mast; // Patriot: мачта поднимается за mastT с, пока РЛС включена; выключили — опускается
   if (M) { u.mV = clamp((u.mV ?? (u.emit ? 1 : 0)) + (u.emit && !u.dead ? dt : -dt) / E.mastT, 0, 1); const k = sstep(u.mV); M.forEach((m, i) => { if (m) m.position.y = E.mast[i] * k; }); }
+}
+// гидроцилиндры подъёма (С-300, Patriot, «Бук-М1»): корпус поворачивается к проушине на пакете, штоки выдвигаются на половину и на всё удлинение
+function cylView(u, g) {
+  const LN = LNCH[u.key];
   for (const C of g.userData.cyl) {
     const q = cylPose(LN, u.lel, C.c); C.pv.rotation.x = q.rot;
     C.parts[1].position.fromArray(q.dir).multiplyScalar(q.ext / 2); C.parts[2].position.fromArray(q.dir).multiplyScalar(q.ext);
   }
+}
+// «Тор-М2»: антенна обнаружения поднимается за fold.up с, пока РЛС включена (крутится — уже поднятая); выключили — стакан доворачивает на 0°
+// (как в походе) и антенна складывается за fold.down с. Состояние — на машине (u.rfV): пересборка модели не сбрасывает
+function radarFold(u, g, dt) {
+  const F = LNCH[u.key].fold, R = g.userData.radar, on = u.emit && !u.dead;
+  let v = u.rfV ?? (on ? 1 : 0);
+  if (on) v += dt / F.up;
+  else { const a = Math.atan2(Math.sin(R.rotation.y), Math.cos(R.rotation.y)), w = (RADAR_W[u.key] || 4) * Math.max(0, dt); if (Math.abs(a) > w) R.rotation.y = a - Math.sign(a) * w; else { R.rotation.y = 0; v -= dt / F.down; } }
+  u.rfV = clamp(v, 0, 1); g.userData.rfold.rotation.x = F.angle * sstep(u.rfV);
 }
 // Patriot, PAC-3: крышка ячейки срывается при пуске — ушедших ракет крышек нет до перезарядки (по порядку слотов, как torLids; у PAC-3 слоты
 // в порядке пуска — номер крышки слота в LN.lidOf)
@@ -516,7 +538,7 @@ function torDish(u, g, dt) {
   D.rotation.x += clamp(a - D.rotation.x, -DS.w * dt, DS.w * dt);
 }
 // ось антенны обзора: центр (x, z) вершин её нижней части — опоры или мачты (тарелка бывает смещена от оси)
-const RADAR_W = { gepard: 6.3, tor: 6.3, osa: 3.5, pantsir: 4.2, roland: 6.3, tunguska: 6.3, rapier: 4, gpsjamw: 3.1, gpsjam: 0.63 }; // рад/с: Gepard и «Тор» ≈ 60 об/мин, «Оса» и «Панцирь» — медленнее, Sentinel — 30, П-18 — 6
+const RADAR_W = { gepard: 6.3, tor: 6.3, torm2: 6.3, osa: 3.5, pantsir: 4.2, roland: 6.3, tunguska: 6.3, rapier: 4, gpsjamw: 3.1, gpsjam: 0.63 }; // рад/с: Gepard и «Тор» ≈ 60 об/мин, «Оса» и «Панцирь» — медленнее, Sentinel — 30, П-18 — 6
 function radarAxis(o) {
   o.updateMatrixWorld(true); const V = new THREE.Vector3(), P = [];
   o.traverse((m) => { if (!m.isMesh) return; const a = m.geometry.attributes.position; for (let i = 0; i < a.count; i += 3) { V.fromBufferAttribute(a, i).applyMatrix4(m.matrixWorld); P.push(V.x, V.y, V.z); } });
@@ -853,10 +875,12 @@ function syncWorld(dt, t) {
       const rem = u.reloadT > 0 ? 0 : Math.max(0, Math.round(u.ammo)), fired = u.S.ammo - rem;
       for (let k = 0; k < sl.length; k++) sl[k].visible = (rem >= N || ((k - fired % N) + N) % N < rem) && !(u.slotT[k] > 0);
     }
-    if (g.userData.radar && (u.emit || u.S.type === 'jammer')) g.userData.radar.rotation.y += (RADAR_W[u.key] || 4) * Math.max(0, dt); // крутится, пока РЛС включена (станция РЭБ работает всегда)
+    if (g.userData.rfold) radarFold(u, g, dt);
+    if (g.userData.radar && (u.emit || u.S.type === 'jammer') && !(g.userData.rfold && u.rfV < 1)) g.userData.radar.rotation.y += (RADAR_W[u.key] || 4) * Math.max(0, dt); // крутится, пока РЛС включена (станция РЭБ работает всегда)
     if (g.userData.lids) torLids(u, g, dt);
     if (g.userData.blow) blowLids(u, g);
     if (g.userData.erect) erectView(u, g, dt);
+    if (g.userData.cyl && g.userData.cyl.length) cylView(u, g);
     if (g.userData.tdish) torDish(u, g, dt);
     const d = g.userData.dish; if (!d) continue;
     if (u.track && u.emit) { LP.copy(u.track.pos).sub(u.pos); d.rotation.y = Math.atan2(-LP.x, -LP.z) - u.yaw; }

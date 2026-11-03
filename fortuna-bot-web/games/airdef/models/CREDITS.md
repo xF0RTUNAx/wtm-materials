@@ -178,7 +178,6 @@
 - "Low-poly Urban Street Props Pack (PS1 Style)" (https://sketchfab.com/3d-models/low-poly-urban-street-props-pack-ps1-style-381b65d98a5b4e3886ac2acace7e5c74) by S1lMoon — CC-BY-4.0 — `pr_vend.glb`, `pr_booth.glb`, `pr_bin.glb`
 - "PSX - Vending Machine" (https://sketchfab.com/3d-models/psx-vending-machine-aff31f282155471d8222287596c7ac59) by Kasugay𓅂 — CC-BY-4.0 — `pr_vend2.glb`
 - "Garbage Bin" (https://sketchfab.com/3d-models/garbage-bin-fba6b5a8afdd4eb0a43be29aabceb3d6) by Glen Ortiz — CC-BY-4.0 — `pr_wbins.glb`
-- "BUK Missile System" (https://sketchfab.com/3d-models/buk-missile-system-7663f9fca2ce485da8c0fafcf2d40d10) by azlan — CC-BY-4.0 — `buk.glb`
 - "ZU - 23, зенитная установка, ЗУ-23, зенитка" (https://sketchfab.com/3d-models/zu-23-23-fdae5a37901941fea3a02578506072a3) by LuckySkink9661 — CC-BY-4.0 — `zu23.glb`
 - "Phalanx CIWS (Close-in Weapons System)" (https://sketchfab.com/3d-models/phalanx-ciws-close-in-weapons-system-6c038d4e66634fc4832be5b2d8697a0d) by DenisGLabrecque — CC-BY-4.0 — `phalanx.glb`
 - "Buk-M3" (https://sketchfab.com/3d-models/buk-m3-45c5b29bbdd24177911df65eb825eb28) by Valera121 — CC-BY-4.0 — `bukm3.glb`, `msl_bukm3.glb`, `bukm3_lo.glb`

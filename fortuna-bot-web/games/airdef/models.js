@@ -248,7 +248,8 @@ const META = {
   // зенитные комплексы: корпус / башня / пакет (оси — LNCH в launchers.js, их печатает prepare.js)
   bukm3: { units: ['bukm3'], matte: true, stations: [], camo: { scheme: 'soviet', size: 1.5 } }, // «Бук-М3» — Valera121 (CC BY; без текстур — камуфляж шейдером, колёса и ракеты в ТПК — свои цвета; гусеницы звеньями — prepare.js tracks)
   msl_bukm3: { samMissile: ['bukm3'], matte: true, stations: [] }, // ракета 9М317М — из той же модели (Missile_1), светлая
-  buk: { units: ['buk'], stations: [], matte: true }, // «Бук» (колёсный) — azlan
+  buk: { units: ['buk'], matte: true, stations: [] }, // «Бук-М1» — своя СОУ 9А310М1 на ГМ-569 (сборщик, Свои/Бук-М1, 2026-11-03): пакет на гидроцилиндре, окраска — побелка потёртая
+  msl_buk: { samMissile: ['buk'], lazy: true, onRail: true, matte: true, stations: [] }, // ракета 9М38М1 — своя (Свои/9М38М1), 6,2 м, нос −Z; onRail — четыре на направляющих пусковой (машина пересобирается, когда пришла)
   zu23: { units: ['zu23'], stations: [], matte: true }, // ЗУ-23-2 — LuckySkink9661
   phalanx: { units: ['phalanx'], stations: [] }, // Phalanx — DenisGLabrecque
   // комплексы с ракетами на направляющих: ракета модели — в слотах и в полёте (у С-75 и С-125 — с отделяемым ускорителем)
@@ -275,8 +276,10 @@ const META = {
   strela1: { units: ['strela1'], matte: true, stations: [] }, // «Стрела-1» — своя пусковая 9П31 и ракеты на БРДМ-2 zhek (CC BY 4.0), Свои/Стрела-1; окраска — текстуры основы и запечённый атлас (без камуфляжа шейдером)
   msl_strela1: { samMissile: ['strela1'], matte: true, stations: [] }, // ракета 9М31 — своя (Свои/Стрела-1), 1,8 м, нос −Z
   osa: { units: ['osa'], matte: true, stations: [] }, // ЗИФ-122 «Оса-М» на береговой позиции — KoreanNavy (CC BY)
-  tor: { units: ['tor', 'torm2'], matte: true, stations: [] }, // «Тор-М1» — своя модель (сборщик, Свои/Тор-М1; камуфляж запечён в цвете): обе версии «Тора» пока на ней
-  msl_tor: { samMissile: ['tor', 'torm2'], matte: true, stations: [] }, // ракета 9М331 — своя (Свои/9М331), 2,9 м, нос −Z
+  tor: { units: ['tor'], matte: true, stations: [] }, // «Тор-М1» — своя модель (сборщик, Свои/Тор-М1; камуфляж запечён в цвете)
+  msl_tor: { samMissile: ['tor'], matte: true, stations: [] }, // ракета 9М331 — своя (Свои/9М331), 2,9 м, нос −Z
+  torm2: { units: ['torm2'], matte: true, stations: [] }, // «Тор-М2» — своя БМ (сборщик, Свои/Тор-М2, 2026-11-03), натуральный размер: 16 ячеек с крышками, антенна обнаружения складывается, шторки окон
+  msl_torm2: { samMissile: ['torm2'], lazy: true, matte: true, stations: [] }, // ракета 9М338К — своя (Свои/9М338К), 2,85 м, Ø 0,175, нос −Z
   pantsir: { units: ['pantsir'], matte: true, stations: [] }, // «Панцирь-С1» на КамАЗ-6560 — SanderWolf (CC BY 4.0), переделан в Blender (Свои/Панцирь): камуфляж, затенение и карта нормалей запечены — шейдерного узора нет
   s300: { units: ['s300'], matte: true, stations: [] }, // С-300 — своя пусковая 5П85 на МАЗ-543 (сборщик, Свои/С-300, 2026-10-28) вместо скана Chenzoss: пакет поднимается от РЛС, крышки, домкраты, цилиндр
   s400: { units: ['s400'], matte: true, bright: 2.0, stations: [] }, // С-400 — копия нашей С-300 (сборщик объектов, Свои/С-400, 2026-11-02): запаска в корзине за кабинами, окраска почти чёрная зелень, фары; части и шарниры — те же; bright 2 — почти чёрная краска в игре (ACES давит тёмные) была втрое темнее превью Blender, у С-300 — на 20 %: ×2 даёт то же соотношение (Mark: «почему миниатюра такая чёрная?»)
@@ -409,6 +412,12 @@ const GLB_V_OWN = {
   pac3: '20261102a', // своя PAC-3 вместо M901 Muhamad Mirza Arrafi
   pac3_lo: '20261102a',
   msl_pac3: '20261102a',
+  buk: '20261103a', // «Бук-М1» — своя СОУ 9А310М1 (Свои/Бук-М1) вместо колёсного «Бука» azlan; ракета 9М38М1 — своя (Свои/9М38М1)
+  buk_lo: '20261103a',
+  msl_buk: '20261103a',
+  torm2: '20261103a', // «Тор-М2» — своя БМ (Свои/Тор-М2), натуральный размер; ракета 9М338К (Свои/9М338К)
+  torm2_lo: '20261103a',
+  msl_torm2: '20261103a',
   l_lance: '20261025s', // M752 — своя пусковая Lance (сборщик, Свои/M752 ревизия 2): трап и стрела поднимаются перед пуском (sim/combined.js POD.l_lance)
 };
 GLB_V.e_f15e = '20261024g'; // заглушки в соплах — тёмные (prepare.js #soot), 2026-10-22
@@ -707,7 +716,7 @@ async function load(name, base) {
 // готовая модель комплекса: { body, turret, cradle } (копии) или null — тогда процедурная
 const UMODEL = Object.fromEntries(Object.entries(META).filter(([, m]) => m.units).flatMap(([n, m]) => m.units.map((k) => [k, n])));
 // у тяжёлых моделей ПВО — дальняя копия <имя>_lo: каждая часть (корпус, башня, пакет) — THREE.LOD, ближе 400 м — подробная
-const UNIT_LO = new Set(['nasams', 'bukm3', 's125', 'gepard', 'ew_e', 'ew_w', 's300', 's400', 'patriot', 'pac3', 'tor', 'pantsir', 'sampt', 'tunguska', 'skyguard', 'rapier', 'zsu234', 'm163', 'chaparral', 'avenger', 'strela1']);
+const UNIT_LO = new Set(['nasams', 'buk', 'torm2', 'bukm3', 's125', 'gepard', 'ew_e', 'ew_w', 's300', 's400', 'patriot', 'pac3', 'tor', 'pantsir', 'sampt', 'tunguska', 'skyguard', 'rapier', 'zsu234', 'm163', 'chaparral', 'avenger', 'strela1']);
 export function unitModelGlb(key) {
   const n = UMODEL[key], G = n && (LOADED[n] || LOADED[n + '_lo']), GL = n && LOADED[n] && LOADED[n + '_lo']; if (!G) return null;
   const find = (M, k) => M.children.find((c) => c.name === k);
@@ -723,7 +732,8 @@ export function unitModelGlb(key) {
   return { body: get('body'), turret: get('turret'), cradle: get('cradle'), missile: get('missile'), booster: get('booster'), radar: get('radar'), // radar — антенна обзора на башне (крутится)
     tdish: near('dish'), lids, // «Тор»: антенна сопровождения (качается по углу места цели) и крышки ячеек (lid0…7, открываются к пуску)
     th: seq('th'), ca: seq('ca'), turret1: get('turret1'), cs: seq('cs'), // расчёт ПЗРК: позы наводчика (головы, руки) и второй номер
-    jacks: seq('jack'), cyl: seq('cyl'), mast: seq('mast') }; // С-300: штоки домкратов и гидроцилиндр подъёма (корпус, два штока); Patriot — ещё подкос (cyl3…5) и секции мачты
+    jacks: seq('jack'), cyl: seq('cyl'), mast: seq('mast'), // С-300: штоки домкратов и гидроцилиндр подъёма (корпус, два штока); Patriot — ещё подкос (cyl3…5) и секции мачты
+    rfold: get('rfold'), sh: seq('sh') }; // «Тор-М2»: антенна обнаружения (складывается в стакане radar) и броне-шторки окон кабины
 }
 // летящая ракета — без деталей пусковой, прилипших к ней при подготовке модели (prepare.js: детали пакета у ракеты-образца): связный кусок
 // сетки уходит, если он целиком в одной из коробок [x0, x1, y0, y1, z0, z1] (оси ракеты в группе: +Z — к хвосту). На пусковой — как в модели.
@@ -782,7 +792,7 @@ export function unitMissileGlb(key, noLoad) {
 }
 export const isObjModel = (name) => !!(META[name] && META[name].obj);
 export function objModel(name) { return LOADED[name] ? LOADED[name].clone() : null; }
-export const isUnitModel = (name) => { const b = name.replace(/_lo$/, ''); return !!(META[b] && (META[b].units || META[b].launcher || META[b].inTube)); }; // пришла — пересобрать машины (inTube — ракеты в их контейнерах)
+export const isUnitModel = (name) => { const b = name.replace(/_lo$/, ''); return !!(META[b] && (META[b].units || META[b].launcher || META[b].inTube || META[b].onRail)); }; // пришла — пересобрать машины (inTube — ракеты в их контейнерах, onRail — на направляющих)
 // ракета в контейнере (С-300: видна сверху через открытую крышку) — только носовая часть len м от носа (−Z): геометрия общая с моделью,
 // треугольников — доля (4 целые 9М83 на пусковую — 75 тыс.). Копия или null (модель ракеты ещё не пришла)
 const NOSE = {};

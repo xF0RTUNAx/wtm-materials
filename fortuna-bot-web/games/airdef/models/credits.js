@@ -1637,15 +1637,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "BUK Missile System",
-  "author": "azlan",
-  "url": "https://sketchfab.com/3d-models/buk-missile-system-7663f9fca2ce485da8c0fafcf2d40d10",
-  "license": "CC-BY-4.0",
-  "files": [
-   "buk"
-  ]
- },
- {
   "title": "ZU - 23, зенитная установка, ЗУ-23, зенитка",
   "author": "LuckySkink9661",
   "url": "https://sketchfab.com/3d-models/zu-23-23-fdae5a37901941fea3a02578506072a3",
