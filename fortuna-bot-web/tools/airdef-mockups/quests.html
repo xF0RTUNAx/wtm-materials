@@ -226,6 +226,14 @@ body { margin: 0; background: var(--bg); color: var(--ink); font: 14px 'Golos Te
 .phone .gq { grid-template-columns: 34px minmax(0, 1fr) 132px auto 86px; gap: 8px; padding: 4px 8px 4px 4px; } .phone .gq .d { font-size: 10.5px; margin-top: 0; } .phone .gq .wh { display: none; } .phone .gq .t { font-size: 14.5px; } .phone .gq .no span { display: none; } .phone .gq .no .ic { font-size: 21px; }
 .phone .gq .cnt { font-size: 11px; min-width: 48px; } .phone .gq .rws .rw { font-size: 11px; padding: 1px 5px; } .phone .gq .rws .rw.cx, .phone .gq .rws .pt { display: none; } .phone .gq .take { font-size: 12px; padding: 6px 10px; } .phone .gq .stamp { font-size: 10.5px; }
 .phone .G .list .gq:nth-child(n+4) { display: none; } .phone .G .bon { padding: 3px 10px; } .phone .G .bon .bt { font-size: 13px; } .phone .G .bon .ic { font-size: 22px; }
+/* F с рендером: сводка на кадре из игры («Туманная топь» на закате), путевые точки на местности, фишка — МиГ-31 сверху */
+.G .sum.rnd { padding: 8px 14px 4px; background: linear-gradient(rgba(8,10,7,.72), rgba(8,10,7,0) 38%, rgba(8,10,7,0) 75%, rgba(8,10,7,.45)), var(--rbg) center 64% / cover no-repeat; border-color: #5b5236; }
+.G .sum.rnd .route { height: 150px; } .G .sum.rnd .wp .v, .G .sum.rnd .wp .nm { text-shadow: 0 1px 2px #000, 0 0 6px #000; color: #f1e6c8; } .G .sum.rnd .wp.got .v { color: var(--gold2); }
+.G .wp .nm { position: absolute; bottom: 33px; font: 500 11px 'Golos Text'; white-space: nowrap; letter-spacing: .02em; }
+.G .sum.rnd .wp .dm { box-shadow: 0 2px 6px rgba(0,0,0,.8); } .G .sum.rnd .wp .rw { background: rgba(8,10,7,.78); }
+.G .mig { position: absolute; width: 96px; margin: -4px 0 0 -40px; transform-origin: 50% 50%; filter: drop-shadow(0 8px 6px rgba(0,0,0,.55)); pointer-events: none; }
+.G .mig.sh { margin: 16px 0 0 -36px; filter: blur(3px) brightness(0); opacity: .35; }
+.phone .G .sum.rnd { padding: 4px 10px 0; } .phone .G .sum.rnd .route { height: 78px; } .phone .G .mig { width: 58px; margin: -3px 0 0 -26px; } .phone .G .mig.sh { margin: 10px 0 0 -23px; } .phone .G .wp .nm { display: none; }
 /* список заданий для Mark */
 .pool { max-width: 1240px; padding: 0 max(16px, env(safe-area-inset-left)) 40px; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
 .pool section { background: #11150f; border: 1px solid var(--line); padding: 14px 16px; min-width: 0; }
@@ -234,10 +242,10 @@ body { margin: 0; background: var(--bg); color: var(--ink); font: 14px 'Golos Te
 </style></head>
 <body>
 <div class="bar"><h1>Задания — макеты</h1>
-  <div class="seg" id="vs"><button data-v="menu" class="on">Кнопка в меню</button><button data-v="A">A · Планшет</button><button data-v="B">B · Штаб</button><button data-v="C">C · Лента приказов</button><button data-v="D">D · Трек недели</button><button data-v="F">F · Сводка (свой стиль)</button><button data-v="E">E · Кампании (по образцу WTM)</button></div>
+  <div class="seg" id="vs"><button data-v="menu" class="on">Кнопка в меню</button><button data-v="A">A · Планшет</button><button data-v="B">B · Штаб</button><button data-v="C">C · Лента приказов</button><button data-v="D">D · Трек недели</button><button data-v="R">F · с рендером и МиГ-31</button><button data-v="F">F · Сводка (свой стиль)</button><button data-v="E">E · Кампании (по образцу WTM)</button></div>
   <div class="seg" id="fs"><button data-f="phone" class="on">Телефон</button><button data-f="pc">Компьютер</button></div>
 </div>
-<div class="note" id="note"></div>
+<div class="note" id="note"></div><div class="note" id="rsw" style="display:flex;gap:10px;flex-wrap:wrap"><span class="seg"><button data-mig="mig_top" class="on">МиГ-31 серый</button><button data-mig="mig_drag">«Нефритовый дракон»</button></span><span class="seg"><button data-rbg="route_bog_dusk" class="on">Топь, закат</button><button data-rbg="route_city_day">Город, день</button></span></div>
 <div class="stageWrap"><div class="frame phone" id="frame"><div class="notch"></div><div class="scr" id="scr"></div></div></div>
 <div class="pool" id="pool"></div>
 <script>
@@ -302,6 +310,7 @@ const PW = {
   both: { ic: 'task-online-laurel-crown', t: '6 онлайн-боёв за ПВО и 6 за авиацию', d: 'Онлайн, обе стороны', of: 12, r: { silver: 450, xp: 250 }, pts: 20 },
   backs: { ic: 'daily-sunrise', t: 'Вернуться на аэродром 10 раз', d: '«Вылет» до посадки', of: 10, r: { silver: 350, xp: 200 }, pts: 20 },
 };
+let RND = false, MIG = 'mig_top', RBG = 'route_bog_dusk'; // вариант «F с рендером»: фон сводки — кадр из игры, фишка — МиГ-31 (серый или «Нефритовый дракон»)
 let FT = 'd'; // вкладка варианта F: d — ежедневно, w — еженедельно
 const V = {
   menu: {
@@ -357,15 +366,20 @@ const V = {
         ${Q.map(row).join('')}</div>
         <div class="bnav"><span class="on">${ic('menu-scroll-unfurled')}Задания</span><span>${ic('g_rating')}Рейтинг</span><span>${ic('g_gem')}Магазин</span><span>${ic('task-online-trophy')}Достижения</span></div></div>`; },
   },
+  R: {
+    note: '<b>F с рендером (идея Mark).</b> Та же «Сводка», но полоса сверху — настоящий кадр из игры («Туманная топь» на закате, «Съёмка» с графикой «кино»), путевые точки — места на карте (аэродром, переправа, гать, монастырь, Лысая гора, КП «Погост»), а по маршруту летит МиГ-31 — модель игры сверху в естественных цветах, с тенью на местности. Каждую неделю — новая карта и новый маршрут (город, топь, зима). Переключатели ниже: МиГ-31 серый / «Нефритовый дракон», фон — топь на закате / город днём.',
+    html: () => { RND = true; try { return V.F.html(); } finally { RND = false; } },
+  },
   F: {
     note: '<b>F · Сводка (свой стиль).</b> Сверху — сводка недели: маршрут по тактической сетке, путевые точки — ступени наград за очки (ежедневное задание +10, еженедельное +20; 300 очков — почти все задания недели). Ниже — вкладки-досье «Ежедневно / Еженедельно» с таймером (нажимаются). Задание: трафаретный номер, заголовок, ступень I–III у длинных, сегментная полоса и счётчик рядом с ней (не внутри), скромная награда, «Забрать» или печать «ПОЛУЧЕНО». Внизу — ящик за все три (или кейс за всю неделю).',
     html: () => {
       const W8 = [[0, 'база', null, 'base got'], [60, '60', { silver: 150 }, 'got'], [120, '120', { gem: 1 }, 'got'], [180, '180', { silver: 300 }, 'next'], [240, '240', { silver: 200, xp: 100 }, ''], [300, '300', { gem: 2, silver: 400 }, '']];
-      const PTS = 145, X = (p) => 3 + p / 300 * 94, Y = (i) => [32, 24, 38, 26, 36, 28][i];
+      const PTS = 145, X = (p) => 3 + p / 300 * 94, Y = (i) => RND ? [86, 74, 70, 60, 56, 50][i] : [32, 24, 38, 26, 36, 28][i], U = RND ? '%' : 'px', NM = ['Аэродром', 'Переправа', 'Гать', 'Монастырь', 'Лысая гора', 'КП «Погост»'];
       const pts = W8.map(([p], i) => `${X(p)},${Y(i)}`).join(' '), cur = W8.findIndex(([p]) => p > PTS), p0 = W8[cur - 1][0], p1 = W8[cur][0], k = (PTS - p0) / (p1 - p0), cx = X(PTS), cy = Y(cur - 1) + (Y(cur) - Y(cur - 1)) * k;
       const done = W8.slice(0, cur).map(([p], i) => `${X(p)},${Y(i)}`).concat([`${cx},${cy}`]).join(' ');
-      const route = `<div class="route"><svg viewBox="0 0 100 74" preserveAspectRatio="none"><polyline points="${pts}" fill="none" stroke="rgba(233,230,220,.35)" stroke-width="1.6" stroke-dasharray="3 3" vector-effect="non-scaling-stroke"/><polyline points="${done}" fill="none" stroke="#e8b04a" stroke-width="2.4" vector-effect="non-scaling-stroke"/></svg>
-        ${W8.map(([p, l, r, c], i) => `<span class="wp ${c}" style="left:${X(p)}%;top:${Y(i)}px"><span class="v">${l}</span><span class="dm"></span>${r ? `<span class="wr">${rw(r)}</span>` : ''}</span>`).join('')}<span class="plane" style="left:${cx}%;top:${cy}px">${ic('jet')}</span></div>`;
+      const ang = Math.atan2((Y(cur) - Y(cur - 1)) * (RND ? 1.5 : 0.74), (X(p1) - X(p0)) * 18) * 180 / Math.PI;
+      const route = `<div class="route"><svg viewBox="0 0 100 ${RND ? 100 : 74}" preserveAspectRatio="none"><polyline points="${pts}" fill="none" stroke="rgba(233,230,220,.35)" stroke-width="1.6" stroke-dasharray="3 3" vector-effect="non-scaling-stroke"/><polyline points="${done}" fill="none" stroke="#e8b04a" stroke-width="2.4" vector-effect="non-scaling-stroke"/></svg>
+        ${W8.map(([p, l, r, c], i) => `<span class="wp ${c}" style="left:${X(p)}%;top:${Y(i)}${U}">${RND ? `<span class="nm">${NM[i]}</span>` : ''}<span class="v">${l}</span><span class="dm"></span>${r ? `<span class="wr">${rw(r)}</span>` : ''}</span>`).join('')}${RND ? `<img class="mig sh" src="quests/${MIG}.webp" alt="" style="left:${cx}%;top:${cy}%;transform:translate(-50%,-50%) rotate(${ang}deg)"><img class="mig" src="quests/${MIG}.webp" alt="" style="left:${cx}%;top:${cy}%;transform:translate(-50%,-50%) rotate(${ang}deg)">` : `<span class="plane" style="left:${cx}%;top:${cy}px">${ic('jet')}</span>`}</div>`;
       const seg = (n, of) => { const m = Math.min(of, 10), f = Math.round(m * Math.min(1, n / of)); return `<span class="sg">${Array.from({ length: m }, (_, i) => `<i class="${i < f ? 'f' : ''}"></i>`).join('')}</span>`; };
       const cnt = (n, of) => of >= 10000 ? `<b>${(n / 1000).toLocaleString('ru-RU', { maximumFractionDigits: 1 })}</b> / ${of / 1000} тыс.` : `<b>${n}</b> / ${of}`;
       const card = (q, i) => `<div class="gq ${q.st || ''}"><span class="no"><span>${String(i + 1).padStart(2, '0')}</span>${ic(q.st === 'taken' ? 'done-check-mark' : q.ic)}</span><div class="tx"><div class="t">${q.t}${q.tier ? `<span class="tier">${q.tier}</span>` : ''}</div><div class="d"><span class="wh">засчитывается:</span> ${q.d}</div></div>
@@ -376,13 +390,13 @@ const V = {
       const D = FT === 'd', L = D ? day : week;
       const bon = D ? `<div class="bon">${ic('reward-wooden-crate')}<span class="bt">Ящик снабжения — за все три сегодня</span><span class="s3"><i class="f"></i><i class="f"></i><i></i></span><span class="rws">${rw({ silver: 150 })}</span></div>`
         : `<div class="bon">${ic('reward-chest')}<span class="bt">Кейс недели — за все пять</span><span class="s3"><i class="f"></i><i class="f"></i><i></i><i></i><i></i></span><span class="rws">${rw({ gem: 1, silver: 300 })}</span></div>`;
-      return `<div class="G">${topBar()}<div class="gw"><div class="sum"><div class="sh"><b>Сводка недели</b><span class="pts">${PTS} / 300 очков</span>${timerW}</div>${route}</div>
+      return `<div class="G">${topBar()}<div class="gw"><div class="sum${RND ? ' rnd' : ''}"${RND ? ` style="--rbg:url(quests/${RBG}.webp)"` : ''}><div class="sh"><b>Сводка недели</b><span class="pts">${PTS} / 300 очков</span>${timerW}</div>${route}</div>
         <div class="tabsG"><span data-ft="d" class="${D ? 'on' : ''}"><b>Ежедневно</b><small>2 из 3 · 07:12:45</small></span><span data-ft="w" class="${D ? '' : 'on'}"><b>Еженедельно</b><small>1 из 5 · 3 д 07 ч</small></span></div>
         <div class="list">${L.map(card).join('')}</div>${bon}</div></div>`;
     },
   },
 };
-let v = 'F', f = 'phone';
+let v = 'R', f = 'phone';
 const frame = document.getElementById('frame'), scr = document.getElementById('scr');
 function draw() {
   const [W, H] = f === 'phone' ? [874, 402] : [1280, 720];
@@ -392,6 +406,7 @@ function draw() {
   document.querySelectorAll('#vs button').forEach((b) => b.classList.toggle('on', b.dataset.v === v)); document.querySelectorAll('#fs button').forEach((b) => b.classList.toggle('on', b.dataset.f === f));
 }
 document.getElementById('vs').onclick = (e) => { const b = e.target.closest('button'); if (b) { v = b.dataset.v; draw(); } };
+document.getElementById('rsw').onclick = (e) => { const b = e.target.closest('button'); if (!b) return; if (b.dataset.mig) MIG = b.dataset.mig; if (b.dataset.rbg) RBG = b.dataset.rbg; b.parentElement.querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b)); draw(); };
 scr.onclick = (e) => { const b = e.target.closest('[data-ft]'); if (b) { FT = b.dataset.ft; draw(); } };
 document.getElementById('fs').onclick = (e) => { const b = e.target.closest('button'); if (b) { f = b.dataset.f; draw(); } };
 addEventListener('resize', draw);
