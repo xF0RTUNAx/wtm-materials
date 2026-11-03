@@ -62,6 +62,14 @@
   #resBtn { display: flex; align-items: center; gap: 10px; padding: 9px 16px 9px 12px;
     background: rgba(16,20,15,.88); border: 1px solid #e8b04a; color: #f3c96f; font: 500 15px 'Oswald', -apple-system, sans-serif; letter-spacing: .03em; cursor: pointer; }
   #resBtn:hover { background: #232a1c; } #resBtn .ic { width: 30px; height: 30px; }
+  #resBtn .tx { display: flex; flex-direction: column; text-align: left; } #resBtn small { display: none; font: 600 11.5px 'Golos Text', sans-serif; letter-spacing: 0; color: #8fe0b2; margin-top: 2px; white-space: nowrap; } #resBtn.note { box-shadow: 0 0 10px rgba(108,201,150,.5); }
+  /* табличка разделов: цель исследований готова или есть незабранные задания — светится, покачивается, показывает число (menu.js renderNotice) */
+  #mbFold { position: relative; } #mbFold .nt { display: none; position: absolute; right: -8px; top: -8px; min-width: 20px; height: 20px; padding: 0 5px; background: radial-gradient(circle at 35% 30%, #e8604f, #a8261c 72%); color: #fff; font: 700 12px/20px 'Golos Text', sans-serif; font-style: normal; text-align: center; border-radius: 10px; box-shadow: 0 0 0 1px rgba(255,220,170,.55), 0 1px 4px rgba(0,0,0,.7); }
+  #mbFold.note { border-color: #e8b04a; color: #f3c96f; } #mbFold.note .ic { filter: drop-shadow(0 0 6px rgba(243,201,111,.85)); }
+  #mbFold.note[aria-expanded="false"] { animation: mbBreath 2.6s ease-in-out infinite; } #mbFold.note[aria-expanded="false"] .ic { transform-origin: 50% 85%; animation: mbSway 6s ease-in-out infinite; }
+  @keyframes mbBreath { 0%, 100% { box-shadow: 0 0 6px rgba(232,176,74,.25); } 50% { box-shadow: 0 0 18px 4px rgba(232,176,74,.6), inset 0 0 12px rgba(232,176,74,.22); } }
+  @keyframes mbSway { 0%, 82%, 100% { transform: rotate(0); } 86% { transform: rotate(-9deg); } 90% { transform: rotate(7deg); } 94% { transform: rotate(-4deg); } 97% { transform: rotate(2deg); } }
+  @media (prefers-reduced-motion: reduce) { #mbFold.note[aria-expanded="false"], #mbFold.note[aria-expanded="false"] .ic { animation: none; } #mbFold.note[aria-expanded="false"] { box-shadow: 0 0 14px 3px rgba(232,176,74,.5); } }
   /* событие «Туманная топь» (event.js): оранжевая кнопка рядом с «Исследованиями», после конца события скрыта */
   #qstBtn { display: none; position: relative; flex-direction: row; align-items: center; gap: 9px; text-align: left; padding: 6px 12px 6px 10px; background: rgba(16,20,15,.88); border: 1px solid #e8b04a; color: #f3c96f; font: 500 15px 'Oswald', -apple-system, sans-serif; letter-spacing: .03em; cursor: pointer; }
   #qstBtn .tx { display: flex; flex-direction: column; } #qstBtn .ic { width: 30px; height: 30px; flex: none; } #qstBtn small { font: 600 11.5px 'Golos Text', sans-serif; letter-spacing: 0; color: #d9d6cb; margin-top: 2px; white-space: nowrap; font-variant-numeric: tabular-nums; } #qstBtn:hover { background: #232a1c; }
@@ -98,7 +106,7 @@
   #mbtns:not(.open) > button:not(#mbFold) { opacity: 0; visibility: hidden; pointer-events: none; transform: translateX(calc(var(--i, 1) * -46px)) scale(.6);
     transition: opacity .22s ease, transform .3s cubic-bezier(.5,0,.75,0), visibility 0s linear .3s; }
   @media (max-width: 1000px) { #mbtns { flex-direction: column-reverse; } #mbFold { align-self: flex-start; height: 48px; } #mbtns:not(.open) > button:not(#mbFold) { transform: translateY(calc(var(--i, 1) * 34px)) scale(.6); } } /* узкий экран: справа панель задания — кнопка события над «Исследованиями» */
-  @media (max-height: 460px) { #resBtn { padding: 6px 12px 6px 9px; font-size: 13px; } #resBtn .ic { width: 24px; height: 24px; } #ratBtn { padding: 4px 11px 4px 8px; font-size: 13px; } #ratBtn .ic { width: 24px; height: 24px; } #ratBtn small { font-size: 10.5px; } #ratBtn .pl { font-size: 13px; } .accBox button { padding-top: 3px; padding-bottom: 3px; } .accBox button.xf { padding-bottom: 4px; } #evtBtn { padding: 4px 11px 4px 8px; font-size: 13px; } #evtBtn .ic { width: 24px; height: 24px; } #evtBtn small { font-size: 10.5px; } }
+  @media (max-height: 460px) { #resBtn { padding: 6px 12px 6px 9px; font-size: 13px; } #resBtn .ic { width: 24px; height: 24px; } #resBtn small { font-size: 10.5px; } #ratBtn { padding: 4px 11px 4px 8px; font-size: 13px; } #ratBtn .ic { width: 24px; height: 24px; } #ratBtn small { font-size: 10.5px; } #ratBtn .pl { font-size: 13px; } .accBox button { padding-top: 3px; padding-bottom: 3px; } .accBox button.xf { padding-bottom: 4px; } #evtBtn { padding: 4px 11px 4px 8px; font-size: 13px; } #evtBtn .ic { width: 24px; height: 24px; } #evtBtn small { font-size: 10.5px; } }
   @keyframes scrIn { from { opacity: 0; } to { opacity: 1; } }
   .screen.on > .card { animation: cardIn .28s cubic-bezier(.2,.9,.3,1.2); }
   @keyframes cardIn { from { transform: translateY(14px) scale(.98); opacity: .4; } to { transform: none; opacity: 1; } }
@@ -796,8 +804,8 @@
 <div id="promoNav"><button data-nav="-1" aria-label="Предыдущий план"></button><button data-nav="1" aria-label="Следующий план"></button></div>
 <div class="screen on" id="menu">
   <div id="menuBg" aria-hidden="true"><div class="mbi"></div><div class="mbi"></div></div>
-  <div id="mbtns"><button id="mbFold" aria-expanded="false" title="Разделы: исследования, событие, рейтинг, магазин"><span id="mbFoldIco"></span></button>
-    <button id="resBtn" style="--i:1" title="Исследования: дерево техники"><span id="resIco"></span><b>Исследования</b></button>
+  <div id="mbtns"><button id="mbFold" aria-expanded="false" title="Разделы: исследования, событие, рейтинг, магазин"><span id="mbFoldIco"></span><i class="nt" id="mbNote"></i></button>
+    <button id="resBtn" style="--i:1" title="Исследования: дерево техники"><span id="resIco"></span><span class="tx"><b>Исследования</b><small id="resSub"></small></span></button>
     <button id="qstBtn" style="--i:2" title="Задания: ежедневные и еженедельные"><span id="qstIco"></span><span class="tx"><b>Задания</b><small id="qstSub"></small></span><span class="sg3" id="qstSeg"></span><i class="dot" id="qstDot"></i></button>
     <button id="evtBtn" style="--i:3" title="Событие: вертолёты над «Туманной топью»"><span id="evtIco"></span><span class="tx"><b>Туманная топь</b><small id="evtLeft"></small></span></button>
     <button id="ratBtn" style="--i:4" title="Рейтинг: таблица сезона"><span id="ratIco"></span><span class="tx"><b>Рейтинг</b><small id="ratSub"></small></span><i class="pl" id="ratPl"></i></button>

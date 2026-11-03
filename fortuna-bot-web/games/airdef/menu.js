@@ -16,6 +16,7 @@ import { ECO_SELECT, setAudioEcoMode } from '../drone/audio.js?v=20261103a';
 import { photoItems } from './photo.js?v=20261103a';
 import { guideChapters } from './guide.js?v=20261103a';
 import { iconize, ico, capsHtml } from './icons.js?v=20261103a';
+import { NODE, owned, researched, canBuy, canResearch } from './progress.js?v=20261103a';
 
 const LOC = LANG === 'en' ? 'en-US' : 'ru-RU'; // разделитель тысяч в числах
 const GAMES = [
@@ -453,7 +454,16 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
   };
   $('mbFold').onclick = () => { snd.click(); mbOpen(!$('mbtns').classList.contains('open')); };
   mbOpen(false);
-  function render() { renderModeSel(); renderPlay(); renderStats(); renderPg(); if (C.account) C.account.render(); if (C.rating) C.rating.touch(); if (C.shop) C.shop.touch(); if (C.quests) C.quests.touch(); } // аккаунт игры и рейтинг — в углу меню
+  // табличка разделов (Mark 2026-11-04): число и свечение, если цель исследований готова (хватает опыта или серебра) или есть незабранные задания
+  function renderNotice() {
+    const G = C.progress, P = G && !G.guest && G.P, ready = [];
+    if (P && P.goal) for (const id of Object.values(P.goal)) { if (!id || !NODE[id] || owned(P, id)) continue; if (researched(P, id) ? canBuy(P, id).ok : canResearch(P, id).ok) ready.push(id); }
+    const n = ready.length + (C.quests ? C.quests.pending() : 0), d = $('mbNote'), sub = $('resSub');
+    $('mbFold').classList.toggle('note', n > 0); d.textContent = n || ''; d.style.display = n ? 'block' : 'none';
+    $('resBtn').classList.toggle('note', ready.length > 0); sub.style.display = ready.length ? 'block' : 'none';
+    sub.textContent = !ready.length ? '' : ready.length > 1 ? tr('Целей готово: {0}', [ready.length]) : tr(researched(P, ready[0]) ? 'Можно купить: {0}' : 'Можно исследовать: {0}', [trIf(NODE[ready[0]].short)]);
+  }
+  function render() { renderModeSel(); renderPlay(); renderStats(); renderPg(); if (C.account) C.account.render(); if (C.rating) C.rating.touch(); if (C.shop) C.shop.touch(); if (C.quests) C.quests.touch(); renderNotice(); } // аккаунт игры и рейтинг — в углу меню
   $('weatherChip').textContent = `${trIf(C.W.name)} · ${C.P.name}`;
   render(); renderRef(); renderGuide(); showTip(false);
   // подложка карт: районы и крупные дома (общая для карты вылета и тактической карты обороны)
@@ -593,7 +603,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
   }
   return {
     show() { render(); showTab(); $('menu').classList.add('on'); },
-    render, mapBase, panel,
+    render, notice: renderNotice, mapBase, panel,
     record(game, score, extra = {}) {
       const s = stats(), r = s[game] || { best: 0, runs: 0, waves: 0 };
       r.runs++; r.best = Math.max(r.best, score); if (extra.waves) r.waves = Math.max(r.waves, extra.waves);

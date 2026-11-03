@@ -3,7 +3,6 @@
 // Пока ДЕМО: состояние — в этом браузере, сервер ничего не считает и не начисляет; на сайте кнопка скрыта (видна локально и с ?quests=1).
 import { DAILY, WEEKLY, ROUTE, ROUTE_MAX, DAILY_N, WEEKLY_N, PTS_DAILY, PTS_WEEKLY, CRATE, CASE, pickDaily, pickWeekly, weekTotals } from './quests-data.js?v=20261103a';
 import { QI } from './quest-icons.js?v=20261103a';
-import { eventOn } from './event.js?v=20261103a';
 import { tr, LANG } from './i18n.js?v=20261103a';
 
 const UI = 'airdef/ui/quests/', LOC = LANG === 'en' ? 'en-US' : 'ru-RU';
@@ -42,8 +41,9 @@ const CSS = `
 #quests .tabs { flex: none; display: flex; gap: 6px; height: 40px; align-items: flex-end; border-bottom: 2px solid var(--gold); padding-left: 2px; }
 #quests .tab { position: relative; height: 38px; display: flex; align-items: center; gap: 10px; padding: 0 6px 0 4px; background: none; border-style: solid; border-width: 0 24px; border-image: url(${UI}tab_off.webp) 0 40 fill / 0 24px stretch; color: #d7d5c6; cursor: pointer; white-space: nowrap; }
 #quests .tab.on { border-image-source: url(${UI}tab_on.webp); color: #2a2215; } #quests .tab b { font: 600 16px 'Oswald'; letter-spacing: .12em; text-transform: uppercase; }
-#quests .mk { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 9px; font: 500 13px 'Oswald'; font-variant-numeric: tabular-nums; color: #2a2215; background: linear-gradient(#d9cfae, #bdb18c); box-shadow: 0 1px 3px rgba(0,0,0,.55); } /* временная закладка до рендера сборщика */
-#quests .mk.rdy { color: #fff; background: linear-gradient(#b8382c, #8f2a20); } #quests .mk i { font: 600 14px 'Oswald'; font-style: normal; padding-right: 6px; border-right: 1px solid rgba(255,255,255,.4); }
+#quests .mk { position: relative; flex: none; align-self: flex-start; width: 100px; height: 30px; margin-top: -3px; background: url(${UI}mark_idle.webp) center / 100% 100% no-repeat; font: 500 13px 'Oswald'; font-variant-numeric: tabular-nums; letter-spacing: .02em; color: #f1ecdc; }
+#quests .mk.rdy { background-image: url(${UI}mark_ready.webp); color: #fff4e2; } #quests .mk i, #quests .mk span { position: absolute; top: 0; height: 96%; display: flex; align-items: center; justify-content: center; font-style: normal; white-space: nowrap; }
+#quests .mk span { left: 10%; width: 77.5%; } #quests .mk.rdy span { left: 31.9%; width: 55.6%; } #quests .mk i { left: 11.25%; width: 19.35%; font: 600 14px 'Oswald'; color: #2a2215; }
 #quests .list { flex: 1 1 0; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; display: flex; flex-direction: column; gap: 5px; scrollbar-width: none; } #quests .list::-webkit-scrollbar { display: none; }
 #quests .row { position: relative; flex: none; height: 62px; display: grid; grid-template-columns: 44px minmax(0, 1fr) 214px 178px 124px; gap: 12px; align-items: center; padding: 0 12px 0 8px; border-style: solid; border-width: 14px; border-image: url(${UI}plate.webp) 28 fill / 14px stretch; }
 #quests .row > * { margin: -14px 0; } #quests .row.done { border-image-source: url(${UI}plate_done.webp); }
@@ -75,7 +75,7 @@ const CSS = `
   #quests .sum { height: 92px; padding: 4px 10px; background-size: auto 210px; background-position: center bottom; } #quests .route { top: 22px; bottom: 2px; left: 10px; right: 10px; } #quests .sh b { font-size: 11.5px; } #quests .sh .pts { font-size: 13px; } #quests .sh .pts img { width: 16px; height: 16px; } #quests .sh .tm, #quests .sh .tm b { font-size: 11.5px; }
   #quests .wp img.pin { width: 34px; height: 34px; left: -18px; top: -25px; } #quests .wp .v { top: -33px; font-size: 10.5px; } #quests .wp .wr { top: 8px; } #quests .chip { font-size: 10.5px; padding-right: 4px; } #quests .chip img { width: 14px; height: 14px; }
   #quests .mig img { width: 108px; height: 45px; left: -54px; top: -22.5px; }
-  #quests .list { padding-bottom: 8px; -webkit-mask-image: linear-gradient(#000 calc(100% - 10px), transparent); mask-image: linear-gradient(#000 calc(100% - 10px), transparent); gap: 4px; } #quests .tabs { height: 31px; } #quests .tab { height: 29px; padding: 0 4px 0 2px; gap: 8px; } #quests .mk { height: 22px; padding: 0 6px; font-size: 11px; gap: 4px; } #quests .mk i { font-size: 12px; padding-right: 4px; } #quests .tab b { font-size: 13.5px; }
+  #quests .list { padding-bottom: 8px; -webkit-mask-image: linear-gradient(#000 calc(100% - 10px), transparent); mask-image: linear-gradient(#000 calc(100% - 10px), transparent); gap: 4px; } #quests .tabs { height: 31px; } #quests .tab { height: 29px; padding: 0 4px 0 2px; gap: 8px; } #quests .mk { width: 76px; height: 23px; margin-top: -2px; font-size: 11px; } #quests .mk i { font-size: 12px; } #quests .tab b { font-size: 13.5px; }
   #quests .row { height: 45px; grid-template-columns: 26px minmax(0, 1fr) 112px 132px 88px; gap: 8px; padding: 0 2px 0 0; border-width: 10px; border-image-width: 10px; } #quests .row > * { margin: -10px 0; }
   #quests .no .ic { width: 21px; height: 21px; } #quests .t { font-size: 14.5px; } #quests .d { font-size: 10.5px; margin-top: 0; } #quests .wh { font-size: 9px; } #quests .sg i { height: 11px; } #quests .prog { gap: 6px; }
   #quests .cnt { font-size: 11.5px; min-width: 36px; } #quests .ptc { font-size: 10.5px; padding-right: 3px; } #quests .ptc img { width: 13px; height: 13px; } #quests .rws { gap: 3px; } #quests .take { width: 86px; height: 28px; font-size: 12px; letter-spacing: .1em; } #quests .stamp { width: 86px; height: 33px; margin-right: 0; } #quests .wait { font-size: 11.5px; }
@@ -106,16 +106,16 @@ const rPath = (p) => { const L = []; for (let x = 0; x < p; x += ROUTE_MAX / 150
 const LS = 'fortuna_airdef_quests_demo';
 function freshDemo() {
   const L = (P, ids) => ids.map(([id, n = 0, st = '']) => ({ id, n, st: st || (n >= P[id].of ? 'done' : '') }));
-  return { v: 1, day: 1, week: 1, pts: 130, paid: 2, mig: 'grey', cur: { xp: 3528, silver: 12400, gem: 46 }, crate: '', chest: '',
+  return { v: 2, day: 1, week: 1, pts: 130, paid: 2, mig: 'grey', cur: { xp: 3528, silver: 12400, gem: 46 }, crate: '', chest: '',
     daily: L(DAILY, [['kills', 6], ['strike', 4], ['play3', 3, 'taken']]),
-    weekly: L(WEEKLY, [['play', 11], ['wins', 3], ['downs', 80], ['xp', 14200], ['days', 5, 'taken']]) };
+    weekly: L(WEEKLY, [['play', 11], ['top', 2], ['downs', 80], ['xp', 14200], ['days', 5, 'taken']]) };
 }
 
 export function createQuests(C) {
   const $ = (id) => document.getElementById(id), snd = () => C.snd || null;
   const css = document.createElement('style'); css.textContent = CSS; (document.head || document.body).appendChild(css);
   const root = document.createElement('div'); root.id = 'quests'; if (LANG === 'en') root.classList.add('en'); document.body.appendChild(root);
-  let D = null; try { D = JSON.parse(localStorage.getItem(LS) || 'null'); } catch (_) { /* приватный режим */ } if (!D || D.v !== 1) D = freshDemo();
+  let D = null; try { D = JSON.parse(localStorage.getItem(LS) || 'null'); } catch (_) { /* приватный режим */ } if (!D || D.v !== 2) D = freshDemo();
   const save = () => { try { localStorage.setItem(LS, JSON.stringify(D)); } catch (_) { /* приватный режим */ } };
   const S = { tab: 'd', pop: false, all: false, shown: Math.min(D.pts, ROUTE_MAX), disp: { ...D.cur }, raf: 0, fresh: null };
   const full = (P, q) => ({ ...P[q.id], ...q });
@@ -124,7 +124,7 @@ export function createQuests(C) {
   const doneN = (L) => L.filter((q) => q.st).length;
 
   const row = (q, kind, i) => `<div class="row ${q.st || ''}"><span class="no">${qic(q.st === 'taken' ? 'done-check-mark' : q.ic)}</span>
-    <div class="tx"><div class="t">${tr(q.t)}${q.ev && kind === 'ro' ? `<span class="tag">${tr('только в событие')}</span>` : ''}</div><div class="d"><span class="wh">${tr('засчитывается:')}</span>${tr(q.d)}</div></div>
+    <div class="tx"><div class="t">${tr(q.t)}${q.solo && kind === 'ro' ? `<span class="tag">${tr('не онлайн')}</span>` : ''}</div><div class="d"><span class="wh">${tr('засчитывается:')}</span>${tr(q.d)}</div></div>
     <span class="prog">${seg(q)}<span class="cnt">${cnt(q)}</span></span><span class="rws">${chips(q.r)}<span class="ptc"><img src="${TILE.star}" alt="">+${q.pts}</span></span>
     <span class="act">${q.st === 'done' ? `<button class="take" data-take="${kind}:${i}">${tr('ЗАБРАТЬ')}</button>` : q.st === 'taken' ? `<span class="stamp${S.fresh === `${kind}:${i}` ? ' fresh' : ''}"></span>` : `<span class="wait">${leftOf(q)}</span>`}</span></div>`;
   const bonus = (d) => { const L = d ? D.daily : D.weekly, st = d ? D.crate : D.chest, ready = allTaken(L), N = L.length, n = L.filter((q) => q.st === 'taken').length, key = d ? 'crate' : 'chest';
@@ -175,12 +175,12 @@ export function createQuests(C) {
   }
   // кнопки демо: ускорить то, что в игре делает сервер
   function autoClaim(L, P, pts) { for (const q of L) if (q.st === 'done') { q.st = 'taken'; give(P[q.id].r, null); D.pts += pts; } }
-  function nextDay() { autoClaim(D.daily, DAILY, PTS_DAILY); if (allTaken(D.daily) && !D.crate) give(CRATE, null); addTo('days', 1); D.day++; D.crate = ''; D.daily = pickDaily(D.day, eventOn()).map((id) => ({ id, n: 0, st: '' })); }
-  function nextWeek() { nextDay(); autoClaim(D.weekly, WEEKLY, PTS_WEEKLY); if (allTaken(D.weekly) && !D.chest) give(CASE, null); S.shown = Math.min(D.pts, ROUTE_MAX); payRoute(); D.week++; D.pts = 0; D.paid = 0; D.chest = ''; S.shown = 0; D.weekly = pickWeekly(D.week, eventOn()).map((id) => ({ id, n: 0, st: '' })); }
+  function nextDay() { autoClaim(D.daily, DAILY, PTS_DAILY); if (allTaken(D.daily) && !D.crate) give(CRATE, null); addTo('days', 1); D.day++; D.crate = ''; D.daily = pickDaily(D.day).map((id) => ({ id, n: 0, st: '' })); }
+  function nextWeek() { nextDay(); autoClaim(D.weekly, WEEKLY, PTS_WEEKLY); if (allTaken(D.weekly) && !D.chest) give(CASE, null); S.shown = Math.min(D.pts, ROUTE_MAX); payRoute(); D.week++; D.pts = 0; D.paid = 0; D.chest = ''; S.shown = 0; D.weekly = pickWeekly(D.week).map((id) => ({ id, n: 0, st: '' })); }
   function advance() { const L = S.tab === 'd' ? D.daily : D.weekly, P = S.tab === 'd' ? DAILY : WEEKLY; for (const q of L) if (!q.st) { q.n = Math.min(P[q.id].of, q.n + Math.ceil(P[q.id].of * 0.34)); if (q.n >= P[q.id].of) q.st = 'done'; } }
 
   function allView() {
-    const T = weekTotals(false), rw = (A, k) => A[k] ? num(A[k]) : '—', roL = (P, pts) => Object.keys(P).map((id) => row({ ...P[id], id, n: 0, st: '', pts }, 'ro', 0)).join('');
+    const T = weekTotals(), rw = (A, k) => A[k] ? num(A[k]) : '—', roL = (P, pts) => Object.keys(P).map((id) => row({ ...P[id], id, n: 0, st: '', pts }, 'ro', 0)).join('');
     const line = (t, A, g) => `<tr><td>${t}</td><td>${rw(A, 'silver')}</td><td>${rw(A, 'xp')}</td><td>${g}</td></tr>`;
     return `<div class="allv"><div class="in"><h3>${tr('Сколько можно получить за неделю')}</h3>
       <table><tr><th></th><th>${tr('серебро')}</th><th>${tr('опыт')}</th><th>${tr('кристаллы')}</th></tr>${line(tr('Ежедневные: 21 задание'), T.daily, '—')}${line(tr('Ящики: 7 дней'), T.crates, '—')}${line(tr('Еженедельные: 5 заданий'), T.weekly, tr('0–2'))}${line(tr('Кейс недели'), CASE, '1')}${line(tr('Маршрут: 5 точек'), T.route, '3')}${line(tr('Всего за неделю'), T.all, tr('4–6'))}</table>
@@ -233,12 +233,14 @@ export function createQuests(C) {
     if (sub) sub.textContent = `${tr('{0} из {1}', [n, D.daily.length])} · ${hms(dayLeft()).slice(0, 5)}`;
     if (seg3) seg3.innerHTML = D.daily.map((q) => `<i class="${q.st === 'taken' ? 'ok' : q.st === 'done' ? 'on' : ''}"></i>`).join('');
     if (dt) { dt.textContent = c || ''; dt.style.display = c ? 'block' : 'none'; }
+    if (C.menu && C.menu.notice) C.menu.notice();
   }
   const api = {
     open() { root.classList.add('on'); document.body.classList.add('researchOn'); S.pop = false; S.shown = Math.min(D.pts, ROUTE_MAX); S.disp = { ...D.cur }; draw(); },
     close() { cancelAnimationFrame(S.raf); root.classList.remove('on'); document.body.classList.remove('researchOn'); touch(); if (C.menu && C.menu.render) C.menu.render(); },
     isOpen: () => root.classList.contains('on'),
     touch,
+    pending: () => (SHOW ? claimable() : 0), // незабранные награды — для таблички меню
   };
   if ($('qstIco')) $('qstIco').innerHTML = qic('menu-scroll-unfurled');
   if ($('qstBtn')) $('qstBtn').onclick = () => { if (snd() && snd().click) snd().click(); api.open(); };

@@ -8,12 +8,16 @@ import { ico, capsHtml } from './icons.js?v=20261103a';
 import { XP, SV, trMsg } from './progress-net.js?v=20261103a';
 import { tr, trIf, LANG } from './i18n.js?v=20261103a';
 
+// сцены категорий; пока — кадры из игры, рендеры сборщика заменят их тут же
+const BG_SCENE = { 'air.east': 'su57-front-morning', 'air.west': 'f15e-chase-sunset', 'air.heli': 'ka52-eve', 'wpn.east': 'su34-kh59m-sunset', 'wpn.west': 'tornado-gbu12-morning', 'pvo.east': 's400-unit', 'pvo.west': 'patriot-frost', 'strike.east': 'iskander-evening', 'strike.west': 'tomahawk-day' };
+for (const k in BG_SCENE) BG_SCENE[k] = `airdef/shots/${BG_SCENE[k]}.webp`;
+
 const CSS = `
 #research { position: fixed; inset: 0; z-index: 40; display: none; background: #10140f; color: #e9e6dc; font: 13px 'Golos Text', -apple-system, sans-serif; overflow: hidden;
   --rt: calc(var(--sa-t, 0px) + var(--tg-t, 0px)); --hh: 58px; --cw: 184px; --ch: 82px; --gx: 26px; --gy: 14px; --line: #39422f; --line2: #2c3426; --ac: #e8b04a; --ac2: #f3c96f; --dim: #b3baa5; --dim2: #8f9884; --ok: #86c06c; --xp: #9fd3ff; }
 #research.on { display: block; }
 #research .ic { width: 1.15em; height: 1.15em; vertical-align: -0.17em; flex: none; }
-#research .rbg { position: absolute; inset: 0; background: url(airdef/shots/s400-unit.webp) center/cover; filter: blur(14px) brightness(.32) saturate(.7); transform: scale(1.06); }
+#research .rbg { position: absolute; inset: 0; background: center / cover no-repeat; filter: blur(2px) brightness(.45) saturate(.85); transform: scale(1.02); opacity: 0; transition: opacity .8s ease; } #research .rbg.on { opacity: 1; } #research .rui { position: absolute; inset: 0; }
 #research .top { position: absolute; left: 0; right: 0; top: var(--rt); height: var(--hh); display: flex; align-items: center; gap: 14px; padding: 0 18px; padding-left: max(18px, var(--sa-l, 0px)); background: linear-gradient(#0b0e0a, rgba(11,14,10,.86)); z-index: 5; }
 #research::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: var(--rt); background: #0b0e0a; z-index: 5; }
 #research .back { font: 500 22px 'Oswald'; color: #e9e6dc; border: 0; background: none; width: 34px; cursor: pointer; }
@@ -24,7 +28,7 @@ const CSS = `
 #research .sides { position: absolute; left: 0; top: calc(var(--rt) + var(--hh)); bottom: 0; width: calc(122px + var(--sa-l, 0px)); /* вырез экрана слева — сверх ширины, а не за счёт подложки кнопок (Mark 2026-11-03: на телефоне «Восток» вылезал за подложку) */ padding: 22px 0 0 14px; padding-left: max(14px, var(--sa-l, 0px)); display: flex; flex-direction: column; gap: 10px; z-index: 4; }
 #research .sides button { border: 0; background: rgba(16,20,15,.88); color: var(--dim); height: 74px; text-align: left; padding: 0 12px; font: 500 15px 'Oswald'; border-left: 3px solid transparent; cursor: pointer; }
 #research .sides button small { display: block; font: 500 11px 'Golos Text'; color: var(--dim2); margin-top: 3px; } #research .sides button.on { background: rgba(233,230,220,.12); color: #e9e6dc; border-left-color: #e9e6dc; }
-#research .note { position: absolute; left: 18px; bottom: 14px; width: 114px; font-size: 11px; color: var(--dim2); line-height: 1.35; z-index: 4; }
+#research .note { position: absolute; left: 18px; bottom: 14px; width: 114px; font-size: 11px; color: var(--dim); line-height: 1.35; z-index: 4; text-shadow: 0 1px 3px #000; }
 #research .note b { color: var(--ac2); font-weight: 600; }
 #research .wrap { position: absolute; left: calc(128px + var(--sa-l, 0px)); top: calc(var(--rt) + var(--hh)); right: 290px; bottom: 0; overflow: auto; -webkit-overflow-scrolling: touch; }
 #research .tree { position: relative; padding: 0 30px 40px 6px; }
@@ -87,6 +91,7 @@ const guide = (n) => (n.branch === 'pvo' ? trIf(SAM[n.key]?.guide) : n.branch ==
 export function createResearch(C, PG) {
   const style = document.createElement('style'); style.textContent = CSS; if (document.head) document.head.appendChild(style); // (заглушка DOM стенда — без head/body)
   const root = document.createElement('div'); root.id = 'research'; if (document.body && document.body.appendChild) document.body.appendChild(root);
+  const mk = (c) => { const e = document.createElement('div'); e.className = c; if (root.appendChild) root.appendChild(e); return e; }, bgs = [mk('rbg'), mk('rbg')], ui = mk('rui'); // фон — вне перерисовки, иначе переход обрывается
   const S = { B: 'air', side: 'east', sel: null, open: false, msg: '', msgErr: false };
   const P0 = { xp: 0, silver: 0, res: [], own: [], goal: {} };
   const P = () => PG.P || P0;
@@ -151,12 +156,19 @@ export function createResearch(C, PG) {
       <span class="mk">${ranked(n.branch) ? tr('{0} · ранг {1} · {2}', [trIf(SIDE_NAME[n.side]), RANK_NAME[n.rank], era(n.rank)]) : `${trIf(SIDE_NAME[n.side])} · ${trIf(n.lineName)}`}</span><h3>${trIf(n.name)}</h3><div class="ty">${trIf(unitType(n))}${n.branch === 'pvo' ? capsHtml(SAM[n.key]) : ''}</div>
       ${stats}<p>${guide(n)}</p>${an}</div><div class="acts">${act}</div></div>`;
   }
+  // фон категории (Mark 2026-11-04): у каждой ветки и стороны своя сцена, при смене — плавный переход двух слоёв; новая картинка показывается, когда загрузилась
+  let bgKey = '', bgN = 0;
+  function setBg() {
+    const key = `${S.B}.${S.side}`; if (key === bgKey) return; bgKey = key; const url = BG_SCENE[key] || BG_SCENE['pvo.east'];
+    const show = () => { if (bgKey !== key) return; bgN ^= 1; bgs[bgN].style.backgroundImage = `url(${url})`; bgs[bgN].classList.add('on'); bgs[bgN ^ 1].classList.remove('on'); };
+    if (typeof Image === 'undefined') { show(); return; } const im = new Image(); im.onload = show; im.onerror = show; im.src = url;
+  }
   function draw() {
     if (!root.classList.contains('on')) return;
     const p = P(), scroll = root.querySelector('.wrap') ? [root.querySelector('.wrap').scrollLeft, root.querySelector('.wrap').scrollTop] : null;
     if (!phone() && !S.sel) S.sel = (nodesOf(EB(), sideOf(), 2)[0] || nodesOf(EB(), sideOf())[0]).id;
     root.classList.toggle('open', S.open);
-    root.innerHTML = `<div class="rbg"></div><div class="top"><button class="back" data-close-all="1" aria-label="${tr('Назад')}">«</button><h1>${tr('Исследования')}</h1><div class="btabs">${BRANCHES.filter((b) => !b.sub).map((b) => `<button data-b="${b.id}" class="${b.id === S.B ? 'on' : ''}">${trIf(b.name)}${ranked(b.id) ? `<i>${RANKS.filter((r) => rankOpen(p, b.id, r)).length}/4</i>` : ''}</button>`).join('')}</div>
+    setBg(); ui.innerHTML = `<div class="top"><button class="back" data-close-all="1" aria-label="${tr('Назад')}">«</button><h1>${tr('Исследования')}</h1><div class="btabs">${BRANCHES.filter((b) => !b.sub).map((b) => `<button data-b="${b.id}" class="${b.id === S.B ? 'on' : ''}">${trIf(b.name)}${ranked(b.id) ? `<i>${RANKS.filter((r) => rankOpen(p, b.id, r)).length}/4</i>` : ''}</button>`).join('')}</div>
       <div class="cur"><span class="xp" title="${tr('Опыт — исследовать')}">${XP(p.xp)}</span><span title="${tr('Серебро — покупать')}">${SV(p.silver)}</span></div></div>
       <div class="sides">${SIDES.map((s) => `<button data-s="${s}" class="${s === S.side ? 'on' : ''}">${trIf(SIDE_NAME[s])}<small>${tr('куплено {0} из {1}', [nodesOf(S.B, s).filter((n) => owned(p, n.id)).length, nodesOf(S.B, s).length])}</small></button>`).join('')}${S.B === 'air' ? `<button data-s="heli" class="${S.side === 'heli' ? 'on' : ''}">${tr('Вертолёты')}<small>${tr('куплено {0} из {1}', [nodesOf('heli').filter((n) => owned(p, n.id)).length, nodesOf('heli').length])}</small></button>` : ''}</div>
       <div class="note">${tr('Только для <b>«Реализма»</b>. Аркада и обучение — всё открыто.')}</div>
