@@ -417,10 +417,10 @@ Object.assign(SAM, {
   // Hawk XXI (2026-10-22 вместо Sevom Khordad — модель 42manako «не своя»): модернизация Hawk — ракеты MIM-23K, РЛС обнаружения Sentinel,
   // цифровое управление; модель — пусковая Hawk (Dominik Biały), место в дереве и балансе — как у «Хордада»
   hawk21: { name: 'Hawk XXI', short: 'Hawk XXI', side: 'west', era: 4, type: 'sarh', rwr: 'H21', hp: 45, channels: 2,
-    radar: { range: 40000, acq: 3, doppler: true, clutter: 15, mast: 5, band: 'J' }, rmin: 2500, rmax: 30000, hmin: 30, hmax: 18000, react: 5, salvo: 2, ammo: 3, reload: 50, eccm: 0.65,
+    radar: { range: 40000, acq: 3, doppler: true, clutter: 15, mast: 5, band: 'J' }, rmin: 2500, rmax: 30000, hmin: 30, hmax: 18000, react: 5, salvo: 2, ammo: 8 /* своя пусковая с 8 направляющими (Mark 2026-11-03: «8 ракет, остальное как есть»); было 3 */, reload: 50, eccm: 0.65,
     msl: { acc: 110, burn: 5, sustain: { acc: 18, t: 18 }, kd: 0.9, g: 18, vmin: 260, life: 45, blast: 30, dmg: 105, L: 5.1, r: 0.18, color: 0xe6e6e6 },
-    guide: 'Модернизированный Hawk: те же три ракеты на пусковой, но новые MIM-23K, РЛС Sentinel и цифровое управление — два канала, лучше против помех и низколетящих целей. Полуактивная ГСН — цель нужно подсвечивать до попадания.',
-    specs: [['Страна', 'США / Норвегия'], ['Наведение', 'полуактивное, непрерывный подсвет'], ['Ракеты', 'MIM-23K'], ['Дальность', 'до ≈ 45 км (в игре меньше)']] },
+    guide: 'Модернизированный Hawk: восемь ракет на пусковой, РЛС Sentinel и цифровое управление — два канала, лучше против помех и низколетящих целей. Полуактивная ГСН — цель нужно подсвечивать до попадания.',
+    specs: [['Страна', 'США / Норвегия'], ['Наведение', 'полуактивное, непрерывный подсвет'], ['Ракет на пусковой', '8'], ['Дальность', 'до ≈ 45 км (в игре меньше)']] },
   tunguska: { name: '2К22 «Тунгуска»', short: 'Тунгуска', side: 'east', era: 3, type: 'command', rwr: 'ТНГ', hp: 45, channels: 1, optTrack: 8000,
     radar: { range: 18000, acq: 2.5, doppler: true, clutter: 5, mast: 4, band: 'E' }, rmin: 2500, rmax: 8000, hmin: 15, hmax: 3500, react: 6, salvo: 1, ammo: 8, reload: 60, eccm: 0.55,
     msl: { acc: 250, burn: 2.6, kd: 1.3, g: 18, vmin: 300, life: 16, blast: 9, dmg: 55, L: 2.56, r: 0.085, color: 0xd8d8d0 },

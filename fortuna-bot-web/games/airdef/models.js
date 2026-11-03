@@ -236,7 +236,7 @@ const META = {
     obj_jhangar: { obj: true, stations: [] }, obj_factory: { obj: true, stations: [] }, // цех — склады города вблизи; навес obj_hangar, база obj_milbase, цех obj_oldind и контейнеры obj_cont убраны (2026-10-29: цели — свои сцены)
   // зенитные ракеты без своих пусковых: ракета «Вербы» — для всех ПЗРК и Avenger, AIM-120 (с F/A-18) — для NASAMS
   msl_manpads: { samMissile: ['strela2', 'redeye', 'igla', 'stinger', 'iglas', 'verba', 'avenger'], stations: [] },
-  msl_amraam: { samMissile: ['nasams'], matte: true, stations: [] }, // AIM-120A — своя (Свои/AIM-120, 2026-10-25) вместо вырезки из F/A-18 (msl_aim120 — её грузит «Летка»), 3,863 м, нос −Z
+  msl_amraam: { samMissile: ['nasams', 'hawk21'], onRail: ['hawk21'], matte: true, stations: [] }, // AIM-120A — своя (Свои/AIM-120, 2026-10-25) вместо вырезки из F/A-18 (msl_aim120 — её грузит «Летка»), 3,863 м, нос −Z; onRail — 8 на направляющих Hawk XXI
   // трубы ПЗРК на плече у расчёта
   mp_verba: { launcher: ['strela2', 'igla', 'iglas', 'verba'], stations: [] },
   mp_stinger: { launcher: ['redeye', 'stinger'], stations: [] },
@@ -256,12 +256,14 @@ const META = {
   s75: { units: ['s75'], stations: [] }, // С-75 «Двина» — manyakasia
   s125: { units: ['s125'], stations: [], bright: 1.9 }, // С-125 «Нева» — teanid; текстура у автора очень тёмная (bright — множитель цвета)
   kub: { units: ['kub'], stations: [] }, // 2К12 «Куб» — UltraKill
-  hawk: { units: ['hawk', 'hawk21'], stations: [] }, // MIM-23 Hawk — Dominik Biały; Hawk XXI — та же пусковая (вместо Sevom Khordad, 2026-10-22)
+  hawk: { units: ['hawk'], stations: [] }, // MIM-23 Hawk — Dominik Biały
+  hawk21: { units: ['hawk21'], matte: true, stations: [] }, // Hawk XXI — своя пусковая на прицепе M192 с восемью AIM-120 (сборщик, Свои/Hawk XXI, 2026-11-03); раньше — пусковая Hawk
   m163: { units: ['m163'], stations: [], matte: true, camo: { scheme: 'nato', size: 1.3 } }, // M163 VADS — Gorgytz
   zsu234: { units: ['zsu234'], matte: true, stations: [] }, // ЗСУ-23-4М «Шилка» — voron335
   strela10: { units: ['strela10'], matte: true, stations: [], camo: { scheme: 'soviet', size: 1.5 } }, // «Стрела-10» на МТ-ЛБ — ScurvyWoof
   avenger: { units: ['avenger'], stations: [], matte: true, camo: { scheme: 'nato', size: 1.1 } }, // AN/TWQ-1 Avenger — KillCaptureDestroy
-  chaparral: { units: ['chaparral'], stations: [], matte: true, camo: { scheme: 'nato', size: 1.2 } }, // MIM-72 Chaparral — TankLord (Thingiverse)
+  chaparral: { units: ['chaparral'], matte: true, stations: [] }, // MIM-72 Chaparral — своя пусковая M54 на M730 (сборщик, Свои/Chaparral, 2026-11-03), песочная; предел подъёма по азимуту (launchers.js elMaxAz)
+  msl_chaparral: { samMissile: ['chaparral'], lazy: true, onRail: true, matte: true, stations: [] }, // ракета MIM-72 — своя (Свои/MIM-72), 2,9 м, нос −Z; 4 на направляющих
   gepard: { units: ['gepard'], matte: true, stations: [] }, // Flakpanzer Gepard — своя модель, ревизия 2 (Свои/Гепард_rev2, 2026-11-02): трёхцветный камуфляж бундесвера запечён (шейдерный узор снят), антенна сопровождения качается за целью
   roland: { units: ['roland'], matte: true, stations: [], camo: { scheme: 'nato', size: 1.4 } },
   tunguska: { units: ['tunguska'], matte: true, stations: [] }, // 2К22 «Тунгуска» — SIpriv (CC BY 4.0), переделана в Blender (Свои/Тунгуска): камуфляж, затенение и карта нормалей запечены — шейдерного узора нет
@@ -416,6 +418,13 @@ const GLB_V_OWN = {
   buk_lo: '20261103a',
   msl_buk: '20261103a',
   msl_buk_lo: '20261103b', // 9М38М1 на пусковой издали (1,2 тыс. треугольников)
+  chaparral: '20261103d', // MIM-72 Chaparral — своя (Свои/Chaparral + Свои/MIM-72) вместо STL TankLord
+  chaparral_lo: '20261103d',
+  msl_chaparral: '20261103d',
+  msl_chaparral_lo: '20261103d',
+  hawk21: '20261103d', // Hawk XXI — своя пусковая с 8 AIM-120 (Свои/Hawk XXI)
+  hawk21_lo: '20261103d',
+  msl_amraam_lo: '20261103d', // AIM-120 на направляющих Hawk XXI издали
   torm2: '20261103a', // «Тор-М2» — своя БМ (Свои/Тор-М2), натуральный размер; ракета 9М338К (Свои/9М338К)
   torm2_lo: '20261103a',
   msl_torm2: '20261103a',
@@ -717,7 +726,7 @@ async function load(name, base) {
 // готовая модель комплекса: { body, turret, cradle } (копии) или null — тогда процедурная
 const UMODEL = Object.fromEntries(Object.entries(META).filter(([, m]) => m.units).flatMap(([n, m]) => m.units.map((k) => [k, n])));
 // у тяжёлых моделей ПВО — дальняя копия <имя>_lo: каждая часть (корпус, башня, пакет) — THREE.LOD, ближе 400 м — подробная
-const UNIT_LO = new Set(['nasams', 'buk', 'torm2', 'bukm3', 's125', 'gepard', 'ew_e', 'ew_w', 's300', 's400', 'patriot', 'pac3', 'tor', 'pantsir', 'sampt', 'tunguska', 'skyguard', 'rapier', 'zsu234', 'm163', 'chaparral', 'avenger', 'strela1']);
+const UNIT_LO = new Set(['nasams', 'buk', 'torm2', 'hawk21', 'bukm3', 's125', 'gepard', 'ew_e', 'ew_w', 's300', 's400', 'patriot', 'pac3', 'tor', 'pantsir', 'sampt', 'tunguska', 'skyguard', 'rapier', 'zsu234', 'm163', 'chaparral', 'avenger', 'strela1']);
 export function unitModelGlb(key) {
   const n = UMODEL[key], G = n && (LOADED[n] || LOADED[n + '_lo']), GL = n && LOADED[n] && LOADED[n + '_lo']; if (!G) return null;
   const find = (M, k) => M.children.find((c) => c.name === k);
@@ -852,7 +861,7 @@ export const anyModel = (name) => (LOADED[name] ? LOADED[name].clone() : null);
 // расчёт ПЗРК — тяжёлый (6–7 МБ, ~50 тыс. треугольников на экране; ревью 2026-10-27): на телефоне — только когда камера близко (wantUnitNear),
 // издали — процедурные солдаты (ПЗРК там почти не видно)
 const NEAR_ONLY = new Set(['crew_e', 'crew_w']);
-export function wantUnit(key) { const n = UMODEL[key], sm = SAMMSL[key]; if (sm && BASE && META[sm].lazy) start(sm); if (sm && BASE && META[sm].onRail) start(sm + '_lo'); if (n && BASE) { if (UNIT_LO.has(n)) start(n + '_lo'); if (!TOUCH || !(UNIT_LO.has(n) || NEAR_ONLY.has(n))) start(n); } } // сначала лёгкая дальняя копия; lazy-ракета комплекса (9М83) — только в бою с ним
+export function wantUnit(key) { const n = UMODEL[key], sm = SAMMSL[key]; if (sm && BASE && META[sm].lazy) start(sm); const oR = sm && META[sm].onRail; if (BASE && oR && (oR === true || oR.includes(key))) start(sm + '_lo'); /* дальняя копия ракеты на направляющих — только у тех, у кого она там видна (у NASAMS — в контейнерах) */ if (n && BASE) { if (UNIT_LO.has(n)) start(n + '_lo'); if (!TOUCH || !(UNIT_LO.has(n) || NEAR_ONLY.has(n))) start(n); } } // сначала лёгкая дальняя копия; lazy-ракета комплекса (9М83) — только в бою с ним
 export function wantUnitNear(key) { const n = UMODEL[key]; if (n && BASE && !LOADING.has(n)) start(n); }
 // дома города вблизи — по запросу (на слабом пресете не грузятся); bldModel — загруженная модель (общая, не копия)
 export function wantBuildings(names) { if (BASE) for (const [n, m] of Object.entries(META)) if (m.bld && (!names || names.includes(n))) start(n); } // names — только модели этой карты (зимний лес городу не нужен и наоборот)

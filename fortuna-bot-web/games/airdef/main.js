@@ -27,7 +27,7 @@ import { createStrike, MODES } from './sim/strike.js?v=20261102b';
 import { createRaid } from './sim/raid.js?v=20261102b';
 import { POD, RAIL, podLift } from './sim/combined.js?v=20261102b';
 import { unitModel, weaponGeo, samMissileMesh, mountWpnFlame, narMesh, flameOf, wpnNozzle, strikerGeo, createFx, attachFlames } from './units-render.js?v=20261102b';
-import { slotCount, LNCH, lnchToWorld, cylPose } from './launchers.js?v=20261102b';
+import { slotCount, LNCH, lnchToWorld, cylPose, mslView } from './launchers.js?v=20261102b';
 import { spinProps as spinRotors, spinSails, modelStats, loadModels, planeModel, heliModel, classOfRole, weaponMesh, pylonMesh, unitModelGlb, unitMissileGlb, samMissileLo, samNose, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, wantUnitNear, bldModel, wantBuildings, wantModel, wantWeapon, weaponPending, anyModel, setWings, glideWings, planeMeta } from './models.js?v=20261102b';
 import { planeDamageVis, updateDebris, clearDebris } from './plane-damage.js?v=20261102b';
 import { createSound } from './sound.js?v=20261102b';
@@ -614,7 +614,7 @@ const simFx = {
   // ракета в полёте: маршевая ступень (+ ускоритель), факел; старт — по типу пусковой (launchers.js)
   samLaunch(m) {
     // ракета из модели комплекса (если есть) или процедурная; ускоритель — отдельной частью, отвалится в полёте; факел — у среза сопла (units-render.js)
-    const L = m.M.L, big = L > 5, g = samMissileMesh(m, unitMissileGlb(m.unit.key), wMat);
+    const L = mslView(m).L, big = L > 5, g = samMissileMesh(m, unitMissileGlb(m.unit.key), wMat);
     g.position.copy(m.pos); g.lookAt(LP.copy(m.pos).sub(m.dir));
     scene.add(g); samMeshes.set(m.id, g);
     const mode = m.ln ? m.ln.mode : 'rail', d = dist(m.pos);
@@ -641,9 +641,9 @@ const simFx = {
     // С-300 / С-400: с клубами следа (plume.js) — розжиг самого факела (вспышка, язык огня, выхлоп клубами по калибру) и след от сопла по настоящему
     // пути ракеты (Mark 2026-11-01: лист «столб первой секунды» снят вертикально и плоский — ракета клонится к цели, а столб стоит). Без клубов (?wts=0) —
     // лист Blender: вспышка, огненный хвост и столб дыма первой секунды (≈ 42 м над точкой зажигания); свой след игры — выше него (trailY)
-    const p = LP.copy(m.pos).addScaledVector(m.dir, -m.M.L / 2), own = m.ln && m.ln.ej && m.ln.ej.acc;
-    if (own && trailPuffsOn()) { /* всё — в факеле (plume.js setIgnition) */ } else if (own && C.fx.launchSheet('launch_ignite', p)) m.trailY = p.y + 38; else C.fx.ignite(p, m.dir, m.M.L > 5);
-    if (!m.coldRec) snd.samLaunch(dist(m.pos), m.M.L > 5, m.unit.key);
+    const V = mslView(m), p = LP.copy(m.pos).addScaledVector(m.dir, -V.L / 2), own = m.ln && m.ln.ej && m.ln.ej.acc;
+    if (own && trailPuffsOn()) { /* всё — в факеле (plume.js setIgnition) */ } else if (own && C.fx.launchSheet('launch_ignite', p)) m.trailY = p.y + 38; else C.fx.ignite(p, m.dir, V.L > 5);
+    if (!m.coldRec) snd.samLaunch(dist(m.pos), V.L > 5, m.unit.key);
   },
   samJet(m) { C.fx.jet(m.pos, m.dir); },
   samStage(m) {
@@ -840,10 +840,10 @@ function syncWorld(dt, t) {
     if (m.ejAt && m.t >= m.ejAt.t) { if (!C.fx.launchSheet('launch_eject', m.ejAt.p)) C.fx.launchCold(m.ejAt.p, m.dir, true); m.ejAt = null; } // С-300: хвост вышел из устья — облако выброса
     if (g.userData.fins) finsSet(g, m);
     // под запись старта: факел и вспышка — с момента рёва в записи (m.visIgn), раньше расчётного зажигания; дальше — как в расчёте
-    if (m.visIgn !== undefined && !m.visLit && m.t >= m.visIgn) { m.visLit = true; C.fx.ignite(LP.copy(m.pos).addScaledVector(m.dir, -m.M.L / 2), m.dir, m.M.L > 5); }
+    if (m.visIgn !== undefined && !m.visLit && m.t >= m.visIgn) { const V = mslView(m); m.visLit = true; C.fx.ignite(LP.copy(m.pos).addScaledVector(m.dir, -V.L / 2), m.dir, V.L > 5); }
     const on = (m.tb >= 0 || m.visLit) && (m.tb < m.M.burn || (m.M.sustain && m.tb < m.M.burn + m.M.sustain.t));
     if (m.tb >= m.M.burn && !m.susM) { m.susM = true; g.userData.flame.motor(motorOf(m.unit.key, 'sam', true)); } // маршевый двигатель (С-75 — жидкостный, «Куб» — прямоточный)
-    g.userData.flame.set(on ? (m.tb < m.M.burn && (m.M.L > 2.5 || g.userData.booster) ? 2 : 1) : 0, g.userData.booster ? m.M.r * m.ln.stageR : m.M.r, m.pos.y); // на высоте факел шире (plume.js)
+    const V = mslView(m); g.userData.flame.set(on ? (m.tb < m.M.burn && (V.L > 2.5 || g.userData.booster) ? 2 : 1) : 0, g.userData.booster ? V.r * m.ln.stageR : V.r, m.pos.y); // на высоте факел шире (plume.js)
   }
   // отделившиеся ускорители: падают, кувыркаются, первые секунды дымят
   for (let i = debris.length - 1; i >= 0; i--) {

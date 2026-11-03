@@ -6,7 +6,7 @@ import { makeParticles, radialTex } from '../drone/world.js?v=20261102b';
 import { createPlumes, makeFlame, flameTick, motorOf, setFlameLayer, setTrailPuffs, trailPuffsOn, PUFF_MIN, setIgnition } from './plume.js?v=20261102b';
 import { FLAME_KIND, makeJetFlame, setJetLayer } from './jetflame.js?v=20261102b';
 import { createCmFx } from './cmfx.js?v=20261102b';
-import { LNCH } from './launchers.js?v=20261102b';
+import { LNCH, mslView } from './launchers.js?v=20261102b';
 import { createBook } from './flipbook.js?v=20261102b';
 import { makePuffs } from './puffs.js?v=20261102b';
 
@@ -410,7 +410,7 @@ export function mountWpnFlame(w, g, ev) {
 }
 // ракета ЗРК в полёте: модель комплекса gm ({ missile, booster }) или процедурная; ускоритель — отдельной частью (отвалится в полёте); факел у среза сопла
 export function samMissileMesh(m, gm, wMat) {
-  const g = new THREE.Group(), L = m.M.L, r = m.M.r;
+  const g = new THREE.Group(), V = mslView(m), L = V.L, r = V.r;
   let hasBoost = false;
   if (gm) { g.add(gm.missile); if (gm.booster && m.ln && m.ln.stage) { g.add(gm.booster); g.userData.booster = gm.booster; hasBoost = true; } }
   else {
@@ -757,11 +757,11 @@ export function createFx(scene, P) {
     },
     samTrail(m) { // дымный след ЗУР: у больших ракет — густой белый, у ПЗРК — тонкий серый; после ускорителя (маршевый ЖРД
       // С-75, прямоточный «Куба», маршевая ступень С-125) — тоньше и прозрачнее
-      const big = m.M.L > 5, LN = m.ln, sus = LN && (LN.stage || LN.ramjet) && m.tb >= m.M.burn;
-      const s = (big ? 9 : m.M.L > 2.5 ? 5 : 2.5) * (sus ? 0.45 : 1), back = sus && LN.stage ? m.M.L * (LN.stage - 0.5) + 0.3 : m.M.L * 0.6;
+      const V = mslView(m), big = V.L > 5, LN = m.ln, sus = LN && (LN.stage || LN.ramjet) && m.tb >= m.M.burn;
+      const s = (big ? 9 : V.L > 2.5 ? 5 : 2.5) * (sus ? 0.45 : 1), back = sus && LN.stage ? V.L * (LN.stage - 0.5) + 0.3 : V.L * 0.6;
       const x = m.pos.x - m.dir.x * back, y = m.pos.y - m.dir.y * back, z = m.pos.z - m.dir.z * back;
       if (m.trailY !== undefined) { if (y < m.trailY && m.tb < 1.2) return; m.trailY = undefined; } // С-300: первые ≈ 40 м дым — в листе запуска двигателя (main.js samIgnite); ушла вбок — не дольше 1,2 с
-      const mo = motorOf(m.unit && m.unit.key, 'sam', m.tb >= m.M.burn), rr = LN && LN.stage && !sus ? m.M.r * (LN.stageR || 1) : m.M.r;
+      const mo = motorOf(m.unit && m.unit.key, 'sam', m.tb >= m.M.burn), rr = LN && LN.stage && !sus ? V.r * (LN.stageR || 1) : V.r;
       PL.add(m, x, y, z, mo, rr); // сплошная лента дыма по траектории; клубы-частицы ниже — объём (видны и вдоль ленты)
       if (!(trailPuffsOn() && mo.a >= PUFF_MIN)) smoke.emit(x, y, z, (Math.random() - 0.5) * 2, 1, (Math.random() - 0.5) * 2, mo.c[0], mo.c[1], mo.c[2], (big ? 0.4 : 0.28) * (sus ? 0.45 : 1) * Math.min(1, mo.a / 0.6), s, s * 0.9, big ? 9 : 5, 0.3, 0.3); // с клубами Blender (plume.js) мягкие шары не нужны
     },

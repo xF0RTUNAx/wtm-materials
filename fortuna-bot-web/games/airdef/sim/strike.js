@@ -15,7 +15,7 @@
 /* global THREE */
 import { tr } from '../i18n.js?v=20261102b';
 import { AG, SAM, eqOf } from '../arsenal.js?v=20261102b';
-import { LNCH, lnchToWorld, lnchDir, slotOf, trainable, yawGoal } from '../launchers.js?v=20261102b';
+import { LNCH, lnchToWorld, lnchDir, slotOf, trainable, yawGoal, elMaxOf } from '../launchers.js?v=20261102b';
 import { clamp, D2R, G0, rhoAt, angleBetween, seekerHeat, offTailDeg, turnToward } from '../../drone/sim/core.js?v=20261102b';
 import { cmOf, cmKey, cmBoost, cmWorld } from './cm.js?v=20261102b';
 import { partDist, siteBld, bldDie, bldKillMains } from '../city.js?v=20261102b';
@@ -56,7 +56,7 @@ const NOOP_FX = {
   cmDrop() {}, decoyed() {}, trackBroken() {},
 };
 
-const TMP = new THREE.Vector3(), TMP2 = new THREE.Vector3(), AIM = new THREE.Vector3(), UPV = new THREE.Vector3(0, 1, 0), LOFT = new THREE.Vector3(), PREV = new THREE.Vector3();
+const CAPD = new THREE.Vector3(), CAPT = new THREE.Vector3(), TMP = new THREE.Vector3(), TMP2 = new THREE.Vector3(), AIM = new THREE.Vector3(), UPV = new THREE.Vector3(0, 1, 0), LOFT = new THREE.Vector3(), PREV = new THREE.Vector3();
 const SF_A = new THREE.Vector3(), SF_B = new THREE.Vector3(), SF_M = new THREE.Vector3();
 const wrapPi = (a) => Math.atan2(Math.sin(a), Math.cos(a));
 
@@ -434,9 +434,12 @@ export function createStrike(ctx) {
     let elT = Math.atan2(dy, hd);
     if (LN.mode === 'rail' && S.msl) { if ((u.lnT -= dt) <= 0 || u.lnEl === null) { u.lnT = 0.3; u.lnEl = launchEl(u, dx / hd, dz / hd, elT); } elT = u.lnEl; }
     const dyaw = LN.yawLim ? yawT - u.lyaw : wrapPi(yawT - u.lyaw), ky = LN.slewY * dt; // с пределами — только через сектор, не через корму
-    u.lyaw = wrapPi(u.lyaw + clamp(dyaw, -ky, ky));
+    // Chaparral (elMaxAz): предел угла места зависит от поворота — над кабиной ниже. Предел — по нынешнему и следующему положению станции;
+    // пакет выше следующего — станция ждёт, пока он опустится (иначе хвосты ракет прошли бы сквозь кабину); цель выше предела — пуск с упора
+    const ny = wrapPi(u.lyaw + clamp(dyaw, -ky, ky)), elCap = LN.elMaxAz ? Math.min(elMaxOf(LN, u.lyaw), elMaxOf(LN, ny)) : LN.elMax;
+    if (!LN.elMaxAz || u.lel <= elMaxOf(LN, ny) + 0.01) u.lyaw = ny;
     let de = 0;
-    if (LN.el == null) { elT = clamp(elT, LN.elMin, LN.elMax); const ke = LN.slewE * dt; de = elT - u.lel; u.lel += clamp(de, -ke, ke); de = elT - u.lel; }
+    if (LN.el == null) { elT = clamp(elT, LN.elMin, elCap); const ke = LN.slewE * dt; de = elT - u.lel; u.lel += clamp(de, -ke, ke); de = elT - u.lel; }
     u.lnErr = Math.max(Math.abs(wrapPi(yawT - u.lyaw)), Math.abs(de));
   }
   // С-300 / С-400: подъём пакета от РЛС (launchers.js erect). u.dep — место на графике «домкраты (jk) → подъём (up)»: РЛС включена — вперёд,
@@ -450,7 +453,10 @@ export function createStrike(ctx) {
   }
   const erected = (u, LN) => !LN.erect || u.dep >= LN.erect.jk + LN.erect.up;
   // пусковая готова: С-300 — пакет поднят; «Тор», NASAMS, С-300 — крышка открыта; поворотные — навелись
-  function launcherReady(u) { const LN = LNCH[u.key]; return !LN || (erected(u, LN) && (!LN.lids || u.lid >= 1) && (!trainable(LN) || u.lnErr < (LN.mode === 'tube' ? 0.12 : 0.09))); }
+  function launcherReady(u) { const LN = LNCH[u.key]; return !LN || (erected(u, LN) && (!LN.lids || u.lid >= 1) && (!trainable(LN) || u.lnErr < (LN.mode === 'tube' ? 0.12 : 0.09)) && capSees(u, LN)); }
+  // Chaparral (elMaxAz): над кабиной пакет на упоре, а ИК-ГСН ракеты видит цель только в конусе 60° от своей оси (sams: m.lost) — цель дальше 55° от оси
+  // пусковой (почти над головой) не пускаем: ракета ушла бы впустую (ревью 2026-11-03)
+  const capSees = (u, LN) => !LN.elMaxAz || u.S.type !== 'ir' || !u.track || u.track.dead || angleBetween(lnchDir(u, CAPD), CAPT.copy(u.track.pos).sub(u.pos)) <= 55 * D2R;
   function launchSam(u, t) {
     const M_ = u.S.msl, LN = LNCH[u.key];
     TMP.copy(t.pos).sub(u.pos); const hd = Math.hypot(TMP.x, TMP.z) || 1, hx = TMP.x / hd, hz = TMP.z / hd;

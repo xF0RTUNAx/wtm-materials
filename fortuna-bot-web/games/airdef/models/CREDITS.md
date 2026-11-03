@@ -134,7 +134,6 @@
 - "ZSU-23-4M" (https://sketchfab.com/3d-models/zsu-23-4m-e9e3ca1a5ee7455f90886de220519e42) by voron — CC-BY-4.0 — `zsu234.glb`, `zsu234_lo.glb`
 - "MTLB Strela-10 (low-poly)" (https://sketchfab.com/3d-models/mtlb-strela-10-low-poly-bbc5ef74a6024739aa89d7e5bbd53f21) by ScurvyWoof — CC-BY-4.0 — `strela10.glb`
 - "AN/TWQ-1A1 Avenger" (https://sketchfab.com/3d-models/antwq-1a1-avenger-5069a439f0c1460b95ccbf6b775de240) by KillCaptureDestroy — CC-BY-4.0 — `avenger.glb`, `avenger_lo.glb`
-- "MIM-72 Chaparral 1/100 Scale" (https://www.thingiverse.com/thing:3058287) by TankLord — CC-BY-4.0 — `chaparral.glb`, `chaparral_lo.glb`
 - "Humvee Transport (кузов, прицеп и антенна AN/MPQ-64 — свои)" (https://sketchfab.com/3d-models/humvee-transport-48336bc41caf4fa1bdf147823a774111) by karmy2k — CC-BY-4.0 — `ew_w.glb`, `ew_w_lo.glb`
 - "Ural 4320 (будка, мачта и антенна П-18 — свои)" (https://sketchfab.com/3d-models/ural-4320-f953c51a5dbc4a15949f4dcc0905c4e8) by Brout — CC-BY-4.0 — `ew_e.glb`, `ew_e_lo.glb`
 - "Large Industrial Storage Tanks" (https://sketchfab.com/3d-models/large-industrial-storage-tanks-bd3ac97071104b64bc388a155b64f79e) by Duane's Mind — CC-BY-4.0 — `obj_tanks.glb`

@@ -504,13 +504,19 @@ const CONFIG = {
     groups: (c) => { const X = c.ctr[0] + 1.92, Y = c.ctr[1], Z = c.ctr[2];
       if (Y > 2.05 && Math.abs(X) > 0.4 && Z > 0.7 && Z < 2.5) return 'cradle';
       return Y > 1.25 && Math.hypot(X, Z - 1.63) < 0.85 ? 'turret' : 'body'; } },
-  // MIM-72 Chaparral (M730) — TankLord, Thingiverse (CC BY), модель для печати 1/100 (мм → ×0,1 м), Z вверх; пусковая поставлена в гнездо
-  // шасси при переводе (stl2glb.js …Launcher.stl@0.31,-26.73,1.35). Шип пусковой внутри корпуса — выбросить; тумба над палубой крутится,
-  // блок с четырьмя ракетами качается
-  chaparral: { src: `${DL}/stl-glb/chaparral.glb`, scale: 0.1, axes: (x, y, z) => [-x, z, y], rulesIn: 'game', unit: true, tex: () => 256, perTri: true, crease: 35, camo: { scheme: 'nato', size: 1.1 }, /* без упрощения (270 тыс.; вдали — chaparral_lo); STL — сварка и сглаживание до 35° */
-    hinge: [-0.035, 2.33, 0.075], turretYaw: Math.PI, colors: { '#msl': [0.55, 0.55, 0.52] }, // пусковая у автора смотрит назад; ракеты — белые
-    groups: (c) => { if (c.mat === 0) return 'body'; if (c.ctr[1] < 1.36) return null; if (c.ctr[1] < 1.6) return 'turret';
-      const ax = Math.abs(c.ctr[0]), y = c.ctr[1]; return ax > 0.72 && ax < 1.18 && ((y > 1.82 && y < 2.22) || (y > 2.42 && y < 2.82)) ? 'cradle#msl' : 'cradle'; } }, // ракеты — по двум рядам направляющих
+  // MIM-72 Chaparral — своя пусковая M54 на M730 (сборщик объектов, Свои/Chaparral, 2026-11-03; Mark: «модель Chaparral готова») вместо STL TankLord;
+  // окраска — песочная. Метры, нос −Z, земля y = 0, оси сборщика без центровки; части — chapPart: turret_main и turret_* — станция M54 (ось tp (0; 1,36; 0,904)),
+  // cradle_beam_l / cradle_beam_r (+ cradle_hw) — балки на одной оси качания (0; 2,915; 1,054), в файле горизонтально (pack0). Ракет в модели нет —
+  // MIM-72 своя (msl_chaparral), игра ставит её в слоты (launchers.js railMsl). Атласы H / T — цвет 2048 / нормали 1024, R — вдвое меньше; дальняя — сборщика
+  chaparral: { src: `${DL}/Свои/Chaparral/chaparral.glb`, scale: 1, nose: '-z', rulesIn: 'game', unit: true, own: true, tex: (m) => (m.name === 'CH_R' ? 1024 : 2048),
+    nTex: (m) => (m.name === 'CH_R' ? 512 : 1024), pickMesh: /./, axisX: 0, axisZ: 0, ground: 0, hinge: [0, 2.9151, 1.0539], tpFix: [0, 1.36, 0.9039], pack0: 0, groups: (c) => bukPart(c) },
+  // ракета MIM-72 — своя (Свои/MIM-72): 2,9 м, Ø 0,132, нос −Z, рули и стабилизаторы «×» неподвижны
+  msl_chaparral: { src: `${DL}/Свои/MIM-72/msl_chaparral.glb`, scale: 1, nose: '-z', own: true, tex: () => 1024, nTex: () => 512, pickMesh: /./ },
+  // Hawk XXI — своя пусковая на прицепе M192 с восемью AIM-120 (сборщик, Свои/Hawk XXI, 2026-11-03; Mark: «модель Hawk XXI готова»; раньше стоял на
+  // модели hawk — она остаётся MIM-23 Hawk). Части — bukPart: turret_* — поворотная часть (ось (0; 1,22; 0)), cradle_* — обе балки, вал цапф и сектор
+  // на оси качания (0; 2; 0), в файле горизонтально; привода-цилиндра нет. Ракеты — наша msl_amraam (railMsl); атласы H / T — 2048 / 1024
+  hawk21: { src: `${DL}/Свои/Hawk XXI/hawk21.glb`, scale: 1, nose: '-z', rulesIn: 'game', unit: true, own: true, tex: () => 2048, nTex: () => 1024, pickMesh: /./,
+    axisX: 0, axisZ: 0, ground: 0, hinge: [0, 2.0, 0], tpFix: [0, 1.22, 0], pack0: 0, groups: (c) => bukPart(c) },
   // ревизия 2 (сборщик объектов, Свои/Гепард_rev2, 2026-11-02; Mark: «модель Гепард готова»): заново по чертежам и фото, 151 тыс., гусеницы звеньями,
   // запечённый трёхцветный камуфляж бундесвера (шейдерный узор в models.js снят); оси сборщика без центровки: погон tp (0; 1,589; 0,05), качание пушек
   // (0; 2,316; 0,431), антенна сопровождения dish_track — своя часть «dish» на шарнире (0; 2,24; −1,8) (launchers.js tdish, как у «Тора»).
@@ -767,7 +773,7 @@ function gepardPart(c, near) {
   if (/(^|\/)dish/.test(p)) return near ? 'dish' : 'turret';
   return /(^|\/)cradle/.test(p) ? 'cradle' : /(^|\/)radar/.test(p) ? 'radar' : /(^|\/)turret/.test(p) ? 'turret' : 'body';
 }
-// «Бук-М1»: пакет и цилиндр — дети башни (turret_main/cradle_*, turret_main/cyl_*): сначала они, потом башня; штоки — по последнему узлу пути
+// «Бук-М1», Chaparral, Hawk XXI: пакет и цилиндр — дети башни (turret_main/cradle_*, turret_main/cyl_*): сначала они, потом башня; штоки — по последнему узлу пути
 function bukPart(c) {
   const p = c.path, Y = [...p.matchAll(/(?:^|\/)cyl_(barrel|rod1|rod2)/g)].pop(); if (Y) return 'cyl' + ['barrel', 'rod1', 'rod2'].indexOf(Y[1]);
   return /(^|\/)cradle_/.test(p) ? 'cradle' : /(^|\/)turret_/.test(p) ? 'turret' : 'body';
@@ -784,7 +790,7 @@ function torm2Part(c, near, lidOrder) {
   return /(^|\/)turret/.test(p) ? 'turret' : 'body';
 }
 // ПВО: дальние копии (_lo) — main.js рисует их дальше 400 м (THREE.LOD по частям: корпус, башня, пакет)
-const SAM_LO = ['osa', 'bukm3', 's125', 'gepard', 'ew_e', 'pantsir', 'sampt', 'tunguska', 'skyguard', 'rapier', 'zsu234', 'm163', 'chaparral', 'avenger'];
+const SAM_LO = ['osa', 'bukm3', 's125', 'gepard', 'ew_e', 'pantsir', 'sampt', 'tunguska', 'skyguard', 'rapier', 'zsu234', 'm163', 'avenger'];
 for (const k of SAM_LO) CONFIG[k + '_lo'] = { ...CONFIG[k], target: k === 'pantsir' ? 15000 : 20000, simpErr: 0.05, tex: () => 256, nTex: null };
 CONFIG.bukm3_lo.tracks = { ...CONFIG.bukm3.tracks, links: false }; // дальняя копия: лента — гладкая, без звеньев
 // Гепард ревизии 2: дальняя копия сборщика (gepard_lo.glb, без мелочи), цвет 512, без нормалей; антенна сопровождения — в башне (вдали не качается).
@@ -803,6 +809,11 @@ CONFIG.torm2_lo = { ...CONFIG.torm2, src: `${DL}/Свои/Тор-М2/torm2_lo.gl
 CONFIG.buk_lo = { ...CONFIG.buk, src: `${DL}/Свои/Бук-М1/buk_lo.glb`, tex: () => 512, nTex: null }; // «Бук-М1»: дальняя сборщика (69 тыс.)
 // 9М38М1 на пусковой издали (дальше 400 м, как buk_lo; Mark 2026-11-03: «облегченные модели ракет бука для дальнего плана»): 8,9 тыс. → ≈ 1,2 тыс., цвет 256, без нормалей
 CONFIG.msl_buk_lo = { ...CONFIG.msl_buk, target: 1200, simpErr: 0.01, tex: () => 256, nTex: null };
+CONFIG.chaparral_lo = { ...CONFIG.chaparral, src: `${DL}/Свои/Chaparral/chaparral_lo.glb`, tex: () => 512, nTex: null }; // Chaparral: дальняя сборщика
+CONFIG.hawk21_lo = { ...CONFIG.hawk21, src: `${DL}/Свои/Hawk XXI/hawk21_lo.glb`, tex: () => 512, nTex: null }; // Hawk XXI: дальняя сборщика (15 тыс.)
+// ракеты на направляющих издали (как msl_buk_lo): MIM-72 Chaparral и AIM-120 Hawk XXI
+CONFIG.msl_chaparral_lo = { ...CONFIG.msl_chaparral, target: 900, simpErr: 0.01, tex: () => 256, nTex: null };
+CONFIG.msl_amraam_lo = { ...CONFIG.msl_amraam, target: 900, simpErr: 0.01, tex: () => 256, nTex: null };
 // С-300 (своя): дальняя копия — облегчённая сборщиком (61 тыс.), цвет 512, без нормалей; домкраты и цилиндр — свои части (двигаются и вдали)
 CONFIG.s300_lo = { ...CONFIG.s300, src: `${DL}/Свои/С-300/s300_lo.glb`, tex: () => 512, nTex: null, groups: (c) => s300Part(c, false) };
 // С-400 — копия нашей С-300 (сборщик объектов, Свои/С-400, 2026-11-02; Mark: «с-400 готов»): те же узлы и шарниры (ПАСПОРТ.json), + запаска в корзине

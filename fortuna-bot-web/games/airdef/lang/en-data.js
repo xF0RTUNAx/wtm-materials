@@ -382,7 +382,7 @@ export default {
   "МиГ-17Ф": "MiG-17F",
   "Т-4 «Сотка»": "T-4 Sotka",
   "М-4": "M-4",
-  "Модернизированный Hawk: те же три ракеты на пусковой, но новые MIM-23K, РЛС Sentinel и цифровое управление — два канала, лучше против помех и низколетящих целей. Полуактивная ГСН — цель нужно подсвечивать до попадания.": "Upgraded Hawk: the same three missiles on the launcher, but new MIM-23K rounds, a Sentinel radar and digital fire control — two channels, better against jamming and low-flying targets. Semi-active seeker — keep the target illuminated until impact.",
+  "Модернизированный Hawk: восемь ракет на пусковой, РЛС Sentinel и цифровое управление — два канала, лучше против помех и низколетящих целей. Полуактивная ГСН — цель нужно подсвечивать до попадания.": "Upgraded Hawk: eight missiles on the launcher, a Sentinel radar and digital fire control — two channels, better against jamming and low-flying targets. Semi-active seeker — keep the target illuminated until impact.",
   "США / Норвегия": "USA / Norway",
   "до ≈ 45 км (в игре меньше)": "up to ≈ 45 km (less in game)",
   // ветки «Ударов» в «Исследованиях» (arsenal.js MULTI_LINES; «Баллистика» и «Крылатые ракеты» уже в en-training.js)

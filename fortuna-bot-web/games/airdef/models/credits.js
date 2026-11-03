@@ -1231,16 +1231,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "MIM-72 Chaparral 1/100 Scale",
-  "author": "TankLord",
-  "url": "https://www.thingiverse.com/thing:3058287",
-  "license": "CC-BY-4.0",
-  "files": [
-   "chaparral",
-   "chaparral_lo"
-  ]
- },
- {
   "title": "Humvee Transport (кузов, прицеп и антенна AN/MPQ-64 — свои)",
   "author": "karmy2k",
   "url": "https://sketchfab.com/3d-models/humvee-transport-48336bc41caf4fa1bdf147823a774111",
