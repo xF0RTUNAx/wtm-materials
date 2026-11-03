@@ -79,7 +79,7 @@ export function createAccount(C) {
   function renderRail() {
     const box = $('accBox'), g = gameAcc();
     const p = siteStatus(); if (p && p.then && !S.pend) { S.pend = true; p.then(() => { S.pend = false; renderRail(); if (root.classList.contains('on')) draw(); }); } // «Перенести прогресс» — по ответу сервера
-    const h = (g ? `<button data-a="open" title="${tr('Профиль')}">${ico('players')}<span class="nm">${esc(g.nick || g.login)}</span></button>` : `<button class="in" data-a="open">${tr('Войти в аккаунт игры')}</button>`)
+    const h = (g ? `<button data-a="open" title="${tr('Профиль')}">${ico('idCard')}<span class="nm">${esc(g.nick || g.login)}</span></button>` : `<button class="in" data-a="open">${tr('Войти в аккаунт игры')}</button>`)
       + (transferOk() ? `<button class="xf" data-a="xfer">${tr('Перенести прогресс')}</button>` : '');
     if (box.innerHTML !== h) box.innerHTML = h;
   }

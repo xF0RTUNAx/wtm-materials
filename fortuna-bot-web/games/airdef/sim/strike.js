@@ -783,7 +783,7 @@ export function createStrike(ctx) {
         // ГСН видит пятно: в поле зрения и без зданий между
         if (spot && angleBetween(w.vel, TMP.copy(spot).sub(w.pos)) < W.fov * D2R && city.los(w.pos.x, w.pos.y, w.pos.z, spot.x, spot.y, spot.z, 4)) { aim = spot; w.homing = true; w.aimSeen = spot.clone(); }
         else w.homing = false;
-      } else if (W.kind === 'gps' && w.aim) {
+      } else if (W.kind === 'gps' && w.aim && !w.miss) {
         // спутниковое: летит в координаты; в зоне станции подавления навигации — уход на десятки метров (один раз)
         if (!w.jammed) for (const u of units) if (!u.dead && u.S.type === 'jammer' && u.pos.distanceTo(w.pos) < u.S.jamR) {
           w.jammed = true; const a2 = rnd() * 6.283, e = 25 + rnd() * 45; w.aim.x += Math.cos(a2) * e; w.aim.z += Math.sin(a2) * e; w.aim.y = city.topAt(w.aim.x, w.aim.z);
@@ -795,10 +795,13 @@ export function createStrike(ctx) {
       }
       if (aim && w.t > 0.6) {
         const sp = w.vel.length(); w.dir.copy(w.vel).divideScalar(sp || 1);
-        // цель с упреждением на «провисание» под тяжестью — бомба идёт чуть выше линии визирования
-        const d = w.pos.distanceTo(aim), tgo = d / Math.max(80, sp);
-        AIM.copy(aim).addScaledVector(UPV, 0.5 * G0 * tgo * tgo * 0.35).sub(w.pos).normalize();
-        turnToward(w.dir, AIM, W.g * G0 / Math.max(80, sp) * dt);
+        if (W.kind === 'gps') { if (!guideGps(w.dir, w.pos, aim, sp, W, dt, w)) { w.miss = true; w.homing = false; } }
+        else {
+          // цель с упреждением на «провисание» под тяжестью — бомба идёт чуть выше линии визирования
+          const d = w.pos.distanceTo(aim), tgo = d / Math.max(80, sp);
+          AIM.copy(aim).addScaledVector(UPV, 0.5 * G0 * tgo * tgo * 0.35).sub(w.pos).normalize();
+          turnToward(w.dir, AIM, W.g * G0 / Math.max(80, sp) * dt);
+        }
         w.vel.copy(w.dir).multiplyScalar(sp);
       }
       PREV.copy(w.pos); w.pos.addScaledVector(w.vel, dt); w.speed = w.vel.length();
@@ -1031,18 +1034,40 @@ export function createStrike(ctx) {
 // ═════════════ Предсказание полёта бомбы (CCIP и зона сброса) ═════════════
 // Бомба из точки p со скоростью v: куда упадёт (без наведения). Для управляемых — ещё и «достанет ли до точки aim»:
 // упрощённо — летим с наведением на aim и смотрим промах.
-const PP = new THREE.Vector3(), PV = new THREE.Vector3(), PD = new THREE.Vector3(), PA = new THREE.Vector3();
+const PP = new THREE.Vector3(), PV = new THREE.Vector3(), PD = new THREE.Vector3(), PA = new THREE.Vector3(), GA = new THREE.Vector3();
+// спутниковая бомба (gps — КАБ-500С, JDAM, SDB, УМПК, GBU-57): рули поворачивают скорость к цели с упреждением на провисание, но не выше
+// 10 % дальности (издалека упреждение ∝ tgo² «целилось» на километры вверх: бомба задирала нос и зависала без скорости на 5–6 км);
+// без тяги высоту не набирает; прошла цель и уходит — рули её не вернут, дальше баллистика (2026-11-03, Mark: на топи КАБ-500С кружили
+// над целью в 10 м от земли до конца жизни, волна обороны не кончалась). D — направление (меняется), st — где помнить ближайшую дальность.
+// false — промах, наводить больше нечего
+function guideGps(D, P, aim, sp, W, dt, st) {
+  const d = P.distanceTo(aim), tgo = d / Math.max(80, sp);
+  GA.copy(aim); GA.y += Math.min(0.5 * G0 * tgo * tgo * 0.35, 0.1 * d); GA.sub(P).normalize();
+  st.dmin = Math.min(st.dmin ?? 1e9, d);
+  if (d > st.dmin + 30 && D.dot(GA) < 0.2) return false;
+  // цель уже была перед носом, а теперь ближе двух радиусов поворота и в стороне больше 60° — рули её не достанут (иначе бомба
+  // кружила над целью у самой земли: упреждение держало её на уровне цели)
+  if (D.dot(GA) > 0.9) st.armed = true;
+  const hx = aim.x - P.x, hz = aim.z - P.z, hl = Math.hypot(hx, hz), vh = Math.hypot(D.x, D.z), r = sp * sp / (W.g * G0);
+  if (st.armed && D.y > -0.8 && vh > 0.2 && hl > 1 && hl < 2 * r && (hx * D.x + hz * D.z) / (hl * vh) < 0.5) return false;
+  const y0 = D.y; turnToward(D, GA, W.g * G0 / Math.max(80, sp) * dt);
+  if (D.y > 0 && D.y > y0) { const ny = Math.max(y0, 0), h = Math.hypot(D.x, D.z), k = h > 1e-6 ? Math.sqrt(1 - ny * ny) / h : 0; D.set(D.x * k, ny, D.z * k); }
+  return true;
+}
 export function predictBomb(city, W, p, v, aim, out) {
   PP.copy(p); PV.copy(v);
-  const dt = 0.1;
+  const dt = 0.1, st = {};
   for (let t = 0; t < 120; t += dt) {
     const sp = PV.length(), rho = rhoAt(PP.y);
     PV.y -= G0 * dt * (W.glide && aim && PP.distanceTo(aim) > 2500 ? 0.3 : 1); PV.multiplyScalar(Math.max(0, 1 - W.kd * 1e-4 * rho * sp * dt));
-    if (aim && W.kind !== 'bomb' && t > 0.6) {
+    if (aim && W.kind !== 'bomb' && t > 0.6 && !st.miss) {
       const s2 = PV.length(); PD.copy(PV).divideScalar(s2 || 1);
-      const d = PP.distanceTo(aim), tgo = d / Math.max(80, s2);
-      PA.copy(aim); PA.y += 0.5 * G0 * tgo * tgo * 0.35; PA.sub(PP).normalize();
-      turnToward(PD, PA, W.g * G0 / Math.max(80, s2) * dt);
+      if (W.kind === 'gps') { if (!guideGps(PD, PP, aim, s2, W, dt, st)) st.miss = true; } // как в полёте (updateWpn)
+      else {
+        const d = PP.distanceTo(aim), tgo = d / Math.max(80, s2);
+        PA.copy(aim); PA.y += 0.5 * G0 * tgo * tgo * 0.35; PA.sub(PP).normalize();
+        turnToward(PD, PA, W.g * G0 / Math.max(80, s2) * dt);
+      }
       PV.copy(PD).multiplyScalar(s2);
     }
     PP.addScaledVector(PV, dt);

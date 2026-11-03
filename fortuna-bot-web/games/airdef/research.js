@@ -21,12 +21,12 @@ const CSS = `
 #research .btabs { display: flex; margin-left: 10px; } #research .btabs button { border: 1px solid transparent; background: none; color: var(--dim); padding: 7px 13px; font: 500 14px 'Golos Text'; cursor: pointer; }
 #research .btabs button.on { color: #e9e6dc; border-color: #e9e6dc; } #research .btabs button i { font-style: normal; color: var(--dim2); font: 600 10.5px 'JetBrains Mono', monospace; margin-left: 5px; }
 #research .cur { display: flex; gap: 18px; margin-left: auto; font: 600 16px 'JetBrains Mono', monospace; padding-right: var(--sa-r, 0px); } #research .cur span { display: flex; align-items: center; gap: 6px; } #research .cur .xp { color: var(--xp); }
-#research .sides { position: absolute; left: 0; top: calc(var(--rt) + var(--hh)); bottom: 0; width: 122px; padding: 22px 0 0 14px; padding-left: max(14px, var(--sa-l, 0px)); display: flex; flex-direction: column; gap: 10px; z-index: 4; }
+#research .sides { position: absolute; left: 0; top: calc(var(--rt) + var(--hh)); bottom: 0; width: calc(122px + var(--sa-l, 0px)); /* вырез экрана слева — сверх ширины, а не за счёт подложки кнопок (Mark 2026-11-03: на телефоне «Восток» вылезал за подложку) */ padding: 22px 0 0 14px; padding-left: max(14px, var(--sa-l, 0px)); display: flex; flex-direction: column; gap: 10px; z-index: 4; }
 #research .sides button { border: 0; background: rgba(16,20,15,.88); color: var(--dim); height: 74px; text-align: left; padding: 0 12px; font: 500 15px 'Oswald'; border-left: 3px solid transparent; cursor: pointer; }
 #research .sides button small { display: block; font: 500 11px 'Golos Text'; color: var(--dim2); margin-top: 3px; } #research .sides button.on { background: rgba(233,230,220,.12); color: #e9e6dc; border-left-color: #e9e6dc; }
 #research .note { position: absolute; left: 18px; bottom: 14px; width: 114px; font-size: 11px; color: var(--dim2); line-height: 1.35; z-index: 4; }
 #research .note b { color: var(--ac2); font-weight: 600; }
-#research .wrap { position: absolute; left: 128px; top: calc(var(--rt) + var(--hh)); right: 290px; bottom: 0; overflow: auto; -webkit-overflow-scrolling: touch; }
+#research .wrap { position: absolute; left: calc(128px + var(--sa-l, 0px)); top: calc(var(--rt) + var(--hh)); right: 290px; bottom: 0; overflow: auto; -webkit-overflow-scrolling: touch; }
 #research .tree { position: relative; padding: 0 30px 40px 6px; }
 #research .ranks { position: sticky; top: 0; z-index: 3; display: flex; gap: var(--gx); padding: 12px 0 10px 18px; background: linear-gradient(rgba(16,20,15,.95) 70%, rgba(16,20,15,0)); }
 #research .rh { width: var(--cw); flex: none; } #research .rh b { font: 500 17px 'Oswald'; } #research .rh span { color: var(--dim); font-size: 12px; margin-left: 6px; }
@@ -65,7 +65,7 @@ const CSS = `
 @media (max-height: 460px), (max-width: 720px) {
   #research { --cw: 196px; --ch: 80px; --gx: 40px; --gy: 12px; }
   #research { --hh: 46px; } #research .top { padding: 0 10px; padding-left: max(10px, var(--sa-l, 0px)); gap: 8px; } #research .top h1 { display: none; } #research .btabs { margin-left: 0; } #research .btabs button { padding: 5px 8px; font-size: 12.5px; } #research .btabs button i { display: none; } #research .cur { font-size: 13px; gap: 10px; }
-  #research .sides { top: calc(var(--rt) + var(--hh)); width: 92px; padding: 10px 0 0 8px; padding-left: max(8px, var(--sa-l, 0px)); } #research .sides button { height: 52px; font-size: 13px; padding: 0 8px; } #research .sides button small, #research .note { display: none; }
+  #research .sides { top: calc(var(--rt) + var(--hh)); width: calc(92px + var(--sa-l, 0px)); padding: 10px 0 0 8px; padding-left: max(8px, var(--sa-l, 0px)); } #research .sides button { height: 52px; font-size: 13px; padding: 0 8px; } #research .sides button small, #research .note { display: none; }
   #research .wrap { left: calc(96px + var(--sa-l, 0px)); top: calc(var(--rt) + var(--hh)); right: 0; } #research .dos { display: none; } #research.open .dos { display: flex; top: calc(var(--rt) + var(--hh)); width: min(320px, 70vw); }
   #research.open .veil { display: block; position: absolute; inset: calc(var(--rt) + var(--hh)) 0 0 0; background: rgba(0,0,0,.45); z-index: 3; }
   html[lang=en] #research .sides button { font-size: 12px; padding: 0 5px; } /* английские «Helicopters» и т. п. шире русских подписей */
