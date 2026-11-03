@@ -324,13 +324,12 @@ const CONFIG = {
   w_gbu12: { src: new URL('./own/gbu12.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 512, nTex: () => 512, pickMesh: /./, own: true }, // GBU-12 Paveway II: своя модель (Blender, own/gbu12.glb)
   mig29: { src: `${DL}/mig_29.glb`, scale: 17.32 / 947.3, nose: '+z', tex: () => 1024 },
   // правила частей — в осях игры (без центровки): along/across — положение центра части вдоль и поперёк оси пакета
-  // «Тор-М1» — своя модель (сборщик, Свои/Тор-М1, 2026-10-24; копия own/tor.glb): 68 тыс. треугольников, цвет 2048 + нормали 1024 запечены, камуфляж в цвете.
-  // Метры, нос −Z, земля y = 0; части — по именам объектов: body_*, turret_* (башня), radar_* (антенна обзора, крутится); dish — антенна сопровождения:
-  // детали turret_dish у центра тарелки (≤ 0,42 м — тарелка, кожух привода, шея) и крепёж на ней turret_hwd (как в Тор-М1_пакет/pack_parts.py split_dish),
-  // качается по углу места цели на цапфе (launchers.js tor.tdish), опора и цапфа остаются на башне; крышки ячеек — грани turret_main / _hw / _detail целиком в рамке ячейки
-  // (геометрия сборщика: Тор-М1_пакет/pack_geo.py cell_frame / cover_pred) → lid0…7 (L1, R1, L2, R2, … — как слоты launchers.js). Дальняя копия — без них.
-  tor: { src: new URL('./own/tor.glb', import.meta.url).pathname, scale: 1, nose: '-z', rulesIn: 'game', unit: true, own: true, perTri: true, tex: () => 2048, nTex: () => 1024, pickMesh: /./,
-    tpFix: [0, 2.523, -0.37], perTriComp: true, groups: (c) => torPart(c, true) },
+  // «Тор-М1» — своя БМ 9А331, ревизия 2 (сборщик С-300, Свои/Тор-М1, 2026-11-03; Mark: «модель Тор-М1 (ревизия 2) готова»), натуральный размер
+  // (корпус 7,6 м; ревизия 1 — 8,86 м — Свои/Тор-М1/rev1 и own/tor.glb). Устроена как «Тор-М2» (torm2Part): стакан radar и антенна radar_fold → rfold,
+  // dish_track → dish, lid0…7 → крышки в порядке пуска (TORM1_LIDS: левый и правый модуль по очереди — как слоты launchers.js), шторки sh0/sh1.
+  // Атласы H / T — цвет 2048 / нормали 1024, R — вдвое меньше; дальняя — tor_lo сборщика (66 тыс.)
+  tor: { src: `${DL}/Свои/Тор-М1/tor.glb`, scale: 1, nose: '-z', rulesIn: 'game', unit: true, own: true, tex: (m) => (m.name === 'T1_R' ? 1024 : 2048),
+    nTex: (m) => (m.name === 'T1_R' ? 512 : 1024), pickMesh: /./, axisX: 0, axisZ: 0, ground: 0, tpFix: [0, 1.95, 0.25], groups: (c) => torm2Part(c, true, TORM1_LIDS) },
   msl_tor: { src: new URL('./own/msl_tor.glb', import.meta.url).pathname, scale: 1, nose: '-z', own: true, tex: () => 512, nTex: () => 512, pickMesh: /./ }, // ракета 9М331 — своя (сборщик, Свои/9М331), корпус 2,9 м
   // «Тор-М2» — своя БМ 9А331М (сборщик, Свои/Тор-М2, 2026-11-03; Mark: «модель Тор-М2 готова»), натуральный размер (корпус 7,6 м). Оси сборщика без
   // центровки; части — torm2Part: turret/* — башня (ось tp (0; 1,95; 0,5)), radar — стакан антенны обнаружения (крутится), radar_fold → rfold —
@@ -733,26 +732,6 @@ const CONFIG = {
   pr_oldtree: { src: `${DL}/old_tree.glb`, scale: 1.62, nose: '-z', rulesIn: 'game', unit: true, ground: -0.08, tex: () => 512, pickMesh: /./, groups: () => 'body' }, // старое дерево — evolveduk (корни у автора ниже земли — зарыты)
   c_vaz: { src: `${DL}/vaz-2104_free.glb`, scale: 4.1 / 278.7, nose: '+z', rulesIn: 'game', unit: true, tex: () => 512, pickMesh: /./, groups: () => 'body' }, // ВАЗ-2104 — sMoKi (SevKa)
 };
-// «Тор-М1»: рамка ячейки на наклонной грани башни (pack_geo.py сборщика; оси файла: x, y вверх, z = −Y Blender): центр (±MX, MY, −Y[k]),
-// n — наружу, w — вверх по скату; крышка — грани, у которых все вершины в |вдоль| ≤ 0,205, |по скату| ≤ 0,285, от грани −0,03…+0,10 м
-const TOR_CELL = (() => { const S = 8.86 / 439, ZA = (325 - 160) * S - 0.02, ZC = (325 - 130) * S, DX = 1.30 - 0.85, DZ = ZC - ZA, L = Math.hypot(DX, DZ); return { MX: (1.30 + 0.85) / 2, MY: (ZA + ZC) / 2, nx: DZ / L, ny: DX / L, Y: [0.12, -0.28, -0.68, -1.08] }; })();
-function torLid(v) {
-  const C = TOR_CELL;
-  for (const sx of [-1, 1]) for (let k = 0; k < 4; k++) {
-    const inside = v.every(([x, y, z]) => { const dx = x - sx * C.MX, dy = y - C.MY, a = z + C.Y[k], c = -sx * C.ny * dx + C.nx * dy, h = sx * C.nx * dx + C.ny * dy; return Math.abs(a) <= 0.205 && Math.abs(c) <= 0.285 && h >= -0.03 && h <= 0.1; });
-    if (inside) return k * 2 + (sx > 0 ? 1 : 0);
-  }
-  return -1;
-}
-function torPart(c, near) {
-  if (/(^|\/)radar/.test(c.path)) return 'radar';
-  if (!/(^|\/)turret/.test(c.path)) return 'body';
-  if (!near) return 'turret'; // дальняя копия: тарелка и крышки — в башне
-  if (/(^|\/)turret_hwd/.test(c.path)) return 'dish';
-  if (/(^|\/)turret_dish/.test(c.path)) return c.cc && Math.hypot(c.cc[0] - 0.45, c.cc[1] - 3.71, c.cc[2] + 2.99) < 0.42 ? 'dish' : 'turret'; // центр тарелки (0,45; 3,71; −2,99)
-  const k = /(^|\/)turret_(main|hw|detail)/.test(c.path) ? torLid(c.v) : -1;
-  return k >= 0 ? 'lid' + k : 'turret';
-}
 // NASAMS: части по первому слову имени узла; крышки lid_c<ряд><колонка> → lid0…5 (вблизи; в дальней копии — закрытые, в башне);
 // мачта mast_boom: три кронштейна на левой стенке блока (рамка у стенки x > −1,045 м, меньше 0,2 м) — блок, остальное — mast (поднимается, raise)
 function nasamsPart(c, near) {
@@ -793,18 +772,20 @@ function bukPart(c) {
   const p = c.path, Y = [...p.matchAll(/(?:^|\/)cyl_(barrel|rod1|rod2)/g)].pop(); if (Y) return 'cyl' + ['barrel', 'rod1', 'rod2'].indexOf(Y[1]);
   return /(^|\/)cradle_/.test(p) ? 'cradle' : /(^|\/)turret_/.test(p) ? 'turret' : 'body';
 }
-// «Тор-М2»: антенна обнаружения — стакан radar и сама антенна radar_fold (ребёнок стакана: сначала она); вдали тарелка и крышки — в башне
-function torm2Part(c, near) {
+// «Тор-М2» и «Тор-М1» (ревизия 2): антенна обнаружения — стакан radar и сама антенна radar_fold (ребёнок стакана: сначала она); вдали тарелка и крышки — в башне
+// «Тор-М1» (ревизия 2): крышки lid0…3 — левый модуль сзади вперёд, lid4…7 — правый; в игре — в порядке пуска (левый, правый, …)
+const TORM1_LIDS = [0, 4, 1, 5, 2, 6, 3, 7];
+function torm2Part(c, near, lidOrder) {
   const p = c.path, S = p.match(/(^|\/)shutter(\d)/); if (S) return 'sh' + S[2];
   if (/(^|\/)radar_fold/.test(p)) return 'rfold';
   if (/(^|\/)radar/.test(p)) return 'radar';
   if (/(^|\/)dish_track/.test(p)) return near ? 'dish' : 'turret';
-  const L = p.match(/(^|\/)lid(\d+)/); if (L) return near ? 'lid' + L[2] : 'turret';
+  const L = p.match(/(^|\/)lid(\d+)/); if (L) return near ? 'lid' + (lidOrder ? lidOrder.indexOf(+L[2]) : L[2]) : 'turret';
   return /(^|\/)turret/.test(p) ? 'turret' : 'body';
 }
 // ПВО: дальние копии (_lo) — main.js рисует их дальше 400 м (THREE.LOD по частям: корпус, башня, пакет)
-const SAM_LO = ['osa', 'bukm3', 's125', 'gepard', 'ew_e', 'tor', 'pantsir', 'sampt', 'tunguska', 'skyguard', 'rapier', 'zsu234', 'm163', 'chaparral', 'avenger'];
-for (const k of SAM_LO) CONFIG[k + '_lo'] = { ...CONFIG[k], target: k === 'tor' || k === 'pantsir' ? 15000 : 20000, simpErr: 0.05, tex: () => 256, nTex: null };
+const SAM_LO = ['osa', 'bukm3', 's125', 'gepard', 'ew_e', 'pantsir', 'sampt', 'tunguska', 'skyguard', 'rapier', 'zsu234', 'm163', 'chaparral', 'avenger'];
+for (const k of SAM_LO) CONFIG[k + '_lo'] = { ...CONFIG[k], target: k === 'pantsir' ? 15000 : 20000, simpErr: 0.05, tex: () => 256, nTex: null };
 CONFIG.bukm3_lo.tracks = { ...CONFIG.bukm3.tracks, links: false }; // дальняя копия: лента — гладкая, без звеньев
 // Гепард ревизии 2: дальняя копия сборщика (gepard_lo.glb, без мелочи), цвет 512, без нормалей; антенна сопровождения — в башне (вдали не качается).
 // На телефоне она видна и вблизи (грузится только _lo) — ходовая (материал GP_R: гусеницы, катки — 2/3 из 48,8 тыс.) упрощена до доли 0,2 с ошибкой
@@ -816,9 +797,8 @@ CONFIG.gepard_lo = { ...CONFIG.gepard, src: `${DL}/Свои/Гепард_rev2/ge
 CONFIG.strela1_lo = { ...CONFIG.strela1, target: 15000, simpErr: 0.05, tex: () => 512, nTex: null };
 // Sentinel (67 тыс., почти всё — «Хамви» основы): дальняя копия — 15 тыс., цвет 512, без нормалей
 CONFIG.ew_w_lo = { ...CONFIG.ew_w, target: 15000, simpErr: 0.05, tex: () => 512, nTex: null };
-// «Тор-М1» (своя, 68 тыс.): дальняя копия — 12 тыс., цвет 512 (камуфляж — в цвете), без нормалей, тарелка и крышки — в башне
 CONFIG.nasams_lo = { ...CONFIG.nasams, target: 12000, simpErr: 0.05, tex: () => 512, nTex: null, groups: (c) => nasamsPart(c, false) }; // NASAMS: дальняя — 12 тыс., крышки закрыты
-CONFIG.tor_lo = { ...CONFIG.tor, target: 12000, simpErr: 0.05, tex: () => 512, nTex: null, perTriComp: false, groups: (c) => torPart(c, false) };
+CONFIG.tor_lo = { ...CONFIG.tor, src: `${DL}/Свои/Тор-М1/tor_lo.glb`, tex: () => 512, nTex: null, groups: (c) => torm2Part(c, false) }; // «Тор-М1»: дальняя сборщика (66 тыс.)
 CONFIG.torm2_lo = { ...CONFIG.torm2, src: `${DL}/Свои/Тор-М2/torm2_lo.glb`, tex: () => 512, nTex: null, groups: (c) => torm2Part(c, false) }; // «Тор-М2»: дальняя сборщика (60 тыс.)
 CONFIG.buk_lo = { ...CONFIG.buk, src: `${DL}/Свои/Бук-М1/buk_lo.glb`, tex: () => 512, nTex: null }; // «Бук-М1»: дальняя сборщика (69 тыс.)
 // 9М38М1 на пусковой издали (дальше 400 м, как buk_lo; Mark 2026-11-03: «облегченные модели ракет бука для дальнего плана»): 8,9 тыс. → ≈ 1,2 тыс., цвет 256, без нормалей
