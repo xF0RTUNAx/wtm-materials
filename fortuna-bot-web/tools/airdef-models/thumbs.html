@@ -79,7 +79,7 @@ const sc = new THREE.Scene();
 // два света: прежний (все миниатюры) и естественный — NATURAL (Mark 2026-11-02: «новые миниатюры только для… петриот и с-400»): солнце со стороны
 // камеры (она справа сзади), нейтральное, мягкое небо и тёмная земля, без тёплой подсветки снизу; кадр приглушён на 20 % (ACES насыщает тёмные
 // и уводит коричневый в рыжий, а Blender у сборщиков, наоборот, приглушает). ?light=2 — естественный всем (проба); exp / hemi / sun / sat — подбор
-const NATURAL = new Set(['pvo:patriot', 'pvo:s400', 'pvo:strela10']), ALLNAT = Q.get('light') === '2';
+const NATURAL = new Set(['pvo:patriot', 'pvo:s400', 'pvo:strela10', 'pvo:avenger']), ALLNAT = Q.get('light') === '2';
 function desat(src, s) {
   const c = document.createElement('canvas'); c.width = src.width; c.height = src.height; const x = c.getContext('2d'); x.drawImage(src, 0, 0);
   const d = x.getImageData(0, 0, c.width, c.height), a = d.data;

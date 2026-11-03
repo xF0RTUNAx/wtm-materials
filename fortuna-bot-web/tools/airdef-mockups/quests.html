@@ -211,7 +211,7 @@ body { margin: 0; background: var(--bg); color: var(--ink); font: 14px 'Golos Te
 .gq .no { display: flex; flex-direction: column; align-items: center; gap: 1px; } .gq .no span { font: 600 11px 'Oswald'; letter-spacing: .12em; color: #6f7a63; } .gq .no .ic { font-size: 26px; color: var(--gold); } .gq.taken .no .ic { color: var(--green); }
 .gq .tx { min-width: 0; } .gq .t { font: 500 17px 'Oswald'; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .gq .tier { display: inline-block; margin-left: 8px; padding: 0 6px; border: 1px solid var(--gold); color: var(--gold2); font: 600 12px 'Oswald'; letter-spacing: .08em; vertical-align: 2px; }
-.gq .d { font-size: 12px; color: var(--dim); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gq .d { font-size: 12px; color: var(--dim); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .gq .wh { color: var(--dim2); font: 600 10.5px 'Golos Text'; text-transform: uppercase; letter-spacing: .06em; margin-right: 2px; }
 .gq .prog { display: flex; align-items: center; gap: 8px; min-width: 0; } .gq .sg { flex: 1; min-width: 0; display: flex; gap: 2px; height: 9px; } .gq .sg i { flex: 1; background: rgba(233,230,220,.12); } .gq .sg i.f { background: var(--gold); } .gq.done .sg i.f, .gq.taken .sg i.f { background: var(--green); }
 .gq .cnt { flex: none; font: 600 12.5px 'JetBrains Mono'; color: var(--dim); white-space: nowrap; text-align: right; min-width: 58px; } .gq .cnt b { color: var(--ink); }
 .gq .rws { display: flex; gap: 5px; white-space: nowrap; } .gq .pt { font: 600 12px 'JetBrains Mono'; color: var(--gold2); padding: 2px 6px; border: 1px dashed rgba(232,176,74,.5); }
@@ -223,7 +223,7 @@ body { margin: 0; background: var(--bg); color: var(--ink); font: 14px 'Golos Te
 .G .bon .ic { font-size: 28px; color: #c9a26a; flex: none; } .G .bon .bt { font: 500 15px 'Oswald'; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; } .G .bon .s3 { display: flex; gap: 3px; flex: none; } .G .bon .s3 i { width: 22px; height: 6px; background: rgba(233,230,220,.15); } .G .bon .s3 i.f { background: var(--gold); } .G .bon .rws { margin-left: auto; display: flex; gap: 5px; flex: none; }
 .phone .G .gw { left: 8px; right: 8px; top: 54px; bottom: 4px; gap: 5px; } .phone .G .sum { padding: 4px 10px 2px; } .phone .G .route { height: 64px; margin-top: 4px; } .phone .G .wp .wr { top: 14px; } .phone .G .wp .rw { font-size: 10px; padding: 0 4px; } .phone .G .wp .v { bottom: 15px; font-size: 10px; } .phone .G .wp .dm { width: 12px; height: 12px; }
 .phone .G .sh b { font-size: 11.5px; } .phone .G .sh .pts { font-size: 13px; } .phone .G .tabsG span { padding: 4px 16px 3px 10px; } .phone .G .tabsG span b { font-size: 13.5px; } .phone .G .tabsG span small { font-size: 10.5px; }
-.phone .gq { grid-template-columns: 34px minmax(0, 1fr) 132px auto 86px; gap: 8px; padding: 4px 8px 4px 4px; } .phone .gq .d { display: none; } .phone .gq .t { font-size: 14.5px; } .phone .gq .no span { display: none; } .phone .gq .no .ic { font-size: 21px; }
+.phone .gq { grid-template-columns: 34px minmax(0, 1fr) 132px auto 86px; gap: 8px; padding: 4px 8px 4px 4px; } .phone .gq .d { font-size: 10.5px; margin-top: 0; } .phone .gq .wh { display: none; } .phone .gq .t { font-size: 14.5px; } .phone .gq .no span { display: none; } .phone .gq .no .ic { font-size: 21px; }
 .phone .gq .cnt { font-size: 11px; min-width: 48px; } .phone .gq .rws .rw { font-size: 11px; padding: 1px 5px; } .phone .gq .rws .rw.cx, .phone .gq .rws .pt { display: none; } .phone .gq .take { font-size: 12px; padding: 6px 10px; } .phone .gq .stamp { font-size: 10.5px; }
 .phone .G .list .gq:nth-child(n+4) { display: none; } .phone .G .bon { padding: 3px 10px; } .phone .G .bon .bt { font-size: 13px; } .phone .G .bon .ic { font-size: 22px; }
 /* список заданий для Mark */
@@ -266,41 +266,41 @@ const topBar = (extra = '') => `<div class="top"><span class="back">«</span><h2
 
 // пул заданий: ежедневные — 3 в день, награда скромная (бой в «Аркаде» даёт ≈ 200–400 опыта и столько же серебра); еженедельные — 5 на неделю, больше игры
 const PD = {
-  kills: { ic: 'task-kills-crosshair', t: 'Сбить 6 воздушных целей', d: 'Самолёты, вертолёты, крылатые ракеты, дроны — любой режим за ПВО', of: 6, r: { silver: 100, xp: 60 }, pts: 10 },
-  strike: { ic: 'task-strike-bombing-run', t: 'Поразить 2 объекта ударом', d: '«Вылет» или онлайн за авиацию', of: 2, r: { silver: 100, xp: 60 }, pts: 10 },
-  sam: { ic: 'task-sam-radar-dish', t: 'Подавить зенитный комплекс', d: 'Ракетой, бомбой или ПРР в «Вылете»', of: 1, r: { silver: 120, xp: 70 }, pts: 10 },
-  waves: { ic: 'task-defense-shield', t: 'Отразить 3 волны обороны', d: '«Оборона», любая карта', of: 3, r: { silver: 90, xp: 50 }, pts: 10 },
-  intc: { ic: 'task-sam-incoming-rocket', t: 'Перехватить 10 ракет и бомб', d: '«Мульти-волна» или «Оборона»', of: 10, r: { silver: 90, xp: 50 }, pts: 10 },
-  back: { ic: 'daily-sunrise', t: 'Вернуться на аэродром', d: 'Довести вылет до посадки', of: 1, r: { silver: 80, xp: 50 }, pts: 10 },
-  online: { ic: 'task-online-trophy-cup', t: 'Сыграть онлайн-бой', d: 'Любой исход', of: 1, r: { silver: 100, xp: 60 }, pts: 10 },
-  win: { ic: 'task-online-trophy', t: 'Победить в онлайн-бою', d: 'Быстрый бой или своя комната', of: 1, r: { silver: 150, xp: 80 }, pts: 10 },
-  heli: { ic: 'task-heli-helicopter', t: 'Слетать на вертолёте', d: 'Вылет на любом вертолёте до конца боя', of: 1, r: { silver: 80, xp: 50 }, pts: 10 },
-  real: { ic: 'task-streak-fire', t: 'Бой в «Реализме»', d: 'Любой режим, своя техника', of: 1, r: { silver: 120, xp: 70 }, pts: 10 },
-  time: { ic: 'timer-stopwatch', t: 'Провести 20 минут в боях', d: 'Время считается по всем боям за день', of: 20, r: { silver: 100, xp: 60 }, pts: 10 },
-  hkill: { ic: 'task-heli-helicopter-tail', t: 'Сбить вертолёт', d: 'В «Обороне» или онлайн за ПВО', of: 1, r: { silver: 90, xp: 50 }, pts: 10 },
-  cm: { ic: 'task-kills-targeting', t: 'Сбить 3 крылатые ракеты или дрона', d: 'Любой режим за ПВО', of: 3, r: { silver: 90, xp: 50 }, pts: 10 },
-  pvo: { ic: 'task-sam-missile-launcher', t: 'Сбить 4 цели за ПВО в онлайне', d: 'Онлайн-бой за сторону ПВО', of: 4, r: { silver: 120, xp: 70 }, pts: 10 },
-  xp: { ic: 'task-xp-sergeant', t: 'Набрать 1 000 опыта', d: 'Опыт за любые бои', of: 1000, r: { silver: 100 }, pts: 10 },
-  mwobj: { ic: 'task-strike-explosion-rays', t: 'Разрушить 10 построек', d: '«Мульти-волна» за нападение', of: 10, r: { silver: 90, xp: 50 }, pts: 10 },
-  play2: { ic: 'menu-checklist', t: 'Сыграть 2 боя', d: 'Любые режимы, кроме обучения', of: 2, r: { silver: 60, xp: 40 }, pts: 10 },
-  full: { ic: 'task-defense-energy-shield', t: 'Пройти «Оборону» до конца', d: 'Все волны одного боя', of: 1, r: { silver: 150, xp: 80 }, pts: 10 },
+  kills: { ic: 'task-kills-crosshair', t: 'Сбить 10 воздушных целей', d: '«Оборона», «Мульти-волна», онлайн за ПВО', of: 10, r: { silver: 140, xp: 80 }, pts: 10 },
+  strike: { ic: 'task-strike-bombing-run', t: 'Поразить 4 объекта ударом', d: '«Вылет», онлайн за авиацию', of: 4, r: { silver: 140, xp: 80 }, pts: 10 },
+  sam: { ic: 'task-sam-radar-dish', t: 'Подавить 2 зенитных комплекса', d: '«Вылет»', of: 2, r: { silver: 150, xp: 90 }, pts: 10 },
+  waves: { ic: 'task-defense-shield', t: 'Отразить 5 волн обороны', d: '«Оборона», любая карта', of: 5, r: { silver: 120, xp: 70 }, pts: 10 },
+  intc: { ic: 'task-sam-incoming-rocket', t: 'Перехватить 20 ракет и бомб', d: '«Мульти-волна», «Оборона»', of: 20, r: { silver: 120, xp: 70 }, pts: 10 },
+  back: { ic: 'daily-sunrise', t: 'Вернуться на аэродром 2 раза', d: '«Вылет» до посадки', of: 2, r: { silver: 110, xp: 60 }, pts: 10 },
+  online: { ic: 'task-online-trophy-cup', t: 'Сыграть 2 онлайн-боя', d: 'Онлайн, любая сторона', of: 2, r: { silver: 130, xp: 80 }, pts: 10 },
+  win: { ic: 'task-online-trophy', t: 'Победить в онлайн-бою', d: 'Онлайн: быстрый бой или своя комната', of: 1, r: { silver: 160, xp: 90 }, pts: 10 },
+  heli: { ic: 'task-heli-helicopter', t: 'Два вылета на вертолёте', d: '«Вылет» на вертолёте, «Туманная топь»', of: 2, r: { silver: 110, xp: 60 }, pts: 10 },
+  real: { ic: 'task-streak-fire', t: 'Два боя в «Реализме»', d: 'Любой режим в «Реализме»', of: 2, r: { silver: 150, xp: 90 }, pts: 10 },
+  time: { ic: 'timer-stopwatch', t: 'Провести 30 минут в боях', d: 'Все режимы, кроме обучения', of: 30, r: { silver: 130, xp: 80 }, pts: 10 },
+  hkill: { ic: 'task-heli-helicopter-tail', t: 'Сбить 2 вертолёта', d: '«Оборона», онлайн за ПВО', of: 2, r: { silver: 120, xp: 70 }, pts: 10 },
+  cm: { ic: 'task-kills-targeting', t: 'Сбить 5 крылатых ракет или дронов', d: '«Оборона», «Мульти-волна», онлайн за ПВО', of: 5, r: { silver: 120, xp: 70 }, pts: 10 },
+  pvo: { ic: 'task-sam-missile-launcher', t: 'Сбить 8 целей за ПВО в онлайне', d: 'Онлайн за ПВО', of: 8, r: { silver: 150, xp: 90 }, pts: 10 },
+  xp: { ic: 'task-xp-sergeant', t: 'Набрать 2 000 опыта', d: 'Все режимы, кроме обучения', of: 2000, r: { silver: 130 }, pts: 10 },
+  mwobj: { ic: 'task-strike-explosion-rays', t: 'Разрушить 20 построек', d: '«Мульти-волна» за нападение', of: 20, r: { silver: 120, xp: 70 }, pts: 10 },
+  play3: { ic: 'menu-checklist', t: 'Сыграть 3 боя', d: 'Все режимы, кроме обучения', of: 3, r: { silver: 90, xp: 50 }, pts: 10 },
+  full: { ic: 'task-defense-energy-shield', t: 'Пройти «Оборону» до конца', d: '«Оборона», все волны одного боя', of: 1, r: { silver: 180, xp: 100 }, pts: 10 },
 };
 const PW = {
-  play: { ic: 'menu-checklist', t: 'Сыграть 25 боёв', d: 'Любые режимы, кроме обучения', of: 25, r: { silver: 400, xp: 250 }, pts: 20 },
-  wins: { ic: 'task-online-trophy', t: 'Победить в 8 онлайн-боях', d: 'Быстрый бой или своя комната', of: 8, r: { silver: 500, gem: 1 }, pts: 20 },
-  downs: { ic: 'task-kills-crosshair', t: 'Сбить воздушные цели', d: 'Ступени: 40 · 80 · 120 — каждая со своей наградой', of: 80, tier: 'II', r: { silver: 300, xp: 200 }, pts: 20 },
-  strike: { ic: 'task-strike-bombing-run', t: 'Поразить 30 объектов ударом', d: '«Вылет» и онлайн за авиацию', of: 30, r: { silver: 450, xp: 250 }, pts: 20 },
+  play: { ic: 'menu-checklist', t: 'Сыграть 25 боёв', d: 'Все режимы, кроме обучения', of: 25, r: { silver: 400, xp: 250 }, pts: 20 },
+  wins: { ic: 'task-online-trophy', t: 'Победить в 8 онлайн-боях', d: 'Онлайн: быстрый бой или своя комната', of: 8, r: { silver: 500, gem: 1 }, pts: 20 },
+  downs: { ic: 'task-kills-crosshair', t: 'Сбить воздушные цели', d: '«Оборона», «Мульти-волна», онлайн за ПВО · ступени 40 · 80 · 120', of: 80, tier: 'II', r: { silver: 300, xp: 200 }, pts: 20 },
+  strike: { ic: 'task-strike-bombing-run', t: 'Поразить 30 объектов ударом', d: '«Вылет», онлайн за авиацию', of: 30, r: { silver: 450, xp: 250 }, pts: 20 },
   sams: { ic: 'task-sam-radar-dish', t: 'Подавить 12 зенитных комплексов', d: '«Вылет»', of: 12, r: { silver: 450, xp: 250 }, pts: 20 },
-  def: { ic: 'task-defense-shield', t: 'Отстоять город в обороне 4 раза', d: '«Оборона» до последней волны', of: 4, r: { silver: 500, gem: 1 }, pts: 20 },
+  def: { ic: 'task-defense-shield', t: 'Отстоять город в обороне 4 раза', d: '«Оборона», все волны', of: 4, r: { silver: 500, gem: 1 }, pts: 20 },
   intc: { ic: 'task-sam-incoming-rocket', t: 'Перехватить 150 ракет и бомб', d: '«Мульти-волна» и «Оборона»', of: 150, r: { silver: 400, xp: 250 }, pts: 20 },
-  time: { ic: 'timer-stopwatch', t: 'Провести 4 часа в боях', d: 'Время по всем боям за неделю', of: 240, r: { silver: 500, xp: 300 }, pts: 20 },
-  xp: { ic: 'task-xp-rank-3', t: 'Набрать 20 000 опыта', d: 'Опыт за любые бои', of: 20000, r: { silver: 500 }, pts: 20 },
-  real: { ic: 'task-streak-fire', t: '8 боёв в «Реализме»', d: 'Любые режимы, своя техника', of: 8, r: { silver: 450, xp: 250 }, pts: 20 },
-  daily: { ic: 'done-check-mark', t: 'Выполнить 15 ежедневных заданий', d: 'Любые ежедневные за неделю', of: 15, r: { silver: 400, gem: 1 }, pts: 20 },
-  days: { ic: 'weekly-calendar', t: 'Играть 5 дней из 7', d: 'Хотя бы один бой в день', of: 5, r: { silver: 300, xp: 200 }, pts: 20 },
-  heli: { ic: 'task-heli-helicopter-tail', t: 'Сбить 15 вертолётов', d: '«Оборона» и онлайн за ПВО', of: 15, r: { silver: 400, xp: 250 }, pts: 20 },
-  both: { ic: 'task-online-laurel-crown', t: '6 онлайн-боёв за ПВО и 6 за авиацию', d: 'Обе стороны онлайна', of: 12, r: { silver: 450, xp: 250 }, pts: 20 },
-  backs: { ic: 'daily-sunrise', t: 'Вернуться на аэродром 10 раз', d: 'Вылеты, доведённые до посадки', of: 10, r: { silver: 350, xp: 200 }, pts: 20 },
+  time: { ic: 'timer-stopwatch', t: 'Провести 4 часа в боях', d: 'Все режимы, кроме обучения', of: 240, r: { silver: 500, xp: 300 }, pts: 20 },
+  xp: { ic: 'task-xp-rank-3', t: 'Набрать 20 000 опыта', d: 'Все режимы, кроме обучения', of: 20000, r: { silver: 500 }, pts: 20 },
+  real: { ic: 'task-streak-fire', t: '8 боёв в «Реализме»', d: 'Любой режим в «Реализме»', of: 8, r: { silver: 450, xp: 250 }, pts: 20 },
+  daily: { ic: 'done-check-mark', t: 'Выполнить 15 ежедневных заданий', d: 'Раздел «Задания» → «Ежедневно»', of: 15, r: { silver: 400, gem: 1 }, pts: 20 },
+  days: { ic: 'weekly-calendar', t: 'Играть 5 дней из 7', d: 'Хотя бы один бой в день, любой режим', of: 5, r: { silver: 300, xp: 200 }, pts: 20 },
+  heli: { ic: 'task-heli-helicopter-tail', t: 'Сбить 15 вертолётов', d: '«Оборона», онлайн за ПВО', of: 15, r: { silver: 400, xp: 250 }, pts: 20 },
+  both: { ic: 'task-online-laurel-crown', t: '6 онлайн-боёв за ПВО и 6 за авиацию', d: 'Онлайн, обе стороны', of: 12, r: { silver: 450, xp: 250 }, pts: 20 },
+  backs: { ic: 'daily-sunrise', t: 'Вернуться на аэродром 10 раз', d: '«Вылет» до посадки', of: 10, r: { silver: 350, xp: 200 }, pts: 20 },
 };
 let FT = 'd'; // вкладка варианта F: d — ежедневно, w — еженедельно
 const V = {
@@ -368,10 +368,10 @@ const V = {
         ${W8.map(([p, l, r, c], i) => `<span class="wp ${c}" style="left:${X(p)}%;top:${Y(i)}px"><span class="v">${l}</span><span class="dm"></span>${r ? `<span class="wr">${rw(r)}</span>` : ''}</span>`).join('')}<span class="plane" style="left:${cx}%;top:${cy}px">${ic('jet')}</span></div>`;
       const seg = (n, of) => { const m = Math.min(of, 10), f = Math.round(m * Math.min(1, n / of)); return `<span class="sg">${Array.from({ length: m }, (_, i) => `<i class="${i < f ? 'f' : ''}"></i>`).join('')}</span>`; };
       const cnt = (n, of) => of >= 10000 ? `<b>${(n / 1000).toLocaleString('ru-RU', { maximumFractionDigits: 1 })}</b> / ${of / 1000} тыс.` : `<b>${n}</b> / ${of}`;
-      const card = (q, i) => `<div class="gq ${q.st || ''}"><span class="no"><span>${String(i + 1).padStart(2, '0')}</span>${ic(q.st === 'taken' ? 'done-check-mark' : q.ic)}</span><div class="tx"><div class="t">${q.t}${q.tier ? `<span class="tier">${q.tier}</span>` : ''}</div><div class="d">${q.d}</div></div>
+      const card = (q, i) => `<div class="gq ${q.st || ''}"><span class="no"><span>${String(i + 1).padStart(2, '0')}</span>${ic(q.st === 'taken' ? 'done-check-mark' : q.ic)}</span><div class="tx"><div class="t">${q.t}${q.tier ? `<span class="tier">${q.tier}</span>` : ''}</div><div class="d"><span class="wh">засчитывается:</span> ${q.d}</div></div>
         <span class="prog">${seg(q.n, q.of)}<span class="cnt">${cnt(q.n, q.of)}</span></span><span class="rws">${rw(q.r)}<span class="pt">+${q.pts}</span></span>
         <span class="act">${q.st === 'done' ? '<button class="take">ЗАБРАТЬ</button>' : q.st === 'taken' ? '<span class="stamp">ПОЛУЧЕНО</span>' : `<span class="wait">ещё ${q.of >= 10000 ? Math.round((q.of - q.n) / 100) / 10 + ' тыс.' : q.of - q.n}</span>`}</span></div>`;
-      const day = [{ ...PD.kills, n: 4 }, { ...PD.strike, n: 2, st: 'done' }, { ...PD.play2, n: 2, st: 'taken' }];
+      const day = [{ ...PD.kills, n: 6 }, { ...PD.strike, n: 4, st: 'done' }, { ...PD.play3, n: 3, st: 'taken' }];
       const week = [{ ...PW.play, n: 11 }, { ...PW.wins, n: 3 }, { ...PW.downs, n: 80, st: 'done' }, { ...PW.xp, n: 14200 }, { ...PW.days, n: 5, st: 'taken' }];
       const D = FT === 'd', L = D ? day : week;
       const bon = D ? `<div class="bon">${ic('reward-wooden-crate')}<span class="bt">Ящик снабжения — за все три сегодня</span><span class="s3"><i class="f"></i><i class="f"></i><i></i></span><span class="rws">${rw({ silver: 150 })}</span></div>`
@@ -401,7 +401,7 @@ draw();
 const li = (q) => `<li><b>${q.t}</b>${q.tier ? ' (ступени)' : ''} — ${q.d} · ${[q.r.silver && q.r.silver + ' сер.', q.r.xp && q.r.xp + ' оп.', q.r.gem && q.r.gem + ' 💎'].filter(Boolean).join(' + ')} · +${q.pts} очков</li>`;
 document.getElementById('pool').innerHTML = `
 <section><h3>${ic('daily-sun')}Ежедневно — 3 в день из ${Object.keys(PD).length}</h3><ul>${Object.values(PD).map(li).join('')}</ul>
-<p style="color:var(--dim);margin:8px 0 0">Все три за день — <b style="color:var(--ink)">ящик снабжения</b>: 150 серебра. Обновление — 00:00 МСК. Для сравнения: обычный бой в «Аркаде» — 200–400 опыта и столько же серебра.</p></section>
+<p style="color:var(--dim);margin:8px 0 0">Все три за день — <b style="color:var(--ink)">ящик снабжения</b>: 150 серебра. Ежедневных три — поэтому каждое чуть длиннее: ≈ 1–2 боя. Обновление — 00:00 МСК. Для сравнения: обычный бой в «Аркаде» — 200–400 опыта и столько же серебра.</p></section>
 <section><h3>${ic('weekly-calendar')}Еженедельно — 5 на неделю из ${Object.keys(PW).length}</h3><ul>${Object.values(PW).map(li).join('')}</ul>
 <p style="color:var(--dim);margin:8px 0 0">Все пять — <b style="color:var(--ink)">кейс недели</b>: 1 💎 + 300 серебра. Неделя — с понедельника 00:00 МСК. Длинные задания — ступенями I–III, у каждой своя награда.</p></section>
 <section><h3>${ic('g_star')}Сводка недели — очки</h3><ul>

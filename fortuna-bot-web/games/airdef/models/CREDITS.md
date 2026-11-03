@@ -130,7 +130,6 @@
 - "Mim-23 Hawk SAM air defence system (game-ready)" (https://sketchfab.com/3d-models/mim-23-hawk-sam-air-defence-system-game-ready-8728909b6ce24ef8baeffabbf5bae8f4) by Dominik Biały — CC-BY-4.0 — `hawk.glb`
 - "M163" (https://sketchfab.com/3d-models/m163-54bf2317be68403d9b5a1d7e75e68d4d) by Gorgytz — CC-BY-4.0 — `m163.glb`, `m163_lo.glb`
 - "ZSU-23-4M" (https://sketchfab.com/3d-models/zsu-23-4m-e9e3ca1a5ee7455f90886de220519e42) by voron — CC-BY-4.0 — `zsu234.glb`, `zsu234_lo.glb`
-- "AN/TWQ-1A1 Avenger" (https://sketchfab.com/3d-models/antwq-1a1-avenger-5069a439f0c1460b95ccbf6b775de240) by KillCaptureDestroy — CC-BY-4.0 — `avenger.glb`, `avenger_lo.glb`
 - "Humvee Transport (кузов, прицеп и антенна AN/MPQ-64 — свои)" (https://sketchfab.com/3d-models/humvee-transport-48336bc41caf4fa1bdf147823a774111) by karmy2k — CC-BY-4.0 — `ew_w.glb`, `ew_w_lo.glb`
 - "Ural 4320 (будка, мачта и антенна П-18 — свои)" (https://sketchfab.com/3d-models/ural-4320-f953c51a5dbc4a15949f4dcc0905c4e8) by Brout — CC-BY-4.0 — `ew_e.glb`, `ew_e_lo.glb`
 - "Large Industrial Storage Tanks" (https://sketchfab.com/3d-models/large-industrial-storage-tanks-bd3ac97071104b64bc388a155b64f79e) by Duane's Mind — CC-BY-4.0 — `obj_tanks.glb`

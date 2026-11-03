@@ -1194,16 +1194,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "AN/TWQ-1A1 Avenger",
-  "author": "KillCaptureDestroy",
-  "url": "https://sketchfab.com/3d-models/antwq-1a1-avenger-5069a439f0c1460b95ccbf6b775de240",
-  "license": "CC-BY-4.0",
-  "files": [
-   "avenger",
-   "avenger_lo"
-  ]
- },
- {
   "title": "Humvee Transport (кузов, прицеп и антенна AN/MPQ-64 — свои)",
   "author": "karmy2k",
   "url": "https://sketchfab.com/3d-models/humvee-transport-48336bc41caf4fa1bdf147823a774111",

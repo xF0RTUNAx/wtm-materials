@@ -261,7 +261,7 @@ const META = {
   m163: { units: ['m163'], stations: [], matte: true, camo: { scheme: 'nato', size: 1.3 } }, // M163 VADS — Gorgytz
   zsu234: { units: ['zsu234'], matte: true, stations: [] }, // ЗСУ-23-4М «Шилка» — voron335
   strela10: { units: ['strela10'], matte: true, stations: [] }, // «Стрела-10» (9А35 на МТ-ЛБ) — своя (сборщик, Свои/Стрела-10; раньше — low-poly ScurvyWoof с шейдерным камуфляжем)
-  avenger: { units: ['avenger'], stations: [], matte: true, camo: { scheme: 'nato', size: 1.1 } }, // AN/TWQ-1 Avenger — KillCaptureDestroy
+  avenger: { units: ['avenger'], matte: true, stations: [] }, // AN/TWQ-1 Avenger — свой (сборщик, Свои/Avenger; раньше — KillCaptureDestroy с шейдерным камуфляжем)
   chaparral: { units: ['chaparral'], matte: true, stations: [] }, // MIM-72 Chaparral — своя пусковая M54 на M730 (сборщик, Свои/Chaparral, 2026-11-03), песочная; предел подъёма по азимуту (launchers.js elMaxAz)
   msl_chaparral: { samMissile: ['chaparral'], lazy: true, onRail: true, matte: true, stations: [] }, // ракета MIM-72 — своя (Свои/MIM-72), 2,9 м, нос −Z; 4 на направляющих
   gepard: { units: ['gepard'], matte: true, stations: [] }, // Flakpanzer Gepard — своя модель, ревизия 2 (Свои/Гепард_rev2, 2026-11-02): трёхцветный камуфляж бундесвера запечён (шейдерный узор снят), антенна сопровождения качается за целью
@@ -418,6 +418,8 @@ const GLB_V_OWN = {
   buk_lo: '20261103a',
   msl_buk: '20261103a',
   msl_buk_lo: '20261103b', // 9М38М1 на пусковой издали (1,2 тыс. треугольников)
+  avenger: '20261103i', // AN/TWQ-1 Avenger — свой (Свои/Avenger), НАТО, 80 тыс.; дальняя — сборщика
+  avenger_lo: '20261103i',
   strela10: '20261103h', // «Стрела-10» — своя (Свои/Стрела-10), тёмная окраска, 176 тыс.; дальняя — сборщика (60 тыс.)
   strela10_lo: '20261103h',
   chaparral: '20261103e', // MIM-72 Chaparral — своя (Свои/Chaparral + Свои/MIM-72) вместо STL TankLord; e — бортовые экраны снаружи гусеницы (перевыпуск сборщика)

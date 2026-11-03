@@ -497,13 +497,11 @@ const CONFIG = {
   strela10: { src: `${DL}/Свои/Стрела-10/strela10.glb`, scale: 1, nose: '-z', rulesIn: 'game', unit: true, own: true, tex: (m) => (m.name === 'S10_R' ? 1024 : 2048),
     nTex: (m) => (m.name === 'S10_R' ? 512 : 1024), pickMesh: /./, axisX: 0, axisZ: 0, ground: 0, hinge: [0, 2.12, 0.4], tpFix: [0, 1.4, 0.3], pack0: 0, groups: (c) => strela10Part(c, true),
     texVf: (src) => (src % 2 ? 'eq=gamma=1.8' : null) /* Mark: «миниатюра очень черная — надо естественного цвета»: окраска сборщика в среднем #262621, на фото ref_01 тот же борт ≈ #666f73 — цвет (картинки 1, 3, 5) светлее, нормали (0, 2, 4) как есть */ },
-  // AN/TWQ-1 Avenger — KillCaptureDestroy (CC BY): 1,7 млн треугольников (шины — 0,4 млн) → 140 тыс.; материалы у автора белые — свои цвета.
-  // Турель — на кузове сзади (центр x −1,92 в осях правил — по краям пакетов), пакеты «Стингеров» по бокам выше 2 м — качаются
-  avenger: { src: `${DL}/antwq-1a1_avenger.glb`, scale: 9.34, nose: '+z', rulesIn: 'game', unit: true, crease: 35, /* пусковые были «смазаны» — сглаженные нормали через острые рёбра */ tex: () => 256, target: 450000, simpErr: 0.005, hinge: [-1.92, 2.38, 1.63], perTri: true, camo: { scheme: 'nato', skip: /tire|chrome|steel|glass|head_lights|paint_black/ }, /* 1,7 млн → 450 тыс. (вдали — avenger_lo) */
-    colors: { tire: [0.02, 0.02, 0.02], paint_black: [0.015, 0.015, 0.015], 'chrome|steel': [0.22, 0.22, 0.21], head_lights: [0.6, 0.6, 0.55] },
-    groups: (c) => { const X = c.ctr[0] + 1.92, Y = c.ctr[1], Z = c.ctr[2];
-      if (Y > 2.05 && Math.abs(X) > 0.4 && Z > 0.7 && Z < 2.5) return 'cradle';
-      return Y > 1.25 && Math.hypot(X, Z - 1.63) < 0.85 ? 'turret' : 'body'; } },
+  // AN/TWQ-1 Avenger — свой (сборщик, Свои/Avenger, 2026-11-03; Mark: «модель Avenger готова»; раньше — KillCaptureDestroy). Части — strela10Part (те же имена):
+  // turret_main — башня (ось (0; 0,95; 1,3)), cradle_* — оба пакета с пулемётом и датчиками на одном валу (0; 2,3; 1,61), lid0…7 — красные крышки труб (рвутся при пуске)
+  avenger: { src: `${DL}/Свои/Avenger/avenger.glb`, scale: 1, nose: '-z', rulesIn: 'game', unit: true, own: true, tex: (m) => (m.name === 'AVG_R' ? 1024 : 2048),
+    nTex: (m) => (m.name === 'AVG_R' ? 512 : 1024), pickMesh: /./, axisX: 0, axisZ: 0, ground: 0, hinge: [0, 2.2992, 1.6081], tpFix: [0, 0.9521, 1.2991], pack0: 0, groups: (c) => strela10Part(c, true),
+    texVf: (src) => (src % 2 ? 'eq=gamma=1.5' : null) /* краска сборщика в среднем #2b2922, на фото короб ≈ #454837, борт ≈ #696666 — цвет (картинки 1, 3, 5) светлее, нормали как есть (урок «Стрелы-10») */ },
   // MIM-72 Chaparral — своя пусковая M54 на M730 (сборщик объектов, Свои/Chaparral, 2026-11-03; Mark: «модель Chaparral готова») вместо STL TankLord;
   // окраска — песочная. Метры, нос −Z, земля y = 0, оси сборщика без центровки; части — chapPart: turret_main и turret_* — станция M54 (ось tp (0; 1,36; 0,904)),
   // cradle_beam_l / cradle_beam_r (+ cradle_hw) — балки на одной оси качания (0; 2,915; 1,054), в файле горизонтально (pack0). Ракет в модели нет —
@@ -796,7 +794,7 @@ function torm2Part(c, near, lidOrder) {
   return /(^|\/)turret/.test(p) ? 'turret' : 'body';
 }
 // ПВО: дальние копии (_lo) — main.js рисует их дальше 400 м (THREE.LOD по частям: корпус, башня, пакет)
-const SAM_LO = ['osa', 'bukm3', 's125', 'gepard', 'ew_e', 'pantsir', 'sampt', 'tunguska', 'skyguard', 'rapier', 'zsu234', 'm163', 'avenger'];
+const SAM_LO = ['osa', 'bukm3', 's125', 'gepard', 'ew_e', 'pantsir', 'sampt', 'tunguska', 'skyguard', 'rapier', 'zsu234', 'm163'];
 for (const k of SAM_LO) CONFIG[k + '_lo'] = { ...CONFIG[k], target: k === 'pantsir' ? 15000 : 20000, simpErr: 0.05, tex: () => 256, nTex: null };
 CONFIG.bukm3_lo.tracks = { ...CONFIG.bukm3.tracks, links: false }; // дальняя копия: лента — гладкая, без звеньев
 // Гепард ревизии 2: дальняя копия сборщика (gepard_lo.glb, без мелочи), цвет 512, без нормалей; антенна сопровождения — в башне (вдали не качается).
@@ -818,6 +816,7 @@ CONFIG.msl_buk_lo = { ...CONFIG.msl_buk, target: 1200, simpErr: 0.01, tex: () =>
 CONFIG.chaparral_lo = { ...CONFIG.chaparral, src: `${DL}/Свои/Chaparral/chaparral_lo.glb`, tex: () => 512, nTex: null }; // Chaparral: дальняя сборщика
 CONFIG.hawk21_lo = { ...CONFIG.hawk21, src: `${DL}/Свои/Hawk XXI/hawk21_lo.glb`, tex: () => 512, nTex: null }; // Hawk XXI: дальняя сборщика (15 тыс.)
 CONFIG.strela10_lo = { ...CONFIG.strela10, src: `${DL}/Свои/Стрела-10/strela10_lo.glb`, tex: () => 512, nTex: null, groups: (c) => strela10Part(c, false) }; // «Стрела-10»: дальняя сборщика (60 тыс.)
+CONFIG.avenger_lo = { ...CONFIG.avenger, src: `${DL}/Свои/Avenger/avenger_lo.glb`, tex: () => 512, nTex: null, groups: (c) => strela10Part(c, false) }; // Avenger: дальняя сборщика
 // ракеты на направляющих издали (как msl_buk_lo): MIM-72 Chaparral и AIM-120 Hawk XXI
 CONFIG.msl_chaparral_lo = { ...CONFIG.msl_chaparral, target: 900, simpErr: 0.01, tex: () => 256, nTex: null };
 CONFIG.msl_amraam_lo = { ...CONFIG.msl_amraam, target: 900, simpErr: 0.01, tex: () => 256, nTex: null };
