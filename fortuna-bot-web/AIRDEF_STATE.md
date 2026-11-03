@@ -4,27 +4,21 @@
 Подробная история — в `SESSION_HANDOFF.md` (разделы с 2026-10-12), правила прокачки — `AIRDEF_PROGRESSION.md`.
 Секретов сюда не писать: всё в `main` публично на fortunawtm.com.
 
-## Пауза 2026-11-02, вечер (Mark закрывает Claude) — ЧИТАТЬ ПЕРВЫМ
-- **На сайте 20261102b** (724c2d2, журнал bd24e23). Вошло:
-  - своя С-400 и стёкла С-300;
-  - 5В55Р у С-300ПМУ;
-  - Patriot (MAN 8×8) с поворотом ±110° и PAC-2;
-  - своя PAC-3 (HEMTT + полуприцеп, 16 ячеек, MSE);
-  - Гепард ревизии 2 (дальняя копия облегчена);
-  - поиск онлайна: виден фон, пинг один раз;
-  - у вертолёта убраны длинные подсказки.
+## Состояние 2026-11-03 (после деплоя 20261103a) — ЧИТАТЬ ПЕРВЫМ
+- **На сайте 20261103a** (a67bede, журнал — следующий коммит). Вошло:
+  - свой «Бук-М1» (9А310М1 + 9М38М1 на направляющих, цилиндр подъёма, облегчённые ракеты вдали);
+  - свой «Тор-М2» (16 ячеек, антенна обнаружения поднимается, шторки) и «Тор-М1» ревизии 2 — обе в натуральный размер;
+  - свой Chaparral (песочный, предел угла над кабиной — пуск с упора);
+  - свой Hawk XXI (8 ракет вместо 3; цена 430 «Мульти-волна» / 370 «Оборона» и онлайн — по замеру), картинка экрана подбора;
+  - функции Supabase airdef-progress 18 / solo 18 / claim 20 / shop 5 (arsenal.js).
 
-  online-dev = main, незакоммиченного нашего нет. Чужое в дереве не трогать: ECONOMY_CATALOG.md, progress-mock.html, CLAUDE.md, airdef-fx/sheets/, supabase/functions/bot-sleep/.
-- **От Mark не подтверждено: update.ps1 на ноутбуке.** Без него онлайн с Patriot и PAC-3 неверный: старый сервер — пакет крутится, «Авто» не стреляет. При следующем разговоре напомнить.
+  online-dev = main. Чужое в дереве не трогать: ECONOMY_CATALOG.md, progress-mock.html, CLAUDE.md, airdef-fx/sheets/, supabase/functions/bot-sleep/.
+- **От Mark не подтверждено: update.ps1 на ноутбуке** (20261102b и 20261103a: launchers.js, sim/strike.js, arsenal.js). Без него онлайн с Patriot / PAC-3 / Chaparral / Hawk XXI неверный. Напоминать.
 - **Открыто (по просьбе Mark — когда скажет):**
-  - переснять фон меню с Patriot / PAC-3 / Гепардом (shots/patriot-frost, pac3-day, gepard-day — tools/airdef-shots/capture.js) и картинки экрана подбора;
+  - переснять фоны меню со старыми моделями (tools/airdef-shots/capture.js): torm2-snow — ещё прежний «Тор» (Тор-М1 ревизии 1), patriot-frost, pac3-day, gepard-day;
   - звуки СПО: записей с лицензией не нашлось — в игре синтез; Mark может прислать ссылки на настоящие кабинные записи с YouTube (не из симуляторов);
   - миниатюры: естественный свет только у Patriot и С-400 (NATURAL в tools/airdef-models/thumbs.html), остальные — по-старому, Mark: «пока оставь».
-- **Сборщики (отдельные чаты) — свободны:**
-  - «Сборка своей модели С-300 и ракеты 9М83» — сдал Patriot ревизии 2 и PAC-3;
-  - «Сборка объекта: склад горючего (город)» — сдал Гепард ревизии 2, С-400, 5В55Р.
-
-  Новых заданий у них нет.
+- **Сборщики (отдельные чаты) — свободны:** fuel-builder (сдал Бук-М1, Chaparral), s300-builder (сдал Тор-М2, Тор-М1 ревизии 2), hawk21-builder (сдал Hawk XXI). Пакеты Sketchfab Chaparral и Hawk XXI — в их папках Свои/…, выкладывает Mark.
 - **Стенды и скрипты этой сессии** (fly.js, lview*.js, thumbs-bake-8937.js, dep/job.sh — все проверки деплоя параллельно) — в
   `~/Downloads/Воздушное превосходство/Claude — рабочие файлы/scratchpad-2026-11-02/` (README.md там).
 - **Сервер для проверки:** в Claude — preview_start «fortuna-nocache» (.claude/launch.json в /Users/mark./инфографика, порт 8937). Ссылки:
@@ -1618,3 +1612,9 @@ Mark работает с **Opus на высоком усилии** — он ру
   - Mark: «430 и 370 по замеру»: MULTI.samCost hawk21 370 → 430, SAM_COST 320 → 370; multi-prices.json — 430, multi-price-sam.json — новая строка hawk21 (cost 320, как у прежнего замера). Полный `price` нормирует всё заново и сдвинул бы соседей на ±10 — в игре цены остальных не трогали.
   - Chaparral: сборщик перевыпустил файлы игры — колпачки пальцев верхней ветви гусеницы на 3 см выходили сквозь бортовые экраны; оси, паспорт и elMaxAz прежние. prepare.js chaparral / _lo, GLB_V 20261103e, ktx, миниатюра. Пакет Sketchfab — Свои/MIM-72 Chaparral (M54 launcher on M730) — Sketchfab, выкладывает Mark.
   - Тесты multi-price, ui, combined, sim, strike-balance check, smoke — прошли. При деплое — sync-shared (arsenal.js).
+- 2026-11-03 · Opus 5.5 · **деплой 20261103a** по слову Mark («подготовь все к деплою, а если готово - сразу и деплой»; a67bede, online-dev → main).
+  - Подготовка: poses.html получил вставки thumbs.html (railMsl, lift, fold, shut); ui/mm/pvo_hawk21_fr.webp переснята — своя пусковая с 8 ракетами (ракурс VEH «fr»: az 2,4, el 0,15, fov 24; 1600×900 → 1280×720, cwebp q 90) — 31eee87.
+  - Версия модулей 20261102b → 20261103a (79 файлов; progress-mock.html не тронут), assets.json (491 файл, 375 моделей, 1718 ktx), sync-shared (arsenal: Hawk XXI 8 ракет, цены), функции Supabase airdef-progress 18 / airdef-solo 18 / airdef-claim 20 / airdef-shop 5 выложены (запрос без данных — функция отвечает).
+  - Проверки до выкладки — 20 наборов параллельно (scratchpad dep2/job.sh): ui, sim, site, event, progress-stand, progress-server, combined, cm, gun, heli-raid, heli-sam, heli-train, multi-train, tbm, strike-balance check, multi-price, map-rand, aim, tgt-filter, game-server smoke/full/multi — все прошли.
+  - Ревью (airdef-reviewer): блокирующих нет. По замечанию — multi-price-stand.js `SAMK` теперь берёт строки и эталоны остальных ЗРК из прежнего multi-price-sam.json (раньше писал нули); строка hawk21 — cost 370.
+  - Mark: update.ps1 на ноутбуке обязателен (launchers.js, sim/strike.js, arsenal.js).
