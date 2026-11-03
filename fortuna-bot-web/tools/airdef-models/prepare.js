@@ -492,11 +492,11 @@ const CONFIG = {
     groups: (c) => (c.mat === 14 || c.mat === 15 ? null /* кормовые фонари без кронштейнов — висели в воздухе */ : c.min[1] > 7.0 && c.max[1] > 7.3 && c.ctr[0] < -0.3 && c.size[1] < 1 ? 'radar' /* антенна РЛС на корме башни — крутится */
       : c.min[1] > 6.7 && c.ctr[0] > 0.75 && Math.abs(c.ctr[2] - 5.37) < 0.42 && c.size[2] < 0.7 ? 'cradle' /* четыре автомата и маска */
       : c.min[1] > 6.7 && c.ctr[0] > -1.1 ? 'turret' : 'body') },
-  // 9К35 «Стрела-10» на МТ-ЛБ — ScurvyWoof (CC BY; его же Roland): части не подписаны — по треугольникам: тумба пусковой крутится,
-  // всё выше неё (контейнеры, блок датчиков) качается; цвета у автора — свои (оставляем)
-  strela10: { src: `${DL}/mtlb_strela-10_low-poly.glb`, scale: 1.2, nose: '+z', rulesIn: 'game', unit: true, tex: () => 256, perTri: true, hinge: [0, 2.1, 0.91],
-    camo: { scheme: 'soviet', skip: /Material\.00[45]$/ }, colors: { 'Material\\.00[45]$': [0.035, 0.035, 0.032] }, // у автора — ярко-зелёный «игрушечный»: камуфляж; гусеницы и катки тёмные
-    groups: (c) => (c.ctr[1] > 2.08 ? 'cradle' : c.ctr[1] > 1.85 && Math.hypot(c.ctr[0], c.ctr[2] - 0.91) < 0.32 ? 'turret' : 'body') },
+  // «Стрела-10» (9А35 на МТ-ЛБ) — своя (сборщик, Свои/Стрела-10, 2026-11-03; Mark: «модель Стрела-10 готова»; раньше — low-poly ScurvyWoof).
+  // Части — strela10Part: turret_* — башня (ось (0; 1,4; 0,3)), cradle_* — пакет на шарнире (0; 2,12; 0,4), lid0…3 — крышки контейнеров (рвутся при пуске)
+  strela10: { src: `${DL}/Свои/Стрела-10/strela10.glb`, scale: 1, nose: '-z', rulesIn: 'game', unit: true, own: true, tex: (m) => (m.name === 'S10_R' ? 1024 : 2048),
+    nTex: (m) => (m.name === 'S10_R' ? 512 : 1024), pickMesh: /./, axisX: 0, axisZ: 0, ground: 0, hinge: [0, 2.12, 0.4], tpFix: [0, 1.4, 0.3], pack0: 0, groups: (c) => strela10Part(c, true),
+    texVf: (src) => (src % 2 ? 'eq=gamma=1.8' : null) /* Mark: «миниатюра очень черная — надо естественного цвета»: окраска сборщика в среднем #262621, на фото ref_01 тот же борт ≈ #666f73 — цвет (картинки 1, 3, 5) светлее, нормали (0, 2, 4) как есть */ },
   // AN/TWQ-1 Avenger — KillCaptureDestroy (CC BY): 1,7 млн треугольников (шины — 0,4 млн) → 140 тыс.; материалы у автора белые — свои цвета.
   // Турель — на кузове сзади (центр x −1,92 в осях правил — по краям пакетов), пакеты «Стингеров» по бокам выше 2 м — качаются
   avenger: { src: `${DL}/antwq-1a1_avenger.glb`, scale: 9.34, nose: '+z', rulesIn: 'game', unit: true, crease: 35, /* пусковые были «смазаны» — сглаженные нормали через острые рёбра */ tex: () => 256, target: 450000, simpErr: 0.005, hinge: [-1.92, 2.38, 1.63], perTri: true, camo: { scheme: 'nato', skip: /tire|chrome|steel|glass|head_lights|paint_black/ }, /* 1,7 млн → 450 тыс. (вдали — avenger_lo) */
@@ -778,6 +778,12 @@ function bukPart(c) {
   const p = c.path, Y = [...p.matchAll(/(?:^|\/)cyl_(barrel|rod1|rod2)/g)].pop(); if (Y) return 'cyl' + ['barrel', 'rod1', 'rod2'].indexOf(Y[1]);
   return /(^|\/)cradle_/.test(p) ? 'cradle' : /(^|\/)turret_/.test(p) ? 'turret' : 'body';
 }
+// «Стрела-10»: крышки lid0…3 (дети пакета, номер — порядок пуска) — вблизи свои части (как у Patriot: в осях башни, в игре — сдвиг на −cp), вдали — в пакете
+function strela10Part(c, near) {
+  const p = c.path, L = p.match(/(^|\/)lid(\d)/);
+  if (L) return near ? 'lid' + L[2] : 'cradle';
+  return /(^|\/)cradle_/.test(p) ? 'cradle' : /(^|\/)turret_/.test(p) ? 'turret' : 'body';
+}
 // «Тор-М2» и «Тор-М1» (ревизия 2): антенна обнаружения — стакан radar и сама антенна radar_fold (ребёнок стакана: сначала она); вдали тарелка и крышки — в башне
 // «Тор-М1» (ревизия 2): крышки lid0…3 — левый модуль сзади вперёд, lid4…7 — правый; в игре — в порядке пуска (левый, правый, …)
 const TORM1_LIDS = [0, 4, 1, 5, 2, 6, 3, 7];
@@ -811,6 +817,7 @@ CONFIG.buk_lo = { ...CONFIG.buk, src: `${DL}/Свои/Бук-М1/buk_lo.glb`, te
 CONFIG.msl_buk_lo = { ...CONFIG.msl_buk, target: 1200, simpErr: 0.01, tex: () => 256, nTex: null };
 CONFIG.chaparral_lo = { ...CONFIG.chaparral, src: `${DL}/Свои/Chaparral/chaparral_lo.glb`, tex: () => 512, nTex: null }; // Chaparral: дальняя сборщика
 CONFIG.hawk21_lo = { ...CONFIG.hawk21, src: `${DL}/Свои/Hawk XXI/hawk21_lo.glb`, tex: () => 512, nTex: null }; // Hawk XXI: дальняя сборщика (15 тыс.)
+CONFIG.strela10_lo = { ...CONFIG.strela10, src: `${DL}/Свои/Стрела-10/strela10_lo.glb`, tex: () => 512, nTex: null, groups: (c) => strela10Part(c, false) }; // «Стрела-10»: дальняя сборщика (60 тыс.)
 // ракеты на направляющих издали (как msl_buk_lo): MIM-72 Chaparral и AIM-120 Hawk XXI
 CONFIG.msl_chaparral_lo = { ...CONFIG.msl_chaparral, target: 900, simpErr: 0.01, tex: () => 256, nTex: null };
 CONFIG.msl_amraam_lo = { ...CONFIG.msl_amraam, target: 900, simpErr: 0.01, tex: () => 256, nTex: null };

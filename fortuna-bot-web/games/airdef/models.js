@@ -260,7 +260,7 @@ const META = {
   hawk21: { units: ['hawk21'], matte: true, stations: [] }, // Hawk XXI — своя пусковая на прицепе M192 с восемью AIM-120 (сборщик, Свои/Hawk XXI, 2026-11-03); раньше — пусковая Hawk
   m163: { units: ['m163'], stations: [], matte: true, camo: { scheme: 'nato', size: 1.3 } }, // M163 VADS — Gorgytz
   zsu234: { units: ['zsu234'], matte: true, stations: [] }, // ЗСУ-23-4М «Шилка» — voron335
-  strela10: { units: ['strela10'], matte: true, stations: [], camo: { scheme: 'soviet', size: 1.5 } }, // «Стрела-10» на МТ-ЛБ — ScurvyWoof
+  strela10: { units: ['strela10'], matte: true, stations: [] }, // «Стрела-10» (9А35 на МТ-ЛБ) — своя (сборщик, Свои/Стрела-10; раньше — low-poly ScurvyWoof с шейдерным камуфляжем)
   avenger: { units: ['avenger'], stations: [], matte: true, camo: { scheme: 'nato', size: 1.1 } }, // AN/TWQ-1 Avenger — KillCaptureDestroy
   chaparral: { units: ['chaparral'], matte: true, stations: [] }, // MIM-72 Chaparral — своя пусковая M54 на M730 (сборщик, Свои/Chaparral, 2026-11-03), песочная; предел подъёма по азимуту (launchers.js elMaxAz)
   msl_chaparral: { samMissile: ['chaparral'], lazy: true, onRail: true, matte: true, stations: [] }, // ракета MIM-72 — своя (Свои/MIM-72), 2,9 м, нос −Z; 4 на направляющих
@@ -418,6 +418,8 @@ const GLB_V_OWN = {
   buk_lo: '20261103a',
   msl_buk: '20261103a',
   msl_buk_lo: '20261103b', // 9М38М1 на пусковой издали (1,2 тыс. треугольников)
+  strela10: '20261103h', // «Стрела-10» — своя (Свои/Стрела-10), тёмная окраска, 176 тыс.; дальняя — сборщика (60 тыс.)
+  strela10_lo: '20261103h',
   chaparral: '20261103e', // MIM-72 Chaparral — своя (Свои/Chaparral + Свои/MIM-72) вместо STL TankLord; e — бортовые экраны снаружи гусеницы (перевыпуск сборщика)
   chaparral_lo: '20261103e',
   msl_chaparral: '20261103d',
@@ -734,7 +736,7 @@ async function load(name, base) {
 // готовая модель комплекса: { body, turret, cradle } (копии) или null — тогда процедурная
 const UMODEL = Object.fromEntries(Object.entries(META).filter(([, m]) => m.units).flatMap(([n, m]) => m.units.map((k) => [k, n])));
 // у тяжёлых моделей ПВО — дальняя копия <имя>_lo: каждая часть (корпус, башня, пакет) — THREE.LOD, ближе 400 м — подробная
-const UNIT_LO = new Set(['nasams', 'buk', 'torm2', 'hawk21', 'bukm3', 's125', 'gepard', 'ew_e', 'ew_w', 's300', 's400', 'patriot', 'pac3', 'tor', 'pantsir', 'sampt', 'tunguska', 'skyguard', 'rapier', 'zsu234', 'm163', 'chaparral', 'avenger', 'strela1']);
+const UNIT_LO = new Set(['strela10', 'nasams', 'buk', 'torm2', 'hawk21', 'bukm3', 's125', 'gepard', 'ew_e', 'ew_w', 's300', 's400', 'patriot', 'pac3', 'tor', 'pantsir', 'sampt', 'tunguska', 'skyguard', 'rapier', 'zsu234', 'm163', 'chaparral', 'avenger', 'strela1']);
 export function unitModelGlb(key) {
   const n = UMODEL[key], G = n && (LOADED[n] || LOADED[n + '_lo']), GL = n && LOADED[n] && LOADED[n + '_lo']; if (!G) return null;
   const find = (M, k) => M.children.find((c) => c.name === k);

@@ -1194,15 +1194,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "MTLB Strela-10 (low-poly)",
-  "author": "ScurvyWoof",
-  "url": "https://sketchfab.com/3d-models/mtlb-strela-10-low-poly-bbc5ef74a6024739aa89d7e5bbd53f21",
-  "license": "CC-BY-4.0",
-  "files": [
-   "strela10"
-  ]
- },
- {
   "title": "AN/TWQ-1A1 Avenger",
   "author": "KillCaptureDestroy",
   "url": "https://sketchfab.com/3d-models/antwq-1a1-avenger-5069a439f0c1460b95ccbf6b775de240",
