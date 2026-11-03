@@ -122,7 +122,6 @@
 - "Low poly 2k22 Tunguska (окраска и запекание текстур)" (https://sketchfab.com/3d-models/low-poly-2k22-tunguska-0bea108df2434f779418e51af9597f5b) by SIpriv — CC-BY-4.0 — `tunguska.glb`, `tunguska_lo.glb`, `msl_9m311.glb`
 - "samp-t air defense system" (https://sketchfab.com/3d-models/samp-t-air-defense-system-096f1bd31fc646b9908d5f1d9b7e0d34) by Chenzoss — CC-BY-4.0 — `sampt.glb`, `sampt_lo.glb`
 - "OERLIKON 35MM SKYGUARD RADAR" (https://sketchfab.com/3d-models/oerlikon-35mm-skyguard-radar-a136b501ae9847258249d51c769b779d) by lm9241221 — CC-BY-4.0 — `skyguard.glb`, `skyguard_lo.glb`
-- "Tracked Rapier" (https://sketchfab.com/3d-models/tracked-rapier-23db0462ce604a64af5ea282b5df59b9) by stealth86 — CC-BY-4.0 — `rapier.glb`, `rapier_lo.glb`
 - "ZIF-122 & 4K33 Osa-M Missile" (https://sketchfab.com/3d-models/zif-122-4k33-osa-m-missile-5cd6b3ec8b9d4e798f662dd9aefefb43) by Art Blender (KoreanNavy) — CC-BY-4.0 — `osa.glb`, `osa_lo.glb`
 - "SAM S-75 "Dvina"" (https://sketchfab.com/3d-models/sam-s-75-dvina-ed7d4831832d499482a6aa9620a858e4) by manyakasia — CC-BY-4.0 — `s75.glb`
 - "ЗРК С-125 «Нева / SAM S-125 "Neva"" (https://sketchfab.com/3d-models/125-sam-s-125-neva-4482f05be23b49099c2cf553a2f38dcd) by teanid — CC-BY-4.0 — `s125.glb`, `s125_lo.glb`

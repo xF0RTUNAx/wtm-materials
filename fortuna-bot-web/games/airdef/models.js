@@ -269,7 +269,8 @@ const META = {
   tunguska: { units: ['tunguska'], matte: true, stations: [] }, // 2К22 «Тунгуска» — SIpriv (CC BY 4.0), переделана в Blender (Свои/Тунгуска): камуфляж, затенение и карта нормалей запечены — шейдерного узора нет
   msl_9m311: { samMissile: ['tunguska'], matte: true, stations: [] }, // ракета 9М311 — своя (Свои/Тунгуска), 2,56 м, нос −Z
   skyguard: { units: ['skyguard'], stations: [] },
-  rapier: { units: ['rapier'], matte: true, stations: [], camo: { scheme: 'uk', size: 1.3 } }, // Tracked Rapier — stealth86 (перекрашен, пусковая развёрнута в рабочее положение) // Oerlikon GDF 35 мм — из сцены Skyguard (lm9241221) // 2К22 «Тунгуска» — usedm
+  rapier: { units: ['rapier'], matte: true, stations: [] }, // Tracked Rapier — свой (сборщик, Свои/Rapier; раньше — stealth86 с шейдерным камуфляжем); маск-сети — вырез по альфе // Oerlikon GDF 35 мм — из сцены Skyguard (lm9241221) // 2К22 «Тунгуска» — usedm
+  msl_rapier: { samMissile: ['rapier'], lazy: true, onRail: true, matte: true, stations: [] }, // ракета Rapier — своя (Свои/Rapier), на балках
   sampt: { units: ['sampt'], stations: [] }, // SAMP/T — Chenzoss
   msl_aster: { samMissile: ['sampt'], stations: [] }, // Aster 30 — по IRIS-T (Raptor9), увеличена и перекрашена // Roland 2 на Marder — ScurvyWoof (перекрашен) // Flakpanzer Gepard (не «War Thunder»)
   nasams: { units: ['nasams'], matte: true, stations: [] }, // NASAMS — своя пусковая (Свои/NASAMS, 2026-10-25): крышки контейнеров lid0…5 откидываются к пуску, мачта поднята
@@ -418,6 +419,10 @@ const GLB_V_OWN = {
   buk_lo: '20261103a',
   msl_buk: '20261103a',
   msl_buk_lo: '20261103b', // 9М38М1 на пусковой издали (1,2 тыс. треугольников)
+  rapier: '20261103j', // Tracked Rapier — свой (Свои/Rapier), олива, 149 тыс., маск-сети; дальняя — сборщика
+  rapier_lo: '20261103j',
+  msl_rapier: '20261103j',
+  msl_rapier_lo: '20261103j',
   avenger: '20261103i', // AN/TWQ-1 Avenger — свой (Свои/Avenger), НАТО, 80 тыс.; дальняя — сборщика
   avenger_lo: '20261103i',
   strela10: '20261103h', // «Стрела-10» — своя (Свои/Стрела-10), тёмная окраска, 176 тыс.; дальняя — сборщика (60 тыс.)

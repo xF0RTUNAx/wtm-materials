@@ -422,17 +422,13 @@ const CONFIG = {
       if (c.min[1] > 1.0 && Math.abs(dx) < 1.3) return 'cradle';
       return c.min[1] > 0.85 && Math.abs(dx) < 1.3 ? 'turret' : 'body';
     } },
-  // Tracked Rapier — stealth86: пусковая на корме стоит ракетами назад — turretYaw разворачивает её в рабочее положение;
-  // по бокам — балки с 8 ракетами (качаются), сзади — малая тарелка РЛС (крутится). Цвет авторов — жёлтый хаки → тёмно-зелёный
-  rapier: { src: `${DL}/tracked_rapier.glb`, scale: 0.001373, nose: '+z', rulesIn: 'game', unit: true, tex: () => 512, texVf: "hue=h=48:s=0.75,curves=all='0/0 0.5/0.4 1/0.75'", simpErr: 0.002, camo: { scheme: 'uk', skip: /missile|metal|wire|rubber|Tracks|socket/ }, /* без упрощения (447 тыс.; вдали — rapier_lo) */
-    hinge: [0, 0.21, 1.45], turretYaw: Math.PI, pack0: 0, instR: 0.12, absorb: 0.13, tplNear: [0.83, 0.02],
-    colors: { '^missile$': [0.55, 0.55, 0.52], '^Tracks': [0.03, 0.03, 0.028], rubber: [0.02, 0.02, 0.02] },
-    groups: (c) => {
-      if (c.min[1] < -0.25 || c.ctr[2] < 0.6) return 'body';
-      if (c.mat === 15) return 'missile';
-      if (c.ctr[2] > 2.85 && Math.abs(c.ctr[0]) < 0.35 && c.ctr[1] > -0.1) return 'radar';
-      return Math.abs(c.ctr[0]) > 0.6 ? 'cradle' : 'turret';
-    } },
+  // Tracked Rapier — свой (сборщик, Свои/Rapier, 2026-11-03; Mark: «модель Rapier готова»; раньше — stealth86). Части — rapierPart: turret_* — башня пусковой (ось (0; 1,12; 2,3)),
+  // radar_drum — барабан РЛС (крутится сам), cradle_* — балки с тарелкой и щитками на валу (0; 1,9; 2,3); маск-сети net_* — вырез по альфе (MASK), прибор наведения tracker — неподвижен
+  rapier: { src: `${DL}/Свои/Rapier/rapier.glb`, scale: 1, nose: '-z', rulesIn: 'game', unit: true, own: true, tex: (m) => (m.name === 'RPR_R' || m.name === 'RPR_net' ? 1024 : 2048),
+    nTex: (m) => (m.name === 'RPR_R' ? 512 : 1024), pickMesh: /./, axisX: 0, axisZ: 0, ground: 0, hinge: [0, 1.9, 2.3], tpFix: [0, 1.12, 2.3], pack0: 0, groups: (c) => rapierPart(c),
+    /* окраска сборщика (в среднем #3e3b31) — как есть: с осветлением олива на миниатюре выцветала в бежевый */ },
+  // ракета Rapier — своя (Свои/Rapier/msl_rapier.glb): 2,24 м, нос −Z, без текстур (цвета материалов)
+  msl_rapier: { src: `${DL}/Свои/Rapier/msl_rapier.glb`, scale: 1, nose: '-z', own: true, tex: () => 512, pickMesh: /./ },
   // ЗИФ-122 «Оса-М» на береговой позиции — KoreanNavy (CC BY 4.0; прежняя модель «Оса-АКМ» Jeyhun1985 — с признаками рипа): двухбалочная корабельная пусковая на тумбе с диском (диск — бетонная площадка-основание),
   // две ракеты 4К33 висят под балками (длина по модели ≈ 2,64 → 3,16 м, как msl.L; масштаб 1,2). Лежит носом в +X, балки подняты на ≈10° (pack0 — угол ракет и балок, 10,2°); ось качания — цапфа (x 0, y 1,815 в единицах автора)
   osa: { src: `${DL}/zif-122_osa-m_koreannavy.glb`, scale: 1.2, nose: '+x', rulesIn: 'game', unit: true, tex: () => 256, absorb: 0, hinge: [0, 2.178, 0], pack0: 0.178, colors: { '^Material\\.004#msl$': [0.25, 0.26, 0.24], '#msl$': [0.72, 0.72, 0.66], '#steel$': [0.17, 0.19, 0.16], '#conc$': [0.34, 0.33, 0.31] },
@@ -776,6 +772,11 @@ function bukPart(c) {
   const p = c.path, Y = [...p.matchAll(/(?:^|\/)cyl_(barrel|rod1|rod2)/g)].pop(); if (Y) return 'cyl' + ['barrel', 'rod1', 'rod2'].indexOf(Y[1]);
   return /(^|\/)cradle_/.test(p) ? 'cradle' : /(^|\/)turret_/.test(p) ? 'turret' : 'body';
 }
+// Tracked Rapier: барабан РЛС — своя часть radar (до проверки turret_: он ребёнок башни), балки со щитками и тарелкой — cradle, сети и трекер — корпус
+function rapierPart(c) {
+  const p = c.path;
+  return /(^|\/)radar_/.test(p) ? 'radar' : /(^|\/)cradle_|(^|\/)shield_/.test(p) ? 'cradle' : /(^|\/)turret_/.test(p) ? 'turret' : 'body';
+}
 // «Стрела-10»: крышки lid0…3 (дети пакета, номер — порядок пуска) — вблизи свои части (как у Patriot: в осях башни, в игре — сдвиг на −cp), вдали — в пакете
 function strela10Part(c, near) {
   const p = c.path, L = p.match(/(^|\/)lid(\d)/);
@@ -794,7 +795,7 @@ function torm2Part(c, near, lidOrder) {
   return /(^|\/)turret/.test(p) ? 'turret' : 'body';
 }
 // ПВО: дальние копии (_lo) — main.js рисует их дальше 400 м (THREE.LOD по частям: корпус, башня, пакет)
-const SAM_LO = ['osa', 'bukm3', 's125', 'gepard', 'ew_e', 'pantsir', 'sampt', 'tunguska', 'skyguard', 'rapier', 'zsu234', 'm163'];
+const SAM_LO = ['osa', 'bukm3', 's125', 'gepard', 'ew_e', 'pantsir', 'sampt', 'tunguska', 'skyguard', 'zsu234', 'm163'];
 for (const k of SAM_LO) CONFIG[k + '_lo'] = { ...CONFIG[k], target: k === 'pantsir' ? 15000 : 20000, simpErr: 0.05, tex: () => 256, nTex: null };
 CONFIG.bukm3_lo.tracks = { ...CONFIG.bukm3.tracks, links: false }; // дальняя копия: лента — гладкая, без звеньев
 // Гепард ревизии 2: дальняя копия сборщика (gepard_lo.glb, без мелочи), цвет 512, без нормалей; антенна сопровождения — в башне (вдали не качается).
@@ -817,6 +818,8 @@ CONFIG.chaparral_lo = { ...CONFIG.chaparral, src: `${DL}/Свои/Chaparral/chap
 CONFIG.hawk21_lo = { ...CONFIG.hawk21, src: `${DL}/Свои/Hawk XXI/hawk21_lo.glb`, tex: () => 512, nTex: null }; // Hawk XXI: дальняя сборщика (15 тыс.)
 CONFIG.strela10_lo = { ...CONFIG.strela10, src: `${DL}/Свои/Стрела-10/strela10_lo.glb`, tex: () => 512, nTex: null, groups: (c) => strela10Part(c, false) }; // «Стрела-10»: дальняя сборщика (60 тыс.)
 CONFIG.avenger_lo = { ...CONFIG.avenger, src: `${DL}/Свои/Avenger/avenger_lo.glb`, tex: () => 512, nTex: null, groups: (c) => strela10Part(c, false) }; // Avenger: дальняя сборщика
+CONFIG.rapier_lo = { ...CONFIG.rapier, src: `${DL}/Свои/Rapier/rapier_lo.glb`, tex: () => 512, nTex: null }; // Tracked Rapier: дальняя сборщика
+CONFIG.msl_rapier_lo = { ...CONFIG.msl_rapier, target: 600, simpErr: 0.01 };
 // ракеты на направляющих издали (как msl_buk_lo): MIM-72 Chaparral и AIM-120 Hawk XXI
 CONFIG.msl_chaparral_lo = { ...CONFIG.msl_chaparral, target: 900, simpErr: 0.01, tex: () => 256, nTex: null };
 CONFIG.msl_amraam_lo = { ...CONFIG.msl_amraam, target: 900, simpErr: 0.01, tex: () => 256, nTex: null };

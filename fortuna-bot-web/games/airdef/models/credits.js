@@ -1117,16 +1117,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "Tracked Rapier",
-  "author": "stealth86",
-  "url": "https://sketchfab.com/3d-models/tracked-rapier-23db0462ce604a64af5ea282b5df59b9",
-  "license": "CC-BY-4.0",
-  "files": [
-   "rapier",
-   "rapier_lo"
-  ]
- },
- {
   "title": "ZIF-122 & 4K33 Osa-M Missile",
   "author": "Art Blender (KoreanNavy)",
   "url": "https://sketchfab.com/3d-models/zif-122-4k33-osa-m-missile-5cd6b3ec8b9d4e798f662dd9aefefb43",
