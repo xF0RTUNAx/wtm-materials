@@ -154,7 +154,7 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, s
     if (!r.players.has(r.host) || r.players.get(r.host).bot) r.host = humans(r)[0].id;
     Object.assign(r, { quick: false, state: 'lobby', map: rollMap(), city: null, t: 0, phaseT: 0, wave: 0, tick: 0, S: null, raid: null, targets: [], valueK: 0, events: [], zone: null, humanCraft: null, lead: null,
       E: null, round: 0, atk: null, scores: null, last: false, lastRes: null, waveRes: null });
-    for (const p of r.players.values()) Object.assign(p, { back: false, ready: !!p.bot, budget: O.BUDGET0[p.team] || 0, choice: null, paid: null, kills: 0, deaths: 0, score: 0, lives: null, craft: null, plane: null,
+    for (const p of r.players.values()) Object.assign(p, { back: false, ready: !!p.bot, budget: O.BUDGET0[p.team] || 0, choice: null, paid: null, kills: 0, deaths: 0, score: 0, objk: 0, lives: null, craft: null, plane: null,
       op: null, plan: null, spent: 0, E: null, out: false, units: 0 });
     sendRoom(r); J(r, 'lobby', { players: humans(r).map((p) => p.name) });
   }
@@ -300,7 +300,7 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, s
     const hm = humans(r).length * 2 > r.players.size ? 1 : 0, deadT = Math.round((r.valueK || 0) * (r.targets || []).length); // разрушено целей (по доле ценности)
     for (const p of humans(r)) {
       // ev — события для прокачки (airdef-claim → опыт и серебро): длительность боя, сбитые / уничтоженные комплексы, доля разрушенных целей команды
-      const ev = { min: Math.round((Date.now() - (r.startedAt || Date.now())) / 6000) / 10, ...(p.team === 'air' ? { sams: p.kills || 0, targets: Array(Math.min(10, Math.round(deadT / Math.max(1, team(r, 'air').filter((q) => !q.bot).length || 1)))).fill(1) } : { downs: p.kills || 0 }) };
+      const ev = { min: Math.round((Date.now() - (r.startedAt || Date.now())) / 6000) / 10, ...(p.team === 'air' ? { sams: p.kills || 0, targets: Array(Math.min(10, Math.round(deadT / Math.max(1, team(r, 'air').filter((q) => !q.bot).length || 1)))).fill(1) } : { downs: p.kills || 0 }), obj: p.objk || 0, top: (p.score || 0) > 0 && team(r, p.team).every((q) => (q.score || 0) <= (p.score || 0)) ? 1 : 0 }; // obj, top — для заданий
       // рейтинг (Mark 2026-10-25, games/airdef/rating.js): только быстрый бой (своя комната рейтинга не даёт — решение Mark); части боя —
       // итог, вклад (доля очков в команде), боты у соперников, режим, ранг (эпоха). ope — id соперников-людей, запечатанные (seal в server.js):
       // клиент итог читает, а голые id чужих аккаунтов — пропуска к ним; силу соперников по таблице сезона досчитает airdef-claim
@@ -381,7 +381,7 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, s
       explosion: (p, R, kind) => push(r, ['x', ...v3(p), r1(R), kind]),
       cmDrop: (a, type) => push(r, ['cm', a.id, type === 'flare' ? 1 : 2]),
       bldDestroyed: (o) => push(r, ['bd', o.id, bldMask(o)]), // постройка объекта-сцены разбита (city.js SITES)
-      objectDestroyed: (o, by, owner) => { push(r, ['od', o.id]); updValue(r); const p = airOwner(r, owner); if (p) p.score += o.value * (r.targets.some((q) => q.id === o.id) ? 2 : 0.5); killLog(r, p ? p.name : 'Авиация', o.name, by, 'air', 'pvo', owner && owner.plane ? 'p:' + owner.plane : ''); },
+      objectDestroyed: (o, by, owner) => { push(r, ['od', o.id]); updValue(r); const p = airOwner(r, owner); if (p) { p.objk = (p.objk || 0) + 1; p.score += o.value * (r.targets.some((q) => q.id === o.id) ? 2 : 0.5); } killLog(r, p ? p.name : 'Авиация', o.name, by, 'air', 'pvo', owner && owner.plane ? 'p:' + owner.plane : ''); },
       objectHit: () => updValue(r),
       unitDestroyed: (u, by, owner) => { push(r, ['ud', u.id]); r.waveRes.unitKills++; if (u.S.radar) r.waveRes.radarKills++; const p = airOwner(r, owner); if (p) { p.kills++; p.score += 40; } const v = r.players.get(u.owner); killLog(r, p ? p.name : 'Авиация', v ? v.name : 'ПВО', by, 'air', 'pvo', owner && owner.plane ? 'p:' + owner.plane : '', 'u:' + u.key); },
     };

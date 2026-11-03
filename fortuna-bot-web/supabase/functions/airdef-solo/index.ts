@@ -48,7 +48,7 @@ Deno.serve(async (req) => {
       let res: ReturnType<typeof credit> | null = null, x1: Extra | null = null;
       try {
         const out = await mutate(db, player_id, (P, x) => {
-          res = credit(P, x, ev, { real: run.mode === "real", online: false, today, used: body.used });
+          res = credit(P, x, ev, { real: run.mode === "real", online: false, today, used: body.used, quest: run.game === "defense" ? { waves: ev.waves!.length, full: ev.win ? 1 : 0 } : undefined }); // задания: из одиночной игры — только «Оборона»
           x1 = res.extra; return { ok: true, extra: res.extra };
         });
         if (out.notFound || out.needGame) {

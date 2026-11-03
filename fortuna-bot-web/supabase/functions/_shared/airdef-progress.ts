@@ -5,13 +5,15 @@
 import {
   NODE, BRANCHES, newProgress, research, buy, canResearch, owned, battleReward, SOLO_DAY,
 } from "./airdef/progress.js";
+import { questApply, questClaim, questRoll, questView } from "./airdef/quests-data.js";
 
 export type Progress = { xp: number; silver: number; res: string[]; own: string[]; goal: Record<string, string> };
 export type Row = {
   player_id: string; xp: number; silver: number; res: string[]; own: string[]; goal: Record<string, string>;
-  first_win_day: string | null; solo_day: string | null; solo_xp: number; version: number;
+  first_win_day: string | null; solo_day: string | null; solo_xp: number; quests?: Record<string, unknown>; version: number;
 };
-export type Extra = { first_win_day: string | null; solo_day: string | null; solo_xp: number };
+// crystals — кристаллы к начислению вместе с этим сохранением (задания); в строке прогресса их нет
+export type Extra = { first_win_day: string | null; solo_day: string | null; solo_xp: number; quests: Record<string, unknown>; crystals?: number };
 // deno-lint-ignore no-explicit-any
 type DB = any;
 
@@ -27,7 +29,7 @@ export function toProgress(row: Partial<Row> | null): Progress {
   for (const [b, id] of Object.entries(row.goal ?? {})) if (BRANCH_IDS.has(b) && NODE[id] && NODE[id].branch === b) P.goal[b] = id;
   return P;
 }
-export const extraOf = (row: Partial<Row> | null): Extra => ({ first_win_day: row?.first_win_day ?? null, solo_day: row?.solo_day ?? null, solo_xp: Number(row?.solo_xp ?? 0) });
+export const extraOf = (row: Partial<Row> | null): Extra => ({ first_win_day: row?.first_win_day ?? null, solo_day: row?.solo_day ?? null, solo_xp: Number(row?.solo_xp ?? 0), quests: row?.quests ?? {} });
 
 // действия игрока: research / buy / goal (branch + id; id пустой — снять цель)
 export function act(P: Progress, action: string, id: unknown, branch: unknown): { ok: boolean; why?: string } {
@@ -62,19 +64,43 @@ export function cleanEvents(ev: unknown, minutes: number): BattleEvents {
 // начисление за бой: опыт и серебро, множители (Реализм, первая победа дня), пределы одиночной игры; цели веток,
 // на которые теперь хватает опыта, исследуются сами. used — узлы, на которых играли (в «Реализме» все должны быть куплены,
 // иначе — как в «Аркаде»: без множителя). Возвращает новое состояние и строки для экрана итогов.
-export function credit(P: Progress, x: Extra, ev: BattleEvents, o: { real: boolean; online: boolean; today: string; used?: unknown; training?: boolean }) {
+// o.quest — счётчики для заданий (онлайн: onlineCounters, «Оборона»: волны и победа); опыт боя добавляется здесь.
+export function credit(P: Progress, x: Extra, ev: BattleEvents, o: { real: boolean; online: boolean; today: string; used?: unknown; training?: boolean; quest?: Record<string, number> }) {
   const used = Array.isArray(o.used) ? o.used.filter((id): id is string => typeof id === "string" && !!NODE[id]).slice(0, 40) : [];
   const realOk = o.real && used.every((id) => owned(P, id));
   const firstWin = x.first_win_day !== o.today;
   const soloToday = x.solo_day === o.today ? x.solo_xp : 0;
   const r = battleReward(ev, { training: o.training, real: realOk, arcade: !realOk, firstWin, online: o.online, dayXp: soloToday }); // solo_xp — опыт за день по всем боям (дневной предел — и для онлайна)
   P.xp += r.xp; P.silver += r.silver;
-  const nx: Extra = { ...x };
+  let nx: Extra = { ...x };
   if (firstWin && ev.win && r.xp > 0) nx.first_win_day = o.today;
   nx.solo_day = o.today; nx.solo_xp = soloToday + r.xp;
+  if (o.quest) nx = payQuest(P, nx, questApply(x.quests, o.today, o.online ? { ...o.quest, xp: r.xp } : o.quest));
+  const auto = autoResearch(P);
+  return { reward: r, P, extra: nx, auto, realOk, realAsked: o.real, soloLeft: Math.max(0, SOLO_DAY - (nx.solo_day === o.today ? nx.solo_xp : 0)) };
+}
+
+// цели веток, на которые теперь хватает опыта, исследуются сами
+function autoResearch(P: Progress) {
   const auto: string[] = [];
   for (const b of Object.keys(P.goal)) { const id = P.goal[b]; if (canResearch(P, id).ok) { research(P, id); auto.push(id); delete P.goal[b]; } }
-  return { reward: r, P, extra: nx, auto, realOk, realAsked: o.real, soloLeft: Math.max(0, SOLO_DAY - (nx.solo_day === o.today ? nx.solo_xp : 0)) };
+  return auto;
+}
+// задания: начислить, что положено; кристаллы уйдут в кошелёк вместе с сохранением
+function payQuest(P: Progress, x: Extra, out: { q: Record<string, unknown>; pay: Record<string, number> }): Extra {
+  P.xp += out.pay.xp || 0; P.silver += out.pay.silver || 0;
+  return { ...x, quests: out.q, crystals: out.pay.gem || 0 };
+}
+// новый день или неделя: выполненное, но не забранное начисляется при первом обращении
+export const questsRolled = (P: Progress, x: Extra, today: string) => { const extra = payQuest(P, x, questRoll(x.quests, today)); return { ok: true as const, extra, auto: autoResearch(P) }; };
+export const questsPending = (x: Extra, today: string) => Object.keys(questRoll(x.quests, today).pay).length > 0; // есть что начислить за прошлый день
+// «Забрать»: key — 'd:id', 'w:id', 'crate', 'chest'
+export function questTake(P: Progress, x: Extra, key: unknown, today: string) {
+  if (typeof key !== "string" || key.length > 32) return { ok: false as const, why: "Такого задания сейчас нет" };
+  const out = questClaim(x.quests, today, key);
+  if (!out.ok) return { ok: false as const, why: out.why as string };
+  const extra = payQuest(P, x, out);
+  return { ok: true as const, extra, auto: autoResearch(P) };
 }
 
 // ── база ──
@@ -98,9 +124,9 @@ export async function load(db: DB, player_id: string): Promise<{ row: Row | null
   return { row: null, exists: true };
 }
 async function save(db: DB, player_id: string, version: number, P: Progress, x: Extra): Promise<number> {
-  const r = await db.rpc("airdef_progress_save", {
+  const r = await db.rpc("airdef_progress_save_q", {
     p_player_id: player_id, p_version: version, p_xp: Math.round(P.xp), p_silver: Math.round(P.silver), p_res: P.res, p_own: P.own, p_goal: P.goal,
-    p_first_win_day: x.first_win_day, p_solo_day: x.solo_day, p_solo_xp: Math.round(x.solo_xp),
+    p_first_win_day: x.first_win_day, p_solo_day: x.solo_day, p_solo_xp: Math.round(x.solo_xp), p_quests: x.quests, p_crystals: Math.max(0, Math.round(x.crystals || 0)),
   });
   if (r.error) throw r.error;
   return Number(r.data);
@@ -122,5 +148,5 @@ export async function mutate<T extends { ok: boolean }>(db: DB, player_id: strin
 // состояние для клиента
 export const view = (P: Progress, x: Extra, today: string) => ({
   xp: P.xp, silver: P.silver, res: P.res, own: P.own, goal: P.goal,
-  first_win_today: x.first_win_day === today, solo_xp_today: x.solo_day === today ? x.solo_xp : 0, solo_day_cap: SOLO_DAY,
+  first_win_today: x.first_win_day === today, solo_xp_today: x.solo_day === today ? x.solo_xp : 0, solo_day_cap: SOLO_DAY, quests: questView(x.quests, today),
 });

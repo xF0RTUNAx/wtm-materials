@@ -8,6 +8,7 @@ import { mskDayStartIso } from "../_shared/msk.ts";
 import { ONLINE_REWARDS_PER_DAY, onlineReward, verifySigned, type Reward } from "../_shared/drone.ts";
 import { mskToday } from "../_shared/msk.ts";
 import { cleanEvents, credit, load, mutate, view, NEED_GAME, NOT_FOUND, type Extra } from "../_shared/airdef-progress.ts";
+import { onlineCounters } from "../_shared/airdef/quests-data.js";
 import { unseal } from "../_shared/airdef-seal.ts";
 // @ts-ignore — общий модуль игры (JS), копия tools/airdef-headless/sync-shared.js
 import { battlePoints, oppStrength, RATING } from "../_shared/airdef/rating.js";
@@ -82,7 +83,7 @@ Deno.serve(async (req) => {
       const today = mskToday(), e = (p.ev && typeof p.ev === "object" ? p.ev : {}) as Record<string, unknown>;
       const ev = cleanEvents({ ...e, win, ...(p.ev ? {} : team === "air" ? { sams: kills } : { downs: kills }) }, Math.max(1, Math.min(60, Number(e.min) > 0 ? Number(e.min) : 8)));
       let res: ReturnType<typeof credit> | null = null, x1: Extra | null = null;
-      const out = await mutate(db, player_id, (P, x) => { res = credit(P, x, ev, { real: mode === "real", online: true, today }); x1 = res.extra; return { ok: true, extra: res.extra }; });
+      const out = await mutate(db, player_id, (P, x) => { res = credit(P, x, ev, { real: mode === "real", online: true, today, quest: onlineCounters(p) }); x1 = res.extra; return { ok: true, extra: res.extra }; });
       if (out.ok && res) {
         const c = res as ReturnType<typeof credit>;
         progress = { xp: c.reward.xp, silver: c.reward.silver, lines: c.reward.lines, mult: c.reward.mult, auto: c.auto, state: view(out.P!, x1!, today) };

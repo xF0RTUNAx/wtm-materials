@@ -27,11 +27,12 @@ function fakeDb(extra = {}) {
     T, delay: null,
     from: q,
     async rpc(name, a) {
-      if (name !== 'airdef_progress_save') throw new Error(name);
+      if (name !== 'airdef_progress_save_q') throw new Error(name);
       if (db.delay) await db.delay();
       const rows = T.airdef_progress, cur = rows.find((r) => r.player_id === a.p_player_id);
       if (a.p_xp < 0 || a.p_silver < 0) return { data: null, error: new Error('negative') };
-      const vals = { xp: a.p_xp, silver: a.p_silver, res: a.p_res, own: a.p_own, goal: a.p_goal, first_win_day: a.p_first_win_day, solo_day: a.p_solo_day, solo_xp: a.p_solo_xp };
+      const vals = { xp: a.p_xp, silver: a.p_silver, res: a.p_res, own: a.p_own, goal: a.p_goal, first_win_day: a.p_first_win_day, solo_day: a.p_solo_day, solo_xp: a.p_solo_xp, quests: a.p_quests };
+      db.crystals = (db.crystals || 0) + (a.p_crystals || 0);
       if (a.p_version === 0) { if (cur) return { data: -1, error: null }; rows.push({ player_id: a.p_player_id, ...structuredClone(vals), version: 1 }); return { data: 1, error: null }; }
       if (!cur || cur.version !== a.p_version) return { data: -1, error: null };
       Object.assign(cur, structuredClone(vals), { version: cur.version + 1 }); return { data: cur.version, error: null };

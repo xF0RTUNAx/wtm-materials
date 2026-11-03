@@ -32,7 +32,7 @@ export function createMulti(ctx) {
   function start(r) {
     r.first = Math.random() < 0.5 ? 'east' : 'west'; r.round = 0; r.scores = { east: 0, west: 0 }; r.startedAt = Date.now();
     for (const p of r.players.values()) p.use = null; // профиль: ЗРК, стоявшие в бою (раунды за ПВО); налёт ведёт ИИ — самолёты не считаем (вылеты — только свои)
-    for (const p of r.players.values()) { p.kills = 0; p.deaths = 0; p.score = 0; p.icp = 0; p.samk = 0; p.dmg = 0; } // icp — перехваты (раунд за ПВО), samk — комплексы, уничтоженные волной игрока, dmg — доля разрушенного волной игрока, % (экран итога)
+    for (const p of r.players.values()) { p.kills = 0; p.deaths = 0; p.score = 0; p.icp = 0; p.icpC = 0; p.icpD = 0; p.icpT = 0; p.samk = 0; p.dmg = 0; p.bld = 0; } // icp — перехваты (раунд за ПВО), samk — комплексы, уничтоженные волной игрока, dmg — доля разрушенного волной игрока, % (экран итога)
     J(r, 'start', { kind: 'multi', era: r.era, first: r.first, east: team(r, 'east').map((p) => p.name), west: team(r, 'west').map((p) => p.name) });
     nextRound(r);
   }
@@ -76,7 +76,7 @@ export function createMulti(ctx) {
     r.scores[r.atk] += value;
     // вклад атакующих — по потраченным очкам угрозы (урон считает весь бой); у ПВО — свои перехваты (p.score по ходу)
     const spent = atkTeam(r).reduce((s, p) => s + M.planCost(p.plan && p.plan.n), 0) || 1;
-    for (const p of atkTeam(r)) { const share = M.planCost(p.plan && p.plan.n) / spent; p.score += Math.round(k * 1000 * share); p.dmg = Math.round(100 * k * share); } // та же доля плана игрока × доля разрушенного раунда
+    for (const p of atkTeam(r)) { const share = M.planCost(p.plan && p.plan.n) / spent; p.score += Math.round(k * 1000 * share); p.dmg = Math.round(100 * k * share); p.bld = (p.bld || 0) + Math.round((r.bldN || 0) * share); } r.bldN = 0; // та же доля плана игрока × доля разрушенного раунда
     const last = r.round >= M.ROUNDS;
     r.state = 'debrief'; r.t = 0; r.phaseT = last ? Math.min(DEBRIEF_T, 2.5) : DEBRIEF_T; r.last = last; // последний раунд — сразу к итогам боя
     const res = { round: r.round, atk: r.atk, why, value: Math.round(value), k: Math.round(k * 1000) / 1000, v0: r.v0, scores: { east: Math.round(r.scores.east), west: Math.round(r.scores.west) }, last,
@@ -87,7 +87,7 @@ export function createMulti(ctx) {
   async function endBattle(r) {
     const e = r.scores.east, w = r.scores.west, winner = Math.abs(e - w) < 1 ? null : e > w ? 'east' : 'west';
     r.state = 'end'; r.t = 0; r.phaseT = RESULTS_T;
-    const list = [...r.players.values()].map((p) => ({ id: p.id, name: p.name, team: p.team, bot: !!p.bot, kills: p.kills || 0, deaths: 0, score: Math.round(p.score || 0), icp: p.icp || 0, samk: p.samk || 0, dmg: p.dmg || 0 }));
+    const list = [...r.players.values()].map((p) => ({ id: p.id, name: p.name, team: p.team, bot: !!p.bot, kills: p.kills || 0, deaths: 0, score: Math.round(p.score || 0), icp: p.icp || 0, samk: p.samk || 0, dmg: p.dmg || 0, bld: p.bld || 0 }));
     const hm = humans(r).length * 2 > r.players.size ? 1 : 0;
     for (const p of humans(r)) {
       // итог для наград — как у обычного онлайна (airdef-claim): team — роль первого раунда игрока, w — победа команды
@@ -98,7 +98,7 @@ export function createMulti(ctx) {
       const ope = await seal(opp.filter((q) => !q.bot && q.pid && !String(q.pid).startsWith('test-')).map((q) => q.pid));
       const u = useOut(p);
       const res = { g: 'airdef', mm: 1, m: `${r.code}-${r.startedAt}`, p: p.pid, mode: r.mode, team: p.team === r.first ? 'air' : 'pvo', w: p.team === winner ? 1 : 0, k: p.kills || 0, s: Math.round(p.score || 0), hm, ...(rt ? { rt } : {}), ...(u ? { u } : {}), ope,
-        ev: { min: Math.round((Date.now() - (r.startedAt || Date.now())) / 6000) / 10, mwInt: (p.kills || 0) * 3, mwObj: Math.min(300, Math.round((p.score || 0) / 40)) }, // для прокачки (airdef-claim)
+        ev: { min: Math.round((Date.now() - (r.startedAt || Date.now())) / 6000) / 10, mwInt: (p.kills || 0) * 3, mwObj: Math.min(300, Math.round((p.score || 0) / 40)), icp: p.icp || 0, icpC: p.icpC || 0, icpD: p.icpD || 0, icpT: p.icpT || 0, samk: p.samk || 0, bld: p.bld || 0, top: all.some((q) => q.team === p.team) && (p.score || 0) > 0 && all.filter((q) => q.team === p.team).every((q) => (q.score || 0) <= (p.score || 0)) ? 1 : 0 }, // для прокачки и заданий (airdef-claim)
         exp: Math.floor(Date.now() / 1000) + 3600 };
       send(p, { t: 'end', kind: 'multi', first: r.first, winner, scores: { east: Math.round(e), west: Math.round(w) }, v0: r.v0, players: list, result: p.pid && !String(p.pid).startsWith('test-') ? await sign(res) : null });
     }
@@ -170,13 +170,13 @@ export function createMulti(ctx) {
       samLaunch: (m) => { const t = m.target; pushTo(r, 'all', ['sl', m.id, m.unit.id, t ? (t.isMun ? -t.id : t.id) : 0, m.slot]); },
       samEnd: (m, hit) => {
         pushTo(r, 'all', ['se', m.id, hit ? 1 : 0, ...v3(m.pos)]);
-        if (hit && m.target && m.target.isMun && m.target.dead) { const p = r.players.get(m.unit.owner); if (p) { p.kills++; p.icp++; p.score += 5 * (THREAT[m.target.key] ?? 4); } r.downs = (r.downs || 0) + 1; } // очки угрозы с 2026-10-28 — из 100 (было 10 × из 50)
+        if (hit && m.target && m.target.isMun && m.target.dead) { const p = r.players.get(m.unit.owner); if (p) { p.kills++; p.icp++; const W = AG[m.target.key] || {}; if (W.kind === 'tbm') p.icpT++; else if (W.uav) p.icpD++; else if (W.kind === 'cruise') p.icpC++; p.score += 5 * (THREAT[m.target.key] ?? 4); } /* виды — для заданий */ r.downs = (r.downs || 0) + 1; } // очки угрозы с 2026-10-28 — из 100 (было 10 × из 50)
       },
       wpnRelease: (w) => { pushTo(r, 'atk', wrEv(w)); },
       wpnEnd: (w, res) => { const e = ['we', w.id, ...v3(w.pos), res.intercepted ? 1 : 0]; pushTo(r, w.defSeen ? 'all' : 'atk', e); },
       explosion: (p, R, kind) => pushTo(r, 'all', ['x', ...v3(p), r1(R), kind]),
-      bldDestroyed: (o) => pushTo(r, 'all', ['bd', o.id, bldMask(o)]), // постройка объекта-сцены разбита (city.js SITES)
-      objectDestroyed: (o, by, owner) => { pushTo(r, 'all', ['od', o.id]); const p = owner && r.players.get(owner.owner || owner.id); pushTo(r, 'all', ['kl', String(p ? p.name : M.TEAM_NAME[r.atk]).slice(0, 24), String(o.name).slice(0, 40), String(by || '').slice(0, 24), r.atk, r.atk === 'east' ? 'west' : 'east', '', '']); },
+      bldDestroyed: (o) => { r.bldN = (r.bldN || 0) + 1; pushTo(r, 'all', ['bd', o.id, bldMask(o)]); }, // постройка объекта-сцены разбита (city.js SITES); счёт — для заданий
+      objectDestroyed: (o, by, owner) => { if (!o.bld) r.bldN = (r.bldN || 0) + 1; pushTo(r, 'all', ['od', o.id]); const p = owner && r.players.get(owner.owner || owner.id); pushTo(r, 'all', ['kl', String(p ? p.name : M.TEAM_NAME[r.atk]).slice(0, 24), String(o.name).slice(0, 40), String(by || '').slice(0, 24), r.atk, r.atk === 'east' ? 'west' : 'east', '', '']); },
       unitDestroyed: (u, by, owner) => { pushTo(r, u.atkSeen ? 'all' : 'def', ['ud', u.id]); const p = owner && r.players.get(owner.owner || owner.id); if (p) { p.kills++; p.samk++; p.score += 40; }
         const v = r.players.get(u.owner); pushTo(r, u.atkSeen ? 'all' : 'def', ['kl', String(p ? p.name : M.TEAM_NAME[r.atk]).slice(0, 24), String(v ? v.name : 'ПВО').slice(0, 40), String(by || '').slice(0, 24), r.atk, opp(r.atk), '', 'u:' + u.key]); },
     };

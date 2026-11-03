@@ -7,6 +7,7 @@ import { LOADOUTS } from './arsenal.js?v=20261103a';
 import { ico } from './icons.js?v=20261103a';
 import { tr, trIf, LANG } from './i18n.js?v=20261103a';
 import { activeAcc, isMock, siteNoProgress } from './account.js?v=20261103a';
+import { DAILY, WEEKLY, mskDay, questApply, questClaim, questRoll, questView } from './quests-data.js?v=20261103a';
 
 const TEST = new URLSearchParams(location.search).get('pgtest'); // ?pgtest=1 — тестовый прогресс в памяти (без сервера)
 export function account() { return activeAcc(); } // аккаунт игры, иначе «старый» аккаунт сайта с прогрессом (account.js)
@@ -33,7 +34,11 @@ export function trLine(t) {
 export const XP = (v) => `${ico('xp')}${n2(v)}`, SV = (v) => `${ico('silver')}${n2(v)}`;
 
 export function createProgress(C) {
-  const G = { P: null, info: null, err: '', busy: false, run: null, guest: false, listeners: [] };
+  const G = { P: null, info: null, err: '', busy: false, run: null, guest: false, listeners: [], crystals: null, lq: {}, lshift: 0 };
+  // задания в тестовом режиме: те же правила (quests-data.js), состояние в памяти; lshift — сдвиг дней для кнопок «следующий день» и «неделя»
+  const lDay = () => mskDay(Date.now() + G.lshift * 864e5);
+  const lPay = (pay) => { G.P.xp += pay.xp || 0; G.P.silver += pay.silver || 0; G.crystals = (G.crystals || 0) + (pay.gem || 0); };
+  const lBoost = (L, P, c) => { for (const t of L) if (!t.st && P[t.id]) { const k = P[t.id].c; c[k] = Math.max(c[k] || 0, Math.ceil(P[t.id].of * 0.34)); } };
   const changed = () => { for (const f of G.listeners) try { f(); } catch (e) { console.warn('progress', e); } };
   async function call(fn, body) {
     if (typeof CONFIG === 'undefined' || !CONFIG.SUPABASE_URL) throw new Error(tr('Нет связи с сайтом'));
@@ -80,6 +85,30 @@ export function createProgress(C) {
         const d = await call('airdef-progress', { player_id: acc.id, action, id, branch }); set(d.progress); return { ok: true };
       } catch (e) { needGame(e); return { ok: false, why: e.message }; }
       finally { G.busy = false; changed(); }
+    },
+
+    // ── задания: вид приходит вместе с прогрессом (quests в ответах функций); тратит и начисляет только сервер ──
+    get test() { return LOCAL(); }, // тестовый режим: на экране заданий есть кнопки «ДЕМО»
+    get crystals() { return G.crystals; },
+    get quests() { if (LOCAL()) return questView(G.lq, lDay()); const q = !G.guest && G.info && G.info.quests; return q || questView({}, mskDay()); },
+    async questsRefresh() {
+      if (LOCAL()) { if (!G.P) await local('goal', null, 'air'); if (G.crystals === null) { G.crystals = 46; G.lq = questRoll({}, lDay()).q; api.questTest('adv', 'd'); api.questTest('adv', 'd'); api.questTest('adv', 'w'); } const r = questRoll(G.lq, lDay()); G.lq = r.q; lPay(r.pay); changed(); return { ok: true }; }
+      const acc = account(); if (!acc) return { ok: true };
+      try { const d = await call('airdef-progress', { player_id: acc.id, action: 'quests' }); G.crystals = d.crystals; set(d.progress); return { ok: true }; }
+      catch (e) { needGame(e); return { ok: false, why: e.message }; }
+    },
+    async questClaim(key) {
+      if (LOCAL()) { const r = questClaim(G.lq, lDay(), key); if (!r.ok) return { ok: false, why: r.why }; G.lq = r.q; lPay(r.pay); changed(); return { ok: true }; }
+      const acc = account(); if (!acc) return { ok: false, why: tr('Войдите в аккаунт игры') };
+      try { const d = await call('airdef-progress', { player_id: acc.id, action: 'quest', key }); G.crystals = d.crystals; set(d.progress); return { ok: true }; }
+      catch (e) { needGame(e); return { ok: false, why: trMsg(e.message) }; }
+    },
+    // кнопки «ДЕМО» (только тестовый режим): бой, новый день, новая неделя, сначала
+    questTest(cmd, tab) {
+      if (!LOCAL()) return;
+      if (cmd === 'adv') { const c = { online: 1 }; if (tab === 'd') lBoost(G.lq.d, DAILY, c); else lBoost(G.lq.w, WEEKLY, c); const r = questApply(G.lq, lDay(), c); G.lq = r.q; lPay(r.pay); }
+      else { if (cmd === 'day') G.lshift += 1; else if (cmd === 'week') G.lshift += 7 - ((new Date(lDay() + 'T00:00:00Z').getUTCDay() + 6) % 7); else if (cmd === 'reset') { G.lq = {}; G.lshift = 0; } const r = questRoll(G.lq, lDay()); G.lq = r.q; lPay(r.pay); }
+      changed();
     },
 
     // ── «Реализм»: что доступно ──
