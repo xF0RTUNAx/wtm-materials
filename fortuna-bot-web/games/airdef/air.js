@@ -94,7 +94,7 @@ export function createAir(C) {
       m.userData.st = st; m.visible = !shipInternal; ship.add(m); pylonMeshes.push(m); seatL.push({ m, st, key: l.key, W: AG[l.key] }); // во внутренних отсеках - не видно
     }
     if (hasPod && podPos) { const m = podModel() || new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 2.4, 10).rotateX(Math.PI / 2), new THREE.MeshPhongMaterial({ color: 0x5a636c })); m.position.copy(podPos); ship.add(m); pylonMeshes.push(m); seatL.push({ m, pod: true }); } // LITENING или цилиндр
-    if (shipModel && !craft.heli && !shipInternal) seatExtra = seatStores(ship, shipModel.userData.pm.replace(/@.*$/, ''), seatL); // на настоящие пилоны модели (вертолёты - по своим точкам)
+    if (shipModel && shipModel.userData.pm && !craft.heli && !shipInternal) seatExtra = seatStores(ship, shipModel.userData.pm.replace(/@.*$/, ''), seatL); // на настоящие пилоны модели (вертолёты - по своим точкам)
   }
   function hurt(dmg, by, from = null) {
     if (craft.dead || game.over || game.net) return; // онлайн: урон и сбитие - от сервера (netHit / netDown)
