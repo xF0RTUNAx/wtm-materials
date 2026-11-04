@@ -1,0 +1,20 @@
+{
+ "key": "w_kh28",
+ "weapon": "kh28",
+ "name": "Х-28",
+ "rev": 1,
+ "files": {
+  "glb": "kh28.glb",
+  "blend": "kh28.blend",
+  "build": [
+   "build.py",
+   "k28_geo.py",
+   "_decals.py",
+   "bake.py",
+   "_collide.py",
+   "_shots.py",
+   "_nozzle.py",
+   "deliver.py"
+  ]
+ }
+}

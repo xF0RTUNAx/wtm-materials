@@ -208,6 +208,7 @@ const META = {
   w_kh58: { weapon: 'kh58', stations: [] }, // Х-58У - Narni_Tchereskov
   w_agm65b: { weapon: 'agm65b', stations: [] }, // AGM-65B - собственная модель (tools/airdef-models/own/agm65b)
   w_bomb1000: { weapon: 'bomb1000', stations: [], matte: true }, // AN-M65A1 - собственная модель (tools/airdef-models/own/bomb1000)
+  w_kh28: { weapon: 'kh28', lazy: true, stations: [] }, // Х-28 — собственная модель (tools/airdef-models/own/kh28)
   w_kab500s: { weapon: 'kab500s', lazy: true, stations: [] }, // КАБ-500С — собственная модель (tools/airdef-models/own/kab500s)
   w_kab500kr: { weapon: 'kab500kr', lazy: true, stations: [] }, // КАБ-500Кр — собственная модель (tools/airdef-models/own/kab500kr)
   w_kab500l: { weapon: 'kab500l', lazy: true, stations: [] }, // КАБ-500Л — собственная модель (tools/airdef-models/own/kab500l)
@@ -455,6 +456,7 @@ const GLB_V_OWN = {
   w_gbu31: '20261103p',
   w_kab500s: '20261103q',
   w_kh101: '20261103s',
+  w_kh28: '20261103t',
 };
 GLB_V.hg_jack = '20261104b'; // подъёмник, ревизия 2: матовый, с износом
 GLB_V.w_pod = '20261104b'; // серый корпус контейнера, без комьев от упрощения
