@@ -1,0 +1,68 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Загрузочное окно</title>
+<style>
+@font-face { font-family: 'Oswald'; font-weight: 300 700; src: url(../../games/airdef/fonts/oswald-cyrillic.woff2) format('woff2'); unicode-range: U+0400-045F, U+2116; }
+@font-face { font-family: 'Oswald'; font-weight: 300 700; src: url(../../games/airdef/fonts/oswald-latin.woff2) format('woff2'); unicode-range: U+0000-00FF, U+2000-206F; }
+@font-face { font-family: 'Golos Text'; font-weight: 400 800; src: url(../../games/airdef/fonts/golos-text-cyrillic.woff2) format('woff2'); unicode-range: U+0400-045F; }
+@font-face { font-family: 'Golos Text'; font-weight: 400 800; src: url(../../games/airdef/fonts/golos-text-latin.woff2) format('woff2'); unicode-range: U+0000-00FF, U+2000-206F; }
+:root { --gold: #e8b04a; --gold2: #f3c96f; --dim: #c2c7b2; --mute: #8d9580; }
+* { box-sizing: border-box; } body { margin: 0; background: #0d100c; color: #f3f0e6; font: 14px 'Golos Text', sans-serif; }
+.bar { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; padding: 10px 16px; } .bar b { font: 500 17px 'Oswald'; } .sw { display: flex; gap: 4px; } .sw button { padding: 6px 12px; font: 500 14px 'Oswald'; color: #e9e6dc; background: #20261c; border: 1px solid #3a4532; cursor: pointer; } .sw button.on { background: var(--gold); color: #17190f; border-color: var(--gold); }
+.note { padding: 0 16px 10px; max-width: 980px; color: var(--dim); line-height: 1.45; }
+.stage { padding: 0 16px 24px; overflow: auto; }
+#S { position: relative; overflow: hidden; background: #000; --k: 1; } #S.ph { --k: .62; }
+.menu { position: absolute; inset: 0; background: url(../../games/airdef/shots/su57-front-morning.webp) center / cover; }
+.lay { position: absolute; inset: 0; transition: opacity .7s ease; } .lay.out { opacity: 0; pointer-events: none; }
+.logo { display: block; }
+.ph0 { font: 500 calc(15px * var(--k) + 2px) 'Oswald'; letter-spacing: .03em; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .pc0 { font: 500 calc(15px * var(--k) + 2px) 'Oswald'; color: var(--gold2); font-variant-numeric: tabular-nums; }
+.tip { color: var(--mute); font-size: calc(12px * var(--k) + 2px); line-height: 1.35; text-align: center; }
+/* A · чёрный экран с лого */
+.A { background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: calc(14px * var(--k)); }
+.A .logo { width: calc(440px * var(--k) + 40px); margin-bottom: calc(26px * var(--k)); }
+.A .row { width: min(calc(480px * var(--k) + 40px), 74%); display: flex; justify-content: space-between; gap: 12px; } .A .ln { width: min(calc(480px * var(--k) + 40px), 74%); height: 3px; background: #24261f; } .A .ln i { display: block; height: 100%; background: var(--gold); }
+.A .tip { position: absolute; left: 12%; right: 12%; bottom: calc(26px * var(--k) + var(--ib)); }
+/* B · полёт по карте */
+.B { background: #14160f url(../../games/airdef/ui/quests/bg.jpg) center / cover; } .B::before { content: ''; position: absolute; inset: 0; background: linear-gradient(rgba(6,7,4,.72), rgba(6,7,4,.25) 45%, rgba(6,7,4,.6)); }
+.B .logo { position: absolute; left: 50%; top: calc(14px * var(--k)); transform: translateX(-50%); width: calc(360px * var(--k)); }
+.B .map { position: absolute; left: calc(40px * var(--k) + var(--il)); right: calc(40px * var(--k) + var(--ir)); bottom: calc(72px * var(--k) + var(--ib)); height: calc(190px * var(--k)); background: url(../../games/airdef/ui/quests/map.jpg) center / cover; box-shadow: 0 6px 18px rgba(0,0,0,.55), inset 0 0 0 1px rgba(0,0,0,.5); }
+.B svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; } .B .pinw { position: absolute; width: 0; height: 0; } .B .pinw img { position: absolute; width: calc(46px * var(--k)); height: calc(46px * var(--k)); left: calc(-25px * var(--k)); top: calc(-33px * var(--k)); } .B .pinw span { position: absolute; left: 0; top: calc(14px * var(--k)); transform: translateX(-50%); font: 500 calc(12px * var(--k) + 2px) 'Oswald'; white-space: nowrap; color: #efe7cf; text-shadow: 0 1px 2px #000, 0 0 6px #000; }
+.B .mig { position: absolute; width: 0; height: 0; } .B .mig img { position: absolute; width: calc(150px * var(--k)); height: calc(62.5px * var(--k)); left: calc(-75px * var(--k)); top: calc(-31px * var(--k)); }
+.B .row { position: absolute; left: calc(40px * var(--k) + var(--il)); right: calc(40px * var(--k) + var(--ir)); bottom: calc(30px * var(--k) + var(--ib)); display: flex; justify-content: space-between; gap: 12px; }
+/* C · ворота ангара */
+.C .door { position: absolute; top: 0; bottom: 0; width: 50.2%; background: #171b14 center / cover no-repeat; transition: transform 1.1s cubic-bezier(.65,0,.3,1); } .C .dl { left: 0; background-image: url(../../games/airdef/ui/doors/hangar_l.webp); background-position: right center; } .C .dr { right: 0; background-image: url(../../games/airdef/ui/doors/hangar_r.webp); background-position: left center; }
+.C.open .dl { transform: translateX(-101%); } .C.open .dr { transform: translateX(101%); }
+.C .plate { position: absolute; left: 50%; top: 47%; transform: translate(-50%, -50%); width: calc(420px * var(--k) + 40px); padding: calc(20px * var(--k)) calc(18px * var(--k)) calc(16px * var(--k)); background: rgba(6,7,5,.88); box-shadow: 0 0 0 1px rgba(233,230,220,.16), 0 10px 26px rgba(0,0,0,.6); transition: opacity .3s; } .C.open .plate { opacity: 0; }
+.C .logo { width: 74%; margin: 0 auto calc(16px * var(--k)); } .C .lamps { display: flex; gap: 3px; height: calc(13px * var(--k) + 2px); margin-top: calc(8px * var(--k)); } .C .lamps i { flex: 1 1 0; background: url(../../games/airdef/ui/quests/seg_off.webp) center / 100% 100%; } .C .lamps i.on { background-image: url(../../games/airdef/ui/quests/seg_on.webp); } .C .lamps i.ok { background-image: url(../../games/airdef/ui/quests/seg_green.webp); }
+.C .row { display: flex; justify-content: space-between; gap: 10px; }
+</style></head><body>
+<div class="bar"><b>Загрузочное окно</b><span class="sw" id="vs"><button data-v="C">C · Ворота ангара</button><button data-v="A">A · Лого на чёрном</button><button data-v="B">B · Полёт по карте</button></span><span class="sw" id="fs"><button data-f="pc">Компьютер</button><button data-f="ph">Телефон</button></span><span class="sw"><button id="again">Запустить ещё раз</button></span></div>
+<div class="note" id="note"></div><div class="stage"><div id="S"><div class="menu"></div><div id="ui"></div></div></div>
+<script>
+const L = '../../img/airdef-logo-alpha.webp', Q = '../../games/airdef/ui/quests/';
+const STEPS = [[0, 'Генерируем город'], [22, 'Деревья, вода, облака и эффекты'], [45, 'Загружаем технику'], [78, 'Загружаем текстуры'], [97, 'Готово']];
+const TIPS = ['Высота и рельеф прячут самолёт от радара дальше, чем скорость.', 'За онлайн-бои идут задания недели: маршрут ведёт к кристаллам.'];
+const NOTE = { C: '<b>C · Ворота ангара (предлагаю).</b> Закрытые ворота с табличкой: лого и полоса из тех же ламп, что на заданиях. Загрузилось — лампы зеленеют, ворота разъезжаются и за ними меню. Те же ворота уже встречают при входе в бой, поэтому игра выглядит одним целым.', A: '<b>A · Лого на чёрном.</b> Самый быстрый: лого и тонкая линия, чёрный совпадает со стартовым экраном приложения на телефоне. Спокойно, но без характера игры.', B: '<b>B · Полёт по карте.</b> Прогресс — это МиГ-31 на маршруте, точки — этапы загрузки, как на экране заданий. Красиво, но самый тяжёлый: стол и карта весят 250 КБ, а открыться окно должно мгновенно.' };
+let V = 'C', F = 'pc', P = 0, raf = 0, t0 = 0, done = false;
+const S = document.getElementById('S'), ui = document.getElementById('ui');
+const stepOf = (p) => { let t = STEPS[0][1]; for (const [a, b] of STEPS) if (p >= a) t = b; return t; };
+const YS = [62, 40, 66, 44, 60], X = (i) => 6 + i * 22, yAt = (p) => { const f = p / 100 * 4, i = Math.min(3, Math.floor(f)), k = f - i; return YS[i] + (YS[i + 1] - YS[i]) * (1 - Math.cos(Math.PI * k)) / 2; }, xAt = (p) => 6 + p * 0.88;
+const path = (p) => { const a = []; for (let x = 0; x < p; x += 1) a.push(`${xAt(x).toFixed(1)},${yAt(x).toFixed(1)}`); a.push(`${xAt(p).toFixed(1)},${yAt(p).toFixed(1)}`); return a.join(' '); };
+function build() {
+  const [W, H, il, ir, ib] = F === 'pc' ? [1280, 720, 0, 0, 0] : [874, 402, 47, 47, 21]; S.className = F === 'ph' ? 'ph' : ''; S.style.width = W + 'px'; S.style.height = H + 'px'; S.style.setProperty('--il', il + 'px'); S.style.setProperty('--ir', ir + 'px'); S.style.setProperty('--ib', ib + 'px');
+  document.getElementById('note').innerHTML = NOTE[V]; document.querySelectorAll('#vs button').forEach((b) => b.classList.toggle('on', b.dataset.v === V)); document.querySelectorAll('#fs button').forEach((b) => b.classList.toggle('on', b.dataset.f === F));
+  const row = '<div class="row"><span class="ph0"></span><span class="pc0"></span></div>';
+  if (V === 'A') ui.innerHTML = `<div class="lay A"><img class="logo" src="${L}" alt="">${row}<div class="ln"><i></i></div><div class="tip">${TIPS[0]}</div></div>`;
+  else if (V === 'B') ui.innerHTML = `<div class="lay B"><img class="logo" src="${L}" alt=""><div class="map"><svg viewBox="0 0 100 100" preserveAspectRatio="none"><polyline points="${path(100)}" fill="none" stroke="#efe7cf" stroke-opacity=".7" stroke-width="2.2" stroke-dasharray="2 6" vector-effect="non-scaling-stroke" stroke-linecap="round"/><polyline class="dn" fill="none" stroke="#f0bd5a" stroke-width="3.2" vector-effect="non-scaling-stroke" stroke-linecap="round"/></svg>${['Город', 'Природа', 'Техника', 'Текстуры', 'Вылет'].map((n, i) => `<div class="pinw" data-p="${i * 25}" style="left:${xAt(i * 25)}%;top:${YS[i]}%"><img alt=""><span>${n}</span></div>`).join('')}<div class="mig"><img src="${Q}mig_grey.webp" alt=""></div></div>${row}</div>`;
+  else ui.innerHTML = `<div class="lay C"><div class="door dl"></div><div class="door dr"></div><div class="plate"><img class="logo" src="${L}" alt="">${row}<div class="lamps">${Array.from({ length: 16 }, () => '<i></i>').join('')}</div></div></div>`;
+  paint();
+}
+function paint() {
+  const p = P, q = (s) => ui.querySelector(s), t = q('.ph0'), c = q('.pc0'); if (t) t.textContent = stepOf(p); if (c) c.textContent = Math.round(p) + ' %';
+  if (V === 'A') q('.ln i').style.width = p + '%';
+  if (V === 'B') { q('.dn').setAttribute('points', path(p)); const m = q('.mig'); m.style.left = xAt(p) + '%'; m.style.top = yAt(p) + '%'; ui.querySelectorAll('.pinw').forEach((e) => { const a = +e.dataset.p, st = a <= p ? 'got' : a <= p + 25 ? 'next' : 'off', im = e.querySelector('img'), src = `${Q}pin_${st}.webp`; if (im.getAttribute('src') !== src) im.setAttribute('src', src); }); }
+  if (V === 'C') { const L2 = ui.querySelectorAll('.lamps i'), n = Math.floor(p / 100 * L2.length + 1e-6); L2.forEach((e, i) => { e.className = i < n ? (p >= 100 ? 'ok' : 'on') : ''; }); }
+}
+function finish() { const l = ui.querySelector('.lay'); if (!l) return; if (V === 'C') l.classList.add('open'); else l.classList.add('out'); }
+function run() { cancelAnimationFrame(raf); P = 0; done = false; build(); t0 = performance.now(); const step = (now) => { P = Math.min(100, (now - t0) / 60); paint(); if (P < 100) raf = requestAnimationFrame(step); else setTimeout(finish, 450); }; raf = requestAnimationFrame(step); }
+document.addEventListener('click', (e) => { const b = e.target.closest('[data-v],[data-f],#again'); if (!b) return; if (b.dataset.v) V = b.dataset.v; if (b.dataset.f) F = b.dataset.f; run(); });
+try { const h = location.hash.slice(1).split('-'); if (NOTE[h[0]]) V = h[0]; if (h[1]) F = h[1]; if (h[2]) { P = +h[2]; build(); } else run(); } catch (_) { run(); }
+</script></body></html>
