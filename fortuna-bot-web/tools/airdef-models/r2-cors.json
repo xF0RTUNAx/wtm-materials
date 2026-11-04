@@ -1,0 +1,1 @@
+{ "rules": [ { "allowed": { "origins": ["https://fortunawtm.com", "https://www.fortunawtm.com", "http://fortunawtm.com", "http://www.fortunawtm.com", "http://localhost:8937", "http://127.0.0.1:8937", "http://192.168.68.102:8937"], "methods": ["GET", "HEAD"], "headers": ["*"] }, "exposeHeaders": ["Content-Length", "ETag"], "maxAgeSeconds": 86400 } ] }

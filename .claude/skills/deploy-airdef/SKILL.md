@@ -34,6 +34,12 @@ description: Деплой «Воздушного превосходства» (f
 - 401 — Mark должен выполнить `supabase login` сам; токен в чате не просить.
 - Проверка без изменения данных: запрос от несуществующего игрока `00000000-0000-0000-0000-000000000000` → 404.
 
+## 4а. Модели в Cloudflare R2 (обязательно, ДО пуша в main)
+Игра на сайте берёт модели с `https://assets.fortunawtm.com/` (хранилище `airdef-assets`), на GitHub Pages их нет (`_config.yml` в корне репозитория; «Летка» условно отключена, для неё на Pages ничего не держим).
+- В `fortuna-bot-web`: `deno run -A tools/airdef-models/r2-sync.js` (закачивает новые и изменившиеся файлы models/*, состояние в `tools/airdef-models/r2-state.json`, его коммитить вместе с деплоем);
+  затем `deno run -A tools/airdef-models/r2-sync.js --check`: итог должен быть «в хранилище всё на месте». Не сошлось — не пушить в main.
+- Нет входа — Mark выполняет `npx wrangler login` сам; токены в чате не просить.
+
 ## 5. Коммит и пуш
 - `git add` только конкретных путей (`fortuna-bot-web/games/airdef.html fortuna-bot-web/games/airdef fortuna-bot-web/game-server/…`
   и т. д.), проверить `git diff --cached --name-only` на запретные файлы.

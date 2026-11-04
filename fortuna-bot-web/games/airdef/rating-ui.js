@@ -8,11 +8,11 @@
 // Свой профиль (Mark 2026-10-29: «через профиль главного меню - то же окно, что в рейтинге, чтобы не нажимать сто раз»): ник в меню (account-ui.js)
 // открывает его сразу (openMe), «Назад» - к таблице рейтинга; в нём же «Аккаунт» - логин, смена ника, выход (что было в окне аккаунта).
 /* global CONFIG */
-import { ico } from './icons.js?v=20261104c';
-import { tr, trIf, LANG } from './i18n.js?v=20261104c';
-import { activeAcc, gameAcc, rating as fetchRating, profile as fetchProfile, transferOk } from './account.js?v=20261104c';
-import { avaSrc, ownAva } from './avatar.js?v=20261104c';
-import { NODE } from './progress.js?v=20261104c';
+import { ico } from './icons.js?v=20261105a';
+import { tr, trIf, LANG } from './i18n.js?v=20261105a';
+import { activeAcc, gameAcc, rating as fetchRating, profile as fetchProfile, transferOk } from './account.js?v=20261105a';
+import { avaSrc, ownAva } from './avatar.js?v=20261105a';
+import { NODE } from './progress.js?v=20261105a';
 
 const LOC = LANG === 'en' ? 'en-US' : 'ru-RU';
 const nf = (v) => Math.round(v).toLocaleString(LOC);
@@ -239,7 +239,7 @@ export function createRating(C) {
     if (S.p === p && S.view === 'prof' && root.classList.contains('on')) draw();
   }
   const MODE_ROWS = [['air', 'fire', tr('Вылет')], ['pvo', 'radar', tr('Оборона')], ['multi', 'players', tr('Мульти-волна')]];
-  const thumbOf = (branch, key) => (NODE[branch + ':' + key] ? `airdef/thumbs/${branch}_${key}.webp?v=20261104c` : '');
+  const thumbOf = (branch, key) => (NODE[branch + ':' + key] ? `airdef/thumbs/${branch}_${key}.webp?v=20261105a` : '');
   const unitName = (branch, key) => { const n = NODE[branch + ':' + key]; return n ? trIf(n.name) : key; };
   const ddmm = (at, year) => { const d = new Date(at); return isNaN(d) ? '' : `${pad2(d.getDate())}.${pad2(d.getMonth() + 1)}${year ? '.' + d.getFullYear() : ''}`; };
   const hhmm = (at) => { const d = new Date(at); return isNaN(d) ? '' : `${pad2(d.getHours())}:${pad2(d.getMinutes())}`; };
