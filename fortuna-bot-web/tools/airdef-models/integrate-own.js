@@ -127,4 +127,5 @@ if (COMMIT) {
 
 console.log(`
 Готово. В коммит — только: tools/airdef-models/prepare.js, tools/airdef-models/own/${base}.* и own/${base}-build/, games/airdef/models.js, games/airdef/models/${KEY}.glb, games/airdef/models/credits.js, games/airdef/models/CREDITS.md, ${TFILE}.
+Если это самолёт или оружие на подвеске: deno run -A tools/airdef-headless/seats-gen.js ${KEY} (таблица посадки на пилоны, для оружия - ключ из arsenal.js), иначе ui-test напомнит.
 Дальше — как после любой правки игры: тесты через airdef-tester, строка в журнал, коммит, пуш в online-dev.`);

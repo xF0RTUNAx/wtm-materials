@@ -4,7 +4,7 @@
 // Фон и самолёт масштабируются как одна картинка: «полный кадр» - весь рендер 16:9 с его камерой, экран - окно в нём (setViewOffset), поэтому пол и самолёт совпадают на любом экране.
 // Подвеска расставлена как в бою (air.js: order, buildPylons). Подъёмник: base, ram (шток, длина 1 м, scale.y = ход), head (седло). ?oldbg=1 - прежний фон.
 import { AG } from './arsenal.js?v=20261104a';
-import { planeModel, planeMeta, classOf, wantModel, wantWeapon, weaponPending, weaponFailed, pylonMesh, pylonGeo, podModel, anyModel, modelLoaded, modelFailed, releaseModel, wantCamo, camoKnown, hiKnown } from './models.js?v=20261104a';
+import { planeModel, planeMeta, classOf, wantModel, wantWeapon, weaponPending, weaponFailed, pylonMesh, seatStores, podModel, anyModel, modelLoaded, modelFailed, releaseModel, wantCamo, camoKnown, hiKnown } from './models.js?v=20261104a';
 
 const VIEWS = { // ПАСПОРТ.json сборщика
   // near, far - не из паспорта: буфер со сглаживанием держит 16 бит глубины, при near 0,3 на 31 м различал только 5 см, и близкие поверхности мерцали лесенкой (Mark, телефон)
@@ -12,7 +12,7 @@ const VIEWS = { // ПАСПОРТ.json сборщика
   heavy: { fov: 46, cam: [0, 2.4, 61], look: [0, 3.4, 0], r: 22, near: 20, far: 130 },
 };
 const FULL_W = 16, FULL_H = 9, AZ0 = +new URLSearchParams(location.search).get('hgaz') || 2.86, BIG = 25; // BIG - длина или размах, с которых нужен большой зал; AZ0 - один ракурс для всех: нос к камере и чуть влево (Mark 2026-11-04: самолёты не вращаются), справа панель
-const ST_ORDER = [3, 4, 2, 5, 1, 6, 0, 7], JACK_TOP = 1.35, JACK_HEAD = 0.11, JACK_MAX = 2.5;
+const ST_ORDER = [3, 4, 2, 5, 1, 6, 0, 7], JACK_TOP = 1.7, JACK_HEAD = 0.125, JACK_MAX = 2.5; // ПАСПОРТ.json, подъёмник версии 2
 const MODEL_WAIT = 12000, PICK_WAIT = 180, KEEP_LOOKED = 3; // модель всё не приходит - показать, что есть; быстрое листание ленты не качает каждый самолёт; на телефоне в памяти - последние просмотренные
 const BLOB_GEO = () => new THREE.PlaneGeometry(2.6, 2.6).rotateX(-Math.PI / 2);
 
@@ -128,16 +128,16 @@ export function createHangar(C, renderer) {
     const obj = pm.obj; holder.add(obj); obj.position.set(0, 0, 0); pivot.updateMatrixWorld(true);
     const box0 = new THREE.Box3().setFromObject(obj), sz = box0.getSize(new THREE.Vector3());
     // подвеска - как в бою
-    let oi = 0; const parts = obj.children.slice(), hung = [], ms = [];
+    let oi = 0; const parts = obj.children.slice(), hung = [], ms = [], seatL = [];
     for (const [key, n] of L.items.slice().sort((a, b) => AG[b[0]].mass - AG[a[0]].mass)) {
       for (let i = 0; i < n && oi < 8; i++) {
         const st = ST_ORDER[oi++], p = pm.stations[st]; if (!p) continue;
-        const W0 = AG[key].vis || {}, m = pylonMesh(key, AG[key], C.weaponGeo, C.mats.wMat); m.position.set(p.x, p.y - (W0.hang ?? W0.r ?? 0.2) - 0.05, p.z); m.visible = !pm.internal; m.userData.stn = p; obj.add(m); if (pm.internal) continue; hung.push(m); ms.push([key, m]); // во внутренних отсеках не видно, как в бою
+        const W0 = AG[key].vis || {}, m = pylonMesh(key, AG[key], C.weaponGeo, C.mats.wMat); m.position.set(p.x, p.y - (W0.hang ?? W0.r ?? 0.2) - 0.05, p.z); m.visible = !pm.internal; obj.add(m); if (pm.internal) continue; hung.push(m); ms.push([key, m]); seatL.push({ m, st, key, W: AG[key] }); // во внутренних отсеках не видно, как в бою
       }
     }
-    if (L.pod && pm.pod) { const m = podModel() || new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 2.4, 10).rotateX(Math.PI / 2), new THREE.MeshPhongMaterial({ color: 0x5a636c })); m.position.copy(pm.pod); m.userData.pod = true; obj.add(m); hung.push(m); } // как в бою: контейнер ещё не пришёл - простая фигура
+    if (L.pod && pm.pod) { const m = podModel() || new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 2.4, 10).rotateX(Math.PI / 2), new THREE.MeshPhongMaterial({ color: 0x5a636c })); m.position.copy(pm.pod); obj.add(m); hung.push(m); seatL.push({ m, pod: true }); } // как в бою: контейнер ещё не пришёл - простая фигура
     pivot.updateMatrixWorld(true);
-    hangStores(obj, parts, hung);
+    hangStores(obj, pm.name, hung, seatL);
     for (const [key, m] of ms) { let g = groups.find((x) => x.key === key); if (!g) groups.push(g = { key, pos: [] }); g.pos.push(m.position.clone()); }
     pivot.updateMatrixWorld(true);
     const box = new THREE.Box3().setFromObject(obj);
@@ -160,7 +160,6 @@ export function createHangar(C, renderer) {
     holder.position.set(-(box0.min.x + box0.max.x) / 2, H, -(box0.min.z + box0.max.z) / 2); pivot.updateMatrixWorld(true);
     for (const [x, zz, y] of pts) {
       const j = anyModel('hg_jack'); if (!j) continue;
-      if (!jackTint) { jackTint = true; j.traverse((o) => { if (o.isMesh && o.material && o.material.color && o.material.map) o.material.color.multiplyScalar(0.84); }); } // материал общий у копий: под тремя источниками жёлтый ярче, чем у сборщика
       const ram = j.getObjectByName('ram'), head = j.getObjectByName('head'), st = Math.max(0, Math.min(JACK_MAX, (H + y - top) / jS));
       if (ram) { ram.position.y = JACK_TOP; ram.scale.y = Math.max(0.001, st); } if (head) head.position.y = JACK_TOP + st;
       j.scale.setScalar(jS); j.position.set(x + holder.position.x, 0, zz + holder.position.z); jackG.add(j);
@@ -169,91 +168,18 @@ export function createHangar(C, renderer) {
     baseZ = wantView === 'heavy' ? Math.max(1.12, Math.min(1.3, 50 / Math.max(size, 1))) : Math.max(1, Math.min(1.34, 23 / Math.max(size, 1))); // небольшой самолёт - крупнее; у большого запас, чтобы сдвинуть кадр от панели
     tAz = az; homeView();
   }
-  // Точки подвески общие с боем и стоят приблизительно: вдали незаметно, в ангаре оружие висело в воздухе (Mark). Для каждой подвески:
-  // верх корпуса - лучом сверху по оси в середине длины (оперение выше корпуса, по габаритам зазор оставался).
-  // 1) на точке есть дорисованный игрой пилон (p.py): подвеска ровно под ним, между ними балка с упорами, сам пилон дотягивается до крыла;
-  // 2) рядом с точкой пилон автора (узкая ступенька вниз, не дальше PY_NEAR от точки): подвеска точно под него и вплотную;
-  // 3) иначе свой пилон с балкой. Вплотную к крылу - только без оперения (контейнер, бак), иначе перья вошли бы в крыло
-  const PY_TOUCH = 0.16, PY_MAX = 0.55, PY_NEAR = 0.7, RACK_H = 0.06;
-  let pyMat = null, pyStat = { hung: 0, pylons: 0, free: 0, snap: 0, gen: 0 }, pyGeos = [], pyAudit = () => [];
-  function hangStores(obj, parts, hung) {
-    if (!pyMat) pyMat = new THREE.MeshPhongMaterial({ color: 0x35393d, specular: 0x1c1c1c, shininess: 16, side: THREE.DoubleSide });
-    for (const g of pyGeos) g.dispose(); pyGeos = [];
-    const geo = (g) => { pyGeos.push(g); return g; };
-    const ray = new THREE.Raycaster(), o = new THREE.Vector3(), up = new THREE.Vector3(0, 1, 0), down = new THREE.Vector3(0, -1, 0), P = { hung: hung.length, pylons: 0, free: 0, snap: 0, gen: 0 }, used = [];
-    const gens = parts.filter((c) => c.userData.genPylon), body = parts.filter((c) => !c.userData.genPylon);
-    const under = (x, z, y) => { ray.set(o.set(x, y, z), up); ray.far = 8; const h = ray.intersectObjects(body, true)[0]; return h ? h.point.y : null; };
-    const onStore = (m, x, z, y) => { ray.set(o.set(x, y, z), down); ray.far = 4; const h = ray.intersectObject(m, true)[0]; return h ? h.point.y : null; };
-    // балка на подвеске: верх на yTop, упоры с двух концов садятся на плечи корпуса
-    const rack = (m, cx, cz, L, yTop) => {
-      const v = [], len = Math.max(0.4, Math.min(0.9, L * 0.3));
-      const beam = (a, b, w, d) => { // брусок от a к b: w - по z, d - поперёк в плоскости xy
-        const dx = b[0] - a[0], dy = b[1] - a[1], k = d / 2 / (Math.hypot(dx, dy) || 1), sx = -dy * k, sy = dx * k, c = [];
-        for (const e of [a, b]) for (const [s, t] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) c.push([e[0] + s * sx, e[1] + s * sy, e[2] + t * w / 2]);
-        for (const [i, j, q, r] of [[0, 1, 2, 3], [7, 6, 5, 4], [0, 4, 5, 1], [1, 5, 6, 2], [2, 6, 7, 3], [3, 7, 4, 0]]) v.push(...c[i], ...c[j], ...c[q], ...c[i], ...c[q], ...c[r]);
-      };
-      for (const z of [cz - len * 0.3, cz, cz + len * 0.3]) beam([cx, yTop, z], [cx, yTop - RACK_H, z], len * 0.42, 0.11);
-      for (const z of [cz - len * 0.36, cz + len * 0.36]) for (const s of [-1, 1]) { const x = cx + s * 0.1, y = onStore(m, x, z, yTop + 0.5); if (y != null && yTop - y < 0.2) beam([cx + s * 0.05, yTop - RACK_H * 0.5, z], [x, y - 0.004, z], 0.03, 0.022); }
-      const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(v, 3)); g.computeVertexNormals(); obj.add(new THREE.Mesh(geo(g), pyMat));
-    };
-    const sized = new Map(); // пилон игры -> длина по его подвеске
-    // перья поднимаются выше корпуса: насколько надо опустить подвеску, чтобы они не вошли в крыло
-    const finDrop = (x, z, L, rise, yTop) => { if (rise < 0.06) return 0; let wing = Infinity; for (const sx of [-0.7, 0.7]) for (const k of [-0.46, -0.34, 0.34, 0.46]) { const y = under(x + sx * rise, z + k * L, yTop - 0.02); if (y != null && y < wing) wing = y; } return wing === Infinity ? 0 : Math.min(PY_MAX, Math.max(0, yTop + rise + 0.02 - wing)); };
-    for (const m of hung) {
-      const b = new THREE.Box3().setFromObject(m), L = b.max.z - b.min.z, cx = (b.min.x + b.max.x) / 2, cz = (b.min.z + b.max.z) / 2, stn = m.userData.stn;
-      let top = b.max.y;
-      if (!m.userData.pod) { const ys = []; for (const k of [-0.12, 0, 0.12]) { const y = onStore(m, cx, cz + k * L, b.max.y + 1); if (y != null) ys.push(y); } if (ys.length) top = Math.min(...ys); }
-      const finRise = b.max.y - top, c = Math.max(0.6, Math.min(1.6, L * 0.55));
-      if (stn && stn.py > 0) { // 1) пилон игры
-        const g = gens.find((q) => Math.abs(q.position.x - stn.x) < 0.01 && Math.abs(q.position.z - stn.z) < 0.01);
-        const drop = finDrop(stn.x, stn.z, L, finRise, stn.y - RACK_H), yB = stn.y - drop;
-        m.position.x += stn.x - cx; m.position.z += stn.z - cz; m.position.y += yB - RACK_H - top;
-        m.updateWorldMatrix(true, true); rack(m, stn.x, stn.z, L, yB); if (g) { sized.set(g, c); g.userData.bottom = yB; } P.gen++; continue;
-      }
-      const y0 = top - 0.5, near = stn ? stn.y : top; // ниже верха корпуса: пилон автора может уходить в подвеску
-      // столбцы поперёк: самая низкая точка над каждым (вдоль корпуса - три пробы)
-      const cols = []; for (let dx = -0.6; dx <= 0.601; dx += 0.05) { let lo = null; for (const k of [-0.25, 0, 0.25]) { const y = under(cx + dx, cz + k * L, y0); if (y != null && (lo == null || y < lo)) lo = y; } cols.push([dx, lo]); }
-      const hits = cols.filter((q) => q[1] != null);
-      if (!hits.length) { P.free++; continue; } // законцовка и подобное: остаётся как есть
-      const low = Math.min(...hits.map((q) => q[1])), band = hits.filter((q) => q[1] <= low + 0.04), wx = band[band.length - 1][0] - band[0][0], xP = cx + (band[0][0] + band[band.length - 1][0]) / 2;
-      const i0 = cols.indexOf(band[0]), i1 = cols.indexOf(band[band.length - 1]), edge = (q) => !q || q[1] == null || q[1] - low > 0.07; // по обе стороны ступенька или пусто: это пилон, а не наклон крыла
-      const isPylon = wx <= 0.42 && Math.abs(low - near) <= PY_NEAR && edge(cols[i0 - 1]) && edge(cols[i1 + 1]) && !used.some((u) => Math.abs(u[0] - xP) < 0.25 && Math.abs(u[1] - cz) < 1.2);
-      if (isPylon) { // 2) пилон автора
-        let z0 = null, z1 = null; for (let dz = -2; dz <= 2.001; dz += 0.08) { const y = under(xP, cz + dz, y0); if (y != null && y <= low + 0.06) { if (z0 == null) z0 = dz; z1 = dz; } }
-        const zP = z0 == null ? cz : cz + Math.max(-1.2, Math.min(1.2, (z0 + z1) / 2));
-        if ([-0.12, 0, 0.12].some((k) => { const y = under(xP, zP + k * L, low - 0.05); return y != null && y <= low + 0.06; })) {
-          m.position.x += xP - cx; m.position.z += zP - cz; used.push([xP, zP]); P.snap++;
-          const drop = finDrop(xP, zP, L, finRise, low + 0.012);
-          if (drop <= 0.03) { m.position.y += low + 0.012 - top; continue; }
-          // пилон автора короче перьев: между ним и подвеской надставка с балкой
-          const h = Math.max(drop, RACK_H + 0.03), yT = low - h + RACK_H; m.position.y += low - h - top; m.updateWorldMatrix(true, true); rack(m, xP, zP, L, yT);
-          const hp = h - RACK_H + 0.04, py = new THREE.Mesh(geo(pylonGeo(hp, Math.min(c, 0.9), 0.08)), pyMat); py.position.set(xP, yT + hp / 2, zP); obj.add(py); continue;
-        }
-        // ступенька нашлась, но над серединой подвески её нет: не пилон
-      }
-      // 3) над точкой только крыло или фюзеляж
-      const here = under(cx, cz, y0); if (here == null) { P.free++; continue; }
-      let gap = here - top; const need = finRise > 0.06 ? finRise + 0.03 : 0;
-      if (!need && gap <= PY_TOUCH) { m.position.y += gap - 0.012; continue; }
-      gap = Math.max(need, RACK_H + 0.08, Math.min(gap, PY_MAX));
-      m.position.y += here - gap - top; const yT = here - gap + RACK_H; m.updateWorldMatrix(true, true); rack(m, cx, cz, L, yT);
-      const h = gap - RACK_H + 0.08, py = new THREE.Mesh(geo(pylonGeo(h, c, 0.1)), pyMat); py.position.set(cx, yT + h / 2, cz); obj.add(py); P.pylons++;
-    }
-    // пилоны игры дотягиваем до крыла: точка в описании могла быть ниже обшивки
-    for (const g of gens) {
-      g.material = pyMat;
-      g.geometry.computeBoundingBox(); const bb = g.geometry.boundingBox, bottom = g.userData.bottom ?? g.position.y + bb.min.y, ys = [-0.3, 0, 0.3].map((k) => under(g.position.x, g.position.z + k, bottom + 0.005)).filter((v) => v != null);
-      if (!ys.length && !sized.has(g)) continue;
-      const h = Math.min(1.6, (ys.length ? Math.max(...ys) - bottom : bb.max.y - bb.min.y) + 0.06), L = sized.get(g) || 1.2;
-      g.geometry = geo(pylonGeo(h, L)); g.position.y = bottom + h / 2;
-    }
-    pyStat = P;
-    // проверка (тесты): зазор от верха корпуса до ближайшего, что выше, по каждой подвеске
+  // Посадка подвески на пилоны - общая с боем, по таблице (seat.js, seats-data.js); здесь только цвет пилонов под свет зала и проверка зазоров для тестов
+  let pyMat = null, pyStat = { hung: 0, seated: 0 }, pyAudit = () => [];
+  function hangStores(obj, name, hung, list) {
+    if (!pyMat) pyMat = new THREE.MeshPhongMaterial({ color: 0x35393d, specular: 0x1c1c1c, shininess: 16 });
+    for (const c of obj.children) if (c.userData.genPylon) c.material = pyMat;
+    seatStores(obj, name, list, pyMat);
+    pyStat = { hung: hung.length };
     pyAudit = () => {
       const a0 = pivot.rotation.y; pivot.rotation.y = 0; pivot.updateMatrixWorld(true);
-      const others = obj.children.filter((c) => !hung.includes(c)), res = hung.map((m) => {
+      const ray = new THREE.Raycaster(), o = new THREE.Vector3(), others = obj.children.filter((c) => !hung.includes(c)), res = hung.map((m) => {
         const b = new THREE.Box3().setFromObject(m), L = b.max.z - b.min.z, cx = (b.min.x + b.max.x) / 2, cz = (b.min.z + b.max.z) / 2; let best = null;
-        for (const k of [-0.12, 0, 0.12]) { const yT = onStore(m, cx, cz + k * L, b.max.y + 1); if (yT == null) continue; ray.set(o.set(cx, yT - 0.03, cz + k * L), up); ray.far = 8; const h = ray.intersectObjects(others, true)[0]; const g = h ? h.point.y - yT : 99; if (best == null || g < best) best = g; }
+        for (const k of [-0.12, 0, 0.12]) { ray.set(o.set(cx, b.max.y + 1, cz + k * L), new THREE.Vector3(0, -1, 0)); ray.far = 8; const t = ray.intersectObject(m, true)[0]; if (!t) continue; const yT = t.point.y < (b.min.y + b.max.y) / 2 ? b.max.y : t.point.y; /* простая фигура: грани внутрь, луч попал в низ */ ray.set(o.set(cx, yT - 0.03, cz + k * L), UP); ray.far = 8; const h = ray.intersectObjects(others, true)[0]; const g = h ? h.point.y - yT : 99; if (best == null || g < best) best = g; }
         return { x: +cx.toFixed(2), z: +cz.toFixed(2), gap: best == null ? null : +best.toFixed(3), L: +L.toFixed(2) };
       });
       pivot.rotation.y = a0; pivot.updateMatrixWorld(true); return res;
@@ -271,7 +197,7 @@ export function createHangar(C, renderer) {
   const blurMat = () => new THREE.ShaderMaterial({ uniforms: { t: { value: null }, d: { value: new THREE.Vector2() } }, depthTest: false, depthWrite: false, toneMapped: false,
     vertexShader: 'varying vec2 u; void main() { u = position.xy * 0.5 + 0.5; gl_Position = vec4(position.xy, 0.0, 1.0); }',
     fragmentShader: 'uniform sampler2D t; uniform vec2 d; varying vec2 u; void main() { float s = 0.0; s += texture2D(t, u - 4.0 * d).g * 0.05; s += texture2D(t, u - 3.0 * d).g * 0.09; s += texture2D(t, u - 2.0 * d).g * 0.12; s += texture2D(t, u - d).g * 0.15; s += texture2D(t, u).g * 0.18; s += texture2D(t, u + d).g * 0.15; s += texture2D(t, u + 2.0 * d).g * 0.12; s += texture2D(t, u + 3.0 * d).g * 0.09; s += texture2D(t, u + 4.0 * d).g * 0.05; gl_FragColor = vec4(s, s, s, 1.0); }' });
-  let shA = null, shB = null, shM = null, jackBlob = null, jackTint = false, blobGeo = null;
+  let shA = null, shB = null, shM = null, jackBlob = null, blobGeo = null;
   function bakeShadow(obj, E) {
     const N = 256, O = { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, depthBuffer: true, stencilBuffer: false };
     if (!shA) { shA = new THREE.WebGLRenderTarget(N, N, O); shB = new THREE.WebGLRenderTarget(N, N, O); shM = blurMat(); }

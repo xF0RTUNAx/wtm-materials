@@ -5,7 +5,7 @@
 import { tr } from './i18n.js?v=20261104a';
 import { CITY, ZONE_NAME, mulberry32, riverX, objAimXZ, objDist } from './city.js?v=20261104a';
 import { strikerGeo, attachFlames } from './units-render.js?v=20261104a';
-import { planeModel, classOf, weaponMesh, pylonMesh, podModel, weaponHasModel, planeMeta, spinProps, wantWeapon, hiKnown } from './models.js?v=20261104a';
+import { planeModel, classOf, weaponMesh, pylonMesh, seatStores, podModel, weaponHasModel, planeMeta, spinProps, wantWeapon, hiKnown } from './models.js?v=20261104a';
 import { ico, drawIco } from './icons.js?v=20261104a';
 import { applyLayout } from './layout.js?v=20261104a';
 import { clamp, makeCraft, pilotStep, fwdOf, D2R, angleBetween } from '../drone/sim/core.js?v=20261104a';
@@ -83,14 +83,18 @@ export function createAir(C) {
   }
   ship.visible = false; scene.add(ship);
   const pylonMeshes = [];
+  let seatExtra = null; // балки и надставки на пилонах (seat.js)
   function buildPylons() {
     for (const m of pylonMeshes) ship.remove(m);
     pylonMeshes.length = 0;
+    if (seatExtra) { ship.remove(seatExtra); seatExtra = null; }
+    const seatL = [];
     for (const l of loadout) for (const st of l.st) {
       const m = pylonMesh(l.key, AG[l.key], C.weaponGeo, C.mats.wMat); const p = stations[st], W0 = AG[l.key].vis; m.position.set(p.x, p.y - (W0.hang ?? W0.r) - 0.05, p.z); // hang - у ракет с гондолой под корпусом
-      m.userData.st = st; m.visible = !shipInternal; ship.add(m); pylonMeshes.push(m); // во внутренних отсеках - не видно
+      m.userData.st = st; m.visible = !shipInternal; ship.add(m); pylonMeshes.push(m); seatL.push({ m, st, key: l.key, W: AG[l.key] }); // во внутренних отсеках - не видно
     }
-    if (hasPod && podPos) { const m = podModel() || new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 2.4, 10).rotateX(Math.PI / 2), new THREE.MeshPhongMaterial({ color: 0x5a636c })); m.position.copy(podPos); ship.add(m); pylonMeshes.push(m); } // LITENING или цилиндр
+    if (hasPod && podPos) { const m = podModel() || new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 2.4, 10).rotateX(Math.PI / 2), new THREE.MeshPhongMaterial({ color: 0x5a636c })); m.position.copy(podPos); ship.add(m); pylonMeshes.push(m); seatL.push({ m, pod: true }); } // LITENING или цилиндр
+    if (shipModel && !craft.heli && !shipInternal) seatExtra = seatStores(ship, shipModel.userData.pm.replace(/@.*$/, ''), seatL); // на настоящие пилоны модели (вертолёты - по своим точкам)
   }
   function hurt(dmg, by, from = null) {
     if (craft.dead || game.over || game.net) return; // онлайн: урон и сбитие - от сервера (netHit / netDown)

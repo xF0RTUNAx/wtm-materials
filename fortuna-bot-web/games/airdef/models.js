@@ -6,6 +6,8 @@
 // tools/airdef-models/planes-view.html?ortho=1; dry - двигатель без форсажа: только слабое свечение; нет сопел - пламени не видно: B-2, F-117) и место
 // контейнера. Авторы и лицензии - MODEL_CREDITS (показываются в «Настройках»).
 /* global THREE */
+import { SEATS } from './seats-data.js?v=20261104a';
+import { pylonTris, geoOf, seatOne } from './seat.js?v=20261104a';
 import { tr } from './i18n.js?v=20261104a';
 import { CREDITS } from './models/credits.js?v=20261104a';
 import { HI_PLANES } from './models/hi-list.js?v=20261104a';
@@ -443,7 +445,7 @@ const GLB_V_OWN = {
   w_bomb1000: '20261103f',
   w_fab1000: '20261103g',
 };
-GLB_V.hg_jack = '20261104a';
+GLB_V.hg_jack = '20261104b'; // подъёмник, ревизия 2: матовый, с износом
 GLB_V.w_pod = '20261104b'; // серый корпус контейнера, без комьев от упрощения
 GLB_V.w_agm88 = '20261104a'; // без синих ложементов тележки
 GLB_V.e_f111 = '20261104a'; // без чёрных наклеек
@@ -467,7 +469,7 @@ Object.assign(GLB_V, { l_iskander: '20261024s', w_tbmdec: '20261024r' }); // «�
 GLB_V.e_su34 = '20261024l'; // Су-34 manilov.ap (CC BY 4.0) вместо 42manako, без шасси (2026-10-22)
 Object.assign(GLB_V, { hawk: '20261024m', w_gbu24: '20261024m' }); // Hawk: ракета без деталей пусковой (absorb 0); GBU-24 - AnirudhRao, своя окраска
 Object.assign(GLB_V, GLB_V_OWN);
-META.hg_jack = { lazy: true, stations: [] }; // подъёмник ангара (hangar.js): части base, ram, head
+META.hg_jack = { lazy: true, matte: true, stations: [] }; // подъёмник ангара (hangar.js): части base, ram, head
 // разбор GLB: меши (позиции, нормали, UV, индексы), материалы, картинки текстур
 function parseGlb(buf) {
   const dv = new DataView(buf), jl = dv.getUint32(12, true), json = JSON.parse(new TextDecoder().decode(new Uint8Array(buf, 20, jl)));
@@ -550,14 +552,6 @@ function wearMat(mat) {
   mat.customProgramCacheKey = () => 'wear';
 }
 const pylonMat = new THREE.MeshPhongMaterial({ color: 0x4a4f54, specular: 0x222222, shininess: 20 });
-// дорисованный пилон: лезвие с острыми кромками, снизу короче и сдвинут назад (нос модели к -z). Центр по высоте в нуле
-export function pylonGeo(h, L = 1.6, w = 0.12) {
-  const loop = (y, kL, kW, dz) => [[0, 0.5], [0.5, 0.17], [0.5, -0.17], [0, -0.5], [-0.5, -0.17], [-0.5, 0.17]].map(([x, z]) => [x * w * kW, y, z * L * kL + dz]);
-  const T = loop(h / 2, 1, 1, 0), B = loop(-h / 2, 0.72, 0.85, L * 0.07), v = [], tri = (a, b, c) => v.push(...a, ...b, ...c);
-  for (let i = 0; i < 6; i++) { const j = (i + 1) % 6; tri(B[i], B[j], T[j]); tri(B[i], T[j], T[i]); }
-  for (let i = 1; i < 5; i++) { tri(T[0], T[i], T[i + 1]); tri(B[0], B[i + 1], B[i]); }
-  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(v, 3)); g.computeVertexNormals(); return g;
-}
 // телефон (2026-10-22: Telegram закрывал вкладку в вертолётном режиме по памяти - у AH-64 18 текстур 1024 ≈ 100 МБ видеопамяти):
 // текстуры вертолётов - не больше 512, остальных моделей - не больше 1024; распакованная картинка закрывается после загрузки на видеокарту
 // (иначе держит ещё столько же обычной памяти). На ПК и в стендах (свои рендереры) - как было
@@ -756,7 +750,9 @@ async function load(name, base) {
     group.userData.wings = true; if ((META[name] || {}).flip) group.userData.flip = true; // висит крыльями вниз (УМПК): после сброса переворачивается на 180° (glideWings)
   }
   // дорисованные пилоны там, где у модели их нет
-  for (const p of (mOf(name) || { stations: [] }).stations) if (p.py > 0) { /* дальняя копия _lo - по описанию основной */ const pm = new THREE.Mesh(pylonGeo(p.py), pylonMat); pm.position.set(p.x, p.y + p.py / 2, p.z); pm.userData.genPylon = true; group.add(pm); }
+  const pyV = [], pyR = seatRec(name.replace(/@.*$/, '').replace(/_lo$/, '')); // одной сеткой: меньше вызовов отрисовки
+  (mOf(name) || { stations: [] }).stations.forEach((p, i) => { const q = pyR && pyR.s[i]; if (q) { if (q[0] === 1) { const h = q[5] - q[2] + 0.06; pylonTris(pyV, h, 1.4, 0.12, q[1], q[2] + h / 2, q[3]); } } else if (p.py > 0) pylonTris(pyV, p.py, 1.6, 0.12, p.x, p.y + p.py / 2, p.z); });
+  if (pyV.length) { const pm = new THREE.Mesh(geoOf(pyV), pylonMat); pm.userData.genPylon = true; group.add(pm); }
   return group;
 }
 // готовая модель комплекса: { body, turret, cradle } (копии) или null - тогда процедурная
@@ -952,6 +948,33 @@ export function weaponMesh(key, W, geoFn, mat) {
 // давали ~100 вызовов отрисовки и столько же в тенях - каждая деталь бомбы отдельно). Крылья сложены, частей не двигаем - на пилоне не нужно;
 // в полёте - weaponMesh (там крылья раскрываются)
 const PYLON = new Map(), PI4 = new THREE.Matrix4();
+// посадка подвески на пилоны по таблице (seat.js); list: { m, st, key, W } или { m, pod: true }. Возвращает сетку с балками и надставками (уже в root) или null. Нет записи или другая версия файла - подвеска остаётся на старой точке
+function seatRec(plane) { const r = SEATS.p[plane]; return r && r.v === glbVer(plane) ? r : null; }
+function seatWpn(key, W, pod) {
+  const n = pod ? podModelName() : WMODEL[key];
+  if (n && LOADED[n]) { const r = SEATS.w[pod ? 'pod' : key]; return r && r[0] === glbVer(n) ? r.slice(1) : null; }
+  return pod ? [0.2, 0, 2.4, 0, 0, null] : [W.vis.hang ?? W.vis.r, 0, W.vis.L || 2, 0, 0, null]; // простая фигура, пока модель не пришла
+}
+const SEAT_GEO = new Map();
+export function seatStores(root, plane, list, mat = pylonMat) {
+  const R = seatRec(plane); if (!R) return null;
+  const v = [], sig = [plane];
+  for (const { m, st, key, W, pod } of list) {
+    const p = pod ? R.pod : R.s[st]; if (!p || !p[0]) continue;
+    const s = seatWpn(key, W, pod); if (!s) continue;
+    const q = seatOne(p, s, v); m.position.set(q[0], q[1], q[2]); sig.push(`${pod ? 'pod' : st}:${pod ? '' : key}:${s[0]}`);
+  }
+  if (!v.length) return null;
+  const k = sig.join('|'); let g = SEAT_GEO.get(k); if (!g) SEAT_GEO.set(k, g = geoOf(v));
+  const x = new THREE.Mesh(g, mat); root.add(x); return x;
+}
+// устаревшие записи таблицы (проверка в ui-test)
+export function seatStale(AG) { const out = []; for (const n of Object.keys(META)) { if (!planeSeated(n)) continue; const r = SEATS.p[n]; if (!r || r.v !== glbVer(n)) out.push(n); } for (const k of Object.keys(WMODEL)) { if (!AG[k]) continue; const r = SEATS.w[k]; if (!r || r[0] !== glbVer(WMODEL[k])) out.push(k); } return out; }
+const planeSeated = (n) => { const m = META[n]; return !!m && !!m.stations && m.stations.length > 0 && !m.heli && !m.internal && !m.weapon && !n.endsWith('_lo'); };
+export const planeNames = () => Object.keys(META).filter(planeSeated);
+export const weaponModelName = (key) => WMODEL[key] || null;
+export const podModelName = () => Object.keys(META).find((k) => META[k].pod === true) || null;
+export const glbVerOf = (n) => glbVer(n);
 export function pylonMesh(key, W, geoFn, mat) {
   const n = WMODEL[key]; if (!n || !LOADED[n]) return weaponMesh(key, W, geoFn, mat);
   let P = PYLON.get(n);

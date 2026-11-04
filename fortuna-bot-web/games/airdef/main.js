@@ -28,7 +28,7 @@ import { createRaid } from './sim/raid.js?v=20261104a';
 import { POD, RAIL, podLift } from './sim/combined.js?v=20261104a';
 import { unitModel, weaponGeo, samMissileMesh, mountWpnFlame, narMesh, flameOf, wpnNozzle, strikerGeo, createFx, attachFlames } from './units-render.js?v=20261104a';
 import { slotCount, LNCH, lnchToWorld, cylPose, mslView } from './launchers.js?v=20261104a';
-import { spinProps as spinRotors, spinSails, modelStats, loadModels, planeModel, heliModel, classOfRole, weaponMesh, pylonMesh, unitModelGlb, unitMissileGlb, samMissileLo, samNose, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, wantUnitNear, bldModel, wantBuildings, wantModel, wantWeapon, weaponPending, anyModel, setWings, glideWings, spinVanes, planeMeta } from './models.js?v=20261104a';
+import { spinProps as spinRotors, spinSails, modelStats, loadModels, planeModel, heliModel, classOfRole, weaponMesh, pylonMesh, seatStores, unitModelGlb, unitMissileGlb, samMissileLo, samNose, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, wantUnitNear, bldModel, wantBuildings, wantModel, wantWeapon, weaponPending, anyModel, setWings, glideWings, spinVanes, planeMeta } from './models.js?v=20261104a';
 import { planeDamageVis, updateDebris, clearDebris } from './plane-damage.js?v=20261104a';
 import { createSound } from './sound.js?v=20261104a';
 import { ico, iconize } from './icons.js?v=20261104a';
@@ -708,12 +708,13 @@ const simFx = {
 };
 // подвеска ИИ-самолёта с готовой моделью: тяжёлое - ближе к фюзеляжу (как у игрока); k - номер изделия этого типа
 const ST_ORDER = [3, 4, 2, 5, 1, 6, 0, 7], LOD_D = 2500; // дальше LOD_D - простая модель самолёта
-function hangLoad(g, stations, load) {
-  const out = []; let oi = 0;
+function hangLoad(g, stations, load, plane) {
+  const out = [], seatL = []; let oi = 0;
   for (const l of [...load].sort((x, y) => AG[y.key].mass - AG[x.key].mass)) for (let k = 0; k < l.n && oi < 8; k++) {
-    const W = AG[l.key], p = stations[ST_ORDER[oi++]], m = pylonMesh(l.key, W, weaponGeo, wMat); if (weaponPending(l.key)) wantWeapon(l.key); // пришла - самолёты пересоберутся
-    m.position.set(W.kind === 'tbm' ? 0 : p.x, p.y - (W.vis.hang ?? W.vis.r) - 0.05, p.z); g.add(m); out.push({ m, l, k }); // «Кинжал» - под фюзеляжем по оси
+    const st = ST_ORDER[oi++], W = AG[l.key], p = stations[st], m = pylonMesh(l.key, W, weaponGeo, wMat); if (weaponPending(l.key)) wantWeapon(l.key); // пришла - самолёты пересоберутся
+    m.position.set(W.kind === 'tbm' ? 0 : p.x, p.y - (W.vis.hang ?? W.vis.r) - 0.05, p.z); g.add(m); out.push({ m, l, k }); if (W.kind !== 'tbm') seatL.push({ m, st, key: l.key, W }); // «Кинжал» - под фюзеляжем по оси
   }
+  const extra = seatStores(g, plane, seatL); if (extra) out.push({ m: extra, l: { n: 1 }, k: 0 }); // балки и надставки: как подвеска, только вблизи
   return out;
 }
 // посадка машины на рельеф: наклон по высоте земли спереди / сзади и слева / справа, высота - по средней из четырёх точек
@@ -913,7 +914,7 @@ function syncWorld(dt, t) {
           g.userData.dv = planeDamageVis(scene, pm.obj, pm.name, planeMeta(pm.name), () => C.fx); // зоны повреждений: отрыв частей, дым из зон
           // пламя - у каждой модели своё (вдали - у простой): иначе у длинных самолётов (Су-34) факелы висели за простой моделью
           const fh = attachFlames(pm.obj, pm.nozzles, pm.nr / 0.45, false, pm.dry, pm.name), fl = attachFlames(lo, pm.nozzles.length ? sg.nozzles : [], sg.nr / 0.45, false, pm.dry, pm.name); // вдали - так же: нет пламени у B-2 и F-117, слабое - без форсажа
-          g.userData.flames = { update(t, ab) { fh.update(t, ab); fl.update(t, ab); } }; g.userData.hung = pm.internal ? [] : hangLoad(g, pm.stations, a.load); // во внутренних отсеках - не видно
+          g.userData.flames = { update(t, ab) { fh.update(t, ab); fl.update(t, ab); } }; g.userData.hung = pm.internal ? [] : hangLoad(g, pm.stations, a.load, pm.name); // во внутренних отсеках - не видно
           if (a.role === 'carrier') lo.visible = false; else g.userData.lod = { hi: pm.obj, lo }; // носитель велик - модель видна и издали
         } else g.userData.flames = attachFlames(g, sg.nozzles, sg.nr / 0.45);
       }
