@@ -56,9 +56,12 @@ try {
         const y = here - Math.max(0.2, Math.min(MAX, here - q.y)); return [1, f(q.x), f(y), f(q.z), clearOf(under, q.x, q.z, y - 0.02), f(here)];
       };
       const s = pm.stations.map((q) => q).sort((a, b) => a.x - b.x).reduce((map, q) => {
-        // правая сторона - зеркало левой: модели симметричны, а поиск мог дать разные ответы
+        // модели почти симметричны, но бывают сдвинуты: у каждой стороны свой ответ. Зеркало левой - только если правая нашла другое, а зеркало действительно касается пилона
         const twin = q.x > 0.01 ? map.get(pm.stations.find((t) => Math.abs(t.x + q.x) < 0.01 && Math.abs(t.z - q.z) < 0.01 && Math.abs(t.y - q.y) < 0.01)) : null;
-        map.set(q, twin ? (twin[0] ? [twin[0], f(-twin[1]), ...twin.slice(2)] : [0]) : one(q)); return map;
+        let r = one(q);
+        if (twin && twin[0] === 2 && (r[0] !== 2 || Math.abs(r[1] + twin[1]) > 0.1 || Math.abs(r[2] - twin[2]) > 0.1 || Math.abs(r[3] - twin[3]) > 0.3) && [-0.12, 0, 0.12].some((k) => { const y = under(-twin[1], twin[3] + k * L, twin[2] - 0.05); return y != null && y <= twin[2] + 0.06; })) r = [2, f(-twin[1]), ...twin.slice(2)];
+        else if (twin && twin[0] === 1 && r[0] === 2) r = [1, f(-twin[1]), ...twin.slice(2)]; // ступенька только справа: не настоящий пилон
+        map.set(q, r); return map;
       }, new Map());
       const sOut = pm.stations.map((q) => s.get(q));
       let pod = null; if (pm.pod) { const a = author(pm.pod.x, pm.pod.y, pm.pod.z); if (a.x != null) pod = [2, f(a.x), f(a.y), f(a.z), 99]; else { const here = a.none ? null : under(pm.pod.x, pm.pod.z, pm.pod.y - 0.55); pod = here == null ? [0] : [3, f(pm.pod.x), f(here), f(pm.pod.z), 99]; } }
