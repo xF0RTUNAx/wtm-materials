@@ -5,7 +5,7 @@
 // Новая карта - перезагрузка страницы (Mark: «анимация створок прерывается»): carry() перед перезагрузкой запоминает стиль, новая страница
 // открывается уже с закрытыми створками (airdef.html: #doorsBoot до загрузки модулей, потом - эти), на шве - ход загрузки; расходятся,
 // когда карта загружена (gate) или бой онлайна открылся.
-import { tr } from './i18n.js?v=20261104b';
+import { tr } from './i18n.js?v=20261104c';
 
 const STY = ['has', 'hangar'], KEY = 'fortuna_ad_doors';
 const CSS = `
@@ -28,7 +28,7 @@ export function createDoors() {
   const el = document.createElement('div'); el.id = 'doors'; if (el.setAttribute) el.setAttribute('aria-hidden', 'true');
   el.innerHTML = '<div class="sh"></div><div class="dl"></div><div class="dr"></div><div class="dt"></div>'; if (document.body) document.body.appendChild(el);
   const sh = el.querySelector('.sh'), L = el.querySelector('.dl'), R = el.querySelector('.dr'), T = el.querySelector('.dt');
-  const url = (s, h) => `airdef/ui/doors/${s}_${h}.webp?v=20261104b`; // ?v= - версия модулей (поднимается при деплое)
+  const url = (s, h) => `airdef/ui/doors/${s}_${h}.webp?v=20261104c`; // ?v= - версия модулей (поднимается при деплое)
   const look = (s) => { cur = s; L.style.backgroundImage = `url(${url(s, 'l')})`; R.style.backgroundImage = `url(${url(s, 'r')})`; };
   let pre = false, busy = false, cur = STY[0], held = null, failT = 0, leaving = false;
   // картинки - заранее, в простое меню (4 × 70-90 КБ): к первому нажатию «Начать» уже в кэше

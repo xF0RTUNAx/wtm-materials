@@ -43,7 +43,7 @@ body.full { overflow: hidden; } body.full .bar, body.full .note { display: none;
 <div class="stage"><div id="S"><div class="bg" id="bg"></div><canvas id="c"></canvas><div class="vg"></div><div class="ui" id="ui"></div></div></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script type="module">
-const G = '../../games/airdef/', V = '?v=20261104b';
+const G = '../../games/airdef/', V = '?v=20261104c';
 const M = await import(G + 'models.js' + V), { weaponGeo } = await import(G + 'units-render.js' + V), { AG, LOADOUTS, PLANES } = await import(G + 'arsenal.js' + V), { ktxInit } = await import(G + 'ktx.js' + V);
 const Q = new URLSearchParams(location.search), hp = location.hash.slice(1).split('-'), FULL = Q.has('full') || innerHeight < 460; if (FULL) document.body.classList.add('full');
 let P = hp[0] || 'hangar', F = hp[2] || 'pc';

@@ -3,12 +3,12 @@
 // и гребнях, лёд с наметёнными пятнами снега, хвойная крона издали (лес читается лесом между редкими импосторами),
 // укатанный снег и асфальт у базы, ВПП. Нормали - из сетки высот (50 м): склоны освещены точнее, чем грубая сетка земли.
 /* global THREE */
-import { tr } from './i18n.js?v=20261104b';
-import { ZONE, partDist } from './city.js?v=20261104b';
-import { WINTER } from './map-winter.js?v=20261104b';
-import { NOISE_ON, NOISE_GLSL, noiseTex } from './noise-tex.js?v=20261104b';
-import { FAR_U, FAR_GLSL, groundShadowChunk } from './ground-far.js?v=20261104b';
-import { ktxOn, ktxLoad } from './ktx.js?v=20261104b';
+import { tr } from './i18n.js?v=20261104c';
+import { ZONE, partDist } from './city.js?v=20261104c';
+import { WINTER } from './map-winter.js?v=20261104c';
+import { NOISE_ON, NOISE_GLSL, noiseTex } from './noise-tex.js?v=20261104c';
+import { FAR_U, FAR_GLSL, groundShadowChunk } from './ground-far.js?v=20261104c';
+import { ktxOn, ktxLoad } from './ktx.js?v=20261104c';
 
 // погода зимней карты (панорамы - Poly Haven, CC0): ясный мороз, морозная дымка, пасмурно со снегом
 export function winterWeathers(W) {
