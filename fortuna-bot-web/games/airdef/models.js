@@ -208,6 +208,7 @@ const META = {
   w_kh58: { weapon: 'kh58', stations: [] }, // Х-58У - Narni_Tchereskov
   w_agm65b: { weapon: 'agm65b', stations: [] }, // AGM-65B - собственная модель (tools/airdef-models/own/agm65b)
   w_bomb1000: { weapon: 'bomb1000', stations: [], matte: true }, // AN-M65A1 - собственная модель (tools/airdef-models/own/bomb1000)
+  w_kab500s: { weapon: 'kab500s', lazy: true, stations: [] }, // КАБ-500С — собственная модель (tools/airdef-models/own/kab500s)
   w_kab500kr: { weapon: 'kab500kr', lazy: true, stations: [] }, // КАБ-500Кр — собственная модель (tools/airdef-models/own/kab500kr)
   w_kab500l: { weapon: 'kab500l', lazy: true, stations: [] }, // КАБ-500Л — собственная модель (tools/airdef-models/own/kab500l)
   w_mk82: { weapon: 'mk82', stations: [] }, // Mk 82 — собственная модель (tools/airdef-models/own/mk82)
@@ -216,7 +217,7 @@ const META = {
   w_mald: { weapon: ['mald', 'quail'], stations: [] }, // ADM-160 MALD («AIM-160A Screamer»)
   w_decoy_e: { weapon: 'decoy_e', stations: [] }, // Harpy - ложная цель
   w_gbu39: { weapon: ['gbu39', 'sdb'], wings: 'fold', stations: [] }, // GBU-39 SDB (и для «Мульти-волны»)
-  w_gbu31: { weapon: 'gbu31', stations: [] }, // Mk 82 JDAM (FeriseCAT) в размер GBU-31
+  w_gbu31: { weapon: 'gbu31', stations: [] }, // GBU-31 JDAM — собственная модель (tools/airdef-models/own/gbu31)
   w_pod: { pod: true, stations: [] }, // AN/AAQ-28 LITENING - прицельный контейнер
   // постройки военных объектов (целей) - расставляются по OBJ_DIMS из city.js
   obj_tanks: { obj: true, stations: [] }, obj_rtank: { obj: true, stations: [] }, // резервуары и ангар obj_jhangar - для «Летки» (на картах этой игры - свои сцены)
@@ -451,6 +452,8 @@ const GLB_V_OWN = {
   w_kab500l: '20261103m',
   w_gbu10: '20261103n',
   w_kab500kr: '20261103o',
+  w_gbu31: '20261103p',
+  w_kab500s: '20261103q',
 };
 GLB_V.hg_jack = '20261104b'; // подъёмник, ревизия 2: матовый, с износом
 GLB_V.w_pod = '20261104b'; // серый корпус контейнера, без комьев от упрощения

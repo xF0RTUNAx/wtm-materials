@@ -1,0 +1,19 @@
+{
+ "key": "w_kab500s",
+ "weapon": "kab500s",
+ "name": "КАБ-500С",
+ "rev": 1,
+ "files": {
+  "glb": "kab500s.glb",
+  "blend": "kab500s.blend",
+  "build": [
+   "build.py",
+   "k5s_geo.py",
+   "_decals.py",
+   "bake.py",
+   "_collide.py",
+   "_shots.py",
+   "deliver.py"
+  ]
+ }
+}

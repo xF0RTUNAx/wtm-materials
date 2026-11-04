@@ -1,0 +1,17 @@
+{
+ "key": "w_gbu31",
+ "weapon": "gbu31",
+ "name": "GBU-31 JDAM",
+ "rev": 1,
+ "files": {
+  "glb": "gbu31.glb",
+  "blend": "gbu31.blend",
+  "build": [
+   "build.py",
+   "_collide.py",
+   "bake_maps.py",
+   "paint.py",
+   "deliver.py"
+  ]
+ }
+}

@@ -178,15 +178,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "Mk82 (JDAM)",
-  "author": "FeriseCAT",
-  "url": "https://sketchfab.com/3d-models/mk82-jdam-b17b76a5e8be474d9cfc400efe27cf7b",
-  "license": "CC-BY-4.0",
-  "files": [
-   "w_gbu31"
-  ]
- },
- {
   "title": "FIM-92 Stinger (перекрашена, развёрнута)",
   "author": "Pan_Ar4ik",
   "url": "https://sketchfab.com/3d-models/fim-92-stinger-925d78a613e847fcb2e7a60d54d3404c",

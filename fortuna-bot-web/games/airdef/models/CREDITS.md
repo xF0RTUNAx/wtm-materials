@@ -22,7 +22,6 @@
 - "Harpy Drone" (https://sketchfab.com/3d-models/harpy-drone-84d8d2dc8ca14d64ac05b19e3c88b385) by KillCaptureDestroy — CC-BY-4.0 — `w_decoy_e.glb`
 - "RAFAEL AN/AAQ-28(V) Litening" (https://sketchfab.com/3d-models/rafael-anaaq-28v-litening-be90b1ca86bd46f4a87a86829d1e112c) by Vlad.Mojaev — CC-BY-4.0 — `w_pod.glb`
 - "GBU-39B Small Diameter Bomb Weapon System" (https://sketchfab.com/3d-models/gbu-39b-small-diameter-bomb-weapon-system-108c5bf859cb41c5b72163b4e2758f26) by KillCaptureDestroy — CC-BY-4.0 — `w_gbu39.glb`
-- "Mk82 (JDAM)" (https://sketchfab.com/3d-models/mk82-jdam-b17b76a5e8be474d9cfc400efe27cf7b) by FeriseCAT — CC-BY-4.0 — `w_gbu31.glb`
 - "FIM-92 Stinger (перекрашена, развёрнута)" (https://sketchfab.com/3d-models/fim-92-stinger-925d78a613e847fcb2e7a60d54d3404c) by Pan_Ar4ik — CC-BY-4.0 — `mp_stinger.glb`
 - "MANPADS model 9K333 Verba (перекрашена)" (https://sketchfab.com/3d-models/manpads-model-9k333-verba-d7e05be0f5384e93a96ca47d84f1da07) by s-k_2005 — CC-BY-4.0 — `mp_verba.glb`
 - "MANPADS model 9K333 Verba" (https://sketchfab.com/3d-models/manpads-model-9k333-verba-d7e05be0f5384e93a96ca47d84f1da07) by s-k_2005 — CC-BY-4.0 — `msl_manpads.glb`

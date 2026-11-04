@@ -83,7 +83,7 @@ const CONFIG = {
     orig: { title: 'RAFAEL AN/AAQ-28(V) Litening', author: 'Vlad.Mojaev', source: 'https://sketchfab.com/3d-models/rafael-anaaq-28v-litening-be90b1ca86bd46f4a87a86829d1e112c', license: 'CC-BY-4.0' } },
   w_gbu39: { src: `${DL}/gbu-39b_small_diameter_bomb_weapon_system.glb`, scale: 0.0496, axes: (x, y, z) => [x, -y, -z], /* нос из +Z в −Z и переворот: у автора крылья снизу — у настоящей SDB на спине */ tex: () => 512, pickMesh: /./,
     groups: (c) => (Math.abs(c.ctr[0]) > 3 && c.size[1] < 1 ? (c.ctr[0] > 0 ? 'wingA' : 'wingB') : 'body') }, // крылья — свои части (на подвеске сложены)
-  w_gbu31: { src: `${DL}/mk82_jdam.glb`, scale: 3.88 / 15.69, nose: '-z', tex: () => 256, target: 9000, pickMesh: /./ }, // Mk 82 JDAM (FeriseCAT) в размер GBU-31 (3,9 м) (прежняя GBU-24 — из War Thunder)
+  w_gbu31: { src: new URL('./own/gbu31.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 1024, nTex: () => 512, pickMesh: /./, own: true }, // GBU-31 JDAM: своя модель (Blender, own/gbu31.glb)
   // трубы ПЗРК — перекрашены по фото настоящих и с запечённым затенением (Свои/ПЗРК_трубы/paint.py, исходники авторов те же, CC BY):
   // Stinger развёрнут (nose '-x'): у настоящего ложа с прицелом спереди, раструб сзади; коробка прицела перенесена на левую сторону трубы
   mp_stinger: { src: `${DL}/Свои/ПЗРК_трубы/mp_stinger_src.glb`, scale: 7.6 * 1.52 / 0.712, nose: '-x', tex: () => 512,   /* в настоящий размер: 1,52 м (было 0,71) */ pickMesh: /./, remove: (c) => c.ctr[0] < -0.05, credit: 'перекрашена, развёрнута',
@@ -195,6 +195,7 @@ const CONFIG = {
   w_nar_hydra: { src: new URL('./own/hydra70.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 256, nTex: () => 256, pickMesh: /./, own: true }, // НАР Hydra 70 в полёте: Mk 66 + M151, 1,45 м, Ø 70 мм
   w_kh29t: { src: new URL('./own/kh29t.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 512, nTex: () => 512, pickMesh: /./, own: true }, // Х-29Т: своя модель (Blender, own/kh29t.glb)
   w_nar_s8: { src: new URL('./own/s8.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 256, nTex: () => 256, pickMesh: /./, own: true }, // НАР С-8КОМ в полёте: своя модель (Blender по чертежу и фото Wikimedia S-8_KOM_80_mm_rocket.jpg), 1,57 м, Ø 80 / 82 мм, 6 лопастей раскрыты, размах 384 мм
+  w_kab500s: { src: new URL('./own/kab500s.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 1024, nTex: () => 1024, pickMesh: /./, own: true }, // КАБ-500С: своя модель (Blender, own/kab500s.glb)
   w_kab500kr: { src: new URL('./own/kab500kr.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 1024, nTex: () => 512, pickMesh: /./, own: true }, // КАБ-500Кр: своя модель (Blender, own/kab500kr.glb)
   w_kab500l: { src: new URL('./own/kab500l.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 1024, nTex: () => 512, pickMesh: /./, own: true }, // КАБ-500Л: своя модель (Blender, own/kab500l.glb)
   w_lance: { src: new URL('./own/msl_lance.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 512, nTex: () => 512, pickMesh: /./, own: true }, // MGM-52 Lance (ракета): своя модель (Blender, own/msl_lance.glb)
