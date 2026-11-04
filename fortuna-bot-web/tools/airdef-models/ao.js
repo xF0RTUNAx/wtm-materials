@@ -5,7 +5,7 @@
 // Сила и дальность — от размера модели: maxD = 12 % диагонали габаритов (не меньше 0,4 м), 32 луча; открытость делится на 80-й процентиль и возводится в степень 1,8, итог не темнее 0,3.
 import { readGlb, accessor } from './glb.js';
 
-const DIR = new URL('../../games/airdef/models/', import.meta.url).pathname;
+const DIR = Deno.env.get('AO_DIR') ? Deno.env.get('AO_DIR').replace(/\/?$/, '/') : new URL('../../games/airdef/models/', import.meta.url).pathname; // AO_DIR - другая папка (hi-textures.js)
 const RAYS = 32, MIN_AO = 0.3;
 
 // ── BVH по треугольникам (медианное деление по длинной оси) ──

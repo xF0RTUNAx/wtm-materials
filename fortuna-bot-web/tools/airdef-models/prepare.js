@@ -1217,7 +1217,9 @@ async function prepare(name, views) {
     let srcT = `${tmp}/t.${ext}`; // texVf — фильтр ffmpeg для перекраски (у прототипа Су-34 грунт жёлтый → серо-голубой строевой)
     const vf = typeof cfg.texVf === 'function' ? cfg.texVf(J.textures[ti].source) : cfg.texVf; // функция — свой фильтр у каждой картинки (по номеру в исходнике)
     if (vf) { await new Deno.Command('ffmpeg', { args: ['-loglevel', 'error', '-y', '-i', srcT, '-vf', vf, `${tmp}/f.png`] }).output(); srcT = `${tmp}/f.png`; }
-    await new Deno.Command('sips', { args: png ? ['-s', 'format', 'png', '-Z', String(size), srcT, '--out', `${tmp}/${of}`] : ['-s', 'format', 'jpeg', '-s', 'formatOptions', '80', '-Z', String(size), srcT, '--out', `${tmp}/${of}`], stdout: 'null', stderr: 'null' }).output();
+    // PREPARE_HI - картинка исходного размера (не больше 4096) и качество выше: версия «Максимальные текстуры» (hi-textures.js)
+    const HI = !!Deno.env.get('PREPARE_HI'); if (HI) { const d = new TextDecoder().decode((await new Deno.Command('sips', { args: ['-g', 'pixelWidth', '-g', 'pixelHeight', srcT], stdout: 'piped', stderr: 'null' }).output()).stdout).match(/pixel\w+: (\d+)/g) || []; size = Math.min(4096, Math.max(...d.map((x) => +x.split(': ')[1]), 16)); }
+    await new Deno.Command('sips', { args: png ? ['-s', 'format', 'png', '-Z', String(size), srcT, '--out', `${tmp}/${of}`] : ['-s', 'format', 'jpeg', '-s', 'formatOptions', HI ? '90' : '80', '-Z', String(size), srcT, '--out', `${tmp}/${of}`], stdout: 'null', stderr: 'null' }).output();
     const jpg = Deno.readFileSync(`${tmp}/${of}`); texBytes += jpg.length;
     images.push({ bufferView: add(jpg), mimeType: png ? 'image/png' : 'image/jpeg' }); textures.push({ sampler: 0, source: images.length - 1 });
     texCache.set(key, textures.length - 1); return textures.length - 1;

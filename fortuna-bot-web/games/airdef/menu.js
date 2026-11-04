@@ -70,9 +70,16 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
   function panel(on) { document.body.classList.toggle('mpOpen', on); if (C.hangar && C.hangar.panelChanged) C.hangar.panelChanged(); try { sessionStorage.setItem(mpKey, on ? '1' : '0'); } catch (_) { /* нет хранилища - только на эту загрузку */ } }
   { const q = new URLSearchParams(location.search), must = q.get('mp') === '1' || q.has('ad'); let on = q.get('oldbg') !== '1'; /* ангар: подвеска на виду, «›» - убрать */ try { const st = sessionStorage.getItem(mpKey); on = st === '1' || (on && st !== '0'); } catch (_) { /* как есть */ } panel(on || must); }
   $('mpClose').onclick = () => { snd.click(); panel(false); };
+  // Арсенал, Справка, Настройки, Об игре (Mark): свёрнуты в кнопку, как табличка разделов
+  $('mtFold').innerHTML = ico('cog');
+  $('mtFold').onclick = (e) => { e.stopPropagation(); snd.click(); $('mtabs').classList.toggle('open'); };
   $('hgStrip').onclick = (e) => { const b = e.target.closest('[data-hgp]'); if (!b) return; panel(true); if (b.dataset.hgp === hgPlane) return; snd.click(); hgPlane = b.dataset.hgp; render(); save(); };
+  const modesKind = (() => { try { const v = new URLSearchParams(location.search).get('modes'); if (v) { sessionStorage.setItem('fortuna_airdef_modes', v); return v; } return sessionStorage.getItem('fortuna_airdef_modes') || 'b'; } catch (_) { return 'b'; } })(); // проба на выбор Mark: a, b, c
+  document.body.classList.add('hgM-' + modesKind);
   $('modeSel').onclick = (e) => {
-    const b = e.target.closest('button'); if (!b) return; panel(true); setup.game = b.dataset.g; setup.evd = false; save(); // evd - оборона события на осенней карте (event.js): обычное меню её сбрасывает
+    const b = e.target.closest('button'); if (!b) return;
+    if (modesKind === 'a' && document.body.classList.contains('hgOn')) { const ms = $('modeSel'), was = ms.classList.contains('open'); ms.classList.toggle('open', !was); if (!was || b.classList.contains('on')) return; } // табличка режима: первое нажатие раскрывает список
+    panel(true); setup.game = b.dataset.g; setup.evd = false; save(); // evd - оборона события на осенней карте (event.js): обычное меню её сбрасывает
     if (setup.game === 'online' && C.RAND_MAPS.includes(C.MAP)) C.ls.set('fortuna_ad_omap', C.MAP); // онлайн «Вылет и оборона»: карту даст комната - пока подходит загруженная
     if (C.wantMap(setup.game, setup.pmap, setup.era, -1, false) !== C.MAP) { const u = new URL(location.href); u.searchParams.delete('mp'); u.searchParams.delete('ad'); if (setup.game === 'online') u.searchParams.set('mp', '1'); location.replace(u.href); return; } // «Мульти-волна» - на зимней карте, остальное - на городе
     if (tab !== 'play') { tab = 'play'; showTab(); } if (C.ctrl && C.ctrl.modeChanged) C.ctrl.modeChanged();
@@ -139,12 +146,12 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
         if (ownOpen.length && !ownOpen.some(([, i]) => i === setup.lo)) setup.lo = ownOpen[0][1];
         if (!ownOpen.length) { C.realBlock = true; C.realNeed = C.progress.loadoutMissing(own[0][0])[0].id; hgGuide = own[0][0]; } else hgGuide = null; // описание внизу - про то, что на экране
         h += own.map(([L, i]) => { const miss = can([L, i]) ? [] : C.progress.loadoutMissing(L), onn = i === setup.lo && !miss.length;
-          return `<div class="opt hgl ${onn ? 'on' : ''} ${miss.length ? 'lock' : ''}" role="button" tabindex="0" ${miss.length ? `data-need="${miss[0].id}"` : `data-lo="${i}"`}><span class="hgr${planeMeta(L.plane) && planeMeta(L.plane).internal ? ' inb' : ''}">${wpnRows(L)}${planeMeta(L.plane) && planeMeta(L.plane).internal ? `<span class="hgw"><span class="wn"><i>${tr('во внутренних отсеках - снаружи не видно')}</i></span></span>` : ''}${L.pod ? `<span class="hgw"><span class="wn"><i>${tr('прицельный контейнер')}</i></span></span>` : ''}</span><span class="hgm"><span class="role ${loadoutRole(L)}">${trIf(ROLE_NAME[loadoutRole(L)])}</span>${loadoutRole(L) !== 'sead' ? `<span class="tgn">${tr('целей: {0} - по силе подвески', [loadoutTargets(L)])}</span>` : ''}</span>${miss.length ? `<span class="need">${miss.length ? ico('lock') + ' ' : ''}${tr('{0} - открыть в «Исследованиях»', [C.progress.needText(miss)])}</span>` : ''}</div>`; }).join('');
+          return `<div class="opt hgl ${onn ? 'on' : ''} ${miss.length ? 'lock' : ''}" role="button" tabindex="0" ${miss.length ? `data-need="${miss[0].id}"` : `data-lo="${i}"`}><span class="hgr${planeMeta(L.plane) && planeMeta(L.plane).internal ? ' inb' : ''}">${wpnRows(L)}${planeMeta(L.plane) && planeMeta(L.plane).internal ? `<span class="hgw"><span class="wn"><i>${tr('во внутренних отсеках - снаружи не видно')}</i></span></span>` : ''}${L.pod ? `<span class="hgw"><span class="wn"><i>${tr('прицельный контейнер')}</i></span></span>` : ''}</span><span class="hgm"><span class="role ${loadoutRole(L)}">${trIf(ROLE_NAME[loadoutRole(L)])}</span></span>${miss.length ? `<span class="need">${miss.length ? ico('lock') + ' ' : ''}${tr('{0} - открыть в «Исследованиях»', [C.progress.needText(miss)])}</span>` : ''}</div>`; }).join('');
         $('hgStrip').innerHTML = planes.map((p) => { const lk = !mine.some((x) => x[0].plane === p && can(x)); return `<button class="hgc${p === hgPlane ? ' on' : ''}${lk ? ' lock' : ''}" data-hgp="${p}"><b>${lk ? ico('lock') + ' ' : ''}${trIf(PLANES[p])}</b><img src="airdef/thumbs/air_${p}.webp?v=20261104a" alt="" loading="lazy"></button>`; }).join('');
         const sel = $('hgStrip').querySelector && $('hgStrip').querySelector('.hgc.on'); if (sel && sel.scrollIntoView) sel.scrollIntoView({ block: 'nearest', inline: 'nearest' });
       } else h += mine.map((x) => loBtn(x, 'data-lo', x[1] === setup.lo)).join('') + `<p class="hint">${tr('«Охота за ПВО» - уничтожить комплексы с РЛС, «штурмовка» - цели города.')}</p>`;
       const L = (!setup.op && hgGuide) || LOADOUTS[setup.era][setup.op ? setup.lo1 : setup.lo];
-      h += `<p class="hint">${L.items.map(([k]) => `<b>${trIf(AG[k].short)}</b> - ${trIf(AG[k].guide)}`).join('<br>')}</p>`;
+      h += `<p class="hint guide">${L.items.map(([k]) => `<b>${trIf(AG[k].short)}</b> - ${trIf(AG[k].guide)}`).join('<br>')}</p>`;
     } else {
       // последняя волна - «Мульти-волна» (если у атакующей стороны в эпохе есть чем ударить)
       const attS = setup.side === 'east' ? 'west' : 'east';
@@ -341,6 +348,9 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
       ${C.gfxKey === 'custom' ? customPanel() : `<div class="prow"><span>${tr('Предел кадров')}</span>${seg('fpsCap', C.fpsCap, [['auto', C.IS_TOUCH ? tr('Авто (60)') : tr('Авто')], [30, '30'], [45, '45'], [60, '60'], ...(C.IS_TOUCH ? [] : [[0, tr('Нет')]])])}</div>
       ${C.IS_TOUCH ? `<div class="prow"><span>${tr('Чёткость')}</span>${seg('sharp', C.SHARP, [['auto', tr('Обычная')], ['high', tr('Высокая')], ['native', tr('Как у экрана')]])}</div>
       <p class="hint">${tr('Высокая и «как у экрана»: картинка чётче, но больше нагрузка на видеочип и нагрев. Применяется после перезапуска.')}</p>` : ''}`}
+      <div class="prow"><span>${tr('Текстуры самолётов')}</span>${seg('texq', C.texQ() === 'opt' ? 'opt' : 'max', [['opt', tr('Оптимизированные')], ['max', tr('Максимальные')]])}</div>
+      ${C.texQ() === 'opt' ? '' : `<div class="prow"><span>${tr('Где')}</span>${seg('texw', C.texQ(), [['hangar', tr('В ангаре')], ['battle', tr('В бою')], ['both', tr('Везде')]])}</div>`}
+      <p class="hint">${tr('Максимальные: надписи и окраска чётче вблизи, но файлы больше и нужно больше памяти. В бою - только у своего самолёта.')}</p>
       <label class="chk"><input type="checkbox" id="sPerf" ${C.perfHud ? 'checked' : ''}> ${tr('счётчик производительности в бою')}</label>
       <div class="cat-h">${tr('Файлы игры')}</div>
       <p class="hint" id="offInfo">${tr('Скачанные модели, текстуры и звуки хранятся на устройстве и не догружаются ни в бою, ни при следующих запусках.')}</p>
@@ -406,6 +416,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
       C.GO[k] = k === 'dyn' || k === 'fx' || k === 'props' ? num === 1 : Number.isFinite(num) ? num : v;
       ls.set('fortuna_airdef_gfxo', JSON.stringify(C.GO)); renderSet(); return;
     }
+    const tq = e.target.closest('[data-seg="texq"] [data-v], [data-seg="texw"] [data-v]'); if (tq) { snd.click(); const v = tq.dataset.v; C.setTexQ(v === 'max' ? 'hangar' : v); renderSet(); if (C.hangar && C.hangar.refresh) C.hangar.refresh(); return; } // настройка текстур: ангар - сразу, бой - со следующего вылета
     const fc = e.target.closest('[data-seg="fpsCap"] [data-v]'); if (fc) { C.setFpsCap(fc.dataset.v); renderSet(); return; } // предел кадров - сразу, без перезапуска
     const sp = e.target.closest('[data-seg="sharp"] [data-v]'); if (sp) { if (sp.dataset.v !== C.SHARP) { ls.set('fortuna_airdef_sharp', sp.dataset.v); location.reload(); } return; } // чёткость - перезапуск
     const lg = e.target.closest('[data-seg="lang"] [data-v]'); if (lg) { if (lg.dataset.v !== LANG) { setLang(lg.dataset.v); const u = new URL(location.href); u.searchParams.delete('lang'); location.href = u.href; } return; } // язык - перезагрузка (Mark 2026-10-21)
@@ -436,7 +447,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
   };
   // Арсенал / Справка / Настройки / Об игре - панель поверх меню; повторное касание, ✕ или Esc - закрыть
   const SHEET = { ref: tr('Арсенал'), guide: tr('Справка'), set: tr('Настройки'), misc: tr('Об игре') };
-  $('mtabs').onclick = (e) => { const b = e.target.closest('button'); if (!b) return; snd.click(); if (b.dataset.tab === 'research') { C.research.open(); return; } tab = tab === b.dataset.tab ? 'play' : b.dataset.tab; showTab(); }; // «Исследования» - свой экран (research.js)
+  $('mtabs').onclick = (e) => { const b = e.target.closest('button'); if (!b) return; snd.click(); $('mtabs').classList.remove('open'); if (b.dataset.tab === 'research') { C.research.open(); return; } tab = tab === b.dataset.tab ? 'play' : b.dataset.tab; showTab(); }; // «Исследования» - свой экран (research.js)
   $('msClose').onclick = () => { tab = 'play'; snd.click(); showTab(); };
   addEventListener('keydown', (e) => { if (e.code === 'Escape' && C.state === 'menu' && tab !== 'play') { tab = 'play'; showTab(); } });
   function showTab() {
@@ -492,6 +503,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
     if (!C.hangar || !C.hangar.has()) return;
     const air = setup.game === 'air' && !setup.op;
     document.body.classList.toggle('hgAir', air);
+    document.body.classList.toggle('hgPlain', ['air', 'defense', 'multi'].includes(setup.game)); // Mark: без описаний режимов в правой панели
     const list = LOADOUTS[setup.era] || [], cur = list[setup.op ? setup.lo2 : setup.lo], ok = (L) => L && L.plane && !L.heli && PLANES[L.plane];
     const L = air && hgPlane && (!cur || cur.plane !== hgPlane) ? list.find((q) => q.plane === hgPlane && ok(q)) : ok(cur) ? cur : list.find(ok);
     if (L) C.hangar.show(L);

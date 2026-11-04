@@ -1,16 +1,17 @@
 // Главный экран - ангар (Mark 2026-11-04: «ангар + подвеска»). Фон - готовый рендер сборщика (ui/hangar, ПАСПОРТ.json: камера и свет), живой слой - настоящий самолёт
-// с подвеской на подъёмниках, вращается по пальцу. Рисует тот же рендерер, что и бой: второй контекст WebGL на телефоне нельзя - текстуры моделей освобождаются после загрузки
+// с подвеской на подъёмниках, в одном ракурсе. Рисует тот же рендерер, что и бой: второй контекст WebGL на телефоне нельзя - текстуры моделей освобождаются после загрузки
 // на видеокарту (models.js). Кадр считается только когда что-то меняется: в покое ни 3D, ни нагрева (как прежний фон на кадрах menubg.js).
 // Фон и самолёт масштабируются как одна картинка: «полный кадр» - весь рендер 16:9 с его камерой, экран - окно в нём (setViewOffset), поэтому пол и самолёт совпадают на любом экране.
 // Подвеска расставлена как в бою (air.js: order, buildPylons). Подъёмник: base, ram (шток, длина 1 м, scale.y = ход), head (седло). ?oldbg=1 - прежний фон.
 import { AG } from './arsenal.js?v=20261104a';
-import { planeModel, planeMeta, classOf, wantModel, wantWeapon, weaponPending, weaponFailed, pylonMesh, podModel, anyModel, modelLoaded, modelFailed, releaseModel, wantCamo, camoKnown } from './models.js?v=20261104a';
+import { planeModel, planeMeta, classOf, wantModel, wantWeapon, weaponPending, weaponFailed, pylonMesh, podModel, anyModel, modelLoaded, modelFailed, releaseModel, wantCamo, camoKnown, hiKnown } from './models.js?v=20261104a';
 
 const VIEWS = { // ПАСПОРТ.json сборщика
-  fighter: { fov: 38, cam: [0, 1.85, 31], look: [0, 1.6, 0], r: 12 },
-  heavy: { fov: 46, cam: [0, 2.4, 61], look: [0, 3.4, 0], r: 22 },
+  // near, far - не из паспорта: буфер со сглаживанием держит 16 бит глубины, при near 0,3 на 31 м различал только 5 см, и близкие поверхности мерцали лесенкой (Mark, телефон)
+  fighter: { fov: 38, cam: [0, 1.85, 31], look: [0, 1.6, 0], r: 12, near: 10, far: 70 },
+  heavy: { fov: 46, cam: [0, 2.4, 61], look: [0, 3.4, 0], r: 22, near: 20, far: 130 },
 };
-const FULL_W = 16, FULL_H = 9, AZ0 = 2.53, BIG = 25; // BIG - длина или размах, с которых нужен большой зал; AZ0 - нос к камере и влево: справа панель
+const FULL_W = 16, FULL_H = 9, AZ0 = 2.86, BIG = 25; // BIG - длина или размах, с которых нужен большой зал; AZ0 - один ракурс для всех: нос к камере и чуть влево (Mark 2026-11-04: самолёты не вращаются), справа панель
 const ST_ORDER = [3, 4, 2, 5, 1, 6, 0, 7], JACK_TOP = 1.35, JACK_HEAD = 0.11, JACK_MAX = 2.5;
 const MODEL_WAIT = 12000, PICK_WAIT = 180, KEEP_LOOKED = 3; // модель всё не приходит - показать, что есть; быстрое листание ленты не качает каждый самолёт; на телефоне в памяти - последние просмотренные
 const BLOB_GEO = () => new THREE.PlaneGeometry(2.6, 2.6).rotateX(-Math.PI / 2);
@@ -74,7 +75,7 @@ export function createHangar(C, renderer) {
   const tmp2 = new THREE.Vector2();
 
   // ── что показать ─────────────────────────────────────────
-  const skinOf = (plane) => { const w = C.shop && C.shop.wallet && C.shop.wallet(), sk = (w && (w.worn || {})[plane]) || null; return sk && camoKnown(plane, sk) ? sk : null; };
+  const skinOf = (plane) => { const w = C.shop && C.shop.wallet && C.shop.wallet(), sk = (w && (w.worn || {})[plane]) || null; if (sk && camoKnown(plane, sk)) return sk; return C.texMax && C.texMax('hangar') && hiKnown(plane) ? 'hi' : null; };
   let lastL = null, retry = null, looked = [], mine = new Set(), wantView = null;
   function show(L) {
     if (!can || !L || !L.plane) return;
@@ -85,7 +86,8 @@ export function createHangar(C, renderer) {
     dirty = true;
   }
   const refresh = () => { const L = (want && want.L) || lastL; if (L) show(L); }; // кошелёк обновился: окраска сменилась - пересборка, нет - show ничего не делает
-  const fullyHere = (q) => modelLoaded(q.plane) && (!q.skin || wantCamo(q.plane, q.skin)) && modelLoaded('hg_jack') && !q.L.items.some(([k]) => weaponPending(k) && !weaponFailed(k));
+  const keyOf = (q) => (q.skin ? `${q.plane}@${q.skin}` : q.plane);
+  const fullyHere = (q) => modelLoaded(keyOf(q)) && modelLoaded('hg_jack') && !q.L.items.some(([k]) => weaponPending(k) && !weaponFailed(k));
   function stepBuild() {
     if (!on) return;
     // показали замену, потому что нужная модель не успела: пришла - пересобрать
@@ -95,9 +97,11 @@ export function createHangar(C, renderer) {
     if (!want.asked) {
       if (now - wantT < PICK_WAIT && cur) return; // листают ленту - не качать каждый самолёт
       want.asked = true;
-      if (!modelLoaded(want.plane)) mine.add(want.plane);
-      wantModel(want.plane); wantModel('hg_jack'); if (want.skin) wantCamo(want.plane, want.skin); for (const [k] of want.L.items) wantWeapon(k);
+      if (!modelLoaded(keyOf(want))) mine.add(keyOf(want));
+      if (want.skin) wantCamo(want.plane, want.skin); else wantModel(want.plane);
+      wantModel('hg_jack'); for (const [k] of want.L.items) wantWeapon(k);
     }
+    if (want.skin && modelFailed(keyOf(want))) { want.skin = null; want.asked = false; wantT = now - PICK_WAIT; return; } // файл с окраской или большими текстурами не пришёл - обычная модель
     const q = want, broke = modelFailed(q.plane) || modelFailed('hg_jack'), here = fullyHere(q);
     if (!here && !broke && now - wantT < MODEL_WAIT) return;
     const meta = planeMeta(q.plane); if (!meta) { want = null; return; }
@@ -105,13 +109,13 @@ export function createHangar(C, renderer) {
     const pm = planeModel(meta.side, classOf(q.L.items, AG), q.plane, q.skin); if (!pm) { if (now - wantT >= MODEL_WAIT) want = null; return; }
     const prev = cur && cur.split('|')[0];
     wantView = q.view; build(pm, q.L); cur = q.key; lastL = q.L; want = null; built = true; dirty = true;
-    if (!here && !modelFailed(q.plane)) retry = q; // замена или простые фигуры оружия - на время
+    if (!here && !modelFailed(keyOf(q))) retry = q; // замена или простые фигуры оружия - на время
     // телефон: просмотренные в этом меню и загруженные ради ангара самолёты не копятся
-    if (TOUCH && prev !== q.plane) { looked = [q.plane, ...looked.filter((n) => n !== q.plane)]; for (const n of looked.slice(KEEP_LOOKED)) { looked = looked.filter((x) => x !== n); if (mine.has(n) && n !== pm.name) { mine.delete(n); releaseModel(n); } } }
+    if (TOUCH && prev !== q.plane) { const kq = keyOf(q); looked = [kq, ...looked.filter((n) => n !== kq)]; for (const n of looked.slice(KEEP_LOOKED)) { looked = looked.filter((x) => x !== n); if (mine.has(n) && n !== kq) { mine.delete(n); releaseModel(n); } } }
   }
   // зал определяется размером самолёта; пока его картинка не загрузилась, стоит прежний зал. Не загрузилась совсем - самолёт в основном зале
   function hallReady(q) {
-    if (q.view === undefined) { const m = anyModel(q.plane); let size = 10; if (m) { const b = new THREE.Box3().setFromObject(m), v = b.getSize(new THREE.Vector3()); size = Math.max(v.x, v.z); } q.view = size > BIG ? 'heavy' : 'fighter'; }
+    if (q.view === undefined) { const m = anyModel(keyOf(q)) || anyModel(q.plane); let size = 10; if (m) { const b = new THREE.Box3().setFromObject(m), v = b.getSize(new THREE.Vector3()); size = Math.max(v.x, v.z); } q.view = size > BIG ? 'heavy' : 'fighter'; }
     const t = texOf(q.view); if (t.bad) { q.view = 'fighter'; return !!texOf('fighter').ok; }
     return t.ok;
   }
@@ -168,7 +172,7 @@ export function createHangar(C, renderer) {
     const T = texOf(key).tex;
     if (texA && key !== viewKey && texA !== T) { texB = T; fade = 0; } else texA = T;
     viewKey = key; V = VIEWS[key];
-    cam.fov = V.fov; cam.position.fromArray(V.cam); cam.up.set(0, 1, 0); cam.lookAt(tmp.fromArray(V.look)); cam.updateMatrixWorld(true);
+    cam.fov = V.fov; cam.near = V.near; cam.far = V.far; cam.position.fromArray(V.cam); cam.up.set(0, 1, 0); cam.lookAt(tmp.fromArray(V.look)); cam.updateMatrixWorld(true);
   }
 
   // тень на полу: вид сверху на самолёт, размытый силуэт (бумажный шарик не нужен: крылья и хвост читаются). Считается один раз на самолёт
@@ -212,11 +216,9 @@ export function createHangar(C, renderer) {
   function focusWeapon(key) {
     const g = groups.find((x) => x.key === key); if (!g) return false;
     if (focusKey === key) { clearFocus(); return false; }
-    focusKey = key; hideHint();
-    const p = g.pos.slice().sort((a, b) => a.x - b.x)[0]; // левый борт: нос остаётся слева на экране
-    const a0 = Math.PI / 2 + 0.34, tw = Math.PI * 2; tAz = a0 + Math.round((az - a0) / tw) * tw; vel = 0;
-    const saveR = pivot.rotation.y; pivot.rotation.y = tAz; holder.updateMatrixWorld(true); pivot.updateMatrixWorld(true);
-    const w = tmp.copy(p); holder.children[0].localToWorld(w); pivot.rotation.y = saveR; pivot.updateMatrixWorld(true);
+    focusKey = key;
+    const c = Math.cos(az), sn = Math.sin(az), w = tmp.copy(g.pos.slice().sort((a, b) => (-b.x * sn + b.z * c) - (-a.x * sn + a.z * c))[0]); // ближняя к камере точка этого оружия
+    pivot.rotation.y = az; pivot.updateMatrixWorld(true); holder.children[0].localToWorld(w);
     cam.clearViewOffset(); cam.aspect = FULL_W / FULL_H; cam.updateProjectionMatrix(); cam.updateMatrixWorld(true); w.project(cam);
     tZ = baseZ * (viewKey === 'heavy' ? 2.3 : 1.75);
     const W = C.VW || innerWidth, s = Math.max(W / FULL_W, (C.VH || innerHeight) / FULL_H) * tZ, fullW = s * FULL_W;
@@ -229,15 +231,10 @@ export function createHangar(C, renderer) {
   function listen() {
     const el = document.getElementById('menu');
     panelW = () => { if (!document.body.classList.contains('mpOpen') || innerWidth <= innerHeight) return 0; /* вертикально панель снизу */ const p = el.querySelector('.mpanel'); return p ? p.getBoundingClientRect().width : 0; };
-    let pid = null, lastMove = 0; // только первый палец; палец остановился - инерции нет
-    el.addEventListener('pointerdown', (e) => { if (!on || inUi(e) || pid != null) return; pid = e.pointerId; drag = e.clientX; moved = 0; vel = 0; lastMove = performance.now(); try { el.setPointerCapture(e.pointerId); } catch (_) { /* нет */ } });
-    el.addEventListener('pointermove', (e) => { if (drag == null || e.pointerId !== pid) return; const dx = e.clientX - drag; drag = e.clientX; moved += Math.abs(dx); tAz += dx * 0.008; vel = dx * 0.008; lastMove = performance.now(); dirty = true; if (moved > 6) hideHint(); });
-    const up = (e) => { if (drag == null || e.pointerId !== pid) return; drag = null; pid = null; if (performance.now() - lastMove > 80) vel = 0; if (moved < 6 && focusKey) { clearFocus(); if (C.menu && C.menu.render) C.menu.render(); } dirty = true; };
-    el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
+    el.addEventListener('click', (e) => { if (!on || inUi(e) || !focusKey) return; clearFocus(); if (C.menu && C.menu.render) C.menu.render(); }); // нажатие мимо панелей - обратно к самолёту целиком
     el.addEventListener('wheel', (e) => { if (!on || inUi(e)) return; e.preventDefault(); tZ = Math.max(baseZ, Math.min(baseZ * 2, tZ * (e.deltaY > 0 ? 0.93 : 1.08))); dirty = true; }, { passive: false });
     document.addEventListener('visibilitychange', () => { if (!document.hidden) dirty = true; });
   }
-  function hideHint() { const h = document.getElementById('hgHint'); if (h) h.classList.remove('on'); try { localStorage.setItem('fortuna_airdef_hgdrag', '1'); } catch (_) { /* приватный режим */ } }
 
   // ── кадр ────────────────────────────────────────────────
   const near = (a, b, e = 0.0008) => Math.abs(a - b) < e;
@@ -245,9 +242,8 @@ export function createHangar(C, renderer) {
   function paint() {
     if (!on || !inited) return;
     stepBuild();
-    if (drag == null && Math.abs(vel) > 0.0004) { tAz += vel; vel *= 0.93; dirty = true; }
-    const k = 0.2, T0 = TEX[viewKey]; if (!T0 || !T0.ok) return; // зал ещё грузится
-    if (!settled()) { az += (tAz - az) * (drag != null ? 0.45 : k); z += (tZ - z) * k; cx += (tCx - cx) * k; cy += (tCy - cy) * k; if (fade < 1) fade = Math.min(1, fade + 0.09); dirty = true; }
+        const k = 0.2, T0 = TEX[viewKey]; if (!T0 || !T0.ok) return; // зал ещё грузится
+    if (!settled()) { az += (tAz - az) * k; z += (tZ - z) * k; cx += (tCx - cx) * k; cy += (tCy - cy) * k; if (fade < 1) fade = Math.min(1, fade + 0.09); dirty = true; }
     if (texB && fade >= 1) { texA = texB; texB = null; }
     if (!dirty || !texA) return; dirty = false; nFrames++;
     const W = C.VW || innerWidth, H = C.VH || innerHeight, s = Math.max(W / FULL_W, H / FULL_H) * z, fullW = s * FULL_W, fullH = s * FULL_H;
@@ -266,7 +262,7 @@ export function createHangar(C, renderer) {
   return {
     has: () => can,
     sim: false, idle: () => true, skip3D: () => true,
-    busy: () => on && (drag != null || dirty || !!want || !settled()),
+    busy: () => on && (dirty || !!want || !settled()),
     ready: () => !can || (!!built && !!texA && !!TEX[viewKey] && !!TEX[viewKey].ok && !want),
     start() {
       init(); on = true; dirty = true;
@@ -274,10 +270,9 @@ export function createHangar(C, renderer) {
       const old = document.getElementById('menuBg'); if (old) old.style.display = 'none';
       C.snd.ambient(true, C.setup.game);
       if (!texA) setView(viewKey);
-      try { if (localStorage.getItem('fortuna_airdef_hgdrag') !== '1') { const h = document.getElementById('hgHint'); if (h) h.classList.add('on'); } } catch (_) { /* приватный режим */ }
     },
     stop() {
-      on = false; drag = null; mine.clear(); looked = []; document.body.classList.remove('hgOn', 'hgAir'); // с этого боя все загруженные модели - его, не освобождать
+      on = false; mine.clear(); looked = []; document.body.classList.remove('hgOn', 'hgAir'); // с этого боя все загруженные модели - его, не освобождать
       C.snd.ambient(false);
       if (rt) { rt.dispose(); rt = null; rtW = rtH = 0; } // бою память нужнее; вернёмся в меню - создадим заново
       for (const k in TEX) if (TEX[k].tex) TEX[k].tex.dispose();

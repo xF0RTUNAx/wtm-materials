@@ -5,7 +5,7 @@
 import { tr } from './i18n.js?v=20261104a';
 import { CITY, ZONE_NAME, mulberry32, riverX, objAimXZ, objDist } from './city.js?v=20261104a';
 import { strikerGeo, attachFlames } from './units-render.js?v=20261104a';
-import { planeModel, classOf, weaponMesh, pylonMesh, podModel, weaponHasModel, planeMeta, spinProps, wantWeapon } from './models.js?v=20261104a';
+import { planeModel, classOf, weaponMesh, pylonMesh, podModel, weaponHasModel, planeMeta, spinProps, wantWeapon, hiKnown } from './models.js?v=20261104a';
 import { ico, drawIco } from './icons.js?v=20261104a';
 import { applyLayout } from './layout.js?v=20261104a';
 import { clamp, makeCraft, pilotStep, fwdOf, D2R, angleBetween } from '../drone/sim/core.js?v=20261104a';
@@ -42,7 +42,8 @@ export function createAir(C) {
   function buildShip(side, cls = 'strike', name = null) {
     // готовая модель (models.js), если загрузилась, иначе - процедурная; окраска из магазина - надетая на этот самолёт (аккаунт игры, shop-ui.js),
     // кроме «Съёмки» и обучения: её модель грузится по требованию, до прихода - обычная
-    const skin = name && C.shop && C.shop.wallet() && C.setup.game !== 'photo' && C.setup.game !== 'training' ? (C.shop.wallet().worn || {})[name] || null : null;
+    const skinW = name && C.shop && C.shop.wallet() && C.setup.game !== 'photo' && C.setup.game !== 'training' ? (C.shop.wallet().worn || {})[name] || null : null;
+    const skin = skinW || (name && C.texMax && C.texMax('battle') && hiKnown(name) ? 'hi' : null); // настройка «Текстуры»: максимальные - у своего самолёта, остальные далеко
     const pm = planeModel(side, cls, name, skin);
     // shipReal - стоит именно модель подвески (пока она грузится - подходящая из загруженных, потом заменяется), с надетой окраской - когда пришла и она
     const exact = !!pm && (!name || pm.name === name) && (pm.skin || null) === skin;

@@ -8,6 +8,7 @@
 /* global THREE */
 import { tr } from './i18n.js?v=20261104a';
 import { CREDITS } from './models/credits.js?v=20261104a';
+import { HI_PLANES } from './models/hi-list.js?v=20261104a';
 import { mergeLocal } from './merge.js?v=20261104a';
 import { cachedFetch } from './offline.js?v=20261104a';
 import { ktxOn, ktxParse, ktxFree, ktxIndexUrl, ktxUrlOf } from './ktx.js?v=20261104a';
@@ -611,7 +612,7 @@ async function load(name, base) {
   const r = await cachedFetch(modelUrl(base, name)); if (!r.ok) throw new Error(`${name}: ${r.status}`); // с кэша устройства, если модель уже скачана (offline.js)
   const pg = parseGlb(await r.arrayBuffer()), { images, hashes, textures, nrm } = pg;
   const meshes = mergeSame(pg.meshes, mOf(name) || {});
-  const tmax = TOUCH ? (/^h_/.test(name) ? 512 : 1024) : 0, MM0 = mOf(name) || {};
+  const tmax = TOUCH ? (/^h_/.test(name) ? 512 : /@hi$/.test(name) ? 2048 : 1024) : 0, MM0 = mOf(name) || {}; // телефон: большие текстуры - до 2048
   const texKeys = new Set(), KI = ktxOn() && !CAMO_R[name] && !name.includes('@') ? await ktxIndex(base) : null; // здания и объекты - тоже (их цвет вдали берётся с уменьшенной копии, mkKtx → small); модель с окраской - картинки из своего glb
   const tex = await Promise.all(textures.map((t, ti) => {
     const isN = nrm.has(ti), tm = isN && TOUCH ? Math.min(tmax, 512) : tmax; // карта нормалей - линейная (не цвет); на телефоне вдвое меньше
@@ -867,6 +868,9 @@ const CAMO_R = (() => { try { const q = new URLSearchParams(location.search); re
 // только когда окраска надета и самолёт в бою; оси, масштаб и центр - как у обычной модели, описание (подвески, сопла, зоны) - её же (mOf).
 // В LOADED - под ключом '<самолёт>@<окраска>'; пока не пришла - обычная модель, потом самолёт пересобирается (modelsReady)
 const CAMO_V = { 'e_f15e@inferno': '20261028a', 'e_mig31@dragon': '20261028a' };
+// Максимальные текстуры (настройка «Текстуры», Mark 2026-11-04): та же модель с картинками исходного размера, models/camo/<самолёт>.hi.glb (tools/airdef-models/hi-textures.js), тот же механизм, что у окраски
+for (const n of HI_PLANES) CAMO_V[`${n}@hi`] = '20261104a';
+export const hiKnown = (name) => !!CAMO_V[`${name}@hi`];
 export function wantCamo(name, skin) { const k = `${name}@${skin}`; if (skin && CAMO_V[k] && BASE) start(k); return !!LOADED[k]; }
 const modelUrl = (base, name) => (CAMO_R[name] ? `${base}../../tools/airdef-shots/camo/${name}.${CAMO_R[name]}.glb` : name.includes('@') ? `${base}models/camo/${name.replace('@', '.')}.glb?v=${CAMO_V[name]}` : `${base}models/${name}.glb?v=${glbVer(name)}`);
 // все модели игры - для «Скачать всё заранее» (Настройки, offline.js prefetchAll): самолёты, оружие, техника и её дальние копии, постройки
@@ -1019,8 +1023,8 @@ export function spinProps(obj, dt, thr = 1) {
   }
 } // сопла, пилоны - для зон повреждений (plane-zones.js) и проверок
 export function planeModel(side, cls = 'strike', name = null, skin = null) {
-  if (name && META[name] && !LOADED[name] && BASE) start(name); // своя модель подвески ещё не пришла - пока подходящая из загруженных
   if (skin && name && META[name] && wantCamo(name, skin)) { const m = META[name]; return { obj: LOADED[`${name}@${skin}`].clone(), stations: m.stations, pods4: !!m.pods4, nozzles: m.nozzles, nr: m.nr, dry: !!m.dry, pod: m.pod, name, skin, cls: m.cls, internal: !!m.internal }; } // надета окраска и модель пришла
+  if (name && META[name] && !LOADED[name] && BASE) start(name); // своя модель подвески ещё не пришла - пока подходящая из загруженных
   const rank = ([n, m]) => (n === name ? -2 : m.cls === cls ? -1 : 0);
   const pick = Object.entries(META).filter(([n, m]) => m.side && m.side === side && LOADED[n] && (!m.only || n === name) && (!m.heli || n === name)).sort((a, b) => rank(a) - rank(b))[0];
   if (!pick) return null;
