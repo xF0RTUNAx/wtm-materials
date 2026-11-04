@@ -208,7 +208,7 @@ const META = {
   w_kh58: { weapon: 'kh58', stations: [] }, // Х-58У - Narni_Tchereskov
   w_agm65b: { weapon: 'agm65b', stations: [] }, // AGM-65B - собственная модель (tools/airdef-models/own/agm65b)
   w_bomb1000: { weapon: 'bomb1000', stations: [], matte: true }, // AN-M65A1 - собственная модель (tools/airdef-models/own/bomb1000)
-  w_mk82: { weapon: 'mk82', stations: [] }, // Mk 83 → размер Mk 82 - набор NETRUNNER_pl
+  w_mk82: { weapon: 'mk82', stations: [] }, // Mk 82 — собственная модель (tools/airdef-models/own/mk82)
   w_jassm: { weapon: 'jassm', stations: [] }, // AGM-158 JASSM
   w_agm88: { weapon: ['agm88', 'aargm'], stations: [] }, // AGM-88 HARM (с тележки) - и для AARGM
   w_mald: { weapon: ['mald', 'quail'], stations: [] }, // ADM-160 MALD («AIM-160A Screamer»)
@@ -445,6 +445,7 @@ const GLB_V_OWN = {
   w_bomb1000: '20261103f',
   w_fab1000: '20261103g',
   w_agm65b: '20261103k',
+  w_mk82: '20261103l',
 };
 GLB_V.hg_jack = '20261104b'; // подъёмник, ревизия 2: матовый, с износом
 GLB_V.w_pod = '20261104b'; // серый корпус контейнера, без комьев от упрощения

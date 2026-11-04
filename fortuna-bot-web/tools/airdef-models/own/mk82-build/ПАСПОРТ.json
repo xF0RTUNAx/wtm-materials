@@ -1,0 +1,15 @@
+{
+ "key": "w_mk82",
+ "weapon": "mk82",
+ "name": "Mk 82",
+ "rev": 1,
+ "files": {
+  "glb": "mk82.glb",
+  "blend": "mk82.blend",
+  "build": [
+   "build.py",
+   "bake.py",
+   "deliver.py"
+  ]
+ }
+}
