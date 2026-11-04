@@ -161,6 +161,7 @@ export function createShop(C) {
     if (d) { S.w = d.wallet; S.season = d.season || S.season; } else S.w = null;
     S.err = err; S.at = Date.now(); paint(); if (api.isOpen()) draw();
     if (C.account && C.account.render) C.account.render(); // своя аватарка у ника в меню
+    if (C.hangar && C.hangar.refresh) C.hangar.refresh(); // надетая окраска — на самолёт в ангаре
     if (d && C.state === 'play' && C.ctrl && C.ctrl.modelsReady) C.ctrl.modelsReady(); // страница открылась сразу в бой (?go= после «Ещё раз» на другой карте): надетая окраска — когда пришёл кошелёк
   }
   function touch() {
@@ -175,7 +176,7 @@ export function createShop(C) {
     S.act = false;
     // на игровом сервере надетое — из билета при подключении: соединение в меню закрыть, панель «Онлайн» подключится с новым (в комнате, в бою и в поиске боя не трогаем)
     const N = C.netc; if (d && action === 'wear' && N && N.accChanged && !N.queued && !N.search) N.accChanged();
-    if (d && d.wallet) { const from = S.w ? S.w.crystals : 0; S.w = d.wallet; draw(); countTo(from, S.w.crystals); paint(); if (C.account && C.account.render) C.account.render(); } else { S.err = err; draw(); S.err = ''; }
+    if (d && d.wallet) { const from = S.w ? S.w.crystals : 0; S.w = d.wallet; draw(); countTo(from, S.w.crystals); paint(); if (C.account && C.account.render) C.account.render(); if (C.hangar && C.hangar.refresh) C.hangar.refresh(); } else { S.err = err; draw(); S.err = ''; }
     return !!d;
   }
 

@@ -442,6 +442,8 @@ const GLB_V_OWN = {
   w_bomb1000: '20261103f',
   w_fab1000: '20261103g',
 };
+GLB_V.hg_jack = '20261104a';
+GLB_V.e_tu160 = '20261104a'; // текстура 1024 вместо 512 (надписи в ангаре)
 GLB_V.e_f15e = '20261024g'; // заглушки в соплах — тёмные (prepare.js #soot), 2026-10-22
 // «Оса-М» ЗИФ-122 (KoreanNavy) и «Бук-М3» (Valera121) вместо моделей Jeyhun1985 (2026-10-22): новые файлы
 Object.assign(GLB_V, Object.fromEntries(['osa', 'osa_lo'].map((n) => [n, '20261024e'])));
@@ -461,6 +463,7 @@ Object.assign(GLB_V, { l_iskander: '20261024s', w_tbmdec: '20261024r' }); // «�
 GLB_V.e_su34 = '20261024l'; // Су-34 manilov.ap (CC BY 4.0) вместо 42manako, без шасси (2026-10-22)
 Object.assign(GLB_V, { hawk: '20261024m', w_gbu24: '20261024m' }); // Hawk: ракета без деталей пусковой (absorb 0); GBU-24 — AnirudhRao, своя окраска
 Object.assign(GLB_V, GLB_V_OWN);
+META.hg_jack = { lazy: true, stations: [] }; // подъёмник ангара (hangar.js): части base, ram, head
 // разбор GLB: меши (позиции, нормали, UV, индексы), материалы, картинки текстур
 function parseGlb(buf) {
   const dv = new DataView(buf), jl = dv.getUint32(12, true), json = JSON.parse(new TextDecoder().decode(new Uint8Array(buf, 20, jl)));
@@ -559,6 +562,7 @@ function smallTex(bmp) {
     return L;
   } catch (_) { return null; }
 }
+const FAILED = new Set(), MTEX = new Map(), TRC = new Map(); // не загрузились; какие общие текстуры у модели и сколько моделей их держит (releaseModel)
 const TEXC = new Map(); // общие текстуры моделей: отпечаток картинки | карта нормалей | предел размера → Promise<THREE.Texture>
 // сжатые текстуры моделей (2026-10-23, KTX2 UASTC: в видеопамяти вчетверо меньше распакованного JPEG; файлы models/ktx, tools/airdef-models/ktx-models.js):
 // есть файл нужной версии (index.json) — берём его, нет или не разобрался — JPEG из glb, как раньше. ?ktx=0 — без сжатых (ktx.js). У зданий и объектов — тоже сжатые (цвет вдали — с уменьшенной копии JPEG, mkKtx → small)
@@ -608,15 +612,17 @@ async function load(name, base) {
   const pg = parseGlb(await r.arrayBuffer()), { images, hashes, textures, nrm } = pg;
   const meshes = mergeSame(pg.meshes, mOf(name) || {});
   const tmax = TOUCH ? (/^h_/.test(name) ? 512 : 1024) : 0, MM0 = mOf(name) || {};
-  const KI = ktxOn() && !CAMO_R[name] && !name.includes('@') ? await ktxIndex(base) : null; // здания и объекты — тоже (их цвет вдали берётся с уменьшенной копии, mkKtx → small); модель с окраской — картинки из своего glb
+  const texKeys = new Set(), KI = ktxOn() && !CAMO_R[name] && !name.includes('@') ? await ktxIndex(base) : null; // здания и объекты — тоже (их цвет вдали берётся с уменьшенной копии, mkKtx → small); модель с окраской — картинки из своего glb
   const tex = await Promise.all(textures.map((t, ti) => {
     const isN = nrm.has(ti), tm = isN && TOUCH ? Math.min(tmax, 512) : tmax; // карта нормалей — линейная (не цвет); на телефоне вдвое меньше
     if (MM0.bld && !KI) return mkTex(t, isN, tm); // без сжатых: у зданий картинку читает дальняя «коробка» (city-render modelColor) — свои копии, как было
     const mk = () => (KI ? mkKtx(t, isN, tm).then((x) => x || mkTex(t, isN, tm)) : mkTex(t, isN, tm)); // сжатая; не вышло — JPEG из glb
     const k = `${hashes[t.source]}|${isN ? 1 : 0}|${tm}`; // та же картинка, тот же вид и предел размера — одна текстура на все модели
     if (!TEXC.has(k)) TEXC.set(k, mk().then((x) => { if (!x) TEXC.delete(k); return x; })); // не вышло (нехватка памяти) — следующая модель попробует заново
+    texKeys.add(k);
     return TEXC.get(k);
   }));
+  MTEX.set(name, [...texKeys]); for (const k of texKeys) TRC.set(k, (TRC.get(k) || 0) + 1);
   // сжатая текстура картинки из glb (файл models/ktx/<имя>.<номер>.ktx2): те же настройки, что у JPEG-пути; на телефоне — без верхних уровней больше предела;
   // нет файла этой версии или любая ошибка — null (вызывающий берёт JPEG)
   async function mkKtx(t, isN, tm) {
@@ -849,7 +855,8 @@ const LSTAT = { req: 0, done: 0 };
 export const modelStats = () => LSTAT;
 function start(name) {
   if (LOADING.has(name)) return; LOADING.add(name); LSTAT.req++;
-  load(name, BASE).then((g) => { LOADED[name] = g; LSTAT.done++; if (READY) READY(name); }).catch((e) => { LSTAT.done++; console.warn('модель не загрузилась:', e.message); });
+  FAILED.delete(name);
+  load(name, BASE).then((g) => { LOADED[name] = g; LSTAT.done++; if (READY) READY(name); }).catch((e) => { LSTAT.done++; FAILED.add(name); LOADING.delete(name); console.warn('модель не загрузилась:', e.message); });
 }
 const glbVer = (name) => GLB_V[name] || '20261022b';
 // окраска для съёмки кадров меню и ролика (?test=1&camo=e_f15e:inferno,e_mig31:dragon): модель сборщика с новой развёрткой и картинкой окраски
@@ -873,6 +880,19 @@ export function loadModels(base, onReady) {
 // модели «Мульти-волны» и прочие lazy: начать загрузку / копия загруженной (или null)
 export function wantModel(name) { if (META[name] && BASE) start(name); }
 export const anyModel = (name) => (LOADED[name] ? LOADED[name].clone() : null);
+export const modelLoaded = (name) => !!LOADED[name]; // без копии: ангар проверяет каждый кадр
+export const modelFailed = (name) => FAILED.has(name);
+export const weaponFailed = (key) => FAILED.has(WMODEL[key]);
+export const camoKnown = (name, skin) => !!CAMO_V[`${name}@${skin}`];
+// освободить модель (ангар на телефоне: просмотренные самолёты не копятся в памяти): геометрия, материалы и текстуры, которых не держит другая модель. Понадобится — загрузится заново.
+// Копии этой модели в сцене уже не должно быть
+export function releaseModel(name) {
+  const g = LOADED[name]; if (!g) return;
+  delete LOADED[name]; LOADING.delete(name);
+  g.traverse((o) => { if (!o.isMesh) return; if (o.geometry) o.geometry.dispose(); for (const m of [].concat(o.material || [])) m.dispose(); });
+  for (const k of MTEX.get(name) || []) { const n = (TRC.get(k) || 1) - 1; if (n > 0) { TRC.set(k, n); continue; } TRC.delete(k); const t = TEXC.get(k); TEXC.delete(k); if (t) t.then((x) => { if (x) x.dispose(); }); }
+  MTEX.delete(name);
+}
 // телефон (2026-10-22, вылеты самолётных боёв): у тяжёлых комплексов подробная модель — только когда камера подлетела ближе 1,5 км
 // (wantUnitNear из main.js; LOD переключает на неё с 400 м) или комплекс пустил ракету (unitMissileGlb): «Шилка» — 656 тыс. треугольников
 // и 31 МБ геометрии (в памяти дважды: массив и видеокарта), а в самолётном бою камера к машинам ПВО обычно не подлетает. Вблизи модель та же

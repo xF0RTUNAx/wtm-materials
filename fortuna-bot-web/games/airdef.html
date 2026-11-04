@@ -528,6 +528,45 @@
   .mpanel { position: absolute; z-index: 2; top: calc(12px + var(--sa-t) + var(--tg-t)); bottom: max(12px, var(--sa-b)); right: max(12px, var(--sa-r)); width: min(330px, 42vw);
     box-sizing: border-box; background: #10140f; border: 1px solid #39422f; display: flex; flex-direction: column; color: #e9e6dc; }
   .mphead { padding: 12px 16px 8px; position: relative; }
+  /* главный экран — ангар (hangar.js, Mark 2026-11-04): режимы сверху, справа подвеска, снизу лента самолётов и «Взлёт»; без ангара — прежняя колонка */
+  .mlg { display: none; } body:not(.hgOn) .mpanel { padding-bottom: 46px; } body:not(.hgOn) #menu #startBtn { position: absolute; z-index: 3; right: max(12px, var(--sa-r)); bottom: max(12px, var(--sa-b)); width: min(330px, 42vw); } #hgStrip, #hgHint { display: none; } body:not(.hgOn):not(.mpOpen) #menu #startBtn { display: none; } body.hgOn.msheetOn #mbtns { display: none; }
+  body.hgOn #menu { touch-action: none; user-select: none; -webkit-user-select: none; }
+  body.hgOn .mrail { right: 0; bottom: auto; width: auto; flex-direction: row; align-items: center; gap: 10px; padding: calc(7px + var(--sa-t) + var(--tg-t)) calc(58px + var(--sa-r)) 14px calc(14px + var(--sa-l)); background: linear-gradient(rgba(7,8,5,.8), rgba(7,8,5,.42) 70%, rgba(7,8,5,0)); touch-action: pan-x; overflow-x: auto; scrollbar-width: none; } body.hgOn .mrail::-webkit-scrollbar { display: none; }
+  body.hgOn .mlogo { padding: 0; flex: none; } body.hgOn .mlt { display: none; } body.hgOn .mlg { display: block; height: 34px; width: auto; }
+  body.hgOn .accBox { flex: none; flex-direction: row; } body.hgOn .accBox button { width: auto; padding: 4px 8px; white-space: nowrap; max-width: 170px; }
+  body.hgOn #menu .modeSel { flex-direction: row; flex: 0 1 auto; margin: 0 auto; overflow: visible; }
+  body.hgOn #menu .modeSel button { flex: none; white-space: nowrap; padding: 7px 13px; font: 500 14.5px 'Oswald', sans-serif; letter-spacing: .02em; color: #d9dccb; background: rgba(14,17,15,.72); border: 1px solid #3a4532; border-right-width: 0; } body.hgOn #menu .modeSel button:last-child { border-right-width: 1px; }
+  body.hgOn #menu .modeSel button.on { background: #e8b04a; color: #17190f; border-color: #e8b04a; } body.hgOn #menu .modeSel button:not(.on):hover { background: rgba(34,42,31,.9); }
+  body.hgOn .pgBar { order: 5; flex: none; width: auto; flex-wrap: nowrap; padding: 4px 6px; }
+  body.hgOn #menu .mtabs { position: fixed; left: calc(14px + var(--sa-l)); top: calc(60px + var(--sa-t) + var(--tg-t)); margin: 0; padding: 0; flex-direction: column; align-items: flex-start; gap: 3px; z-index: 2; }
+  body.hgOn #menu .mtabs button { padding: 2px 7px; font-size: 12px; color: #f3c96f; background: rgba(14,17,15,.66); text-shadow: 0 1px 2px #000; }
+  body.hgOn #mbtns { z-index: 4; left: calc(14px + var(--sa-l)); bottom: calc(10px + var(--sa-b)); } body.hgOn #hgStrip { transition: opacity .25s; } body.hgOn #mbtns.open ~ #hgStrip { opacity: 0; pointer-events: none; }
+  body.hgOn.menuing #mute { display: flex; left: auto; right: calc(14px + var(--sa-r)); top: calc(7px + var(--sa-t) + var(--tg-t)); bottom: auto; } body.hgOn #fsBtn { right: calc(58px + var(--sa-r)); }
+  body.hgOn .mpanel { top: calc(58px + var(--sa-t) + var(--tg-t)); bottom: calc(102px + var(--sa-b)); right: calc(14px + var(--sa-r)); width: min(320px, 36vw); background: rgba(14,17,15,.8); border-color: rgba(84,96,70,.7); }
+  body.hgOn.hgAir .mphead { padding: 0; height: 0; } body.hgOn.hgAir .mphead > :not(#mpClose) { display: none; } body.hgOn.hgAir #mpClose { left: -31px; right: auto; top: -1px; width: 30px; height: 30px; background: rgba(14,17,15,.8); border: 1px solid rgba(84,96,70,.7); border-right: 0; }
+  body.hgOn .msheet { left: calc(14px + var(--sa-l)); top: calc(58px + var(--sa-t) + var(--tg-t)); }
+  body.hgOn #assetLoad { bottom: calc(100px + var(--sa-b)); }
+  body.hgOn #menu #startBtn { position: absolute; z-index: 3; right: calc(14px + var(--sa-r)); bottom: calc(10px + var(--sa-b)); width: 190px; height: 82px; margin: 0; padding: 0 22px; border: 0; background: url(airdef/ui/quests/btn_take.webp) center / 100% 100% no-repeat; font: 600 26px/1.05 'Oswald', sans-serif; letter-spacing: .1em; text-transform: uppercase; color: #2a1d08; text-shadow: 0 1px 0 rgba(255,236,190,.55); box-shadow: none; }
+  body.hgOn #menu #startBtn:hover { filter: brightness(1.08); background: url(airdef/ui/quests/btn_take.webp) center / 100% 100% no-repeat; } body.hgOn #menu #startBtn.long { font-size: 18px; letter-spacing: .04em; }
+  body.hgOn.hgAir #hgStrip { position: absolute; z-index: 2; display: flex; gap: 6px; left: calc(80px + var(--sa-l)); right: calc(214px + var(--sa-r)); bottom: calc(10px + var(--sa-b)); overflow-x: auto; scrollbar-width: none; touch-action: pan-x; } #hgStrip::-webkit-scrollbar { display: none; }
+  .hgc { position: relative; flex: 0 0 148px; height: 82px; padding: 0; color: #ece8dc; text-align: left; background: rgba(14,17,15,.84); border: 1px solid #333d2c; overflow: hidden; cursor: pointer; } .hgc img { position: absolute; right: -6px; bottom: -2px; width: 118px; height: 66px; object-fit: contain; } .hgc b { position: absolute; left: 7px; top: 4px; font: 500 14px 'Oswald', sans-serif; text-shadow: 0 1px 2px #000; z-index: 1; white-space: nowrap; } .hgc b .ic { width: .95em; height: .95em; vertical-align: -.1em; color: #f3c96f; }
+  .hgc.on { border-color: #e8b04a; background: rgba(40,36,20,.92); box-shadow: inset 0 -3px 0 #e8b04a; } .hgc.lock img { filter: saturate(.4) brightness(.62); } .hgc:not(.on):hover { border-color: #5c6a4f; }
+  body.hgOn #hgHint { position: absolute; z-index: 1; left: 0; right: 0; bottom: calc(150px + var(--sa-b)); display: block; text-align: center; font-size: 12.5px; color: #e4e1d4; text-shadow: 0 1px 3px #000; opacity: 0; transition: opacity .5s; pointer-events: none; } body.hgOn #hgHint.on { opacity: 1; }
+  .hgSum { display: block; width: 100%; margin: 0 0 6px; padding: 6px 24px 6px 9px; text-align: left; background: rgba(255,255,255,.05); border: 1px solid #3a4532; color: #d9dccb; font: 500 12px 'Golos Text', sans-serif; cursor: pointer; position: relative; } .hgSum::after { content: ''; position: absolute; right: 9px; top: 50%; width: 7px; height: 7px; border-right: 2px solid #e8b04a; border-bottom: 2px solid #e8b04a; transform: translateY(-70%) rotate(45deg); } .hgSum.open::after { transform: translateY(-30%) rotate(-135deg); }
+  .hgSet { margin: 0 0 6px; padding: 0 2px 6px; border-bottom: 1px solid #2c3526; } .cat-h.hgh { margin: 8px 0 5px; font: 500 12.5px 'Oswald', sans-serif; letter-spacing: .12em; text-transform: uppercase; color: #c2c7b2; }
+  .opt.hgl { display: block; padding: 6px 8px; cursor: pointer; margin-bottom: 5px; } .hgr { display: flex; flex-direction: column; gap: 3px; } .hgw { display: flex; align-items: center; gap: 7px; min-width: 0; } .hgw img { flex: none; width: 58px; height: 32px; object-fit: contain; } .hgw .wn { display: flex; flex-direction: column; min-width: 0; } .hgw b { font: 500 14px/1.15 'Oswald', sans-serif; color: #ece8dc; } .hgw i { font: 400 11.5px/1.2 'Golos Text', sans-serif; font-style: normal; color: #c2c7b2; } .hgl.on .hgr:not(.inb) .hgw { cursor: pointer; } .hgl.on .hgw.fo { box-shadow: inset 2px 0 0 #e8b04a; padding-left: 4px; }
+  .hgm { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 6px; margin-top: 4px; font-size: 11px; color: #a7ae98; } .hgl .need .ic { width: 1em; height: 1em; vertical-align: -.12em; }
+  @media (max-height: 500px) {
+    body.hgOn .mrail { padding-top: calc(4px + var(--sa-t) + var(--tg-t)); padding-bottom: 8px; gap: 6px; } body.hgOn .mlg { height: 24px; } body.hgOn .accBox button { padding: 2px 5px; font-size: 12px; max-width: 110px; }
+    body.hgOn #menu .modeSel button { padding: 4px 8px; font-size: 12px; } body.hgOn .pgBar { font-size: 11px; gap: 5px; padding: 2px 3px; }
+    body.hgOn #menu .mtabs { top: calc(38px + var(--sa-t) + var(--tg-t)); gap: 2px; } body.hgOn #menu .mtabs button { font-size: 10.5px; padding: 1px 5px; }
+    body.hgOn.menuing #mute { width: 30px; height: 30px; top: calc(4px + var(--sa-t) + var(--tg-t)); } body.hgOn .mpanel { top: calc(38px + var(--sa-t) + var(--tg-t)); bottom: calc(60px + var(--sa-b)); width: min(240px, 32vw); } body.hgOn .mpanel .hint { font-size: 10.5px; line-height: 1.3; } .hgw img { width: 38px; height: 21px; } .hgw b { font-size: 11.5px; } .hgw i { font-size: 9.5px; } .hgw { gap: 5px; } .opt.hgl { padding: 3px 5px; margin-bottom: 3px; } .hgSum { padding: 3px 20px 3px 6px; font-size: 10px; margin-bottom: 3px; } .cat-h.hgh { margin: 3px 0 2px; font-size: 10px; } .hgm { font-size: 9.5px; margin-top: 1px; }
+    body.hgOn #menu #startBtn { width: 116px; height: 50px; font-size: 16px; padding: 0 12px; bottom: calc(5px + var(--sa-b)); } body.hgOn #menu #startBtn.long { font-size: 11.5px; }
+    body.hgOn.hgAir #hgStrip { left: calc(64px + var(--sa-l)); right: calc(128px + var(--sa-r)); bottom: calc(5px + var(--sa-b)); gap: 4px; } .hgc { flex-basis: 92px; height: 50px; } .hgc img { width: 74px; height: 42px; } .hgc b { font-size: 11px; left: 4px; top: 1px; }
+    body.hgOn #mbtns { bottom: calc(5px + var(--sa-b)); } body.hgOn #hgHint { bottom: calc(96px + var(--sa-b)); font-size: 10.5px; } body.hgOn #assetLoad { bottom: calc(58px + var(--sa-b)); }
+  }
+  @media (max-width: 760px) and (max-height: 500px) { body.hgOn .mlogo { display: none; } body.hgOn .accBox .nm { display: none; } body.hgOn #menu .modeSel button { padding: 4px 6px; font-size: 11.5px; } body.hgOn .mpanel { width: min(216px, 34vw); } body.hgOn #menu .mtabs { top: calc(34px + var(--sa-t) + var(--tg-t)); } }
+  @media (max-aspect-ratio: 1/1) { body.hgOn .mpanel { left: 10px; right: 10px; width: auto; top: auto; bottom: calc(100px + var(--sa-b)); height: 42vh; } body.hgOn #menu #startBtn { width: 130px; height: 62px; font-size: 18px; } body.hgOn.hgAir #hgStrip { right: calc(150px + var(--sa-r)); } body.hgOn.hgAir #mpClose { left: auto; right: 8px; top: 8px; } body.hgOn.hgAir .mphead { height: 34px; } body.hgOn #menu .mtabs { top: calc(52px + var(--sa-t) + var(--tg-t)); } }
   /* панель задания (Mark 2026-10-25): по умолчанию убрана, выезжает при выборе режима слева, «›» — убрать (смотреть фон); онлайн — открыта */
   .mpanel { transition: transform .42s cubic-bezier(.22, .9, .25, 1), opacity .3s ease, visibility 0s; }
   body:not(.mpOpen) .mpanel { transform: translateX(calc(100% + 16px + var(--sa-r))); opacity: 0; visibility: hidden; transition: transform .34s cubic-bezier(.55, 0, .7, .4), opacity .3s ease .04s, visibility 0s .34s; }
@@ -821,7 +860,7 @@
     <button id="ratBtn" style="--i:4" title="Рейтинг: таблица сезона"><span id="ratIco"></span><span class="tx"><b>Рейтинг</b><small id="ratSub"></small></span><i class="pl" id="ratPl"></i></button>
     <button id="shopBtn" style="--i:5" title="Магазин: окраски и аватарки за кристаллы"><span id="shopIco"></span><span class="tx"><b>Магазин</b><small id="shopSub">окраски и аватарки</small></span><img class="thumb" src="airdef/shop/e_mig31_dragon_s.webp" alt=""></button></div>
   <nav class="mrail" aria-label="Режимы игры">
-    <div class="mlogo">AIR SUPERIORITY</div>
+    <div class="mlogo"><span class="mlt">AIR SUPERIORITY</span><img class="mlg" src="../img/airdef-logo-alpha.webp" alt="AIR SUPERIORITY"></div>
     <div class="accBox" id="accBox"></div>
     <button class="pgBar" id="pgBar" title="Исследования: опыт и серебро"></button>
     <div class="modeSel" id="modeSel"></div>
@@ -830,8 +869,10 @@
   <section class="mpanel" aria-label="Задание">
     <div class="mphead"><button id="mpClose" aria-label="Убрать панель" title="Убрать панель"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square"/></svg></button><div class="mpk" id="mpKind"></div><div class="mpt" id="mpTitle"></div><div id="lobbyStats"></div></div>
     <div class="tabp on" id="tab-play"></div>
-    <button class="btn" id="startBtn">В бой</button>
   </section>
+  <button class="btn" id="startBtn">В бой</button>
+  <div id="hgStrip" aria-label="Самолёты"></div>
+  <div id="hgHint">потяните, чтобы повернуть самолёт</div>
   <section class="msheet" id="msheet" aria-label="Раздел">
     <div class="mshead"><b id="msTitle"></b><button id="msClose" aria-label="Закрыть"></button></div>
     <div class="msbody"><div class="tabp" id="tab-ref"></div><div class="tabp" id="tab-guide"></div><div class="tabp" id="tab-set"></div><div class="tabp" id="tab-misc"></div></div>

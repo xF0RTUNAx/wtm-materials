@@ -36,6 +36,7 @@ import { createAir } from './air.js?v=20261104a';
 import { createDefense } from './defense.js?v=20261104a';
 import { createDirector } from './director.js?v=20261104a';
 import { createMenuBg } from './menubg.js?v=20261104a';
+import { createHangar } from './hangar.js?v=20261104a';
 import { createOnline } from './online.js?v=20261104a';
 import { createProgress } from './progress-net.js?v=20261104a';
 import { createDifficulty } from './difficulty.js?v=20261104a';
@@ -1077,7 +1078,7 @@ C.toMenu = function () {
   for (const c of ['playing', 'flying', 'defense', 'dmap', 'oper']) document.body.classList.remove(c);
   document.body.classList.add('menuing');
   hx.setTransform(1, 0, 0, 1, 0, 0); hx.clearRect(0, 0, hc.width, hc.height);
-  C.state = 'menu'; C.shell.play(false); C.ctrl = ctrls.menuBg.has() ? ctrls.menuBg : ctrls.director; C.ctrl.start(); C.menu.show(); // фон: кадры, если есть, иначе живой бой
+  C.state = 'menu'; C.shell.play(false); C.ctrl = ctrls.hangar.has() ? ctrls.hangar : ctrls.menuBg.has() ? ctrls.menuBg : ctrls.director; C.ctrl.start(); C.menu.show(); // фон: ангар (hangar.js), без него — кадры, иначе живой бой
   resize();
 };
 C.togglePause = function () {
@@ -1205,7 +1206,7 @@ function frame(now) {
   const rd = now - lastRaf; lastRaf = now; if (rd > 0 && rd < 100) rafEma += (rd - rafEma) * 0.05;
   const uc = gfxKey === 'custom' ? P.cap : fpsCap === 'auto' ? undefined : fpsCap; // предел игрока (0 — нет)
   const menu = !C.probeOn && (idle || C.state === 'menu' || C.paused || C.endFreeze); // меню, пауза и итог одиночного боя — 30 к/с всему (и 3D, и интерфейсу); замер ?probe=1 — без предела
-  const capUI = idle ? 1000 / 8 : menu ? 1000 / 30 : uc ? 1000 / uc : 0;
+  const capUI = idle ? (cc.busy && cc.busy() ? 1000 / 60 : 1000 / 8) : menu ? 1000 / 30 : uc ? 1000 / uc : 0; // ангар: пока самолёт вращается — плавно, в покое кадр не считается
   const capMs = C.probeOn ? 0 : capUI || (IS_TOUCH && uc !== 0 ? 1000 / 60 : 0);
   const cap3D = !menu && IS_TOUCH && !fly ? 1000 / 30 : 0; // предел игрока (45, 60) — не отменяет 30 для 3D вне полёта
   if (capMs) { capAcc = Math.min(capAcc + Math.max(0, rd), capMs * 2); if (capAcc < capMs - 1.5) return; capAcc = Math.max(0, capAcc - capMs); } else capAcc = 0;
@@ -1216,7 +1217,7 @@ function frame(now) {
   C.t = t;
   if (C.state === 'play' && !C.paused && !C.ended) C.bt += dt; // часы боя (лента «Разбора»): без пауз и итога
   const ctrl = C.ctrl;
-  if (idle) { hx.setTransform(C.hudK, 0, 0, C.hudK, 0, 0); hx.clearRect(0, 0, VW, VH); updateSound(dt); setPerf(''); return; } // меню на кадрах: ни боя, ни 3D
+  if (idle) { hx.setTransform(C.hudK, 0, 0, C.hudK, 0, 0); hx.clearRect(0, 0, VW, VH); updateSound(dt); setPerf(''); if (ctrl.paint) ctrl.paint(); return; } // меню: ни боя, ни 3D города
   const online = !!(C.net && C.net.battle); // онлайн: мир не встаёт на паузу (пауза — только меню), бой считает сервер
   // «Съёмка»: замедление и стоп-кадр (ctrl.dtK) — бой идёт медленнее, камера — как обычно
   const dts = dt * (ctrl && ctrl.dtK && !online ? ctrl.dtK() : 1);
@@ -1318,7 +1319,7 @@ setInterval(() => {
   const m = modelStats(), t = texStats, need = m.req + t.req, got = m.done + t.done, e = $('assetLoad');
   const left = need - got; C.assetsDone = left <= 0;
   if (ldGate) {
-    const now = performance.now(), done = (need > 0 && left <= 0) || (!need && now - ldGateT > 2500) || now > LD_CAP;
+    const now = performance.now(), done = (((need > 0 && left <= 0) || (!need && now - ldGateT > 2500)) && (!C.hangar || C.hangar.ready())) || now > LD_CAP; // ворота открываются в готовый ангар: фон и самолёт на месте
     if (done) { ldGate = false; ldOpen(); } else { ldPaint(LD_CITY + (1 - LD_CITY) * (need ? got / need : 0), tr('Загружаем город')); return; }
   }
   if (!e || !need) return;
@@ -1356,7 +1357,7 @@ setInterval(() => {
   ctrls.air = createAir(C); ctrls.defense = createDefense(C);
   ctrls.multi = Object.assign(Object.create(ctrls.defense), { start: () => ctrls.defense.start({ multi: setup.mrole === 'atk' ? 'atk' : 'def', lastGame: 'multi' }) }); // «Мульти-волна» — та же карта обороны
   $('wNext').onclick = () => C.watchNext(); $('wMap').onclick = () => C.watchMap(); $('wSpeed').onclick = () => C.watchSpeed();
-  ctrls.director = createDirector(C); ctrls.menuBg = createMenuBg(C); ctrls.training = createTraining(C, ctrls); ctrls.photo = createPhoto(C, ctrls);
+  ctrls.director = createDirector(C); ctrls.menuBg = createMenuBg(C); ctrls.hangar = C.hangar = createHangar(C, renderer); C.hangarFail = () => { if (C.ctrl === ctrls.hangar) { ctrls.hangar.stop(); C.ctrl = ctrls.menuBg.has() ? ctrls.menuBg : ctrls.director; C.ctrl.start(); C.menu.show(); } }; /* зал не загрузился — прежний фон */ ctrls.training = createTraining(C, ctrls); ctrls.photo = createPhoto(C, ctrls);
   C.diff = createDifficulty(ls); // сложность: режим + скрытая подстройка под игрока (difficulty.js)
   C.progress = createProgress(C); C.research = createResearch(C, C.progress); // прокачка: состояние с сайта, экран «Исследования»
   createHints(C, ctrls); // подсказки клавиш в бою (ПК): «Настройки» или F1
