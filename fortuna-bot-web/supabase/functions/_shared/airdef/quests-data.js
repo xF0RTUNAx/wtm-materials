@@ -83,7 +83,7 @@ export const dayNo = (day) => Math.floor(Date.parse(day + 'T00:00:00Z') / 864e5)
 export const weekNo = (day) => Math.floor((dayNo(day) + 3) / 7);
 const fresh = (L) => L.map((id) => ({ id, n: 0, st: '' }));
 const addTo = (pay, r) => { for (const k in r) pay[k] = (pay[k] || 0) + r[k]; };
-const allTaken = (L) => L.length > 0 && L.every((q) => q.st === 'taken');
+const allTaken = (L, P) => { const K = L.filter((q) => P[q.id]); return K.length > 0 && K.every((q) => q.st === 'taken'); }; // задания, снятые из пула, не мешают ящику и кейсу
 // точки маршрута: долетел — награда сразу
 function payRoute(q, pay) { for (let i = (q.paid || 0) + 1; i < ROUTE.length && ROUTE[i].p <= q.pts; i++) { addTo(pay, ROUTE[i].r); q.paid = i; } }
 const takeAll = (L, P, pts, q, pay) => { for (const t of L) if (t.st === 'done' && P[t.id]) { t.st = 'taken'; addTo(pay, P[t.id].r); q.pts += pts; } };
@@ -93,12 +93,12 @@ export function questRoll(q0, today) {
   const q = structuredClone(q0 && q0.day ? q0 : { d: [], w: [], pts: 0, paid: 0, crate: 0, chest: 0 }), pay = {}, wk = weekNo(today);
   if (q.day !== today) {
     takeAll(q.d, DAILY, PTS_DAILY, q, pay);
-    if (allTaken(q.d) && !q.crate) addTo(pay, CRATE);
+    if (allTaken(q.d, DAILY) && !q.crate) addTo(pay, CRATE);
     q.day = today; q.d = fresh(pickDaily(dayNo(today))); q.crate = 0;
   }
   if (q.wk !== wk) {
     takeAll(q.w, WEEKLY, PTS_WEEKLY, q, pay);
-    if (allTaken(q.w) && !q.chest) addTo(pay, CASE);
+    if (allTaken(q.w, WEEKLY) && !q.chest) addTo(pay, CASE);
     payRoute(q, pay);
     q.wk = wk; q.w = fresh(pickWeekly(wk)); q.pts = 0; q.paid = 0; q.chest = 0;
   } else payRoute(q, pay);
@@ -108,6 +108,7 @@ const stepTask = (t, P, c) => { const def = P[t.id]; if (!def || t.st) return fa
 // бой: c — счётчики (onlineCounters или { waves, full } из «Обороны»); один бой идёт во все подходящие задания
 export function questApply(q0, today, c) {
   const { q, pay } = questRoll(q0, today); let done = 0;
+  if (c.soloEnd) { if (c.soloStart < (q.soloEnd || 0)) return { q, pay }; q.soloEnd = c.soloEnd; } // одиночные бои идут только друг за другом: параллельные пуски не считаются
   for (const t of q.d) if (stepTask(t, DAILY, c)) done++;
   const c2 = { ...c, dailyDone: (Number(c.dailyDone) || 0) + done, day: c.online && q.lastPlay !== today ? 1 : Number(c.day) || 0 };
   if (c.online) q.lastPlay = today;
@@ -120,7 +121,7 @@ export function questClaim(q0, today, key) {
   if (key === 'crate' || key === 'chest') {
     const d = key === 'crate', L = d ? q.d : q.w;
     if (q[key]) return { ok: false, why: 'Награда уже получена' };
-    if (!allTaken(L)) return { ok: false, why: 'Сначала заберите все задания' };
+    if (!allTaken(L, d ? DAILY : WEEKLY)) return { ok: false, why: 'Сначала заберите все задания' };
     q[key] = 1; addTo(pay, d ? CRATE : CASE); return { ok: true, q, pay };
   }
   const [k, id] = String(key).split(':'), d = k === 'd', t = (d ? q.d : k === 'w' ? q.w : []).find((x) => x.id === id), def = t && (d ? DAILY : WEEKLY)[id];
@@ -137,9 +138,17 @@ export function questView(q0, today) {
   return { day: q.day, d: q.d.filter((t) => DAILY[t.id]), w: q.w.filter((t) => WEEKLY[t.id]), pts: q.pts, paid: q.paid, crate: q.crate, chest: q.chest };
 }
 const int = (v, hi = 999) => Math.max(0, Math.min(hi, Math.floor(Number(v) || 0)));
-// подписанный итог онлайн-боя → счётчики. Поля, которых нет у старого игрового сервера, просто дают 0
+// «Оборона» (итог присылает браузер): волн не больше, чем успело пройти по времени сервера (минимум 30 с на волну); «до конца» — все волны и победа
+export const DEF_WAVES = 6; // defense.js WAVES
+const DEF_WAVE_MIN = 30;
+export function defenseCounters(ev, seconds, nowSec, wavesAll = DEF_WAVES) {
+  const waves = Math.min(ev.waves ? ev.waves.length : 0, wavesAll, Math.floor(seconds / DEF_WAVE_MIN));
+  return { waves, full: ev.win && waves >= wavesAll ? 1 : 0, soloStart: nowSec - seconds, soloEnd: nowSec };
+}
+// подписанный итог онлайн-боя → счётчики (бой без очков и сбитых не считается: null). Поля, которых нет у старого игрового сервера, просто дают 0
 export function onlineCounters(p) {
   const e = (p && p.ev && typeof p.ev === 'object' ? p.ev : {}), mm = p.mm === 1, pvo = p.team === 'pvo', k = int(p.k), icp = int(e.icp), drones = int(e.icpD);
+  if (!(Number(p.s) > 0) && !(k > 0)) return null;
   return { online: 1, play: 1, min: Math.max(0, Math.min(60, Number(e.min) || 0)), real: p.mode === 'real' ? 1 : 0, top: e.top ? 1 : 0,
     downs: mm ? icp : pvo ? k : 0, kill3: !mm && pvo && k >= 3 ? 1 : 0, intc: mm ? Math.max(0, icp - drones) : 0, cm: mm ? int(e.icpC) + drones : 0, tbm: mm ? int(e.icpT) : 0,
     obj: !mm && !pvo ? int(e.obj ?? (Array.isArray(e.targets) ? e.targets.length : 0)) : 0, sams: !mm && !pvo ? k : 0, bld: mm ? int(e.bld) : 0, mwsam: mm ? int(e.samk) : 0 };

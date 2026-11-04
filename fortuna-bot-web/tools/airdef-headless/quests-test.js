@@ -1,7 +1,7 @@
 // Проверка «Заданий» без боевой базы: правила (games/airdef/quests-data.js), сервер (_shared/airdef-progress.ts на поддельной базе), SQL (sql/030 в PGlite).
 //   deno run -A tools/airdef-headless/quests-test.js
 import { PGlite } from 'npm:@electric-sql/pglite@0.2.17';
-import { DAILY, WEEKLY, ROUTE, ROUTE_MAX, CRATE, CASE, PTS_DAILY, PTS_WEEKLY, pickDaily, pickWeekly, mskDay, dayNo, weekNo, questRoll, questApply, questClaim, questView, onlineCounters, weekTotals } from '../../games/airdef/quests-data.js';
+import { DAILY, WEEKLY, ROUTE, ROUTE_MAX, CRATE, CASE, PTS_DAILY, PTS_WEEKLY, pickDaily, pickWeekly, mskDay, dayNo, weekNo, questRoll, questApply, questClaim, questView, onlineCounters, defenseCounters, weekTotals } from '../../games/airdef/quests-data.js';
 import { credit, extraOf, mutate, questsPending, questsRolled, questTake, toProgress, view } from '../../supabase/functions/_shared/airdef-progress.ts';
 let bad = 0; const ok = (c, t) => { console.log((c ? 'OK   ' : 'ОШИБКА ') + t); if (!c) bad++; };
 const MON = '2026-11-02', WED = '2026-11-04', THU = '2026-11-05', NEXT = '2026-11-09';
@@ -21,12 +21,21 @@ const T = weekTotals(); ok(T.gemsMax <= 2 && T.all.silver > 6000 && T.all.silver
 // ── счётчики подписанного итога ──
 const air = onlineCounters({ team: 'air', mode: 'real', k: 2, ev: { min: 8.5, obj: 3, top: 1 } });
 ok(air.online === 1 && air.play === 1 && air.real === 1 && air.sams === 2 && air.obj === 3 && air.top === 1 && air.downs === 0 && air.kill3 === 0, 'онлайн за авиацию');
-const pvo = onlineCounters({ team: 'pvo', mode: 'arcade', k: 3, ev: { min: 8 } });
+const pvo = onlineCounters({ team: 'pvo', mode: 'arcade', k: 3, s: 150, ev: { min: 8 } });
 ok(pvo.downs === 3 && pvo.kill3 === 1 && pvo.real === 0 && pvo.sams === 0 && pvo.obj === 0, 'онлайн за ПВО: 3 самолёта за бой');
-ok(onlineCounters({ team: 'pvo', k: 2, ev: {} }).kill3 === 0, 'два самолёта — не три');
+ok(onlineCounters({ team: 'pvo', k: 2, s: 100, ev: {} }).kill3 === 0, 'два самолёта — не три');
 const mm = onlineCounters({ mm: 1, team: 'air', k: 20, ev: { min: 12, icp: 15, icpC: 4, icpD: 3, icpT: 2, samk: 5, bld: 7 } });
 ok(mm.downs === 15 && mm.intc === 12 && mm.cm === 7 && mm.tbm === 2 && mm.bld === 7 && mm.mwsam === 5 && mm.sams === 0 && mm.kill3 === 0, '«Мульти-волна»: перехваты по видам, постройки, комплексы');
+ok(onlineCounters({ team: 'air', k: 0, s: 0, ev: { min: 8 } }) === null, 'бой без очков и сбитых не считается');
+ok(onlineCounters({ team: 'pvo', k: 0, s: 40, ev: { min: 8 } }).play === 1, 'бой с очками считается');
 const old = onlineCounters({ team: 'air', k: 1, ev: { min: 8, sams: 1 } }); ok(old.obj === 0 && old.top === 0 && old.sams === 1, 'итог старого игрового сервера не ломает счёт');
+
+// ── «Оборона»: итог присылает браузер ──
+{ const W = 6, fast = defenseCounters({ waves: [1, 2, 3, 4, 5, 6], win: true }, 5, 1000, W), slow = defenseCounters({ waves: [1, 2, 3, 4, 5, 6], win: true }, 600, 1000, W), lost = defenseCounters({ waves: [1, 2], win: false }, 600, 1000, W), over = defenseCounters({ waves: Array(12).fill(1), win: true }, 3000, 4000, W);
+  ok(fast.waves === 0 && fast.full === 0, 'мгновенный итог с победой не засчитан'); ok(slow.waves === 6 && slow.full === 1, 'бой по времени засчитан'); ok(lost.waves === 2 && lost.full === 0, 'поражение: только отбитые волны'); ok(over.waves === 6, 'волн не больше, чем в бою');
+  const base = questRoll({}, WED).q; base.d[1] = { id: 'waves', n: 0, st: '' };
+  const a1 = questApply(base, WED, { waves: 1, soloStart: 100, soloEnd: 400 }).q, a2 = questApply(a1, WED, { waves: 1, soloStart: 200, soloEnd: 500 }).q, a3 = questApply(a1, WED, { waves: 1, soloStart: 400, soloEnd: 700 }).q;
+  ok(a1.d[1].n === 1 && a2.d[1].n === 1 && a3.d[1].n === 2, 'параллельные бои не считаются, следующий за первым — считается'); }
 
 // ── день: счёт, «Забрать», ящик ──
 const done = (L) => L.filter((t) => t.st === 'done').length;
@@ -49,6 +58,9 @@ ok(!questClaim(q, WED, 'd:нет').ok && !questClaim(q, WED, 'w:нет').ok && !
 // ── маршрут ──
 { let z = { ...structuredClone(q), pts: 45, paid: 0 }; z.d[0].st = 'done'; const r = questClaim(z, WED, 'd:' + z.d[0].id); ok(r.ok && r.q.pts === 55 && r.q.paid === 1 && r.pay.silver === DAILY[z.d[0].id].r.silver + ROUTE[1].r.silver, 'долетел до точки 50 — её награда пришла сама'); const r2 = questClaim({ ...r.q, d: r.q.d.map((t) => ({ ...t, st: 'done' })) }, WED, 'd:' + r.q.d[1].id); ok(r2.q.paid === 1, 'точка оплачивается один раз'); }
 { let z = { ...structuredClone(q), pts: 245, paid: 4 }; z.w[0].n = WEEKLY[z.w[0].id].of; z.w[0].st = 'done'; const r = questClaim(z, WED, 'w:' + z.w[0].id); ok(r.q.pts === 265 && r.q.paid === 5 && (r.pay.gem || 0) >= ROUTE[5].r.gem, 'конец маршрута на 250'); const r3 = questApply(r.q, WED, { online: 1 }); ok(r3.q.paid === 5 && !Object.keys(r3.pay).length, 'дальше 250 ничего не добавляется'); }
+
+// ── задание снято из пула ──
+{ const z = questRoll({}, WED).q; z.d = [{ id: 'снято', n: 0, st: '' }, ...z.d.slice(0, 2).map((t) => ({ ...t, st: 'taken' }))]; ok(questClaim(z, WED, 'crate').ok, 'снятое задание не мешает ящику'); ok(questView(z, WED).d.length === 2, 'и не показывается'); }
 
 // ── новый день и неделя ──
 { const a0 = questApply(questRoll({}, WED).q, WED, all()).q, roll = questRoll(a0, THU); const sum = a0.d.reduce((s, t) => s + (DAILY[t.id].r.silver || 0), 0);
@@ -85,6 +97,13 @@ ok(await save(0, 2) === -1 && await wallet() === 2, 'гонка при созд�
 ok(await save(1, 3) === 2 && await wallet() === 5, 'новая версия начисляет');
 ok(await save(1, 3) === -1 && await wallet() === 5, 'устаревшая версия ничего не пишет и не начисляет');
 ok((await db.query('select quests from airdef_progress where player_id = $1', [pl])).rows[0].quests.day === WED, 'состояние заданий записано');
+{ const site = (await db.query(`insert into players (login, password_hash, kind) values ('s', 'x', 'site') returning id`)).rows[0].id, game = (await db.query(`insert into players (login, password_hash, kind) values ('ad:g', 'x', 'airdef') returning id`)).rows[0].id;
+  await db.query(`insert into airdef_accounts (player_id, nick) values ($1, 'g')`, [game]);
+  await db.query('select airdef_progress_save_q($1, 0, 5, 6, $2, $3, $4, null, null, 0, $5, 7)', [site, [], [], '{}', JSON.stringify({ day: WED })]);
+  await db.query(`insert into airdef_wallet (player_id, crystals, camos, picks) values ($1, 1, '{x:y}', 1)`, [game]);
+  await db.query('select airdef_transfer($1, $2)', [site, game]);
+  const w = (await db.query('select airdef_wallet_view($1) w', [game])).rows[0].w, g = (await db.query('select quests from airdef_progress where player_id = $1', [game])).rows[0], left = (await db.query('select count(*)::int c from airdef_wallet where player_id = $1', [site])).rows[0].c;
+  ok(w.crystals === 8 && w.picks === 1 && w.camos.includes('x:y') && left === 0, 'перенос аккаунта: кристаллы сложены, кошелёк сайта пуст'); ok(g && g.quests.day === WED, 'перенос аккаунта: задания переехали'); }
 let threw = false; try { await save(2, -1); } catch (_) { threw = true; } ok(threw && await wallet() === 5, 'отрицательные кристаллы — отказ');
 await db.close();
 console.log(bad ? `\nошибок: ${bad}` : '\nошибок нет'); Deno.exit(bad ? 1 : 0);

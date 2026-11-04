@@ -65,7 +65,7 @@ export function cleanEvents(ev: unknown, minutes: number): BattleEvents {
 // на которые теперь хватает опыта, исследуются сами. used — узлы, на которых играли (в «Реализме» все должны быть куплены,
 // иначе — как в «Аркаде»: без множителя). Возвращает новое состояние и строки для экрана итогов.
 // o.quest — счётчики для заданий (онлайн: onlineCounters, «Оборона»: волны и победа); опыт боя добавляется здесь.
-export function credit(P: Progress, x: Extra, ev: BattleEvents, o: { real: boolean; online: boolean; today: string; used?: unknown; training?: boolean; quest?: Record<string, number> }) {
+export function credit(P: Progress, x: Extra, ev: BattleEvents, o: { real: boolean; online: boolean; today: string; used?: unknown; training?: boolean; quest?: Record<string, number> | null }) {
   const used = Array.isArray(o.used) ? o.used.filter((id): id is string => typeof id === "string" && !!NODE[id]).slice(0, 40) : [];
   const realOk = o.real && used.every((id) => owned(P, id));
   const firstWin = x.first_win_day !== o.today;
@@ -87,9 +87,11 @@ function autoResearch(P: Progress) {
   return auto;
 }
 // задания: начислить, что положено; кристаллы уйдут в кошелёк вместе с сохранением
-function payQuest(P: Progress, x: Extra, out: { q: Record<string, unknown>; pay: Record<string, number> }): Extra {
-  P.xp += out.pay.xp || 0; P.silver += out.pay.silver || 0;
-  return { ...x, quests: out.q, crystals: out.pay.gem || 0 };
+// deno-lint-ignore no-explicit-any
+function payQuest(P: Progress, x: Extra, out: { q?: any; pay?: Record<string, number> }): Extra {
+  const pay = out.pay ?? {};
+  P.xp += pay.xp || 0; P.silver += pay.silver || 0;
+  return { ...x, quests: out.q, crystals: pay.gem || 0 };
 }
 // новый день или неделя: выполненное, но не забранное начисляется при первом обращении
 export const questsRolled = (P: Progress, x: Extra, today: string) => { const extra = payQuest(P, x, questRoll(x.quests, today)); return { ok: true as const, extra, auto: autoResearch(P) }; };

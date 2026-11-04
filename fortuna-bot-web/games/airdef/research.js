@@ -17,7 +17,8 @@ const CSS = `
   --rt: calc(var(--sa-t, 0px) + var(--tg-t, 0px)); --hh: 58px; --cw: 184px; --ch: 82px; --gx: 26px; --gy: 14px; --line: #39422f; --line2: #2c3426; --ac: #e8b04a; --ac2: #f3c96f; --dim: #b3baa5; --dim2: #8f9884; --ok: #86c06c; --xp: #9fd3ff; }
 #research.on { display: block; }
 #research .ic { width: 1.15em; height: 1.15em; vertical-align: -0.17em; flex: none; }
-#research .rbg { position: absolute; inset: 0; background: center / cover no-repeat; filter: blur(2px) brightness(.45) saturate(.85); transform: scale(1.02); opacity: 0; transition: opacity .8s ease; } #research .rbg.on { opacity: 1; } #research .rui { position: absolute; inset: 0; }
+#research .rbg { position: absolute; left: -3%; right: -3%; top: -6%; bottom: -6%; background: center / cover no-repeat; opacity: 0; transition: opacity .8s ease; will-change: transform; } #research .rbg.on { opacity: 1; } #research .rui { position: absolute; inset: 0; background: rgba(10,12,8,.55); } /* запас сверх экрана — на сдвиг фона при прокрутке; затемнение .rui — пока кадры из игры */
+@media (max-height: 460px) { #research .rbg { top: -12%; bottom: -12%; } }
 #research .top { position: absolute; left: 0; right: 0; top: var(--rt); height: var(--hh); display: flex; align-items: center; gap: 14px; padding: 0 18px; padding-left: max(18px, var(--sa-l, 0px)); background: linear-gradient(#0b0e0a, rgba(11,14,10,.86)); z-index: 5; }
 #research::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: var(--rt); background: #0b0e0a; z-index: 5; }
 #research .back { font: 500 22px 'Oswald'; color: #e9e6dc; border: 0; background: none; width: 34px; cursor: pointer; }
@@ -163,6 +164,20 @@ export function createResearch(C, PG) {
     const show = () => { if (bgKey !== key) return; bgN ^= 1; bgs[bgN].style.backgroundImage = `url(${url})`; bgs[bgN].classList.add('on'); bgs[bgN ^ 1].classList.remove('on'); };
     if (typeof Image === 'undefined') { show(); return; } const im = new Image(); im.onload = show; im.onerror = show; im.src = url;
   }
+  // сдвиг фона при прокрутке (Mark 2026-11-04): от начала до конца списка фон проходит весь запас, но не быстрее 0,4 скорости списка; плавно догоняет прокрутку, двигается только transform
+  const BG_MOTION = !(typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const par = { x: 0, y: 0, tx: 0, ty: 0, raf: 0 };
+  function parApply() { const tr = `translate3d(${par.x.toFixed(1)}px, ${par.y.toFixed(1)}px, 0)`; bgs[0].style.transform = tr; bgs[1].style.transform = tr; }
+  function parStep() {
+    par.x += (par.tx - par.x) * 0.14; par.y += (par.ty - par.y) * 0.14; parApply();
+    par.raf = Math.abs(par.tx - par.x) + Math.abs(par.ty - par.y) > 0.2 && root.classList.contains('on') ? requestAnimationFrame(parStep) : 0;
+  }
+  function parTarget(w) {
+    if (!BG_MOTION || !w) return; const W = root.clientWidth, H = root.clientHeight, ry = w.scrollHeight - w.clientHeight, rx = w.scrollWidth - w.clientWidth;
+    const ay = Math.min(H * (H <= 460 ? 0.24 : 0.12), ry * 0.4), ax = Math.min(W * 0.06, rx * 0.4); // запас слоя .rbg на весь ход
+    par.ty = ry > 4 ? ay * (0.5 - w.scrollTop / ry) : 0; par.tx = rx > 4 ? ax * (0.5 - w.scrollLeft / rx) : 0; if (!par.raf) par.raf = requestAnimationFrame(parStep);
+  }
+  root.addEventListener('scroll', (e) => { if (e.target && e.target.classList && e.target.classList.contains('wrap')) parTarget(e.target); }, true); // список пересоздаётся при перерисовке, поэтому ловим на корне
   function draw() {
     if (!root.classList.contains('on')) return;
     const p = P(), scroll = root.querySelector('.wrap') ? [root.querySelector('.wrap').scrollLeft, root.querySelector('.wrap').scrollTop] : null;
@@ -175,6 +190,7 @@ export function createResearch(C, PG) {
       ${PG.guest ? `<div class="guest">${tr('Вы не вошли: показан стартовый набор. Опыт и серебро копятся в аккаунте.')}</div>` : PG.err ? `<div class="guest">${tr('Нет связи с сайтом: {0}', [trMsg(PG.err)])}</div>` : ''}
       <div class="wrap">${tree()}</div>${S.open || !phone() ? dossier() : ''}`;
     if (scroll && !S.reset) { const w = root.querySelector('.wrap'); w.scrollLeft = scroll[0]; w.scrollTop = scroll[1]; } // выбор единицы, покупка — дерево стоит на месте
+    parTarget(root.querySelector('.wrap'));
     const sc0 = S.dosScroll; if (sc0 != null && root.querySelector('.dos .sc')) root.querySelector('.dos .sc').scrollTop = sc0; S.reset = false; S.dosScroll = null;
   }
   root.addEventListener('click', async (e) => {

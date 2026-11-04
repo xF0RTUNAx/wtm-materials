@@ -9,6 +9,7 @@ import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
 import { supabaseAdmin } from "../_shared/supabase-admin.ts";
 import { mskToday } from "../_shared/msk.ts";
 import { cleanEvents, credit, load, mutate, view, NEED_GAME, NOT_FOUND, type Extra } from "../_shared/airdef-progress.ts";
+import { defenseCounters } from "../_shared/airdef/quests-data.js";
 
 const GAMES = new Set(["air", "defense", "multi"]), MODES = new Set(["arcade", "real"]);
 
@@ -48,7 +49,7 @@ Deno.serve(async (req) => {
       let res: ReturnType<typeof credit> | null = null, x1: Extra | null = null;
       try {
         const out = await mutate(db, player_id, (P, x) => {
-          res = credit(P, x, ev, { real: run.mode === "real", online: false, today, used: body.used, quest: run.game === "defense" ? { waves: ev.waves!.length, full: ev.win ? 1 : 0 } : undefined }); // задания: из одиночной игры — только «Оборона»
+          res = credit(P, x, ev, { real: run.mode === "real", online: false, today, used: body.used, quest: run.game === "defense" ? defenseCounters(ev, run.seconds, Date.now() / 1000) : undefined }); // задания: из одиночной игры — только «Оборона»
           x1 = res.extra; return { ok: true, extra: res.extra };
         });
         if (out.notFound || out.needGame) {

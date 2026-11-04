@@ -95,8 +95,8 @@ const weekLeft = () => { const m = Date.now() + MSK, d = new Date(m).getUTCDay()
 const pad = (v) => String(v).padStart(2, '0');
 const hms = (ms) => { const s = Math.floor(ms / 1000); return `${pad(Math.floor(s / 3600))}:${pad(Math.floor(s / 60) % 60)}:${pad(s % 60)}`; };
 const dh = (ms) => tr('{0} д {1} ч', [Math.floor(ms / DAY), pad(Math.floor(ms / 3600e3) % 24)]);
-const cnt = (q) => q.u === 'h' ? `<b>${dec(q.n / 60)}</b> / ${tr('{0} ч', [q.of / 60])}` : q.u === 'min' ? `<b>${q.n}</b> / ${tr('{0} мин', [q.of])}` : q.of >= 10000 ? `<b>${dec(q.n / 1000)}</b> / ${tr('{0} тыс.', [q.of / 1000])}` : `<b>${num(q.n)}</b> / ${num(q.of)}`;
-const leftOf = (q) => { const v = q.of - q.n; return tr('ещё {0}', [q.u === 'h' ? tr('{0} ч', [dec(v / 60)]) : q.u === 'min' ? tr('{0} мин', [v]) : q.of >= 10000 ? tr('{0} тыс.', [dec(v / 1000)]) : num(v)]); };
+const cnt = (q) => q.u === 'h' ? `<b>${dec(q.n / 60)}</b> / ${tr('{0} ч', [q.of / 60])}` : q.u === 'min' ? `<b>${Math.floor(q.n)}</b> / ${tr('{0} мин', [q.of])}` : q.of >= 10000 ? `<b>${dec(q.n / 1000)}</b> / ${tr('{0} тыс.', [q.of / 1000])}` : `<b>${num(q.n)}</b> / ${num(q.of)}`;
+const leftOf = (q) => { const v = q.of - q.n; return tr('ещё {0}', [q.u === 'h' ? tr('{0} ч', [dec(Math.ceil(v / 6) / 10)]) : q.u === 'min' ? tr('{0} мин', [Math.ceil(v)]) : q.of >= 10000 ? tr('{0} тыс.', [dec(v / 1000)]) : num(v)]); };
 const chips = (r) => Object.entries(r).map(([k, v]) => `<span class="chip ${k}"><img src="${TILE[k]}" alt="">${num(v)}</span>`).join('');
 const seg = (q) => { const m = Math.min(q.of, 10), f = q.n >= q.of ? m : q.n > 0 ? Math.max(1, Math.floor(m * q.n / q.of)) : 0, c = q.n >= q.of ? 'ok' : 'on'; return `<span class="sg">${Array.from({ length: m }, (_, i) => `<i class="${i < f ? c : ''}"></i>`).join('')}</span>`; };
 // маршрут: x — по очкам, y — между путевыми точками плавно (проценты полосы)
@@ -116,6 +116,7 @@ export function createQuests(C) {
   const cur = () => { const P = PG().P || {}, w = C.shop && C.shop.wallet && C.shop.wallet(); return { xp: P.xp || 0, silver: P.silver || 0, gem: PG().crystals ?? (w ? w.crystals : 0) ?? 0 }; };
   const isOpen = () => root.classList.contains('on');
   const allTaken = (L) => L.length > 0 && L.every((q) => q.st === 'taken');
+  const known = (L, P) => L.filter((q) => P[q.id]); // страница старее сервера: незнакомое задание не показываем
   const doneN = (L) => L.filter((q) => q.st === 'done').length;
   const count = (q) => doneN(q.d) + doneN(q.w) + (allTaken(q.d) && !q.crate ? 1 : 0) + (allTaken(q.w) && !q.chest ? 1 : 0);
   // МиГ на маршруте: серый; у кого есть окраска «Нефритовый дракон» — дракон
@@ -171,9 +172,10 @@ export function createQuests(C) {
   }
   async function take(key, el) {
     if (S.busy) return; S.busy = true; S.msg = '';
-    const [k, id] = key.split(':'), r = key === 'crate' ? CRATE : key === 'chest' ? CASE : (k === 'd' ? DAILY : WEEKLY)[id].r, a = el.getBoundingClientRect();
+    const [k, id] = key.split(':'), r = key === 'crate' ? CRATE : key === 'chest' ? CASE : (k === 'd' ? DAILY : WEEKLY)[id].r, a = el.getBoundingClientRect(), g0 = cur().gem;
     const res = await PG().questClaim(key); S.busy = false;
-    if (!res.ok) { S.msg = res.why || tr('Ошибка сервера'); draw(); return; }
+    if (!res.ok) { S.msg = res.why || tr('Ошибка сервера'); draw(); PG().questsRefresh().then(() => { draw(); touch(); }); return; } // например, забрали в другой вкладке
+    if (cur().gem !== g0 && C.shop && C.shop.reset) C.shop.reset(); // кошелёк магазина — заново
     snd(); S.fresh = key; draw(); give(r, a); touch(); fly(); setTimeout(() => { S.fresh = null; }, 400);
   }
 
@@ -204,7 +206,7 @@ export function createQuests(C) {
         <div class="cur"><span class="xp" data-c="xp"><img src="${TILE.xp}" alt=""><u>${num(S.disp.xp)}</u></span><span data-c="silver"><img src="${TILE.silver}" alt=""><u>${num(S.disp.silver)}</u></span><span class="gem" data-c="gem"><img src="${TILE.gem}" alt=""><u>${num(S.disp.gem)}</u></span></div></div>
       <div class="gw"><div class="sum"><div class="sh"><b>${tr('Сводка недели')}</b><span class="pts"><img src="${TILE.star}" alt=""><span class="ptsT"></span></span><span class="tm">${qic('weekly-calendar')}<span>${tr('неделя закончится через')}</span> <b class="tmW"></b></span></div><div class="route">${routeHtml()}</div></div>
         <div class="tabs"><button class="tab ${d ? 'on' : ''}" data-tab="d"><b>${tr('Ежедневно')}</b>${mark(nD, 'tmD')}</button><button class="tab ${d ? '' : 'on'}" data-tab="w"><b>${tr('Еженедельно')}</b>${mark(nW, 'tmW')}</button></div>
-        <div class="list">${note}${L.map((q) => row({ ...P[q.id], ...q, pts }, S.tab, 0)).join('')}${bonus(Q, d)}</div></div>${S.all ? allView() : ''}${S.pop ? popView() : ''}`;
+        <div class="list">${note}${known(L, P).map((q) => row({ ...P[q.id], ...q, pts }, S.tab, 0)).join('')}${bonus(Q, d)}</div></div>${S.all ? allView() : ''}${S.pop ? popView() : ''}`;
     const l2 = root.querySelector('.list'); if (l2) l2.scrollTop = sc; const a2 = root.querySelector('.allv'); if (a2) a2.scrollTop = asc;
     place(); tick();
   }
@@ -226,8 +228,8 @@ export function createQuests(C) {
   });
   addEventListener('resize', () => { draw(); });
   let stale = 0;
-  setInterval(() => { if (!isOpen()) return; tick(); if (V().day !== mskDay() && !PG().test && Date.now() - stale > 60000) { stale = Date.now(); PG().questsRefresh(); } }, 1000); // полночь при открытом экране
-  setInterval(() => { touch(); }, 30000);
+  setInterval(() => { if (!isOpen()) return; tick(); if (V().day !== mskDay() && !PG().test && Date.now() - stale > 60000) { stale = Date.now(); PG().questsRefresh().then(() => { draw(); touch(); fly(); }); } }, 1000); // полночь при открытом экране
+  setInterval(() => { touch(); if (!isOpen() && PG() && !PG().test && !PG().guest && V().day !== mskDay() && Date.now() - stale > 600000) { stale = Date.now(); PG().questsRefresh(); } }, 30000); // полночь в меню: кнопка и табличка — про новый день
 
   // кнопка в меню: подпись «сделано N из 3 · до обновления», три лампы, красная цифра — есть что забрать
   function touch() {

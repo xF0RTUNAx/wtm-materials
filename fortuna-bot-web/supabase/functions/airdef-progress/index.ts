@@ -20,7 +20,7 @@ Deno.serve(async (req) => {
     const { player_id, action, id, branch, key } = await req.json();
     if (typeof player_id !== "string" || player_id.length < 8 || player_id.length > 64) return jsonResponse({ error: "Некорректные параметры" }, 400);
     const db = supabaseAdmin(), today = mskToday();
-    const crystals = async () => { const w = await db.rpc("airdef_wallet_view", { p_player: player_id }); if (w.error) throw w.error; return Number((w.data as { crystals?: number })?.crystals) || 0; };
+    const crystals = async () => { try { const w = await db.rpc("airdef_wallet_view", { p_player: player_id }); return w.error ? null : Number((w.data as { crystals?: number })?.crystals) || 0; } catch (_) { return null; } }; // кошелёк не прочитался — null, награда уже сохранена
     if (action === "state" || action === undefined || action === "quests") {
       // награды закончившегося сезона (sql/024) — молча; сбой не мешает загрузке прокачки
       if (action !== "quests") await settleSeasons(db).catch((e) => console.error("airdef-progress season", e));
@@ -30,9 +30,11 @@ Deno.serve(async (req) => {
       let P = toProgress(row), x = extraOf(row);
       // новый день: выполненные, но не забранные задания начисляются сами; без начислений чтение ничего не пишет
       if (row && questsPending(x, today)) {
-        let x1 = null as Extra | null;
-        const out = await mutate(db, player_id, (P2, x2) => { const r = questsRolled(P2, x2, today); x1 = r.extra; return r; });
-        if (out.ok && x1) { P = out.P!; x = x1; }
+        try {
+          let x1 = null as Extra | null;
+          const out = await mutate(db, player_id, (P2, x2) => { const r = questsRolled(P2, x2, today); x1 = r.extra; return r; });
+          if (out.ok && x1) { P = out.P!; x = x1; }
+        } catch (e) { console.error("airdef-progress quests roll", e); } // сбой записи не мешает загрузке прогресса: начислится при следующем обращении
       }
       return jsonResponse({ progress: view(P, x, today), ...(action === "quests" ? { crystals: await crystals() } : {}) });
     }

@@ -70,7 +70,8 @@ export function createProgress(C) {
     ready: () => !!G.P,
     async refresh() {
       if (LOCAL()) { const lid = (account() || {}).id || ''; if (!G.P || G.guest || G.lid !== lid) { G.P = null; G.lid = lid; await local('goal', null, 'air'); } G.guest = false; return G.P; }
-      const acc = account(); if (!acc) { G.P = newProgress(); G.guest = true; G.err = ''; changed(); return G.P; } // гость: стартовый набор
+      const acc = account(); if (!acc || acc.id !== G.qAcc) { G.crystals = null; G.qAcc = acc && acc.id; } // кристаллы — свои у каждого аккаунта
+      if (!acc) { G.P = newProgress(); G.guest = true; G.err = ''; changed(); return G.P; } // гость: стартовый набор
       try { const d = await call('airdef-progress', { player_id: acc.id, action: 'state' }); set(d.progress); }
       catch (e) { if (needGame(e) && !account()) return G.P; G.err = e.message; changed(); }
       return G.P;
@@ -94,13 +95,13 @@ export function createProgress(C) {
     async questsRefresh() {
       if (LOCAL()) { if (!G.P) await local('goal', null, 'air'); if (G.crystals === null) { G.crystals = 46; G.lq = questRoll({}, lDay()).q; api.questTest('adv', 'd'); api.questTest('adv', 'd'); api.questTest('adv', 'w'); } const r = questRoll(G.lq, lDay()); G.lq = r.q; lPay(r.pay); changed(); return { ok: true }; }
       const acc = account(); if (!acc) return { ok: true };
-      try { const d = await call('airdef-progress', { player_id: acc.id, action: 'quests' }); G.crystals = d.crystals; set(d.progress); return { ok: true }; }
+      try { const d = await call('airdef-progress', { player_id: acc.id, action: 'quests' }); G.crystals = d.crystals ?? G.crystals; set(d.progress); return { ok: true }; }
       catch (e) { needGame(e); return { ok: false, why: e.message }; }
     },
     async questClaim(key) {
       if (LOCAL()) { const r = questClaim(G.lq, lDay(), key); if (!r.ok) return { ok: false, why: r.why }; G.lq = r.q; lPay(r.pay); changed(); return { ok: true }; }
       const acc = account(); if (!acc) return { ok: false, why: tr('Войдите в аккаунт игры') };
-      try { const d = await call('airdef-progress', { player_id: acc.id, action: 'quest', key }); G.crystals = d.crystals; set(d.progress); return { ok: true }; }
+      try { const d = await call('airdef-progress', { player_id: acc.id, action: 'quest', key }); G.crystals = d.crystals ?? G.crystals; set(d.progress); return { ok: true }; }
       catch (e) { needGame(e); return { ok: false, why: trMsg(e.message) }; }
     },
     // кнопки «ДЕМО» (только тестовый режим): бой, новый день, новая неделя, сначала
