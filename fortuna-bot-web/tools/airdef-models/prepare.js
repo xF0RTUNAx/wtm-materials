@@ -250,7 +250,7 @@ const CONFIG = {
   w_gbu10: { src: new URL('./own/gbu10.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 1024, nTex: () => 512, pickMesh: /./, own: true }, // GBU-10 Paveway: своя модель (Blender, own/gbu10.glb)
   // станция помех ELTA 8222 — Original_linny, Thingiverse (CC BY; 1/48, мм): и для запада, и пока вместо «Сорбции» (Mark 2026-10-19)
   w_ecm: { src: `${DL}/stl-glb/elta8222.glb`, scale: 0.048, axes: (x, y, z) => [x, z, -y], tex: () => 256, pickMesh: /./, crease: 35, colors: { '': [0.2, 0.21, 0.2] } },
-  w_kh101: { src: `${DL}/stl-glb/kh101.glb`, scale: 0.001, axes: (x, y, z) => [y, z, x], tex: () => 256, pickMesh: /./, colors: { '': [0.08, 0.085, 0.09] } },
+  w_kh101: { src: new URL('./own/kh101.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 1024, nTex: () => 512, pickMesh: /./, own: true, groups: (c) => (/(^|\/)wing1/.test(c.path) ? 'wing1' : /(^|\/)wing2/.test(c.path) ? 'wing2' : 'body') }, // Х-101: своя модель (Blender, own/kh101.glb)
   w_kh555: { src: new URL('./own/kh555.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 512, nTex: () => 512, pickMesh: /./, own: true }, // Х-555: своя модель (Blender, own/kh555.glb)
   w_kalibr: { src: `${DL}/sizzler_ss-n-27_kalibr_3m-54.glb`, scale: 1, nose: '+z', rulesIn: 'game', tex: () => 256, groups: LS }, // «Калибр» — 6,2 м
   w_agm86: { src: `${DL}/agm-86.glb`, scale: 0.1454, nose: '-z', rulesIn: 'game', tex: () => 256, centerX: true, groups: LS }, // AGM-86 ALCM — 6,32 м

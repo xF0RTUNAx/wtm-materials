@@ -181,7 +181,7 @@ const META = {
   w_kinzhal: { weapon: 'kinzhal', lazy: true, stations: [] }, // Х-47М2 «Кинжал» - собственная модель (tools/airdef-models/own/kinzhal)
   w_slam: { weapon: 'slam', lazy: true, stations: [] }, // AGM-84E SLAM - по UGM-84 Harpoon (FeriseCAT)
   w_jsow: { weapon: 'jsow', lazy: true, wings: 'deploy', stations: [] }, // AGM-154 JSOW - RickSlash
-  w_kh101: { weapon: 'kh101', lazy: true, stations: [] },
+  w_kh101: { weapon: 'kh101', lazy: true, wings: 'deploy', wingAx: { wing1: [0.3004, -0.3252, -0.8642, 58], wing2: [-0.3004, -0.3252, -0.8642, -58] }, stations: [] }, // Х-101 — собственная модель (tools/airdef-models/own/kh101)
   w_gbu10: { weapon: 'gbu10', stations: [] }, // GBU-10 Paveway — собственная модель (tools/airdef-models/own/gbu10)
   w_ecm: { weapon: ['ecm_w', 'ecm_e'], matte: true, stations: [] }, // станция помех ELTA 8222 - Original_linny (Thingiverse); у востока пока она же // Х-101 - HappyBattleSheep (Thingiverse)
   w_ecm_w: { weapon: [], lazy: true, matte: true, stations: [] }, // AN/ALQ-131 - собственная модель (tools/airdef-models/own/alq131); как «Сорбция» ниже - только значок в «Исследованиях» (Mark 2026-10-24: в бою остаётся ELTA - она с разрешённой лицензией, лишней работы не делаем)
@@ -454,6 +454,7 @@ const GLB_V_OWN = {
   w_kab500kr: '20261103o',
   w_gbu31: '20261103p',
   w_kab500s: '20261103q',
+  w_kh101: '20261103s',
 };
 GLB_V.hg_jack = '20261104b'; // подъёмник, ревизия 2: матовый, с износом
 GLB_V.w_pod = '20261104b'; // серый корпус контейнера, без комьев от упрощения
@@ -751,11 +752,13 @@ async function load(name, base) {
     const b = new THREE.Box3().setFromObject(part), c = part.userData.ctr ? part.userData.ctr.clone() : b.getCenter(new THREE.Vector3());
     const side = Math.sign(c.x) || 1, pv = part.userData.pivot ? part.userData.pivot.clone() : new THREE.Vector3(side > 0 ? b.min.x : b.max.x, c.y, b.min.z);
     if (WM === 'deploy' && !part.userData.pivot) pv.set(c.x, c.y, b.min.z);
+    const wAx = ((META[name] || {}).wingAx || {})[part.name]; if (wAx) pv.set(wAx[0], wAx[1], wAx[2]); // ось и угол раскрытия заданы в паспорте модели (x, y, z, градусы)
     const piv = new THREE.Group(); piv.name = part.name; piv.position.copy(pv);
     for (const m of part.children.slice()) { m.position.sub(pv); piv.add(m); }
     group.remove(part); group.add(piv);
     const ang = (x, z) => Math.atan2(x, z), d = c.clone().sub(pv), wrap = (a) => Math.atan2(Math.sin(a), Math.cos(a));
     if (WM === 'fold') piv.userData.wa = [wrap(ang(0, 1) - ang(d.x, d.z)), 0]; // вдоль бомбы, назад
+    else if (wAx) piv.userData.wa = [0, wAx[3] * Math.PI / 180];
     else { const sx = Math.sign(d.x) || (part.name === 'wingA' ? 1 : -1); piv.userData.wa = [0, wrap(ang(sx * 0.98, 0.17) - ang(d.x, d.z))]; } // в сторону, со стреловидностью ~10°
     group.userData.wings = true; if ((META[name] || {}).flip) group.userData.flip = true; // висит крыльями вниз (УМПК): после сброса переворачивается на 180° (glideWings)
   }

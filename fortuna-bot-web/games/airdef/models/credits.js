@@ -747,15 +747,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "Kh-101 Cruise Missile",
-  "author": "HappyBattleSheep",
-  "url": "https://www.thingiverse.com/thing:6720723",
-  "license": "CC-BY-4.0",
-  "files": [
-   "w_kh101"
-  ]
- },
- {
   "title": "Sizzler SS-N-27 Kalibr 3M-54",
   "author": "mmickel",
   "url": "https://sketchfab.com/3d-models/sizzler-ss-n-27-kalibr-3m-54-63fc0ac8032c42e3bfd3e548192d5a9c",

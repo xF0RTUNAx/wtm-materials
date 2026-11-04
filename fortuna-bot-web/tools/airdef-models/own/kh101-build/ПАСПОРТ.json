@@ -1,0 +1,16 @@
+{
+ "key": "w_kh101",
+ "weapon": "kh101",
+ "name": "Х-101",
+ "rev": 1,
+ "files": {
+  "glb": "kh101.glb",
+  "blend": "kh101.blend",
+  "build": [
+   "build.py",
+   "_collide.py",
+   "bake.py",
+   "deliver.py"
+  ]
+ }
+}
