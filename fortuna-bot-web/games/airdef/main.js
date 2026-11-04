@@ -55,7 +55,7 @@ import { createCrashRep } from './crashrep.js?v=20261104c';
 import { createTraining, LESSONS } from './training.js?v=20261104c';
 import { createPhoto } from './photo.js?v=20261104c';
 import { createMenu } from './menu.js?v=20261104c';
-import { registerSW } from './offline.js?v=20261104c';
+import { registerSW, assetsBase } from './offline.js?v=20261104c';
 import { detectGpu, sharpFor, sharpCeil } from './gpu.js?v=20261104c';
 import { orientGate } from '../orient-warn.js?v=20261011a';
 
@@ -1298,7 +1298,7 @@ const pendingObj = [];
 registerSW(); // файлы игры - из кэша устройства (только на сайте; offline.js)
 // замер частей кадра на телефоне (?probe=1): таблица мс поверх игры через 12 с боя (probe.js)
 if (Q.get('probe') === '1') { C.perfScale = perf.scale; C.probeMap = MAP; import('./probe.js?v=20261104c').then((m) => m.startProbe(C, { renderer, scene, pipe })); }
-loadModels(new URL('./', import.meta.url).href, (name) => {
+loadModels(assetsBase(), (name) => {
   warmSoon(); // шейдеры пришедшей модели - сразу, а не когда она впервые попадёт в кадр
   if (C.G && C.G.attachBld && bldModel(name)) C.G.attachBld(name, bldModel(name)); // дома города вблизи (и цеха - та же модель, что у целей)
   if (isObjModel(name)) { if (C.G) C.G.attachObjModel(name, () => objModel(name)); else pendingObj.push(name); return; } // постройки целей

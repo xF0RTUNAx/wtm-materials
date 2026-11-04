@@ -1,0 +1,42 @@
+# GitHub Pages: модели «Воздушного превосходства» лежат в Cloudflare R2 (assets.fortunawtm.com), на сайт их не публикуем:
+# у Pages лимит 1 ГБ на сайт, с моделями было 1,28 ГБ. Закачка в R2: fortuna-bot-web/tools/airdef-models/r2-sync.js
+exclude:
+  - .sass-cache/
+  - .jekyll-cache/
+  - gemfiles/
+  - Gemfile
+  - Gemfile.lock
+  - node_modules/
+  - vendor/bundle/
+  - vendor/cache/
+  - vendor/gems/
+  - vendor/ruby/
+  - fortuna-bot-web/games/airdef/models/*.glb
+  - fortuna-bot-web/games/airdef/models/ktx
+  - fortuna-bot-web/games/airdef/models/camo
+# А эти модели «Симулятор Летки» (games/drone/glb.js) берёт с сайта: остаются на Pages как есть. Имена без пути: Jekyll сверяет include и по имени файла
+include:
+  - .htaccess
+  - aam_aim54.glb
+  - aam_aim7.glb
+  - aam_aim9.glb
+  - aam_aim9x.glb
+  - aam_iris.glb
+  - aam_mica.glb
+  - aam_r27.glb
+  - aam_r33.glb
+  - aam_r60.glb
+  - aam_r73.glb
+  - aam_r77.glb
+  - e_f22.glb
+  - e_f35.glb
+  - e_gripen.glb
+  - e_mig21.glb
+  - e_mig31.glb
+  - e_su57.glb
+  - e_tu22m3.glb
+  - f16.glb
+  - f18.glb
+  - mig29.glb
+  - msl_aim120.glb
+  - su30.glb

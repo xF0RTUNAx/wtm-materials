@@ -11,13 +11,21 @@ const PROD = typeof location !== 'undefined' && (/fortunawtm\.com$/.test(locatio
 const MCACHE = 'airdef-models-v1', glbName = (u) => (u.match(/models\/([^?]+)\.glb/) || [])[1], ktxName = (u) => (u.match(/models\/ktx\/([^?]+)\.(?:ktx2|json)/) || [])[1]; // сжатые текстуры моделей (models/ktx, ktx.js): имя «<модель>.<номер>», индекс - «index»
 const hasCaches = () => PROD && typeof caches !== 'undefined' && caches && typeof caches.open === 'function';
 let mc = null; const mcOpen = () => mc || (mc = caches.open(MCACHE).catch(() => null));
+// Модели и их сжатые текстуры лежат в Cloudflare R2, а не на GitHub Pages (у Pages лимит 1 ГБ на сайт, Mark 2026-11-05); пути в хранилище те же: models/...
+// На сайте адрес - assets.fortunawtm.com; локально - свои файлы; ?assets=<адрес> - проверить другой источник (только вне сайта)
+const ASSETS = 'https://assets.fortunawtm.com/', SITE = new URL('./', import.meta.url).href;
+const ASSET_BASE = (() => { try { if (typeof location === 'undefined') return SITE; if (/fortunawtm\.com$/.test(location.hostname)) return ASSETS; const q = new URLSearchParams(location.search).get('assets'); return q ? new URL(q).href : SITE; } catch (_) { return SITE; } })();
+export const assetsBase = () => ASSET_BASE;
+// в кэше устройства файл лежит под прежним адресом сайта: уже скачанное игроками после переезда не качается заново и не занимает место дважды
+const cacheKey = (url) => (ASSET_BASE !== SITE && url.startsWith(ASSET_BASE) ? SITE + url.slice(ASSET_BASE.length) : url);
 // модель: из кэша устройства, нет - из сети и в кэш (прежние версии того же файла - долой)
 export async function cachedFetch(url) {
   if (!hasCaches()) return fetch(url);
   const c = await mcOpen(); if (!c) return fetch(url);
-  try { const hit = await c.match(url); if (hit) return hit; } catch (_) { /* нет - из сети */ }
+  const key = cacheKey(url);
+  try { const hit = await c.match(key); if (hit) return hit; } catch (_) { /* нет - из сети */ }
   const r = await fetch(url);
-  if (r.ok) { const copy = r.clone(); c.put(url, copy).then(() => dropOld(c, url)).catch(() => { /* нет места - просто без кэша */ }); }
+  if (r.ok) { const copy = r.clone(); c.put(key, copy).then(() => dropOld(c, key)).catch(() => { /* нет места - просто без кэша */ }); }
   return r;
 }
 async function dropOld(c, url) {
