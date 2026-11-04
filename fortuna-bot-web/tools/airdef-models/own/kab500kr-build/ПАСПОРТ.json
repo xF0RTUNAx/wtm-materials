@@ -1,0 +1,16 @@
+{
+ "key": "w_kab500kr",
+ "weapon": "kab500kr",
+ "name": "КАБ-500Кр",
+ "rev": 1,
+ "files": {
+  "glb": "kab500kr.glb",
+  "blend": "kab500kr.blend",
+  "build": [
+   "build.py",
+   "_collide.py",
+   "bake.py",
+   "deliver.py"
+  ]
+ }
+}
