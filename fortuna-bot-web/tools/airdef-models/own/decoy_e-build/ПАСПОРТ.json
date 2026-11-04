@@ -1,0 +1,16 @@
+{
+ "key": "w_decoy_e",
+ "weapon": "decoy_e",
+ "name": "Ложная цель (имитатор)",
+ "rev": 1,
+ "files": {
+  "glb": "decoy_e.glb",
+  "blend": "decoy_e.blend",
+  "build": [
+   "build.py",
+   "_collide.py",
+   "bake.py",
+   "deliver.py"
+  ]
+ }
+}

@@ -151,15 +151,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "Harpy Drone",
-  "author": "KillCaptureDestroy",
-  "url": "https://sketchfab.com/3d-models/harpy-drone-84d8d2dc8ca14d64ac05b19e3c88b385",
-  "license": "CC-BY-4.0",
-  "files": [
-   "w_decoy_e"
-  ]
- },
- {
   "title": "RAFAEL AN/AAQ-28(V) Litening",
   "author": "Vlad.Mojaev",
   "url": "https://sketchfab.com/3d-models/rafael-anaaq-28v-litening-be90b1ca86bd46f4a87a86829d1e112c",

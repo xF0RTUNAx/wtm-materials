@@ -217,7 +217,7 @@ const META = {
   w_jassm: { weapon: 'jassm', stations: [] }, // AGM-158 JASSM
   w_agm88: { weapon: ['agm88', 'aargm'], stations: [] }, // AGM-88 HARM (с тележки) - и для AARGM
   w_mald: { weapon: ['mald', 'quail'], stations: [] }, // ADM-160 MALD («AIM-160A Screamer»)
-  w_decoy_e: { weapon: 'decoy_e', stations: [] }, // Harpy - ложная цель
+  w_decoy_e: { weapon: 'decoy_e', wings: 'deploy', wingAx: { wing1: [0.165, -0.2045, -0.4, 80], wing2: [-0.165, -0.2045, -0.4, -80] }, stations: [] }, // Ложная цель (имитатор) — собственная модель (tools/airdef-models/own/decoy_e)
   w_gbu39: { weapon: ['gbu39', 'sdb'], wings: 'fold', stations: [] }, // GBU-39 SDB (и для «Мульти-волны»)
   w_gbu31: { weapon: 'gbu31', stations: [] }, // GBU-31 JDAM — собственная модель (tools/airdef-models/own/gbu31)
   w_pod: { pod: true, stations: [] }, // AN/AAQ-28 LITENING - прицельный контейнер
@@ -459,6 +459,7 @@ const GLB_V_OWN = {
   w_kh101: '20261103s',
   w_kh28: '20261103t',
   w_agm45: '20261103u',
+  w_decoy_e: '20261103w',
 };
 GLB_V.hg_jack = '20261104b'; // подъёмник, ревизия 2: матовый, с износом
 GLB_V.w_pod = '20261104b'; // серый корпус контейнера, без комьев от упрощения

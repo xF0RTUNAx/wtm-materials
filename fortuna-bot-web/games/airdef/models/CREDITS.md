@@ -19,7 +19,6 @@
 - "Agm-158 - wings extended" (https://sketchfab.com/3d-models/agm-158-wings-extended-1b1f0f509249401297057ee97b511ee0) by samadsamadi — CC-BY-4.0 — `w_jassm.glb`
 - "AGM-88 HARM transport cart" (https://sketchfab.com/3d-models/agm-88-harm-transport-cart-2c60dcae416e4af1a3d69914ff72a198) by Tiltow — CC-BY-4.0 — `w_agm88.glb`
 - "AIM-160A "Screamer"" (https://sketchfab.com/3d-models/aim-160a-screamer-5342783592684eaaa98238acae57fb0c) by Peter Primini — CC-BY-4.0 — `w_mald.glb`
-- "Harpy Drone" (https://sketchfab.com/3d-models/harpy-drone-84d8d2dc8ca14d64ac05b19e3c88b385) by KillCaptureDestroy — CC-BY-4.0 — `w_decoy_e.glb`
 - "RAFAEL AN/AAQ-28(V) Litening" (https://sketchfab.com/3d-models/rafael-anaaq-28v-litening-be90b1ca86bd46f4a87a86829d1e112c) by Vlad.Mojaev — CC-BY-4.0 — `w_pod.glb`
 - "GBU-39B Small Diameter Bomb Weapon System" (https://sketchfab.com/3d-models/gbu-39b-small-diameter-bomb-weapon-system-108c5bf859cb41c5b72163b4e2758f26) by KillCaptureDestroy — CC-BY-4.0 — `w_gbu39.glb`
 - "FIM-92 Stinger (перекрашена, развёрнута)" (https://sketchfab.com/3d-models/fim-92-stinger-925d78a613e847fcb2e7a60d54d3404c) by Pan_Ar4ik — CC-BY-4.0 — `mp_stinger.glb`
