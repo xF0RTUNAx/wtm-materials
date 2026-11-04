@@ -214,7 +214,7 @@ const META = {
   w_kab500kr: { weapon: 'kab500kr', lazy: true, stations: [] }, // КАБ-500Кр — собственная модель (tools/airdef-models/own/kab500kr)
   w_kab500l: { weapon: 'kab500l', lazy: true, stations: [] }, // КАБ-500Л — собственная модель (tools/airdef-models/own/kab500l)
   w_mk82: { weapon: 'mk82', stations: [] }, // Mk 82 — собственная модель (tools/airdef-models/own/mk82)
-  w_jassm: { weapon: 'jassm', stations: [] }, // AGM-158 JASSM
+  w_jassm: { weapon: 'jassm', wings: 'deploy', wingAx: { wing1: [0.215, -0.2535, -0.49, 65], wing2: [-0.215, -0.2535, -0.49, -65] }, hinge: { fin: [0, 0.1223, 1.81, 0, -0.1989, 0.98, 90] }, stations: [] }, // AGM-158 JASSM — собственная модель (tools/airdef-models/own/jassm)
   w_agm88: { weapon: ['agm88', 'aargm'], stations: [] }, // AGM-88 HARM (с тележки) - и для AARGM
   w_mald: { weapon: ['mald', 'quail'], stations: [] }, // ADM-160 MALD («AIM-160A Screamer»)
   w_decoy_e: { weapon: 'decoy_e', wings: 'deploy', wingAx: { wing1: [0.165, -0.2045, -0.4, 80], wing2: [-0.165, -0.2045, -0.4, -80] }, stations: [] }, // Ложная цель (имитатор) — собственная модель (tools/airdef-models/own/decoy_e)
@@ -460,6 +460,7 @@ const GLB_V_OWN = {
   w_kh28: '20261103t',
   w_agm45: '20261103u',
   w_decoy_e: '20261103w',
+  w_jassm: '20261103z',
 };
 GLB_V.hg_jack = '20261104b'; // подъёмник, ревизия 2: матовый, с износом
 GLB_V.w_pod = '20261104b'; // серый корпус контейнера, без комьев от упрощения
@@ -767,6 +768,13 @@ async function load(name, base) {
     else { const sx = Math.sign(d.x) || (part.name === 'wingA' ? 1 : -1); piv.userData.wa = [0, wrap(ang(sx * 0.98, 0.17) - ang(d.x, d.z))]; } // в сторону, со стреловидностью ~10°
     group.userData.wings = true; if ((META[name] || {}).flip) group.userData.flip = true; // висит крыльями вниз (УМПК): после сброса переворачивается на 180° (glideWings)
   }
+  // шарнир с произвольной осью (киль JASSM): x, y, z, ось, градусы раскрытия - из паспорта модели; раскрывается вместе с крыльями
+  const HG = (META[name] || {}).hinge;
+  if (HG) for (const part of group.children.filter((c) => HG[c.name])) {
+    const [px, py, pz, ax, ay, az, deg] = HG[part.name], piv = new THREE.Group(), n = Math.hypot(ax, ay, az) || 1; piv.name = part.name; piv.position.set(px, py, pz);
+    for (const m of part.children.slice()) { m.position.sub(piv.position); piv.add(m); }
+    group.remove(part); group.add(piv); piv.userData.ha = [ax / n, ay / n, az / n, deg * Math.PI / 180]; group.userData.wings = true;
+  }
   // дорисованные пилоны там, где у модели их нет
   const pyV = [], pyR = seatRec(name.replace(/@.*$/, '').replace(/_lo$/, '')); // одной сеткой: меньше вызовов отрисовки
   (mOf(name) || { stations: [] }).stations.forEach((p, i) => { const q = pyR && pyR.s[i]; if (q) { if (q[0] === 1) { const h = q[5] - q[2] + 0.06; pylonTris(pyV, h, 1.4, 0.12, q[1], q[2] + h / 2, q[3]); } } else if (p.py > 0) pylonTris(pyV, p.py, 1.6, 0.12, p.x, p.y + p.py / 2, p.z); });
@@ -879,10 +887,13 @@ let BASE = '', READY = null; const LOADING = new Set();
 // счёт загрузки (статус «Загружаем город» в меню): сколько моделей запрошено и сколько пришло (или не пришло)
 const LSTAT = { req: 0, done: 0 };
 export const modelStats = () => LSTAT;
+const FAIL_T = new Map(), FAIL_WAIT = 30000; // упавшую модель - не чаще раза в 30 с: иначе вызов каждый кадр (вертолёт, цель, объект) без сети давал поток запросов
 function start(name) {
-  if (LOADING.has(name)) return; LOADING.add(name); LSTAT.req++;
+  if (LOADING.has(name)) return;
+  const tf = FAIL_T.get(name); if (tf !== undefined && performance.now() - tf < FAIL_WAIT) return;
+  LOADING.add(name); LSTAT.req++;
   FAILED.delete(name);
-  load(name, BASE).then((g) => { LOADED[name] = g; LSTAT.done++; if (READY) READY(name); }).catch((e) => { LSTAT.done++; FAILED.add(name); LOADING.delete(name); console.warn('модель не загрузилась:', e.message); });
+  load(name, BASE).then((g) => { LOADED[name] = g; LSTAT.done++; FAIL_T.delete(name); if (READY) READY(name); }).catch((e) => { LSTAT.done++; FAILED.add(name); FAIL_T.set(name, performance.now()); LOADING.delete(name); console.warn('модель не загрузилась:', e.message); });
 }
 const glbVer = (name) => GLB_V[name] || '20261022b';
 // окраска для съёмки кадров меню и ролика (?test=1&camo=e_f15e:inferno,e_mig31:dragon): модель сборщика с новой развёрткой и картинкой окраски
@@ -944,7 +955,8 @@ export function podModel() { const n = Object.keys(META).find((k) => META[k].pod
 // труба ПЗРК (качающаяся часть пусковой у расчёта) или null
 export function launcherGlb(key) { const n = LAUNCHER[key]; return n && LOADED[n] ? LOADED[n].clone() : null; }
 // крылья планирующей бомбы: k = 0 - сложены (на подвеске), 1 - раскрыты (в полёте)
-export function setWings(obj, k) { if (obj.userData.wings) obj.traverse((n) => { const a = n.userData.wa; if (a) n.rotation.y = a[0] + (a[1] - a[0]) * k; }); }
+const HAX = new THREE.Vector3();
+export function setWings(obj, k) { if (obj.userData.wings) obj.traverse((n) => { const a = n.userData.wa; if (a) n.rotation.y = a[0] + (a[1] - a[0]) * k; const h = n.userData.ha; if (h) n.quaternion.setFromAxisAngle(HAX.set(h[0], h[1], h[2]), h[3] * k); }); }
 // планирующая бомба в полёте, вызывать после lookAt (aimed - lookAt был в этом кадре); dt - секунд кадра. Крылья раскрываются через 0,3 с за 0,8 с; у бомб с flip (УМПК висит крыльями вниз) -
 // сперва переворот на 180° вокруг оси (0,3…1,6 с), крылья - когда она уже вверх крыльями (1,3…2,1 с)
 export function glideWings(obj, dt, aimed = true) {
@@ -980,7 +992,7 @@ export function seatStores(root, plane, list, mat = pylonMat) {
   for (const { m, st, key, W, pod } of list) {
     const p = pod ? R.pod : R.s[st]; if (!p || !p[0]) continue;
     const s = seatWpn(key, W, pod); if (!s) continue;
-    const q = seatOne(p, s, v); m.position.set(q[0], q[1], q[2]); sig.push(`${pod ? 'pod' : st}:${pod ? '' : key}:${s[0]}`);
+    const q = seatOne(p, s, v); m.position.set(q[0], q[1], q[2]); sig.push(`${pod ? 'pod' : st}:${pod ? '' : key}:${s.join()}`); // весь размер: у простой фигуры и настоящей модели верх корпуса может совпасть
   }
   if (!v.length) return null;
   const k = sig.join('|'); let g = SEAT_GEO.get(k); if (!g) SEAT_GEO.set(k, g = geoOf(v));

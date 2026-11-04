@@ -309,6 +309,7 @@ runLesson('def', LI('def', 'd_gun'), (D) => { const u = C.S.units[0]; if (!u || 
 }
 { const stale = (await import(`../../games/airdef/models.js?v=${Deno.readTextFileSync(new URL('../../games/airdef.html', import.meta.url)).match(/main\.js\?v=([0-9a-z]+)/)[1]}`)).seatStale((await import(`../../games/airdef/arsenal.js?v=${Deno.readTextFileSync(new URL('../../games/airdef.html', import.meta.url)).match(/main\.js\?v=([0-9a-z]+)/)[1]}`)).AG);
   check(`таблица посадки подвески свежая${stale.length ? ` (пересчитать seats-gen.js: ${stale.join(', ')})` : ''}`, !stale.length); }
+{ const r = await new Deno.Command('deno', { args: ['run', '-A', new URL('../airdef-models/ktx-models.js', import.meta.url).pathname, '--check'], stdout: 'piped', stderr: 'piped' }).output(); const t = new TextDecoder().decode(r.stdout).trim(); check(`сжатые текстуры: ${t.split('\n').slice(0, 6).join('; ')}`, r.success); }
 C.toMenu(); frames(30);
 console.error = origErr;
 console.log(errors.length ? `\nОШИБКИ (${errors.length}):\n${errors.slice(0, 12).join('\n')}` : '\nошибок нет');

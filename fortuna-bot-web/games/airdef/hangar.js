@@ -111,7 +111,7 @@ export function createHangar(C, renderer) {
     wantView = q.view; build(pm, q.L); cur = q.key; lastL = q.L; want = null; built = true; dirty = true;
     if (!here && !modelFailed(keyOf(q))) retry = q; // замена или простые фигуры оружия - на время
     // телефон: просмотренные в этом меню и загруженные ради ангара самолёты не копятся
-    if (TOUCH && prev !== q.plane) { const kq = keyOf(q); looked = [kq, ...looked.filter((n) => n !== kq)]; for (const n of looked.slice(KEEP_LOOKED)) { looked = looked.filter((x) => x !== n); if (mine.has(n) && n !== kq) { mine.delete(n); releaseModel(n); } } }
+    if (TOUCH && prev !== q.plane) { const kq = keyOf(q); looked = [kq, ...looked.filter((n) => n !== kq)]; const shown = pm.skin ? `${pm.name}@${pm.skin}` : pm.name; for (const n of looked.slice(KEEP_LOOKED)) { looked = looked.filter((x) => x !== n); if (mine.has(n) && n !== kq && n !== shown) { mine.delete(n); releaseModel(n); } } } // shown: нужная не пришла, а на экране замена из списка - её текстуры заняты
   }
   // зал определяется размером самолёта; пока его картинка не загрузилась, стоит прежний зал. Не загрузилась совсем - самолёт в основном зале
   function hallReady(q) {
@@ -288,9 +288,13 @@ export function createHangar(C, renderer) {
       const old = document.getElementById('menuBg'); if (old) old.style.display = 'none';
       C.snd.ambient(true, C.setup.game);
       if (!texA) setView(viewKey);
+      if (!cur && !want && lastL) show(lastL); // самолёт освобождали на время боя
     },
     stop() {
-      on = false; mine.clear(); looked = []; document.body.classList.remove('hgOn', 'hgAir'); // с этого боя все загруженные модели - его, не освобождать
+      on = false;
+      // телефон: большие текстуры ангара в бою не нужны (бой берёт @hi только при настройке «максимальные»): освободить, вернёмся в меню - самолёт соберётся заново
+      if (TOUCH && !(C.texMax && C.texMax('battle')) && holder) { const hi = [...mine].filter((n) => n.endsWith('@hi')); if (hi.length) { while (holder.children.length) holder.remove(holder.children[0]); for (const n of hi) releaseModel(n); cur = null; built = false; } }
+      mine.clear(); looked = []; document.body.classList.remove('hgOn', 'hgAir'); // с этого боя все загруженные модели - его, не освобождать
       C.snd.ambient(false);
       if (rt) { rt.dispose(); rt = null; rtW = rtH = 0; } // бою память нужнее; вернёмся в меню - создадим заново
       for (const k in TEX) if (TEX[k].tex) TEX[k].tex.dispose();

@@ -902,7 +902,7 @@ function syncWorld(dt, t) {
     let g = planeMeshes.get(a.id);
     if (!g) {
       g = new THREE.Group(); g.rotation.order = 'YXZ';
-      if (a.role === 'decoy') { g.add(weaponMesh(a.decoyKey, AG[a.decoyKey], weaponGeo, wMat)); g.userData.flames = { update() {} }; }
+      if (a.role === 'decoy') { const dm = weaponMesh(a.decoyKey, AG[a.decoyKey], weaponGeo, wMat); setWings(dm, 1); /* в полёте крылья раскрыты */ g.add(dm); g.userData.flames = { update() {} }; }
       else if (a.heli) { // вертолёт налёта: ждём свою модель (пока грузится - не рисуем: иначе встал бы самолёт стороны), подвески - без отрисовки
         const hm = heliModel(a.plane); if (!hm) continue;
         hm.obj.traverse((o) => { if (o.isMesh && !o.userData.glass) o.castShadow = !!P.shadows; }); g.add(hm.obj); g.userData.flames = { update() {} };

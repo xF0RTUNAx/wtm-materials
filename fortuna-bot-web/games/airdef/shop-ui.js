@@ -175,7 +175,7 @@ export function createShop(C) {
     try { d = await callFn('airdef-shop', { player_id: keyNow(), action, key, ...extra }); } catch (e) { err = trIf(e.message) || tr('Нет связи с сайтом'); }
     S.act = false;
     // на игровом сервере надетое - из билета при подключении: соединение в меню закрыть, панель «Онлайн» подключится с новым (в комнате, в бою и в поиске боя не трогаем)
-    const N = C.netc; if (d && action === 'wear' && N && N.accChanged && !N.queued && !N.search) N.accChanged();
+    const N = C.netc; if (d && action === 'wear' && N && N.accChanged && !N.queued) N.accChanged();
     if (d && d.wallet) { const from = S.w ? S.w.crystals : 0; S.w = d.wallet; draw(); countTo(from, S.w.crystals); paint(); if (C.account && C.account.render) C.account.render(); if (C.hangar && C.hangar.refresh) C.hangar.refresh(); } else { S.err = err; draw(); S.err = ''; }
     return !!d;
   }

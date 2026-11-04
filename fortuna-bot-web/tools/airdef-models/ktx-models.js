@@ -32,6 +32,8 @@ const all = [...Deno.readDirSync(MD)].filter((e) => e.name.endsWith('.glb')).map
 const ONLY_BLD = args.includes('--bld');
 const todo = names.length ? names : ONLY_BLD ? all.filter(isBld) : all.filter((n) => !isSkip(n));
 for (const n of todo) if (!all.includes(n)) throw new Error(`нет модели ${n}`);
+// частичный прогон: кто ссылается на файлы этих моделей (alias), кодируется вместе с ними. Номера картинок при пересборке сдвигаются, и ссылка тихо начинала показывать чужую картинку (Gripen и ЗСУ на файле F-111, ревью 2026-11-04)
+if (names.length) { let old0 = {}; try { old0 = JSON.parse(Deno.readTextFileSync(OUT + 'index.json')); } catch (_) { /* нет */ } for (let grew = true; grew;) { grew = false; for (const [m, e] of Object.entries(old0)) if (!todo.includes(m) && all.includes(m) && Object.values(e.alias || {}).some((t) => todo.includes(t.split('.')[0]))) { todo.push(m); grew = true; console.log(`${m}: ссылается на перекодируемый файл, кодирую вместе`); } } }
 if (names.length) for (const n of names) if (isSkip(n)) console.log(`${n}: здание / объект — пропускаю (картинку читает city-render)`);
 
 // ── картинки glb ──
@@ -69,6 +71,17 @@ async function encode(im, out) {
     const t0 = performance.now(); await sh('basisu', a);
     return { ms: performance.now() - t0, alpha };
   } finally { for (const f of [tmp, png, `${tmp}.src`]) try { Deno.removeSync(f); } catch (_) { /* нет */ } }
+}
+
+// --check: ссылки index.json указывают на ту же картинку, файл на месте. Ничего не пишет, код выхода 1 при ошибке
+if (args.includes('--check')) {
+  const idx = JSON.parse(Deno.readTextFileSync(OUT + 'index.json')), imgs = new Map(), bad = [], of = (n) => { if (!imgs.has(n)) imgs.set(n, new Map(readGlb(n).map((im) => [im.i, createHash('sha1').update(im.data).digest('hex') + im.role]))); return imgs.get(n); };
+  for (const [m, e] of Object.entries(idx)) {
+    if (!all.includes(m)) continue;
+    for (const [i, t] of Object.entries(e.alias || {})) { const [tm, tj] = t.split('.'); let ok = false; try { Deno.statSync(`${OUT}${t}.ktx2`); ok = all.includes(tm) && of(m).get(+i) === of(tm).get(+tj); } catch (_) { ok = false; } if (!ok) bad.push(`${m}.${i} -> ${t}`); }
+    for (const i of e.img || []) { if ((e.alias || {})[i]) continue; try { Deno.statSync(`${OUT}${m}.${i}.ktx2`); } catch (_) { bad.push(`${m}.${i}: нет файла`); } }
+  }
+  console.log(bad.length ? `ссылки KTX с ошибкой (${bad.length}):\n${bad.join('\n')}` : 'ссылки KTX в порядке'); Deno.exit(bad.length ? 1 : 0);
 }
 
 // ── план: уникальные (по содержимому и роли) картинки ──

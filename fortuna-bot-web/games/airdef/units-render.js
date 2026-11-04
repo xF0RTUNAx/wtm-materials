@@ -397,7 +397,7 @@ export function mountWpnFlame(w, g, ev) {
       return;
     }
     if (W.kind !== 'agm' && W.kind !== 'arm' && W.kind !== 'cruise') return;
-    const nz = w.nzL = NZC[w.key] || nozzleOf(g, v.r, v.nzAx); if (!g.isMesh) NZC[w.key] = nz; // запоминаем только по готовой модели (не по временной)
+    const nz = w.nzL = v.nz && !stub ? { x: v.nz[0], y: v.nz[1], z: v.nz[2] } : NZC[w.key] || nozzleOf(g, v.r, v.nzAx); if (!g.isMesh) NZC[w.key] = nz; // nz - сопло задано в модели вручную (как у «Мульти-волны» ниже); запоминаем только по готовой модели (не по временной)
     g.userData.flame = rocketFlame(g, nz.z, v.r, motorOf(w.key, W.kind, false)); g.userData.flame.at(nz.x, nz.y, nz.z); g.userData.fl = W.kind === 'cruise' ? 'jet' : 'rocket'; g.userData.flame.owner = w;
     return;
   }

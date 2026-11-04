@@ -124,15 +124,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "Agm-158 - wings extended",
-  "author": "samadsamadi",
-  "url": "https://sketchfab.com/3d-models/agm-158-wings-extended-1b1f0f509249401297057ee97b511ee0",
-  "license": "CC-BY-4.0",
-  "files": [
-   "w_jassm"
-  ]
- },
- {
   "title": "AGM-88 HARM transport cart",
   "author": "Tiltow",
   "url": "https://sketchfab.com/3d-models/agm-88-harm-transport-cart-2c60dcae416e4af1a3d69914ff72a198",

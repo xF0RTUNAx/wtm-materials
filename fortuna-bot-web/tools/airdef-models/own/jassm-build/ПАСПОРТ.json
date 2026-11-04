@@ -1,0 +1,20 @@
+{
+ "key": "w_jassm",
+ "weapon": "jassm",
+ "name": "AGM-158 JASSM",
+ "rev": 1,
+ "files": {
+  "glb": "jassm.glb",
+  "blend": "jassm.blend",
+  "build": [
+   "build.py",
+   "jsm_geo.py",
+   "_decals.py",
+   "bake.py",
+   "_collide.py",
+   "_shots.py",
+   "_pose.py",
+   "deliver.py"
+  ]
+ }
+}
