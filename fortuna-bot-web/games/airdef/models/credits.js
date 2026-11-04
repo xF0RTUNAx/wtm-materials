@@ -747,15 +747,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "GBU-10 Laser Guided Bomb",
-  "author": "PhilCiborowski",
-  "url": "https://www.thingiverse.com/thing:5383701",
-  "license": "CC-BY-4.0",
-  "files": [
-   "w_gbu10"
-  ]
- },
- {
   "title": "ELTA 8222 ECM POD 1/48",
   "author": "Original_linny",
   "url": "https://www.thingiverse.com/thing:5360259",

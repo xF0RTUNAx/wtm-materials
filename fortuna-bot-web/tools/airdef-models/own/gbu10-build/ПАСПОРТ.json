@@ -1,0 +1,17 @@
+{
+ "key": "w_gbu10",
+ "weapon": "gbu10",
+ "name": "GBU-10 Paveway",
+ "rev": 1,
+ "files": {
+  "glb": "gbu10.glb",
+  "blend": "gbu10.blend",
+  "build": [
+   "build.py",
+   "_collide.py",
+   "bake_maps.py",
+   "paint.py",
+   "deliver.py"
+  ]
+ }
+}

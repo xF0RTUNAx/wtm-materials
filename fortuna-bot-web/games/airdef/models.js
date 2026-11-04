@@ -182,7 +182,7 @@ const META = {
   w_slam: { weapon: 'slam', lazy: true, stations: [] }, // AGM-84E SLAM - по UGM-84 Harpoon (FeriseCAT)
   w_jsow: { weapon: 'jsow', lazy: true, wings: 'deploy', stations: [] }, // AGM-154 JSOW - RickSlash
   w_kh101: { weapon: 'kh101', lazy: true, stations: [] },
-  w_gbu10: { weapon: 'gbu10', stations: [] }, // GBU-10 - PhilCiborowski (Thingiverse)
+  w_gbu10: { weapon: 'gbu10', stations: [] }, // GBU-10 Paveway — собственная модель (tools/airdef-models/own/gbu10)
   w_ecm: { weapon: ['ecm_w', 'ecm_e'], matte: true, stations: [] }, // станция помех ELTA 8222 - Original_linny (Thingiverse); у востока пока она же // Х-101 - HappyBattleSheep (Thingiverse)
   w_ecm_w: { weapon: [], lazy: true, matte: true, stations: [] }, // AN/ALQ-131 - собственная модель (tools/airdef-models/own/alq131); как «Сорбция» ниже - только значок в «Исследованиях» (Mark 2026-10-24: в бою остаётся ELTA - она с разрешённой лицензией, лишней работы не делаем)
   w_ecm_e: { weapon: [], lazy: true, matte: true, stations: [] }, // «Сорбция» (контейнер Су-27) - собственная модель (tools/airdef-models/own/sorbtsiya); пока только значок в «Исследованиях» (thumbs.html, ICON), поэтому weapon: [] - материал как у оружия, но ключу ecm_e не назначена: в бою у него по-прежнему w_ecm. Физически (на законцовки, 4,2 м) - отдельной задачей, AIRDEF_STATE «Открытые задачи»
@@ -208,6 +208,7 @@ const META = {
   w_kh58: { weapon: 'kh58', stations: [] }, // Х-58У - Narni_Tchereskov
   w_agm65b: { weapon: 'agm65b', stations: [] }, // AGM-65B - собственная модель (tools/airdef-models/own/agm65b)
   w_bomb1000: { weapon: 'bomb1000', stations: [], matte: true }, // AN-M65A1 - собственная модель (tools/airdef-models/own/bomb1000)
+  w_kab500l: { weapon: 'kab500l', lazy: true, stations: [] }, // КАБ-500Л — собственная модель (tools/airdef-models/own/kab500l)
   w_mk82: { weapon: 'mk82', stations: [] }, // Mk 82 — собственная модель (tools/airdef-models/own/mk82)
   w_jassm: { weapon: 'jassm', stations: [] }, // AGM-158 JASSM
   w_agm88: { weapon: ['agm88', 'aargm'], stations: [] }, // AGM-88 HARM (с тележки) - и для AARGM
@@ -446,6 +447,8 @@ const GLB_V_OWN = {
   w_fab1000: '20261103g',
   w_agm65b: '20261103k',
   w_mk82: '20261103l',
+  w_kab500l: '20261103m',
+  w_gbu10: '20261103n',
 };
 GLB_V.hg_jack = '20261104b'; // подъёмник, ревизия 2: матовый, с износом
 GLB_V.w_pod = '20261104b'; // серый корпус контейнера, без комьев от упрощения
