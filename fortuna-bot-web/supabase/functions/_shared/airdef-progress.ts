@@ -88,8 +88,8 @@ function autoResearch(P: Progress) {
 }
 // задания: начислить, что положено; кристаллы уйдут в кошелёк вместе с сохранением
 // deno-lint-ignore no-explicit-any
-function payQuest(P: Progress, x: Extra, out: { q?: any; pay?: Record<string, number> }): Extra {
-  const pay = out.pay ?? {};
+function payQuest(P: Progress, x: Extra, out: { q?: any; pay?: any }): Extra {
+  const pay: Record<string, number> = out.pay ?? {};
   P.xp += pay.xp || 0; P.silver += pay.silver || 0;
   return { ...x, quests: out.q, crystals: pay.gem || 0 };
 }
