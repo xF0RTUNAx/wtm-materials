@@ -8,16 +8,15 @@ import { ico, capsHtml } from './icons.js?v=20261103a';
 import { XP, SV, trMsg } from './progress-net.js?v=20261103a';
 import { tr, trIf, LANG } from './i18n.js?v=20261103a';
 
-// сцены категорий; пока — кадры из игры, рендеры сборщика заменят их тут же
-const BG_SCENE = { 'air.east': 'su57-front-morning', 'air.west': 'f15e-chase-sunset', 'air.heli': 'ka52-eve', 'wpn.east': 'su34-kh59m-sunset', 'wpn.west': 'tornado-gbu12-morning', 'pvo.east': 's400-unit', 'pvo.west': 'patriot-frost', 'strike.east': 'iskander-evening', 'strike.west': 'tomahawk-day' };
-for (const k in BG_SCENE) BG_SCENE[k] = `airdef/shots/${BG_SCENE[k]}.webp`;
+// сцены категорий (рендеры сборщика, Mark 2026-11-04): файл ветка_сторона.jpg, у «Авиации» ещё вертолёты
+const BG_SCENE = {}; for (const k of ['air.east', 'air.west', 'air.heli', 'wpn.east', 'wpn.west', 'pvo.east', 'pvo.west', 'strike.east', 'strike.west']) BG_SCENE[k] = `airdef/ui/research/${k.replace('.', '_')}.jpg`;
 
 const CSS = `
 #research { position: fixed; inset: 0; z-index: 40; display: none; background: #10140f; color: #e9e6dc; font: 13px 'Golos Text', -apple-system, sans-serif; overflow: hidden;
   --rt: calc(var(--sa-t, 0px) + var(--tg-t, 0px)); --hh: 58px; --cw: 184px; --ch: 82px; --gx: 26px; --gy: 14px; --line: #39422f; --line2: #2c3426; --ac: #e8b04a; --ac2: #f3c96f; --dim: #b3baa5; --dim2: #8f9884; --ok: #86c06c; --xp: #9fd3ff; }
 #research.on { display: block; }
 #research .ic { width: 1.15em; height: 1.15em; vertical-align: -0.17em; flex: none; }
-#research .rbg { position: absolute; left: -3%; right: -3%; top: -6%; bottom: -6%; background: center / cover no-repeat; opacity: 0; transition: opacity .8s ease; will-change: transform; } #research .rbg.on { opacity: 1; } #research .rui { position: absolute; inset: 0; background: rgba(10,12,8,.55); } /* запас сверх экрана — на сдвиг фона при прокрутке; затемнение .rui — пока кадры из игры */
+#research .rbg { position: absolute; left: -3%; right: -3%; top: -6%; bottom: -6%; background: center / cover no-repeat; opacity: 0; transition: opacity .8s ease; will-change: transform; } #research .rbg.on { opacity: 1; } #research .rui { position: absolute; inset: 0; } /* запас сверх экрана — на сдвиг фона при прокрутке */
 @media (max-height: 460px) { #research .rbg { top: -12%; bottom: -12%; } }
 #research .top { position: absolute; left: 0; right: 0; top: var(--rt); height: var(--hh); display: flex; align-items: center; gap: 14px; padding: 0 18px; padding-left: max(18px, var(--sa-l, 0px)); background: linear-gradient(#0b0e0a, rgba(11,14,10,.86)); z-index: 5; }
 #research::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: var(--rt); background: #0b0e0a; z-index: 5; }

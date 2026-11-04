@@ -2,7 +2,7 @@
 // Задания: пул ежедневных и еженедельных, очки маршрута недели, награды и правила счёта (экран — quests.js). Без DOM: те же правила у игры и у функций Supabase
 // (копия в supabase/functions/_shared/airdef, tools/airdef-headless/sync-shared.js).
 // Ориентир наград: час в «Реализме» ≈ 4300 опыта и столько же серебра, в «Аркаде» — вдвое меньше (progress.js battleReward).
-// Mark 2026-11-04: всё засчитывается только в онлайне (итог подписан игровым сервером), кроме заданий на «Оборону» (solo).
+// Mark 2026-11-04: всё засчитывается только в быстрых онлайн-боях (итог подписан игровым сервером, своя комната не считается), кроме заданий на «Оборону» (solo).
 // g — откуда задание: any — любая сторона, pvo — за ПВО, air — за авиацию и удар. c — счётчик боя (onlineCounters, questApply).
 export const DAILY_N = 3, WEEKLY_N = 5, PTS_DAILY = 10, PTS_WEEKLY = 20;
 export const CRATE = { silver: 150 }, CASE = { gem: 1, silver: 300 }; // за все три сегодня, за все пять недели
@@ -145,10 +145,11 @@ export function defenseCounters(ev, seconds, nowSec, wavesAll = DEF_WAVES) {
   const waves = Math.min(ev.waves ? ev.waves.length : 0, wavesAll, Math.floor(seconds / DEF_WAVE_MIN));
   return { waves, full: ev.win && waves >= wavesAll ? 1 : 0, soloStart: nowSec - seconds, soloEnd: nowSec };
 }
-// подписанный итог онлайн-боя → счётчики (бой без очков и сбитых не считается: null). Поля, которых нет у старого игрового сервера, просто дают 0
+// подписанный итог онлайн-боя → счётчики. Mark 2026-11-04: считаются все быстрые бои, бои в своей комнате в счёт не идут (rt есть только у быстрого боя).
+// null — не считается: своя комната или бой без очков и сбитых. Поля, которых нет у старого игрового сервера, просто дают 0
 export function onlineCounters(p) {
   const e = (p && p.ev && typeof p.ev === 'object' ? p.ev : {}), mm = p.mm === 1, pvo = p.team === 'pvo', k = int(p.k), icp = int(e.icp), drones = int(e.icpD);
-  if (!(Number(p.s) > 0) && !(k > 0)) return null;
+  if (!p.rt || (!(Number(p.s) > 0) && !(k > 0))) return null;
   return { online: 1, play: 1, min: Math.max(0, Math.min(60, Number(e.min) || 0)), real: p.mode === 'real' ? 1 : 0, top: e.top ? 1 : 0,
     downs: mm ? icp : pvo ? k : 0, kill3: !mm && pvo && k >= 3 ? 1 : 0, intc: mm ? Math.max(0, icp - drones) : 0, cm: mm ? int(e.icpC) + drones : 0, tbm: mm ? int(e.icpT) : 0,
     obj: !mm && !pvo ? int(e.obj ?? (Array.isArray(e.targets) ? e.targets.length : 0)) : 0, sams: !mm && !pvo ? k : 0, bld: mm ? int(e.bld) : 0, mwsam: mm ? int(e.samk) : 0 };

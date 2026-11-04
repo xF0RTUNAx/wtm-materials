@@ -19,16 +19,17 @@ ok(ROUTE_MAX === 250 && 21 * PTS_DAILY + 5 * PTS_WEEKLY === 310, 'неделя 3
 const T = weekTotals(); ok(T.gemsMax <= 2 && T.all.silver > 6000 && T.all.silver < 9000, `неделя в среднем: ${Math.round(T.all.silver)} серебра, ${Math.round(T.all.xp)} опыта`);
 
 // ── счётчики подписанного итога ──
-const air = onlineCounters({ team: 'air', mode: 'real', k: 2, ev: { min: 8.5, obj: 3, top: 1 } });
+const air = onlineCounters({ rt: {}, team: 'air', mode: 'real', k: 2, ev: { min: 8.5, obj: 3, top: 1 } });
+ok(onlineCounters({ team: 'air', mode: 'real', k: 2, s: 300, ev: { min: 8.5, obj: 3 } }) === null, 'своя комната (нет rt) не считается');
 ok(air.online === 1 && air.play === 1 && air.real === 1 && air.sams === 2 && air.obj === 3 && air.top === 1 && air.downs === 0 && air.kill3 === 0, 'онлайн за авиацию');
-const pvo = onlineCounters({ team: 'pvo', mode: 'arcade', k: 3, s: 150, ev: { min: 8 } });
+const pvo = onlineCounters({ rt: {}, team: 'pvo', mode: 'arcade', k: 3, s: 150, ev: { min: 8 } });
 ok(pvo.downs === 3 && pvo.kill3 === 1 && pvo.real === 0 && pvo.sams === 0 && pvo.obj === 0, 'онлайн за ПВО: 3 самолёта за бой');
-ok(onlineCounters({ team: 'pvo', k: 2, s: 100, ev: {} }).kill3 === 0, 'два самолёта — не три');
-const mm = onlineCounters({ mm: 1, team: 'air', k: 20, ev: { min: 12, icp: 15, icpC: 4, icpD: 3, icpT: 2, samk: 5, bld: 7 } });
+ok(onlineCounters({ rt: {}, team: 'pvo', k: 2, s: 100, ev: {} }).kill3 === 0, 'два самолёта — не три');
+const mm = onlineCounters({ rt: {}, mm: 1, team: 'air', k: 20, ev: { min: 12, icp: 15, icpC: 4, icpD: 3, icpT: 2, samk: 5, bld: 7 } });
 ok(mm.downs === 15 && mm.intc === 12 && mm.cm === 7 && mm.tbm === 2 && mm.bld === 7 && mm.mwsam === 5 && mm.sams === 0 && mm.kill3 === 0, '«Мульти-волна»: перехваты по видам, постройки, комплексы');
-ok(onlineCounters({ team: 'air', k: 0, s: 0, ev: { min: 8 } }) === null, 'бой без очков и сбитых не считается');
-ok(onlineCounters({ team: 'pvo', k: 0, s: 40, ev: { min: 8 } }).play === 1, 'бой с очками считается');
-const old = onlineCounters({ team: 'air', k: 1, ev: { min: 8, sams: 1 } }); ok(old.obj === 0 && old.top === 0 && old.sams === 1, 'итог старого игрового сервера не ломает счёт');
+ok(onlineCounters({ rt: {}, team: 'air', k: 0, s: 0, ev: { min: 8 } }) === null, 'бой без очков и сбитых не считается');
+ok(onlineCounters({ rt: {}, team: 'pvo', k: 0, s: 40, ev: { min: 8 } }).play === 1, 'бой с очками считается');
+const old = onlineCounters({ rt: {}, team: 'air', k: 1, ev: { min: 8, sams: 1 } }); ok(old.obj === 0 && old.top === 0 && old.sams === 1, 'итог старого игрового сервера не ломает счёт');
 
 // ── «Оборона»: итог присылает браузер ──
 { const W = 6, fast = defenseCounters({ waves: [1, 2, 3, 4, 5, 6], win: true }, 5, 1000, W), slow = defenseCounters({ waves: [1, 2, 3, 4, 5, 6], win: true }, 600, 1000, W), lost = defenseCounters({ waves: [1, 2], win: false }, 600, 1000, W), over = defenseCounters({ waves: Array(12).fill(1), win: true }, 3000, 4000, W);
@@ -70,7 +71,7 @@ ok(!questClaim(q, WED, 'd:нет').ok && !questClaim(q, WED, 'w:нет').ok && !
   const st = questRoll(questRoll({}, WED).q, WED); ok(!Object.keys(st.pay).length && st.q.day === WED, 'тот же день — ничего не меняется'); }
 
 // ── сервер на поддельном прогрессе ──
-{ const Pr = toProgress(null), x = extraOf(null), ev = { min: 10, targets: [1], sams: 1, win: true }; const c = onlineCounters({ team: 'air', mode: 'arcade', k: 1, ev: { min: 10, obj: 1 } });
+{ const Pr = toProgress(null), x = extraOf(null), ev = { min: 10, targets: [1], sams: 1, win: true }; const c = onlineCounters({ rt: {}, team: 'air', mode: 'arcade', k: 1, ev: { min: 10, obj: 1 } });
   const r = credit(Pr, x, ev, { real: false, online: true, today: WED, quest: c }); const q1 = r.extra.quests;
   ok(q1.day === WED && r.extra.solo_day === WED && r.extra.solo_xp === r.reward.xp, 'бой сохраняет и дневной опыт, и задания');
   const xpT = q1.d.find((t) => t.id === 'xp') || q1.w.find((t) => t.id === 'xp'); ok(!xpT || xpT.n === Math.min(r.reward.xp, xpT.n), 'опыт боя идёт в задание на опыт');
