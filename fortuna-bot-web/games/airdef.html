@@ -96,7 +96,7 @@
   /* аккаунт игры в левом верхнем углу меню (account-ui.js): ник или «Войти», ниже — «Перенести прогресс», если касается */
   .accBox { display: flex; flex-direction: column; } .accBox:empty { display: none; }
   .accBox button { display: flex; align-items: center; gap: 7px; width: 100%; box-sizing: border-box; text-align: left; background: none; border: 0; padding: 5px 16px; color: #e9e6dc; font: 500 13px 'Golos Text', -apple-system, sans-serif; cursor: pointer; }
-  .accBox button:hover { background: #222a1f; } .accBox .ic { width: 1.15em; height: 1.15em; flex: none; color: #e8b04a; } .accBox .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+  .accBox button:hover { background: #222a1f; } .accBox .av { width: 1.9em; height: 1.9em; flex: none; object-fit: cover; box-shadow: 0 0 0 1px #8a7232; } .accBox .ic { width: 1.15em; height: 1.15em; flex: none; color: #e8b04a; } .accBox .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
   .accBox button.in { color: #e8b04a; } .accBox button.xf { color: #f3c96f; font-size: 12.5px; padding-top: 2px; padding-bottom: 7px; }
   .ratLine { color: #f3c96f; } .ratLine b { font-family: 'JetBrains Mono', monospace; color: #fff; }
   /* «Магазин» (Mark 2026-10-26, «Витрина» — shop-ui.js): кристаллы и окраски сезона; справа выглядывает самолёт в окраске сезона */
@@ -439,7 +439,7 @@
   body.short #mnPad { width: 70px; height: 70px; } body.short #mapNav { padding: 6px 8px; } body.short #mnZ { width: 100px; }
   /* онлайн: лобби, ожидание поиска, выбор связки лётчиком */
   .adteams { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; } .adteam { background: rgba(255,255,255,.04); border-radius: 10px; padding: 4px 8px 8px; }
-  .adp { font-size: 12.5px; padding: 3px 0; } .adp.me b { color: #fdba74; } .adp .dim { opacity: .6; font-size: 11px; } .okc { color: #4ade80; font-weight: 800; }
+  .adp { font-size: 12.5px; padding: 3px 0; } .adav { width: 20px; height: 20px; object-fit: cover; vertical-align: -5px; margin-right: 6px; box-shadow: 0 0 0 1px #8a7232; } .adp.me b { color: #fdba74; } .adp .dim { opacity: .6; font-size: 11px; } .okc { color: #4ade80; font-weight: 800; }
   .adcode { letter-spacing: .15em; color: #fde68a; font-size: 15px; }
   .mini { border: 1px solid rgba(255,255,255,.25); background: rgba(255,255,255,.07); color: #fff; border-radius: 7px; padding: 3px 8px; font-size: 11.5px; cursor: pointer; margin: 3px 2px 0 0; }
   #netPlan { position: fixed; z-index: 14; top: calc(var(--top) + 10px); left: max(12px, var(--sa-l)); width: min(360px, calc(100vw - 24px)); max-height: calc(100% - var(--top) - 24px); overflow-y: auto; display: none;
@@ -819,7 +819,7 @@
     <button id="qstBtn" style="--i:2" title="Задания: ежедневные и еженедельные"><span id="qstIco"></span><span class="tx"><b>Задания</b><small id="qstSub"></small></span><span class="sg3" id="qstSeg"></span><i class="dot" id="qstDot"></i></button>
     <button id="evtBtn" style="--i:3" title="Событие: вертолёты над «Туманной топью»"><span id="evtIco"></span><span class="tx"><b>Туманная топь</b><small id="evtLeft"></small></span></button>
     <button id="ratBtn" style="--i:4" title="Рейтинг: таблица сезона"><span id="ratIco"></span><span class="tx"><b>Рейтинг</b><small id="ratSub"></small></span><i class="pl" id="ratPl"></i></button>
-    <button id="shopBtn" style="--i:5" title="Магазин: окраски сезона за кристаллы"><span id="shopIco"></span><span class="tx"><b>Магазин</b><small id="shopSub">окраски сезона</small></span><img class="thumb" src="airdef/shop/e_mig31_dragon_s.webp" alt=""></button></div>
+    <button id="shopBtn" style="--i:5" title="Магазин: окраски и аватарки за кристаллы"><span id="shopIco"></span><span class="tx"><b>Магазин</b><small id="shopSub">окраски и аватарки</small></span><img class="thumb" src="airdef/shop/e_mig31_dragon_s.webp" alt=""></button></div>
   <nav class="mrail" aria-label="Режимы игры">
     <div class="mlogo">AIR SUPERIORITY</div>
     <div class="accBox" id="accBox"></div>

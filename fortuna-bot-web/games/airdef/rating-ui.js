@@ -11,6 +11,7 @@
 import { ico } from './icons.js?v=20261104a';
 import { tr, trIf, LANG } from './i18n.js?v=20261104a';
 import { activeAcc, gameAcc, rating as fetchRating, profile as fetchProfile, transferOk } from './account.js?v=20261104a';
+import { avaSrc, ownAva } from './avatar.js?v=20261104a';
 import { NODE } from './progress.js?v=20261104a';
 
 const LOC = LANG === 'en' ? 'en-US' : 'ru-RU';
@@ -47,7 +48,8 @@ const CSS = `
 #ratWin button.row:hover { background: #171d14; } #ratWin button.row.me:hover { background: #33331c; } #ratWin .row .go { width: 10px; height: 10px; color: #5d6a52; }
 #ratWin .mecard .nk.lnk { background: none; border: 0; padding: 0; color: inherit; font: inherit; text-align: left; cursor: pointer; } #ratWin .mecard .nk.lnk u { text-decoration: underline dotted #6b7363; text-underline-offset: 3px; }
 #ratWin .who { display: flex; align-items: center; gap: 8px; min-width: 0; } #ratWin .who span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-#ratWin .av { width: 24px; height: 24px; display: grid; place-items: center; font: 600 10.5px 'Golos Text', sans-serif; background: #2c3526; flex: none; }
+#ratWin .av { width: 26px; height: 26px; background: #2c3526; flex: none; overflow: hidden; } #ratWin .av img, #ratWin .ava img { display: block; width: 100%; height: 100%; object-fit: cover; }
+#ratWin .mecard .av { display: inline-block; vertical-align: middle; margin-right: 7px; }
 #ratWin .mecard { flex: none; margin: 12px; padding: 10px 12px; background: #1a2014; border: 1px solid #4b5640; display: grid; grid-template-columns: auto 1fr auto; gap: 4px 12px; align-items: center; }
 #ratWin .mecard .big { font: 600 28px 'Oswald', sans-serif; color: var(--amber2); grid-row: span 2; } #ratWin .mecard .nk { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 #ratWin .mecard small { color: var(--dim); font-size: 12.5px; }
@@ -76,8 +78,8 @@ const CSS = `
 #ratWin .pbody { flex: 1 1 auto; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; display: block; }
 #ratWin .pbody .col { display: grid; align-content: start; min-width: 0; }
 #ratWin .hero { padding: 14px 12px; display: grid; grid-template-columns: 56px minmax(0, 1fr) auto; gap: 2px 12px; align-items: center; }
-#ratWin .ava { width: 56px; height: 56px; grid-row: span 2; display: grid; place-items: center; font: 600 21px 'Oswald', sans-serif; background: #2c3526; border: 1px solid #4b5640; }
-#ratWin .hero.g1 .ava { border-color: #f5d06a; color: #f5d06a; } #ratWin .hero.g2 .ava { border-color: #dadcd2; } #ratWin .hero.g3 .ava { border-color: #d29a62; }
+#ratWin .ava { width: 56px; height: 56px; grid-row: span 2; background: #2c3526; border: 1px solid #4b5640; overflow: hidden; }
+#ratWin .hero.g1 .ava { border-color: #f5d06a; } #ratWin .hero.g2 .ava { border-color: #dadcd2; } #ratWin .hero.g3 .ava { border-color: #d29a62; }
 #ratWin .hero .nick { font: 500 24px/1.15 'Oswald', sans-serif; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; align-self: end; min-width: 0; }
 #ratWin .hero .since { font-size: 13px; color: var(--dim); align-self: start; }
 #ratWin .place { grid-row: span 2; display: grid; justify-items: end; gap: 3px; text-align: right; }
@@ -108,7 +110,7 @@ const CSS = `
 #ratWin .bd.g1 .ic { color: #f5d06a; } #ratWin .bd.g2 .ic { color: #dadcd2; } #ratWin .bd.g3 .ic { color: #d29a62; } #ratWin .bd.t10 .ic { color: var(--amber2); }
 #ratWin .empty { font-size: 13.5px; color: var(--dim); }
 #ratWin .acts { display: flex; gap: 8px; flex-wrap: wrap; } #ratWin .msg + .sec { flex: none; }
-@media (max-width: 420px) { #ratWin .hero { grid-template-columns: 48px minmax(0, 1fr) auto; gap: 2px 10px; } #ratWin .ava { width: 48px; height: 48px; font-size: 18px; } #ratWin .hero .nick { font-size: 21px; } #ratWin .place .pn { font-size: 30px; }
+@media (max-width: 420px) { #ratWin .hero { grid-template-columns: 48px minmax(0, 1fr) auto; gap: 2px 10px; } #ratWin .ava { width: 48px; height: 48px; } #ratWin .hero .nick { font-size: 21px; } #ratWin .place .pn { font-size: 30px; }
   #ratWin .mt td, #ratWin .mt th { padding-left: 4px; } #ratWin .mt td:first-child .ic { display: none; } }
 /* телефон горизонтально: окно во всю высоту, две колонки — каждая листается сама */
 @media (orientation: landscape) and (max-height: 500px) {
@@ -116,7 +118,7 @@ const CSS = `
   #ratWin .win.prof .pbody { display: grid; grid-template-columns: 1fr 1fr; overflow: hidden; }
   #ratWin .win.prof .col { min-height: 0; }
   #ratWin .win.prof .col { overflow-y: auto; -webkit-overflow-scrolling: touch; } #ratWin .win.prof .col + .col { border-left: 1px solid var(--line); } #ratWin .win.prof .col > .sec:first-child { border-top: 0; }
-  #ratWin .win.prof .hero { grid-template-columns: 44px minmax(0, 1fr) auto; padding: 10px 12px; } #ratWin .win.prof .ava { width: 44px; height: 44px; font-size: 17px; }
+  #ratWin .win.prof .hero { grid-template-columns: 44px minmax(0, 1fr) auto; padding: 10px 12px; } #ratWin .win.prof .ava { width: 44px; height: 44px; }
   #ratWin .win.prof .hero .nick { font-size: 20px; } #ratWin .win.prof .place .pn { font-size: 28px; }
 }
 @media (max-height: 460px) { #ratWin .whead { padding: 6px 10px; } #ratWin .row { padding-top: 4px; padding-bottom: 4px; } #ratWin .mecard { margin: 8px 10px; padding: 7px 10px; } #ratWin .mecard .big { font-size: 24px; } #ratWin td { padding: 5px 8px; } }
@@ -126,7 +128,6 @@ const CSS = `
 const rankOf = (k) => (k >= 1.075 ? 'IV' : k >= 1.04 ? 'III' : k >= 1.015 ? 'II' : 'I');
 const pad2 = (v) => String(v).padStart(2, '0');
 const when = (at) => { const d = new Date(at); return isNaN(d) ? '' : `${pad2(d.getDate())}.${pad2(d.getMonth() + 1)}, ${pad2(d.getHours())}:${pad2(d.getMinutes())}`; };
-const initials = (nick) => (String(nick).match(/[\p{L}\p{N}]/gu) || ['?']).slice(0, 2).join('').toUpperCase();
 
 export function createRating(C) {
   const style = document.createElement('style'); style.textContent = CSS; if (document.head) document.head.appendChild(style); // (заглушка DOM стенда — без head/body)
@@ -189,12 +190,13 @@ export function createRating(C) {
     const d = S.data, m = mine(), acc = activeAcc();
     const title = `${ico('rating')}${tr('Рейтинг')}<button class="qbtn${seen() ? ' seen' : ''}" data-a="help" aria-expanded="${S.q}" title="${tr('Как начисляются очки')}">?</button>`;
     const pop = S.q ? `<div class="qpop"><div class="qh"><b>${tr('Как начисляются очки')}</b><button class="rx" data-a="helpx" aria-label="${tr('Закрыть')}">${ico('close')}</button></div><ul>${HELP.map((h) => `<li>${h}</li>`).join('')}</ul></div>` : '';
-    const rows = d.top.map((r, i) => `<button type="button" class="row${r.place <= 3 ? ' g' + r.place : ''}${m && m.place === r.place ? ' me' : ''}" data-a="prof" data-i="${i}"><span class="p">${r.place}</span><span class="who"><span class="av">${esc(initials(r.nick))}</span><span>${esc(r.nick)}</span></span><span class="v">${nf(r.points)}</span>${ico('tri', 'go')}</button>`).join('')
+    const isMe = (r) => !!(m && m.nick) && String(m.nick).toLowerCase() === String(r.nick).toLowerCase(); // не по месту: при равных очках места совпадают
+    const rows = d.top.map((r, i) => `<button type="button" class="row${r.place <= 3 ? ' g' + r.place : ''}${isMe(r) ? ' me' : ''}" data-a="prof" data-i="${i}"><span class="p">${r.place}</span><span class="who"><span class="av"><img src="${avaSrc(isMe(r) ? ownAva(C, r.ava) : r.ava)}" alt="" loading="lazy"></span><span>${esc(r.nick)}</span></span><span class="v">${nf(r.points)}</span>${ico('tri', 'go')}</button>`).join('')
       + (d.total > d.top.length ? '<div class="row gap">…</div>' : '') + (d.top.length ? '' : `<div class="msg"><span>${tr('В этом сезоне ещё нет результатов.')}</span></div>`);
     let card;
     if (acc && acc.kind === 'airdef') {
       const me = d.me || { nick: acc.nick, place: null, points: 0, n: 0 };
-      card = `<div class="mecard"><span class="big">${me.place || '—'}</span><button type="button" class="nk lnk" data-a="profme" title="${tr('Профиль')}"><u>${esc(me.nick || acc.nick)}</u> · <b class="num">${nf(me.points || 0)}</b></button><button class="btnm" data-a="mine">${tr('Мои бои')}</button>
+      card = `<div class="mecard"><span class="big">${me.place || '—'}</span><button type="button" class="nk lnk" data-a="profme" title="${tr('Профиль')}"><span class="av"><img src="${avaSrc(ownAva(C, me.ava))}" alt=""></span><u>${esc(me.nick || acc.nick)}</u> · <b class="num">${nf(me.points || 0)}</b></button><button class="btnm" data-a="mine">${tr('Мои бои')}</button>
         <small>${tr('засчитано {0} из {1}', [me.n || 0, SLOTS])}</small><span class="slots">${Array.from({ length: SLOTS }, (_, i) => `<i${i < (me.n || 0) ? ' class="on"' : ''}></i>`).join('')}</span></div>`;
     } else {
       card = `<div class="mecard no"><span>${tr('В рейтинге — только аккаунты игры')}</span><span class="acts"><button class="btnm" data-a="login">${tr('Войти')}</button>${transferOk() ? `<button class="btnm alt" data-a="xfer">${tr('Перенести прогресс')}</button>` : ''}</span></div>`;
@@ -243,7 +245,7 @@ export function createRating(C) {
   const hhmm = (at) => { const d = new Date(at); return isNaN(d) ? '' : `${pad2(d.getHours())}:${pad2(d.getMinutes())}`; };
   function profParts(P, season, own) {
     const per = S.per === 'all' ? 'all' : 'season', g = P.place && P.place <= 3 ? ' g' + P.place : '';
-    const hero = `<div class="hero${g}"><span class="ava">${esc(initials(P.nick))}</span><span class="nick">${esc(P.nick)}</span>
+    const hero = `<div class="hero${g}"><span class="ava"><img src="${avaSrc(own ? ownAva(C, P.ava) : P.ava)}" alt=""></span><span class="nick">${esc(P.nick)}</span>
       <span class="place"><span class="lb">${tr('место')}</span><span class="pn">${P.place && P.place <= 3 ? ico('rating') : ''}${P.place || '—'}</span><span class="pts">${nf(P.points || 0)}</span><span class="slots">${Array.from({ length: SLOTS }, (_, i) => `<i${i < (P.n || 0) ? ' class="on"' : ''}></i>`).join('')}</span></span>
       <span class="since">${tr('в игре с {0}', [ddmm(P.since, true)])}<br>${tr('онлайн-боёв: {0}', [nf(P.games || 0)])}</span>
       ${own ? `<span class="mine"><button class="btnm" data-a="mine">${tr('Мои бои')}</button><small>${tr('Так ваш профиль видят другие игроки')}</small></span>` : ''}</div>`;
@@ -343,7 +345,7 @@ export function createRating(C) {
       const b0 = (m.battles || [])[0];
       return { place: m.place, prev, n: m.n, counted: b0 ? !!b0.counted : true };
     },
-    touch, paint,
+    touch, paint, me: mine,
     // сменился аккаунт / засчитан бой: данные устарели
     reset() {
       if (S.key !== keyNow()) S.data = null; S.at = 0; paint();

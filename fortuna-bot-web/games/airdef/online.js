@@ -12,6 +12,7 @@ import { AG, SAM, CARRIERS, LOADOUTS, PLANES, ERAS, loadoutRole } from './arsena
 import { MODES } from './sim/strike.js?v=20261104a';
 import { ICON, ico } from './icons.js?v=20261104a';
 import { activeAcc, siteAcc, siteNoProgress } from './account.js?v=20261104a';
+import { avaSrc } from './avatar.js?v=20261104a';
 import { boardOl, boardMw } from './endscr.js?v=20261104a';
 import { createMM } from './mm.js?v=20261104a';
 
@@ -63,7 +64,7 @@ export function createOnline(C, ctrls) {
     const me = N.myPlayer(), host = r.host === (N.me && N.me.id);
     const TN = r.kind === 'multi' ? MW.TEAM_NAME : O.ROLE_NAMES, TT = r.kind === 'multi' ? MW.TEAMS : ['air', 'pvo'];
     const col = (t) => `<div class="adteam"><div class="cat-h">${TN[t]} · ${r.players.filter((p) => p.team === t).length}/${r.size}</div>` +
-      r.players.filter((p) => p.team === t).map((p) => `<div class="adp ${p.id === (me && me.id) ? 'me' : ''}"><b>${pnm(p)}</b>${p.bot ? ` <span class="dim">${tr('бот')}</span>` : ''}${p.ready ? ` <span class="okc">${ico('ok', 'ii')}</span>` : ''}${host && p.bot ? ` <button class="mini" data-kick="${p.id}">×</button>` : ''}</div>`).join('') +
+      r.players.filter((p) => p.team === t).map((p) => `<div class="adp ${p.id === (me && me.id) ? 'me' : ''}">${p.bot ? '' : `<img class="adav" src="${avaSrc(p.ava)}" alt="">`}<b>${pnm(p)}</b>${p.bot ? ` <span class="dim">${tr('бот')}</span>` : ''}${p.ready ? ` <span class="okc">${ico('ok', 'ii')}</span>` : ''}${host && p.bot ? ` <button class="mini" data-kick="${p.id}">×</button>` : ''}</div>`).join('') +
       (me && me.team !== t ? `<button class="mini" data-oa="team" data-t="${t}">${tr('Перейти сюда')}</button>` : '') + (host ? ` <button class="mini" data-bot="${t}">${tr('+ бот')}</button>` : '') + '</div>';
     el.innerHTML = `<div class="cat-h">${tr('Комната <b class="adcode">{0}</b>', [r.code])} <button class="mini" data-oa="invite">${tr('Пригласить')}</button> <button class="mini" data-oa="leave">${tr('Выйти')}</button></div>
       <p class="hint">${r.kind === 'multi' ? tr('Мульти-волна · два раунда со сменой сторон · {0} · {1}×{2}{3}', [MODES[r.mode].name, r.size, r.size, r.fill ? tr(' · пустые места — боты') : '']) /* без эпохи: уровень ботов скрытый */

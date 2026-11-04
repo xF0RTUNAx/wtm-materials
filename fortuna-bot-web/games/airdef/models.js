@@ -305,6 +305,7 @@ const FX_CREDITS = [
   { title: tr('Иконки управления'), author: 'Delapouite, Lorc, Skoll (game-icons.net)', url: 'https://game-icons.net', license: 'CC BY 3.0', licenseUrl: 'https://creativecommons.org/licenses/by/3.0/', files: ['icons.js'] },
   { title: 'Explosion sprite sheets', author: 'ohyhei', url: 'https://ohyhei.itch.io/a-free-explosion-sprite-sheets-asset-on-itch', license: tr('бесплатно, с указанием автора'), licenseUrl: 'https://ohyhei.itch.io/a-free-explosion-sprite-sheets-asset-on-itch', files: ['fx/explosion*.png'] },
   { title: 'Explosion FX Free', author: 'heyheythere', url: 'https://heyheythere.itch.io/explosion-fx-free', license: 'CC BY 4.0', files: ['fx/blast*.png'] },
+  { title: 'Lockheed Martin F-22A Raptor', author: 'Spark_Customs', url: 'https://sketchfab.com/3d-models/lockheed-martin-f-22a-raptor-e2aabcdfe5c947fa95aa23aec5370c5b', license: 'CC BY 4.0', files: ['ui/avatars/a04*.webp'] }, // сетка аватарки со своей окраской
 ];
 export const MODEL_CREDITS = [...CREDITS, TEX_CREDIT, PH_CREDIT, ...FX_CREDITS].map((c) => ({ ...c, licenseUrl: c.licenseUrl || (/CC0/.test(c.license) ? 'https://creativecommons.org/publicdomain/zero/1.0/' : 'http://creativecommons.org/licenses/by/4.0/') }));
 const LOADED = {};

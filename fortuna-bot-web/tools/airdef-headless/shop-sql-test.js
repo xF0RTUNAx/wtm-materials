@@ -2,7 +2,7 @@
 // надеть и снять; чужую, «будущую» и уже свою окраску не купить, кристаллы в минус не уходят, повторное нажатие не списывает дважды; права.
 //   deno run -A tools/airdef-headless/shop-sql-test.js
 import { PGlite } from 'npm:@electric-sql/pglite@0.2.17';
-import { CAMO_PRICE, camosOut } from '../../games/airdef/arsenal.js';
+import { CAMO_PRICE, camosOut, AVA_DEFAULT, AVA_PRICE, AVA_SHOP, avaCatalog, avaKey } from '../../games/airdef/arsenal.js';
 const SQL = new URL('../../sql/', import.meta.url).pathname;
 const db = new PGlite();
 let bad = 0; const ok = (c, t) => { console.log((c ? 'OK   ' : 'ОШИБКА ') + t); if (!c) bad++; };
@@ -60,6 +60,27 @@ let threw = false; try { await wear("x'; drop", null); } catch (_) { threw = tru
 ok(threw, 'имя самолёта проверяется');
 threw = false; try { await buy(A, 0); } catch (_) { threw = true; }
 ok(threw, 'нулевая цена — ошибка');
+// аватарки (Mark 2026-11-04): те же функции и поля кошелька, ключ 'ava:…', своя цена и каталог; файлы — tools/airdef-ui/avatars-import.js
+{
+  ok(AVA_SHOP.length === 10 && new Set(AVA_SHOP).size === 10 && !AVA_SHOP.includes(AVA_DEFAULT) && AVA_PRICE === 20, `каталог аватарок: 10 разных, не считая ${AVA_DEFAULT} по умолчанию, цена ${AVA_PRICE}`);
+  const AV = new URL('../../games/airdef/ui/avatars/', import.meta.url).pathname, has = (f) => { try { return Deno.statSync(AV + f).size > 0; } catch (_) { return false; } };
+  ok(has(AVA_DEFAULT + '.webp') && AVA_SHOP.every((a) => has(a + '.webp') && has(a + '_l.webp')), 'у каждой аватарки есть файлы');
+  const [x, y] = AVA_SHOP, q = await one(`insert into players (login, password_hash, kind) values ('ava_pilot', 'x', 'airdef') returning id`), id = q.id;
+  const abuy = (k, cat = avaCatalog()) => one('select airdef_shop_buy($1, $2, $3, $4) r', [id, k, AVA_PRICE, cat]).then((r) => r.r);
+  const awear = (sk) => one('select airdef_shop_wear($1, $2, $3) r', [id, 'ava', sk]).then((r) => r.r);
+  ok((await abuy(avaKey(x))).error === 'no_crystals', 'аватарка: без кристаллов не купить');
+  await db.query('update airdef_wallet set crystals = 25 where player_id = $1', [id]);
+  ok((await abuy('ava:' + AVA_DEFAULT)).error === 'not_sold' && (await abuy('ava:a03')).error === 'not_sold', 'аватарка: по умолчанию и не из магазина — не купить');
+  ok((await awear(x)).error === 'not_owned', 'аватарка: чужую не надеть');
+  const b1 = await abuy(avaKey(x));
+  ok(b1.wallet && b1.wallet.crystals === 5 && b1.wallet.camos.includes(avaKey(x)), 'аватарка: куплена за 20, осталось 5');
+  ok((await abuy(avaKey(x))).error === 'owned' && (await abuy(avaKey(y))).error === 'no_crystals', 'аватарка: вторую такую нельзя, на другую не хватает');
+  ok((await awear(x)).wallet.worn.ava === x, 'аватарка: надета');
+  ok(!('ava' in (await awear(null)).wallet.worn), 'аватарка: снята');
+  ok(!(await one('select airdef_shop_buy($1, $2, $3, $4) r', [id, CAT[0], AVA_PRICE, avaCatalog()])).r.wallet, 'по каталогу аватарок окраску не купить');
+  await db.query('update airdef_wallet set picks = 1 where player_id = $1', [id]);
+  ok((await one('select airdef_shop_pick($1, $2, $3) r', [id, avaKey(y), CAT])).r.error === 'not_sold', 'окраска «на выбор» аватарку не даёт');
+}
 // права
 for (const f of ['airdef_shop_buy(uuid,text,int,text[])', 'airdef_shop_pick(uuid,text,text[])', 'airdef_shop_wear(uuid,text,text)', 'airdef_wallet_view(uuid)']) {
   const g = await one(`select has_function_privilege('anon', '${f}', 'execute') a, has_function_privilege('authenticated', '${f}', 'execute') u, has_function_privilege('service_role', '${f}', 'execute') s`);

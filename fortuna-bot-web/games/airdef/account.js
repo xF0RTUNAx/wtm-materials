@@ -5,6 +5,7 @@
 // прогресс сайта можно один раз перенести в аккаунт игры (функция airdef-account, sql/022). Чистый модуль: хранилище, запросы, заглушка ?rmock=1.
 /* global CONFIG */
 import { tr } from './i18n.js?v=20261104a';
+import { AVA_SHOP } from './arsenal.js?v=20261104a';
 
 const KEY_GAME = 'fortuna_airdef_acc', KEY_SITE = 'fortuna_web_player', KEY_SST = 'fortuna_airdef_site_st';
 // ?rmock=1 — заглушка: airdef-account и get-airdef-rating отвечают локально (сервер ещё не применён в боевой базе); ?rmock=empty — у «вас» нет боёв,
@@ -118,13 +119,13 @@ async function mockFn(fn, b) {
   if (fn === 'airdef-shop') return mockShop(b);
   throw mockErr(404, 'Not found');
 }
-// магазин (shop-ui.js): 340 кристаллов; ?shop=token — окраска на выбор, owned — обе куплены и «Инферно» надета, poor — не хватает кристаллов
-const SHOP0 = { token: { crystals: 60, camos: [], picks: 1, worn: {} }, owned: { crystals: 190, camos: ['e_f15e:inferno', 'e_mig31:dragon'], picks: 0, worn: { e_f15e: 'inferno' } },
-  poor: { crystals: 120, camos: [], picks: 0, worn: {} } };
+// магазин (shop-ui.js): 340 кристаллов; ?shop=token — окраска на выбор, owned — обе окраски куплены и «Инферно» надета, две аватарки куплены и одна надета, poor — не хватает на окраску, broke — и на аватарку
+const SHOP0 = { token: { crystals: 60, camos: [], picks: 1, worn: {} }, owned: { crystals: 190, camos: ['e_f15e:inferno', 'e_mig31:dragon', 'ava:a13', 'ava:a16'], picks: 0, worn: { e_f15e: 'inferno', ava: 'a16' } },
+  poor: { crystals: 120, camos: [], picks: 0, worn: {} }, broke: { crystals: 8, camos: [], picks: 0, worn: {} } };
 let MSHOP = null;
 function mockShop(b) {
   if (!MSHOP) { let st = ''; try { st = new URLSearchParams(location.search).get('shop') || ''; } catch (_) { /* нет адреса */ } MSHOP = JSON.parse(JSON.stringify(SHOP0[st] || { crystals: 340, camos: [], picks: 0, worn: {} })); }
-  const W = MSHOP, PRICE = 150; // как CAMO_PRICE (arsenal.js)
+  const W = MSHOP, PRICE = String(b.key || '').startsWith('ava:') ? 20 : 150; // как AVA_PRICE и CAMO_PRICE (arsenal.js)
   if (b.action === 'buy') { if (W.camos.includes(b.key)) throw mockErr(409, tr('Эта окраска уже ваша')); if (W.crystals < PRICE) throw mockErr(409, tr('Не хватает кристаллов')); W.crystals -= PRICE; W.camos.push(b.key); }
   else if (b.action === 'pick') { if (W.picks < 1) throw mockErr(409, tr('Окраски на выбор нет')); W.picks -= 1; W.camos.push(b.key); }
   else if (b.action === 'wear') { if (b.key) { const [pl, id] = b.key.split(':'); W.worn[pl] = id; } else delete W.worn[b.plane]; }
@@ -138,7 +139,7 @@ function mockRating(pid) {
   const day = 86400000, t0 = Date.parse('2026-10-25T00:00:00+03:00'), t1 = Date.parse('2027-01-01T00:00:00+03:00') /* сезон 1 — до 01.01.2027, sql/026 */, now = Date.now();
   const ago = (d, h, m) => new Date(now - d * day - h * 3600000 - m * 60000).toISOString();
   const g = gameAcc(), nick = g ? g.nick || g.login : 'xFORTUNAx';
-  const top = MOCK_TOP.map(([n, p], i) => ({ place: i + 1, nick: n, points: p, n: 7 }));
+  const top = MOCK_TOP.map(([n, p], i) => ({ place: i + 1, nick: n, points: p, n: 7, ava: AVA_SHOP[i % 13] })); // часть — без аватарки: у них та, что у всех
   top.push({ place: 37, nick, points: 3940, n: 5 }); // «вы» — 37-е место; остальные ниже
   for (let i = 0; i < 12; i++) top.push({ place: 38 + i, nick: ['Кедр', 'Rook', 'Ветер', 'Bravo_4', 'Лайка', 'Orbit', 'Гюрза', 'Sparrow', 'Ратник', 'Echo_2', 'Витязь', 'Nimbus'][i], points: 3930 - i * 90, n: 4 });
   const base = { season: 1, current: 1, live: true, starts_at: new Date(t0).toISOString(), ends_at: new Date(t1).toISOString(), next: null, total: 214, top };
@@ -175,7 +176,7 @@ function mockProfile(nick, season) {
   best.sort((a, b) => b.rating - a.rating);
   const modes = empty ? { season: {}, all: {} } : { season: { air: md(1), pvo: md(1), multi: md(1) }, all: { air: md(2), pvo: md(2), multi: md(2) } };
   const games = Object.values(modes.all).reduce((a, x) => a + x.n, 0);
-  return { season: season || R.season, live: R.live, profile: { nick: row.nick, since: '2026-10-25T12:00:00+03:00', games, place: empty ? null : row.place, points: empty ? 0 : row.points, n,
+  return { season: season || R.season, live: R.live, profile: { nick: row.nick, ava: row.ava, since: '2026-10-25T12:00:00+03:00', games, place: empty ? null : row.place, points: empty ? 0 : row.points, n,
     modes, fav: { season: fav(1), all: fav(2) }, best, awards: row.place <= 12 && !empty ? [{ season: 1, place: row.place }] : [] } };
 }
 

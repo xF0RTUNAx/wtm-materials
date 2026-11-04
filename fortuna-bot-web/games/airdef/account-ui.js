@@ -5,6 +5,7 @@
 // В комнате и в бою аккаунт сменить нельзя; вне их смена закрывает соединение онлайна (net.js accChanged).
 import { ico } from './icons.js?v=20261104a';
 import { tr, trIf } from './i18n.js?v=20261104a';
+import { avaSrc, ownAva } from './avatar.js?v=20261104a';
 import { gameAcc, siteAcc, setGameAcc, clearGameAcc, accountApi, siteStatus, siteStatusDone, transferOk, siteNewbie, legacySite, onAccChange } from './account.js?v=20261104a';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -79,7 +80,7 @@ export function createAccount(C) {
   function renderRail() {
     const box = $('accBox'), g = gameAcc();
     const p = siteStatus(); if (p && p.then && !S.pend) { S.pend = true; p.then(() => { S.pend = false; renderRail(); if (root.classList.contains('on')) draw(); }); } // «Перенести прогресс» — по ответу сервера
-    const h = (g ? `<button data-a="open" title="${tr('Профиль')}">${ico('idCard')}<span class="nm">${esc(g.nick || g.login)}</span></button>` : `<button class="in" data-a="open">${tr('Войти в аккаунт игры')}</button>`)
+    const h = (g ? `<button data-a="open" title="${tr('Профиль')}">${C.shop && C.shop.wallet && C.shop.wallet() ? `<img class="av" src="${avaSrc(ownAva(C))}" alt="">` : ico('idCard')}<span class="nm">${esc(g.nick || g.login)}</span></button>` : `<button class="in" data-a="open">${tr('Войти в аккаунт игры')}</button>`)
       + (transferOk() ? `<button class="xf" data-a="xfer">${tr('Перенести прогресс')}</button>` : '');
     if (box.innerHTML !== h) box.innerHTML = h;
   }

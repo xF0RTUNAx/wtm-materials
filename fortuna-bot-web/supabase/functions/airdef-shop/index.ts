@@ -4,10 +4,11 @@
 //   { player_id, action: 'buy',  key }            → { season, wallet } — за CAMO_PRICE кристаллов (sql/028 airdef_shop_buy)
 //   { player_id, action: 'pick', key }            → { season, wallet } — окраска на выбор
 //   { player_id, action: 'wear', key }            → { season, wallet } — надеть свою ('самолёт:окраска'); key: null + plane — снять с самолёта
+// Аватарки (Mark 2026-11-04) — те же действия и те же поля кошелька: ключ 'ava:a02', цена AVA_PRICE, каталог avaCatalog; снять — plane: 'ava'.
 // В магазине — окраски, вышедшие к сезону (arsenal.js camosOut; в межсезонье — следующего сезона, они уже на витрине). Списание — в SQL.
 import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
 import { supabaseAdmin } from "../_shared/supabase-admin.ts";
-import { camosOut, CAMO_PRICE } from "../_shared/airdef/arsenal.js";
+import { avaCatalog, AVA_PRICE, camosOut, CAMO_PRICE } from "../_shared/airdef/arsenal.js";
 
 const WHY: Record<string, string> = {
   not_sold: "Этой окраски сейчас нет в магазине",
@@ -16,6 +17,7 @@ const WHY: Record<string, string> = {
   no_pick: "Окраски на выбор нет",
   not_owned: "Сначала купите эту окраску",
 };
+const WHY_AVA: Record<string, string> = { ...WHY, not_sold: "Этой аватарки сейчас нет в магазине", owned: "Эта аватарка уже ваша", not_owned: "Сначала купите эту аватарку" };
 const CAMO_RE = /^[a-z0-9_]{1,24}:[a-z0-9_]{1,24}$/, PLANE_RE = /^[a-z0-9_]{1,24}$/;
 
 Deno.serve(async (req) => {
@@ -41,8 +43,9 @@ Deno.serve(async (req) => {
     let r;
     if (action === "buy" || action === "pick") {
       if (!camo) return jsonResponse({ error: "Некорректные параметры" }, 400);
+      const ava = camo.startsWith("ava:");
       r = action === "buy"
-        ? await db.rpc("airdef_shop_buy", { p_player: player_id, p_camo: camo, p_price: CAMO_PRICE, p_catalog: camosOut(season) })
+        ? await db.rpc("airdef_shop_buy", { p_player: player_id, p_camo: camo, p_price: ava ? AVA_PRICE : CAMO_PRICE, p_catalog: ava ? avaCatalog() : camosOut(season) })
         : await db.rpc("airdef_shop_pick", { p_player: player_id, p_camo: camo, p_catalog: camosOut(season) });
     } else if (action === "wear") {
       const pn = camo ? camo.split(":")[0] : typeof plane === "string" && PLANE_RE.test(plane) ? plane : null;
@@ -51,7 +54,8 @@ Deno.serve(async (req) => {
     } else return jsonResponse({ error: "Неизвестное действие" }, 400);
     if (r.error) throw r.error;
     const d = r.data as { wallet?: unknown; error?: string };
-    if (d.error) return jsonResponse({ error: WHY[d.error] || "Нельзя", code: d.error }, 409);
+    const why = camo?.startsWith("ava:") ? WHY_AVA : WHY;
+    if (d.error) return jsonResponse({ error: why[d.error] || "Нельзя", code: d.error }, 409);
     return jsonResponse({ season, wallet: d.wallet });
   } catch (e) {
     console.error("airdef-shop", e);

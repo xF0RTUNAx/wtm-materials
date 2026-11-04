@@ -229,6 +229,13 @@ export const PLANES = { h_mi24: 'Ми-24В', h_mi28: 'Ми-28Н', h_ka52: 'Ка-
 export const CAMO_PRICE = 150;
 export const CAMOS = [['e_f15e:inferno', 1], ['e_mig31:dragon', 1], ['e_f35:sakura', 0], ['e_tu22:milk', 0], ['f16:digital', 0], ['e_su34:cosmos', 0], ['e_typhoon:harlequin', 0]].map(([key, season]) => ({ key, season }));
 export const camosOut = (season) => CAMOS.filter((c) => c.season && c.season <= season).map((c) => c.key);
+// Аватарки игрока (Mark 2026-11-04). Номера — по листу, с которого выбирал Mark (файлы — tools/airdef-ui/avatars-import.js). У всех по умолчанию AVA_DEFAULT, в магазине — AVA_SHOP за
+// AVA_PRICE кристаллов, остальные готовы и лежат у сборщика. Кошелёк — те же поля, что у окрасок (sql/028): купленная — 'ava:a02' в camos, надетая — worn.ava = 'a02'; новых таблиц нет.
+export const AVA_PRICE = 20;
+export const AVA_DEFAULT = 'a01';
+export const AVA_SHOP = ['a02', 'a04', 'a13', 'a15', 'a16', 'a20', 'a29', 'a07', 'a18', 'a26'];
+export const avaKey = (id) => `ava:${id}`;
+export const avaCatalog = () => AVA_SHOP.map(avaKey);
 // самолёты ИИ-налёта (только вид): сторона → эпоха → роль; нет роли — bomber
 export const RAID_PLANES = {
   east: { 1: { bomber: 'e_tu22m3', sead: 'e_su24', low: 'e_su17' }, 2: { bomber: 'e_su24', tv: 'e_su25', sead: 'e_su17', low: 'e_su25' },

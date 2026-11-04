@@ -8,7 +8,8 @@
 import { ico } from './icons.js?v=20261104a';
 import { tr, trIf, LANG } from './i18n.js?v=20261104a';
 import { activeAcc, callFn } from './account.js?v=20261104a';
-import { CAMOS, CAMO_PRICE, PLANES } from './arsenal.js?v=20261104a';
+import { CAMOS, CAMO_PRICE, PLANES, AVA_SHOP, AVA_PRICE, avaKey } from './arsenal.js?v=20261104a';
+import { avaSrc } from './avatar.js?v=20261104a';
 
 const LOC = LANG === 'en' ? 'en-US' : 'ru-RU';
 const nf = (v) => Math.round(v).toLocaleString(LOC);
@@ -45,7 +46,7 @@ const CSS = `
 #shopWin .vign { position: absolute; inset: 0; z-index: 3; pointer-events: none; background: linear-gradient(180deg, rgba(10,12,14,.72) 0, rgba(10,12,14,0) calc(90px * var(--k))),
   linear-gradient(0deg, rgba(10,12,14,.8) 0, rgba(10,12,14,0) calc(120px * var(--k))), linear-gradient(90deg, rgba(10,12,14,.78) 0, rgba(10,12,14,.35) 30%, rgba(10,12,14,0) 48%); }
 #shopWin .top { position: absolute; z-index: 6; left: var(--sl); right: var(--sr); top: calc(10px * var(--k) + var(--st)); display: flex; align-items: center; gap: calc(8px * var(--k)); }
-#shopWin .top .t { display: flex; align-items: baseline; gap: calc(10px * var(--k)); margin-right: auto; min-width: 0; }
+#shopWin .top .t { display: flex; align-items: center; gap: calc(10px * var(--k)); margin-right: auto; min-width: 0; }
 #shopWin .top h1 { margin: 0; font: 500 calc(22px * var(--k))/1 'Oswald', 'Arial Narrow', sans-serif; letter-spacing: .01em; }
 #shopWin .top .t small { font-size: calc(12px * var(--k)); color: var(--mute); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 #shopWin .bal { display: flex; align-items: center; gap: calc(7px * var(--k)); height: max(40px, calc(40px * var(--k))); padding: 0 calc(12px * var(--k)) 0 calc(10px * var(--k)); background: rgba(14,17,15,.82); border: 1px solid #3a4532;
@@ -102,13 +103,34 @@ const CSS = `
 @keyframes shpDrop { from { opacity: 0; transform: translateY(calc(-6px * var(--k))); } }
 #shopWin .shint h3 { margin: 0 0 calc(8px * var(--k)); font: 500 calc(16px * var(--k)) 'Oswald', sans-serif; display: flex; align-items: center; gap: calc(7px * var(--k)); }
 #shopWin .shint p { margin: 0; padding: calc(8px * var(--k)) 0; border-top: 1px solid #262e21; font-size: calc(13px * var(--k)); } #shopWin .shint p small { display: block; color: var(--mute); font-size: calc(11.5px * var(--k)); }
+#shopWin .cats { display: flex; flex: none; }
+#shopWin .cats button { height: calc(36px * var(--k)); padding: 0 calc(14px * var(--k)); font: 500 calc(15px * var(--k)) 'Oswald', sans-serif; letter-spacing: .02em; color: var(--dim); background: rgba(14,17,15,.72); border: 1px solid #3a4532; border-right-width: 0; display: flex; align-items: center; }
+#shopWin .cats button:last-child { border-right-width: 1px; } #shopWin .cats button.on { background: var(--amber); color: #17190f; border-color: var(--amber); } #shopWin .cats button:not(.on):hover { color: #f3f0e6; }
+#shopWin .avaL, #shopWin .avaG { display: none; }
+#shopWin.cat-ava .avaL { display: block; } #shopWin.cat-ava .avaG { display: grid; }
+#shopWin.cat-ava .hero, #shopWin.cat-ava .sinfo, #shopWin.cat-ava .tray, #shopWin.cat-ava .tok, #shopWin.cat-ava .ssub { display: none; }
+#shopWin .avaL { position: absolute; z-index: 5; left: var(--sl); top: var(--at); width: var(--fs); }
+#shopWin .avaL .frame { display: block; width: var(--fs); height: var(--fs); object-fit: cover; box-shadow: 0 0 0 calc(2px * var(--k)) var(--amber), 0 calc(10px * var(--k)) calc(26px * var(--k)) rgba(0,0,0,.55); }
+#shopWin .aact { display: flex; align-items: center; gap: calc(10px * var(--k)); margin-top: calc(12px * var(--k)); flex-wrap: wrap; }
+#shopWin .anote { max-width: none; margin-top: calc(6px * var(--k)); } #shopWin .anote:empty { display: none; }
+#shopWin .seenT { margin-top: calc(10px * var(--k)); font-size: calc(11.5px * var(--k)); color: var(--dim); text-shadow: 0 1px 4px rgba(0,0,0,.6); } #shopWin.lowh .seenT { display: none; }
+#shopWin .seen { margin-top: calc(6px * var(--k)); padding: calc(5px * var(--k)) calc(9px * var(--k)); display: flex; align-items: center; gap: calc(9px * var(--k)); background: rgba(14,17,15,.84); border: 1px solid #333d2c; min-width: 0; }
+#shopWin .seen img { flex: none; width: calc(34px * var(--k)); height: calc(34px * var(--k)); object-fit: cover; box-shadow: 0 0 0 1px rgba(232,177,74,.7); }
+#shopWin .seen span { min-width: 0; } #shopWin .seen b { display: block; font: 500 calc(15px * var(--k)) 'Oswald', sans-serif; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } #shopWin .seen small { display: block; color: var(--mute); font-size: calc(11.5px * var(--k)); white-space: nowrap; } #shopWin .seen small:empty { display: none; }
+#shopWin .avaL .stamp { left: 0; right: 0; margin-inline: auto; width: fit-content; top: calc(var(--fs) * .4); background: rgba(14,17,15,.7); }
+#shopWin .avaG { position: absolute; z-index: 5; left: calc(var(--sl) + var(--fs) + 24px * var(--k)); top: var(--at); grid-template-columns: repeat(5, var(--ts)); gap: calc(10px * var(--k)); }
+#shopWin .atile { display: block; padding: calc(4px * var(--k)); background: rgba(14,17,15,.84); border: 1px solid #333d2c; transition: border-color .2s, background .2s; }
+#shopWin .atile img { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; filter: saturate(.85) brightness(.88); transition: filter .25s; }
+#shopWin .atile.on { background: rgba(26,31,24,.94); border-color: var(--amber); } #shopWin .atile.on img, #shopWin .atile:hover img { filter: none; } #shopWin .atile:not(.on):hover { border-color: #4c5843; }
+#shopWin .atile .pr { display: flex; justify-content: center; align-items: center; gap: .3em; padding-top: calc(3px * var(--k)); font: 500 calc(12.5px * var(--k)) 'JetBrains Mono', monospace; color: var(--dim); white-space: nowrap; }
+#shopWin .atile .pr.t { font-family: 'Golos Text', sans-serif; } #shopWin .atile .pr.worn { color: var(--ok); }
 `;
 
 export function createShop(C) {
   const style = document.createElement('style'); style.textContent = CSS; if (document.head) document.head.appendChild(style); // (заглушка DOM стенда — без head/body)
   const root = document.createElement('div'); root.id = 'shopWin'; root.setAttribute && root.setAttribute('role', 'dialog'); root.setAttribute && root.setAttribute('aria-modal', 'true');
   if (document.body && document.body.appendChild) document.body.appendChild(root);
-  const S = { w: null, season: 1, err: '', key: null, at: 0, busy: false, sel: 0, shown: null, hint: false, act: false, built: '' };
+  const S = { w: null, season: 1, err: '', key: null, at: 0, busy: false, sel: 0, shown: null, hint: false, act: false, built: '', cat: 'camo', asel: 0 }; // cat — вкладка: окраски или аватарки (asel — выбранная)
   const $ = (id) => document.getElementById(id);
   const q = (s) => root.querySelector(s);
   const gem = ico('gem', 'gem');
@@ -119,7 +141,7 @@ export function createShop(C) {
 
   // ── кнопка в меню: баланс (картинка — «Нефритовый дракон», Mark: в разметке) ──
   function paint() {
-    const sub = S.w ? `${gem}<b>${nf(S.w.crystals)}</b> · ${tr('окраски')}` : tr('окраски сезона');
+    const sub = S.w ? `${gem}<b>${nf(S.w.crystals)}</b>` : tr('окраски и аватарки');
     if ($('shopSub') && $('shopSub').innerHTML !== sub) $('shopSub').innerHTML = sub;
   }
   $('shopBtn').onclick = () => { if (C.snd && C.snd.click) C.snd.click(); api.open(); };
@@ -138,6 +160,7 @@ export function createShop(C) {
     if (key !== keyNow()) { S.at = 0; S.w = null; load(); return; } // пока ждали, сменили аккаунт
     if (d) { S.w = d.wallet; S.season = d.season || S.season; } else S.w = null;
     S.err = err; S.at = Date.now(); paint(); if (api.isOpen()) draw();
+    if (C.account && C.account.render) C.account.render(); // своя аватарка у ника в меню
     if (d && C.state === 'play' && C.ctrl && C.ctrl.modelsReady) C.ctrl.modelsReady(); // страница открылась сразу в бой (?go= после «Ещё раз» на другой карте): надетая окраска — когда пришёл кошелёк
   }
   function touch() {
@@ -150,7 +173,9 @@ export function createShop(C) {
     let d = null, err = '';
     try { d = await callFn('airdef-shop', { player_id: keyNow(), action, key, ...extra }); } catch (e) { err = trIf(e.message) || tr('Нет связи с сайтом'); }
     S.act = false;
-    if (d && d.wallet) { const from = S.w ? S.w.crystals : 0; S.w = d.wallet; draw(); countTo(from, S.w.crystals); paint(); } else { S.err = err; draw(); S.err = ''; }
+    // на игровом сервере надетое — из билета при подключении: соединение в меню закрыть, панель «Онлайн» подключится с новым (в комнате, в бою и в поиске боя не трогаем)
+    const N = C.netc; if (d && action === 'wear' && N && N.accChanged && !N.queued && !N.search) N.accChanged();
+    if (d && d.wallet) { const from = S.w ? S.w.crystals : 0; S.w = d.wallet; draw(); countTo(from, S.w.crystals); paint(); if (C.account && C.account.render) C.account.render(); } else { S.err = err; draw(); S.err = ''; }
     return !!d;
   }
 
@@ -162,12 +187,25 @@ export function createShop(C) {
     const hw = Math.min(vw * 0.74, vh * 1.5), hh = hw * 0.5625, cx = vw * (vw / vh > 1.9 ? 0.62 : 0.6), cy = vh * 0.5;
     r.setProperty('--hw', hw + 'px'); r.setProperty('--hx', cx - hw / 2 + 'px'); r.setProperty('--hy', cy - hh / 2 + 'px');
     r.setProperty('--extra-top', Math.max(0, (vh - 430 * k) * 0.25) + 'px');
+    if (S.cat === 'ava') layoutAva(k, vw, vh);
     fitInfo();
+  }
+  // аватарки (Mark: вариант «Картотека»): большая слева, под ней кнопка и строка «как увидят», справа плитки 5×2. Размеры — от экрана: всё помещается без прокрутки
+  function layoutAva(k, vw, vh) {
+    const top = q('.top'); if (!top) return;
+    const b = top.getBoundingClientRect(), y0 = b.bottom + 12 * k, low = vh < 520;
+    const H = vh - y0 - 12 * k - (parseFloat(getComputedStyle(root).getPropertyValue('--sa-b')) || 0);
+    const under = (58 + 44 + 54 + (low ? 0 : 28)) * k, gap = 10 * k, cap = 24 * k; // под большой: кнопка, пояснение, строка «как увидят», её подпись; cap — цена под плиткой
+    const fs = Math.max(110, Math.min(300 * k, H - under));
+    const ts = Math.max(56, Math.min((vw - b.left - fs - 24 * k - (vw - b.right) - 4 * gap) / 5, (H - gap) / 2 - cap));
+    const h = Math.max(fs + under, 2 * (ts + cap) + gap);
+    const r = root.style; r.setProperty('--fs', fs + 'px'); r.setProperty('--ts', ts + 'px'); r.setProperty('--at', y0 + Math.min(Math.max(0, (vh - 430 * k) * 0.25), Math.max(0, H - h)) + 'px');
+    root.classList.toggle('lowh', low);
   }
   // название, кнопка и подсказка — над плитками (Mark 2026-10-29: длинное название — два-три слова строками — уводило кнопку под плитки, тем более
   // с отступом Telegram сверху и строкой «Окраска на выбор» снизу): не влезает по высоте или слово шире блока — название мельче, до 55 %
   function fitInfo() {
-    const info = q('.sinfo'), tray = q('.tray'), nm = q('.name'); if (!info || !tray || !nm || !api.isOpen()) return;
+    const info = q('.sinfo'), tray = q('.tray'), nm = q('.name'); if (!info || !tray || !nm || !api.isOpen() || S.cat === 'ava') return;
     nm.style.fontSize = '';
     const k = parseFloat(root.style.getPropertyValue('--k')) || 1, room = () => tray.getBoundingClientRect().top - 8 * k - info.getBoundingClientRect().top;
     for (let f = 0.92; f >= 0.55 && (info.getBoundingClientRect().height > room() || nm.scrollWidth > nm.clientWidth + 1); f -= 0.08) nm.style.fontSize = `calc(52px * var(--k) * ${f.toFixed(2)})`;
@@ -178,7 +216,7 @@ export function createShop(C) {
     const list = out(), sig = list.join(',') + '|' + LANG;
     if (S.built === sig) return; S.built = sig; S.shown = null;
     root.innerHTML = `<div class="sky"><i class="skyi"></i><i class="skyi"></i></div><div class="hero"><img class="pl" alt=""><img class="pl" alt=""></div><div class="vign"></div>
-      <header class="top"><div class="t"><h1>${tr('Магазин')}</h1><small class="ssub"></small></div>
+      <header class="top"><div class="t"><h1>${tr('Магазин')}</h1><div class="cats"><button data-c="camo">${tr('Окраски')}</button><button data-c="ava">${tr('Аватарки')}</button></div><small class="ssub"></small></div>
         <div class="tok" title="${tr('Окраска на выбор')}">${ico('ticket')}<span class="tokN"></span></div>
         <div class="bal" title="${tr('Кристаллы')}"><small>${tr('кристаллы')}</small>${gem}<b class="balN">—</b></div>
         <button class="sq q" data-a="q" aria-expanded="false" title="${tr('Откуда кристаллы')}">?</button>
@@ -186,9 +224,12 @@ export function createShop(C) {
       <div class="sinfo"><div class="kick pln"></div><h2 class="name"></h2><div class="chips"></div><div class="act"></div><div class="note"></div><div class="stamp"></div></div>
       <div class="tray"><span class="ticket">${ico('ticket')}${tr('Окраска на выбор — возьмите любую')}</span>
         <div class="tiles">${list.map((k, i) => `<button class="tile" data-i="${i}" style="--acc:${LOOK[k].acc}"><img src="${img(k, 's')}" alt=""><span class="tt"><b>${camoName(k)}</b><small></small></span></button>`).join('')}</div></div>
+      <div class="avaL"><img class="frame" alt=""><div class="aact"></div><div class="note anote"></div><div class="seenT">${tr('Так вас увидят в рейтинге и в онлайне:')}</div><div class="seen"><img alt=""><span><b></b><small></small></span></div><div class="stamp"></div></div>
+      <div class="avaG">${AVA_SHOP.map((id, i) => `<button class="atile" data-ai="${i}" aria-label="${tr('Аватарка {0}', [i + 1])}"><img src="${avaSrc(id)}" alt=""><span class="pr"></span></button>`).join('')}</div>
       <div class="shint" role="dialog" aria-label="${tr('Откуда кристаллы')}"><h3>${gem}${tr('Откуда кристаллы')}</h3>
+        <p>${tr('Задания')}<small>${tr('ежедневные и еженедельные')}</small></p>
         <p>${tr('Награда за онлайн-рейтинг')}<small>${tr('начисляются в конце сезона')}</small></p>
-        <p>${tr('Купленная окраска — навсегда')}<small>${tr('надеть или снять — здесь же')}</small></p></div>`;
+        <p>${tr('Покупка — навсегда')}<small>${tr('надеть или снять — здесь же')}</small></p></div>`;
     for (const k of list) { const a = new Image(); a.src = img(k); const b = new Image(); b.src = img(k, 'sky'); } // смена окраски без мигания
     layout();
   }
@@ -208,8 +249,54 @@ export function createShop(C) {
     pNew.animate([{ opacity: 0, transform: 'translate(38%, -7%) scale(.88)' }, { opacity: 1, transform: 'translate(0, 0) scale(1)' }], { duration: 900, delay: 260, easing: 'cubic-bezier(.2,.8,.2,1)', fill: 'backwards' });
   }
 
+  // вкладка «Аватарки»: тот же слой неба плавно сменяется столом кадровика, самолёта нет
+  function sceneAva() {
+    if (S.shown === 'ava') return; S.shown = 'ava';
+    const [s0, s1] = root.querySelectorAll('.skyi'), sOld = s0.classList.contains('on') ? s0 : s1, sNew = sOld === s0 ? s1 : s0;
+    sNew.style.backgroundImage = 'url(airdef/shop/bg_avatars.jpg)'; sNew.classList.add('on'); sOld.classList.remove('on');
+  }
+  function drawAva(anim) {
+    sceneAva();
+    const id = AVA_SHOP[S.asel], k = avaKey(id), a = acc(), w = S.w, tick = ico('ok'), busy = S.act ? ' disabled' : '', big = q('.frame'), src = avaSrc(id, true);
+    q('.balN').textContent = w ? nf(w.crystals) : '—';
+    if (big.getAttribute('src') !== src) { big.src = src; if (anim && !RM && big.animate) big.animate([{ opacity: 0.3, transform: 'scale(.985)' }, { opacity: 1, transform: 'none' }], { duration: 320, easing: 'cubic-bezier(.2,.8,.2,1)' }); }
+    let html = '', note = '';
+    if (!a || a.kind !== 'airdef') {
+      html = `<button class="sbt main" data-a="${a ? 'xfer' : 'login'}">${a ? tr('Перенести прогресс') : tr('Войти')}</button>`;
+      note = tr('Кристаллы и аватарки — только у аккаунта игры.');
+    } else if (!w) {
+      html = `<button class="sbt main" disabled>${tr('Купить')} ${gem}<b>${AVA_PRICE}</b></button>`;
+      note = S.busy || !S.err ? tr('Загружаем…') : S.err === 'soon' ? tr('Магазин скоро откроется.') : `${S.err} <button data-a="retry">${tr('Повторить')}</button>`;
+    } else if (worn(k)) {
+      html = `<span class="sbt worn">${tick}${tr('Надета')}</span>`;
+      note = `${tr('Эта аватарка у вас в профиле.')} <button data-a="off">${tr('Снять')}</button>`;
+    } else if (owned(k)) {
+      html = `<span class="stag">${tick}${tr('Куплена')}</span><button class="sbt main" data-a="wear"${busy}>${tr('Надеть')}</button>`;
+    } else if (w.crystals >= AVA_PRICE) {
+      html = `<button class="sbt main" data-a="buy"${busy}>${tr('Купить')} ${gem}<b>${AVA_PRICE}</b></button>`;
+    } else {
+      html = `<button class="sbt short" data-a="q">${tr('Не хватает')} ${gem}<b>${AVA_PRICE - w.crystals}</b></button>`;
+      note = `${tr('Кристаллы — за задания и рейтинг.')} <button data-a="q">${tr('Откуда?')}</button>`;
+    }
+    q('.aact').innerHTML = html; const ne = q('.anote'); ne.innerHTML = note; ne.classList.toggle('err', !!S.err && !!w);
+    if (S.err && w) ne.textContent = S.err;
+    const m = C.rating && C.rating.me ? C.rating.me() : null;
+    q('.seen img').src = avaSrc(id); q('.seen b').textContent = (a && a.nick) || tr('Ваш ник'); q('.seen small').textContent = m && m.place ? tr('{0} место · очки: {1}', [m.place, nf(m.points || 0)]) : '';
+    root.querySelectorAll('.atile').forEach((t) => {
+      const i = +t.dataset.ai, kk = avaKey(AVA_SHOP[i]), pr = t.querySelector('.pr');
+      t.classList.toggle('on', i === S.asel);
+      const [cls, txt] = !w ? ['', gem + AVA_PRICE] : worn(kk) ? ['t worn', tick + tr('надета')] : owned(kk) ? ['t', tr('куплена')] : ['', gem + AVA_PRICE];
+      pr.className = `pr ${cls}`; pr.innerHTML = txt;
+    });
+  }
+  const setCat = (c) => { if (S.cat === c) return; S.cat = c; S.hint = false; layout(); draw(true); };
+
   function draw(anim) {
     build();
+    root.classList.toggle('cat-ava', S.cat === 'ava');
+    root.querySelectorAll('.cats button').forEach((b) => b.classList.toggle('on', b.dataset.c === S.cat));
+    q('.shint').classList.toggle('open', S.hint); q('.sq.q').setAttribute('aria-expanded', S.hint);
+    if (S.cat === 'ava') { drawAva(anim); return; }
     const list = out(), n = list.length; if (!n) return;
     S.sel = Math.min(S.sel, n - 1);
     const k = list[S.sel], L = LOOK[k], a = acc(), w = S.w;
@@ -242,7 +329,7 @@ export function createShop(C) {
       html = `<button class="sbt main" data-a="buy"${busy}>${tr('Купить')} ${gem}<b>${CAMO_PRICE}</b></button>`;
     } else {
       html = `<button class="sbt short" data-a="q">${tr('Не хватает')} ${gem}<b>${CAMO_PRICE - w.crystals}</b></button>`;
-      note = `${tr('Кристаллы приходят в конце сезона.')} <button data-a="q">${tr('Откуда?')}</button>`;
+      note = `${tr('Кристаллы — за задания и рейтинг.')} <button data-a="q">${tr('Откуда?')}</button>`;
     }
     q('.act').innerHTML = html; const ne = q('.note'); ne.innerHTML = note; ne.classList.toggle('err', !!S.err && !!w);
     if (S.err && w) ne.textContent = S.err;
@@ -252,7 +339,6 @@ export function createShop(C) {
       const [cls, txt] = !w ? ['', gem + CAMO_PRICE] : worn(kk) ? ['t worn', tick + tr('надета')] : owned(kk) ? ['t', tr('куплена')] : w.picks > 0 ? ['t tk', tr('на выбор')] : ['', gem + CAMO_PRICE];
       sm.className = cls; sm.innerHTML = txt;
     });
-    q('.shint').classList.toggle('open', S.hint); q('.sq.q').setAttribute('aria-expanded', S.hint);
     fitInfo();
     // название и кнопка проявляются без обрезки букв (Mark: нижнее слово обрезалось на миг)
     if (anim && !RM && q('.name').animate) {
@@ -260,25 +346,28 @@ export function createShop(C) {
       q('.act').animate([{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }], { duration: 380, delay: 120, fill: 'backwards' });
     }
   }
-  const select = (i, anim) => { S.sel = i; draw(anim); };
+  const count = () => (S.cat === 'ava' ? AVA_SHOP.length : out().length), cur = () => (S.cat === 'ava' ? S.asel : S.sel);
+  const select = (i, anim) => { if (S.cat === 'ava') S.asel = i; else S.sel = i; draw(anim); };
   function countTo(from, to) {
     const el = q('.balN'); if (!el || RM || from === to) return;
     const t0 = performance.now(), step = (now) => { const k = Math.min(1, (now - t0) / 600); el.textContent = nf(from + (to - from) * k); if (k < 1) requestAnimationFrame(step); };
     requestAnimationFrame(step);
   }
   function stamp(text) {
-    const s = q('.stamp'); s.textContent = text; if (RM || !s.animate) return;
+    const s = q(S.cat === 'ava' ? '.avaL .stamp' : '.sinfo .stamp'); s.textContent = text; if (RM || !s.animate) return;
     s.animate([{ opacity: 0, transform: 'rotate(-8deg) scale(2)' }, { opacity: 1, transform: 'rotate(-8deg) scale(.95)', offset: 0.6 }, { opacity: 1, transform: 'rotate(-8deg) scale(1)', offset: 0.85 }, { opacity: 0, transform: 'rotate(-8deg) scale(1)' }], { duration: 1500, easing: 'cubic-bezier(.5,0,.75,0)' });
   }
 
   // ── события ──
   root.addEventListener && root.addEventListener('click', async (e) => {
     if (Date.now() - swipeAt < 400) return; // click сразу после свайпа — его же касание (ревью: свайп по плитке гасил сам себя)
-    const b = e.target.closest('[data-a]'), tile = e.target.closest('.tile');
+    const b = e.target.closest('[data-a]'), tile = e.target.closest('.tile'), at = e.target.closest('.atile'), cat = e.target.closest('[data-c]');
     if ((!b || b.dataset.a !== 'q') && S.hint && !e.target.closest('.shint')) { S.hint = false; draw(); }
+    if (cat) { if (cat.dataset.c !== S.cat) { if (C.snd && C.snd.click) C.snd.click(); setCat(cat.dataset.c); } return; }
+    if (at) { if (+at.dataset.ai !== S.asel) { if (C.snd && C.snd.click) C.snd.click(); select(+at.dataset.ai, true); } return; }
     if (tile) { if (+tile.dataset.i !== S.sel) { if (C.snd && C.snd.click) C.snd.click(); select(+tile.dataset.i, true); } return; }
     if (!b) return;
-    const k = out()[S.sel], a = b.dataset.a;
+    const k = S.cat === 'ava' ? avaKey(AVA_SHOP[S.asel]) : out()[S.sel], a = b.dataset.a;
     if (a === 'close') api.close();
     else if (a === 'q') { S.hint = !S.hint; draw(); }
     else if (a === 'retry') { S.at = 0; S.err = ''; draw(); load(); }
@@ -292,8 +381,8 @@ export function createShop(C) {
   let sx = null, tx = 0, ty = 0, mx = 0, my = 0, raf = 0, swipeAt = 0;
   root.addEventListener && root.addEventListener('pointerdown', (e) => { sx = e.clientX; });
   root.addEventListener && root.addEventListener('pointerup', (e) => {
-    if (sx == null) return; const dx = e.clientX - sx, n = out().length; sx = null;
-    if (Math.abs(dx) > 50 && n > 1 && !e.target.closest('.shint')) { swipeAt = Date.now(); select((S.sel + (dx < 0 ? 1 : n - 1)) % n, true); }
+    if (sx == null) return; const dx = e.clientX - sx, n = count(); sx = null;
+    if (Math.abs(dx) > 50 && n > 1 && !e.target.closest('.shint')) { swipeAt = Date.now(); select((cur() + (dx < 0 ? 1 : n - 1)) % n, true); }
   });
   const loop = () => { mx += (tx - mx) * 0.08; my += (ty - my) * 0.08; root.style.setProperty('--mx', mx.toFixed(3)); root.style.setProperty('--my', my.toFixed(3)); raf = Math.abs(tx - mx) + Math.abs(ty - my) > 0.002 ? requestAnimationFrame(loop) : 0; };
   root.addEventListener && root.addEventListener('pointermove', (e) => {
@@ -302,10 +391,10 @@ export function createShop(C) {
   });
   addEventListener('keydown', (e) => {
     if (!api.isOpen() || (C.account && C.account.isOpen())) return;
-    const n = out().length;
+    const n = count();
     if (e.code === 'Escape') { if (S.hint) { S.hint = false; draw(); } else api.close(); }
-    else if (e.code === 'ArrowRight' && n > 1) select((S.sel + 1) % n, true);
-    else if (e.code === 'ArrowLeft' && n > 1) select((S.sel + n - 1) % n, true);
+    else if (e.code === 'ArrowRight' && n > 1) select((cur() + 1) % n, true);
+    else if (e.code === 'ArrowLeft' && n > 1) select((cur() + n - 1) % n, true);
   });
   addEventListener('resize', () => { if (api.isOpen()) layout(); });
   paint();

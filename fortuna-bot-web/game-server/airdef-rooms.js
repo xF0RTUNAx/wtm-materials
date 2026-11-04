@@ -73,7 +73,7 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, s
     t: 'room', code: r.code, mode: r.mode, size: r.size, era: r.era, sideAir: r.sideAir, host: r.host, quick: !!r.quick, state: r.state, wave: r.wave, map: r.kind === 'multi' ? 'winter' : r.map,
     left: r.phaseT ? Math.max(0, Math.round(r.phaseT - (r.kind === 'multi' && r.state === 'play' ? r.wt : r.t))) : null, valueK: r.valueK || 0, fill: !!r.fill, lead: r.lead || null, // left: раунд «Мульти-волны» кончается по времени боя (в затишье ×3)
     ...(r.kind === 'multi' && MU ? MU.viewExtra(r, me) : {}),
-    players: [...r.players.values()].map((p) => ({ id: p.id, name: p.name, team: p.team, bot: !!p.bot, ready: !!p.ready, away: !p.bot && !p.ws, spent: !me || p.team === me.team ? p.spent || 0 : null,
+    players: [...r.players.values()].map((p) => ({ id: p.id, name: p.name, ava: (p.worn && p.worn.ava) || undefined, /* надетая аватарка (билет mp-ticket), Mark 2026-11-04 */ team: p.team, bot: !!p.bot, ready: !!p.ready, away: !p.bot && !p.ws, spent: !me || p.team === me.team ? p.spent || 0 : null,
       budget: !me || p.team === me.team ? p.budget : null, choice: (!me || p.team === me.team) && p.choice !== null && p.choice !== undefined ? p.choice : null,
       kills: p.kills || 0, deaths: p.deaths || 0, score: Math.round(p.score || 0), lives: p.lives ?? null })),
   });

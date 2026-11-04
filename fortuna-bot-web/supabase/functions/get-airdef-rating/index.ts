@@ -1,7 +1,7 @@
 // get-airdef-rating — окно рейтинга «Воздушного превосходства» (Mark 2026-10-25, макет одобрен): таблица сезона (место, ник, очки — без
 // подробностей), своё место и «Мои бои» (все онлайн-бои сезона: засчитан ли — sql/025, 2 + 2 + 2 + 1 — и из чего очки). В таблице — только аккаунты игры
 // (sql/022: airdef_rating_board); аккаунт сайта видит таблицу и свои бои, но без места — нужен аккаунт игры (перенос прогресса).
-//   { player_id?, season? } → { season, live, starts_at, ends_at, next: { season, starts_at } | null, top: [{ place, nick, points, n }], me: { kind, place, points, n, nick, battles } | null }
+//   { player_id?, season? } → { season, live, starts_at, ends_at, next: { season, starts_at } | null, top: [{ place, nick, points, n, ava? }], me: { kind, place, points, n, nick, ava?, battles } | null }
 // Межсезонье (sql/027, неделя между сезонами): по умолчанию — итоги прошедшего сезона (live: false), в next — когда начнётся следующий.
 import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
 import { supabaseAdmin } from "../_shared/supabase-admin.ts";
@@ -26,8 +26,8 @@ Deno.serve(async (req) => {
     if (nb.error) throw nb.error;
     const nx = ((nb.data || []) as { starts_at: string }[])[0];
     const rows = (board.data || []) as { player_id: string; nick: string; points: number; n: number; place: number }[];
-    const top = rows.slice(0, TOP).map((r) => ({ place: Number(r.place), nick: r.nick, points: Number(r.points), n: r.n }));
-    let me = null;
+    const topRows = rows.slice(0, TOP);
+    let me: Record<string, unknown> | null = null;
     const id = body.player_id;
     if (typeof id === "string" && id.length >= 8 && id.length <= 64) {
       const { data: pl } = await db.from("players").select("kind").eq("id", id).maybeSingle();
@@ -49,6 +49,16 @@ Deno.serve(async (req) => {
         me = { kind: pl.kind, nick: acc?.data?.nick ?? null, place: mine ? Number(mine.place) : null, points: mine ? Number(mine.points) : counted.reduce((a, x) => a + x.rating, 0), n: counted.length, battles };
       }
     }
+    // надетые аватарки (кошелёк, sql/028: worn.ava; Mark 2026-11-04). Не прочитались — таблица всё равно нужна: у всех та, что по умолчанию
+    const want = topRows.map((r) => r.player_id), avaOf = new Map<string, string>();
+    if (me) want.push(id);
+    if (want.length) {
+      const wl = await db.from("airdef_wallet").select("player_id, worn").in("player_id", want);
+      if (wl.error) console.error("get-airdef-rating ava", wl.error);
+      for (const x of wl.data || []) { const a = (x.worn as Record<string, unknown> | null)?.ava; if (typeof a === "string" && /^[a-z0-9_]{1,24}$/.test(a)) avaOf.set(x.player_id, a); }
+    }
+    const top = topRows.map((r) => ({ place: Number(r.place), nick: r.nick, points: Number(r.points), n: r.n, ava: avaOf.get(r.player_id) }));
+    if (me && avaOf.has(id)) me.ava = avaOf.get(id);
     const bd = (b.data || [])[0] || {};
     return jsonResponse({ season, current: at, live: live === season, starts_at: bd.starts_at ?? null, ends_at: bd.ends_at ?? null, next: nx ? { season: at, starts_at: nx.starts_at } : null, total: rows.length, top, me });
   } catch (e) {
