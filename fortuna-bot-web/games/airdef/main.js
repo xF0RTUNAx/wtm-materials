@@ -1306,12 +1306,21 @@ loadModels(new URL('./', import.meta.url).href, (name) => {
   if (C.ctrl && C.ctrl.modelsReady) C.ctrl.modelsReady();
 });
 // запуск по этапам: между ними экран успевает показать, что сейчас строится (полоса и подпись)
-const ldStep = (txt, k) => new Promise((r) => { const t = $('ldTxt'), b = $('ldBar'); if (t) t.textContent = txt; C.doors.note(`${txt} ${Math.round(k * 100)} %`); /* створки с прошлой страницы — подпись на шве */ if (b) b.style.width = Math.round(k * 100) + '%'; setTimeout(r, 30); });
+// загрузочное окно: одно на всю загрузку (Mark 2026-11-04, вариант C): город — до 55 %, модели и текстуры — остальное; всё пришло или прошло 15 с от открытия страницы — ворота разъезжаются в меню
+const LD_CITY = 0.55, LD_CAP = 15000;
+function ldPaint(k, txt) { const t = $('ldTxt'), p = $('ldPct'), b = $('ldBar'), L = (b && b.children) || []; if (t && txt) t.textContent = txt; if (p) p.textContent = Math.round(k * 100) + ' %'; const n = Math.floor(k * L.length + 1e-6); for (let i = 0; i < L.length; i++) L[i].className = i < n ? 'on' : ''; }
+function ldOpen() { const e = $('loading'); if (!e) return; ldPaint(1, tr('Готово')); e.classList.add('done'); setTimeout(() => { e.classList.add('open'); setTimeout(() => e.remove(), 1400); }, 420); }
+let ldGate = false, ldGateT = 0; // ворота закрыты, город готов, ждём модели и текстуры
+const ldStep = (txt, k) => new Promise((r) => { C.doors.note(`${txt} ${Math.round(k * 100)} %`); /* створки с прошлой страницы — подпись на шве */ ldPaint(k * LD_CITY, txt); setTimeout(r, 30); });
 // догрузка после старта: модели техники и домов, текстуры — статус внизу, пока не придёт всё
 let alShown = false;
 setInterval(() => {
   const m = modelStats(), t = texStats, need = m.req + t.req, got = m.done + t.done, e = $('assetLoad');
   const left = need - got; C.assetsDone = left <= 0;
+  if (ldGate) {
+    const now = performance.now(), done = (need > 0 && left <= 0) || (!need && now - ldGateT > 2500) || now > LD_CAP;
+    if (done) { ldGate = false; ldOpen(); } else { ldPaint(LD_CITY + (1 - LD_CITY) * (need ? got / need : 0), tr('Загружаем город')); return; }
+  }
   if (!e || !need) return;
   if (left > 0 && C.state !== 'loading') {
     alShown = true; e.classList.add('on');
@@ -1362,8 +1371,9 @@ setInterval(() => {
   C.buildMs = Math.round(performance.now() - t0);
   await ldStep(tr('Готовим графику (шейдеры)…'), 0.85);
   try { renderer.compile(scene, camera); } catch (_) { /* не критично */ }
-  await ldStep(tr('Готово'), 1);
-  $('loading').remove();
+  await ldStep(tr('Загружаем город'), 1);
+  // сразу в бой, створки с прошлой страницы, стенды — без ворот
+  if (Q.get('go') || Q.get('test') || C.doors.held || navigator.webdriver) $('loading').remove(); else { ldGate = true; ldGateT = performance.now(); }
   C.toMenu();
   requestAnimationFrame(frame);
   // go / hlo / weather — одноразовые (старт события, перезагрузка под карту): убрать из адреса, иначе следующая перезагрузка из меню

@@ -1,0 +1,140 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><title>Ангар: проба</title>
+<!-- Проба главного экрана (Mark 2026-11-04): настоящая модель игры с настоящей подвеской на пилонах (как в бою: air.js buildPylons), вращается пальцем; три места — ангар, перрон, небо; три вида выбора подвески.
+     Фоны, стойки и шасси здесь временные. ?full=1 — на весь экран (для телефона). -->
+<style>
+@font-face { font-family: 'Oswald'; font-weight: 300 700; src: url(../../games/airdef/fonts/oswald-cyrillic.woff2) format('woff2'); unicode-range: U+0400-045F, U+2116; }
+@font-face { font-family: 'Oswald'; font-weight: 300 700; src: url(../../games/airdef/fonts/oswald-latin.woff2) format('woff2'); unicode-range: U+0000-00FF, U+2000-206F; }
+@font-face { font-family: 'Golos Text'; font-weight: 400 800; src: url(../../games/airdef/fonts/golos-text-cyrillic.woff2) format('woff2'); unicode-range: U+0400-045F; }
+@font-face { font-family: 'Golos Text'; font-weight: 400 800; src: url(../../games/airdef/fonts/golos-text-latin.woff2) format('woff2'); unicode-range: U+0000-00FF, U+2000-206F; }
+:root { --gold: #e8b04a; --gold2: #f3c96f; --ink: #ece8dc; --dim: #c2c7b2; --mute: #8d9580; --jade: #8fe0b2; --sky: #9fd0ff; }
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; } html, body { margin: 0; background: #0d100c; color: var(--ink); font: 14px 'Golos Text', sans-serif; }
+body.full { overflow: hidden; } body.full .bar, body.full .note { display: none; } body.full .stage { padding: 0; }
+.bar { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; padding: 10px 16px; } .bar b { font: 500 17px 'Oswald'; } .sw { display: flex; gap: 4px; align-items: center; } .sw span { color: var(--mute); margin-right: 4px; } .sw button { padding: 6px 12px; font: 500 14px 'Oswald'; color: #e9e6dc; background: #20261c; border: 1px solid #3a4532; cursor: pointer; } .sw button.on { background: var(--gold); color: #17190f; border-color: var(--gold); }
+.note { padding: 0 16px 10px; max-width: 1000px; color: var(--dim); line-height: 1.45; } .stage { padding: 0 16px 24px; overflow: auto; }
+#S { position: relative; overflow: hidden; background: #14160f; user-select: none; touch-action: none; --il: 0px; --ir: 0px; --ib: 0px; }
+.bg { position: absolute; inset: -2%; background: center / cover no-repeat; transition: opacity .6s; } canvas#c { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.vg { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(rgba(6,7,4,.6), rgba(6,7,4,0) 16%, rgba(6,7,4,0) 62%, rgba(6,7,4,.72)); }
+.ui { position: absolute; inset: 0; pointer-events: none; } .ui > * { pointer-events: auto; }
+/* верх */
+.topb { position: absolute; left: calc(14px + var(--il)); right: calc(14px + var(--ir)); top: 10px; display: flex; align-items: center; gap: 14px; }
+.topb .lg { height: 34px; width: auto; } .prof { display: flex; flex-direction: column; font-size: 12px; color: var(--dim); } .prof b { font: 500 15px 'Oswald'; color: var(--ink); }
+.modes { display: flex; margin: 0 auto; } .modes button { padding: 7px 16px; font: 500 15px 'Oswald'; letter-spacing: .02em; color: var(--dim); background: rgba(14,17,15,.72); border: 1px solid #3a4532; border-right-width: 0; } .modes button:last-child { border-right-width: 1px; } .modes button.on { background: var(--gold); color: #17190f; border-color: var(--gold); }
+.cur { display: flex; gap: 12px; font: 500 16px 'Oswald'; font-variant-numeric: tabular-nums; } .cur span { display: flex; align-items: center; gap: 4px; } .cur img { width: 24px; height: 24px; } .cur .x { color: var(--sky); } .cur .g { color: var(--jade); }
+/* слева разделы */
+.side { position: absolute; left: calc(14px + var(--il)); top: 62px; display: flex; flex-direction: column; gap: 6px; } .side button { width: 118px; padding: 7px 10px; text-align: left; font: 500 14px 'Oswald'; color: var(--gold2); background: rgba(14,17,15,.78); border: 1px solid rgba(232,176,74,.55); }
+/* низ: лента техники и кнопка */
+.strip { position: absolute; left: calc(14px + var(--il)); right: calc(214px + var(--ir)); bottom: calc(10px + var(--ib)); display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; touch-action: pan-x; } .strip::-webkit-scrollbar { display: none; }
+.card { position: relative; flex: 0 0 148px; height: 82px; padding: 0; color: inherit; text-align: left; background: rgba(14,17,15,.84); border: 1px solid #333d2c; overflow: hidden; cursor: pointer; } .card img { position: absolute; right: -6px; bottom: -2px; width: 118px; height: 66px; object-fit: contain; } .card b { position: absolute; left: 7px; top: 4px; font: 500 14px 'Oswald'; text-shadow: 0 1px 2px #000; z-index: 1; } .card.on { border-color: var(--gold); background: rgba(40,36,20,.92); box-shadow: inset 0 -3px 0 var(--gold); }
+.go { position: absolute; right: calc(14px + var(--ir)); bottom: calc(10px + var(--ib)); width: 190px; height: 82px; border: 0; background: url(../../games/airdef/ui/quests/btn_take.webp) center / 100% 100%; font: 600 26px 'Oswald'; letter-spacing: .1em; color: #2a1d08; text-shadow: 0 1px 0 rgba(255,236,190,.55); cursor: pointer; }
+/* А · подвески справа */
+.pres { position: absolute; right: calc(14px + var(--ir)); top: 62px; bottom: calc(102px + var(--ib)); width: 310px; display: flex; flex-direction: column; gap: 5px; overflow-y: auto; scrollbar-width: none; touch-action: pan-y; } .pres::-webkit-scrollbar { display: none; }
+.pres .h, .tb .h { font: 500 13px 'Oswald'; letter-spacing: .12em; text-transform: uppercase; color: var(--dim); text-shadow: 0 1px 2px #000; }
+.pr { width: 100%; padding: 7px 9px; text-align: left; color: inherit; background: rgba(14,17,15,.82); border: 1px solid #333d2c; cursor: pointer; } .pr.on { border-color: var(--gold); background: rgba(40,36,20,.92); } .pr .w { display: flex; flex-wrap: wrap; gap: 6px; } .wt { display: inline-flex; align-items: center; gap: 3px; font: 500 14px 'Oswald'; } .wt img { width: 52px; height: 30px; object-fit: contain; } .pr small { display: block; margin-top: 3px; font-size: 11.5px; color: var(--mute); }
+/* Б · таблица пилонов */
+.tb { position: absolute; right: calc(14px + var(--ir)); bottom: calc(102px + var(--ib)); max-width: min(620px, 56%); background: rgba(14,17,15,.88); border: 1px solid #333d2c; padding: 6px 8px 8px; } .tb .h { margin-bottom: 4px; } .tb .scr { max-height: 230px; overflow-y: auto; touch-action: pan-y; scrollbar-width: none; } .tb table { border-collapse: collapse; } .tb th { font: 500 11px 'Oswald'; color: var(--mute); padding: 0 0 3px; } .tb td { width: 44px; height: 34px; padding: 1px; border: 1px solid rgba(233,230,220,.1); text-align: center; } .tb td img { width: 40px; height: 26px; object-fit: contain; display: block; } .tb tr { cursor: pointer; } .tb tr.on td { background: rgba(232,176,74,.2); border-color: rgba(232,176,74,.5); } .tb td.gap { width: 8px; border: 0; }
+/* В · выноски на самой модели */
+.tabsv { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(102px + var(--ib)); display: flex; gap: 4px; max-width: 70%; overflow-x: auto; scrollbar-width: none; touch-action: pan-x; } .tabsv button { flex: none; padding: 5px 10px; font: 500 13px 'Oswald'; color: var(--dim); background: rgba(14,17,15,.84); border: 1px solid #333d2c; white-space: nowrap; } .tabsv button.on { color: #17190f; background: var(--gold); border-color: var(--gold); }
+.call { position: absolute; left: 0; top: 0; display: flex; align-items: center; gap: 5px; padding: 2px 7px 2px 3px; font: 500 12.5px 'Oswald'; white-space: nowrap; background: rgba(10,12,8,.86); border: 1px solid rgba(232,176,74,.6); will-change: transform; cursor: pointer; } .call img { width: 40px; height: 23px; object-fit: contain; } svg#ln { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; } svg#ln line { stroke: rgba(243,201,111,.85); stroke-width: 1.2; } svg#ln circle { fill: #f3c96f; }
+.hint { position: absolute; left: 50%; transform: translateX(-50%); top: 58px; font-size: 12px; color: var(--dim); text-shadow: 0 1px 3px #000; pointer-events: none; }
+.tag { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(100px + var(--ib)); font: 500 18px 'Oswald'; text-shadow: 0 1px 4px #000; pointer-events: none; white-space: nowrap; }
+#S.ph .topb { top: 6px; gap: 8px; } #S.ph .topb .lg { height: 24px; } #S.ph .prof { display: none; } #S.ph .modes button { padding: 4px 9px; font-size: 12.5px; } #S.ph .cur { font-size: 12.5px; gap: 7px; } #S.ph .cur img { width: 17px; height: 17px; }
+#S.ph .side { top: 40px; gap: 3px; } #S.ph .side button { width: 92px; padding: 3px 7px; font-size: 11.5px; }
+#S.ph .strip { right: calc(128px + var(--ir)); bottom: calc(4px + var(--ib)); gap: 4px; } #S.ph .card { flex-basis: 92px; height: 50px; } #S.ph .card img { width: 74px; height: 42px; } #S.ph .card b { font-size: 11px; left: 4px; top: 1px; } #S.ph .go { width: 116px; height: 50px; font-size: 16px; bottom: calc(4px + var(--ib)); }
+#S.ph .pres { top: 40px; bottom: calc(60px + var(--ib)); width: 216px; gap: 3px; } #S.ph .pres .h, #S.ph .tb .h { font-size: 10px; } #S.ph .pr { padding: 3px 5px; } #S.ph .wt { font-size: 11px; } #S.ph .wt img { width: 34px; height: 20px; } #S.ph .pr small { display: none; }
+#S.ph .tb { bottom: calc(60px + var(--ib)); padding: 3px 5px 4px; max-width: 62%; } #S.ph .tb .scr { max-height: 150px; } #S.ph .tb td { width: 30px; height: 23px; } #S.ph .tb td img { width: 28px; height: 18px; } #S.ph .tb th { font-size: 9px; }
+#S.ph .tabsv { bottom: calc(60px + var(--ib)); } #S.ph .tabsv button { font-size: 11px; padding: 3px 7px; } #S.ph .call { font-size: 10.5px; } #S.ph .call img { width: 28px; height: 16px; } #S.ph .hint { top: 34px; font-size: 10px; } #S.ph .tag { bottom: calc(58px + var(--ib)); font-size: 13px; }
+</style></head><body>
+<div class="bar"><b>Главный экран: проба</b><span class="sw" id="ps"><span>Где стоит:</span><button data-p="hangar">Ангар</button><button data-p="apron">Перрон</button><button data-p="air">В воздухе</button></span><span class="sw" id="us"><span>Подвески:</span><button data-u="A">А · Плашки с оружием</button><button data-u="B">Б · Таблица пилонов</button><button data-u="C">В · Выноски на модели</button></span><span class="sw" id="fs"><button data-f="pc">Компьютер</button><button data-f="ph">Телефон</button></span></div>
+<div class="note" id="note"></div>
+<div class="stage"><div id="S"><div class="bg" id="bg"></div><canvas id="c"></canvas><div class="vg"></div><svg id="ln"></svg><div class="ui" id="ui"></div></div></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script type="module">
+const G = '../../games/airdef/', V = '?v=20261104a';
+const M = await import(G + 'models.js' + V), { weaponGeo } = await import(G + 'units-render.js' + V), { AG, LOADOUTS, PLANES } = await import(G + 'arsenal.js' + V), { ktxInit } = await import(G + 'ktx.js' + V);
+const Q = new URLSearchParams(location.search), hp = location.hash.slice(1).split('-'), FULL = Q.has('full') || innerHeight < 460; if (FULL) document.body.classList.add('full');
+let P = hp[0] || 'hangar', U = hp[1] || 'A', F = hp[2] || 'pc';
+const ALL = Object.values(LOADOUTS).flat().filter((L) => !L.heli && L.plane), byPlane = {}; for (const L of ALL) (byPlane[L.plane] = byPlane[L.plane] || []).push(L);
+const WANT = ['e_f15e', 'e_su34', 'f16', 'e_a10', 'su30', 'e_f22', 'e_su57', 'e_mig31', 'e_su25', 'e_f35'], PL = WANT.filter((k) => byPlane[k]);
+let plane = PL.includes(hp[3]) ? hp[3] : PL[0], lo = 0;
+const NOTE = { hangar: '<b>Ангар.</b> Самолёт на подъёмниках при рабочем свете, подвески на уровне глаз. Шасси не нужны, поэтому сразу работает для всех 58 самолётов. Фон и стойки здесь временные.', apron: '<b>Перрон.</b> Самый близкий к твоей идее аэродрома. Но у наших самолётов шасси сняты, и их придётся собрать: сейчас стойки временные, чтобы показать замысел. Для ЗРК и пусковых перрон подходит сразу.', air: '<b>В воздухе.</b> Самолёт над аэродромом, снизу хорошо видно подвески. Новых моделей не нужно совсем, но это уже не стоянка.' };
+const S = document.getElementById('S'), cv = document.getElementById('c'), ui = document.getElementById('ui'), ln = document.getElementById('ln'), bg = document.getElementById('bg');
+const r = new THREE.WebGLRenderer({ canvas: cv, antialias: true, alpha: true }); r.outputEncoding = THREE.sRGBEncoding; r.setPixelRatio(Math.min(2, devicePixelRatio)); try { ktxInit(r); } catch (_) { /* без сжатых текстур */ }
+M.loadModels(new URL(G, location.href).href, () => {});
+const sc = new THREE.Scene(), cam = new THREE.PerspectiveCamera(30, 16 / 9, 0.1, 3000), pivot = new THREE.Group(); sc.add(pivot);
+sc.add(new THREE.HemisphereLight(0xffffff, 0x6a6a5a, 0.72)); const dl = new THREE.DirectionalLight(0xfff2dd, 0.62); dl.position.set(6, 12, -8); sc.add(dl); const dl2 = new THREE.DirectionalLight(0xbfd4ff, 0.22); dl2.position.set(-8, 2, 6); sc.add(dl2);
+const wMat = new THREE.MeshPhongMaterial({ vertexColors: true, specular: 0x444444, shininess: 40 });
+const blob = (() => { const c = document.createElement('canvas'); c.width = c.height = 256; const x = c.getContext('2d'), g = x.createRadialGradient(128, 128, 10, 128, 128, 128); g.addColorStop(0, 'rgba(0,0,0,.7)'); g.addColorStop(.6, 'rgba(0,0,0,.42)'); g.addColorStop(1, 'rgba(0,0,0,0)'); x.fillStyle = g; x.fillRect(0, 0, 256, 256); const t = new THREE.CanvasTexture(c); return new THREE.Mesh(new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ map: t, transparent: true, depthWrite: false })); })();
+const ground = (() => { const t = new THREE.TextureLoader().load(G + 'tex/concrete.jpg', () => { need = 1; }); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(150, 150); t.encoding = THREE.sRGBEncoding; t.anisotropy = r.capabilities.getMaxAnisotropy(); const m = new THREE.Mesh(new THREE.CircleGeometry(600, 64).rotateX(-Math.PI / 2), new THREE.MeshLambertMaterial({ map: t, color: 0xd8d6cc })); return m; })();
+sc.add(ground); sc.add(blob);
+let need = 1, obj = null, props = [], bb = null, size = 10, stationsN = [], groups = [], focus = null, az = -0.72, el = 0.1, tAz = az, tEl = el, zoom = 1, tZoom = 1, target = new THREE.Vector3(), tTarget = new THREE.Vector3(), H0 = 0, token = 0;
+const wait = (f, n = 500) => new Promise((ok) => { let i = 0; const t = setInterval(() => { const v = f(); if (v || ++i > n) { clearInterval(t); ok(v); } }, 40); });
+const ORDER = [1, 6, 2, 5, 0, 7, 3, 4];
+// раскладка как в plane-hang.html: тяжёлое — ближе к фюзеляжу по порядку точек
+const layout = (L, st) => { const items = L.items.filter(([k]) => AG[k] && AG[k].kind !== 'ecm').sort((a, b) => AG[b[0]].mass - AG[a[0]].mass), out = []; let oi = 0; for (const [key, c] of items) for (let j = 0; j < c && oi < ORDER.length && oi < st.length; j++) out.push({ key, st: ORDER[oi++] }); return out.filter((q) => st[q.st]); };
+async function build() {
+  const my = ++token, L = byPlane[plane][lo] || byPlane[plane][0]; M.wantModel(plane); const meta = M.planeMeta(plane);
+  const pm = await wait(() => { const q = M.planeModel(meta.side, meta.cls, plane); return q && q.name === plane ? q : null; }); if (my !== token || !pm) return;
+  for (const [k] of L.items) if (AG[k]) M.wantWeapon(k); await wait(() => L.items.every(([k]) => !AG[k] || !M.weaponPending(k))); if (my !== token) return;
+  while (pivot.children.length) pivot.remove(pivot.children[0]); props = []; groups = [];
+  obj = pm.obj; pivot.add(obj); stationsN = pm.stations;
+  const box0 = new THREE.Box3().setFromObject(obj), sz = box0.getSize(new THREE.Vector3()); size = Math.max(sz.x, sz.z);
+  for (const q of layout(L, pm.stations)) { const p = pm.stations[q.st], W0 = AG[q.key].vis || {}, m = M.pylonMesh(q.key, AG[q.key], weaponGeo, wMat); m.position.set(p.x, p.y - (W0.hang ?? W0.r ?? 0.2) - 0.05, p.z); obj.add(m); let g = groups.find((x) => x.key === q.key); if (!g) groups.push(g = { key: q.key, n: 0, st: [], pos: [] }); g.n++; g.st.push(q.st); g.pos.push(m.position.clone()); }
+  place(box0); frame(); ui.innerHTML = view(); listen(); need = 1;
+}
+function place(box0) {
+  const box = new THREE.Box3().setFromObject(obj), low = box.min.y;
+  ground.visible = P !== 'air'; blob.visible = P !== 'air';
+  if (P === 'air') { obj.position.y = 0; obj.rotation.z = 0.16; H0 = (box0.min.y + box0.max.y) / 2; }
+  else {
+    const gearH = P === 'hangar' ? Math.max(1.25, -low + 0.35) : Math.max(1.05, -low + 0.25); obj.rotation.z = 0; obj.position.y = gearH; H0 = gearH + (box0.min.y + box0.max.y) / 2;
+    const mat = new THREE.MeshPhongMaterial({ color: P === 'hangar' ? 0xc7a93a : 0x6d7278, shininess: 50 }), tyre = new THREE.MeshPhongMaterial({ color: 0x17181a, shininess: 8 }), zF = box0.min.z + (box0.max.z - box0.min.z) * 0.22, zM = box0.min.z + (box0.max.z - box0.min.z) * 0.62, xM = Math.max(1.0, size * 0.11), pts = [[0, zF], [-xM, zM], [xM, zM]];
+    for (const [x, z] of pts) { const top = gearH + box0.min.y + 0.2, s = new THREE.Mesh(new THREE.CylinderGeometry(P === 'hangar' ? 0.11 : 0.06, P === 'hangar' ? 0.16 : 0.07, top, 10), mat); s.position.set(x, top / 2, z); pivot.add(s); props.push(s); if (P === 'hangar') { const b = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.5, 0.14, 14), mat); b.position.set(x, 0.07, z); pivot.add(b); props.push(b); } else { const w = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.2, 18).rotateZ(Math.PI / 2), tyre); w.position.set(x, 0.3, z); pivot.add(w); props.push(w); } }
+    blob.scale.set(size * 1.25, 1, size * 1.05); blob.position.set(0, 0.02, 0);
+  }
+  sc.fog = P === 'hangar' ? new THREE.Fog(0x24262a, size * 2.2, size * 5.5) : P === 'apron' ? new THREE.Fog(0xcfd8de, size * 3, 260) : null; ground.material.needsUpdate = true;
+  bg.style.backgroundImage = `url(${P === 'hangar' ? G + 'ui/research/wpn_west.jpg' : P === 'apron' ? G + 'sky/day.jpg' : G + 'shop/e_f15e_inferno_sky.webp'})`;
+  cv.style.opacity = 1; tTarget.set(0, H0, 0); target.copy(tTarget); focus = null; tZoom = 1; zoom = 1;
+}
+function frame() {
+  const [W, H, il, ir, ib] = FULL ? [innerWidth, innerHeight, 44, 44, 16] : F === 'pc' ? [1280, 720, 0, 0, 0] : [874, 402, 47, 47, 21];
+  S.classList.toggle('ph', H < 460); S.style.width = W + 'px'; S.style.height = H + 'px'; S.style.setProperty('--il', il + 'px'); S.style.setProperty('--ir', ir + 'px'); S.style.setProperty('--ib', ib + 'px'); r.setSize(W, H, false); cam.aspect = W / H; cam.updateProjectionMatrix(); ln.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  document.getElementById('note').innerHTML = NOTE[P]; for (const [id, k, v] of [['ps', 'p', P], ['us', 'u', U], ['fs', 'f', F]]) document.querySelectorAll(`#${id} button`).forEach((b) => b.classList.toggle('on', b.dataset[k] === v)); need = 1;
+}
+const nm = (k) => (AG[k] ? AG[k].short || AG[k].name : k), thumb = (k) => `${G}thumbs/wpn_${k}.webp${V}`, pName = (k) => PLANES[k] || k;
+const wts = (L) => L.items.filter(([k]) => AG[k]).map(([k, n]) => `<span class="wt"><img src="${thumb(k)}" alt="" onerror="this.style.visibility='hidden'">×${n}</span>`).join('');
+const label = (L) => L.items.filter(([k]) => AG[k]).map(([k, n]) => `${nm(k)} ×${n}`).join(' · ');
+function view() {
+  const Ls = byPlane[plane], base = `<div class="topb"><img class="lg" src="../../img/airdef-logo-alpha.webp" alt=""><span class="prof"><b>xFORTUNAx</b>ранг III</span><div class="modes"><button class="on">Вылет</button><button>Оборона</button><button>Мульти-волна</button><button>Онлайн</button></div><div class="cur"><span class="x"><img src="${G}ui/quests/t_xp.webp" alt="">4 998</span><span><img src="${G}ui/quests/t_silver.webp" alt="">4 998</span><span class="g"><img src="${G}ui/quests/t_gems.webp" alt="">12</span></div></div>
+    <div class="side"><button>Исследования</button><button>Задания</button><button>Рейтинг</button><button>Магазин</button></div><div class="hint">потяни, чтобы повернуть</div>
+    <div class="strip">${PL.map((k) => `<button class="card ${k === plane ? 'on' : ''}" data-pl="${k}"><b>${pName(k)}</b><img src="${G}thumbs/air_${k}.webp${V}" alt=""></button>`).join('')}</div><button class="go">ВЗЛЁТ</button>`;
+  if (U === 'A') return base + `<div class="pres"><div class="h">Подвеска</div>${Ls.map((L, i) => `<button class="pr ${i === lo ? 'on' : ''}" data-lo="${i}"><span class="w">${wts(L)}</span><small>${label(L)}</small></button>`).join('')}</div>`;
+  if (U === 'B') { const st = stationsN.length, half = Math.ceil(st / 2), idx = Array.from({ length: st }, (_, i) => i), cols = [...idx.slice(0, half), -1, ...idx.slice(half)];
+    return base + `<div class="tb"><div class="h">Подвеска по пилонам</div><div class="scr"><table><tr>${cols.map((c) => (c < 0 ? '<th class="gap"></th>' : `<th>${c + 1}</th>`)).join('')}</tr>${Ls.map((L, i) => { const lay = layout(L, stationsN); return `<tr class="${i === lo ? 'on' : ''}" data-lo="${i}">${cols.map((c) => { if (c < 0) return '<td class="gap"></td>'; const q = lay.find((x) => x.st === c); return `<td>${q ? `<img src="${thumb(q.key)}" alt="" onerror="this.style.visibility='hidden'">` : ''}</td>`; }).join('')}</tr>`; }).join('')}</table></div></div>`; }
+  return base + `<div class="tabsv">${Ls.map((L, i) => `<button class="${i === lo ? 'on' : ''}" data-lo="${i}">${L.items.filter(([k]) => AG[k]).map(([k, n]) => `${nm(k)} ×${n}`).slice(0, 2).join(' + ')}</button>`).join('')}</div>${groups.map((g, i) => `<div class="call" data-g="${i}"><img src="${thumb(g.key)}" alt="" onerror="this.style.visibility='hidden'">${nm(g.key)} ×${g.n}</div>`).join('')}`;
+}
+function listen() { ui.querySelectorAll('[data-pl]').forEach((b) => { b.onclick = () => { plane = b.dataset.pl; lo = 0; build(); }; }); ui.querySelectorAll('[data-lo]').forEach((b) => { b.onclick = () => { lo = +b.dataset.lo; build(); }; }); ui.querySelectorAll('[data-g]').forEach((b) => { b.onclick = () => { const g = groups[+b.dataset.g]; if (focus === g) { focus = null; tTarget.set(0, H0, 0); tZoom = 1; } else { focus = g; const c = g.pos[0].clone(); obj.localToWorld(c); pivot.worldToLocal(c); tTarget.set(c.x, c.y, c.z); tZoom = 0.42; } need = 1; }; }); }
+// вращение пальцем: самолёт поворачивается, камера стоит; рисуем только когда что-то меняется
+let drag = null, vel = 0; const inUi = (e) => e.target.closest && e.target.closest('button,.pres,.tb,.strip,.tabsv,.call');
+S.addEventListener('pointerdown', (e) => { if (inUi(e)) return; drag = [e.clientX, e.clientY]; S.setPointerCapture(e.pointerId); }); S.addEventListener('pointermove', (e) => { if (!drag) return; const dx = e.clientX - drag[0], dy = e.clientY - drag[1]; drag = [e.clientX, e.clientY]; tAz += dx * 0.008; vel = dx * 0.008; tEl = Math.max(-0.28, Math.min(0.6, tEl + dy * 0.004)); need = 1; }); S.addEventListener('pointerup', () => { drag = null; need = 1; });
+S.addEventListener('wheel', (e) => { e.preventDefault(); tZoom = Math.max(0.35, Math.min(1.4, tZoom * (e.deltaY > 0 ? 1.08 : 0.93))); need = 1; }, { passive: false });
+const tmp = new THREE.Vector3();
+function draw(now) {
+  const anim = P === 'air'; let moving = anim || need;
+  if (!drag && Math.abs(vel) > 0.0004) { tAz += vel; vel *= 0.93; moving = true; }
+  const k = 0.16; az += (tAz - az) * k; el += (tEl - el) * k; zoom += (tZoom - zoom) * k; target.lerp(tTarget, k); if (Math.abs(tAz - az) + Math.abs(tEl - el) + Math.abs(tZoom - zoom) + target.distanceTo(tTarget) > 0.0015) moving = true;
+  if (obj && moving) {
+    pivot.rotation.y = az; if (anim) { obj.position.y = Math.sin(now / 1400) * 0.14; obj.rotation.z = 0.16 + Math.sin(now / 2100) * 0.025; }
+    const h = S.clientHeight, w = S.clientWidth, fit = Math.max(size * 1.02 / (2 * Math.tan(cam.fov * Math.PI / 360) * cam.aspect), size * 0.62 / (2 * Math.tan(cam.fov * Math.PI / 360))) * 1.22, D = fit * zoom;
+    const shift = U === 'A' ? 0.09 : 0; // сдвиг влево, когда справа панель
+    tmp.copy(target).applyAxisAngle(new THREE.Vector3(0, 1, 0), az); cam.position.set(tmp.x, tmp.y + Math.sin(el) * D, tmp.z - Math.cos(el) * D); cam.lookAt(tmp); cam.setViewOffset(w, h, w * shift, h * 0.03, w, h); r.render(sc, cam); need = 0;
+    if (U === 'C') lines(w, h);
+  }
+  requestAnimationFrame(draw);
+}
+function lines(w, h) {
+  let html = ''; const used = []; ui.querySelectorAll('.call').forEach((e, i) => { const g = groups[i]; if (!g) return; const p = g.pos[0].clone(); obj.localToWorld(p); p.project(cam); const x = (p.x + 1) / 2 * w, y = (1 - p.y) / 2 * h, lx0 = x < w / 2 ? x - e.offsetWidth - 34 : x + 34; const lyMax = h - (h < 460 ? 96 : 150) - e.offsetHeight; let ly = Math.min(lyMax, y + 34); while (used.some((u) => Math.abs(u - ly) < e.offsetHeight + 4)) ly -= e.offsetHeight + 5; used.push(ly); const lx = Math.max(6, Math.min(w - e.offsetWidth - 6, lx0)); e.style.transform = `translate(${lx}px, ${ly}px)`; html += `<line x1="${x}" y1="${y}" x2="${x < w / 2 ? lx + e.offsetWidth : lx}" y2="${ly + e.offsetHeight / 2}"/><circle cx="${x}" cy="${y}" r="2.6"/>`; }); ln.innerHTML = html;
+}
+document.addEventListener('click', (e) => { const b = e.target.closest('#ps [data-p],#us [data-u],#fs [data-f]'); if (!b) return; if (b.dataset.p) P = b.dataset.p; if (b.dataset.u) { U = b.dataset.u; ln.innerHTML = ''; } if (b.dataset.f) F = b.dataset.f; build(); });
+addEventListener('resize', () => { if (FULL) frame(); });
+frame(); build(); requestAnimationFrame(draw); window.__ready = () => !!obj;
+</script></body></html>

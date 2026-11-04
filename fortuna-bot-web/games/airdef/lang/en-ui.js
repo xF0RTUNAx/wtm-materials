@@ -1158,4 +1158,5 @@ export default {
   "Задание ещё не выполнено": "The task is not complete yet",
   "Награда уже получена": "Reward already claimed",
   "Сначала заберите все задания": "Claim all the tasks first",
+  "Загружаем город": "Loading the city",
 };
