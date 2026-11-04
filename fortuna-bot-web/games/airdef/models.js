@@ -444,7 +444,8 @@ const GLB_V_OWN = {
   w_fab1000: '20261103g',
 };
 GLB_V.hg_jack = '20261104a';
-GLB_V.w_pod = '20261104a'; // серый корпус контейнера
+GLB_V.w_pod = '20261104b'; // серый корпус контейнера, без комьев от упрощения
+GLB_V.w_agm88 = '20261104a'; // без синих ложементов тележки
 GLB_V.e_f111 = '20261104a'; // без чёрных наклеек
 GLB_V.e_tu160 = '20261104a'; // текстура 1024 вместо 512 (надписи в ангаре)
 GLB_V.e_f15e = '20261024g'; // заглушки в соплах - тёмные (prepare.js #soot), 2026-10-22
@@ -549,6 +550,14 @@ function wearMat(mat) {
   mat.customProgramCacheKey = () => 'wear';
 }
 const pylonMat = new THREE.MeshPhongMaterial({ color: 0x4a4f54, specular: 0x222222, shininess: 20 });
+// дорисованный пилон: лезвие с острыми кромками, снизу короче и сдвинут назад (нос модели к -z). Центр по высоте в нуле
+export function pylonGeo(h, L = 1.6, w = 0.12) {
+  const loop = (y, kL, kW, dz) => [[0, 0.5], [0.5, 0.17], [0.5, -0.17], [0, -0.5], [-0.5, -0.17], [-0.5, 0.17]].map(([x, z]) => [x * w * kW, y, z * L * kL + dz]);
+  const T = loop(h / 2, 1, 1, 0), B = loop(-h / 2, 0.72, 0.85, L * 0.07), v = [], tri = (a, b, c) => v.push(...a, ...b, ...c);
+  for (let i = 0; i < 6; i++) { const j = (i + 1) % 6; tri(B[i], B[j], T[j]); tri(B[i], T[j], T[i]); }
+  for (let i = 1; i < 5; i++) { tri(T[0], T[i], T[i + 1]); tri(B[0], B[i + 1], B[i]); }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(v, 3)); g.computeVertexNormals(); return g;
+}
 // телефон (2026-10-22: Telegram закрывал вкладку в вертолётном режиме по памяти - у AH-64 18 текстур 1024 ≈ 100 МБ видеопамяти):
 // текстуры вертолётов - не больше 512, остальных моделей - не больше 1024; распакованная картинка закрывается после загрузки на видеокарту
 // (иначе держит ещё столько же обычной памяти). На ПК и в стендах (свои рендереры) - как было
@@ -747,7 +756,7 @@ async function load(name, base) {
     group.userData.wings = true; if ((META[name] || {}).flip) group.userData.flip = true; // висит крыльями вниз (УМПК): после сброса переворачивается на 180° (glideWings)
   }
   // дорисованные пилоны там, где у модели их нет
-  for (const p of (mOf(name) || { stations: [] }).stations) if (p.py > 0) { /* дальняя копия _lo - по описанию основной */ const pm = new THREE.Mesh(new THREE.BoxGeometry(0.12, p.py, 1.6), pylonMat); pm.position.set(p.x, p.y + p.py / 2, p.z); group.add(pm); }
+  for (const p of (mOf(name) || { stations: [] }).stations) if (p.py > 0) { /* дальняя копия _lo - по описанию основной */ const pm = new THREE.Mesh(pylonGeo(p.py), pylonMat); pm.position.set(p.x, p.y + p.py / 2, p.z); pm.userData.genPylon = true; group.add(pm); }
   return group;
 }
 // готовая модель комплекса: { body, turret, cradle } (копии) или null - тогда процедурная
