@@ -12,7 +12,7 @@
   #doorsBoot > div { position: absolute; top: 0; bottom: 0; width: 50.2%; background: #171b14 center / cover no-repeat; }
   #doorsBoot .dl { left: 0; background-image: var(--dbl); background-position: right center; } #doorsBoot .dr { right: 0; background-image: var(--dbr); background-position: left center; }</style>
 <script>try { var dd = JSON.parse(sessionStorage.getItem('fortuna_ad_doors') || 'null'); if (dd && Date.now() - dd.t < 60000 && /^(has|hangar)$/.test(dd.s) && !matchMedia('(prefers-reduced-motion: reduce)').matches) { var dr = document.documentElement; dr.classList.add('dboot'); setTimeout(function () { dr.classList.remove('dboot'); }, 20000); /* игра не поднялась (ошибка до doors.js) — заглушка не висит вечно */
-  dr.style.setProperty('--dbl', 'url(airdef/ui/doors/' + dd.s + '_l.webp?v=20261103a)'); dr.style.setProperty('--dbr', 'url(airdef/ui/doors/' + dd.s + '_r.webp?v=20261103a)'); } } catch (e) { /* нет хранилища */ }</script>
+  dr.style.setProperty('--dbl', 'url(airdef/ui/doors/' + dd.s + '_l.webp?v=20261104a)'); dr.style.setProperty('--dbr', 'url(airdef/ui/doors/' + dd.s + '_r.webp?v=20261104a)'); } } catch (e) { /* нет хранилища */ }</script>
 <!-- превью ссылки (то же, что у fortunawtm.com/airsuperiority — Mark 2026-10-27) -->
 <meta name="description" content="Современная авиация, вооружение и комплексы ПВО прямо в браузере! Специальный режим мульти-волны против баллистики, крылатых ракет, дронов и бомб по обе стороны. Онлайн, рейтинг, камуфляжи и многое другое. Попробуй прямо сейчас!"><meta property="og:type" content="website"><meta property="og:site_name" content="xFORTUNAx"><meta property="og:title" content="Air Superiority Online">
 <meta property="og:description" content="Современная авиация, вооружение и комплексы ПВО прямо в браузере! Специальный режим мульти-волны против баллистики, крылатых ракет, дронов и бомб по обе стороны. Онлайн, рейтинг, камуфляжи и многое другое. Попробуй прямо сейчас!"><meta property="og:image" content="https://fortunawtm.com/fortuna-bot-web/img/og-logo.jpg"><meta property="og:url" content="https://fortunawtm.com/airsuperiority"><meta name="twitter:card" content="summary_large_image">
@@ -850,10 +850,10 @@
 </div>
 <script src="https://telegram.org/js/telegram-web-app.js"></script> <!-- Telegram Mini App (вне Telegram — пустой объект) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="../config.js?v=20261103a"></script> <!-- адрес функции mp-ticket и ключ Supabase (билет онлайна) -->
+<script src="../config.js?v=20261104a"></script> <!-- адрес функции mp-ticket и ключ Supabase (билет онлайна) -->
 <script> // сервис-воркер: файлы игры — в кэше устройства (games/airdef-sw.js, airdef/offline.js); только на сайте или с ?sw=1. Версия — как у модулей: поднимается при деплое
-  if ('serviceWorker' in navigator && (/fortunawtm\.com$/.test(location.hostname) || /[?&]sw=1/.test(location.search))) navigator.serviceWorker.register('airdef-sw.js?v=20261103a', { scope: './airdef' }).catch(() => {});
+  if ('serviceWorker' in navigator && (/fortunawtm\.com$/.test(location.hostname) || /[?&]sw=1/.test(location.search))) navigator.serviceWorker.register('airdef-sw.js?v=20261104a', { scope: './airdef' }).catch(() => {});
 </script>
-<script type="module" src="airdef/main.js?v=20261103a"></script>
+<script type="module" src="airdef/main.js?v=20261104a"></script>
 </body>
 </html>

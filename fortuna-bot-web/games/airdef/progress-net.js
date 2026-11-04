@@ -2,12 +2,12 @@
 // одиночного боя и его итог (airdef-solo), строки награды на экране итогов. Тратит и начисляет только сервер — здесь
 // только запросы и показ. Без входа (нет аккаунта игры fortuna_airdef_acc; аккаунт сайта fortuna_web_player считается, только если у него уже есть прогресс игры —
 // account.js legacySite) — как у новичка: в «Реализме» только стартовый набор, опыт не копится; «Аркада» и обучение открыты целиком (AIRDEF_PROGRESSION.md §5).
-import { NODE, newProgress, owned, loadoutMissing, samOk, strikeOk, strikeId, RANK_NAME } from './progress.js?v=20261103a';
-import { LOADOUTS } from './arsenal.js?v=20261103a';
-import { ico } from './icons.js?v=20261103a';
-import { tr, trIf, LANG } from './i18n.js?v=20261103a';
-import { activeAcc, isMock, siteNoProgress } from './account.js?v=20261103a';
-import { DAILY, WEEKLY, mskDay, questApply, questClaim, questRoll, questView } from './quests-data.js?v=20261103a';
+import { NODE, newProgress, owned, loadoutMissing, samOk, strikeOk, strikeId, RANK_NAME } from './progress.js?v=20261104a';
+import { LOADOUTS } from './arsenal.js?v=20261104a';
+import { ico } from './icons.js?v=20261104a';
+import { tr, trIf, LANG } from './i18n.js?v=20261104a';
+import { activeAcc, isMock, siteNoProgress } from './account.js?v=20261104a';
+import { DAILY, WEEKLY, mskDay, questApply, questClaim, questRoll, questView } from './quests-data.js?v=20261104a';
 
 const TEST = new URLSearchParams(location.search).get('pgtest'); // ?pgtest=1 — тестовый прогресс в памяти (без сервера)
 export function account() { return activeAcc(); } // аккаунт игры, иначе «старый» аккаунт сайта с прогрессом (account.js)
@@ -55,7 +55,7 @@ export function createProgress(C) {
 
   // ── тестовый режим (без сервера): правила те же, состояние — в памяти ──
   async function local(action, id, branch) {
-    const M = await import('./progress.js?v=20261103a');
+    const M = await import('./progress.js?v=20261104a');
     if (!G.P) G.P = { ...newProgress(), xp: 20000, silver: 20000 };
     const r = action === 'research' ? M.research(G.P, id) : action === 'buy' ? M.buy(G.P, id) : (G.P.goal[branch] = id, { ok: true });
     if (!r.ok) throw new Error(r.why);
@@ -96,7 +96,7 @@ export function createProgress(C) {
       if (LOCAL()) { if (!G.P) await local('goal', null, 'air'); if (G.crystals === null) { G.crystals = 46; G.lq = questRoll({}, lDay()).q; api.questTest('adv', 'd'); api.questTest('adv', 'd'); api.questTest('adv', 'w'); } const r = questRoll(G.lq, lDay()); G.lq = r.q; lPay(r.pay); changed(); return { ok: true }; }
       const acc = account(); if (!acc) return { ok: true };
       try { const d = await call('airdef-progress', { player_id: acc.id, action: 'quests' }); G.crystals = d.crystals ?? G.crystals; set(d.progress); return { ok: true }; }
-      catch (e) { needGame(e); return { ok: false, why: e.message }; }
+      catch (e) { needGame(e); return { ok: false, why: trMsg(e.message) }; }
     },
     async questClaim(key) {
       if (LOCAL()) { const r = questClaim(G.lq, lDay(), key); if (!r.ok) return { ok: false, why: r.why }; G.lq = r.q; lPay(r.pay); changed(); return { ok: true }; }

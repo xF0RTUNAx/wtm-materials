@@ -90,7 +90,7 @@ const takeAll = (L, P, pts, q, pay) => { for (const t of L) if (t.st === 'done' 
 // новый день и неделя: выполненное, но не забранное начисляется само (сгорает только невыполненное). q — состояние (пустое у новичка); исходный объект не меняется.
 // Возвращает { q, pay } — pay: что начислить (silver, xp, gem)
 export function questRoll(q0, today) {
-  const q = structuredClone(q0 && q0.day ? q0 : { d: [], w: [], pts: 0, paid: 0, crate: 0, chest: 0 }), pay = {}, wk = weekNo(today);
+  const q = JSON.parse(JSON.stringify(q0 && q0.day ? q0 : { d: [], w: [], pts: 0, paid: 0, crate: 0, chest: 0 })), pay = {}, wk = weekNo(today); // копия: старые браузеры без structuredClone
   if (q.day !== today) {
     takeAll(q.d, DAILY, PTS_DAILY, q, pay);
     if (allTaken(q.d, DAILY) && !q.crate) addTo(pay, CRATE);
@@ -138,9 +138,9 @@ export function questView(q0, today) {
   return { day: q.day, d: q.d.filter((t) => DAILY[t.id]), w: q.w.filter((t) => WEEKLY[t.id]), pts: q.pts, paid: q.paid, crate: q.crate, chest: q.chest };
 }
 const int = (v, hi = 999) => Math.max(0, Math.min(hi, Math.floor(Number(v) || 0)));
-// «Оборона» (итог присылает браузер): волн не больше, чем успело пройти по времени сервера (минимум 30 с на волну); «до конца» — все волны и победа
+// «Оборона» (итог присылает браузер): волн не больше, чем успело пройти по времени сервера (минимум 20 с на волну: время боя можно ускорить); «до конца» — все волны и победа
 export const DEF_WAVES = 6; // defense.js WAVES
-const DEF_WAVE_MIN = 30;
+const DEF_WAVE_MIN = 20;
 export function defenseCounters(ev, seconds, nowSec, wavesAll = DEF_WAVES) {
   const waves = Math.min(ev.waves ? ev.waves.length : 0, wavesAll, Math.floor(seconds / DEF_WAVE_MIN));
   return { waves, full: ev.win && waves >= wavesAll ? 1 : 0, soloStart: nowSec - seconds, soloEnd: nowSec };

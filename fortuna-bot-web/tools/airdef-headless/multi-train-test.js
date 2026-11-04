@@ -44,8 +44,8 @@ THREE.WebGLRenderer = FakeRenderer;
 const errors = [];
 const origErr = console.error; console.error = (...a) => { errors.push(a.join(' ')); };
 await import('../../games/airdef/main.js');
-const { samKnown } = await import('../../games/airdef/sim/combined.js?v=20261103a');
-const { THREAT } = await import('../../games/airdef/arsenal.js?v=20261103a');
+const { samKnown } = await import('../../games/airdef/sim/combined.js?v=20261104a');
+const { THREAT } = await import('../../games/airdef/arsenal.js?v=20261104a');
 for (let i = 0; i < 300 && !(globalThis.__a && globalThis.__a.state === 'menu'); i++) await new Promise((r) => setTimeout(r, 100)); // запуск по этапам (экран загрузки)
 const C = globalThis.__a;
 let now = 1000;
