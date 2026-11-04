@@ -1,0 +1,17 @@
+{
+ "key": "w_agm45",
+ "weapon": "agm45",
+ "name": "AGM-45 Shrike",
+ "rev": 1,
+ "files": {
+  "glb": "agm45.glb",
+  "blend": "agm45.blend",
+  "build": [
+   "build.py",
+   "_collide.py",
+   "bake_maps.py",
+   "paint.py",
+   "deliver.py"
+  ]
+ }
+}
