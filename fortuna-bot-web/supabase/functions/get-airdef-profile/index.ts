@@ -1,12 +1,12 @@
-// get-airdef-profile — профиль игрока «Воздушного превосходства» (Mark 2026-10-28, макет tools/airdef-ui/profile-mock.html): открывается из таблицы
-// рейтинга по нику (свой — из своей карточки, тоже по нику). Всё считает sql/029 airdef_profile: шапка, онлайн по режимам за сезон и за всё
+// get-airdef-profile - профиль игрока «Воздушного превосходства» (Mark 2026-10-28, макет tools/airdef-ui/profile-mock.html): открывается из таблицы
+// рейтинга по нику (свой - из своей карточки, тоже по нику). Всё считает sql/029 airdef_profile: шапка, онлайн по режимам за сезон и за всё
 // время, любимые самолёт и ЗРК, лучшие бои сезона (без разбора), места за сезоны. Ни id игрока, ни номеров боёв в ответе нет.
 //   { nick, season? } → { season, live, profile: { …, ava? } } | 404 { error }
-// Сезон — как у get-airdef-rating: идущий, а в межсезонье — прошедший; season — номер из окна рейтинга (не больше текущего).
+// Сезон - как у get-airdef-rating: идущий, а в межсезонье - прошедший; season - номер из окна рейтинга (не больше текущего).
 import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
 import { supabaseAdmin } from "../_shared/supabase-admin.ts";
 
-const NICK_RE = /^[\p{L}\p{N}_\- ]{1,32}$/u; // ник аккаунта игры — 3–16 символов (airdef-account); здесь — только отсев мусора
+const NICK_RE = /^[\p{L}\p{N}_\- ]{1,32}$/u; // ник аккаунта игры - 3-16 символов (airdef-account); здесь - только отсев мусора
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -24,7 +24,7 @@ Deno.serve(async (req) => {
     const pr = await db.rpc("airdef_profile", { p_nick: nick, p_season: season });
     if (pr.error) throw pr.error;
     if (!pr.data) return jsonResponse({ error: "Игрок не найден" }, 404);
-    // надетая аватарка (кошелёк, sql/028: worn.ava; Mark 2026-11-04). Не прочиталась — профиль всё равно нужен: та, что по умолчанию
+    // надетая аватарка (кошелёк, sql/028: worn.ava; Mark 2026-11-04). Не прочиталась - профиль всё равно нужен: та, что по умолчанию
     const profile = { ...pr.data as Record<string, unknown> };
     const acc = await db.from("airdef_accounts").select("player_id").eq("nick", profile.nick).maybeSingle();
     const wl = acc.data ? await db.from("airdef_wallet").select("worn").eq("player_id", acc.data.player_id).maybeSingle() : null;

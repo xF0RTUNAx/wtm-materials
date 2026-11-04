@@ -1,12 +1,12 @@
 // Рейтинг онлайна «Воздушного превосходства» (Mark 2026-10-25): кнопка в меню (#ratBtn, верхняя в #mbtns), окно рейтинга (макет «Б» без пьедестала:
 // место, игрок, очки; внизу своя карточка с 7 ячейками и «Мои бои») и вид «Мои бои» (все онлайн-бои сезона: засчитан или нет, разбор очков).
-// Данные — функция get-airdef-rating (account.js; без сервера и без ?rmock=1 — «Рейтинг скоро откроется»). Формула очков — rating.js.
-// В таблице — только аккаунты игры; аккаунту сайта и гостю вместо своей карточки — вход / перенос прогресса (account-ui.js).
-// Профиль игрока (Mark 2026-10-28, макет tools/airdef-ui/profile-mock.html): нажатие на строку таблицы (свой — на свой ник в карточке) — профиль
-// в том же окне, «Назад» — к таблице. Данные — get-airdef-profile по нику (sql/029): шапка, онлайн по режимам (сезон / всё время), любимые
-// самолёт и ЗРК, лучшие бои сезона без разбора, места за сезоны. В горизонтали телефона — две колонки, каждая листается сама.
-// Свой профиль (Mark 2026-10-29: «через профиль главного меню — то же окно, что в рейтинге, чтобы не нажимать сто раз»): ник в меню (account-ui.js)
-// открывает его сразу (openMe), «Назад» — к таблице рейтинга; в нём же «Аккаунт» — логин, смена ника, выход (что было в окне аккаунта).
+// Данные - функция get-airdef-rating (account.js; без сервера и без ?rmock=1 - «Рейтинг скоро откроется»). Формула очков - rating.js.
+// В таблице - только аккаунты игры; аккаунту сайта и гостю вместо своей карточки - вход / перенос прогресса (account-ui.js).
+// Профиль игрока (Mark 2026-10-28, макет tools/airdef-ui/profile-mock.html): нажатие на строку таблицы (свой - на свой ник в карточке) - профиль
+// в том же окне, «Назад» - к таблице. Данные - get-airdef-profile по нику (sql/029): шапка, онлайн по режимам (сезон / всё время), любимые
+// самолёт и ЗРК, лучшие бои сезона без разбора, места за сезоны. В горизонтали телефона - две колонки, каждая листается сама.
+// Свой профиль (Mark 2026-10-29: «через профиль главного меню - то же окно, что в рейтинге, чтобы не нажимать сто раз»): ник в меню (account-ui.js)
+// открывает его сразу (openMe), «Назад» - к таблице рейтинга; в нём же «Аккаунт» - логин, смена ника, выход (что было в окне аккаунта).
 /* global CONFIG */
 import { ico } from './icons.js?v=20261104a';
 import { tr, trIf, LANG } from './i18n.js?v=20261104a';
@@ -43,7 +43,7 @@ const CSS = `
 #ratWin .row.g1 .p { color: #f5d06a; } #ratWin .row.g2 .p { color: #dadcd2; } #ratWin .row.g3 .p { color: #d29a62; }
 #ratWin .row.me { background: #2a2a17; } #ratWin .row.me .p { color: var(--amber2); }
 #ratWin .row.gap { grid-template-columns: 1fr; text-align: center; color: var(--dim); padding: 2px; font-size: 12px; }
-/* строка таблицы — кнопка: профиль игрока (стрелка справа — подсказка, Mark 2026-10-28) */
+/* строка таблицы - кнопка: профиль игрока (стрелка справа - подсказка, Mark 2026-10-28) */
 #ratWin button.row { width: 100%; grid-template-columns: 40px 1fr auto 12px; border: 0; border-bottom: 1px solid #1d2419; background: none; color: inherit; font: inherit; font-size: 14.5px; text-align: left; cursor: pointer; }
 #ratWin button.row:hover { background: #171d14; } #ratWin button.row.me:hover { background: #33331c; } #ratWin .row .go { width: 10px; height: 10px; color: #5d6a52; }
 #ratWin .mecard .nk.lnk { background: none; border: 0; padding: 0; color: inherit; font: inherit; text-align: left; cursor: pointer; } #ratWin .mecard .nk.lnk u { text-decoration: underline dotted #6b7363; text-underline-offset: 3px; }
@@ -112,7 +112,7 @@ const CSS = `
 #ratWin .acts { display: flex; gap: 8px; flex-wrap: wrap; } #ratWin .msg + .sec { flex: none; }
 @media (max-width: 420px) { #ratWin .hero { grid-template-columns: 48px minmax(0, 1fr) auto; gap: 2px 10px; } #ratWin .ava { width: 48px; height: 48px; } #ratWin .hero .nick { font-size: 21px; } #ratWin .place .pn { font-size: 30px; }
   #ratWin .mt td, #ratWin .mt th { padding-left: 4px; } #ratWin .mt td:first-child .ic { display: none; } }
-/* телефон горизонтально: окно во всю высоту, две колонки — каждая листается сама */
+/* телефон горизонтально: окно во всю высоту, две колонки - каждая листается сама */
 @media (orientation: landscape) and (max-height: 500px) {
   #ratWin .win.prof { width: min(860px, 100%); height: 100%; }
   #ratWin .win.prof .pbody { display: grid; grid-template-columns: 1fr 1fr; overflow: hidden; }
@@ -130,15 +130,15 @@ const pad2 = (v) => String(v).padStart(2, '0');
 const when = (at) => { const d = new Date(at); return isNaN(d) ? '' : `${pad2(d.getDate())}.${pad2(d.getMonth() + 1)}, ${pad2(d.getHours())}:${pad2(d.getMinutes())}`; };
 
 export function createRating(C) {
-  const style = document.createElement('style'); style.textContent = CSS; if (document.head) document.head.appendChild(style); // (заглушка DOM стенда — без head/body)
+  const style = document.createElement('style'); style.textContent = CSS; if (document.head) document.head.appendChild(style); // (заглушка DOM стенда - без head/body)
   const root = document.createElement('div'); root.id = 'ratWin'; root.setAttribute && root.setAttribute('role', 'dialog'); root.setAttribute && root.setAttribute('aria-modal', 'true'); if (document.body && document.body.appendChild) document.body.appendChild(root);
-  const S = { data: null, err: '', key: null, at: 0, busy: false, view: 'list', q: false, p: null, per: 'season', listTop: 0 }; // view: list | mine | prof (профиль S.p), per — период профиля
+  const S = { data: null, err: '', key: null, at: 0, busy: false, view: 'list', q: false, p: null, per: 'season', listTop: 0 }; // view: list | mine | prof (профиль S.p), per - период профиля
   const $ = (id) => document.getElementById(id);
   const seen = () => { try { return localStorage.getItem(HELP_KEY) === '1'; } catch (_) { return false; } };
   const markSeen = () => { try { localStorage.setItem(HELP_KEY, '1'); } catch (_) { /* приватный режим */ } };
 
   const daysLeft = (d) => { const e = Date.parse(d.ends_at); return isNaN(e) ? null : Math.max(1, Math.ceil((e - Date.now()) / 86400000)); };
-  // межсезонье (sql/027, неделя между сезонами): сервер показывает итоги прошедшего сезона, next — когда начнётся следующий
+  // межсезонье (sql/027, неделя между сезонами): сервер показывает итоги прошедшего сезона, next - когда начнётся следующий
   const seasonText = (d) => {
     if (d.next) { const s = Date.parse(d.next.starts_at), n = isNaN(s) ? null : Math.max(1, Math.ceil((s - Date.now()) / 86400000)); return n == null ? tr('сезон {0} завершён', [d.season]) : tr('сезон {0} завершён · сезон {1} через {2} дн.', [d.season, d.next.season, n]); }
     const n = daysLeft(d); return n == null ? tr('сезон {0}', [d.season]) : tr('сезон {0} · ещё {1} дн.', [d.season, n]);
@@ -163,12 +163,12 @@ export function createRating(C) {
     const key = keyNow(); S.busy = true; S.key = key;
     let data = null, err = '';
     try { data = await fetchRating(key || null); }
-    catch (e) { err = e.status === 404 || (e.status === 0 && !e.offline && typeof CONFIG !== 'undefined') ? 'soon' : trIf(e.message) || tr('Нет связи с сайтом'); } // функции рейтинга ещё нет на сервере (404 или ответ без CORS) — «скоро откроется»
+    catch (e) { err = e.status === 404 || (e.status === 0 && !e.offline && typeof CONFIG !== 'undefined') ? 'soon' : trIf(e.message) || tr('Нет связи с сайтом'); } // функции рейтинга ещё нет на сервере (404 или ответ без CORS) - «скоро откроется»
     S.busy = false;
-    if (key !== keyNow()) { S.at = 0; S.data = null; S.err = ''; paint(); load(); return; } // пока ждали, сменили аккаунт — данные чужие
+    if (key !== keyNow()) { S.at = 0; S.data = null; S.err = ''; paint(); load(); return; } // пока ждали, сменили аккаунт - данные чужие
     S.data = data; S.err = err; S.at = Date.now(); paint(); if (root.classList.contains('on')) draw();
   }
-  // меню показано: обновить данные кнопки (не чаще раза в минуту; после сбоя — раз в полминуты)
+  // меню показано: обновить данные кнопки (не чаще раза в минуту; после сбоя - раз в полминуты)
   function touch() {
     if (C.state !== 'menu' || S.busy) return;
     if (S.key === keyNow() && Date.now() - S.at < (S.err ? RETRY : FRESH)) return;
@@ -179,8 +179,8 @@ export function createRating(C) {
   function head(inner, sub, back) {
     return `<div class="whead">${back ? `<button class="back" data-a="back">${ico('triL')}${tr('Назад')}</button>` : ''}<span class="t">${inner}</span><span class="s">${sub}</span><button class="rx" data-a="close" aria-label="${tr('Закрыть')}" title="${tr('Закрыть')}">${ico('close')}</button></div>`;
   }
-  const HELP = [tr('За каждый онлайн-бой: итог команды, ваш вклад и сила соперников.'), tr('Аркада — ×0,6.'), tr('Ранг боя II, III, IV — +2, +5, +8 %. В Мульти-волне надбавки нет.'),
-    tr('Чем больше ботов среди соперников, тем меньше очков.'), tr('Итог сезона — 7 боёв: по 2 лучших за ПВО, за лётчика и в Мульти-волне и ещё 1 лучший из остальных.'), tr('Между сезонами — неделя межсезонья: бои в рейтинг не идут.'), tr('Своя комната не считается. Вышли из боя раньше — 0.')];
+  const HELP = [tr('За каждый онлайн-бой: итог команды, ваш вклад и сила соперников.'), tr('Аркада - ×0,6.'), tr('Ранг боя II, III, IV - +2, +5, +8 %. В Мульти-волне надбавки нет.'),
+    tr('Чем больше ботов среди соперников, тем меньше очков.'), tr('Итог сезона - 7 боёв: по 2 лучших за ПВО, за лётчика и в Мульти-волне и ещё 1 лучший из остальных.'), tr('Между сезонами - неделя межсезонья: бои в рейтинг не идут.'), tr('Своя комната не считается. Вышли из боя раньше - 0.')];
   function noData() {
     const soon = S.err === 'soon';
     return `<div class="win">${head(`${ico('rating')}${tr('Рейтинг')}`, '')}<div class="msg">${S.busy || !S.err ? `<span>${tr('Загружаем…')}</span>` : soon ? `<b>${tr('Рейтинг скоро откроется')}</b><span>${tr('Таблица сезона появится, как только сервер рейтинга заработает.')}</span>`
@@ -196,10 +196,10 @@ export function createRating(C) {
     let card;
     if (acc && acc.kind === 'airdef') {
       const me = d.me || { nick: acc.nick, place: null, points: 0, n: 0 };
-      card = `<div class="mecard"><span class="big">${me.place || '—'}</span><button type="button" class="nk lnk" data-a="profme" title="${tr('Профиль')}"><span class="av"><img src="${avaSrc(ownAva(C, me.ava))}" alt=""></span><u>${esc(me.nick || acc.nick)}</u> · <b class="num">${nf(me.points || 0)}</b></button><button class="btnm" data-a="mine">${tr('Мои бои')}</button>
+      card = `<div class="mecard"><span class="big">${me.place || '-'}</span><button type="button" class="nk lnk" data-a="profme" title="${tr('Профиль')}"><span class="av"><img src="${avaSrc(ownAva(C, me.ava))}" alt=""></span><u>${esc(me.nick || acc.nick)}</u> · <b class="num">${nf(me.points || 0)}</b></button><button class="btnm" data-a="mine">${tr('Мои бои')}</button>
         <small>${tr('засчитано {0} из {1}', [me.n || 0, SLOTS])}</small><span class="slots">${Array.from({ length: SLOTS }, (_, i) => `<i${i < (me.n || 0) ? ' class="on"' : ''}></i>`).join('')}</span></div>`;
     } else {
-      card = `<div class="mecard no"><span>${tr('В рейтинге — только аккаунты игры')}</span><span class="acts"><button class="btnm" data-a="login">${tr('Войти')}</button>${transferOk() ? `<button class="btnm alt" data-a="xfer">${tr('Перенести прогресс')}</button>` : ''}</span></div>`;
+      card = `<div class="mecard no"><span>${tr('В рейтинге - только аккаунты игры')}</span><span class="acts"><button class="btnm" data-a="login">${tr('Войти')}</button>${transferOk() ? `<button class="btnm alt" data-a="xfer">${tr('Перенести прогресс')}</button>` : ''}</span></div>`;
     }
     return `<div class="win">${head(title, esc(seasonText(d)))}${pop}<div class="rows">${rows}</div>${card}</div>`;
   }
@@ -213,7 +213,7 @@ export function createRating(C) {
     if (p.m && p.m !== 1) chips.push(tr('аркада ×{0}', [kf(p.m)]));
     if (p.k && p.k !== 1) chips.push(tr('ранг {0} +{1} %', [rankOf(p.k), Math.round((p.k - 1) * 100)]));
     if (p.b && p.b !== 1) chips.push(tr('боты ×{0}', [kf(p.b)]));
-    const why = p.idle ? `<span class="break">${tr('без действий — 0')}</span>` : `<span class="break">${p.r || 0} + ${p.c || 0} + ${p.s || 0}</span>${chips.length ? '<br>' + chips.map((c) => `<span class="k">${esc(c)}</span>`).join('') : ''}`;
+    const why = p.idle ? `<span class="break">${tr('без действий - 0')}</span>` : `<span class="break">${p.r || 0} + ${p.c || 0} + ${p.s || 0}</span>${chips.length ? '<br>' + chips.map((c) => `<span class="k">${esc(c)}</span>`).join('') : ''}`;
     return `<tr${b.counted ? '' : ' class="off"'}><td>${when(b.at)}<br><span class="note">${esc(mode)}</span></td><td class="nw">${role[0]} ${role[1]}</td><td class="nw">${res}</td><td>${why}</td><td class="n"><b>${nf(b.rating || 0)}</b></td>`
       + `<td class="nw">${b.counted ? `<span class="ok">${ico('ok')} ${tr('засчитан')}</span>` : tr('не засчитан')}</td></tr>`;
   }
@@ -226,7 +226,7 @@ export function createRating(C) {
   // ── профиль игрока (get-airdef-profile, sql/029): по нику, кэш на минуту ──
   const PROF = new Map(); // ник (строчными) + сезон → { data, at }
   const pkey = (nick, season) => String(nick).toLowerCase() + '|' + season;
-  async function openProfile(nick, own, menu = false) { // menu — открыт ником в меню: «Назад» ведёт в таблицу и подписан «Рейтинг»
+  async function openProfile(nick, own, menu = false) { // menu - открыт ником в меню: «Назад» ведёт в таблицу и подписан «Рейтинг»
     const season = S.data ? S.data.season : 0;
     S.view = 'prof'; S.p = { nick, own: !!own, menu, season, data: null, err: '', busy: true };
     const c = PROF.get(pkey(nick, season));
@@ -234,7 +234,7 @@ export function createRating(C) {
     draw();
     const p = S.p;
     try { const d = await fetchProfile(nick, season); p.data = d; PROF.set(pkey(nick, season), { data: d, at: Date.now() }); }
-    catch (e) { p.err = e.status === 404 ? tr('Игрок не найден') : e.status === 0 && !e.offline && typeof CONFIG !== 'undefined' ? 'soon' : trIf(e.message) || tr('Нет связи с сайтом'); } // функции ещё нет на сервере (ответ без CORS) — «скоро»
+    catch (e) { p.err = e.status === 404 ? tr('Игрок не найден') : e.status === 0 && !e.offline && typeof CONFIG !== 'undefined' ? 'soon' : trIf(e.message) || tr('Нет связи с сайтом'); } // функции ещё нет на сервере (ответ без CORS) - «скоро»
     p.busy = false;
     if (S.p === p && S.view === 'prof' && root.classList.contains('on')) draw();
   }
@@ -246,19 +246,19 @@ export function createRating(C) {
   function profParts(P, season, own) {
     const per = S.per === 'all' ? 'all' : 'season', g = P.place && P.place <= 3 ? ' g' + P.place : '';
     const hero = `<div class="hero${g}"><span class="ava"><img src="${avaSrc(own ? ownAva(C, P.ava) : P.ava)}" alt=""></span><span class="nick">${esc(P.nick)}</span>
-      <span class="place"><span class="lb">${tr('место')}</span><span class="pn">${P.place && P.place <= 3 ? ico('rating') : ''}${P.place || '—'}</span><span class="pts">${nf(P.points || 0)}</span><span class="slots">${Array.from({ length: SLOTS }, (_, i) => `<i${i < (P.n || 0) ? ' class="on"' : ''}></i>`).join('')}</span></span>
+      <span class="place"><span class="lb">${tr('место')}</span><span class="pn">${P.place && P.place <= 3 ? ico('rating') : ''}${P.place || '-'}</span><span class="pts">${nf(P.points || 0)}</span><span class="slots">${Array.from({ length: SLOTS }, (_, i) => `<i${i < (P.n || 0) ? ' class="on"' : ''}></i>`).join('')}</span></span>
       <span class="since">${tr('в игре с {0}', [ddmm(P.since, true)])}<br>${tr('онлайн-боёв: {0}', [nf(P.games || 0)])}</span>
       ${own ? `<span class="mine"><button class="btnm" data-a="mine">${tr('Мои бои')}</button><small>${tr('Так ваш профиль видят другие игроки')}</small></span>` : ''}</div>`;
     const M = (P.modes && P.modes[per]) || {}, tot = [0, 0, 0, null];
     const mrow = ([k, ic, name]) => {
       const x = M[k] || { n: 0, w: 0, k: 0, best: null }, pc = x.n ? Math.round(100 * x.w / x.n) : 0;
       tot[0] += x.n; tot[1] += x.w; tot[2] += x.k || 0; if (x.best != null) tot[3] = Math.max(tot[3] ?? 0, x.best);
-      return `<tr><td>${ico(ic)}${name}</td><td>${x.n}</td><td>${x.w}<small>${pc} %</small><span class="wbar"><i style="width:${pc}%"></i></span></td><td>${x.k || 0}</td><td>${x.best != null ? nf(x.best) : '—'}</td></tr>`;
+      return `<tr><td>${ico(ic)}${name}</td><td>${x.n}</td><td>${x.w}<small>${pc} %</small><span class="wbar"><i style="width:${pc}%"></i></span></td><td>${x.k || 0}</td><td>${x.best != null ? nf(x.best) : '-'}</td></tr>`;
     };
     const body = MODE_ROWS.map(mrow).join('');
     const modes = `<div class="sec"><div class="sh"><b>${tr('По режимам')}</b><span class="seg" role="group"><button type="button" data-a="per" data-per="season" aria-pressed="${per === 'season'}">${tr('Сезон {0}', [season])}</button><button type="button" data-a="per" data-per="all" aria-pressed="${per === 'all'}">${tr('Всё время')}</button></span></div>
-      <table class="mt"><thead><tr><th>${tr('Онлайн')}</th><th>${tr('Боёв')}</th><th>${tr('Побед')}</th><th title="${tr('Лётчик — уничтоженные ЗРК, ПВО — сбитые, Мульти-волна — всё поражённое')}">${tr('Поражено')}</th><th>${tr('Лучший')}</th></tr></thead>
-      <tbody>${body}</tbody><tfoot><tr><td>${tr('Всего')}</td><td>${tot[0]}</td><td>${tot[1]}</td><td>${tot[2]}</td><td>${tot[3] != null ? nf(tot[3]) : '—'}</td></tr></tfoot></table></div>`;
+      <table class="mt"><thead><tr><th>${tr('Онлайн')}</th><th>${tr('Боёв')}</th><th>${tr('Побед')}</th><th title="${tr('Лётчик - уничтоженные ЗРК, ПВО - сбитые, Мульти-волна - всё поражённое')}">${tr('Поражено')}</th><th>${tr('Лучший')}</th></tr></thead>
+      <tbody>${body}</tbody><tfoot><tr><td>${tr('Всего')}</td><td>${tot[0]}</td><td>${tot[1]}</td><td>${tot[2]}</td><td>${tot[3] != null ? nf(tot[3]) : '-'}</td></tr></tfoot></table></div>`;
     const F = (P.fav && P.fav[per]) || {};
     const fv = (x, branch, label, cnt) => (x ? `<div class="fv"><span class="pic"${thumbOf(branch, x.key) ? ` style="background-image:url('${thumbOf(branch, x.key)}')"` : ''}></span><span class="fk">${label}</span><span class="fn">${esc(unitName(branch, x.key))}</span><span class="fc">${cnt(x.n, x.of)}</span></div>` : '');
     const favs = fv(F.plane, 'air', tr('Самолёт'), (n, of) => tr('вылетов: {0} из {1}', [n, of])) + fv(F.sam, 'pvo', tr('ЗРК'), (n, of) => tr('боёв: {0} из {1}', [n, of]));
@@ -273,7 +273,7 @@ export function createRating(C) {
     const awards = `<div class="sec"><div class="sh"><b>${tr('Награды')}</b><small>${tr('места за сезоны')}</small></div>${aw ? `<div class="aw">${aw}</div>` : `<span class="empty">${tr('Наград пока нет. Место за сезон появляется после его конца.')}</span>`}</div>`;
     return { hero, modes, fav, best, awards };
   }
-  // свой профиль: аккаунт игры — логин, смена ника, выход (раньше — только в окне аккаунта)
+  // свой профиль: аккаунт игры - логин, смена ника, выход (раньше - только в окне аккаунта)
   function accSec() {
     const g = gameAcc(); if (!g) return '';
     return `<div class="sec"><div class="sh"><b>${tr('Аккаунт')}</b><small>${tr('Логин: {0}', [esc(g.login)])}</small></div>
@@ -292,9 +292,9 @@ export function createRating(C) {
   }
   function draw() {
     const q = (s) => (root.querySelectorAll ? [...root.querySelectorAll(s)] : []);
-    const sc = q('.rows')[0]; if (sc) S.listTop = sc.scrollTop || 0; // таблица: место прокрутки — и после профиля («Назад»)
-    const pv = S.view === 'prof' && S.p ? q('.pbody, .pbody .col').map((el) => el.scrollTop || 0) : null, pnick = S.p && S.p.nick; // профиль: прокрутка — при смене «Сезон / Всё время»
-    root.innerHTML = S.view === 'prof' && S.p ? viewProfile() : !S.data ? noData() : S.view === 'mine' && mine() ? viewMine() : viewList(); // профиль — и до таблицы (открыт из меню)
+    const sc = q('.rows')[0]; if (sc) S.listTop = sc.scrollTop || 0; // таблица: место прокрутки - и после профиля («Назад»)
+    const pv = S.view === 'prof' && S.p ? q('.pbody, .pbody .col').map((el) => el.scrollTop || 0) : null, pnick = S.p && S.p.nick; // профиль: прокрутка - при смене «Сезон / Всё время»
+    root.innerHTML = S.view === 'prof' && S.p ? viewProfile() : !S.data ? noData() : S.view === 'mine' && mine() ? viewMine() : viewList(); // профиль - и до таблицы (открыт из меню)
     if (S.view === 'list') { const r = q('.rows')[0]; if (r && S.listTop) r.scrollTop = S.listTop; }
     if (pv && S.view === 'prof' && S.p && S.p.nick === pnick) q('.pbody, .pbody .col').forEach((el, i) => { if (pv[i]) el.scrollTop = pv[i]; });
   }
@@ -310,15 +310,15 @@ export function createRating(C) {
     else if (a === 'back') { S.view = 'list'; draw(); }
     else if (a === 'retry') { S.at = 0; draw(); load(); }
     else if (a === 'login' || a === 'xfer') { if (C.account) C.account.open(a); }
-    else if (a === 'prof') { // строка таблицы: свой ник — свой профиль (с «Моими боями»)
+    else if (a === 'prof') { // строка таблицы: свой ник - свой профиль (с «Моими боями»)
       const r = S.data && S.data.top[+t.dataset.i]; if (!r) return;
       const m = mine(); openProfile(r.nick, !!(m && m.nick && String(m.nick).toLowerCase() === String(r.nick).toLowerCase()));
     }
     else if (a === 'profme') { const m = mine(), acc = activeAcc(), nk = (m && m.nick) || (acc && acc.nick); if (nk) openProfile(nk, true); }
     else if (a === 'per') { S.per = t.dataset.per === 'all' ? 'all' : 'season'; draw(); }
     else if (a === 'pretry') { if (S.p) openProfile(S.p.nick, S.p.own, S.p.menu); }
-    else if (a === 'rename') { if (C.account) C.account.open('rename'); } // окно аккаунта — поверх профиля
-    else if (a === 'logout') { if (C.account && C.account.logout()) api.close(); } // в комнате и в бою выйти нельзя — откроется окно аккаунта с причиной
+    else if (a === 'rename') { if (C.account) C.account.open('rename'); } // окно аккаунта - поверх профиля
+    else if (a === 'logout') { if (C.account && C.account.logout()) api.close(); } // в комнате и в бою выйти нельзя - откроется окно аккаунта с причиной
   });
   addEventListener('keydown', (e) => { if (e.code === 'Escape' && root.classList.contains('on') && !(C.account && C.account.isOpen())) { if (S.q) { S.q = false; draw(); } else api.close(); } });
 
@@ -326,9 +326,9 @@ export function createRating(C) {
     open() {
       S.view = 'list'; S.q = false; root.classList.add('on'); draw();
       const f = root.querySelector && root.querySelector('.rx'); if (f && f.focus && !(typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches)) try { f.focus(); } catch (_) { /* нет */ }
-      if (!S.busy && Date.now() - S.at > 10000) { S.at = 0; load(); } // открыли окно — свежие данные
+      if (!S.busy && Date.now() - S.at > 10000) { S.at = 0; load(); } // открыли окно - свежие данные
     },
-    // свой профиль сразу (ник в меню, account-ui.js); таблица подгружается следом — для «Назад»
+    // свой профиль сразу (ник в меню, account-ui.js); таблица подгружается следом - для «Назад»
     openMe() {
       const a = activeAcc(); if (!a || a.kind !== 'airdef') return false;
       S.q = false; root.classList.add('on'); openProfile(a.nick, true, true);
@@ -337,7 +337,7 @@ export function createRating(C) {
     },
     close() { root.classList.remove('on'); S.q = false; },
     isOpen: () => root.classList.contains('on'),
-    // свежие данные после засчитанного боя (табло итога, endscr.js): { place, prev — место до боя, n — засчитано, counted — засчитан ли бой в сезон } или null
+    // свежие данные после засчитанного боя (табло итога, endscr.js): { place, prev - место до боя, n - засчитано, counted - засчитан ли бой в сезон } или null
     async fresh() {
       const m0 = mine(), prev = m0 ? m0.place : null;
       for (let i = 0; i < 30 && S.busy; i++) await new Promise((r) => setTimeout(r, 100));
@@ -349,7 +349,7 @@ export function createRating(C) {
     // сменился аккаунт / засчитан бой: данные устарели
     reset() {
       if (S.key !== keyNow()) S.data = null; S.at = 0; paint();
-      if (S.view === 'prof' && S.p && S.p.own) { const a = activeAcc(); if (!a || a.kind !== 'airdef') { S.view = 'list'; api.close(); } else if (a.nick !== S.p.nick && root.classList.contains('on')) openProfile(a.nick, true, S.p.menu); } // свой профиль: вышли — закрыть, сменили ник — заново
+      if (S.view === 'prof' && S.p && S.p.own) { const a = activeAcc(); if (!a || a.kind !== 'airdef') { S.view = 'list'; api.close(); } else if (a.nick !== S.p.nick && root.classList.contains('on')) openProfile(a.nick, true, S.p.menu); } // свой профиль: вышли - закрыть, сменили ник - заново
       if (root.classList.contains('on')) { draw(); load(); } else touch();
     },
   };

@@ -1,6 +1,6 @@
-// Русские строки в коде игры, ещё не обёрнутые в tr(…) (или обёрнутые, но без перевода в словаре): файл:строка — текст.
-//   deno run -A tools/i18n/scan.js games/airdef/menu.js [ещё файлы…]   (--all — показывать и обёрнутые; --miss — только без перевода)
-// Комментарии не считаются. Ключи словаря — строки как в коде; шаблон `…${x}…` надо переписать в tr('…{0}…', [x]).
+// Русские строки в коде игры, ещё не обёрнутые в tr(…) (или обёрнутые, но без перевода в словаре): файл:строка - текст.
+//   deno run -A tools/i18n/scan.js games/airdef/menu.js [ещё файлы…]   (--all - показывать и обёрнутые; --miss - только без перевода)
+// Комментарии не считаются. Ключи словаря - строки как в коде; шаблон `…${x}…` надо переписать в tr('…{0}…', [x]).
 import * as acorn from 'npm:acorn@8.12.1';
 import * as walk from 'npm:acorn-walk@8.3.3';
 const args = Deno.args.filter((a) => !a.startsWith('--')), ALL = Deno.args.includes('--all'), MISS = Deno.args.includes('--miss');
@@ -18,7 +18,7 @@ for (const f of args) {
     const parent = anc[anc.length - 2], wrapped = parent && parent.type === 'CallExpression' && parent.callee && /^(tr|trIf)$/.test(parent.callee.name || '') && parent.arguments[0] === node;
     const isKey = parent && parent.type === 'Property' && parent.key === node;
     total++; if (!wrapped && !isKey) todo++; const has = EN[text] !== undefined; if (wrapped && !has) miss++;
-    if (MISS ? wrapped && !has : ALL || (!wrapped && !isKey)) out.push(`${f}:${node.loc.start.line}  ${wrapped ? (has ? '✓ ' : '✗ ') : isKey ? 'ключ ' : '— '}${text.replace(/\s+/g, ' ').slice(0, 160)}`);
+    if (MISS ? wrapped && !has : ALL || (!wrapped && !isKey)) out.push(`${f}:${node.loc.start.line}  ${wrapped ? (has ? '✓ ' : '✗ ') : isKey ? 'ключ ' : '- '}${text.replace(/\s+/g, ' ').slice(0, 160)}`);
   });
   for (const l of out) console.log(l);
 }

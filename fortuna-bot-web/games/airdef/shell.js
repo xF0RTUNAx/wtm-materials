@@ -1,11 +1,11 @@
 // Оболочка «Воздушного превосходства»: Telegram Mini App и браузер (как в «Летке», games/drone/main.js).
 //  • Безопасные зоны: вырез и скругления экрана (env(safe-area-inset-*), у страницы-родителя, если игра во фрейме сайта) и
 //    кнопки Telegram поверх страницы в полноэкранном режиме (contentSafeAreaInset) → CSS-переменные --sa-* и --tg-t.
-//  • Telegram: ready / expand сразу; свайп вниз не сворачивает приложение (весь сеанс, а не только бой — им двигают ручку
-//    и камеру); в бою — закрытие с подтверждением, полный экран Telegram (8.0+) и фиксация ориентации.
-//  • Браузер: полный экран (без адресной строки) по первому касанию и при старте боя — если включено в настройках;
-//    экран не гаснет (Wake Lock); «Назад» в бою — пауза, а не выход; закрытие вкладки в бою — с подтверждением.
-//    iPhone Safari полный экран страницам не даёт — там помогает «На экран „Домой“»; iPad и Android — дают.
+//  • Telegram: ready / expand сразу; свайп вниз не сворачивает приложение (весь сеанс, а не только бой - им двигают ручку
+//    и камеру); в бою - закрытие с подтверждением, полный экран Telegram (8.0+) и фиксация ориентации.
+//  • Браузер: полный экран (без адресной строки) по первому касанию и при старте боя - если включено в настройках;
+//    экран не гаснет (Wake Lock); «Назад» в бою - пауза, а не выход; закрытие вкладки в бою - с подтверждением.
+//    iPhone Safari полный экран страницам не даёт - там помогает «На экран „Домой“»; iPad и Android - дают.
 import { tr } from './i18n.js?v=20261104a';
 import { ico } from './icons.js?v=20261104a';
 export function createShell(C, { IS_TOUCH, ls }) {
@@ -16,9 +16,9 @@ export function createShell(C, { IS_TOUCH, ls }) {
     } catch (_) { return { W: null, proxy: false }; }
   })();
   const tgv = (v) => { try { return !!(TG.W && TG.W.isVersionAtLeast && TG.W.isVersionAtLeast(v)); } catch (_) { return false; } };
-  // проверка (только ?test=1): insets=t,r,b,l,tg — эмуляция выреза и кнопок Telegram на ПК (как в «Летке»)
+  // проверка (только ?test=1): insets=t,r,b,l,tg - эмуляция выреза и кнопок Telegram на ПК (как в «Летке»)
   const TEST_INSETS = (() => { try { const Q = new URLSearchParams(location.search); return Q.get('test') === '1' && Q.get('insets') ? Q.get('insets').split(',').map((v) => +v || 0) : null; } catch (_) { return null; } })();
-  const S = { fsPref: (ls.get('fortuna_airdef_fs') ?? '1') === '1', fsHint: (ls.get('fortuna_airdef_fshint') ?? '1') === '1', playing: false, wake: null, tgFs: false }; // fsHint — кнопка / плашка возврата в полный экран (настройки)
+  const S = { fsPref: (ls.get('fortuna_airdef_fs') ?? '1') === '1', fsHint: (ls.get('fortuna_airdef_fshint') ?? '1') === '1', playing: false, wake: null, tgFs: false }; // fsHint - кнопка / плашка возврата в полный экран (настройки)
 
   // ── безопасные зоны ──
   function envInsets(win) {
@@ -44,7 +44,7 @@ export function createShell(C, { IS_TOUCH, ls }) {
       ['t', 'r', 'b', 'l'].forEach((k, i) => st.setProperty('--sa-' + k, Math.round(ins[i]) + 'px'));
       st.setProperty('--tg-t', Math.round(tg) + 'px');
       document.body.classList.toggle('tgfs', tg > 0);
-      dispatchEvent(new Event('airdef-safearea')); // верх экрана сдвинулся — сенсорные кнопки вылета пересчитывают места (air.js layoutTouch)
+      dispatchEvent(new Event('airdef-safearea')); // верх экрана сдвинулся - сенсорные кнопки вылета пересчитывают места (air.js layoutTouch)
     } catch (_) { /* без DOM (проверки) */ }
   }
   applySafeArea();
@@ -64,11 +64,11 @@ export function createShell(C, { IS_TOUCH, ls }) {
   }
   // первое касание: браузер даёт полный экран только по жесту
   addEventListener('pointerdown', () => { browserFs(); }, { once: true });
-  // полный экран слетел посреди боя (Mark 2026-10-27: «кнопкой, которая появляется в такие моменты», «где не будет мешать», на устройстве — один элемент):
-  //  • Android, iPad, Telegram 8.0+ — кнопка ⛶ #fsBtn в ряду верхних кнопок, нажатие возвращает полный экран; на ПК не показываем (Esc — нарочно);
-  //  • iPhone Safari полного экрана страницам не даёт, панели прячет только живой жест (прокрутка из кода — нет, проверено в симуляторе iOS 26.5):
-  //    плашка #fsSwipe внизу по центру — по ней проводят вверх; на время боя страница чуть длиннее экрана (html.iosfs) и прокручивается, во фрейме
-  //    сайта своя не прокручивается (html.iosfr) — свайп уходит странице сайта. Нажатие на плашку — подсказка
+  // полный экран слетел посреди боя (Mark 2026-10-27: «кнопкой, которая появляется в такие моменты», «где не будет мешать», на устройстве - один элемент):
+  //  • Android, iPad, Telegram 8.0+ - кнопка ⛶ #fsBtn в ряду верхних кнопок, нажатие возвращает полный экран; на ПК не показываем (Esc - нарочно);
+  //  • iPhone Safari полного экрана страницам не даёт, панели прячет только живой жест (прокрутка из кода - нет, проверено в симуляторе iOS 26.5):
+  //    плашка #fsSwipe внизу по центру - по ней проводят вверх; на время боя страница чуть длиннее экрана (html.iosfs) и прокручивается, во фрейме
+  //    сайта своя не прокручивается (html.iosfr) - свайп уходит странице сайта. Нажатие на плашку - подсказка
   const IOS_SAFARI = IS_TOUCH && /iP(hone|od)/.test(navigator.userAgent) && !navigator.standalone && !TG.W && !TG.proxy, IN_FRAME = window.top !== window;
   const fsBtn = document.getElementById('fsBtn'), fsSw = document.getElementById('fsSwipe');
   const barsShown = () => innerWidth > innerHeight && innerHeight < Math.min(screen.width, screen.height) - 30; // горизонталь, панели Safari видны
@@ -89,8 +89,8 @@ export function createShell(C, { IS_TOUCH, ls }) {
   if (fsSw && IOS_SAFARI) {
     const chev = '<svg viewBox="0 0 18 12" aria-hidden="true"><path d="M2 10 9 3l7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
     fsSw.innerHTML = `<span class="ch">${chev}${chev}</span><span>${tr('Потяните вверх для полноэкранного режима')}</span>`; // Mark 2026-10-27: «допиши, что потяните вверх для полноэкранного режима»
-    document.documentElement.appendChild(fsSw); // вне <body>: у <body> touch-action: none, а по плашке проводят — прокручивается страница
-    fsSw.addEventListener('click', () => C.say(tr('Проведите пальцем вверх по плашке — Safari спрячет панели'), 3)); // нажатие ничего не даёт — подскажем
+    document.documentElement.appendChild(fsSw); // вне <body>: у <body> touch-action: none, а по плашке проводят - прокручивается страница
+    fsSw.addEventListener('click', () => C.say(tr('Проведите пальцем вверх по плашке - Safari спрячет панели'), 3)); // нажатие ничего не даёт - подскажем
   }
   const fsSoon = () => setTimeout(fsCheck, 120); // размеры окна после поворота и сворачивания панелей приходят не сразу
   addEventListener('resize', fsSoon); addEventListener('orientationchange', fsSoon); document.addEventListener('fullscreenchange', fsSoon); document.addEventListener('webkitfullscreenchange', fsSoon);
@@ -115,7 +115,7 @@ export function createShell(C, { IS_TOUCH, ls }) {
     else { wake(false); try { screen.orientation && screen.orientation.unlock && screen.orientation.unlock(); } catch (_) { /* нет */ } }
     fsCheck();
   }
-  // «Назад» (жест или кнопка) в бою — пауза; закрытие вкладки в бою — с подтверждением
+  // «Назад» (жест или кнопка) в бою - пауза; закрытие вкладки в бою - с подтверждением
   addEventListener('popstate', () => { if (S.playing && C.state === 'play') { if (!C.paused && C.togglePause) C.togglePause(); try { history.pushState({ airdef: 1 }, ''); } catch (_) { /* нет */ } } });
   addEventListener('beforeunload', (e) => { if (S.playing && C.state === 'play') { e.preventDefault(); e.returnValue = ''; } });
 

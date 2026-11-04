@@ -1,8 +1,8 @@
-// get-airdef-rating — окно рейтинга «Воздушного превосходства» (Mark 2026-10-25, макет одобрен): таблица сезона (место, ник, очки — без
-// подробностей), своё место и «Мои бои» (все онлайн-бои сезона: засчитан ли — sql/025, 2 + 2 + 2 + 1 — и из чего очки). В таблице — только аккаунты игры
-// (sql/022: airdef_rating_board); аккаунт сайта видит таблицу и свои бои, но без места — нужен аккаунт игры (перенос прогресса).
+// get-airdef-rating - окно рейтинга «Воздушного превосходства» (Mark 2026-10-25, макет одобрен): таблица сезона (место, ник, очки - без
+// подробностей), своё место и «Мои бои» (все онлайн-бои сезона: засчитан ли - sql/025, 2 + 2 + 2 + 1 - и из чего очки). В таблице - только аккаунты игры
+// (sql/022: airdef_rating_board); аккаунт сайта видит таблицу и свои бои, но без места - нужен аккаунт игры (перенос прогресса).
 //   { player_id?, season? } → { season, live, starts_at, ends_at, next: { season, starts_at } | null, top: [{ place, nick, points, n, ava? }], me: { kind, place, points, n, nick, ava?, battles } | null }
-// Межсезонье (sql/027, неделя между сезонами): по умолчанию — итоги прошедшего сезона (live: false), в next — когда начнётся следующий.
+// Межсезонье (sql/027, неделя между сезонами): по умолчанию - итоги прошедшего сезона (live: false), в next - когда начнётся следующий.
 import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
 import { supabaseAdmin } from "../_shared/supabase-admin.ts";
 
@@ -17,7 +17,7 @@ Deno.serve(async (req) => {
     const [cur, lv] = await Promise.all([db.rpc("airdef_season_at", { ts: now }), db.rpc("airdef_season_live", { ts: now })]);
     if (cur.error) throw cur.error;
     if (lv.error) throw lv.error;
-    const at = Number(cur.data) || 0, live = Number(lv.data) || 0; // at — идущий или (в межсезонье) следующий сезон; live — идущий, 0 — межсезонье
+    const at = Number(cur.data) || 0, live = Number(lv.data) || 0; // at - идущий или (в межсезонье) следующий сезон; live - идущий, 0 - межсезонье
     const season = Number.isInteger(body.season) && body.season > 0 && body.season <= at ? body.season : live || Math.max(1, at - 1);
     const [b, board, nb] = await Promise.all([db.rpc("airdef_season_bounds", { p: season }), db.rpc("airdef_rating_board", { p_season: season }),
       !live && at > season ? db.rpc("airdef_season_bounds", { p: at }) : Promise.resolve({ data: null, error: null })]);
@@ -39,7 +39,7 @@ Deno.serve(async (req) => {
           db.rpc("airdef_rating_counted", { p_season: season, p_player: id })]);
         if (error) throw error;
         if (cnt.error) throw cnt.error;
-        // засчитаны — как в таблице сезона (sql/025): по 2 лучших в обороне, вылете и «Мульти-волне» + 1 лучший из остальных
+        // засчитаны - как в таблице сезона (sql/025): по 2 лучших в обороне, вылете и «Мульти-волне» + 1 лучший из остальных
         const counted = (cnt.data || []) as { match_id: string; rating: number }[], best = new Set(counted.map((x) => x.match_id));
         const battles = (list || []).map((x) => {
           const res = (x.result || {}) as Record<string, unknown>;
@@ -49,7 +49,7 @@ Deno.serve(async (req) => {
         me = { kind: pl.kind, nick: acc?.data?.nick ?? null, place: mine ? Number(mine.place) : null, points: mine ? Number(mine.points) : counted.reduce((a, x) => a + x.rating, 0), n: counted.length, battles };
       }
     }
-    // надетые аватарки (кошелёк, sql/028: worn.ava; Mark 2026-11-04). Не прочитались — таблица всё равно нужна: у всех та, что по умолчанию
+    // надетые аватарки (кошелёк, sql/028: worn.ava; Mark 2026-11-04). Не прочитались - таблица всё равно нужна: у всех та, что по умолчанию
     const want = topRows.map((r) => r.player_id), avaOf = new Map<string, string>();
     if (me) want.push(id);
     if (want.length) {

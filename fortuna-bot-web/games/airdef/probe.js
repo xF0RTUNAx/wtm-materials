@@ -1,7 +1,7 @@
-// Замер на телефоне (?probe=1; Mark 2026-10-24: «где ещё сэкономить без заметных потерь» — на всех картах и в режимах): через 12 с боя игра
-// встаёт, кадр рисуется без предела 60 к/с и без динамического разрешения; по 4 с — всё, без земли, без техники и объектов, без мелких
-// экземпляров (деревья, реквизит), без частиц и дыма, без сглаживания и апскейла, снова всё. Время кадра — среднее между кадрами (на телефоне
-// упор в видеокарту — это её время); таблица поверх игры — для скриншота. Части пропускаются при отрисовке (как стенд gpu-parts в scratchpad).
+// Замер на телефоне (?probe=1; Mark 2026-10-24: «где ещё сэкономить без заметных потерь» - на всех картах и в режимах): через 12 с боя игра
+// встаёт, кадр рисуется без предела 60 к/с и без динамического разрешения; по 4 с - всё, без земли, без техники и объектов, без мелких
+// экземпляров (деревья, реквизит), без частиц и дыма, без сглаживания и апскейла, снова всё. Время кадра - среднее между кадрами (на телефоне
+// упор в видеокарту - это её время); таблица поверх игры - для скриншота. Части пропускаются при отрисовке (как стенд gpu-parts в scratchpad).
 /* global THREE */
 export function startProbe(C, { renderer, scene, pipe }) {
   const STEP = 4000, WARM = 1200;
@@ -13,14 +13,14 @@ export function startProbe(C, { renderer, scene, pipe }) {
   const G = () => C.G || {};
   const cat = (obj, mat) => {
     const g = G(); if (obj === g.ground || obj === g.roads) return 'ground';
-    if (g.tiles && (g.tiles.includes(obj) || g.tiles.includes(obj.parent))) return 'tiles'; // плитки города и деревень — слитые дома
+    if (g.tiles && (g.tiles.includes(obj) || g.tiles.includes(obj.parent))) return 'tiles'; // плитки города и деревень - слитые дома
     if (obj === g.sky) return 'sky';
     if (obj.isPoints || (mat && (mat.blending === THREE.AdditiveBlending || (mat.transparent && !obj.isInstancedMesh)))) return 'fx';
     if (obj.isInstancedMesh) return 'inst';
     return 'obj';
   };
   // кадр на время замера рисуется K раз (время делится на K): иначе быстрый кадр упирается в частоту экрана (16,7 мс) и разницы не видно
-  // K подбирается в начале (кадр ≥ 26 мс — заведомо медленнее экрана 60–120 Гц)
+  // K подбирается в начале (кадр ≥ 26 мс - заведомо медленнее экрана 60-120 Гц)
   let K = 3, cal = 0; const rp = pipe && pipe.render, rr = renderer.render;
   const multi = (on) => {
     if (pipe) pipe.render = on ? function (...a) { for (let k = 0; k < K; k++) rp.apply(this, a); } : rp;
@@ -33,7 +33,7 @@ export function startProbe(C, { renderer, scene, pipe }) {
   };
   let i = -1, t0 = 0, last = 0; const res = [], iv = [];
   const pc = pipe && pipe.cfg, aa0 = pc && pc.aa, up0 = pc && pc.upscaler;
-  // что умеет браузер (2026-10-25: решение о переходе на WebGPU — по телефонам и окну Telegram тестеров)
+  // что умеет браузер (2026-10-25: решение о переходе на WebGPU - по телефонам и окну Telegram тестеров)
   const api = `WebGPU ${typeof navigator !== 'undefined' && navigator.gpu ? 'есть' : 'нет'} · WebGL ${renderer.capabilities.isWebGL2 ? 2 : 1}`;
   const show = (head) => {
     const b = res.length ? res[0][1] : 0;
@@ -43,7 +43,7 @@ export function startProbe(C, { renderer, scene, pipe }) {
   const next = (now) => {
     if (i >= 0) { const a = iv.filter((x) => x < 750); res.push([steps[i][0], a.length ? a.reduce((s, x) => s + x, 0) / a.length / K : 0]); }
     i++; iv.length = 0; t0 = now; last = 0;
-    if (i >= steps.length) { renderer.renderBufferDirect = orig; multi(false); if (pc) { pc.aa = aa0; pc.upscaler = up0; } C.probeOn = false; C.paused = false; show('готово — скриншот'); return; }
+    if (i >= steps.length) { renderer.renderBufferDirect = orig; multi(false); if (pc) { pc.aa = aa0; pc.upscaler = up0; } C.probeOn = false; C.paused = false; show('готово - скриншот'); return; }
     skip = steps[i][1]; if (pc) { pc.aa = skip === 'post' ? 'off' : aa0; pc.upscaler = skip === 'post' ? 'off' : up0; }
     show(`${steps[i][0]}… не трогайте телефон`);
   };
@@ -52,7 +52,7 @@ export function startProbe(C, { renderer, scene, pipe }) {
     requestAnimationFrame(tick);
     if (!C.probeOn) { if (C.state === 'play' && (C.probeT = (C.probeT || 0) + 1) > 12 * 60) begin(); else if (C.state === 'play') box.textContent = 'Замер начнётся через ' + Math.ceil(12 - C.probeT / 60) + ' с'; return; }
     if (now - t0 > WARM && last) iv.push(now - last); last = now;
-    if (cal && now - t0 > WARM + 1000) { // подбор K: кадр быстрее 26 мс — повторов больше (до 24)
+    if (cal && now - t0 > WARM + 1000) { // подбор K: кадр быстрее 26 мс - повторов больше (до 24)
       const a = iv.filter((x) => x < 750), avg = a.length ? a.reduce((s, x) => s + x, 0) / a.length : 0;
       if (avg < 26 && K < 24 && cal < 4) { K = Math.min(24, Math.ceil(K * 32 / Math.max(avg, 4))); cal++; t0 = now; last = 0; iv.length = 0; return; }
       cal = 0; next(now); return;

@@ -1,25 +1,25 @@
 // Стенд цен «Мульти-волны» (2026-10-28, Mark: «цена = измеренная сила», один бюджет на все бои): без браузера, как combined-test.js,
 // бой «волна против ПВО» на «Северном рубеже» по правилам онлайна (sim/combined.js LIM_ON, strike game 'multi', «Реализм»).
-//   deno run -A tools/airdef-headless/multi-price-stand.js atk  [N=40] [J=4]   — сила каждой единицы удара
-//   deno run -A tools/airdef-headless/multi-price-stand.js sam  [N=40] [J=4]   — сила каждого ЗРК
-//   deno run -A tools/airdef-headless/multi-price-stand.js sam  N=40 NA=100     — (NA — боёв для вклада в ослабленной ПВО); SAMK=hawk21 OUT=… — только эти ЗРК
-//   deno run -A tools/airdef-headless/multi-price-stand.js price                — цены и потолки из замеров → multi-prices.json
-//   deno run -A tools/airdef-headless/multi-price-stand.js fair [N=150] [J=4]  — честность: восток против запада при равном бюджете
-//   deno run -A tools/airdef-headless/multi-price-stand.js mono [N=30]         — вся волна (или вся ПВО) из одного типа: где нужен потолок
-// N — боёв на точку (разное зерно), J — потоков. Итог — таблица в консоль и JSON в OUT (по умолчанию multi-price-<режим>.json рядом:
-// atk и sam — замеры, их читают price / fair / mono). CACHE=файл.jsonl — продолжить оборванный прогон. Замер 2026-10-28: atk N=60 (≈ 20 мин
+//   deno run -A tools/airdef-headless/multi-price-stand.js atk  [N=40] [J=4]   - сила каждой единицы удара
+//   deno run -A tools/airdef-headless/multi-price-stand.js sam  [N=40] [J=4]   - сила каждого ЗРК
+//   deno run -A tools/airdef-headless/multi-price-stand.js sam  N=40 NA=100     - (NA - боёв для вклада в ослабленной ПВО); SAMK=hawk21 OUT=… - только эти ЗРК
+//   deno run -A tools/airdef-headless/multi-price-stand.js price                - цены и потолки из замеров → multi-prices.json
+//   deno run -A tools/airdef-headless/multi-price-stand.js fair [N=150] [J=4]  - честность: восток против запада при равном бюджете
+//   deno run -A tools/airdef-headless/multi-price-stand.js mono [N=30]         - вся волна (или вся ПВО) из одного типа: где нужен потолок
+// N - боёв на точку (разное зерно), J - потоков. Итог - таблица в консоль и JSON в OUT (по умолчанию multi-price-<режим>.json рядом:
+// atk и sam - замеры, их читают price / fair / mono). CACHE=файл.jsonl - продолжить оборванный прогон. Замер 2026-10-28: atk N=60 (≈ 20 мин
 // на 4 ядрах), sam N=40 NA=100 (≈ 45 мин), fair N=150, mono N=30.
 // Как меряем:
-//  • удар: фон — типовая волна ИИ своей стороны (COMBINED[сторона][2…4]) против типовой ПВО противника того же уровня (DEFENSE, mission.js
-//    placeDefense — как одиночная игра); к фону добавляем m единиц типа k (крылатые и дроны — 4–6, баллистика — 2, «исключительная» — 1
+//  • удар: фон - типовая волна ИИ своей стороны (COMBINED[сторона][2…4]) против типовой ПВО противника того же уровня (DEFENSE, mission.js
+//    placeDefense - как одиночная игра); к фону добавляем m единиц типа k (крылатые и дроны - 4-6, баллистика - 2, «исключительная» - 1
 //    без другой баллистики); сила k = (ценность объектов, разрушенная волной с k − без k) / m, зерно боя одно и то же (расстановка целей
-//    и ПВО совпадает). Наряд — как у ботов онлайна: ложные цели по ПВО, остальное — по трём целям по кругу;
-//  • ЗРК: один комплекс (у трёх целей боя, дальний — кольцом у центра, как placeDefense) против типовых волн ИИ уровня 2…4 — сколько
-//    единиц удара и носителей сбил и сколько ценности сберёг (разрушено без ПВО − с ним); второй замер — он же в половинной ПВО уровня.
+//    и ПВО совпадает). Наряд - как у ботов онлайна: ложные цели по ПВО, остальное - по трём целям по кругу;
+//  • ЗРК: один комплекс (у трёх целей боя, дальний - кольцом у центра, как placeDefense) против типовых волн ИИ уровня 2…4 - сколько
+//    единиц удара и носителей сбил и сколько ценности сберёг (разрушено без ПВО − с ним); второй замер - он же в половинной ПВО уровня.
 const dir = new URL('.', import.meta.url).pathname;
 const IS_WORKER = typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope;
 (0, eval)(Deno.readTextFileSync(dir + '../drone-headless/three.min.js'));
-// модули игры — с тем же ?v=, что у sim/combined.js (иначе arsenal.js загрузился бы второй копией)
+// модули игры - с тем же ?v=, что у sim/combined.js (иначе arsenal.js загрузился бы второй копией)
 const V = Deno.readTextFileSync(dir + '../../games/airdef/sim/combined.js').match(/arsenal\.js(\?v=\w+)/)[1];
 const G = (p) => import(`../../games/airdef/${p}${V}`);
 const { buildWinter } = await G('map-winter.js');
@@ -54,7 +54,7 @@ function wave(side, list, targets) {
   }
   return { comp, plan };
 }
-// один комплекс — как placeDefense: дальний (≥ 15 км) — кольцом у центра, ПЗРК — на крыше у цели, остальные — у цели
+// один комплекс - как placeDefense: дальний (≥ 15 км) - кольцом у центра, ПЗРК - на крыше у цели, остальные - у цели
 function placeOne(S, rnd, key, tgt) {
   const Sx = SAM[key]; let xz;
   if (Sx.rmax >= 15000) { const a = rnd() * Math.PI * 2, r = 2500 + rnd() * 4000; xz = spotNear(city, rnd, 500 + Math.cos(a) * r, -300 + Math.sin(a) * r, 0, 900, false); }
@@ -64,9 +64,9 @@ function placeOne(S, rnd, key, tgt) {
 }
 
 // бой. job: { att, list: [[ключ, n]], seed, def: { lvl, k } | null (без ПВО), sam: ключ | null (+ один комплекс), samN, real }
-// Замер (real нет): объекты неразрушимы — иначе волна по трём целям упирается в их ценность (цели кончились — добавка «ничего не даёт»);
-// попаданию засчитывается ценность объекта × доля его прочности, но не больше самого объекта (одна боевая часть — не больше одного объекта).
-// real — как в игре (для проверки честности): объекты разрушаются, итог — damageValue
+// Замер (real нет): объекты неразрушимы - иначе волна по трём целям упирается в их ценность (цели кончились - добавка «ничего не даёт»);
+// попаданию засчитывается ценность объекта × доля его прочности, но не больше самого объекта (одна боевая часть - не больше одного объекта).
+// real - как в игре (для проверки честности): объекты разрушаются, итог - damageValue
 export function battle(job) {
   const rnd = rng(job.seed), att = job.att, def = OTHER[att];
   const st = { launched: {}, inter: {}, del: {}, kx: {}, kxCar: 0 }, pend = [], extra = [];
@@ -89,8 +89,8 @@ export function battle(job) {
   const targets = pickTargets(S, rnd, job.nt || 3);
   if (job.def) placeDefense(S, city, rnd, def, job.def.lvl, targets, job.def.k ?? 1);
   if (job.sam) for (let i = 0; i < (job.samN || 1); i++) extra.push(placeOne(S, rnd, job.sam, targets[i % targets.length]));
-  // своя расстановка (проверка честности): [[ключ, n]] — как бот онлайна, целей атаки не знает: дальние — между центром и объектами,
-  // остальные — у объектов по кругу (airdef-multi.js botDefense)
+  // своя расстановка (проверка честности): [[ключ, n]] - как бот онлайна, целей атаки не знает: дальние - между центром и объектами,
+  // остальные - у объектов по кругу (airdef-multi.js botDefense)
   if (job.defList) {
     const objs = S.objects.filter((o) => !o.noTarget); let g = Math.floor(rnd() * objs.length);
     for (const [key, n] of job.defList) for (let i = 0; i < n; i++) {
@@ -114,11 +114,11 @@ export function battle(job) {
 if (IS_WORKER) {
   self.onmessage = (e) => { const out = e.data.map((j) => ({ id: j.id, r: battle(j) })); self.postMessage(out); };
 }
-// CACHE=файл.jsonl — каждый сыгранный бой дописывается туда; при повторном запуске (оборвался прогон) уже сыгранные не повторяются
+// CACHE=файл.jsonl - каждый сыгранный бой дописывается туда; при повторном запуске (оборвался прогон) уже сыгранные не повторяются
 const jobKey = (j) => JSON.stringify([j.att, j.list, j.seed, j.def || null, j.sam || null, j.samN || 0, !!j.real, j.nt || 3, j.defList || null, ...(j.kx ? ['kx'] : [])]);
 async function runAll(jobs, J) {
   const res = new Array(jobs.length), chunk = 6, CACHE = Deno.env.get('CACHE'), seen = new Map();
-  if (CACHE) try { for (const line of Deno.readTextFileSync(CACHE).split('\n')) if (line) { const [k, r] = JSON.parse(line); seen.set(k, r); } } catch (_) { /* нет файла — с начала */ }
+  if (CACHE) try { for (const line of Deno.readTextFileSync(CACHE).split('\n')) if (line) { const [k, r] = JSON.parse(line); seen.set(k, r); } } catch (_) { /* нет файла - с начала */ }
   jobs.forEach((j, i) => { j.id = i; const r = seen.get(jobKey(j)); if (r) res[i] = r; });
   const todo = jobs.filter((j) => !res[j.id]);
   if (seen.size) console.error(`  из кэша: ${jobs.length - todo.length}, осталось ${todo.length}`);
@@ -145,7 +145,7 @@ if (!IS_WORKER && import.meta.main) {
   const N = arg('N', 40), J = arg('J', 4), LVLS = [2, 3, 4];
   const OUT = Deno.env.get('OUT') || `${dir}multi-price-${mode}.json`;
   if (mode === 'atk') {
-    // фон: волна уровня; для баллистики — без своей баллистики
+    // фон: волна уровня; для баллистики - без своей баллистики
     const bg = (side, lvl, noTbm) => COMBINED[side][lvl].filter(([k]) => !AG[k].recon && !(noTbm && isTbm(k))).map(([k, n]) => [k, n]);
     const jobs = [];
     for (const att of ['east', 'west']) for (const lvl of LVLS) for (let s = 1; s <= N; s++) {
@@ -186,11 +186,11 @@ if (!IS_WORKER && import.meta.main) {
     for (const r of rows) console.log(`${r.att.padEnd(6)} ${r.k.padEnd(10)} ${String(r.m).padStart(3)} ${LVLS.map((l) => `${r.lvl[l].v.toFixed(1).padStart(6)}±${r.lvl[l].se.toFixed(1).padEnd(4)}`).join(' ')}  ${r.v.toFixed(1).padStart(6)} | ${LVLS.map((l) => r.lvl[l].dir.toFixed(1).padStart(5)).join(' ')}  ${r.dir.toFixed(1).padStart(6)} | ${LVLS.map((l) => Math.round(r.lvl[l].surv * 100)).join('/')}   ${LVLS.map((l) => r.lvl[l].lost.toFixed(2)).join('/')}`);
   }
   if (mode === 'sam') {
-    // NA — боёв на точку для вклада в ослабленной ПВО (он шумнее одиночного); ATK — итог замера удара (сила единиц — цена сбитого)
+    // NA - боёв на точку для вклада в ослабленной ПВО (он шумнее одиночного); ATK - итог замера удара (сила единиц - цена сбитого)
     const NA = arg('NA', N), jobs = [];
-    const ONLY = Deno.env.get('SAMK') ? Deno.env.get('SAMK').split(',') : null; // SAMK=hawk21 — перемерить только эти; остальные строки и эталоны — из прежнего замера (multi-price-sam.json)
-    let OLD = null; if (ONLY) try { OLD = JSON.parse(Deno.readTextFileSync(dir + 'multi-price-sam.json')); } catch (_) { console.error('SAMK: нет прежнего multi-price-sam.json — в итоге будут только перемеренные'); }
-    const VA = {}; try { for (const r of JSON.parse(Deno.readTextFileSync(Deno.env.get('ATK') || dir + 'multi-price-atk.json')).rows) VA[r.k] = r.v; } catch (_) { console.error('нет ATK — сбитое без цены'); }
+    const ONLY = Deno.env.get('SAMK') ? Deno.env.get('SAMK').split(',') : null; // SAMK=hawk21 - перемерить только эти; остальные строки и эталоны - из прежнего замера (multi-price-sam.json)
+    let OLD = null; if (ONLY) try { OLD = JSON.parse(Deno.readTextFileSync(dir + 'multi-price-sam.json')); } catch (_) { console.error('SAMK: нет прежнего multi-price-sam.json - в итоге будут только перемеренные'); }
+    const VA = {}; try { for (const r of JSON.parse(Deno.readTextFileSync(Deno.env.get('ATK') || dir + 'multi-price-atk.json')).rows) VA[r.k] = r.v; } catch (_) { console.error('нет ATK - сбитое без цены'); }
     for (const def of ['east', 'west']) {
       const att = OTHER[def], sams = Object.keys(SAM).filter((k) => SAM[k].side === def && SAM_COST[k] && (!ONLY || ONLY.includes(k)));
       if (ONLY && !sams.length) continue;
@@ -234,18 +234,18 @@ if (!IS_WORKER && import.meta.main) {
       row.save = mean(LVLS.map((l) => row.lvl[l].save)); row.add = mean(LVLS.map((l) => row.lvl[l].add)); row.kxV = mean(LVLS.map((l) => row.lvl[l].kxV));
       rows.push(row);
     }
-    const refs = { ...(OLD && OLD.refs) }; for (const def of ['east', 'west']) for (const lvl of LVLS) for (const kind of ['none', 'half']) { const a = [...ref].filter(([q]) => q.startsWith(`${kind}|${def}|${lvl}|`)).map(([, r]) => r.value); if (a.length) refs[`${kind}-${def}${lvl}`] = { v: mean(a), sd: sd(a) }; } // сторону без перемеренных ЗРК (SAMK) не гоняли — эталон прежний
+    const refs = { ...(OLD && OLD.refs) }; for (const def of ['east', 'west']) for (const lvl of LVLS) for (const kind of ['none', 'half']) { const a = [...ref].filter(([q]) => q.startsWith(`${kind}|${def}|${lvl}|`)).map(([, r]) => r.value); if (a.length) refs[`${kind}-${def}${lvl}`] = { v: mean(a), sd: sd(a) }; } // сторону без перемеренных ЗРК (SAMK) не гоняли - эталон прежний
     Deno.writeTextFileSync(OUT, JSON.stringify({ N, rows, refs }, null, 1));
     console.log('без ПВО / половина ПВО уровня:', Object.entries(refs).map(([k, b]) => `${k} ${b.v.toFixed(0)}`).join(' · '));
     console.log('ПВО    ключ       цена  один: сбил(2/3/4) носит. сберёг(2/3/4)   | в ослабленной ПВО: сбил (2/3/4), их сила (2/3/4), сберёг (2/3/4)');
     for (const r of rows) console.log(`${r.def.padEnd(5)} ${r.k.padEnd(9)} ${String(r.cost).padStart(4)}  ${LVLS.map((l) => r.lvl[l].kill.toFixed(1).padStart(4)).join(' ')}  ${LVLS.map((l) => r.lvl[l].car.toFixed(1)).join('/')}  ${LVLS.map((l) => r.lvl[l].save.toFixed(0).padStart(4)).join(' ')}  | ${LVLS.map((l) => r.lvl[l].kxN.toFixed(1).padStart(4)).join(' ')}  ${LVLS.map((l) => `${r.lvl[l].kxV.toFixed(0).padStart(4)}±${r.lvl[l].kxVSe.toFixed(0).padEnd(3)}`).join(' ')}  ${LVLS.map((l) => `${r.lvl[l].add.toFixed(0).padStart(4)}±${r.lvl[l].addSe.toFixed(0).padEnd(3)}`).join(' ')}`);
   }
-  // ── цены из замеров (ATK, SAMJ) → PRICES: удар — ∝ прибавке к волне, бюджет 100, масштаб KA (0,9 — сила волны против ПВО как при старых ценах);
-  // ЗРК — ∝ полусумме «сбитое по силе» и «сберёг» в ослабленной ПВО, сумма цен как у SAM_COST, шаг 10, не дешевле 30; потолки — как предложено Mark 2026-10-28
+  // ── цены из замеров (ATK, SAMJ) → PRICES: удар - ∝ прибавке к волне, бюджет 100, масштаб KA (0,9 - сила волны против ПВО как при старых ценах);
+  // ЗРК - ∝ полусумме «сбитое по силе» и «сберёг» в ослабленной ПВО, сумма цен как у SAM_COST, шаг 10, не дешевле 30; потолки - как предложено Mark 2026-10-28
   if (mode === 'price') {
     const A = JSON.parse(Deno.readTextFileSync(Deno.env.get('ATK') || dir + 'multi-price-atk.json')), Sm = JSON.parse(Deno.readTextFileSync(Deno.env.get('SAMJ') || dir + 'multi-price-sam.json'));
-    // масштаб: сумма новых цен = сумме нынешних (THREAT — уже из бюджета 100; 2026-10-28 переводили из 50 — было ×2 и KA 0,9);
-    // BUDGET — бюджет волны (2026-11-01, баланс удара: объекты крепче — бюджет поднят, чтобы волна разрушала столько же, см. fair)
+    // масштаб: сумма новых цен = сумме нынешних (THREAT - уже из бюджета 100; 2026-10-28 переводили из 50 - было ×2 и KA 0,9);
+    // BUDGET - бюджет волны (2026-11-01, баланс удара: объекты крепче - бюджет поднят, чтобы волна разрушала столько же, см. fair)
     const KA = +(Deno.env.get('KA') || 1), BUDGET = +(Deno.env.get('BUDGET') || 100), { THREAT } = await G('arsenal.js');
     const c = A.rows.reduce((s, r) => s + r.v, 0) / A.rows.reduce((s, r) => s + THREAT[r.k], 0) / KA, atk = {}, cap = {};
     for (const r of A.rows) { atk[r.k] = Math.max(1, Math.round(r.v / c)); cap[r.k] = AG[r.k].uav ? 12 : AG[r.k].decoyMun ? 8 : 10; }
@@ -256,13 +256,13 @@ if (!IS_WORKER && import.meta.main) {
     for (const r of Sm.rows) console.log(`${r.def.padEnd(5)} ${r.k.padEnd(9)} было ${r.cost}  сила ${w(r).toFixed(0).padStart(4)}  → ${sam[r.k]}, не больше ${samCap[r.k]}`);
   }
   // ── честность при равном бюджете: случайные «игроцкие» волны и расстановки по ценам из PRICES (JSON: budget, atk, cap, samBudget, sam, samCap),
-  // восток бьёт по ПВО запада и наоборот, у каждого боя свои случайные составы. mono — вся волна из одного типа (сколько пустит потолок)
+  // восток бьёт по ПВО запада и наоборот, у каждого боя свои случайные составы. mono - вся волна из одного типа (сколько пустит потолок)
   if (mode === 'fair' || mode === 'mono') {
     const P = JSON.parse(Deno.readTextFileSync(Deno.env.get('PRICES') || dir + 'multi-prices.json'));
     const tbmOk = (n, k) => { if (!isTbm(k)) return true; const t = Object.entries(n).reduce((s, [q, c]) => s + (isTbm(q) ? c : 0), 0); if (EXCL.includes(k)) return t === 0; return t < 2 && !EXCL.some((q) => n[q]); };
-    // «умный» игрок (smart) берёт тип с вероятностью ∝ (сила / цена)³ — выгодное за очко чаще; сила — из замеров ATK и SAMJ
+    // «умный» игрок (smart) берёт тип с вероятностью ∝ (сила / цена)³ - выгодное за очко чаще; сила - из замеров ATK и SAMJ
     const VA = {}, VS = {};
-    try { for (const r of JSON.parse(Deno.readTextFileSync(Deno.env.get('ATK') || dir + 'multi-price-atk.json')).rows) VA[r.k] = r.v; } catch (_) { /* без замера — все равны */ }
+    try { for (const r of JSON.parse(Deno.readTextFileSync(Deno.env.get('ATK') || dir + 'multi-price-atk.json')).rows) VA[r.k] = r.v; } catch (_) { /* без замера - все равны */ }
     try { for (const r of JSON.parse(Deno.readTextFileSync(Deno.env.get('SAMJ') || dir + 'multi-price-sam.json')).rows) VS[r.k] = Math.max(1, (r.kxV + r.add) / 2); } catch (_) { /* то же */ }
     const fill = (keys, price, cap, budget, rnd, okX = () => true, burstN = () => 3, wt = () => 1) => {
       const n = {}; let left = budget;
@@ -281,7 +281,7 @@ if (!IS_WORKER && import.meta.main) {
     const cost = (list, price) => list.reduce((s, [k, n]) => s + price[k] * n, 0);
     const jobs = [];
     if (mode === 'fair') {
-      // real — объекты разрушаются, целей 5 (с тремя волна почти всегда разносит все и разницы не видно)
+      // real - объекты разрушаются, целей 5 (с тремя волна почти всегда разносит все и разницы не видно)
       for (let s = 1; s <= N; s++) for (const att of ['east', 'west']) for (const real of [false, true]) for (const smart of [false, true]) {
         const rw = rng(s * 31 + 7), rd = rng(s * 57 + 3);
         jobs.push({ att, seed: s * 1000 + 5, list: waveOf(att, rw, smart), defList: defOf(OTHER[att], rd, smart), real, nt: real ? 5 : 3, tag: { s, real, smart } });
@@ -312,7 +312,7 @@ if (!IS_WORKER && import.meta.main) {
       console.log(ex.join('\n'));
       for (const st of ['rand', 'smart']) {
         const o = (k) => out[`${st}-${k}`];
-        console.log(`${st === 'rand' ? 'случайные составы' : '«умные» составы'}: восток по ПВО запада — удар ${o('east').v.toFixed(0)}±${o('east').se.toFixed(0)}, разрушено ${o('east-real').v.toFixed(0)}±${o('east-real').se.toFixed(0)}; запад по ПВО востока — удар ${o('west').v.toFixed(0)}±${o('west').se.toFixed(0)}, разрушено ${o('west-real').v.toFixed(0)}±${o('west-real').se.toFixed(0)}; запад / восток: удар ×${(o('west').v / o('east').v).toFixed(2)}, разрушено ×${(o('west-real').v / o('east-real').v).toFixed(2)}`);
+        console.log(`${st === 'rand' ? 'случайные составы' : '«умные» составы'}: восток по ПВО запада - удар ${o('east').v.toFixed(0)}±${o('east').se.toFixed(0)}, разрушено ${o('east-real').v.toFixed(0)}±${o('east-real').se.toFixed(0)}; запад по ПВО востока - удар ${o('west').v.toFixed(0)}±${o('west').se.toFixed(0)}, разрушено ${o('west-real').v.toFixed(0)}±${o('west-real').se.toFixed(0)}; запад / восток: удар ×${(o('west').v / o('east').v).toFixed(2)}, разрушено ×${(o('west-real').v / o('east-real').v).toFixed(2)}`);
       }
     } else {
       const mix = {}; for (const att of ['east', 'west']) mix[att] = mean(pick((j) => j.att === att && j.tag.k === 'mix').map(([, r]) => r.value));
@@ -323,7 +323,7 @@ if (!IS_WORKER && import.meta.main) {
         mono.atk.push({ att, k, n: p[0][0].tag.n, v: mean(a), se: sd(a) / Math.sqrt(a.length), x: mean(a) / mix[att] });
         console.log(`${att.padEnd(5)} ${k.padEnd(9)} ×${String(p[0][0].tag.n).padEnd(3)} ${mean(a).toFixed(0).padStart(5)}±${(sd(a) / Math.sqrt(a.length)).toFixed(0).padEnd(3)} ×${(mean(a) / mix[att]).toFixed(2)} от смешанной`);
       }
-      console.log(`ПВО из одного типа (удар по ней; смешанная ПВО: по востоку ${mix.west.toFixed(0)}, по западу ${mix.east.toFixed(0)} — меньше значит сильнее ПВО)`);
+      console.log(`ПВО из одного типа (удар по ней; смешанная ПВО: по востоку ${mix.west.toFixed(0)}, по западу ${mix.east.toFixed(0)} - меньше значит сильнее ПВО)`);
       for (const def of ['east', 'west']) for (const k of Object.keys(SAM).filter((q) => SAM[q].side === def && P.sam[q] != null)) {
         const p = pick((j) => j.tag.sam && j.tag.k === k), a = p.map(([, r]) => r.value), ref = mix[OTHER[def]];
         mono.sam.push({ def, k, n: p[0][0].tag.n, v: mean(a), se: sd(a) / Math.sqrt(a.length), x: mean(a) / ref });

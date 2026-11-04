@@ -1,14 +1,14 @@
-// «Воздушное превосходство» — ядро: город, рендер, бой (sim/strike.js + ИИ-налёт sim/raid.js), эффекты, звук, кадр,
-// экраны паузы и итогов. Режимы — отдельные модули с общим контекстом C:
-//   air.js      — вылет за самолёт против ИИ-ПВО;
-//   defense.js  — «Оборона города»: расстановка, волны ИИ-ударников, командир и оператор ЗРК;
-//   director.js — живой фон главного меню: ИИ-налёт против ИИ-ПВО и «режиссёр» камеры;
-//   training.js — обучение за обе стороны (подсказки и объяснения на паузе);
-//   menu.js     — карточка меню: режимы, вкладки «Бой», «Арсенал», «Руководство», «Настройки».
-// Параметры адреса: ?gfx=low|medium|high|ultra, ?weather=…, ?touch=1, ?test=1 (window.__a), ?go=air|defense — сразу в бой,
-// ?view=x,y,z,курс°,тангаж° — неподвижная камера (снимки города).
+// «Воздушное превосходство» - ядро: город, рендер, бой (sim/strike.js + ИИ-налёт sim/raid.js), эффекты, звук, кадр,
+// экраны паузы и итогов. Режимы - отдельные модули с общим контекстом C:
+//   air.js      - вылет за самолёт против ИИ-ПВО;
+//   defense.js  - «Оборона города»: расстановка, волны ИИ-ударников, командир и оператор ЗРК;
+//   director.js - живой фон главного меню: ИИ-налёт против ИИ-ПВО и «режиссёр» камеры;
+//   training.js - обучение за обе стороны (подсказки и объяснения на паузе);
+//   menu.js     - карточка меню: режимы, вкладки «Бой», «Арсенал», «Руководство», «Настройки».
+// Параметры адреса: ?gfx=low|medium|high|ultra, ?weather=…, ?touch=1, ?test=1 (window.__a), ?go=air|defense - сразу в бой,
+// ?view=x,y,z,курс°,тангаж° - неподвижная камера (снимки города).
 /* global THREE */
-import { localizeTree } from './lang/data.js?v=20261104a'; // язык: названия и описания из данных (arsenal, flight, heli) — до progress.js, который строит по ним дерево
+import { localizeTree } from './lang/data.js?v=20261104a'; // язык: названия и описания из данных (arsenal, flight, heli) - до progress.js, который строит по ним дерево
 import { TREE, BRANCHES } from './progress.js?v=20261104a';
 import { trDom, tr, trIf, LANG, askLang } from './i18n.js?v=20261104a';
 import { ktxInit, ktxRestore, ktxBusy } from './ktx.js?v=20261104a';
@@ -61,17 +61,17 @@ import { orientGate } from '../orient-warn.js?v=20261011a';
 
 const $ = (id) => document.getElementById(id);
 const Q = new URLSearchParams(location.search);
-localizeTree(TREE, BRANCHES); // страховка: узлы прокачки — по уже переведённым данным (если progress.js построил дерево раньше)
-trDom(document.body); // язык: статичный HTML страницы — до того, как меню и бой допишут свой текст (i18n.js)
-if (LANG === 'en') { const mf = document.querySelector('link[rel="manifest"]'); if (mf) mf.href = 'airdef-en.webmanifest'; } // «На экран „Домой“» (Android) — английское описание
-askLang(); // первый вход: язык ещё не выбран — спросить (угаданный по устройству / Telegram выделен)
-// окна общих модулей (предупреждение о повороте телефона — orient-warn.js, «Летка» делит его с игрой), которые сами добавляют русский текст прямо в body
+localizeTree(TREE, BRANCHES); // страховка: узлы прокачки - по уже переведённым данным (если progress.js построил дерево раньше)
+trDom(document.body); // язык: статичный HTML страницы - до того, как меню и бой допишут свой текст (i18n.js)
+if (LANG === 'en') { const mf = document.querySelector('link[rel="manifest"]'); if (mf) mf.href = 'airdef-en.webmanifest'; } // «На экран „Домой“» (Android) - английское описание
+askLang(); // первый вход: язык ещё не выбран - спросить (угаданный по устройству / Telegram выделен)
+// окна общих модулей (предупреждение о повороте телефона - orient-warn.js, «Летка» делит его с игрой), которые сами добавляют русский текст прямо в body
 if (LANG === 'en' && typeof MutationObserver !== 'undefined') new MutationObserver((ms) => { for (const m of ms) for (const n of m.addedNodes) if (n.nodeType === 1) trDom(n); }).observe(document.body, { childList: true });
 if (Q.get('test') === '1') addEventListener('error', (e) => (window.__errs = window.__errs || []).push(e.error ? e.error.stack : e.message)); // для проверки: стеки ошибок
 const IS_TOUCH = Q.get('touch') === '1' || matchMedia('(pointer: coarse)').matches;
 document.body.classList.toggle('coarse', IS_TOUCH);
 const ls = { get(k) { try { return localStorage.getItem(k); } catch (_) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (_) { /* приватный режим */ } } };
-// онлайн-бой шёл, а вкладка открылась заново (вылетела, iOS выгрузил её из памяти): запись online.js в хранилище вкладки не старше 110 с —
+// онлайн-бой шёл, а вкладка открылась заново (вылетела, iOS выгрузил её из памяти): запись online.js в хранилище вкладки не старше 110 с -
 // сразу онлайн, сервер держит место 2 мин и возвращает в тот же бой (2026-10-26)
 const LIVE = (() => { if (Q.get('test') === '1') return null; try { const o = JSON.parse(sessionStorage.getItem('fortuna_ad_live') || 'null'); return o && Date.now() - o.t < 110000 ? o : null; } catch (_) { return null; } })();
 
@@ -87,14 +87,14 @@ export const PRESETS = {
   ultra: { name: tr('Ультра'), lodObj: 8000, desc: tr('тени 4K, тени деревьев, дальняя прорисовка'), prCap: 2, prMul: 1, draw: 20000, houseK: 1, bldNear: 650, bldFar: 3600, treeFar: 1000, treeNear: 260, groundSeg: 384, zoneTex: 2048, trees: 24000, clouds: 900, roofDetail: true, particles: 6000,
     shadows: true, treeShadows: true, shadowMap: 4096, shadowBox: 800, aniso: 8,
     perf: { scale: 1, min: 0.67, aa: 'msaa', up: 'fsr', sharp: 0.35 }, post: { bloom: 0.6, vignette: 0.18, grade: 0.3, exposure: 0.95 } },
-  // «Кастомный» — последним, после «Ультра» (Mark 2026-10-23): всё настраивается (Настройки → «Кастомный»). Основа — техника, ракеты, бомбы, самолёты и эффекты как на
+  // «Кастомный» - последним, после «Ультра» (Mark 2026-10-23): всё настраивается (Настройки → «Кастомный»). Основа - техника, ракеты, бомбы, самолёты и эффекты как на
   // «Высоком» (тени вблизи, свечение, сглаживание), город проще
   custom: { name: tr('Кастомный'), lodObj: 5000, desc: tr('свои настройки: разрешение, тени, город, эффекты'), prCap: 1.5, prMul: 1, draw: 12000, houseK: 0.8, bldNear: 0, treeNear: 0, groundSeg: 256, zoneTex: 1024, trees: 5000, clouds: 300, roofDetail: true, particles: 4000,
     shadows: true, shadowMap: 2048, shadowBox: 450, aniso: 4, props: false,
     perf: { scale: 1, min: 0.6, aa: 'msaa', up: 'cas', sharp: 0.4 }, post: { bloom: 0.35, grade: 0.18, vignette: 0.14 } },
 };
-export const WEATHER_KEYS = ['day', 'morning', 'evening', 'sunset', 'overcast']; // ночь временно убрана (Mark, 2026-10-18): вернуть 'night' — и она снова в настройках
-// цветокоррекция по погоде (post.js): gGain — оттенок светов, gLift — теней, gSat — насыщенность, gCon — контраст; сдержанно
+export const WEATHER_KEYS = ['day', 'morning', 'evening', 'sunset', 'overcast']; // ночь временно убрана (Mark, 2026-10-18): вернуть 'night' - и она снова в настройках
+// цветокоррекция по погоде (post.js): gGain - оттенок светов, gLift - теней, gSat - насыщенность, gCon - контраст; сдержанно
 const GRADE = {
   day: { gSat: 1.02 },
   morning: { gGain: [1.035, 1.0, 0.95], gLift: [0, 0.004, 0.012] },
@@ -106,13 +106,13 @@ const CINEMA = Q.get('gfx') === 'cinema'; // запись промо-ролик�
 let gfxKey = CINEMA ? 'ultra' : Q.get('gfx') || ls.get('fortuna_airdef_gfx') || (IS_TOUCH ? 'medium' : 'high');
 if (!PRESETS[gfxKey]) gfxKey = 'medium';
 // свои настройки пресета «Кастомный» (Настройки; применяются перезапуском): разрешение, динамическое
-// разрешение и его цель, тени, город, детали улиц, эффекты кадра, сглаживание, дальность; на сенсорных — без ×2 (если не «полное»)
+// разрешение и его цель, тени, город, детали улиц, эффекты кадра, сглаживание, дальность; на сенсорных - без ×2 (если не «полное»)
 const GO = (() => { try { return JSON.parse(ls.get('fortuna_airdef_gfxo') || '{}') || {}; } catch (_) { return {}; } })();
-// предел кадров для всех пресетов, кроме «Кастомного» (у него свой): 'auto' — на телефоне 60, на ПК без предела; 30 / 45 / 60; 0 — нет (ПК)
-// чёткость на телефоне для всех пресетов, кроме «Кастомного» (Mark 2026-10-23: «мыльно»; после снижения нагрузки на процессор — можно чётче):
-// 'auto' — как было (×1,25 у «Низкого» и «Среднего», ×1,5 у «Высокого» и «Ультра»), 'high' — ×1,75 / ×2, 'native' — как у экрана. Применяется перезапуском
+// предел кадров для всех пресетов, кроме «Кастомного» (у него свой): 'auto' - на телефоне 60, на ПК без предела; 30 / 45 / 60; 0 - нет (ПК)
+// чёткость на телефоне для всех пресетов, кроме «Кастомного» (Mark 2026-10-23: «мыльно»; после снижения нагрузки на процессор - можно чётче):
+// 'auto' - как было (×1,25 у «Низкого» и «Среднего», ×1,5 у «Высокого» и «Ультра»), 'high' - ×1,75 / ×2, 'native' - как у экрана. Применяется перезапуском
 const SHARP = (() => { const v = ls.get('fortuna_airdef_sharp'); return v === 'high' || v === 'native' ? v : 'auto'; })();
-// видеочип телефона и его примерные баллы (gpu.js): по ним «Обычная» чёткость; ?gpu=<баллы> — проверить другую ступень (напр. ?gpu=1500 / 12000)
+// видеочип телефона и его примерные баллы (gpu.js): по ним «Обычная» чёткость; ?gpu=<баллы> - проверить другую ступень (напр. ?gpu=1500 / 12000)
 const GPU = (() => { const g = detectGpu(), q = Q.get('gpu'); if (q && Number.isFinite(+q)) g.score = +q; return g; })();
 const GPU_NAME = GPU.name;
 let fpsCap = (() => { const v = ls.get('fortuna_airdef_fps'); return v === null || v === 'auto' || !Number.isFinite(+v) ? 'auto' : +v; })();
@@ -127,7 +127,7 @@ function applyGfx(base, o) {
   else if (o.sh === 'low') Object.assign(P, { shadows: true, shadowMap: 1024, shadowBox: 400, treeShadows: false });
   else if (o.sh === 'mid') Object.assign(P, { shadows: true, shadowMap: 2048, shadowBox: 600, treeShadows: false });
   else if (o.sh === 'high') Object.assign(P, { shadows: true, shadowMap: 4096, shadowBox: 800, treeShadows: true });
-  // город: простой — коробки и мало деревьев; средний — дома и деревья моделями вблизи; полный — как на «Высоком»
+  // город: простой - коробки и мало деревьев; средний - дома и деревья моделями вблизи; полный - как на «Высоком»
   if (o.city === 'low') Object.assign(P, { bldNear: 0, treeNear: 0, bldFar: 0, treeFar: 0, trees: 3000, houseK: 0.6, groundSeg: Math.min(P.groundSeg, 192) });
   else if (o.city === 'mid') Object.assign(P, { bldNear: 250, treeNear: 100, bldFar: 1400, treeFar: 400, trees: 8000, houseK: 0.9 });
   else if (o.city === 'full') Object.assign(P, { bldNear: 450, treeNear: 170, bldFar: 2600, treeFar: 700, trees: 14000, houseK: 1 });
@@ -141,58 +141,58 @@ function applyGfx(base, o) {
   if (o.parts) P.particles = Math.round(P.particles * clamp(+o.parts, 0.3, 1.5));
   if (o.tex === 'low') Object.assign(P, { zoneTex: 512, aniso: 1 }); else if (o.tex === 'high') Object.assign(P, { zoneTex: 2048, aniso: 8 });
   if (o.pod) P.podHalf = o.pod === 'half';
-  if (o.cap !== undefined) P.cap = +o.cap; // 0 — без ограничения (на сенсорных — 60)
+  if (o.cap !== undefined) P.cap = +o.cap; // 0 - без ограничения (на сенсорных - 60)
   if (o.shRate) P.shEvery = +o.shRate;
   return P;
 }
-// сенсорные (телефоны, планшеты) — то, что почти не видно, но дорого видеочипу: тени ≤ 2048 и ближе, без MSAA (у «Кастомного» —
-// как выбрано), свечение с четверти разрешения, облака и дым — в половине разрешения (post.js), фильтр теней попроще
+// сенсорные (телефоны, планшеты) - то, что почти не видно, но дорого видеочипу: тени ≤ 2048 и ближе, без MSAA (у «Кастомного» -
+// как выбрано), свечение с четверти разрешения, облака и дым - в половине разрешения (post.js), фильтр теней попроще
 function touchGfx(P, custom) {
   if (!IS_TOUCH) return P;
   if (P.shadowMap > 2048) Object.assign(P, { shadowMap: 2048, shadowBox: Math.min(P.shadowBox, 600) });
   if (!custom && P.perf.aa === 'msaa') P.perf.aa = 'fxaa';
-  if (!custom && P.shadows && !(P.shEvery > 1)) { P.shEvery = 2; P.shAuto = true; } // тени через кадр (main.js frame: камера низко — каждый кадр)
+  if (!custom && P.shadows && !(P.shEvery > 1)) { P.shEvery = 2; P.shAuto = true; } // тени через кадр (main.js frame: камера низко - каждый кадр)
   P.bloomQ = true; P.halfFx = true; P.treeLoD = 1600;
-  const b = PRESETS[gfxKey].prCap; // по пресету, а не по P: applyGfx уже срезал до 1,5 — «Высокий» и «Ультра» выходили ×1,25 (ревью 2026-10-23)
-  // «Обычная» — по баллам видеочипа (2026-10-23): слабые — как было (×1,25 / ×1,5), дальше ступени до ×2; не тянет — динамическое разрешение само
+  const b = PRESETS[gfxKey].prCap; // по пресету, а не по P: applyGfx уже срезал до 1,5 - «Высокий» и «Ультра» выходили ×1,25 (ревью 2026-10-23)
+  // «Обычная» - по баллам видеочипа (2026-10-23): слабые - как было (×1,25 / ×1,5), дальше ступени до ×2; не тянет - динамическое разрешение само
   // опустит (perf.min)
   const RAW = sharpFor(GPU.score), CEIL = sharpCeil(), AUTO = {}; // ступень по баллам видеочипа (gpu.js): ниже прежнего не опускаем
-  for (const k in RAW) AUTO[k] = Math.min(RAW[k], CEIL); // «Обычная» — не выше, чем различит глаз на этом экране (телефон ×1,75, планшет ×1,5; ?prtest=1 — проверка)
+  for (const k in RAW) AUTO[k] = Math.min(RAW[k], CEIL); // «Обычная» - не выше, чем различит глаз на этом экране (телефон ×1,75, планшет ×1,5; ?prtest=1 - проверка)
   if (!custom) P.prCap = SHARP === 'native' ? 4 : SHARP === 'high' ? Math.max(RAW[gfxKey] || 0, b > 1.5 ? 2 : 1.75) : (AUTO[gfxKey] || Math.min(P.prCap, b > 1.5 ? 1.5 : 1.25));
-  // ?fsrout=1 (проба): холст — в разрешении экрана, 3D — во внутреннем буфере той же чёткости, до экрана — FSR (края чётче, чем растяжка браузера)
+  // ?fsrout=1 (проба): холст - в разрешении экрана, 3D - во внутреннем буфере той же чёткости, до экрана - FSR (края чётче, чем растяжка браузера)
   if (!custom && /[?&]fsrout=1/.test(location.search) && P.prCap < 4) {
     const native = (window.devicePixelRatio || 1) * (P.prMul || 1), k = Math.min(1, P.prCap / native);
     P.prCap = 4; P.perf.scale = k; P.perf.min = Math.max(0.35, k * (P.perf.min || 0.7)); P.perf.up = 'fsr';
-  } // телефон и планшет: экран и так плотный — меньше пикселей, меньше нагрев (iPad Air M1: «Средний» упирался в видеочип)
+  } // телефон и планшет: экран и так плотный - меньше пикселей, меньше нагрев (iPad Air M1: «Средний» упирался в видеочип)
   return P;
 }
-// окно контейнера через кадр — по умолчанию на сенсорных (телефоны, планшеты) и на «Низком»/«Среднем»
+// окно контейнера через кадр - по умолчанию на сенсорных (телефоны, планшеты) и на «Низком»/«Среднем»
 for (const k in PRESETS) if (PRESETS[k].podHalf === undefined) PRESETS[k].podHalf = IS_TOUCH || k === 'low' || k === 'medium';
-const P0 = touchGfx(gfxKey === 'custom' ? applyGfx(PRESETS.custom, GO) : applyGfx(PRESETS[gfxKey], { fullRes: GO.fullRes }), gfxKey === 'custom'); // свои настройки — только у «Кастомного»
-const P = CINEMA ? Object.assign(P0, { name: tr('Кино'), lodObj: 1e9, draw: 26000, bldNear: 5000, treeNear: 3000, bldFar: 9000, treeFar: 5000, trees: 32000, clouds: 1100, particles: 9000, props: true, shadowMap: 4096, shadowBox: 900, // дома и деревья готовыми моделями на километры (комментарий съедал конец строки с 2026-10-09 — у «Кино» не было этих настроек)
-  shEvery: 1, shAuto: false, // «Кино» — без уступок: тени каждый кадр
+const P0 = touchGfx(gfxKey === 'custom' ? applyGfx(PRESETS.custom, GO) : applyGfx(PRESETS[gfxKey], { fullRes: GO.fullRes }), gfxKey === 'custom'); // свои настройки - только у «Кастомного»
+const P = CINEMA ? Object.assign(P0, { name: tr('Кино'), lodObj: 1e9, draw: 26000, bldNear: 5000, treeNear: 3000, bldFar: 9000, treeFar: 5000, trees: 32000, clouds: 1100, particles: 9000, props: true, shadowMap: 4096, shadowBox: 900, // дома и деревья готовыми моделями на километры (комментарий съедал конец строки с 2026-10-09 - у «Кино» не было этих настроек)
+  shEvery: 1, shAuto: false, // «Кино» - без уступок: тени каждый кадр
   treeShadows: true, aniso: 16, zoneTex: 2048, prCap: 2, podHalf: false, perf: { ...P0.perf, scale: 1, dynOff: true, aa: 'msaa', up: 'off' }, post: { ...P0.post, bloom: 0.5 } }) : P0;
-// ?full=1 вместе с «Кино» — для кадров меню и ролика (Mark 2026-10-27: «в полном качестве даже на таком расстоянии»): дома, деревья, реквизит
-// улиц — полными моделями на всю карту (±16 км), без упрощённых копий, импосторов и коробок; кадр медленный — только для записи
-if (CINEMA && Q.get('full') === '1') Object.assign(P, { bldNear: 24000, treeNear: 24000, bldFar: 0, treeFar: 0, bldLo: false, full: true, propNear: 5000, prCap: 3 }); // мелочь улиц (фонари, провода, надгробия) — в 5 км: дальше она тоньше пикселя и мерцает «крупой»; ×3 — сглаживание мелких моделей вдали
-if (Q.get('bldfar') !== null) Object.assign(P, { bldFar: +Q.get('bldfar'), treeFar: +Q.get('bldfar') * 0.3 }); // проверка: ?bldfar=0 — без дальних копий моделей
-// карта: «Мульти-волна» (и в онлайне) и «Кино» — только зимняя долина «Северный рубеж», вылеты, задания и уроки — город
-// (?map=winter|city — принудительно); у зимы — свои погоды. Карта строится при загрузке: смена — перезагрузкой страницы
-// «Съёмка» — карта на выбор (pmap: 'winter' | 'city', по умолчанию зимняя) и своя погода для каждой карты (pwx: { city, winter })
-// Осенняя «Туманная топь» (Хеллоуин) — ?map=autumn, «Съёмка» (pmap 'autumn') и проверка вертолёта ?heli=…
+// ?full=1 вместе с «Кино» - для кадров меню и ролика (Mark 2026-10-27: «в полном качестве даже на таком расстоянии»): дома, деревья, реквизит
+// улиц - полными моделями на всю карту (±16 км), без упрощённых копий, импосторов и коробок; кадр медленный - только для записи
+if (CINEMA && Q.get('full') === '1') Object.assign(P, { bldNear: 24000, treeNear: 24000, bldFar: 0, treeFar: 0, bldLo: false, full: true, propNear: 5000, prCap: 3 }); // мелочь улиц (фонари, провода, надгробия) - в 5 км: дальше она тоньше пикселя и мерцает «крупой»; ×3 - сглаживание мелких моделей вдали
+if (Q.get('bldfar') !== null) Object.assign(P, { bldFar: +Q.get('bldfar'), treeFar: +Q.get('bldfar') * 0.3 }); // проверка: ?bldfar=0 - без дальних копий моделей
+// карта: «Мульти-волна» (и в онлайне) и «Кино» - только зимняя долина «Северный рубеж», вылеты, задания и уроки - город
+// (?map=winter|city - принудительно); у зимы - свои погоды. Карта строится при загрузке: смена - перезагрузкой страницы
+// «Съёмка» - карта на выбор (pmap: 'winter' | 'city', по умолчанию зимняя) и своя погода для каждой карты (pwx: { city, winter })
+// Осенняя «Туманная топь» (Хеллоуин) - ?map=autumn, «Съёмка» (pmap 'autumn') и проверка вертолёта ?heli=…
 const MAPS = ['winter', 'city', 'autumn'];
-// Вылет и оборона (офлайн и онлайн) — карта каждый бой случайная: «Речной узел» или «Северный рубеж» (Mark 2026-10-27: «даже когда игрок жмёт
-// ещё раз — случайным образом выпадает следующая карта»). Следующая выбрана заранее (fortuna_ad_map) и перевыбирается в начале каждого боя
-// (C.start): выпала другая — «Ещё раз» перезагружает страницу сразу в бой (?go=…). Онлайн — карту боя выбирает сервер (комната r.map),
-// страница перезагружается под неё (online.js mapFix → fortuna_ad_omap). «Туманная топь» — только в событии (вертолёты), «Мульти-волна» — зима
+// Вылет и оборона (офлайн и онлайн) - карта каждый бой случайная: «Речной узел» или «Северный рубеж» (Mark 2026-10-27: «даже когда игрок жмёт
+// ещё раз - случайным образом выпадает следующая карта»). Следующая выбрана заранее (fortuna_ad_map) и перевыбирается в начале каждого боя
+// (C.start): выпала другая - «Ещё раз» перезагружает страницу сразу в бой (?go=…). Онлайн - карту боя выбирает сервер (комната r.map),
+// страница перезагружается под неё (online.js mapFix → fortuna_ad_omap). «Туманная топь» - только в событии (вертолёты), «Мульти-волна» - зима
 const RAND_MAPS = ['city', 'winter'];
-let nextM = null; // без хранилища — на эту загрузку
+let nextM = null; // без хранилища - на эту загрузку
 function nextMap() { const m = ls.get('fortuna_ad_map'); if (RAND_MAPS.includes(m)) return m; if (!nextM) rerollMap(); return nextM; }
 function rerollMap() { nextM = RAND_MAPS[Math.floor(Math.random() * RAND_MAPS.length)]; ls.set('fortuna_ad_map', nextM); }
-// вылет на вертолёте (подвеска heli) — тоже на «Туманной топи»
+// вылет на вертолёте (подвеска heli) - тоже на «Туманной топи»
 function wantMap(game, pmap, era, lo, evd, tside) {
   if (MAPS.includes(Q.get('map'))) return Q.get('map');
-  if (game === 'training') return tside === 'heli' ? 'autumn' : tside === 'matk' || tside === 'mdef' ? 'winter' : 'city'; // обучение: вертолёт — «Туманная топь», «Мульти-волна» — «Северный рубеж», как сами режимы (Mark 2026-10-21)
+  if (game === 'training') return tside === 'heli' ? 'autumn' : tside === 'matk' || tside === 'mdef' ? 'winter' : 'city'; // обучение: вертолёт - «Туманная топь», «Мульти-волна» - «Северный рубеж», как сами режимы (Mark 2026-10-21)
   if (game === 'air' && LOADOUTS[era] && LOADOUTS[era][lo] && LOADOUTS[era][lo].heli) return 'autumn';
   if (game === 'defense' && evd) return 'autumn'; // оборона события «Туманная топь» (event.js)
   if (game === 'photo') return pmap === 'city' || pmap === 'autumn' ? pmap : 'winter';
@@ -200,28 +200,28 @@ function wantMap(game, pmap, era, lo, evd, tside) {
   if (game === 'air' || game === 'defense') return nextMap();
   const online = game === 'online' || Q.get('ad') || Q.get('mp') === '1';
   if (game === 'multi' || (online && ls.get('fortuna_ad_kind') === 'multi')) return 'winter';
-  const om = Q.get('omap') || ls.get('fortuna_ad_omap'); // omap в адресе — перезагрузка под карту комнаты без хранилища (online.js mapFix)
+  const om = Q.get('omap') || ls.get('fortuna_ad_omap'); // omap в адресе - перезагрузка под карту комнаты без хранилища (online.js mapFix)
   return online && RAND_MAPS.includes(om) ? om : 'city';
 }
 const SETUP0 = (() => { try { return JSON.parse(ls.get('fortuna_airdef_setup') || '{}') || {}; } catch (_) { return {}; } })();
-// вертолёт и оборона события — только при запуске из события (event.js: go=air&hlo=<подвеска в эпохе setup.era> / go=defense и setup.evd): сохранённая вертолётная подвеска обычный «Вылет» на осеннюю карту не уводит
+// вертолёт и оборона события - только при запуске из события (event.js: go=air&hlo=<подвеска в эпохе setup.era> / go=defense и setup.evd): сохранённая вертолётная подвеска обычный «Вылет» на осеннюю карту не уводит
 const HLO = Q.get('hlo') !== null ? +Q.get('hlo') : -1;
-// онлайн при загрузке: возвращение в бой (LIVE), кнопка сайта «Онлайн-бой» (?mp=1) и приглашение (?ad=) — карта комнаты, а не последнего режима
+// онлайн при загрузке: возвращение в бой (LIVE), кнопка сайта «Онлайн-бой» (?mp=1) и приглашение (?ad=) - карта комнаты, а не последнего режима
 // (ревью 2026-10-28: последний режим «Вылет» → случайная карта вылета ≠ карте комнаты → перезагрузка по кругу)
 const MAP = wantMap(!Q.get('go') && (LIVE || Q.get('mp') === '1' || Q.get('ad')) ? 'online' : SETUP0.game, SETUP0.pmap, SETUP0.era, Q.get('go') === 'air' ? HLO : -1, Q.get('go') === 'defense' && SETUP0.evd, SETUP0.tside);
-// погода: «Съёмка» — выбранная для этой карты; зимняя карта иначе — всегда случайная из своих (общая настройка — только для города)
+// погода: «Съёмка» - выбранная для этой карты; зимняя карта иначе - всегда случайная из своих (общая настройка - только для города)
 const weatherKey = Q.get('weather') || (SETUP0.game === 'photo' ? (SETUP0.pwx && SETUP0.pwx[MAP]) || 'random' : ls.get('fortuna_airdef_weather') || 'random');
-const RND_KEYS = WEATHER_KEYS.filter((k) => k !== 'night'); // «Случайная» — без ночи; ночь — только по выбору и не в онлайне (?mp=1, приглашение ?ad=)
-const MAP_KEYS = MAP === 'winter' ? WINTER_KEYS : MAP === 'autumn' ? AUTUMN_KEYS : null; // у зимы и осени — свои погоды
+const RND_KEYS = WEATHER_KEYS.filter((k) => k !== 'night'); // «Случайная» - без ночи; ночь - только по выбору и не в онлайне (?mp=1, приглашение ?ad=)
+const MAP_KEYS = MAP === 'winter' ? WINTER_KEYS : MAP === 'autumn' ? AUTUMN_KEYS : null; // у зимы и осени - свои погоды
 const W_KEY = MAP_KEYS ? (MAP_KEYS.includes(weatherKey) ? weatherKey : MAP_KEYS[Math.floor(Math.random() * MAP_KEYS.length)])
   : WEATHER_KEYS.includes(weatherKey) && !(weatherKey === 'night' && (Q.get('mp') === '1' || Q.get('ad'))) ? weatherKey : RND_KEYS[Math.floor(Math.random() * RND_KEYS.length)];
 const W = WEATHERS[W_KEY];
-if (CINEMA) { W.hazeK = (W.hazeK || 0) * 0.45; W.fogD = (W.fogD || 0) * 0.55; } // ролик: даль чище — высотки Сити не тонут в дымке
+if (CINEMA) { W.hazeK = (W.hazeK || 0) * 0.45; W.fogD = (W.fogD || 0) * 0.55; } // ролик: даль чище - высотки Сити не тонут в дымке
 
 // ═════════════ Настройки боя (сохраняются) ═════════════
-// game: 'air' — вылет, 'defense' — оборона, 'training'; diff — Аркада/Реализм; era; side — сторона ПВО города; lo — подвеска;
-// tside — ветка обучения ('air' | 'def'), tl — урок
-// op — «Операция» из 2 вылетов: lo1 — охота за ПВО, lo2 — удар
+// game: 'air' - вылет, 'defense' - оборона, 'training'; diff - Аркада/Реализм; era; side - сторона ПВО города; lo - подвеска;
+// tside - ветка обучения ('air' | 'def'), tl - урок
+// op - «Операция» из 2 вылетов: lo1 - охота за ПВО, lo2 - удар
 const setup = { game: 'air', diff: 'arcade', era: 2, side: 'east', lo: 0, op: false, lo1: 0, lo2: 0, tside: 'air', tl: 0 };
 try { Object.assign(setup, JSON.parse(ls.get('fortuna_airdef_setup') || '{}')); } catch (_) { /* по умолчанию */ }
 if (!MODES[setup.diff]) setup.diff = 'arcade';
@@ -232,14 +232,14 @@ if (!['air', 'defense', 'multi', 'training', 'online', 'photo'].includes(setup.g
 
 // ═════════════ Город и рендер ═════════════
 const city = MAP === 'winter' ? buildWinter(1) : MAP === 'autumn' ? buildAutumn(1) : buildCity(1);
-const MILLS = city.objects.filter((o) => (o.models || []).some((m) => m.m === 'obj_mill')).map((o) => o.id); // объекты с мельницей — крутить крылья
+const MILLS = city.objects.filter((o) => (o.models || []).some((m) => m.m === 'obj_mill')).map((o) => o.id); // объекты с мельницей - крутить крылья
 setGround(city.groundH);
 const canvas = $('c');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance', preserveDrawingBuffer: false });
-ktxInit(renderer); // сжатые текстуры (ktx.js): нужен рендерер — какие форматы есть у устройства
-// телефон: текстуры после загрузки на видеокарту освобождаются (models.js, ktx.js) — в бою (онлайн и одиночном) не выбрасывать игрока: сжатые
-// текстуры (модели, земля, листы взрывов) грузятся заново из кэша (ktxRestore — иначе до конца боя чёрные), бой доигрывается, перезагрузка — при выходе в меню
-canvas.addEventListener('webglcontextrestored', () => { if (!IS_TOUCH) return; if ((C.net && C.net.battle) || C.state === 'play') { C.reloadAfterBattle = true; ktxRestore(renderer); } else location.reload(); }); // и в одиночном бою (2026-10-22, «бои изредка вылетают»): свернул Telegram / пришло уведомление — iOS отбирает контекст WebGL, раньше страница сразу перезагружалась и бой пропадал
+ktxInit(renderer); // сжатые текстуры (ktx.js): нужен рендерер - какие форматы есть у устройства
+// телефон: текстуры после загрузки на видеокарту освобождаются (models.js, ktx.js) - в бою (онлайн и одиночном) не выбрасывать игрока: сжатые
+// текстуры (модели, земля, листы взрывов) грузятся заново из кэша (ktxRestore - иначе до конца боя чёрные), бой доигрывается, перезагрузка - при выходе в меню
+canvas.addEventListener('webglcontextrestored', () => { if (!IS_TOUCH) return; if ((C.net && C.net.battle) || C.state === 'play') { C.reloadAfterBattle = true; ktxRestore(renderer); } else location.reload(); }); // и в одиночном бою (2026-10-22, «бои изредка вылетают»): свернул Telegram / пришло уведомление - iOS отбирает контекст WebGL, раньше страница сразу перезагружалась и бой пропадал
 renderer.outputEncoding = THREE.sRGBEncoding;
 renderer.toneMappingExposure = ((P.post && P.post.exposure) || 1.1) * (W.exposure || 1);
 renderer.shadowMap.enabled = !!P.shadows; renderer.shadowMap.type = IS_TOUCH ? THREE.PCFShadowMap : THREE.PCFSoftShadowMap;
@@ -252,8 +252,8 @@ let pipe = null, sceneTM = THREE.ACESFilmicToneMapping;
 if (P.post || perf.aa !== 'off' || perf.up !== 'off') {
   const ldr = !P.post;
   pipe = createPipeline(renderer, { ...(P.post || {}), ...(GRADE[W_KEY] || {}), ldr, exposure: renderer.toneMappingExposure, scale: perf.scale, upscaler: perf.up, sharp: perf.sharp || 0.4, aa: perf.aa,
-    bloomQ: !!P.bloomQ, fx: !!P.halfFx, fxU: FXU, fxLayer: FX_LAYER, fxAddLayer: FX_ADD_LAYER, // fx — облака и дым в половине разрешения (слои FX_*)
-    aaCas1: Q.get('pp1') !== '0' }); // FXAA и резкость CAS — одним проходом (post.js; ?pp1=0 — двумя, как раньше)
+    bloomQ: !!P.bloomQ, fx: !!P.halfFx, fxU: FXU, fxLayer: FX_LAYER, fxAddLayer: FX_ADD_LAYER, // fx - облака и дым в половине разрешения (слои FX_*)
+    aaCas1: Q.get('pp1') !== '0' }); // FXAA и резкость CAS - одним проходом (post.js; ?pp1=0 - двумя, как раньше)
   sceneTM = ldr ? THREE.ACESFilmicToneMapping : THREE.NoToneMapping;
   renderer.setPixelRatio(basePR);
 } else renderer.setPixelRatio(basePR * perf.scale);
@@ -261,22 +261,22 @@ renderer.toneMapping = sceneTM;
 const snd = createSound();
 
 // ═════════════ Общий контекст режимов ═════════════
-// NIGHT — темнота для правил боя (ТВ-головки не видят, контейнер в ИК, оптика ЗРК хуже): только у ночи. Ночь убрана (Mark 2026-10-18), а у заката
-// W.night 0,6 — вылет на закате запрещал захват ТВ-бомбой «ночь» (Mark 2026-10-29); вид неба и света (W.night) — как был; онлайн-сервер — тоже 0
+// NIGHT - темнота для правил боя (ТВ-головки не видят, контейнер в ИК, оптика ЗРК хуже): только у ночи. Ночь убрана (Mark 2026-10-18), а у заката
+// W.night 0,6 - вылет на закате запрещал захват ТВ-бомбой «ночь» (Mark 2026-10-29); вид неба и света (W.night) - как был; онлайн-сервер - тоже 0
 const C = {
   $, Q, IS_TOUCH, ls, LIVE, P, W, W_KEY, weatherKey, gfxKey, NIGHT: W_KEY === 'night' ? W.night || 0 : 0, city, scene, camera, renderer, snd, setup, MAP, wantMap, RAND_MAPS, GPU_NAME,
   get pipe() { return pipe; }, get sceneTM() { return sceneTM; },
   SHARP, get fps() { return fps; }, get fpsCap() { return fpsCap; }, setFpsCap(v) { fpsCap = v === 'auto' ? 'auto' : +v; ls.set('fortuna_airdef_fps', String(fpsCap)); },
   VW: 1, VH: 1, fx: null, G: null, S: null, raid: null, player: null, ctrl: null, state: 'loading', paused: false, t: 0,
   hooks: {}, // события боя для текущего режима
-  MODE: () => (C.net && C.net.battle ? MODES[C.net.battle.mode] : MODES[setup.diff]), // онлайн — режим комнаты
+  MODE: () => (C.net && C.net.battle ? MODES[C.net.battle.mode] : MODES[setup.diff]), // онлайн - режим комнаты
   // чувствительность: ручка (тангаж/крен), ведение контейнера, поворот обзора оператора
-  // invert — вверх нос вниз (как в авиасимуляторах); pad — крестовина тангажа и крена, padK — её сила; aim — наведение камерой (сенсорные), иначе ручка
+  // invert - вверх нос вниз (как в авиасимуляторах); pad - крестовина тангажа и крена, padK - её сила; aim - наведение камерой (сенсорные), иначе ручка
   sens: Object.assign({ stick: 1, look: 1, invert: false, pad: true, padK: 0.5, aim: true }, (() => { try { return JSON.parse(ls.get('fortuna_airdef_sens') || '{}'); } catch (_) { return {}; } })()),
   saveSens: () => ls.set('fortuna_airdef_sens', JSON.stringify(C.sens)),
-  // «АВТО» — помощь в бою (вылет и оператор ЗРК)
+  // «АВТО» - помощь в бою (вылет и оператор ЗРК)
   auto: ls.get('fortuna_airdef_auto') === '1',
-  setAuto(on) { C.auto = !!on; ls.set('fortuna_airdef_auto', on ? '1' : '0'); for (const id of ['tAuto', 'opAuto']) $(id).classList.toggle('on', C.auto); C.say(on ? tr('Авто включено: захват, сброс и пуск — сами (не идеально)') : tr('Авто выключено'), 2); snd.click(); },
+  setAuto(on) { C.auto = !!on; ls.set('fortuna_airdef_auto', on ? '1' : '0'); for (const id of ['tAuto', 'opAuto']) $(id).classList.toggle('on', C.auto); C.say(on ? tr('Авто включено: захват, сброс и пуск - сами (не идеально)') : tr('Авто выключено'), 2); snd.click(); },
   saveSetup: () => ls.set('fortuna_airdef_setup', JSON.stringify(setup)),
 };
 
@@ -290,47 +290,47 @@ const deadMat = new THREE.MeshPhongMaterial({ color: 0x181614, specular: 0x05050
 const planeMat = new THREE.MeshPhongMaterial({ vertexColors: true, specular: 0x666666, shininess: 50 });
 C.mats = { wMat, unitMat, deadMat };
 C.weaponGeo = weaponGeo;
-// defSide — сторона ПВО города; атакующие — другая сторона. player — самолёт игрока (вылет) или null.
+// defSide - сторона ПВО города; атакующие - другая сторона. player - самолёт игрока (вылет) или null.
 C.newBattle = function (o) {
   clearBattle();
   const rnd = o.rnd || Math.random;
-  const S = createStrike({ city, rnd, mode: C.MODE, night: C.NIGHT, fx: simFx, game: o.game || null, // game — перезарядка ПВО: 'air' вылеты, 'multi' «Мульти-волна»
+  const S = createStrike({ city, rnd, mode: C.MODE, night: C.NIGHT, fx: simFx, game: o.game || null, // game - перезарядка ПВО: 'air' вылеты, 'multi' «Мульти-волна»
     aircraft: () => { const a = raid ? raid.alive() : []; return C.player && !C.player.dead ? [C.player, ...a] : a; },
     hurt: (a, dmg, by, from) => { if (a === C.player) { if (C.hooks.hurtPlayer) C.hooks.hurtPlayer(dmg, by, from); } else raid.hurt(a, dmg * (C.hooks.aiDmgK || 1), from); },
     unitDmgK: () => C.hooks.unitDmgK ?? 1,
     laserSpot: (a) => (a === C.player ? (C.hooks.playerLaser ? C.hooks.playerLaser() : null) : raid.laserSpot(a)),
     spawnDecoy: (a, key, aim) => { const d = raid.spawnDecoy(a, key, aim); if (C.hooks.decoyOut) C.hooks.decoyOut(d); } });
-  const raid = createRaid(S, city, rnd, { side: o.defSide === 'east' ? 'west' : 'east', era: o.era, fx: raidFx, helis: city.kind === 'autumn' }); // ИИ-вертолёты — только на «Туманной топи» (Mark 2026-10-21)
+  const raid = createRaid(S, city, rnd, { side: o.defSide === 'east' ? 'west' : 'east', era: o.era, fx: raidFx, helis: city.kind === 'autumn' }); // ИИ-вертолёты - только на «Туманной топи» (Mark 2026-10-21)
   if (C.diff && (setup.game === 'defense' || (setup.game === 'multi' && setup.mrole !== 'atk'))) raid.setHard(C.diff.knobs(setup.game, setup.diff)); // сложность: налёт против игрока за ПВО
   C.S = S; C.raid = raid; C.player = o.player || null; C.raidEra = o.era || 2;
   for (const ob of S.objects) objLook(ob.id, false);
   return S;
 };
-// вид объекта-цели: целый или разрушенный (осел и почернел) — процедурная часть, заглушка и готовые постройки
+// вид объекта-цели: целый или разрушенный (осел и почернел) - процедурная часть, заглушка и готовые постройки
 function objLook(id, ruin) {
   const so = C.S && C.S.objects.find((q) => q.id === id);
-  if (so && so.site) { // объект-сцена: разрушенные — только разбитые постройки (siteLook), остальное (мельница у «Лысой горы») — как есть
+  if (so && so.site) { // объект-сцена: разрушенные - только разбитые постройки (siteLook), остальное (мельница у «Лысой горы») - как есть
     const b = C.G.objBox[id]; if (b) { b.material = ruin ? C.G.ruinMat : C.G.objMat; b.scale.y = ruin ? 0.35 : 1; b.updateMatrix(); }
     const g = C.G.objGroup[id]; if (g) g.userData.ruin = ruin;
     siteLook(so); return;
   }
-  for (const m of [C.G.objMesh[id], C.G.objBox[id]]) if (m) { m.material = ruin ? C.G.ruinMat : C.G.objMat; m.scale.y = ruin ? 0.35 : 1; m.updateMatrix(); } // матрицы у неподвижного — вручную (city-render freezeTree)
-  for (const g of [C.G.objGroup[id], C.G.objFar && C.G.objFar[id]]) { // и дальняя копия (если она придёт позже — objFarLook)
+  for (const m of [C.G.objMesh[id], C.G.objBox[id]]) if (m) { m.material = ruin ? C.G.ruinMat : C.G.objMat; m.scale.y = ruin ? 0.35 : 1; m.updateMatrix(); } // матрицы у неподвижного - вручную (city-render freezeTree)
+  for (const g of [C.G.objGroup[id], C.G.objFar && C.G.objFar[id]]) { // и дальняя копия (если она придёт позже - objFarLook)
     if (g) { g.userData.ruin = ruin; g.scale.y = ruin ? 0.35 : 1; g.updateMatrix(); g.traverse((c) => { if (!c.isMesh) return; if (!c.userData.mat0) c.userData.mat0 = c.material; c.material = ruin ? C.G.ruinMat : c.userData.mat0; }); }
   }
 }
-// объект-сцена (city.js SITES): у каждой постройки видна целая (b_<имя>) или разрушенная (b_<имя>_ruin) часть модели — по бою (o.bld),
+// объект-сцена (city.js SITES): у каждой постройки видна целая (b_<имя>) или разрушенная (b_<имя>_ruin) часть модели - по бою (o.bld),
 // и у подробной модели, и у дальней копии
-function siteLook(o, now = false) { // now — постройка разбита на глазах (bldDestroyed): падающий кусок падает, а не сразу лежит
+function siteLook(o, now = false) { // now - постройка разбита на глазах (bldDestroyed): падающий кусок падает, а не сразу лежит
   if (!o || !o.site || !C.G) return;
   for (const g of [C.G.objGroup[o.id], C.G.objFar && C.G.objFar[o.id]]) {
     const m = g && g.userData.site; if (!m) continue;
-    if (m.userData.siteMask) m.userData.siteMask(o.bld ? bldMask(o) : 0, now); // склеенная сцена: целые / руины — индексом по маске (city-render siteInstance)
-    for (const k of g.userData.copies || []) k.traverse((c) => { if (!c.isMesh) return; if (!c.userData.mat0) c.userData.mat0 = c.material; c.material = o.dead ? C.G.ruinMat : c.userData.mat0; }); // копии моделей — сгоревшие, когда объект уничтожен
+    if (m.userData.siteMask) m.userData.siteMask(o.bld ? bldMask(o) : 0, now); // склеенная сцена: целые / руины - индексом по маске (city-render siteInstance)
+    for (const k of g.userData.copies || []) k.traverse((c) => { if (!c.isMesh) return; if (!c.userData.mat0) c.userData.mat0 = c.material; c.material = o.dead ? C.G.ruinMat : c.userData.mat0; }); // копии моделей - сгоревшие, когда объект уничтожен
   }
 }
-// копии моделей игры на объекте-сцене (SITES place: П-18, вертолёт) — в группе подробной модели (видны вместе с ней); модели — по запросу,
-// ставятся, как пришли (siteLod каждый кадр, пока не все на месте); стоят на площадке сцены, нос — по курсу (°, 0 — север)
+// копии моделей игры на объекте-сцене (SITES place: П-18, вертолёт) - в группе подробной модели (видны вместе с ней); модели - по запросу,
+// ставятся, как пришли (siteLod каждый кадр, пока не все на месте); стоят на площадке сцены, нос - по курсу (°, 0 - север)
 const SITE_BB = new THREE.Box3();
 function sitePlace(o, g) {
   const done = g.userData.placed || (g.userData.placed = new Set()), y0 = g.userData.site.position.y; let left = 0; g.userData.siteKey = o.site;
@@ -338,7 +338,7 @@ function sitePlace(o, g) {
     if (done.has(i)) continue;
     const m = anyModel(k); if (!m) { wantModel(k); left++; continue; }
     m.scale.setScalar(s); m.rotation.y = -h * D2R; m.updateMatrixWorld(true); SITE_BB.setFromObject(m);
-    // на площадке сцены (y0) или на земле, если она выше (сцена на склоне — РЛС на вершине); s — масштаб (стога карты — 1,4)
+    // на площадке сцены (y0) или на земле, если она выше (сцена на склоне - РЛС на вершине); s - масштаб (стога карты - 1,4)
     m.position.set(o.x + x, Math.max(y0, city.groundH(o.x + x, o.z + z)) + 0.1 - SITE_BB.min.y, o.z + z);
     m.traverse((c) => { if (c.isMesh) { c.castShadow = !!P.shadows; c.receiveShadow = !!P.shadows; } });
     g.add(m); freezeTree(m); done.add(i); (g.userData.copies = g.userData.copies || []).push(m);
@@ -346,11 +346,11 @@ function sitePlace(o, g) {
   if (!left) { g.userData.placeDone = true; siteCopiesMerge(g); }
   if (g.userData.copies) siteLook((C.S && C.S.objects.find((q) => q.id === o.id)) || o);
 }
-// копий много (аэродром: 14 самолётов, 2 вертолёта, 3 ЗУ-23; у моделей — десятки материалов и картинок: склейка по материалу давала 140 сеток) —
-// текстура запекается в цвет вершин (city-render farFlat, по уменьшенной копии картинки; с 200 м и дальше рисунок не виден), сетки — одним материалом:
-// 1–5 вызовов отрисовки вместо сотен; сгоревший вид (siteLook) — так же, по сеткам склейки
+// копий много (аэродром: 14 самолётов, 2 вертолёта, 3 ЗУ-23; у моделей - десятки материалов и картинок: склейка по материалу давала 140 сеток) -
+// текстура запекается в цвет вершин (city-render farFlat, по уменьшенной копии картинки; с 200 м и дальше рисунок не виден), сетки - одним материалом:
+// 1-5 вызовов отрисовки вместо сотен; сгоревший вид (siteLook) - так же, по сеткам склейки
 function siteCopiesMerge(g) {
-  const L = g.userData.copies; if (!L || !L.length || !SITES[g.userData.siteKey].merge) return; // только у сцен с флагом merge (аэродром): у фермы и вертолётной площадки копии — с текстурой
+  const L = g.userData.copies; if (!L || !L.length || !SITES[g.userData.siteKey].merge) return; // только у сцен с флагом merge (аэродром): у фермы и вертолётной площадки копии - с текстурой
   g.updateMatrixWorld(true); const inv = new THREE.Matrix4().copy(g.matrixWorld).invert(), by = new Map();
   for (const k of L) k.traverse((c) => { if (!c.isMesh || Array.isArray(c.material) || c.isSkinnedMesh || c.isInstancedMesh) return;
     if (c.userData.mat0) c.material = c.userData.mat0; c.geometry = farFlat(c, c.geometry, c.geometry); const t = c.material;
@@ -360,7 +360,7 @@ function siteCopiesMerge(g) {
   for (const M of by.values()) { const m = new THREE.Mesh(mergeLocal(M.map((c) => ({ g: c.geometry, m: new THREE.Matrix4().multiplyMatrices(inv, c.matrixWorld) }))), M[0].material); m.castShadow = m.receiveShadow = !!P.shadows; root.add(m); }
   for (const k of L) g.remove(k); g.add(root); freezeTree(root); g.userData.copies = [root];
 }
-// вторичные взрывы складов объекта-сцены (SITES chain): очередь разрывов по площади постройки за ~5 с — только вид и звук (урона нет)
+// вторичные взрывы складов объекта-сцены (SITES chain): очередь разрывов по площади постройки за ~5 с - только вид и звук (урона нет)
 const chainQ = [];
 function chainStep(dt) {
   for (let i = chainQ.length - 1; i >= 0; i--) { const e = chainQ[i]; if ((e.t -= dt) > 0) continue; chainQ.splice(i, 1); simFx.explosion(new THREE.Vector3(e.x, city.groundH(e.x, e.z) + 1, e.z), e.R, e.R > 20 ? 'bomb' : 'ground'); }
@@ -375,9 +375,9 @@ function clearBattle() {
   C.S = null; C.raid = null; C.player = null;
 }
 C.clearBattle = clearBattle;
-// онлайн: зеркало боя (сервер считает, клиент повторяет по снимкам — games/airdef/net.js); не шагается
+// онлайн: зеркало боя (сервер считает, клиент повторяет по снимкам - games/airdef/net.js); не шагается
 C.netBattle = function (N, o) {
-  clearBattle(); C.simFx = simFx; C.raidFx = raidFx; // хуки эффектов — для зеркала (net.js)
+  clearBattle(); C.simFx = simFx; C.raidFx = raidFx; // хуки эффектов - для зеркала (net.js)
   const S = createStrike({ city, rnd: Math.random, mode: () => MODES[o.mode] || C.MODE(), night: C.NIGHT, fx: simFx, game: o.game || null,
     aircraft: () => { const a = N.raid.alive(); return C.player && !C.player.dead && N.myCraft ? [C.player, ...a] : a; },
     hurt: () => {}, laserSpot: () => null, spawnDecoy: () => {} });
@@ -386,21 +386,21 @@ C.netBattle = function (N, o) {
   return S;
 };
 C.objLook = (id, ruin) => objLook(id, ruin);
-// модели комплексов — по списку боя (после расстановки или переезда)
+// модели комплексов - по списку боя (после расстановки или переезда)
 C.syncUnits = function () {
   const S = C.S; if (!S) return;
   const ids = new Set(S.units.map((u) => u.id));
   for (const [id, g] of unitMeshes) if (!ids.has(id)) { scene.remove(g); unitMeshes.delete(id); }
   for (const u of S.units) {
     let g = unitMeshes.get(u.id);
-    wantUnit(u.key); // готовая модель комплекса — загрузить, если есть (пересоберётся, когда придёт)
+    wantUnit(u.key); // готовая модель комплекса - загрузить, если есть (пересоберётся, когда придёт)
     if (!g) {
       const md = unitModel(u.key, u.S), gm = unitModelGlb(u.key); g = new THREE.Group();
       const mesh = (geo, parent) => { const m = new THREE.Mesh(geo, unitMat); m.castShadow = !!P.shadows; parent.add(m); return m; };
       const obj = (o, parent) => { o.traverse((q) => { if (q.isMesh && !q.userData.glass) { q.castShadow = !!P.shadows; q.receiveShadow = !!P.shadows; } }); parent.add(o); return o; };
-      // готовая модель (корпус, башня, пакет — РЛС на башне) или процедурная
+      // готовая модель (корпус, башня, пакет - РЛС на башне) или процедурная
       if (gm) obj(gm.body, g); else if (md.body) mesh(md.body, g);
-      // «Тор-М2»: броне-шторки окон кабины в бою открыты — поворот вокруг X на петлях shut.piv (в осях машины)
+      // «Тор-М2»: броне-шторки окон кабины в бою открыты - поворот вокруг X на петлях shut.piv (в осях машины)
       if (gm && md.LN && md.LN.shut) gm.sh.forEach((s, i) => { const P = md.LN.shut.piv[i]; if (!s || !P) return; const pv = new THREE.Group(); obj(s, pv); pv.position.fromArray(P); s.position.set(-P[0], -P[1], -P[2]); pv.rotation.x = md.LN.shut.open; g.add(pv); });
       if (md.dish && !gm) { const d = mesh(md.dish, g); d.position.set(md.dishXZ[0], md.dishY, md.dishXZ[1]); g.userData.dish = d; }
       // пусковые: башня (азимут) → качающаяся часть (угол места) → ракеты / крышки контейнеров по слотам
@@ -408,8 +408,8 @@ C.syncUnits = function () {
       if (md.LN) for (const [li, Ld] of md.LN.L.entries()) {
         const tg = new THREE.Group(), cg = new THREE.Group(), T = { tg, cg }; tg.position.fromArray(Ld.tp); cg.position.fromArray(Ld.cp);
         if (gm && md.LN.crew) {
-          // расчёт ПЗРК: наводчик (пусковая 0) — тело и головы по позам на башне, руки по позам и труба на качающейся части;
-          // второй номер (пусковая 1, без ракет) — своё тело и рука, показывает на цель. Видна поза, ближайшая к углу места (crewPose)
+          // расчёт ПЗРК: наводчик (пусковая 0) - тело и головы по позам на башне, руки по позам и труба на качающейся части;
+          // второй номер (пусковая 1, без ракет) - своё тело и рука, показывает на цель. Видна поза, ближайшая к углу места (crewPose)
           const body = li === 0 ? gm.turret : gm.turret1, heads = li === 0 ? gm.th : [], arms = li === 0 ? gm.ca : gm.cs;
           if (body) obj(body.clone(), tg);
           const hs = heads.map((h) => obj(h.clone(), tg)), as = arms.map((a) => obj(a.clone(), cg));
@@ -417,29 +417,29 @@ C.syncUnits = function () {
           T.pose = { els: (li === 0 ? md.LN.crew.poses : md.LN.crew.spot).map((d) => d * D2R), parts: [], cur: -1 };
           T.pose.parts = T.pose.els.map((_, i) => [hs[i], as[i]].filter(Boolean)); crewPose(T.pose, 0);
         } else if (gm) { if (gm.turret) obj(gm.turret.clone(), tg); if (gm.cradle) obj(gm.cradle.clone(), cg); }
-        else if (li > 0 && md.LN.crew) { /* процедурный расчёт (пока не пришла модель): второй номер — в корпусе */ }
+        else if (li > 0 && md.LN.crew) { /* процедурный расчёт (пока не пришла модель): второй номер - в корпусе */ }
         else {
           if (md.turret) mesh(md.turret, tg);
-          // ПЗРК: готовая труба вместо процедурной (ось трубы — через слот; центр модели ниже оси из-за рукоятки)
+          // ПЗРК: готовая труба вместо процедурной (ось трубы - через слот; центр модели ниже оси из-за рукоятки)
           const lg = launcherGlb(u.key);
           if (lg) { obj(lg, cg); lg.position.set(Ld.slots[0][0], Ld.slots[0][1] - 0.06, Ld.slots[0][2]); } else if (md.cradle) mesh(md.cradle, cg);
         }
-        // ракеты модели на направляющих — в слотах (пустой слот прячется, как у процедурных)
+        // ракеты модели на направляющих - в слотах (пустой слот прячется, как у процедурных)
         if (gm && gm.missile) for (const sp of Ld.slots) { const q = new THREE.Group(); obj(gm.missile.clone(), q); if (gm.booster) obj(gm.booster.clone(), q); q.position.fromArray(sp); cg.add(q); slots.push(q); }
-        // «Бук-М1»: в модели пусковой ракет нет — целая своя ракета (msl_buk) в каждом слоте, дальше 400 м — облегчённая (msl_buk_lo, как сама машина);
-        // пришла позже — машина пересоберётся (models.js isUnitModel)
+        // «Бук-М1»: в модели пусковой ракет нет - целая своя ракета (msl_buk) в каждом слоте, дальше 400 м - облегчённая (msl_buk_lo, как сама машина);
+        // пришла позже - машина пересоберётся (models.js isUnitModel)
         if (gm && !gm.missile && md.LN.railMsl) for (const sp of Ld.slots) {
           const q = unitMissileGlb(u.key, true); if (!q) break; const lo = samMissileLo(u.key);
           let o = q.missile; if (lo) { o = new THREE.LOD(); o.addLevel(q.missile, 0); o.addLevel(lo, 400); }
           obj(o, cg); o.position.fromArray(sp); slots.push(o);
         }
-        // С-300: ракеты 9М83 в контейнерах — носы (видны через открытую крышку); дальше 400 м — пусто (как крышки: models.js near)
+        // С-300: ракеты 9М83 в контейнерах - носы (видны через открытую крышку); дальше 400 м - пусто (как крышки: models.js near)
         if (gm && md.LN.inTube) for (const sp of Ld.slots) { const q = samNose(u.key, 2.2); if (!q) break; const L = new THREE.LOD(); obj(q, L); L.addLevel(q, 0); L.addLevel(new THREE.Object3D(), 400); L.position.fromArray(sp); cg.add(L); slots.push(L); }
         if (md.slotGeo && !gm) for (const sp of Ld.slots) { const sm = new THREE.Mesh(md.slotGeo, md.LN.box ? unitMat : wMat); sm.position.fromArray(sp); cg.add(sm); slots.push(sm); }
         tg.add(cg); g.add(tg); tur.push(T);
-        // «Тор»: антенна сопровождения — на цапфе (tdish.p), крышки ячеек — на шарнирах по верхней кромке (lids.hinge; борт — по знаку x слота)
+        // «Тор»: антенна сопровождения - на цапфе (tdish.p), крышки ячеек - на шарнирах по верхней кромке (lids.hinge; борт - по знаку x слота)
         if (gm && gm.tdish && md.LN.tdish) { const P = md.LN.tdish.p, pv = new THREE.Group(); obj(gm.tdish, pv); pv.position.fromArray(P); gm.tdish.position.set(-P[0], -P[1], -P[2]); tg.add(pv); g.userData.tdish = pv; }
-        // NASAMS: у каждой крышки свой шарнир (lids.piv, в осях башни; ось вдоль X — откидывается вперёд-вниз); С-300 — в осях пакета (onPack), поднимаются с ним
+        // NASAMS: у каждой крышки свой шарнир (lids.piv, в осях башни; ось вдоль X - откидывается вперёд-вниз); С-300 - в осях пакета (onPack), поднимаются с ним
         if (gm && gm.lids.length && md.LN.lids) {
           const LD = md.LN.lids, H = LD.hinge; g.userData.lids = gm.lids.map((lid, i) => {
             const sp = Ld.slots[i], pv = new THREE.Group(); obj(lid, pv);
@@ -448,14 +448,14 @@ C.syncUnits = function () {
             (LD.onPack ? cg : tg).add(pv); return pv;
           });
         }
-        // Patriot: рвущиеся крышки — на пакете; prepare.js кладёт lid* в оси башни (от tp), пакет стоит в cp от неё — сдвиг на −cp (у С-300 cp = 0)
+        // Patriot: рвущиеся крышки - на пакете; prepare.js кладёт lid* в оси башни (от tp), пакет стоит в cp от неё - сдвиг на −cp (у С-300 cp = 0)
         if (gm && gm.lids.length && md.LN.blowLids) g.userData.blow = gm.lids.map((lid) => { if (!lid) return null; lid.position.set(-Ld.cp[0], -Ld.cp[1], -Ld.cp[2]); return obj(lid, cg); });
       }
-      // С-300: штоки домкратов (вниз до земли) и гидроцилиндр подъёма — корпус на шарнире cylA смотрит на проушину стрелы, штоки выдвигаются (erectView)
-      if (md.LN && md.LN.erect && md.LN.mode === 'cold' && C.fx && C.fx.wantLaunch) C.fx.wantLaunch(); // листы старта С-300 / С-400 — только в бою с ними
-      // Patriot — так же, плюс подкос (cyl3…5, erect.cyl2) и секции мачты (в модели опущены, поднимаются на erect.mast м); цилиндры и мачта — на
-      // поворотной плите (onTur: в группе башни, координаты частей — в осях машины при повороте 0, поэтому сдвиг на −tp)
-      // «Бук-М1» — только цилиндр подъёма на башне (lift: без домкратов, угол пакета — наведение)
+      // С-300: штоки домкратов (вниз до земли) и гидроцилиндр подъёма - корпус на шарнире cylA смотрит на проушину стрелы, штоки выдвигаются (erectView)
+      if (md.LN && md.LN.erect && md.LN.mode === 'cold' && C.fx && C.fx.wantLaunch) C.fx.wantLaunch(); // листы старта С-300 / С-400 - только в бою с ними
+      // Patriot - так же, плюс подкос (cyl3…5, erect.cyl2) и секции мачты (в модели опущены, поднимаются на erect.mast м); цилиндры и мачта - на
+      // поворотной плите (onTur: в группе башни, координаты частей - в осях машины при повороте 0, поэтому сдвиг на −tp)
+      // «Бук-М1» - только цилиндр подъёма на башне (lift: без домкратов, угол пакета - наведение)
       if (gm && md.LN && (md.LN.erect || md.LN.lift)) {
         const E = md.LN.erect || md.LN.lift, onT = E.onTur && tur.length, host = onT ? tur[0].tg : g, T0 = onT ? md.LN.L[0].tp : [0, 0, 0];
         g.userData.jacks = gm.jacks.filter(Boolean).map((j) => obj(j, g));
@@ -467,15 +467,15 @@ C.syncUnits = function () {
         if (E.mast) { const mg = new THREE.Group(); mg.position.set(-T0[0], -T0[1], -T0[2]); host.add(mg); g.userData.mast = gm.mast.map((m) => m && obj(m, mg)); }
         g.userData.erect = !!md.LN.erect;
       }
-      // антенна обзора (готовая модель): на первой башне (без башни — на машине, Sentinel), ось вращения — центр её опоры (нижние 15 % по высоте)
-      // «Тор-М2»: ось стакана — из паспорта (fold.axis), сама антенна (rfold) — на шарнире fold.hinge в стакане, в модели сложена (radarFold)
+      // антенна обзора (готовая модель): на первой башне (без башни - на машине, Sentinel), ось вращения - центр её опоры (нижние 15 % по высоте)
+      // «Тор-М2»: ось стакана - из паспорта (fold.axis), сама антенна (rfold) - на шарнире fold.hinge в стакане, в модели сложена (radarFold)
       if (gm && gm.radar) {
         const rd = gm.radar.clone(), pv = new THREE.Group(), F = md.LN && md.LN.fold; obj(rd, pv); (tur.length ? tur[0].tg : g).add(pv); const ax = F ? F.axis : radarAxis(rd); pv.position.set(ax[0], 0, ax[1]); rd.position.set(-ax[0], 0, -ax[1]); g.userData.radar = pv;
         if (F && gm.rfold) { const H = F.hinge, fp = new THREE.Group(); obj(gm.rfold, fp); fp.position.set(H[0] - ax[0], H[1], H[2] - ax[1]); gm.rfold.position.set(-H[0], -H[1], -H[2]); pv.add(fp); g.userData.rfold = fp; }
       }
       g.userData.tur = tur; g.userData.slots = slots; g.userData.nSlots = md.LN ? slotCount(md.LN) : 0;
-      if (!P.shadows) addBlob(g); // без карты теней — мягкое пятно под машиной (иначе «висит» над землёй)
-      g.rotation.y = u.yaw; scene.add(g); unitMeshes.set(u.id, g); warmSoon(); // его ракета — собрать шейдеры заранее (оборона и онлайн ставят комплексы по ходу)
+      if (!P.shadows) addBlob(g); // без карты теней - мягкое пятно под машиной (иначе «висит» над землёй)
+      g.rotation.y = u.yaw; scene.add(g); unitMeshes.set(u.id, g); warmSoon(); // его ракета - собрать шейдеры заранее (оборона и онлайн ставят комплексы по ходу)
     }
     g.position.copy(u.pos); g.position.y -= 1.5; seat(g, u); // по рельефу: на склоне длинная машина не уходит в землю
   }
@@ -486,9 +486,9 @@ function crewPose(P, el) {
   if (i === P.cur) return; P.cur = i;
   P.parts.forEach((ps, k) => { for (const o of ps) o.visible = k === i; });
 }
-// «Тор», NASAMS, С-300: крышки ячеек и контейнеров (только вид; правило — как в sim/strike.js u.lid, чтобы и в онлайне, где u.lid не приходит).
-// Следующая ячейка открывается, пока цель сопровождается и есть ракеты (у С-300 — и пакет поднят); ракета ушла — её крышка открыта ещё 3 с (С-300 — lids.hold, 5 с),
-// следующая — заново с нуля
+// «Тор», NASAMS, С-300: крышки ячеек и контейнеров (только вид; правило - как в sim/strike.js u.lid, чтобы и в онлайне, где u.lid не приходит).
+// Следующая ячейка открывается, пока цель сопровождается и есть ракеты (у С-300 - и пакет поднят); ракета ушла - её крышка открыта ещё 3 с (С-300 - lids.hold, 5 с),
+// следующая - заново с нуля
 const sstep = (x) => x * x * (3 - 2 * x);
 function torLids(u, g, dt) {
   const LN = LNCH[u.key], L = g.userData.lids, LD = LN.lids; if (!LD) return;
@@ -502,17 +502,17 @@ function torLids(u, g, dt) {
     const tgt = st.hold[k] > 0 ? 1 : k === next ? st.v : 0;
     st.a[k] = k === next && !(st.hold[k] > 0) ? tgt : clamp(st.a[k] + clamp(tgt - st.a[k], -dt / LD.tClose, dt / LD.tOpen), 0, 1);
     const a = LD.open * sstep(st.a[k]);
-    if (LD.axis === 'y') L[k].rotation.y = LD.sgn[k] * a; else if (LD.piv) L[k].rotation.x = a; else L[k].rotation.z = L[k].userData.sx * a; // С-300 — наружу вокруг оси пакета, NASAMS — вокруг X, «Тор» — вбок
+    if (LD.axis === 'y') L[k].rotation.y = LD.sgn[k] * a; else if (LD.piv) L[k].rotation.x = a; else L[k].rotation.z = L[k].userData.sx * a; // С-300 - наружу вокруг оси пакета, NASAMS - вокруг X, «Тор» - вбок
   }
 }
-// С-300 / С-400: домкраты и гидроцилиндр подъёма (только вид; угол пакета u.lel — из симуляции или снимка сервера). Домкраты внизу, пока РЛС
-// включена или пакет не лёг (как график sim/strike.js erectStep: сначала домкраты, потом пакет; обратно — наоборот), ход — за jk с.
-// Цилиндр — cylView ниже
+// С-300 / С-400: домкраты и гидроцилиндр подъёма (только вид; угол пакета u.lel - из симуляции или снимка сервера). Домкраты внизу, пока РЛС
+// включена или пакет не лёг (как график sim/strike.js erectStep: сначала домкраты, потом пакет; обратно - наоборот), ход - за jk с.
+// Цилиндр - cylView ниже
 function erectView(u, g, dt) {
   const LN = LNCH[u.key], E = LN.erect;
   u.jkV = clamp((u.jkV ?? (u.emit ? 1 : 0)) + ((u.emit && !u.dead) || u.lel > 0.001 ? dt : -dt) / E.jk, 0, 1);
   const s = E.jack * sstep(u.jkV); for (const j of g.userData.jacks) j.position.y = -s;
-  const M = g.userData.mast; // Patriot: мачта поднимается за mastT с, пока РЛС включена; выключили — опускается
+  const M = g.userData.mast; // Patriot: мачта поднимается за mastT с, пока РЛС включена; выключили - опускается
   if (M) { u.mV = clamp((u.mV ?? (u.emit ? 1 : 0)) + (u.emit && !u.dead ? dt : -dt) / E.mastT, 0, 1); const k = sstep(u.mV); M.forEach((m, i) => { if (m) m.position.y = E.mast[i] * k; }); }
 }
 // гидроцилиндры подъёма (С-300, Patriot, «Бук-М1»): корпус поворачивается к проушине на пакете, штоки выдвигаются на половину и на всё удлинение
@@ -523,8 +523,8 @@ function cylView(u, g) {
     C.parts[1].position.fromArray(q.dir).multiplyScalar(q.ext / 2); C.parts[2].position.fromArray(q.dir).multiplyScalar(q.ext);
   }
 }
-// «Тор-М2»: антенна обнаружения поднимается за fold.up с, пока РЛС включена (крутится — уже поднятая); выключили — стакан доворачивает на 0°
-// (как в походе) и антенна складывается за fold.down с. Состояние — на машине (u.rfV): пересборка модели не сбрасывает
+// «Тор-М2»: антенна обнаружения поднимается за fold.up с, пока РЛС включена (крутится - уже поднятая); выключили - стакан доворачивает на 0°
+// (как в походе) и антенна складывается за fold.down с. Состояние - на машине (u.rfV): пересборка модели не сбрасывает
 function radarFold(u, g, dt) {
   const F = LNCH[u.key].fold, R = g.userData.radar, on = u.emit && !u.dead;
   let v = u.rfV ?? (on ? 1 : 0);
@@ -532,20 +532,20 @@ function radarFold(u, g, dt) {
   else { const a = Math.atan2(Math.sin(R.rotation.y), Math.cos(R.rotation.y)), w = (RADAR_W[u.key] || 4) * Math.max(0, dt); if (Math.abs(a) > w) R.rotation.y = a - Math.sign(a) * w; else { R.rotation.y = 0; v -= dt / F.down; } }
   u.rfV = clamp(v, 0, 1); g.userData.rfold.rotation.x = F.angle * sstep(u.rfV);
 }
-// Patriot, PAC-3: крышка ячейки срывается при пуске — ушедших ракет крышек нет до перезарядки (по порядку слотов, как torLids; у PAC-3 слоты
-// в порядке пуска — номер крышки слота в LN.lidOf)
+// Patriot, PAC-3: крышка ячейки срывается при пуске - ушедших ракет крышек нет до перезарядки (по порядку слотов, как torLids; у PAC-3 слоты
+// в порядке пуска - номер крышки слота в LN.lidOf)
 function blowLids(u, g) {
   const L = g.userData.blow, ord = LNCH[u.key].lidOf, nf = u.S.ammo - Math.max(0, Math.round(u.ammo));
   L.forEach((l, j) => { if (l) l.visible = (ord ? ord.indexOf(j) : j) >= nf; });
 }
-// «Тор»: антенна сопровождения — по углу места цели (от положения покоя el0, в пределах lo…hi, не быстрее w рад/с); без цели — в покой
+// «Тор»: антенна сопровождения - по углу места цели (от положения покоя el0, в пределах lo…hi, не быстрее w рад/с); без цели - в покой
 function torDish(u, g, dt) {
   const D = g.userData.tdish, DS = LNCH[u.key].tdish; let a = 0;
   if (u.track && !u.track.dead && u.emit) { D.getWorldPosition(LP); const t = u.track.pos; a = clamp(Math.atan2(t.y - LP.y, Math.hypot(t.x - LP.x, t.z - LP.z)) - DS.el0, DS.lo, DS.hi); }
   D.rotation.x += clamp(a - D.rotation.x, -DS.w * dt, DS.w * dt);
 }
-// ось антенны обзора: центр (x, z) вершин её нижней части — опоры или мачты (тарелка бывает смещена от оси)
-const RADAR_W = { gepard: 6.3, tor: 6.3, torm2: 6.3, osa: 3.5, pantsir: 4.2, roland: 6.3, tunguska: 6.3, rapier: 4, gpsjamw: 3.1, gpsjam: 0.63 }; // рад/с: Gepard и «Тор» ≈ 60 об/мин, «Оса» и «Панцирь» — медленнее, Sentinel — 30, П-18 — 6
+// ось антенны обзора: центр (x, z) вершин её нижней части - опоры или мачты (тарелка бывает смещена от оси)
+const RADAR_W = { gepard: 6.3, tor: 6.3, torm2: 6.3, osa: 3.5, pantsir: 4.2, roland: 6.3, tunguska: 6.3, rapier: 4, gpsjamw: 3.1, gpsjam: 0.63 }; // рад/с: Gepard и «Тор» ≈ 60 об/мин, «Оса» и «Панцирь» - медленнее, Sentinel - 30, П-18 - 6
 function radarAxis(o) {
   o.updateMatrixWorld(true); const V = new THREE.Vector3(), P = [];
   o.traverse((m) => { if (!m.isMesh) return; const a = m.geometry.attributes.position; for (let i = 0; i < a.count; i += 3) { V.fromBufferAttribute(a, i).applyMatrix4(m.matrixWorld); P.push(V.x, V.y, V.z); } });
@@ -563,18 +563,18 @@ function addBlob(g) {
 }
 const dist = (p) => camera.position.distanceTo(p);
 const TP = new THREE.Vector3();
-// объекты-цели: готовые постройки (сотни тысяч треугольников на объект) — только ближе P.lodObj, дальше — их сильно упрощённые
-// копии (city-render.js farIndex: та же форма и текстура), коробки — только пока модели грузятся. Окно ТВ — всё подробно (его узкое поле зрения само отсекает лишнее)
+// объекты-цели: готовые постройки (сотни тысяч треугольников на объект) - только ближе P.lodObj, дальше - их сильно упрощённые
+// копии (city-render.js farIndex: та же форма и текстура), коробки - только пока модели грузятся. Окно ТВ - всё подробно (его узкое поле зрения само отсекает лишнее)
 const objC = new Map();
-// объект-сцена (city.js SITES): подробная модель (150 тыс. треугольников) — ближе SITE_NEAR, грузится, когда камера подлетела на SITE_NEAR · 1,6
-// или окно ТВ смотрит на объект (at — точка взгляда; до того — только дальняя копия _lo); в окне ТВ (D огромное) — подробная, если пришла
-// «Низкий» (слабые телефоны) — только дальняя копия: подробная — 13 МБ и 150 тыс. треугольников
+// объект-сцена (city.js SITES): подробная модель (150 тыс. треугольников) - ближе SITE_NEAR, грузится, когда камера подлетела на SITE_NEAR · 1,6
+// или окно ТВ смотрит на объект (at - точка взгляда; до того - только дальняя копия _lo); в окне ТВ (D огромное) - подробная, если пришла
+// «Низкий» (слабые телефоны) - только дальняя копия: подробная - 13 МБ и 150 тыс. треугольников
 const SITE_NEAR = 1200, SITE_HI = gfxKey !== 'low' || CINEMA;
 function siteLod(o, g, c, p, D, at) {
   const G = C.G, f = G.objFar && G.objFar[o.id], b = G.objBox[o.id], d = Math.hypot(c.x - p.x, c.z - p.z) - c.r, Ds = D > 1e8 ? D : Math.min(D, SITE_NEAR);
   if (SITE_HI && !g.userData.want && (d < SITE_NEAR * 1.6 || (at && Math.hypot(c.x - at.x, c.z - at.z) - c.r < 300))) { g.userData.want = true; wantModel(o.site); }
   const fr = !!(f && f.userData.site), full = !!g.userData.site && d < Ds;
-  g.visible = full; if (f) f.visible = !full && fr; if (b) b.visible = !full && !fr; // заглушка — пока нет ни подробной, ни дальней
+  g.visible = full; if (f) f.visible = !full && fr; if (b) b.visible = !full && !fr; // заглушка - пока нет ни подробной, ни дальней
   if (full && !g.userData.placeDone) sitePlace(o, g);
 }
 function objLod(p, D, at) {
@@ -582,17 +582,17 @@ function objLod(p, D, at) {
   for (const o of city.objects) {
     const g = G.objGroup[o.id]; if (!g) continue;
     let c = objC.get(o.id);
-    // стена игры у ГЭС (wall, до 2 км в стороны) — не сцена: в центр и радиус детализации не входит
+    // стена игры у ГЭС (wall, до 2 км в стороны) - не сцена: в центр и радиус детализации не входит
     if (!c) { const L = !o.site && o.models && o.models.length ? o.models : o.parts.filter((q) => !q.wall); let x = 0, z = 0, r = 0; for (const q of L) { x += q.x; z += q.z; } x /= L.length; z /= L.length; for (const q of L) r = Math.max(r, Math.hypot(q.x - x, q.z - z)); objC.set(o.id, c = { x, z, r }); }
     if (o.site) { siteLod(o, g, c, p, D, at); continue; }
     const full = Math.hypot(c.x - p.x, c.z - p.z) - c.r < D, b = G.objBox[o.id], f = G.objFar && G.objFar[o.id], fr = !!(f && f.userData.ready);
-    g.visible = full; if (f) { f.visible = !full && fr; if (fr && f.userData.ruin !== g.userData.ruin && g.userData.ruin !== undefined) objLook(o.id, g.userData.ruin); } // вдали — упрощённые копии тех же построек
-    if (b) b.visible = (!full && !fr) || g.userData.left.size > 0; // коробка — пока не пришли модели (или нет дальних копий)
+    g.visible = full; if (f) { f.visible = !full && fr; if (fr && f.userData.ruin !== g.userData.ruin && g.userData.ruin !== undefined) objLook(o.id, g.userData.ruin); } // вдали - упрощённые копии тех же построек
+    if (b) b.visible = (!full && !fr) || g.userData.left.size > 0; // коробка - пока не пришли модели (или нет дальних копий)
   }
 }
-// окно ТВ (контейнер): своя детализация на время его кадра — машины по размеру в пикселях окна, объекты подробно, дома и
-// деревья моделями вокруг точки, куда смотрит контейнер, фасады — с детализацией по пикселю окна. Остальной кадр не трогается.
-// at — точка взгляда, hPx — высота окна в пикселях; возвращает функцию «вернуть как было»
+// окно ТВ (контейнер): своя детализация на время его кадра - машины по размеру в пикселях окна, объекты подробно, дома и
+// деревья моделями вокруг точки, куда смотрит контейнер, фасады - с детализацией по пикселю окна. Остальной кадр не трогается.
+// at - точка взгляда, hPx - высота окна в пикселях; возвращает функцию «вернуть как было»
 const podSaved = [];
 C.podPass = function (cam, at, hPx) {
   const pk = hPx / 2 / Math.tan(cam.fov * D2R / 2); podSaved.length = 0;
@@ -607,44 +607,44 @@ C.podPass = function (cam, at, hPx) {
   };
 };
 const raidFx = {
-  down(a) { C.fx.explosion(a.pos, a.role === 'decoy' ? 8 : 22, a.role === 'decoy' ? 'air' : 'plane'); /* 'plane' — свой лист: топливо и обломки */ if (a.role === 'decoy') snd.samBurst(dist(a.pos), 0.8); else snd.planeKill(dist(a.pos)); const g = planeMeshes.get(a.id); if (g) { planeMeshes.delete(a.id); wrecks.push({ g, vel: a.vel.clone(), spin: (Math.random() - 0.5) * 3, t: 0 }); } if (C.hooks.planeDown) C.hooks.planeDown(a); },
+  down(a) { C.fx.explosion(a.pos, a.role === 'decoy' ? 8 : 22, a.role === 'decoy' ? 'air' : 'plane'); /* 'plane' - свой лист: топливо и обломки */ if (a.role === 'decoy') snd.samBurst(dist(a.pos), 0.8); else snd.planeKill(dist(a.pos)); const g = planeMeshes.get(a.id); if (g) { planeMeshes.delete(a.id); wrecks.push({ g, vel: a.vel.clone(), spin: (Math.random() - 0.5) * 3, t: 0 }); } if (C.hooks.planeDown) C.hooks.planeDown(a); },
   out(a) { const g = planeMeshes.get(a.id); if (g) { scene.remove(g); planeMeshes.delete(a.id); } if (C.hooks.planeOut) C.hooks.planeOut(a); },
-  release(a, key) { const k = AG[key] && AG[key].kind; if ((k === 'agm' || k === 'arm' || k === 'cruise') && a.role !== 'carrier') snd.airLaunch(dist(a.pos)); if (C.hooks.aiRelease) C.hooks.aiRelease(a, key); }, // ракета с самолёта ИИ — запись пуска
+  release(a, key) { const k = AG[key] && AG[key].kind; if ((k === 'agm' || k === 'arm' || k === 'cruise') && a.role !== 'carrier') snd.airLaunch(dist(a.pos)); if (C.hooks.aiRelease) C.hooks.aiRelease(a, key); }, // ракета с самолёта ИИ - запись пуска
 };
 const aaaT = new Map();
 const simFx = {
-  // ракета в полёте: маршевая ступень (+ ускоритель), факел; старт — по типу пусковой (launchers.js)
+  // ракета в полёте: маршевая ступень (+ ускоритель), факел; старт - по типу пусковой (launchers.js)
   samLaunch(m) {
-    // ракета из модели комплекса (если есть) или процедурная; ускоритель — отдельной частью, отвалится в полёте; факел — у среза сопла (units-render.js)
+    // ракета из модели комплекса (если есть) или процедурная; ускоритель - отдельной частью, отвалится в полёте; факел - у среза сопла (units-render.js)
     const L = mslView(m).L, big = L > 5, g = samMissileMesh(m, unitMissileGlb(m.unit.key), wMat);
     g.position.copy(m.pos); g.lookAt(LP.copy(m.pos).sub(m.dir));
     scene.add(g); samMeshes.set(m.id, g);
     const mode = m.ln ? m.ln.mode : 'rail', d = dist(m.pos);
     if (mode === 'cold' && m.ln.ej.acc) {
-      // С-300 / С-400 (своя пусковая 5П85): газ толкает ракету в контейнере — хвост выходит из устья через ej.tube: облако выброса (лист Blender у устья)
-      // и хлопок записи; двигатель — через ej.t от начала: рёв записи и лист запуска двигателя (samIgnite). Рули 9М83 сложены — раскрываются после выхода
+      // С-300 / С-400 (своя пусковая 5П85): газ толкает ракету в контейнере - хвост выходит из устья через ej.tube: облако выброса (лист Blender у устья)
+      // и хлопок записи; двигатель - через ej.t от начала: рёв записи и лист запуска двигателя (samIgnite). Рули 9М83 сложены - раскрываются после выхода
       const ej = m.ln.ej, Ld = m.ln.L[0], sp = Ld.slots[m.slot] || Ld.slots[0];
       m.ejAt = { t: ej.tube, p: lnchToWorld(m.unit, Ld, [sp[0], sp[1], sp[2] - ej.mouth], new THREE.Vector3()) };
       m.coldRec = !!snd.coldLaunch(d, false, { exit: Math.max(0, ej.tube - m.t), ign: Math.max(0, ej.t - m.t) });
       finsFold(g);
     } else if (mode === 'cold') {
       C.fx.launchCold(LP.copy(m.pos).addScaledVector(m.dir, L / 2), m.dir, big);
-      // «Тор» (9М331): катапульта выбрасывает ракету, газовые рули склоняют её, двигатель — только через ≈ 1 с на ≈ 20 м. В записях С-300 рёв идёт
-      // через 0,3–0,5 с после хлопка — факел загорался бы раньше двигателя. Поэтому здесь — хлопок катапульты, а вспышка, факел и рёв — в расчётный момент (samIgnite)
+      // «Тор» (9М331): катапульта выбрасывает ракету, газовые рули склоняют её, двигатель - только через ≈ 1 с на ≈ 20 м. В записях С-300 рёв идёт
+      // через 0,3-0,5 с после хлопка - факел загорался бы раньше двигателя. Поэтому здесь - хлопок катапульты, а вспышка, факел и рёв - в расчётный момент (samIgnite)
       if (m.ln.ej && m.ln.ej.tilt) { snd.eject(d, false); m.coldRec = false; }
-      else { const rec = snd.coldLaunch(d, !big); m.coldRec = !!rec; if (rec) m.visIgn = rec.gap; } // С-300 / С-400: запись старта; вспышка и факел — когда в записи начинается рёв, полёт (зажигание в расчёте) — прежний
+      else { const rec = snd.coldLaunch(d, !big); m.coldRec = !!rec; if (rec) m.visIgn = rec.gap; } // С-300 / С-400: запись старта; вспышка и факел - когда в записи начинается рёв, полёт (зажигание в расчёте) - прежний
     }
     else if (mode === 'tube') { C.fx.launchTube(m.pos, m.dir); snd.eject(d, false); }
     else { C.fx.launchHot(m.pos, m.dir, big, m.unit.pos.clone().setY(city.groundH(m.unit.pos.x, m.unit.pos.z))); snd.samLaunch(d, big, m.unit.key); }
     if (C.hooks.samLaunch) C.hooks.samLaunch(m);
   },
   samIgnite(m) {
-    if (m.visIgn !== undefined) return; // под запись — вспышка в отрисовке
-    // С-300 / С-400: с клубами следа (plume.js) — розжиг самого факела (вспышка, язык огня, выхлоп клубами по калибру) и след от сопла по настоящему
-    // пути ракеты (Mark 2026-11-01: лист «столб первой секунды» снят вертикально и плоский — ракета клонится к цели, а столб стоит). Без клубов (?wts=0) —
-    // лист Blender: вспышка, огненный хвост и столб дыма первой секунды (≈ 42 м над точкой зажигания); свой след игры — выше него (trailY)
+    if (m.visIgn !== undefined) return; // под запись - вспышка в отрисовке
+    // С-300 / С-400: с клубами следа (plume.js) - розжиг самого факела (вспышка, язык огня, выхлоп клубами по калибру) и след от сопла по настоящему
+    // пути ракеты (Mark 2026-11-01: лист «столб первой секунды» снят вертикально и плоский - ракета клонится к цели, а столб стоит). Без клубов (?wts=0) -
+    // лист Blender: вспышка, огненный хвост и столб дыма первой секунды (≈ 42 м над точкой зажигания); свой след игры - выше него (trailY)
     const V = mslView(m), p = LP.copy(m.pos).addScaledVector(m.dir, -V.L / 2), own = m.ln && m.ln.ej && m.ln.ej.acc;
-    if (own && trailPuffsOn()) { /* всё — в факеле (plume.js setIgnition) */ } else if (own && C.fx.launchSheet('launch_ignite', p)) m.trailY = p.y + 38; else C.fx.ignite(p, m.dir, V.L > 5);
+    if (own && trailPuffsOn()) { /* всё - в факеле (plume.js setIgnition) */ } else if (own && C.fx.launchSheet('launch_ignite', p)) m.trailY = p.y + 38; else C.fx.ignite(p, m.dir, V.L > 5);
     if (!m.coldRec) snd.samLaunch(dist(m.pos), V.L > 5, m.unit.key);
   },
   samJet(m) { C.fx.jet(m.pos, m.dir); },
@@ -660,32 +660,32 @@ const simFx = {
   },
   samTrail(m) { C.fx.samTrail(m); },
   samEnd(m, hit) { const g = samMeshes.get(m.id); if (g) { scene.remove(g); samMeshes.delete(m.id); } if (C.hooks.samEnd) C.hooks.samEnd(m, hit); },
-  wpnIgnite(w) { snd.tbmLaunch(dist(w.pos), true); C.fx.ignite(w.pos, w.dir, true); }, // «Кинжал» сошёл с пилона — двигатель
+  wpnIgnite(w) { snd.tbmLaunch(dist(w.pos), true); C.fx.ignite(w.pos, w.dir, true); }, // «Кинжал» сошёл с пилона - двигатель
   wpnRelease(w) {
     const g = relMesh(w); scene.add(g); wpnMeshes.set(w.id, g);
-    // «Мульти-волна»: старт баллистики с пусковой — рёв; крылатая с носителя — хлопок и запуск двигателя
-    if (w.ev && !w.decoy && w.W.kind === 'tbm' && w.phase !== 'drop') snd.tbmLaunch(dist(w.pos)); // воздушный пуск — рёв при зажигании (wpnIgnite)
+    // «Мульти-волна»: старт баллистики с пусковой - рёв; крылатая с носителя - хлопок и запуск двигателя
+    if (w.ev && !w.decoy && w.W.kind === 'tbm' && w.phase !== 'drop') snd.tbmLaunch(dist(w.pos)); // воздушный пуск - рёв при зажигании (wpnIgnite)
     else if (w.ev && w.owner && w.owner.role === 'carrier') snd.cruiseLaunch(dist(w.pos));
     if (w.owner === C.player) snd.release(w.W.kind === 'agm' || w.W.kind === 'arm');
     if (C.hooks.wpnRelease) C.hooks.wpnRelease(w);
   },
-  wpnTrail(w) { // огонь и дым — из среза сопла (w.nzL — сопло в осях модели: +Z к хвосту, как после lookAt)
+  wpnTrail(w) { // огонь и дым - из среза сопла (w.nzL - сопло в осях модели: +Z к хвосту, как после lookAt)
     if (!w.nzL) { C.fx.wpnTrail(w); return; }
     C.fx.wpnTrail(w, wpnNozzle(w, TP));
   },
   wpnEnd(w, res) { const g = wpnMeshes.get(w.id); if (g) { scene.remove(g); wpnMeshes.delete(w.id); } if (C.hooks.wpnEnd) C.hooks.wpnEnd(w, res); },
-  explosion(p, R, kind) { C.fx.explosion(p, R, kind); C.fx.crater(p, R, kind, city.groundH(p.x, p.z), city.bldAt(p.x, p.z)); if (kind === 'air') snd.samBurst(dist(p), R / 12); else snd.explosion(dist(p), R / (kind === 'tbm' ? 13 : R >= 45 ? 16 : 20), kind); }, // в воздухе — подрыв ЗУР / перехват
+  explosion(p, R, kind) { C.fx.explosion(p, R, kind); C.fx.crater(p, R, kind, city.groundH(p.x, p.z), city.bldAt(p.x, p.z)); if (kind === 'air') snd.samBurst(dist(p), R / 12); else snd.explosion(dist(p), R / (kind === 'tbm' ? 13 : R >= 45 ? 16 : 20), kind); }, // в воздухе - подрыв ЗУР / перехват
   gunFire(u, t, hits, dt) {
     C.fx.gunFire(u.pos, t.pos, hits, dt);
-    if (snd.gunLoop(u.id, dist(u.pos), u.key)) return; // многоствольные — записанная очередь
+    if (snd.gunLoop(u.id, dist(u.pos), u.key)) return; // многоствольные - записанная очередь
     const k = (aaaT.get(u.id) || 0) - dt; if (k <= 0) { snd.aaa(dist(u.pos), /gepard|skyguard|skynex/.test(u.key) ? 35 : 23, u.S.gun && u.S.gun.rof); aaaT.set(u.id, 0.16); } else aaaT.set(u.id, k);
   },
   objectHit(o, amount, p) { if (C.hooks.objectHit) C.hooks.objectHit(o, amount, p); },
-  bldDestroyed(o, b, now = true) { // постройка объекта-сцены разбита: разрушенный вид и пожар на ней; склад (chain) — серия вторичных взрывов;
-    // now = false — снимок боя (онлайн, вход в идущий бой: net.js applyState): башня сразу лежит, вторичных взрывов нет
+  bldDestroyed(o, b, now = true) { // постройка объекта-сцены разбита: разрушенный вид и пожар на ней; склад (chain) - серия вторичных взрывов;
+    // now = false - снимок боя (онлайн, вход в идущий бой: net.js applyState): башня сразу лежит, вторичных взрывов нет
     siteLook(o, now); const q = o.parts.find((p) => p.b === b);
-    // у штаба «П» — каждый корпус; у башни — только основание (пояса выше — не пожар); seat — стоит на нуле сцены (city.js siteParts y: насосная на плитах
-    // набережной — земля игры под ними ниже), корабль — на палубе (дно реки ниже), размер — по ширине; секции плотины (nofire) — бетон, пожара нет
+    // у штаба «П» - каждый корпус; у башни - только основание (пояса выше - не пожар); seat - стоит на нуле сцены (city.js siteParts y: насосная на плитах
+    // набережной - земля игры под ними ниже), корабль - на палубе (дно реки ниже), размер - по ширине; секции плотины (nofire) - бетон, пожара нет
     if (C.fx && !SITES[o.site].b[b].nofire) for (const p of o.parts) if (p.b === b && (p.seat || !(p.y0 > city.groundH(p.x, p.z) + 3)))
       C.fx.burn(new THREE.Vector3(p.x, p.water ? p.y0 + p.h * 0.6 : p.seat ? p.y0 + 2 : city.groundH(p.x, p.z) + 2, p.z), Math.min(60, (p.water ? Math.min(p.w, p.d) : p.w || p.r * 2 || 20) * 0.6));
     if (q && now && SITES[o.site].b[b].chain) for (let i = 0, t = 0.25; i < 7; i++, t += 0.35 + Math.random() * 0.6) chainQ.push({ t, x: q.x + (Math.random() - 0.5) * (q.w || q.r * 2 || 10) * 0.8, z: q.z + (Math.random() - 0.5) * (q.d || q.r * 2 || 10) * 0.8, R: i ? 7 + Math.random() * 9 : 22 });
@@ -706,18 +706,18 @@ const simFx = {
   decoyed(m, f) { if (C.hooks.decoyed) C.hooks.decoyed(m, f); },
   trackBroken(u, a) { if (C.hooks.trackBroken) C.hooks.trackBroken(u, a); },
 };
-// подвеска ИИ-самолёта с готовой моделью: тяжёлое — ближе к фюзеляжу (как у игрока); k — номер изделия этого типа
-const ST_ORDER = [3, 4, 2, 5, 1, 6, 0, 7], LOD_D = 2500; // дальше LOD_D — простая модель самолёта
+// подвеска ИИ-самолёта с готовой моделью: тяжёлое - ближе к фюзеляжу (как у игрока); k - номер изделия этого типа
+const ST_ORDER = [3, 4, 2, 5, 1, 6, 0, 7], LOD_D = 2500; // дальше LOD_D - простая модель самолёта
 function hangLoad(g, stations, load) {
   const out = []; let oi = 0;
   for (const l of [...load].sort((x, y) => AG[y.key].mass - AG[x.key].mass)) for (let k = 0; k < l.n && oi < 8; k++) {
-    const W = AG[l.key], p = stations[ST_ORDER[oi++]], m = pylonMesh(l.key, W, weaponGeo, wMat); if (weaponPending(l.key)) wantWeapon(l.key); // пришла — самолёты пересоберутся
-    m.position.set(W.kind === 'tbm' ? 0 : p.x, p.y - (W.vis.hang ?? W.vis.r) - 0.05, p.z); g.add(m); out.push({ m, l, k }); // «Кинжал» — под фюзеляжем по оси
+    const W = AG[l.key], p = stations[ST_ORDER[oi++]], m = pylonMesh(l.key, W, weaponGeo, wMat); if (weaponPending(l.key)) wantWeapon(l.key); // пришла - самолёты пересоберутся
+    m.position.set(W.kind === 'tbm' ? 0 : p.x, p.y - (W.vis.hang ?? W.vis.r) - 0.05, p.z); g.add(m); out.push({ m, l, k }); // «Кинжал» - под фюзеляжем по оси
   }
   return out;
 }
-// посадка машины на рельеф: наклон по высоте земли спереди / сзади и слева / справа, высота — по средней из четырёх точек
-// (раньше — по центру: на склоне нос или корма длинной машины уходили в землю). Пересчёт — когда машину переставили
+// посадка машины на рельеф: наклон по высоте земли спереди / сзади и слева / справа, высота - по средней из четырёх точек
+// (раньше - по центру: на склоне нос или корма длинной машины уходили в землю). Пересчёт - когда машину переставили
 const SEAT_B = new THREE.Box3();
 function seat(g, u) {
   if (u.roof) return; // ПЗРК на крыше
@@ -726,38 +726,38 @@ function seat(g, u) {
     g.userData.seatK = k;
     if (!g.userData.half) { const r0 = g.rotation.y, p0 = g.position.clone(); g.rotation.set(0, 0, 0); g.position.set(0, 0, 0); g.updateMatrixWorld(true); SEAT_B.setFromObject(g); g.rotation.y = r0; g.userData.half = [Math.max(0.8, (SEAT_B.max.x - SEAT_B.min.x) * 0.42), Math.max(1, (SEAT_B.max.z - SEAT_B.min.z) * 0.42)]; g.position.copy(p0); }
     const [hw, hl] = g.userData.half, c = Math.cos(u.yaw), s = Math.sin(u.yaw);
-    const gh = (C.G && C.G.meshH) || city.groundH; // по высоте нарисованной сетки земли (на склоне и у реки точная высота карты расходится с ней на метры — машина висела или тонула)
+    const gh = (C.G && C.G.meshH) || city.groundH; // по высоте нарисованной сетки земли (на склоне и у реки точная высота карты расходится с ней на метры - машина висела или тонула)
     const h = (lx, lz) => gh(u.pos.x + lx * c + lz * s, u.pos.z - lx * s + lz * c);
     const hf = h(0, -hl), hb = h(0, hl), hL = h(-hw, 0), hR = h(hw, 0);
-    if (C.S && C.S.unitTilt) C.S.unitTilt(u); // наклон — тот же, по которому считается старт ракеты (sim/strike.js)
+    if (C.S && C.S.unitTilt) C.S.unitTilt(u); // наклон - тот же, по которому считается старт ракеты (sim/strike.js)
     g.userData.seat = { dy: (hf + hb + hL + hR) / 4 - city.groundH(u.pos.x, u.pos.z), rx: u.tx ?? Math.atan2(hf - hb, 2 * hl), rz: u.tz ?? Math.atan2(hR - hL, 2 * hw) };
   }
   const st = g.userData.seat; g.rotation.order = 'YXZ'; g.rotation.set(st.rx, u.yaw, st.rz); g.position.y += st.dy;
 }
 // ── «Мульти-волна»: модели ракет и дронов, пусковые за городом ──
-// ракета с пусковой (tbm у «Искандера», «Точки», «Скада»): копия части модели, центр — в середину, ось — вперёд (−Z)
+// ракета с пусковой (tbm у «Искандера», «Точки», «Скада»): копия части модели, центр - в середину, ось - вперёд (−Z)
 const EVB = new THREE.Box3(), EVC = new THREE.Vector3();
 function evPart(glb, part) {
   const m = anyModel(glb); if (!m) return null;
   const p = m.children.find((c) => c.name === part); if (!p) return null;
   const g = new THREE.Group(), inner = p.clone(); EVB.setFromObject(inner); EVB.getCenter(EVC); inner.position.sub(EVC);
   const tilt = new THREE.Group(); tilt.add(inner); g.add(tilt);
-  const R = RAIL[glb]; if (R) tilt.quaternion.setFromUnitVectors(new THREE.Vector3(...R.a), new THREE.Vector3(0, 0, -1)); // ось ракеты на направляющей (RAIL.a; у «Искандера» — вверх, тот же поворот −90° вокруг X) в −Z
-  else tilt.rotation.x = -Math.PI / 2; // стоит вертикально — нос в −Z
+  const R = RAIL[glb]; if (R) tilt.quaternion.setFromUnitVectors(new THREE.Vector3(...R.a), new THREE.Vector3(0, 0, -1)); // ось ракеты на направляющей (RAIL.a; у «Искандера» - вверх, тот же поворот −90° вокруг X) в −Z
+  else tilt.rotation.x = -Math.PI / 2; // стоит вертикально - нос в −Z
   return g;
 }
-// ложная цель баллистической ракеты — отделившаяся головная часть (w_tbmdec), сзади закрыта диском; двигателя у неё нет
+// ложная цель баллистической ракеты - отделившаяся головная часть (w_tbmdec), сзади закрыта диском; двигателя у неё нет
 function decoyMesh() {
   const m = anyModel('w_tbmdec'); if (!m) return null;
   const b = new THREE.Box3().setFromObject(m), r = (b.max.x - b.min.x) / 2;
   const cap = new THREE.Mesh(new THREE.CircleGeometry(r * 0.97, 16), new THREE.MeshLambertMaterial({ color: 0x3a3c3e })); cap.position.set((b.max.x + b.min.x) / 2, (b.max.y + b.min.y) / 2, b.max.z - 0.01); m.add(cap);
   m.traverse((q) => { if (q.isMesh) q.castShadow = !!P.shadows; }); return m;
 }
-// сброшенное оружие самолёта: готовая модель или временная фигура (модель ещё грузится — потом подменяется, см. «подменить
-// временную»); у ракет с двигателем — факел из среза сопла
+// сброшенное оружие самолёта: готовая модель или временная фигура (модель ещё грузится - потом подменяется, см. «подменить
+// временную»); у ракет с двигателем - факел из среза сопла
 function relMesh(w) {
   if (w.ev) return evMesh(w);
-  if (w.W.kind === 'rocket') { // НАР — одна ракета (калибр 70–80 мм), а не блок с пилона: своя модель из Blender (w_nar_<ключ>), пока грузится — простая фигура
+  if (w.W.kind === 'rocket') { // НАР - одна ракета (калибр 70-80 мм), а не блок с пилона: своя модель из Blender (w_nar_<ключ>), пока грузится - простая фигура
     const own = anyModel('w_nar_' + w.key); if (!own) wantModel('w_nar_' + w.key);
     const g = own || narMesh(w.key, w.W, wMat); mountWpnFlame(w, g, false); return g;
   }
@@ -769,13 +769,13 @@ function evMesh(w) {
   const M = w.W.model;
   if (w.decoy && w.W.kind === 'tbm') { const d = decoyMesh(); if (d) return d; }
   let g = M && M.part ? evPart(M.glb, M.part) : M ? anyModel(M.glb) : null;
-  if (!g) { g = weaponMesh(w.key, w.W, weaponGeo, wMat); if (M || weaponPending(w.key)) { g.userData.stub = true; if (!M) wantWeapon(w.key); } } // модель ещё грузится — временная (онлайн: ракета пущена раньше, чем пришла модель, — «Томагавк» оставался фигурой)
+  if (!g) { g = weaponMesh(w.key, w.W, weaponGeo, wMat); if (M || weaponPending(w.key)) { g.userData.stub = true; if (!M) wantWeapon(w.key); } } // модель ещё грузится - временная (онлайн: ракета пущена раньше, чем пришла модель, - «Томагавк» оставался фигурой)
   g.traverse((q) => { if (q.isMesh) q.castShadow = !!P.shadows; });
   if (g.children.some((c) => /^prop/.test(c.name))) g.userData.props = true;
   mountWpnFlame(w, g, true);
   return g;
 }
-// винты дронов: части prop / prop2 крутятся вокруг своей оси (центр — по габаритам части, один раз)
+// винты дронов: части prop / prop2 крутятся вокруг своей оси (центр - по габаритам части, один раз)
 function spinProps(g, dt) {
   for (const c of g.children) {
     if (!/^prop/.test(c.name)) continue;
@@ -783,7 +783,7 @@ function spinProps(g, dt) {
   }
   for (const c of g.children) if (c.userData.prop) c.rotation.z += dt * 70;
 }
-// пусковые: ставим, когда удар начался; ракеты на пусковой прячутся по мере пусков (evLaunch — рядом с unitMeshes)
+// пусковые: ставим, когда удар начался; ракеты на пусковой прячутся по мере пусков (evLaunch - рядом с unitMeshes)
 C.evPreload = (comp) => { for (const [k, , , via] of comp) { const W = AG[k]; if (W.model) wantModel(W.model.glb); else wantWeapon(k); if (W.dec) wantModel('w_tbmdec'); if (W.launcher) wantModel(W.launcher); if (via) wantModel(via); } };
 C.evReady = (ev) => {
   for (const [k] of ev.comp) { const W = AG[k]; if (W.model) wantModel(W.model.glb); else wantWeapon(k); if (W.dec) wantModel('w_tbmdec'); }
@@ -797,17 +797,17 @@ function syncEv() {
     let g = evLaunch.get(L.id);
     if (!g) { const m = anyModel(L.key); if (!m) continue; g = m; g.traverse((q) => { if (q.isMesh) q.castShadow = !!P.shadows; }); scene.add(g); evLaunch.set(L.id, g); g.position.copy(L.pos); seat(g, { pos: L.pos, yaw: L.yaw, roof: false }, 0); } // по рельефу, как ЗРК
     const parts = g.children.filter((c) => /^tbm/.test(c.name));
-    parts.forEach((c, i) => { c.visible = i >= L.fired && i < (L.n0 ?? parts.length); }); // n0 — сколько ракет заряжено (у последней пусковой при нечётном числе — одна: вторая не стоит весь бой)
+    parts.forEach((c, i) => { c.visible = i >= L.fired && i < (L.n0 ?? parts.length); }); // n0 - сколько ракет заряжено (у последней пусковой при нечётном числе - одна: вторая не стоит весь бой)
     const PO = POD[L.key];
-    if (PO) { // пакет HIMARS / стрела M752: поворот вокруг оси у кормы (своя «петля», один раз), подъём — по L.podEl; у M752 до стрелы — трап
+    if (PO) { // пакет HIMARS / стрела M752: поворот вокруг оси у кормы (своя «петля», один раз), подъём - по L.podEl; у M752 до стрелы - трап
       if (!g.userData.podPivot) {
-        // части группы (pod, rampA…; у каждой — свои материалы) — в «петлю» на оси h (оси модели); вложенная петля (par) стоит относительно своей (base)
+        // части группы (pod, rampA…; у каждой - свои материалы) - в «петлю» на оси h (оси модели); вложенная петля (par) стоит относительно своей (base)
         const hingeOf = (re, h, par = g, base = [0, 0, 0]) => { const ps = g.children.filter((c) => re.test(c.name)); if (!ps.length) return null; const pv = new THREE.Group(); pv.position.set(h[0] - base[0], h[1] - base[1], h[2] - base[2]); par.add(pv); for (const c of ps) { c.position.x -= h[0]; c.position.y -= h[1]; c.position.z -= h[2]; pv.add(c); } return pv; };
         g.userData.podPivot = hingeOf(/^pod/, PO.hinge);
         if (PO.rampA) { const a = hingeOf(/^rampA/, PO.rampA.hinge); g.userData.rampA = a; if (a) g.userData.rampB = hingeOf(/^rampB/, PO.rampB.hinge, a, PO.rampA.hinge); }
       }
       const pv = g.userData.podPivot;
-      if (pv && PO.msl && !g.userData.msl) { // ракета на стреле (M752): копия модели оружия; центр — на срезе (POD.muzzle) в осях стрелы
+      if (pv && PO.msl && !g.userData.msl) { // ракета на стреле (M752): копия модели оружия; центр - на срезе (POD.muzzle) в осях стрелы
         const m = anyModel(PO.msl); if (!m) wantModel(PO.msl);
         else { m.traverse((q) => { if (q.isMesh) q.castShadow = !!P.shadows; }); m.position.set(PO.muzzle[0] - PO.hinge[0], PO.muzzle[1] - PO.hinge[1], PO.muzzle[2] - PO.hinge[2]); pv.add(m); g.userData.msl = m; }
       }
@@ -818,7 +818,7 @@ function syncEv() {
     }
   }
 }
-// рули 9М83 (части fin0…3 модели ракеты): в контейнере сложены — повёрнуты на −90° вокруг оси ракеты у своего шарнира (корень руля у корпуса,
+// рули 9М83 (части fin0…3 модели ракеты): в контейнере сложены - повёрнуты на −90° вокруг оси ракеты у своего шарнира (корень руля у корпуса,
 // ПАСПОРТ 9М83), раскрываются за ej.fins с после выхода хвоста из устья (ej.tube)
 function finsFold(g) {
   const M = g.children[0], fs = M ? M.children.filter((c) => /^fin\d$/.test(c.name)) : []; if (!fs.length) return;
@@ -839,12 +839,12 @@ function syncWorld(dt, t) {
   for (const m of S.sams) {
     const g = samMeshes.get(m.id); if (!g) continue;
     g.position.copy(m.pos); g.lookAt(LP.copy(m.pos).sub(m.dir));
-    if (m.ejAt && m.t >= m.ejAt.t) { if (!C.fx.launchSheet('launch_eject', m.ejAt.p)) C.fx.launchCold(m.ejAt.p, m.dir, true); m.ejAt = null; } // С-300: хвост вышел из устья — облако выброса
+    if (m.ejAt && m.t >= m.ejAt.t) { if (!C.fx.launchSheet('launch_eject', m.ejAt.p)) C.fx.launchCold(m.ejAt.p, m.dir, true); m.ejAt = null; } // С-300: хвост вышел из устья - облако выброса
     if (g.userData.fins) finsSet(g, m);
-    // под запись старта: факел и вспышка — с момента рёва в записи (m.visIgn), раньше расчётного зажигания; дальше — как в расчёте
+    // под запись старта: факел и вспышка - с момента рёва в записи (m.visIgn), раньше расчётного зажигания; дальше - как в расчёте
     if (m.visIgn !== undefined && !m.visLit && m.t >= m.visIgn) { const V = mslView(m); m.visLit = true; C.fx.ignite(LP.copy(m.pos).addScaledVector(m.dir, -V.L / 2), m.dir, V.L > 5); }
     const on = (m.tb >= 0 || m.visLit) && (m.tb < m.M.burn || (m.M.sustain && m.tb < m.M.burn + m.M.sustain.t));
-    if (m.tb >= m.M.burn && !m.susM) { m.susM = true; g.userData.flame.motor(motorOf(m.unit.key, 'sam', true)); } // маршевый двигатель (С-75 — жидкостный, «Куб» — прямоточный)
+    if (m.tb >= m.M.burn && !m.susM) { m.susM = true; g.userData.flame.motor(motorOf(m.unit.key, 'sam', true)); } // маршевый двигатель (С-75 - жидкостный, «Куб» - прямоточный)
     const V = mslView(m); g.userData.flame.set(on ? (m.tb < m.M.burn && (V.L > 2.5 || g.userData.booster) ? 2 : 1) : 0, g.userData.booster ? V.r * m.ln.stageR : V.r, m.pos.y); // на высоте факел шире (plume.js)
   }
   // отделившиеся ускорители: падают, кувыркаются, первые секунды дымят
@@ -856,18 +856,18 @@ function syncWorld(dt, t) {
   }
   for (const w of S.wpns) {
     let g = wpnMeshes.get(w.id);
-    if (g && g.userData.stub && (w.stubT = (w.stubT || 0) - dt) <= 0) { w.stubT = 1; const g2 = relMesh(w); if (!g2.userData.stub) { scene.remove(g); scene.add(g2); wpnMeshes.set(w.id, g2); g = g2; } } // модель пришла — подменить временную
+    if (g && g.userData.stub && (w.stubT = (w.stubT || 0) - dt) <= 0) { w.stubT = 1; const g2 = relMesh(w); if (!g2.userData.stub) { scene.remove(g); scene.add(g2); wpnMeshes.set(w.id, g2); g = g2; } } // модель пришла - подменить временную
     if (g) { g.position.copy(w.pos); if (w.vel.lengthSq() > 1e-4) g.lookAt(LP.copy(w.pos).sub(w.vel)); if (g.userData.props) spinProps(g, dt); if (g.userData.flame) flameOf(g, w);
       if (g.userData.wings) glideWings(g, dt, w.vel.lengthSq() > 1e-4); if (g.userData.vanes) spinVanes(g, dt); } } // крылья раскрываются через 0,3 с после сброса (УМПК: сперва переворот на 180°, см. models.js); крыльчатки взрывателей (AN-M65A1) крутятся
   syncEv();
   const pxK = VH / 2 / Math.tan(camera.fov * D2R / 2); // пикселей на метр на расстоянии 1 м
   for (const u of S.units) {
     const g = unitMeshes.get(u.id); if (!g) continue;
-    // машина на экране меньше ~1,5 пикселя — не рисуем (детальные модели тяжёлые, а вдали их не видно)
+    // машина на экране меньше ~1,5 пикселя - не рисуем (детальные модели тяжёлые, а вдали их не видно)
     if (g.userData.R === undefined) g.userData.R = Math.max(2, new THREE.Box3().setFromObject(g).getSize(LP).length() * 0.5);
     g.visible = g.userData.R * pxK > 1.5 * camera.position.distanceTo(u.pos);
-    if (g.visible && camera.position.distanceTo(u.pos) < 1500) wantUnitNear(u.key); // телефон: подробная модель — когда камера подлетела (models.js), до того — дальняя копия
-    // подробная модель или дальняя копия (models.js: THREE.LOD по частям) — по расстоянию с поправкой на поле зрения
+    if (g.visible && camera.position.distanceTo(u.pos) < 1500) wantUnitNear(u.key); // телефон: подробная модель - когда камера подлетела (models.js), до того - дальняя копия
+    // подробная модель или дальняя копия (models.js: THREE.LOD по частям) - по расстоянию с поправкой на поле зрения
     // (у узкого окна ТВ и прицела оператора «ближе»); конвейер кадра сам LOD не переключает
     if (g.visible) {
       if (!g.userData.lods) { g.userData.lods = []; g.traverse((o) => { if (o.isLOD) { o.autoUpdate = false; g.userData.lods.push(o); } }); }
@@ -875,7 +875,7 @@ function syncWorld(dt, t) {
       for (const l of g.userData.lods) { l.levels[0].object.visible = near; l.levels[1].object.visible = !near; }
     }
     if (u.dead) continue;
-    // пусковые: азимут и угол места из симуляции; слот пуст — ракета ушла (или нет боекомплекта)
+    // пусковые: азимут и угол места из симуляции; слот пуст - ракета ушла (или нет боекомплекта)
     for (const T of g.userData.tur) { T.tg.rotation.y = u.lyaw; T.cg.rotation.x = u.lel; if (T.pose) crewPose(T.pose, u.lel); }
     const N = g.userData.nSlots, sl = g.userData.slots;
     if (sl.length) {
@@ -902,19 +902,19 @@ function syncWorld(dt, t) {
     if (!g) {
       g = new THREE.Group(); g.rotation.order = 'YXZ';
       if (a.role === 'decoy') { g.add(weaponMesh(a.decoyKey, AG[a.decoyKey], weaponGeo, wMat)); g.userData.flames = { update() {} }; }
-      else if (a.heli) { // вертолёт налёта: ждём свою модель (пока грузится — не рисуем: иначе встал бы самолёт стороны), подвески — без отрисовки
+      else if (a.heli) { // вертолёт налёта: ждём свою модель (пока грузится - не рисуем: иначе встал бы самолёт стороны), подвески - без отрисовки
         const hm = heliModel(a.plane); if (!hm) continue;
         hm.obj.traverse((o) => { if (o.isMesh && !o.userData.glass) o.castShadow = !!P.shadows; }); g.add(hm.obj); g.userData.flames = { update() {} };
       } else {
-        // вблизи — готовая модель (подвеска отдельными моделями на пилонах, сброшенное пропадает), вдали — простая
-        const pm = planeModel(a.mside || a.side, a.role === 'carrier' ? 'carrier' : classOfRole(a.role), a.plane || raidPlane(a.side, C.raidEra, a.role), a.camo || null) /* a.camo — окраска другого игрока онлайна */, sg = strikerGeo(a.side), lo = new THREE.Mesh(sg.geo, planeMat); lo.castShadow = !!P.shadows; g.add(lo);
+        // вблизи - готовая модель (подвеска отдельными моделями на пилонах, сброшенное пропадает), вдали - простая
+        const pm = planeModel(a.mside || a.side, a.role === 'carrier' ? 'carrier' : classOfRole(a.role), a.plane || raidPlane(a.side, C.raidEra, a.role), a.camo || null) /* a.camo - окраска другого игрока онлайна */, sg = strikerGeo(a.side), lo = new THREE.Mesh(sg.geo, planeMat); lo.castShadow = !!P.shadows; g.add(lo);
         if (pm) {
           pm.obj.traverse((o) => { if (o.isMesh && !o.userData.glass) o.castShadow = !!P.shadows; }); g.add(pm.obj);
           g.userData.dv = planeDamageVis(scene, pm.obj, pm.name, planeMeta(pm.name), () => C.fx); // зоны повреждений: отрыв частей, дым из зон
-          // пламя — у каждой модели своё (вдали — у простой): иначе у длинных самолётов (Су-34) факелы висели за простой моделью
-          const fh = attachFlames(pm.obj, pm.nozzles, pm.nr / 0.45, false, pm.dry, pm.name), fl = attachFlames(lo, pm.nozzles.length ? sg.nozzles : [], sg.nr / 0.45, false, pm.dry, pm.name); // вдали — так же: нет пламени у B-2 и F-117, слабое — без форсажа
-          g.userData.flames = { update(t, ab) { fh.update(t, ab); fl.update(t, ab); } }; g.userData.hung = pm.internal ? [] : hangLoad(g, pm.stations, a.load); // во внутренних отсеках — не видно
-          if (a.role === 'carrier') lo.visible = false; else g.userData.lod = { hi: pm.obj, lo }; // носитель велик — модель видна и издали
+          // пламя - у каждой модели своё (вдали - у простой): иначе у длинных самолётов (Су-34) факелы висели за простой моделью
+          const fh = attachFlames(pm.obj, pm.nozzles, pm.nr / 0.45, false, pm.dry, pm.name), fl = attachFlames(lo, pm.nozzles.length ? sg.nozzles : [], sg.nr / 0.45, false, pm.dry, pm.name); // вдали - так же: нет пламени у B-2 и F-117, слабое - без форсажа
+          g.userData.flames = { update(t, ab) { fh.update(t, ab); fl.update(t, ab); } }; g.userData.hung = pm.internal ? [] : hangLoad(g, pm.stations, a.load); // во внутренних отсеках - не видно
+          if (a.role === 'carrier') lo.visible = false; else g.userData.lod = { hi: pm.obj, lo }; // носитель велик - модель видна и издали
         } else g.userData.flames = attachFlames(g, sg.nozzles, sg.nr / 0.45);
       }
       scene.add(g); planeMeshes.set(a.id, g);
@@ -926,11 +926,11 @@ function syncWorld(dt, t) {
     if (L) { L.hi.visible = near; L.lo.visible = !near; }
     if (g.userData.hung) for (const h of g.userData.hung) h.m.visible = near && h.l.n > h.k;
   }
-  // дым подбитых самолётов (ИИ и игрок): ветер — лёгкий, постоянный для боя. После того как модели встали на место этого кадра
-  // (2026-10-25: раньше — до них, след выходил из прошлого положения: на 30 к/с в 6–10 м позади, в вираже — вбок)
+  // дым подбитых самолётов (ИИ и игрок): ветер - лёгкий, постоянный для боя. После того как модели встали на место этого кадра
+  // (2026-10-25: раньше - до них, след выходил из прошлого положения: на 30 к/с в 6-10 м позади, в вираже - вбок)
   if (C.fx && dt > 0) {
     const W = C.windV || (C.windV = new THREE.Vector3(3.9, 0, 1.1)); // ~4 м/с
-    // у самолётов с зонами повреждений (sim/damage.js) — дым и огонь из самих зон, отрыв частей (plane-damage.js); без зон — общий шлейф по прочности
+    // у самолётов с зонами повреждений (sim/damage.js) - дым и огонь из самих зон, отрыв частей (plane-damage.js); без зон - общий шлейф по прочности
     if (C.raid) for (const a of C.raid.planes) {
       if (a.dead || a.out || a.role === 'decoy' || !a.hpMax) continue;
       const dv = (planeMeshes.get(a.id) || { userData: {} }).userData.dv;
@@ -940,7 +940,7 @@ function syncWorld(dt, t) {
     updateDebris(scene, dt, city.groundH, W);
   }
   if (dt > 0) for (const f of S.flares) C.fx.flareTick(f, dt);
-  // обломки сбитых: падают, крутятся, дымят; на земле — пожар
+  // обломки сбитых: падают, крутятся, дымят; на земле - пожар
   for (let i = wrecks.length - 1; i >= 0; i--) {
     const w = wrecks[i]; w.t += dt; w.vel.y -= 9.8 * dt; w.vel.multiplyScalar(1 - 0.15 * dt);
     w.g.position.addScaledVector(w.vel, dt); w.g.rotation.z += w.spin * dt; w.g.rotation.x += w.spin * 0.3 * dt;
@@ -950,12 +950,12 @@ function syncWorld(dt, t) {
 }
 // звук: двигатель игрока, объёмные голоса самолётов и ракет
 const sndCands = [], sndPool = [];
-// вертолёты: одна запись винта (UH-1) на всех — скорость по типу (тяжёлые Ми ниже), нагрузка — по общему шагу
+// вертолёты: одна запись винта (UH-1) на всех - скорость по типу (тяжёлые Ми ниже), нагрузка - по общему шагу
 const HELI_SND = { h_uh1: 1, h_ah1: 1.04, h_ah64: 1.06, h_mi24: 0.88, h_mi28: 0.9, h_ka52: 0.93, h_ka50: 0.93, h_mi8: 0.82, h_uh60: 0.97, h_rah66: 1.08 };
 const heliPw = (a) => clamp(((a.col ?? 0.75) - 0.45) / 0.5, 0, 1);
 function updateSound(dt) {
   if (!snd.A.ready) return;
-  // меню на кадрах (menubg.js, бой не считается): самолёты и ракеты прошлого боя стоят на месте — их голоса молчат (иначе петли звучали в лобби)
+  // меню на кадрах (menubg.js, бой не считается): самолёты и ракеты прошлого боя стоят на месте - их голоса молчат (иначе петли звучали в лобби)
   const bg = C.state === 'menu' && C.ctrl && C.ctrl.idle && C.ctrl.idle();
   const pl = C.player, on = !bg && (C.state === 'play' || C.state === 'menu');
   const live = pl && !pl.dead && C.state === 'play' && !C.paused;
@@ -971,7 +971,7 @@ function updateSound(dt) {
   if (C.raid) for (const a of C.raid.planes) if (!a.dead && !a.out && a.phase !== 'wait') {
     a.sfwd = fwdOf(a, a.sfwd || new THREE.Vector3());
     if (a.heli) { const c = cand(a, 'heli', a.pos, a.vel, a.sfwd, false, 1.2); c.pw = heliPw(a); c.rate = HELI_SND[a.plane] || 1; continue; }
-    // близкий пролёт: за 2,6 с до точки наибольшего сближения (промах < 300 м) — запись пролёта целиком, свой голос тише
+    // близкий пролёт: за 2,6 с до точки наибольшего сближения (промах < 300 м) - запись пролёта целиком, свой голос тише
     const rx = a.pos.x - cp.x, ry = a.pos.y - cp.y, rz = a.pos.z - cp.z, vx = a.vel.x - (lv ? lv.x : 0), vy = a.vel.y - (lv ? lv.y : 0), vz = a.vel.z - (lv ? lv.z : 0), vv = vx * vx + vy * vy + vz * vz;
     const tca = vv > 1 ? -(rx * vx + ry * vy + rz * vz) / vv : -1, now = performance.now() / 1000;
     if (tca > 0 && tca <= 2.6 && (a.stca ?? 9) > 2.6 && vv > 120 * 120 && !(now < (a.passT || 0) + 8)) {
@@ -984,10 +984,10 @@ function updateSound(dt) {
   if (C.S) {
     for (const m of C.S.sams) if (!m.dead && m.tb >= 0 && m.tb < m.M.burn + (m.M.sustain ? m.M.sustain.t : 0)) { m.svel = (m.svel || new THREE.Vector3()).copy(m.dir).multiplyScalar(m.speed); cand(m, 'msl', m.pos, m.svel, null, false, 1); }
     for (const w of C.S.wpns) if (!w.dead && w.W.burn && w.t < w.W.burn) cand(w, 'msl', w.pos, w.vel, null, false, 0.8);
-    // «Мульти-волна»: крылатые — маленький турбовентилятор, дроны — поршневой мотор, баллистика — рёв на разгоне и свист на спуске
+    // «Мульти-волна»: крылатые - маленький турбовентилятор, дроны - поршневой мотор, баллистика - рёв на разгоне и свист на спуске
     for (const w of C.S.wpns) {
       if (w.dead || !w.ev) continue;
-      if (w.W.kind === 'tbm') { const c = cand(w, 'tbm', w.pos, w.vel, null, false, w.phase === 'boost' ? 1.5 : 0.9); c.pw = w.phase === 'boost' ? 1 : 0; c.air = w.phase === 'term' ? 1 : 0; } // разгон — двигатель, в небе — гул вдали, спуск — воздух (без «двигателя»)
+      if (w.W.kind === 'tbm') { const c = cand(w, 'tbm', w.pos, w.vel, null, false, w.phase === 'boost' ? 1.5 : 0.9); c.pw = w.phase === 'boost' ? 1 : 0; c.air = w.phase === 'term' ? 1 : 0; } // разгон - двигатель, в небе - гул вдали, спуск - воздух (без «двигателя»)
       else if (w.W.uav) cand(w, 'prop', w.pos, w.vel, w.dir, false, 0.9);
       else cand(w, 'jet', w.pos, w.vel, w.dir, false, 0.55);
     }
@@ -1019,7 +1019,7 @@ function resize() {
 addEventListener('resize', resize);
 C.resize = resize;
 // проверка чёткости на телефоне (?prtest=1, Mark 2026-10-26: «подобрать такое значение, чтобы не было мыла, но и без лишнего разрешения»): кнопка
-// вверху переключает разрешение 3D на ходу — ×1,25 / ×1,5 / ×1,75 / ×2 / как у экрана; динамическое разрешение на время проверки выключено
+// вверху переключает разрешение 3D на ходу - ×1,25 / ×1,5 / ×1,75 / ×2 / как у экрана; динамическое разрешение на время проверки выключено
 if (Q.get('prtest') === '1') {
   perf.dynOff = true; if (pipe) pipe.setScale(1);
   const dpr = window.devicePixelRatio || 1, L = [1.25, 1.5, 1.75, 2, dpr].filter((v, i, a) => v <= dpr + 0.01 && a.indexOf(v) === i);
@@ -1029,46 +1029,46 @@ if (Q.get('prtest') === '1') {
   const show = () => { const pr = renderer.getPixelRatio(); b.textContent = `×${+pr.toFixed(3)} · ${Math.round(VW * pr)}×${Math.round(VH * pr)} · ${(VW * VH * pr * pr / 1e6).toFixed(2)} MP`; };
   b.onpointerdown = (e) => e.stopPropagation();
   b.onclick = (e) => { e.stopPropagation(); i = (i + 1) % L.length; renderer.setPixelRatio(L[i]); resize(); show(); };
-  document.body.appendChild(b); const t0 = setInterval(() => { if (VW > 10) { show(); clearInterval(t0); } }, 300); // размер окна — после первого resize
+  document.body.appendChild(b); const t0 = setInterval(() => { if (VW > 10) { show(); clearInterval(t0); } }, 300); // размер окна - после первого resize
 }
-// поле зрения камеры (оператор ЗРК меняет увеличение): частицы и сглаживание линий — по новому FOV
+// поле зрения камеры (оператор ЗРК меняет увеличение): частицы и сглаживание линий - по новому FOV
 C.setFov = (f) => { if (Math.abs(camera.fov - f) < 0.01) return; camera.fov = f; resize(); };
-// Telegram: кнопки поверх страницы — отступ сверху
+// Telegram: кнопки поверх страницы - отступ сверху
 C.shell = createShell(C, { IS_TOUCH, ls });
-// створки при входе в бой и выходе в меню (doors.js): стиль — случайно на каждый переход; картинки — заранее, через 4 с после загрузки
+// створки при входе в бой и выходе в меню (doors.js): стиль - случайно на каждый переход; картинки - заранее, через 4 с после загрузки
 C.doors = createDoors(); setTimeout(() => C.doors.preload(), 4000);
-setPuffCam(camera); // клубы следов ракет: вдали от камеры — реже (plume.js)
+setPuffCam(camera); // клубы следов ракет: вдали от камеры - реже (plume.js)
 C.doors.gate = () => C.assetsDone === true; // после перезагрузки под карту створки расходятся, когда модели и текстуры пришли (не дольше 8 с)
-C.crash = createCrashRep(C); // прошлый бой оборвался без выхода (вылет вкладки) — после меню предложим отправить отчёт
+C.crash = createCrashRep(C); // прошлый бой оборвался без выхода (вылет вкладки) - после меню предложим отправить отчёт
 document.body.classList.toggle('nopad', !C.sens.pad); // крестовина выключена в настройках
 document.body.classList.toggle('nobino', C.sens.bino === false); // «Бинокль» вылета выключен в настройках
 
 // ═════════════ Режимы: вход, пауза, итоги ═════════════
 const ctrls = {};
 C.start = function (game) {
-  if (game === 'online') { C.online.again(); return; } // «Ещё раз» после онлайн-боя — снова в поиск
-  // самолёт ↔ вертолёт: у них разные карты (город / «Туманная топь») — карта строится при загрузке: перезагрузка сразу в вылет
-  // «Ещё раз» после потери контекста WebGL (текстуры моделей не вернуть): новый бой — с перезагрузкой, адрес страницы тот же (карта, вертолёт — как были)
-  if (C.reloadAfterBattle && (game === 'air' || game === 'defense' || game === 'training')) { ls.set('fortuna_airdef_setup', JSON.stringify(C.setup)); C.doors.carry('go'); const u = new URL(location.href); u.searchParams.set('go', game); u.searchParams.set('weather', W_KEY); if (game === 'air' && MAP === 'autumn') u.searchParams.set('hlo', C.setup.lo); /* hlo и weather при загрузке из адреса убраны — вернуть: вертолёт «Топи» и её погода */ location.replace(u.href); return; }
-  const contOp = game === 'air' && C.op && C.op.next; // второй вылет «Операции» — на той же карте (цели и уцелевшая ПВО — оттуда)
+  if (game === 'online') { C.online.again(); return; } // «Ещё раз» после онлайн-боя - снова в поиск
+  // самолёт ↔ вертолёт: у них разные карты (город / «Туманная топь») - карта строится при загрузке: перезагрузка сразу в вылет
+  // «Ещё раз» после потери контекста WebGL (текстуры моделей не вернуть): новый бой - с перезагрузкой, адрес страницы тот же (карта, вертолёт - как были)
+  if (C.reloadAfterBattle && (game === 'air' || game === 'defense' || game === 'training')) { ls.set('fortuna_airdef_setup', JSON.stringify(C.setup)); C.doors.carry('go'); const u = new URL(location.href); u.searchParams.set('go', game); u.searchParams.set('weather', W_KEY); if (game === 'air' && MAP === 'autumn') u.searchParams.set('hlo', C.setup.lo); /* hlo и weather при загрузке из адреса убраны - вернуть: вертолёт «Топи» и её погода */ location.replace(u.href); return; }
+  const contOp = game === 'air' && C.op && C.op.next; // второй вылет «Операции» - на той же карте (цели и уцелевшая ПВО - оттуда)
   if ((game === 'air' || game === 'defense' || game === 'training') && !Q.get('map') && !contOp && wantMap(game, C.setup.pmap, C.setup.era, C.setup.lo, C.setup.evd, C.setup.tside) !== MAP) {
-    ls.set('fortuna_airdef_setup', JSON.stringify(C.setup)); C.doors.carry('go'); /* створки закрыты — новая страница начнётся с них */ const u = new URL(location.href); u.searchParams.set('go', game); u.searchParams.delete('heli'); u.searchParams.delete('hlo'); u.searchParams.delete('weather'); location.replace(u.href); return;
+    ls.set('fortuna_airdef_setup', JSON.stringify(C.setup)); C.doors.carry('go'); /* створки закрыты - новая страница начнётся с них */ const u = new URL(location.href); u.searchParams.set('go', game); u.searchParams.delete('heli'); u.searchParams.delete('hlo'); u.searchParams.delete('weather'); location.replace(u.href); return;
   }
-  if ((game === 'air' || game === 'defense') && RAND_MAPS.includes(MAP) && !contOp && wantMap(game, C.setup.pmap, C.setup.era, C.setup.lo, C.setup.evd, C.setup.tside) === MAP) rerollMap(); // следующему бою — новая случайная карта
+  if ((game === 'air' || game === 'defense') && RAND_MAPS.includes(MAP) && !contOp && wantMap(game, C.setup.pmap, C.setup.era, C.setup.lo, C.setup.evd, C.setup.tside) === MAP) rerollMap(); // следующему бою - новая случайная карта
   snd.unlock();
   if (C.ctrl && C.ctrl.stop) C.ctrl.stop();
-  snd.battleOff(); // «Ещё раз»: сирена и петли прошлого боя — не в новый
+  snd.battleOff(); // «Ещё раз»: сирена и петли прошлого боя - не в новый
   C.hooks = {}; C.paused = false; C.hint(''); C.say('');
   C.endScr.reset(); C.bt = 0; C.blog = []; C.bkey = {}; // часы боя и журнал событий для «Разбора» (C.bev)
   $('menu').classList.remove('on'); $('end').classList.remove('on'); $('pauseScr').classList.remove('on');
   document.body.classList.remove('menuing'); document.body.classList.add('playing');
   C.state = 'play'; C.camera.clearViewOffset(); C.shell.play(true);
-  C.ctrl = ctrls[game]; C.ctrl.start(); prewarm(); warmSoon(); // шейдеры сцены — сейчас, а не при первом взрыве или первом появлении техники
-  if (C.progress) C.progress.runStart(game === 'multi' ? 'multi' : game, C.setup.diff === 'real' ? 'real' : 'arcade', C.setup.era); // опыт за бой (обучение, съёмка — без)
+  C.ctrl = ctrls[game]; C.ctrl.start(); prewarm(); warmSoon(); // шейдеры сцены - сейчас, а не при первом взрыве или первом появлении техники
+  if (C.progress) C.progress.runStart(game === 'multi' ? 'multi' : game, C.setup.diff === 'real' ? 'real' : 'arcade', C.setup.era); // опыт за бой (обучение, съёмка - без)
   resize();
 };
 C.toMenu = function () {
-  if (C.reloadAfterBattle) { C.doors.carry('menu'); location.reload(); return; } // контекст WebGL терялся в онлайн-бою — текстуры моделей вернёт только перезагрузка
+  if (C.reloadAfterBattle) { C.doors.carry('menu'); location.reload(); return; } // контекст WebGL терялся в онлайн-бою - текстуры моделей вернёт только перезагрузка
   C.op = null; // «Операция» прервана
   C.endScr.reset();
   if (C.ctrl && C.ctrl.stop) C.ctrl.stop();
@@ -1078,28 +1078,28 @@ C.toMenu = function () {
   for (const c of ['playing', 'flying', 'defense', 'dmap', 'oper']) document.body.classList.remove(c);
   document.body.classList.add('menuing');
   hx.setTransform(1, 0, 0, 1, 0, 0); hx.clearRect(0, 0, hc.width, hc.height);
-  C.state = 'menu'; C.shell.play(false); C.ctrl = ctrls.hangar.has() ? ctrls.hangar : ctrls.menuBg.has() ? ctrls.menuBg : ctrls.director; C.ctrl.start(); C.menu.show(); // фон: ангар (hangar.js), без него — кадры, иначе живой бой
+  C.state = 'menu'; C.shell.play(false); C.ctrl = ctrls.hangar.has() ? ctrls.hangar : ctrls.menuBg.has() ? ctrls.menuBg : ctrls.director; C.ctrl.start(); C.menu.show(); // фон: ангар (hangar.js), без него - кадры, иначе живой бой
   resize();
 };
 C.togglePause = function () {
   if (C.state !== 'play' || C.ended) return;
-  if (document.body.classList.contains('lsnOpen') && C.ctrl && C.ctrl.lsnClose) { C.ctrl.lsnClose(); return; } // открыта панель «Урок» (она и есть пауза) — Esc / пауза её закрывают
+  if (document.body.classList.contains('lsnOpen') && C.ctrl && C.ctrl.lsnClose) { C.ctrl.lsnClose(); return; } // открыта панель «Урок» (она и есть пауза) - Esc / пауза её закрывают
   if ($('lesson').classList.contains('on')) { C.closeLesson(); return; }
   C.paused = !C.paused;
   $('pauseScr').classList.toggle('on', C.paused);
   $('pauseHelp').innerHTML = iconize(C.ctrl.pauseHelp ? C.ctrl.pauseHelp() : '');
   if (C.paused) snd.silence();
 };
-// журнал боя для «Разбора» (endscr.js): { t — секунд боя, c — 'g' сделано · 'r' по вам, потери · 'y' ловушки, баллистика · '' — вехи, l — подпись }.
-// key + gap — не чаще раза в gap секунд на один key (gap 1e9 — только первый раз)
+// журнал боя для «Разбора» (endscr.js): { t - секунд боя, c - 'g' сделано · 'r' по вам, потери · 'y' ловушки, баллистика · '' - вехи, l - подпись }.
+// key + gap - не чаще раза в gap секунд на один key (gap 1e9 - только первый раз)
 C.bt = 0; C.blog = [];
 C.bev = (c, l, key, gap = 0) => {
   if (!C.blog || C.blog.length >= 300) return;
   if (key) { const k = C.bkey || (C.bkey = {}); if (k[key] != null && C.bt - k[key] < gap) return; k[key] = C.bt; }
   C.blog.push({ t: Math.round(C.bt * 10) / 10, c, l });
 };
-// итоги: title, reason, stats [[число, подпись]], note, win (true/false/null), again; events и dur — лента боя «Разбора» (по умолчанию C.blog и C.bt);
-// online — табло онлайн-боя (endscr.js boardOl / boardMw)
+// итоги: title, reason, stats [[число, подпись]], note, win (true/false/null), again; events и dur - лента боя «Разбора» (по умолчанию C.blog и C.bt);
+// online - табло онлайн-боя (endscr.js boardOl / boardMw)
 C.showEnd = function (o) {
   C.ended = true; $('againBtn').textContent = o.again || tr('Ещё раз'); // «Операция»: «Вылет 2: удар →»
   C.endScr.show({ ...o, events: o.events || C.blog, dur: o.dur ?? C.bt });
@@ -1110,7 +1110,7 @@ C.openLesson = function (title, body, sub) {
   $('lessonTitle').innerHTML = title; $('lessonBody').innerHTML = iconize(body); $('lessonSub').textContent = sub || tr('Объяснение · игра на паузе');
   $('lesson').classList.add('on');
 };
-C.closeLesson = function () { $('lesson').classList.remove('on'); C.paused = document.body.classList.contains('lsnOpen'); /* панель «Урок» открыта — пауза остаётся */ if (C.onLessonClose) { const f = C.onLessonClose; C.onLessonClose = null; f(); } };
+C.closeLesson = function () { $('lesson').classList.remove('on'); C.paused = document.body.classList.contains('lsnOpen'); /* панель «Урок» открыта - пауза остаётся */ if (C.onLessonClose) { const f = C.onLessonClose; C.onLessonClose = null; f(); } };
 $('lessonClose').onclick = () => C.closeLesson();
 $('resumeBtn').onclick = () => C.togglePause();
 $('pauseExit').onclick = () => C.doors.run(() => C.toMenu());
@@ -1119,13 +1119,13 @@ $('pause').onclick = () => C.togglePause();
 $('againBtn').onclick = () => orientGate(() => C.doors.run(() => { C.ended = false; C.start(C.lastGame || 'air'); }), IS_TOUCH);
 $('closeBtn').onclick = () => C.doors.run(() => { C.ended = false; C.toMenu(); });
 $('exit').onclick = () => C.doors.run(() => C.toMenu());
-// кнопки-иконки (games/airdef/icons.js): прежняя надпись — во всплывающей подсказке и для экранного диктора
-const ICO = { tBino: ['bino', tr('Бинокль: цель и своё оружие (B)')], tFlare: ['flares', tr('Ловушки')], tMap: ['map', tr('Карта')], tLock: ['target', tr('Цель')], tAuto: ['auto', tr('Авто — помощник')], tLook: ['camera', tr('Обзор — свободная камера')], tCam: ['camera', tr('Камера: следующий союзник')],
-  tHelp: ['help', tr('Нужна помощь')], tPop: ['popUp', tr('Подскок')], opMap: ['map', tr('Карта')], opAuto: ['auto', tr('Авто — расчёт сам')], opCam: ['camera', tr('Камера')], opBino: ['bino', tr('Бинокль')], opRadar: ['radar', tr('РЛС: включить / выключить')],
+// кнопки-иконки (games/airdef/icons.js): прежняя надпись - во всплывающей подсказке и для экранного диктора
+const ICO = { tBino: ['bino', tr('Бинокль: цель и своё оружие (B)')], tFlare: ['flares', tr('Ловушки')], tMap: ['map', tr('Карта')], tLock: ['target', tr('Цель')], tAuto: ['auto', tr('Авто - помощник')], tLook: ['camera', tr('Обзор - свободная камера')], tCam: ['camera', tr('Камера: следующий союзник')],
+  tHelp: ['help', tr('Нужна помощь')], tPop: ['popUp', tr('Подскок')], opMap: ['map', tr('Карта')], opAuto: ['auto', tr('Авто - расчёт сам')], opCam: ['camera', tr('Камера')], opBino: ['bino', tr('Бинокль')], opRadar: ['radar', tr('РЛС: включить / выключить')],
   pause: ['pause', tr('Пауза')], plBtn: ['players', tr('Игроки')], lsnBtn: ['lesson', tr('Урок: задание и подсказки')], askBtn: ['lesson', tr('Объяснение')], wMap: ['map', tr('Карта')],
   exit: ['close', tr('Выйти')], lsnX: ['close', tr('Свернуть')], msClose: ['close', tr('Закрыть')], lessonX: ['close', tr('Закрыть')] };
 for (const [id, [n, t]] of Object.entries(ICO)) { const e = $(id); if (!e) continue; e.innerHTML = ico(n); e.title = t; if (e.setAttribute) e.setAttribute('aria-label', t); e.classList.add('icb'); }
-{ const pd = $('tPad'); if (pd && pd.querySelector) { for (const [c, n] of [['.pu', 'triU'], ['.pl', 'rollL'], ['.pr', 'rollR'], ['.pd', 'triD']]) { const e = pd.querySelector(c); if (e) e.innerHTML = ico(n); } } } // крестовина: треугольники вверх / вниз, крен — стрелки вращения
+{ const pd = $('tPad'); if (pd && pd.querySelector) { for (const [c, n] of [['.pu', 'triU'], ['.pl', 'rollL'], ['.pr', 'rollR'], ['.pd', 'triD']]) { const e = pd.querySelector(c); if (e) e.innerHTML = ico(n); } } } // крестовина: треугольники вверх / вниз, крен - стрелки вращения
 for (const [id, n, after] of [['wNext', 'tri', true], ['evBtn', 'list', false]]) { const e = $(id); if (e) e.innerHTML = after ? e.innerHTML + ico(n, 'ii') : ico(n, 'ii') + e.innerHTML; } // подпись и значок рядом
 { const pn = $('promoNav'); if (pn && pn.querySelector) for (const [s, n] of [['[data-nav="-1"]', 'triL'], ['[data-nav="1"]', 'tri']]) { const e = pn.querySelector(s); if (e) e.innerHTML = ico(n); } }
 const muteIco = C.muteIco = () => { $('mute').innerHTML = ico(snd.muted ? 'soundOff' : 'soundOn'); $('mute').title = snd.muted ? tr('Звук выключен') : tr('Звук'); };
@@ -1134,14 +1134,14 @@ for (const id of ['tAuto', 'opAuto']) $(id).classList.toggle('on', C.auto); };
 muteIco();
 for (const id of ['tAuto', 'opAuto']) $(id).classList.toggle('on', C.auto);
 addEventListener('keydown', (e) => {
-  if (e.target && /^(INPUT|TEXTAREA)$/.test(e.target.tagName)) return; // ввод текста (код комнаты, чат команды) — не управление
-  if (C.state === 'play' && (e.code === 'Escape' || e.code === 'KeyP') && !e.repeat) { if (e.code === 'Escape' && !C.paused && C.ctrl && C.ctrl.onEsc && C.ctrl.onEsc()) return; C.togglePause(); return; } // Esc в расстановке — отмена размещения
+  if (e.target && /^(INPUT|TEXTAREA)$/.test(e.target.tagName)) return; // ввод текста (код комнаты, чат команды) - не управление
+  if (C.state === 'play' && (e.code === 'Escape' || e.code === 'KeyP') && !e.repeat) { if (e.code === 'Escape' && !C.paused && C.ctrl && C.ctrl.onEsc && C.ctrl.onEsc()) return; C.togglePause(); return; } // Esc в расстановке - отмена размещения
   if (C.ctrl && C.ctrl.onKey && !C.paused) C.ctrl.onKey(e, true);
 });
 addEventListener('keyup', (e) => { if (C.ctrl && C.ctrl.onKey) C.ctrl.onKey(e, false); });
 addEventListener('pointerdown', () => snd.unlock(), { once: true });
 document.addEventListener('visibilitychange', () => { if (document.hidden && C.state === 'play' && !C.paused) C.togglePause(); });
-// телефон вертикально — экран «Поверните телефон» поверх всего, бой — на паузу (повернул — снимает паузу кнопкой «Продолжить»)
+// телефон вертикально - экран «Поверните телефон» поверх всего, бой - на паузу (повернул - снимает паузу кнопкой «Продолжить»)
 function orient() {
   const p = IS_TOUCH && innerHeight > innerWidth * 1.05; document.body.classList.toggle('portrait', p);
   if (p && C.state === 'play' && !C.paused && !C.ended) C.togglePause();
@@ -1152,22 +1152,22 @@ addEventListener('resize', orient); addEventListener('orientationchange', () => 
 let last = performance.now(), lastDraw = 0, last3D = 0, ms3D = 0, lastRaf = 0, rafEma = 16.7, fpsAcc = 0, fpsN = 0, fps = 0, shN = 0, capAcc = 0;
 const msWin = [], dr = { scale: perf.scale, calm: 0, prev: 0, before: 0, hold: 0, miss: 0 };
 const pf = { cpu: 0, n: 0, cpuS: 0, calls: 0, tris: 0 };
-// строка в углу (пресет · к/с · %) — только когда текст сменился: запись каждый кадр — раскладка и отрисовка страницы 60 раз в секунду (2026-10-26)
+// строка в углу (пресет · к/с · %) - только когда текст сменился: запись каждый кадр - раскладка и отрисовка страницы 60 раз в секунду (2026-10-26)
 let perfS = null; const setPerf = (x) => { if (x !== perfS) { perfS = x; $('perf').textContent = x; } };
 C.perfHud = ls.get('fortuna_airdef_perfhud') === '1';
-if (renderer.info) renderer.info.autoReset = false; // счётчики — за весь кадр (постобработка рисует в несколько проходов); сброс — в начале кадра
+if (renderer.info) renderer.info.autoReset = false; // счётчики - за весь кадр (постобработка рисует в несколько проходов); сброс - в начале кадра
 C.gpuName = (() => { try { const gl = renderer.getContext(), e = gl.getExtension('WEBGL_debug_renderer_info'); return e ? gl.getParameter(e.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER); } catch (_) { return '?'; } })();
 C.GO = GO; document.body.classList.toggle('perfhud', C.perfHud);
-// динамическое разрешение: медиана 30 кадров (подгрузка моделей и сборка шейдеров не тянут вниз). Снизили — и кадр не ускорился
-// (упор не в пиксели: вызовы, ЦП, ожидание экрана) — возвращаем как было и долго не трогаем, а не «мылим» картинку зря
+// динамическое разрешение: медиана 30 кадров (подгрузка моделей и сборка шейдеров не тянут вниз). Снизили - и кадр не ускорился
+// (упор не в пиксели: вызовы, ЦП, ожидание экрана) - возвращаем как было и долго не трогаем, а не «мылим» картинку зря
 function dynRes(ms) {
   if (perf.dynOff || C.probeOn) return;
   msWin.push(ms); if (msWin.length < 30) return;
   msWin.sort((a, b) => a - b); const med = msWin[15]; msWin.length = 0;
-  const goal = 1000 / Math.min(perf.goal || 60, P.cap || 999); // при ограничении 30 к/с — цель не выше него
+  const goal = 1000 / Math.min(perf.goal || 60, P.cap || 999); // при ограничении 30 к/с - цель не выше него
   let s = dr.scale;
   if (dr.prev) { // проверка прошлого снижения
-    if (med > dr.before * 0.94) { s = dr.prev; dr.hold = 20 * ++dr.miss; } else dr.miss = 0; // не помогло — назад, пауза растёт (≈10 с, 20 с, …)
+    if (med > dr.before * 0.94) { s = dr.prev; dr.hold = 20 * ++dr.miss; } else dr.miss = 0; // не помогло - назад, пауза растёт (≈10 с, 20 с, …)
     dr.prev = 0;
   } else if (dr.hold > 0) dr.hold--;
   else if (med > goal * 1.15 && s > perf.min) { dr.prev = s; dr.before = med; s -= med > goal * 1.5 ? 0.1 : 0.05; dr.calm = 0; }
@@ -1176,14 +1176,14 @@ function dynRes(ms) {
   if (Math.abs(s - dr.scale) >= 0.01) { dr.scale = s; if (pipe) pipe.setScale(s); else renderer.setPixelRatio(basePR * s); resize(); }
 }
 const view = Q.get('view') ? Q.get('view').split(',').map(Number) : null;
-// неподвижный кадр (Mark 2026-10-26, нагрев): пауза одиночного боя, урок и итог боя рисовали один и тот же кадр 30 раз в секунду — половина
-// нагрузки боя. Теперь 3D и HUD — заново, только если сдвинулась камера, сменился размер, игрок что-то нажал, двигает или поменял (+0,7 с),
-// и раз в 2 с на всякий случай; первые 6 кадров — как обычно (сглаживание и дым устоятся). ?still=0 — как раньше
+// неподвижный кадр (Mark 2026-10-26, нагрев): пауза одиночного боя, урок и итог боя рисовали один и тот же кадр 30 раз в секунду - половина
+// нагрузки боя. Теперь 3D и HUD - заново, только если сдвинулась камера, сменился размер, игрок что-то нажал, двигает или поменял (+0,7 с),
+// и раз в 2 с на всякий случай; первые 6 кадров - как обычно (сглаживание и дым устоятся). ?still=0 - как раньше
 const STILL_ON = Q.get('still') !== '0', stillCam = new Float64Array(34);
 let stillN = 0, stillT = 0, stillDirty = 0, stillWas = false, stillClock = 0;
 const stillWake = () => { stillDirty = performance.now() + 700; };
 for (const ev of ['pointerdown', 'pointermove', 'pointerup', 'input', 'change', 'keydown', 'wheel', 'resize', 'pageshow']) addEventListener(ev, stillWake, true);
-document.addEventListener('visibilitychange', stillWake); canvas.addEventListener('webglcontextrestored', stillWake); // вернулся на вкладку, контекст WebGL восстановлен — кадр заново
+document.addEventListener('visibilitychange', stillWake); canvas.addEventListener('webglcontextrestored', stillWake); // вернулся на вкладку, контекст WebGL восстановлен - кадр заново
 function stillMoved() {
   camera.updateMatrixWorld(); const a = camera.matrixWorld.elements, b = camera.projectionMatrix.elements; let m = false;
   for (let i = 0; i < 16; i++) { if (stillCam[i] !== a[i]) { stillCam[i] = a[i]; m = true; } if (stillCam[16 + i] !== b[i]) { stillCam[16 + i] = b[i]; m = true; } }
@@ -1192,34 +1192,34 @@ function stillMoved() {
 }
 function frame(now) {
   requestAnimationFrame(frame);
-  // меню и пауза — 30 к/с (фон не должен греть телефон), бой на телефоне — не больше 60
-  // «Кастомный»: своё ограничение (30 к/с — вдвое меньше нагрев и расход батареи)
-  // телефон: 60 к/с — в полёте за самолёт, в обороне и «Мульти-волне» (Mark 2026-10-25: «разлочить 60 кадров, как во всей игре»);
-  // остальное вне полёта — 30 к/с для 3D (нагрев и расход батареи вдвое меньше). Свой предел из «Кастомного» — главнее
-  const cc = C.ctrl, fly = !!(cc && (cc.craft || cc.fps60 || (cc.inner && (cc.inner.craft || cc.inner.fps60)))); // «Съёмка» — тоже 60
-  const idle = !!(cc && cc.idle && cc.idle()); // фон меню — готовые кадры: 3D не рисуется
-  // Mark 2026-10-21: на телефоне вне полёта ограничение 30 к/с — только для 3D (нагрев и батарея — от видеочипа), а бой, экран боя и
-  // кнопки (перезарядка, таймеры) — каждый кадр, без рывков
-  // предел — накопителем времени (Mark 2026-10-23: телефоны с экраном 90 Гц грелись, игра шла 75–90 к/с): кадр рисуется, когда набралось
-  // 1000/предел мс, остаток переносится — на 90 Гц предел 60 даёт ровно 60 (два кадра из трёх), а не 45, как порог «не раньше 14,7 мс»;
-  // на телефоне 60 к/с по умолчанию при любой частоте экрана; 3D вне полёта — 30 к/с независимо от предела интерфейса (ревью 2026-10-21)
+  // меню и пауза - 30 к/с (фон не должен греть телефон), бой на телефоне - не больше 60
+  // «Кастомный»: своё ограничение (30 к/с - вдвое меньше нагрев и расход батареи)
+  // телефон: 60 к/с - в полёте за самолёт, в обороне и «Мульти-волне» (Mark 2026-10-25: «разлочить 60 кадров, как во всей игре»);
+  // остальное вне полёта - 30 к/с для 3D (нагрев и расход батареи вдвое меньше). Свой предел из «Кастомного» - главнее
+  const cc = C.ctrl, fly = !!(cc && (cc.craft || cc.fps60 || (cc.inner && (cc.inner.craft || cc.inner.fps60)))); // «Съёмка» - тоже 60
+  const idle = !!(cc && cc.idle && cc.idle()); // фон меню - готовые кадры: 3D не рисуется
+  // Mark 2026-10-21: на телефоне вне полёта ограничение 30 к/с - только для 3D (нагрев и батарея - от видеочипа), а бой, экран боя и
+  // кнопки (перезарядка, таймеры) - каждый кадр, без рывков
+  // предел - накопителем времени (Mark 2026-10-23: телефоны с экраном 90 Гц грелись, игра шла 75-90 к/с): кадр рисуется, когда набралось
+  // 1000/предел мс, остаток переносится - на 90 Гц предел 60 даёт ровно 60 (два кадра из трёх), а не 45, как порог «не раньше 14,7 мс»;
+  // на телефоне 60 к/с по умолчанию при любой частоте экрана; 3D вне полёта - 30 к/с независимо от предела интерфейса (ревью 2026-10-21)
   const rd = now - lastRaf; lastRaf = now; if (rd > 0 && rd < 100) rafEma += (rd - rafEma) * 0.05;
-  const uc = gfxKey === 'custom' ? P.cap : fpsCap === 'auto' ? undefined : fpsCap; // предел игрока (0 — нет)
-  const menu = !C.probeOn && (idle || C.state === 'menu' || C.paused || C.endFreeze); // меню, пауза и итог одиночного боя — 30 к/с всему (и 3D, и интерфейсу); замер ?probe=1 — без предела
-  const capUI = idle ? (cc.busy && cc.busy() ? 1000 / 60 : 1000 / 8) : menu ? 1000 / 30 : uc ? 1000 / uc : 0; // ангар: пока самолёт вращается — плавно, в покое кадр не считается
+  const uc = gfxKey === 'custom' ? P.cap : fpsCap === 'auto' ? undefined : fpsCap; // предел игрока (0 - нет)
+  const menu = !C.probeOn && (idle || C.state === 'menu' || C.paused || C.endFreeze); // меню, пауза и итог одиночного боя - 30 к/с всему (и 3D, и интерфейсу); замер ?probe=1 - без предела
+  const capUI = idle ? (cc.busy && cc.busy() ? 1000 / 60 : 1000 / 8) : menu ? 1000 / 30 : uc ? 1000 / uc : 0; // ангар: пока самолёт вращается - плавно, в покое кадр не считается
   const capMs = C.probeOn ? 0 : capUI || (IS_TOUCH && uc !== 0 ? 1000 / 60 : 0);
-  const cap3D = !menu && IS_TOUCH && !fly ? 1000 / 30 : 0; // предел игрока (45, 60) — не отменяет 30 для 3D вне полёта
+  const cap3D = !menu && IS_TOUCH && !fly ? 1000 / 30 : 0; // предел игрока (45, 60) - не отменяет 30 для 3D вне полёта
   if (capMs) { capAcc = Math.min(capAcc + Math.max(0, rd), capMs * 2); if (capAcc < capMs - 1.5) return; capAcc = Math.max(0, capAcc - capMs); } else capAcc = 0;
   const ms = now - lastDraw; lastDraw = now;
   let draw3D = !cap3D || now - last3D >= cap3D - 2; if (draw3D) { ms3D = now - last3D; last3D = now; }
   const t0 = performance.now(); if (renderer.info) renderer.info.reset(); // счётчик производительности: время ЦП и вызовы за кадр
-  const dt = C.endFreeze ? 0 : clamp((now - last) / 1000, 0, 0.05), t = now / 1000; last = now; // время кадра не бывает отрицательным; итог одиночного боя (C.endFreeze) — бой стоит
+  const dt = C.endFreeze ? 0 : clamp((now - last) / 1000, 0, 0.05), t = now / 1000; last = now; // время кадра не бывает отрицательным; итог одиночного боя (C.endFreeze) - бой стоит
   C.t = t;
   if (C.state === 'play' && !C.paused && !C.ended) C.bt += dt; // часы боя (лента «Разбора»): без пауз и итога
   const ctrl = C.ctrl;
   if (idle) { hx.setTransform(C.hudK, 0, 0, C.hudK, 0, 0); hx.clearRect(0, 0, VW, VH); updateSound(dt); setPerf(''); if (ctrl.paint) ctrl.paint(); return; } // меню: ни боя, ни 3D города
-  const online = !!(C.net && C.net.battle); // онлайн: мир не встаёт на паузу (пауза — только меню), бой считает сервер
-  // «Съёмка»: замедление и стоп-кадр (ctrl.dtK) — бой идёт медленнее, камера — как обычно
+  const online = !!(C.net && C.net.battle); // онлайн: мир не встаёт на паузу (пауза - только меню), бой считает сервер
+  // «Съёмка»: замедление и стоп-кадр (ctrl.dtK) - бой идёт медленнее, камера - как обычно
   const dts = dt * (ctrl && ctrl.dtK && !online ? ctrl.dtK() : 1);
   if ((!C.paused || online) && ctrl && dts > 0) {
     // ускорение времени (смотреть удар «Мульти-волны»): несколько шагов боя за кадр
@@ -1235,28 +1235,28 @@ function frame(now) {
   else if (ctrl && ctrl.camera) ctrl.camera(dt, t);
   // ближняя плоскость отсечения растёт с высотой камеры: с 10 км точности глубины иначе не хватает (крыши «мерцают»)
   { let nearW = clamp((camera.position.y - city.groundH(camera.position.x, camera.position.z)) * 0.006, 3, 20);
-    if (ctrl && ctrl.near && ctrl.near()) nearW = Math.min(nearW, ctrl.near()); // крупный план у самолёта — ближе
+    if (ctrl && ctrl.near && ctrl.near()) nearW = Math.min(nearW, ctrl.near()); // крупный план у самолёта - ближе
     if (Math.abs(camera.near - nearW) > camera.near * 0.15) { camera.near = nearW; camera.updateProjectionMatrix(); } }
-  const still = STILL_ON && !C.probeOn && C.state === 'play' && (C.endFreeze || (C.paused && !online)); let hold = false; // неподвижный кадр — держим (см. stillMoved)
-  // часы сцены (вода, снегопад, антенны ЗРК, дрожание воздуха) на это время стоят — иначе страховочный кадр раз в 2 с прыгал бы (ревью)
+  const still = STILL_ON && !C.probeOn && C.state === 'play' && (C.endFreeze || (C.paused && !online)); let hold = false; // неподвижный кадр - держим (см. stillMoved)
+  // часы сцены (вода, снегопад, антенны ЗРК, дрожание воздуха) на это время стоят - иначе страховочный кадр раз в 2 с прыгал бы (ревью)
   if (still && !stillWas) stillClock = t; stillWas = still; const t3 = still ? stillClock : t;
   syncWorld(C.paused ? 0 : dts, t3);
   if (still && draw3D) { const mv = stillMoved(); if (mv || now < stillDirty || now - stillT > 2000 || stillN < 6) { stillT = now; stillN = mv ? 0 : stillN + 1; } else { hold = true; draw3D = false; } } else if (!still) stillN = 0;
   if (draw3D) objLod(camera.position, P.lodObj);
-  if (draw3D) updateCityScene(C.G, camera, P, ctrl && ctrl.focus ? ctrl.focus() : camera.position, t3); // окно ТВ — свой набор моделей вблизи (C.podPass)
-  // тактическая карта обороны закрывает весь экран — 3D-кадр не рисуем (телефон не греется)
+  if (draw3D) updateCityScene(C.G, camera, P, ctrl && ctrl.focus ? ctrl.focus() : camera.position, t3); // окно ТВ - свой набор моделей вблизи (C.podPass)
+  // тактическая карта обороны закрывает весь экран - 3D-кадр не рисуем (телефон не греется)
   // «Тени через кадр»: карта теней перерисовывается раз в P.shEvery кадров (город стоит, тени техники чуть запаздывают). На телефоне у пресетов
-  // с тенями — по умолчанию (P.shAuto, 2026-10-23, нагрев), но камера ниже 150 м над землёй — каждый кадр: тень своего самолёта или вертолёта
-  // рядом, её запаздывание (4 м на 250 м/с) было бы видно. У «Кастомного» — как выбрано (shRate), всегда
+  // с тенями - по умолчанию (P.shAuto, 2026-10-23, нагрев), но камера ниже 150 м над землёй - каждый кадр: тень своего самолёта или вертолёта
+  // рядом, её запаздывание (4 м на 250 м/с) было бы видно. У «Кастомного» - как выбрано (shRate), всегда
   if (draw3D && renderer.shadowMap.enabled) {
     const k = P.shEvery > 1 && (!P.shAuto || camera.position.y - city.groundH(camera.position.x, camera.position.z) > 150) ? P.shEvery : 1;
     renderer.shadowMap.autoUpdate = k < 2; if (k > 1 && ++shN >= k) { shN = 0; renderer.shadowMap.needsUpdate = true; }
   }
-  if (C.fx && C.fx.setView) C.fx.setView(camera.position.y); // порядок дыма и облаков — по высоте камеры (units-render)
+  if (C.fx && C.fx.setView) C.fx.setView(camera.position.y); // порядок дыма и облаков - по высоте камеры (units-render)
   if (draw3D && !(ctrl && ctrl.skip3D && ctrl.skip3D())) { if (pipe) pipe.render(scene, camera, t3); else renderer.render(scene, camera); }
   if (C.perfHud && renderer.info) { pf.cpu += performance.now() - t0; pf.n++; pf.calls = renderer.info.render.calls; pf.tris = renderer.info.render.triangles; }
   if (!hold && ctrl && ctrl.afterRender) ctrl.afterRender(); // окно ТВ рисуется прямо на экран: без кадра сцены под ним экран был бы чёрным (ревью)
-  if (!hold) { // кадр держим — HUD тоже (холст не меняется — экрану нечего пересобирать)
+  if (!hold) { // кадр держим - HUD тоже (холст не меняется - экрану нечего пересобирать)
     hx.setTransform(C.hudK, 0, 0, C.hudK, 0, 0); hx.clearRect(0, 0, VW, VH);
     if (ctrl && ctrl.hud && !C.endFreeze) ctrl.hud(dt, t);
     if (C.extraHud && !C.endFreeze) C.extraHud(dt, t); // онлайн: журнал сбитий, метки «нужна помощь»
@@ -1264,56 +1264,56 @@ function frame(now) {
   if (!C.endFreeze) updateSound(dt);
   if (msgT > 0 && (msgT -= dt) <= 0) C.say('');
   fpsAcc += ms; fpsN++; if (fpsAcc > 500) { fps = Math.round(1000 * fpsN / fpsAcc); fpsAcc = fpsN = 0; }
-  if (draw3D && !still && C.state === 'play' && !view && ms3D < 250 && !(ctrl && ctrl.skip3D && ctrl.skip3D())) dynRes(cap3D ? ms3D / 2 : ms3D); // 3D через кадр — время кадра на пару кадров интерфейса // на карте 3D не рисуется — мерить нечего
+  if (draw3D && !still && C.state === 'play' && !view && ms3D < 250 && !(ctrl && ctrl.skip3D && ctrl.skip3D())) dynRes(cap3D ? ms3D / 2 : ms3D); // 3D через кадр - время кадра на пару кадров интерфейса // на карте 3D не рисуется - мерить нечего
   const sc = Math.round((pipe ? pipe.scale : dr.scale) * 100);
-  // онлайн: задержка и потери — в значке у «Игроков» (online.js netChip, 2026-10-26), здесь — только кадр
-  if (C.perfHud && renderer.info) { // подробно: кадр, ЦП (подготовка кадра в JS), ГП ≈ остаток кадра, вызовы, треугольники, память — одна строка у верхнего края
+  // онлайн: задержка и потери - в значке у «Игроков» (online.js netChip, 2026-10-26), здесь - только кадр
+  if (C.perfHud && renderer.info) { // подробно: кадр, ЦП (подготовка кадра в JS), ГП ≈ остаток кадра, вызовы, треугольники, память - одна строка у верхнего края
     if (pf.n >= 20) { pf.cpuS = pf.cpu / pf.n; pf.cpu = pf.n = 0; }
     const frameMs = fps ? 1000 / fps : 0, mem = performance.memory ? tr(' · JS {0} МБ', [Math.round(performance.memory.usedJSHeapSize / 1048576)]) : '', gm = renderer.info.memory;
     setPerf(tr('{0} · {1} к/с · кадр {2} мс (ЦП {3} · ГП ≈{4}) · {5} выз. · {6} млн тр. · {7}% · геом. {8} · текст. {9}{10}', [P.name, fps, frameMs.toFixed(1), pf.cpuS.toFixed(1), Math.max(0, frameMs - pf.cpuS).toFixed(1), pf.calls, (pf.tris / 1e6).toFixed(2), sc, gm.geometries, gm.textures, mem]));
   } else setPerf(C.state === 'play' ? tr('{0} · {1} к/с · {2}%', [P.name, fps, sc]) : '');
 }
 
-// компиляция шейдеров всего, что есть в сцене (и скрытого — листы эффектов, дым): без неё первое появление эффекта = рывок кадра
-// с постобработкой — в её буфер кадра (2026-10-26): кодировка цвета входит в ключ шейдера, а после кадра выбран экран (sRGB) — на «Высоком» и «Ультра»
+// компиляция шейдеров всего, что есть в сцене (и скрытого - листы эффектов, дым): без неё первое появление эффекта = рывок кадра
+// с постобработкой - в её буфер кадра (2026-10-26): кодировка цвета входит в ключ шейдера, а после кадра выбран экран (sRGB) - на «Высоком» и «Ультра»
 // (буфер HalfFloat, линейный) прогрев собирал не тот вариант, и всё собиралось второй раз при первой отрисовке
 function prewarm() {
   if (!renderer.compile) return; const rt = renderer.getRenderTarget();
-  try { if (pipe) renderer.setRenderTarget(pipe.target); renderer.compile(scene, camera); } catch (_) { /* в проверках без WebGL — нет */ } finally { try { renderer.setRenderTarget(rt); } catch (_) { /* нет */ } }
+  try { if (pipe) renderer.setRenderTarget(pipe.target); renderer.compile(scene, camera); } catch (_) { /* в проверках без WebGL - нет */ } finally { try { renderer.setRenderTarget(rt); } catch (_) { /* нет */ } }
 }
-// после прихода моделей и в начале боя — собрать шейдеры того, что ещё не рисовалось (2026-10-26: модель цели вблизи и первая ракета комплекса
-// собирались посреди боя — рывок 0,1–0,7 с); ракеты комплексов этого боя — на время сборки в сцене невидимыми. Повторно, когда всё собрано, ≈ 3 мс
+// после прихода моделей и в начале боя - собрать шейдеры того, что ещё не рисовалось (2026-10-26: модель цели вблизи и первая ракета комплекса
+// собирались посреди боя - рывок 0,1-0,7 с); ракеты комплексов этого боя - на время сборки в сцене невидимыми. Повторно, когда всё собрано, ≈ 3 мс
 let warmT = 0, warmFl = null;
 function warmSoon() { clearTimeout(warmT); warmT = setTimeout(warmNow, 400); }
 function warmNow() {
   const tmp = new THREE.Group(), seen = new Set(); tmp.visible = false;
   if (C.state === 'play' && C.S && C.S.units) for (const u of C.S.units) if (u.key && !seen.has(u.key)) { seen.add(u.key); const gm = unitMissileGlb(u.key, true); if (gm) { tmp.add(gm.missile); if (gm.booster) tmp.add(gm.booster); } }
-  if (!warmFl) { warmFl = new THREE.Group(); makeFlame(warmFl, 0, 1); } tmp.add(warmFl); // факел ракеты и свечение у сопла (создаются при первом пуске) — один на всё время
+  if (!warmFl) { warmFl = new THREE.Group(); makeFlame(warmFl, 0, 1); } tmp.add(warmFl); // факел ракеты и свечение у сопла (создаются при первом пуске) - один на всё время
   scene.add(tmp); prewarm(); scene.remove(tmp);
 }
 // ═════════════ Запуск ═════════════
-// готовые модели — в фоне; загрузилась — самолёты пересобираются уже с ней (постройки — ставятся, когда город собран)
+// готовые модели - в фоне; загрузилась - самолёты пересобираются уже с ней (постройки - ставятся, когда город собран)
 const pendingObj = [];
-registerSW(); // файлы игры — из кэша устройства (только на сайте; offline.js)
+registerSW(); // файлы игры - из кэша устройства (только на сайте; offline.js)
 // замер частей кадра на телефоне (?probe=1): таблица мс поверх игры через 12 с боя (probe.js)
 if (Q.get('probe') === '1') { C.perfScale = perf.scale; C.probeMap = MAP; import('./probe.js?v=20261104a').then((m) => m.startProbe(C, { renderer, scene, pipe })); }
 loadModels(new URL('./', import.meta.url).href, (name) => {
-  warmSoon(); // шейдеры пришедшей модели — сразу, а не когда она впервые попадёт в кадр
-  if (C.G && C.G.attachBld && bldModel(name)) C.G.attachBld(name, bldModel(name)); // дома города вблизи (и цеха — та же модель, что у целей)
+  warmSoon(); // шейдеры пришедшей модели - сразу, а не когда она впервые попадёт в кадр
+  if (C.G && C.G.attachBld && bldModel(name)) C.G.attachBld(name, bldModel(name)); // дома города вблизи (и цеха - та же модель, что у целей)
   if (isObjModel(name)) { if (C.G) C.G.attachObjModel(name, () => objModel(name)); else pendingObj.push(name); return; } // постройки целей
   if (bldModel(name)) return;
-  if (isUnitModel(name)) { for (const g of unitMeshes.values()) scene.remove(g); unitMeshes.clear(); C.syncUnits(); return; } // комплексы — пересобрать
+  if (isUnitModel(name)) { for (const g of unitMeshes.values()) scene.remove(g); unitMeshes.clear(); C.syncUnits(); return; } // комплексы - пересобрать
   for (const g of planeMeshes.values()) scene.remove(g); planeMeshes.clear();
   if (C.ctrl && C.ctrl.modelsReady) C.ctrl.modelsReady();
 });
 // запуск по этапам: между ними экран успевает показать, что сейчас строится (полоса и подпись)
-// загрузочное окно: одно на всю загрузку (Mark 2026-11-04, вариант C): город — до 55 %, модели и текстуры — остальное; всё пришло или прошло 15 с от открытия страницы — ворота разъезжаются в меню
+// загрузочное окно: одно на всю загрузку (Mark 2026-11-04, вариант C): город - до 55 %, модели и текстуры - остальное; всё пришло или прошло 15 с от открытия страницы - ворота разъезжаются в меню
 const LD_CITY = 0.55, LD_CAP = 15000;
 function ldPaint(k, txt) { const t = $('ldTxt'), p = $('ldPct'), b = $('ldBar'), L = (b && b.children) || []; if (t && txt) t.textContent = txt; if (p) p.textContent = Math.round(k * 100) + ' %'; const n = Math.floor(k * L.length + 1e-6); for (let i = 0; i < L.length; i++) L[i].className = i < n ? 'on' : ''; }
 function ldOpen() { const e = $('loading'); if (!e) return; ldPaint(1, tr('Готово')); e.classList.add('done'); setTimeout(() => { e.classList.add('open'); setTimeout(() => e.remove(), 1400); }, 420); }
 let ldGate = false, ldGateT = 0; // ворота закрыты, город готов, ждём модели и текстуры
-const ldStep = (txt, k) => new Promise((r) => { C.doors.note(`${txt} ${Math.round(k * 100)} %`); /* створки с прошлой страницы — подпись на шве */ ldPaint(k * LD_CITY, txt); setTimeout(r, 30); });
-// догрузка после старта: модели техники и домов, текстуры — статус внизу, пока не придёт всё
+const ldStep = (txt, k) => new Promise((r) => { C.doors.note(`${txt} ${Math.round(k * 100)} %`); /* створки с прошлой страницы - подпись на шве */ ldPaint(k * LD_CITY, txt); setTimeout(r, 30); });
+// догрузка после старта: модели техники и домов, текстуры - статус внизу, пока не придёт всё
 let alShown = false;
 setInterval(() => {
   const m = modelStats(), t = texStats, need = m.req + t.req, got = m.done + t.done, e = $('assetLoad');
@@ -1333,56 +1333,56 @@ setInterval(() => {
   await ldStep(tr('Строим улицы, дома и реку…'), 0.15);
   const t0 = performance.now();
   C.G = buildCityScene(scene, city, P, renderer, W_KEY);
-  // запечённая земля — после загрузки моделей и текстур и возврата их после потери контекста: в разгар загрузки сжатых текстур графический процесс
-  // Safari в симуляторе iPhone падал 3 раза из 4 (с ожиданием — 0 из 3, 2026-10-27)
+  // запечённая земля - после загрузки моделей и текстур и возврата их после потери контекста: в разгар загрузки сжатых текстур графический процесс
+  // Safari в симуляторе iPhone падал 3 раза из 4 (с ожиданием - 0 из 3, 2026-10-27)
   if (C.G.bake) C.G.bake.gate = () => C.assetsDone === true && !ktxBusy();
-  C.G.onSite = (o) => siteLook((C.S && C.S.objects.find((q) => q.id === o.id)) || o); // модель объекта-сцены пришла — вид построек по бою
-  for (const n of new Set(city.objects.map((o) => o.site).filter(Boolean))) { // объекты-сцены: дальняя копия — сразу, подробная — когда камера подлетит (siteLod);
-    wantModel(n + '_lo'); if (SITE_HI) for (const [k] of SITES[n].place || []) wantModel(k); // копии моделей на объекте — тоже сразу: их приход пересобирает самолёты и комплексы — не посреди захода на цель
+  C.G.onSite = (o) => siteLook((C.S && C.S.objects.find((q) => q.id === o.id)) || o); // модель объекта-сцены пришла - вид построек по бою
+  for (const n of new Set(city.objects.map((o) => o.site).filter(Boolean))) { // объекты-сцены: дальняя копия - сразу, подробная - когда камера подлетит (siteLod);
+    wantModel(n + '_lo'); if (SITE_HI) for (const [k] of SITES[n].place || []) wantModel(k); // копии моделей на объекте - тоже сразу: их приход пересобирает самолёты и комплексы - не посреди захода на цель
   }
   await ldStep(tr('Деревья, вода, облака и эффекты…'), 0.55);
   for (const n of pendingObj.splice(0)) C.G.attachObjModel(n, () => objModel(n));
-  if (C.G.bldNames) { for (const n of C.G.bldNames) if (bldModel(n)) C.G.attachBld(n, bldModel(n)); wantBuildings(C.G.bldNames); } // дома вблизи — только если пресет их рисует
-  // постройки целей — только этой карты (models.js loadModels их сразу не грузит): модели объектов (у аэродрома города — и вышка КДП, city-render),
-  // цеха — ещё и склады города вблизи (bldNames — уже известны здесь); пролёт моста и огни / заправщики аэродрома — только у города
-  // (attachBridgeSegs, attachAirfield ставят их у аэродрома города — на зиме и осени они стояли в поле)
+  if (C.G.bldNames) { for (const n of C.G.bldNames) if (bldModel(n)) C.G.attachBld(n, bldModel(n)); wantBuildings(C.G.bldNames); } // дома вблизи - только если пресет их рисует
+  // постройки целей - только этой карты (models.js loadModels их сразу не грузит): модели объектов (у аэродрома города - и вышка КДП, city-render),
+  // цеха - ещё и склады города вблизи (bldNames - уже известны здесь); пролёт моста и огни / заправщики аэродрома - только у города
+  // (attachBridgeSegs, attachAirfield ставят их у аэродрома города - на зиме и осени они стояли в поле)
   for (const n of new Set([...city.objects.flatMap((o) => (o.models || []).map((q) => q.m)), ...(C.G.bldNames || []).filter(isObjModel),
-    ...(city.kind === 'city' ? ['br_seg', 'af_appr'] : [])])) wantModel(n); // топливозаправщики у ангаров (af_fuel) не нужны — у сцены аэродрома свои
-  C.fx = createFx(scene, P); C.fx.groundH = (x, z) => city.groundH(x, z); // пыль от упавших комьев — по рельефу
-  // заранее (2026-10-23, рывки при первом появлении): листы взрывов, огня и вспышек — на видеокарту, как только пришли; новые материалы — компилировать сразу
-  C.fx.onTex = (t) => { try { if (renderer.initTexture) renderer.initTexture(t); } catch (_) { /* нет — загрузится при первом показе */ } };
+    ...(city.kind === 'city' ? ['br_seg', 'af_appr'] : [])])) wantModel(n); // топливозаправщики у ангаров (af_fuel) не нужны - у сцены аэродрома свои
+  C.fx = createFx(scene, P); C.fx.groundH = (x, z) => city.groundH(x, z); // пыль от упавших комьев - по рельефу
+  // заранее (2026-10-23, рывки при первом появлении): листы взрывов, огня и вспышек - на видеокарту, как только пришли; новые материалы - компилировать сразу
+  C.fx.onTex = (t) => { try { if (renderer.initTexture) renderer.initTexture(t); } catch (_) { /* нет - загрузится при первом показе */ } };
   C.fx.onNewMats = () => prewarm();
-  if (pipe && pipe.fx) { C.fx.setLayers(FX_LAYER, FX_ADD_LAYER); if (C.G.clouds) C.G.clouds.layers.set(FX_LAYER); } // облака и дым — в половине разрешения
+  if (pipe && pipe.fx) { C.fx.setLayers(FX_LAYER, FX_ADD_LAYER); if (C.G.clouds) C.G.clouds.layers.set(FX_LAYER); } // облака и дым - в половине разрешения
   await ldStep(tr('Режимы игры: вылет, оборона, обучение…'), 0.7);
   ctrls.air = createAir(C); ctrls.defense = createDefense(C);
-  ctrls.multi = Object.assign(Object.create(ctrls.defense), { start: () => ctrls.defense.start({ multi: setup.mrole === 'atk' ? 'atk' : 'def', lastGame: 'multi' }) }); // «Мульти-волна» — та же карта обороны
+  ctrls.multi = Object.assign(Object.create(ctrls.defense), { start: () => ctrls.defense.start({ multi: setup.mrole === 'atk' ? 'atk' : 'def', lastGame: 'multi' }) }); // «Мульти-волна» - та же карта обороны
   $('wNext').onclick = () => C.watchNext(); $('wMap').onclick = () => C.watchMap(); $('wSpeed').onclick = () => C.watchSpeed();
-  ctrls.director = createDirector(C); ctrls.menuBg = createMenuBg(C); ctrls.hangar = C.hangar = createHangar(C, renderer); C.hangarFail = () => { if (C.ctrl === ctrls.hangar) { ctrls.hangar.stop(); C.ctrl = ctrls.menuBg.has() ? ctrls.menuBg : ctrls.director; C.ctrl.start(); C.menu.show(); } }; /* зал не загрузился — прежний фон */ ctrls.training = createTraining(C, ctrls); ctrls.photo = createPhoto(C, ctrls);
+  ctrls.director = createDirector(C); ctrls.menuBg = createMenuBg(C); ctrls.hangar = C.hangar = createHangar(C, renderer); C.hangarFail = () => { if (C.ctrl === ctrls.hangar) { ctrls.hangar.stop(); C.ctrl = ctrls.menuBg.has() ? ctrls.menuBg : ctrls.director; C.ctrl.start(); C.menu.show(); } }; /* зал не загрузился - прежний фон */ ctrls.training = createTraining(C, ctrls); ctrls.photo = createPhoto(C, ctrls);
   C.diff = createDifficulty(ls); // сложность: режим + скрытая подстройка под игрока (difficulty.js)
   C.progress = createProgress(C); C.research = createResearch(C, C.progress); // прокачка: состояние с сайта, экран «Исследования»
   createHints(C, ctrls); // подсказки клавиш в бою (ПК): «Настройки» или F1
-  C.event = createEvent(C); // событие «Туманная топь»: экран вертолётов (кнопка в меню — #evtBtn)
+  C.event = createEvent(C); // событие «Туманная топь»: экран вертолётов (кнопка в меню - #evtBtn)
   C.endScr = createEndScreen(C); // экраны итога боя (endscr.js)
   C.account = createAccount(C); C.rating = createRating(C); C.shop = createShop(C); // аккаунт игры (строка в углу меню, окно) и рейтинг онлайна (кнопка #ratBtn, окно, «Мои бои»)
   C.quests = createQuests(C); // «Задания»: кнопка #qstBtn, экран и счёт на сервере (quests.js, quests-data.js)
   C.online = createOnline(C, ctrls); // до меню: оно спрашивает у онлайна текст кнопки и раздел
   C.menu = createMenu(C, { PRESETS, WEATHER_KEYS });
-  C.progress.on(() => { if (C.state === 'menu') C.menu.render(); }); C.progress.refresh(); // замки «Реализма» — по купленному
+  C.progress.on(() => { if (C.state === 'menu') C.menu.render(); }); C.progress.refresh(); // замки «Реализма» - по купленному
   resize();
   C.buildMs = Math.round(performance.now() - t0);
   await ldStep(tr('Готовим графику (шейдеры)…'), 0.85);
   try { renderer.compile(scene, camera); } catch (_) { /* не критично */ }
   await ldStep(tr('Загружаем город'), 1);
-  // сразу в бой, створки с прошлой страницы, стенды — без ворот
+  // сразу в бой, створки с прошлой страницы, стенды - без ворот
   if (Q.get('go') || Q.get('test') || C.doors.held || navigator.webdriver) $('loading').remove(); else { ldGate = true; ldGateT = performance.now(); }
   C.toMenu();
   requestAnimationFrame(frame);
-  // go / hlo / weather — одноразовые (старт события, перезагрузка под карту): убрать из адреса, иначе следующая перезагрузка из меню
+  // go / hlo / weather - одноразовые (старт события, перезагрузка под карту): убрать из адреса, иначе следующая перезагрузка из меню
   // (смена режима, карты) снова запустит вылет на вертолёте или не тот режим
   { const u = new URL(location.href); let ch = false; for (const k of ['go', 'hlo', 'weather']) if (u.searchParams.has(k)) { u.searchParams.delete(k); ch = true; } if (ch) try { history.replaceState(history.state, '', u.href); } catch (_) { /* нет */ } }
-  const em = Q.get('endmock'); if (em) { C.endScr.mock(em); } // ?endmock=solo-win | solo-lose | ol-win | ol-lose | mw-win | mw-lose — показать экран итога с примерными данными
+  const em = Q.get('endmock'); if (em) { C.endScr.mock(em); } // ?endmock=solo-win | solo-lose | ol-win | ol-lose | mw-win | mw-lose - показать экран итога с примерными данными
   const go = Q.get('go'); if (go && ctrls[go]) { setup.game = go === 'training' ? 'training' : go; if (go === 'air' && HLO >= 0) setup.lo = HLO; /* меню при показе подменило вертолётную подвеску самолётной */ C.lastGame = go; C.doors.run(() => C.start(go)); }
-  else C.doors.release(); // створки с прошлой страницы (выход в меню после потери контекста) — открыть; онлайн их откроет сам — вход в бой или лобби
-  setTimeout(() => C.crash.offer(), 2000); // окно «Игра закрылась с ошибкой» — когда меню уже на экране
+  else C.doors.release(); // створки с прошлой страницы (выход в меню после потери контекста) - открыть; онлайн их откроет сам - вход в бой или лобби
+  setTimeout(() => C.crash.offer(), 2000); // окно «Игра закрылась с ошибкой» - когда меню уже на экране
 })();
 if (Q.get('test') === '1') { window.__a = C; window.__frame = frame; C.ctrls = ctrls; C.resize = resize; C.lessons = LESSONS; } // проверка: доступ к игре и шаг кадра вручную (страница в фоне)

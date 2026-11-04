@@ -1,9 +1,9 @@
-// Экраны итога боя «Воздушного превосходства» (Mark 2026-10-25, макет endscr/tpl.html): «Разбор вылета» — для всех одиночных боёв
-// (вылет самолёта и вертолёта, оборона, «Мульти-волна», операция из двух вылетов), «Табло команд» — онлайн «Вылет и оборона»,
-// «Два раунда» — онлайн «Мульти-волна». Вход — C.showEnd (main.js): { title, reason, stats, note, win, again, events, dur, online }.
-// Одиночный бой: 3D замирает (C.endFreeze), холст выцветает (CSS body.endCine), сверху и снизу — чёрные полосы, внизу — лента боя
-// (C.blog: { t, c: 'g' | 'r' | 'y' | '', l } — события, их пишут air.js и defense.js через C.bev). Онлайн — табло поверх затемнённой игры;
-// очки рейтинга и награда приходят позже (claimed / reward). Всё в единицах «u» — процент ширины экрана 16:9, вписанного по высоте.
+// Экраны итога боя «Воздушного превосходства» (Mark 2026-10-25, макет endscr/tpl.html): «Разбор вылета» - для всех одиночных боёв
+// (вылет самолёта и вертолёта, оборона, «Мульти-волна», операция из двух вылетов), «Табло команд» - онлайн «Вылет и оборона»,
+// «Два раунда» - онлайн «Мульти-волна». Вход - C.showEnd (main.js): { title, reason, stats, note, win, again, events, dur, online }.
+// Одиночный бой: 3D замирает (C.endFreeze), холст выцветает (CSS body.endCine), сверху и снизу - чёрные полосы, внизу - лента боя
+// (C.blog: { t, c: 'g' | 'r' | 'y' | '', l } - события, их пишут air.js и defense.js через C.bev). Онлайн - табло поверх затемнённой игры;
+// очки рейтинга и награда приходят позже (claimed / reward). Всё в единицах «u» - процент ширины экрана 16:9, вписанного по высоте.
 import { tr, LANG } from './i18n.js?v=20261104a';
 import { ico } from './icons.js?v=20261104a';
 import { WIN_K } from './sim/online.js?v=20261104a';
@@ -17,18 +17,18 @@ const RM = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduce
 const mmss = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 const SLOTS = 7;
 
-// «Nu» → calc(var(--u) * N); F(n) — размер шрифта не меньше 10 px (на телефоне 1u ≈ 7 px)
+// «Nu» → calc(var(--u) * N); F(n) - размер шрифта не меньше 10 px (на телефоне 1u ≈ 7 px)
 const U = (css) => css.replace(/(-?\d*\.?\d+)u\b/g, (m, n) => `calc(var(--u) * ${n})`);
 const F = (n, min = 10) => `max(${min}px, ${n}u)`;
 const CSS = U(`
 #end .endv { position: absolute; inset: 0; container-type: size; --u: min(1vw, 1.7778vh); color: #e9e6dc; font-family: 'Golos Text', -apple-system, sans-serif; line-height: 1.35; }
-@supports (width: 1cqw) { #end .endv { --u: min(1cqw, 1.7778cqh); } } /* iOS 15 и старше: единиц контейнера нет — окно целиком (vw / vh) */
+@supports (width: 1cqw) { #end .endv { --u: min(1cqw, 1.7778cqh); } } /* iOS 15 и старше: единиц контейнера нет - окно целиком (vw / vh) */
 #end.cine { background: none; } #end.cine.on { animation: none; }
 #endView { position: absolute; inset: 0; overflow: hidden; }
-/* пока открыт итог — интерфейс боя (HUD, кнопки, подсказки, чат, метки) не поверх него */
+/* пока открыт итог - интерфейс боя (HUD, кнопки, подсказки, чат, метки) не поверх него */
 body.endOn #hudc, body.endOn #hud, body.endOn #mute, body.endOn #pause, body.endOn #exit, body.endOn #perf, body.endOn #hint, body.endOn #msg, body.endOn #warn, body.endOn #ask, body.endOn #touch, body.endOn #opHud,
 body.endOn #netChat, body.endOn #plPanel, body.endOn #plBtn, body.endOn #netPlan, body.endOn #evBtn, body.endOn #evPanel, body.endOn #dtop, body.endOn #dside, body.endOn #wBar, body.endOn #mapNav, body.endOn #lsnPanel { display: none !important; }
-#endView .num, #end .num { font-family: 'Oswald', 'Golos Text', sans-serif; font-variant-numeric: tabular-nums; } /* цифры итогов — Oswald, как заголовок (Mark 2026-10-27: моноширинный «выдавал ИИ»); tabular — счёт при отсчёте не дрожит */
+#endView .num, #end .num { font-family: 'Oswald', 'Golos Text', sans-serif; font-variant-numeric: tabular-nums; } /* цифры итогов - Oswald, как заголовок (Mark 2026-10-27: моноширинный «выдавал ИИ»); tabular - счёт при отсчёте не дрожит */
 #endView .ic { width: 1em; height: 1em; fill: currentColor; display: inline-block; vertical-align: -0.14em; flex: none; }
 #endBtns { position: absolute; display: flex; gap: 1.2u; z-index: 3; }
 #endBtns .btn { display: block; width: auto; margin: 0; border-radius: 0; box-shadow: none; padding: 1.1u 2.4u; font-family: 'Oswald', 'Arial Narrow', sans-serif; font-weight: 500; font-size: ${F(1.7, 13)}; letter-spacing: .02em; line-height: 1.2; white-space: nowrap; }
@@ -87,7 +87,7 @@ body.endCine #c, body.endCine #tmap, body.endCine #map { transform-origin: 60% 5
 .mw .verdict { top: 4.4u; }
 `);
 
-// ── разбор событий боя для ленты: не больше 10 подписей, важные — первыми, близкие не налезают ──
+// ── разбор событий боя для ленты: не больше 10 подписей, важные - первыми, близкие не налезают ──
 const PRI = (e, i, n) => (i === 0 || i === n - 1 ? 5 : e.c === 'r' ? 4 : e.c === 'g' ? 3 : e.c === 'y' ? 2 : 1);
 export function layoutTimeline(events, dur, widthPx, fontPx) {
   const evs = (events || []).filter((e) => e && e.l && isFinite(e.t)).map((e) => ({ x: clamp(e.t / dur, 0, 1), c: e.c || '', l: String(e.l).slice(0, 24) })).sort((a, b) => a.x - b.x);
@@ -105,7 +105,7 @@ const numParts = (v) => { const s = String(v).replace(/[\s ]/g, ''), m = /^(\d+
 export function createEndScreen(C) {
   const $ = (id) => document.getElementById(id);
   const root = $('end'), view = $('endView');
-  const style = document.createElement('style'); style.textContent = CSS; if (document.head) document.head.appendChild(style); // (заглушка DOM стенда — без head/body)
+  const style = document.createElement('style'); style.textContent = CSS; if (document.head) document.head.appendChild(style); // (заглушка DOM стенда - без head/body)
   const E = { gen: 0, timers: [], anims: [], mode: '', on: false, reward: null, claim: null, rateOn: false };
 
   const later = (ms, f) => { const g = E.gen; E.timers.push(setTimeout(() => { if (g === E.gen) f(); }, RM() ? 0 : ms)); };
@@ -138,7 +138,7 @@ export function createEndScreen(C) {
   }
   function playCine() {
     document.body.classList.add('endCine'); C.endFreeze = true; if (C.snd && C.snd.silence) C.snd.silence();
-    if (C.say) C.say(''); if (C.hint) C.hint(''); for (const id of ['ask', 'warn']) { const e = $(id); if (e) e.style.display = 'none'; } // подсказки боя — не поверх итога
+    if (C.say) C.say(''); if (C.hint) C.hint(''); for (const id of ['ask', 'warn']) { const e = $(id); if (e) e.style.display = 'none'; } // подсказки боя - не поверх итога
     const bt = (c) => view.querySelector(c);
     anim(bt('.bar.t'), [{ transform: 'translateY(-100%)' }, { transform: 'none' }], { duration: 500, delay: 100 });
     anim(bt('.bar.b'), [{ transform: 'translateY(100%)' }, { transform: 'none' }], { duration: 500, delay: 100 });
@@ -166,13 +166,13 @@ export function createEndScreen(C) {
   const hd = (...h) => `<div class="pr${h.length === 3 ? ' pr3' : ''} hd"><span></span>${h.map((x) => `<span>${x}</span>`).join('')}</div>`;
   function olHtml(b) {
     return `<div class="verdict" data-k="verdict">${esc(b.title)}</div>
-      <div class="meter"><div class="fill"></div><div class="th" style="left:${b.wk}%"></div><span class="cap">${tr('уничтожено ценности целей')}</span><span class="cap c" style="left:${b.wk}%">${tr('порог победы авиации — {0} %', [b.wk])}</span><span class="val num" data-k="pct">0 %</span></div>
+      <div class="meter"><div class="fill"></div><div class="th" style="left:${b.wk}%"></div><span class="cap">${tr('уничтожено ценности целей')}</span><span class="cap c" style="left:${b.wk}%">${tr('порог победы авиации - {0} %', [b.wk])}</span><span class="val num" data-k="pct">0 %</span></div>
       <div class="teams"><div class="team a" data-team="air"><h4><span>${tr('Авиация')}</span><i>${tr('победа')}</i></h4>${hd(tr('ЗРК уничтожено'), tr('очки'))}${b.air.map((r) => row(r, [(x) => x.k, (x) => fmt(x.s)])).join('')}</div>
       <div class="team p" data-team="pvo"><h4><span>${tr('ПВО')}</span><i>${tr('победа')}</i></h4>${hd(tr('сбито'), tr('очки'))}${b.pvo.map((r) => row(r, [(x) => x.k, (x) => fmt(x.s)])).join('')}</div></div>${rateHtml()}`;
   }
   function mwHtml(b) {
     const rnd = (s) => `<div class="rnd ${s.side}"><div class="who">${s.side === 'e' ? tr('Волна Востока') : tr('Волна Запада')}<small>${s.side === 'e' ? tr('раунд {0} · по ПВО Запада', [s.n]) : tr('раунд {0} · по ПВО Востока', [s.n])}</small></div><div class="trk"><div class="f"></div></div><div class="pc num" data-k="pc${s.side}">0 %</div></div>`;
-    const cols = [(x) => x.icp ?? '—', (x) => (x.dmg == null ? '—' : x.dmg + ' %'), (x) => fmt(x.s)];
+    const cols = [(x) => x.icp ?? '-', (x) => (x.dmg == null ? '-' : x.dmg + ' %'), (x) => fmt(x.s)];
     const team = (k, cls, name, rows) => `<div class="team ${cls}" data-team="${k}"><h4><span>${name}</span><i>${tr('победа')}</i></h4>${hd(tr('перехвачено'), tr('разрушено'), tr('очки'))}${rows.map((r) => row(r, cols)).join('')}</div>`;
     return `<div class="verdict" data-k="verdict">${esc(b.title)}</div><div class="rounds">${b.rounds.map(rnd).join('')}</div>
       <div class="teams">${team('east', 'e', tr('Восток'), b.east)}${team('west', 'w', tr('Запад'), b.west)}</div>${rateHtml()}`;
@@ -208,7 +208,7 @@ export function createEndScreen(C) {
     rw.innerHTML = `<span class="xp">${ico('xp')}<b data-c="xp">0</b></span><span>${ico('silver')}<b data-c="sv">0</b></span>`;
     count(rw.querySelector('[data-c="xp"]'), d.xp, 1000, '+'); count(rw.querySelector('[data-c="sv"]'), d.silver || 0, 1000, '+');
   }
-  // claim: { rating: { points, parts }, acc, note, board: { place, prev, n, counted } | null, off — межсезонье (рейтинга нет) }
+  // claim: { rating: { points, parts }, acc, note, board: { place, prev, n, counted } | null, off - межсезонье (рейтинга нет) }
   function applyClaim() {
     const c = E.claim, rt = view.querySelector('.rate'); if (!c || !rt || !E.rateOn) return;
     const rp = Q(view, 'rp'), txt = Q(view, 'rtxt'), slots = Q(view, 'slots'), r = c.rating, line = [];
@@ -218,14 +218,14 @@ export function createEndScreen(C) {
       if (c.acc && c.acc.kind === 'airdef') { if (once) count(rp, r.points, 900, idle ? '' : '+'); if (idle) line.push(tr('без действий в бою')); }
       else { if (once) count(rp, r.points, 900); rp.parentNode.classList.add('off'); line.push(tr('очки засчитаются, когда перенесёте прогресс в аккаунт игры')); }
     } else if (rp && rp.parentNode) rp.parentNode.style.display = 'none';
-    if (c.off) line.push(tr('межсезонье — бой не идёт в рейтинг'));
+    if (c.off) line.push(tr('межсезонье - бой не идёт в рейтинг'));
     const b = c.board;
     if (b) {
       if (b.place) line.push(b.prev && b.prev !== b.place ? tr('место в сезоне {0} → {1}', [b.prev, b.place]) : tr('место в сезоне {0}', [b.place]));
       line.push(b.counted === false ? tr('бой не вошёл в засчитанные') : tr('засчитано {0} из {1}', [b.n, SLOTS]));
       if (slots) { slots.innerHTML = Array.from({ length: SLOTS }, (_, i) => `<i class="${i < b.n ? 'on' : ''}"></i>`).join(''); if (b.counted !== false && b.n > 0) later(900, () => { const s = slots.querySelectorAll('i')[b.n - 1]; if (s) { s.classList.add('new'); anim(s, [{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }], { duration: 300 }); } }); }
     }
-    if (txt) txt.innerHTML = [...(c.note ? [c.note] : []), ...line.map(esc)].join(' · '); // c.note — готовый HTML (в награде бывает значок ключа), остальное — текст
+    if (txt) txt.innerHTML = [...(c.note ? [c.note] : []), ...line.map(esc)].join(' · '); // c.note - готовый HTML (в награде бывает значок ключа), остальное - текст
   }
 
   // ═════════════ Вход ═════════════
@@ -238,7 +238,7 @@ export function createEndScreen(C) {
       root.classList.remove('cine', 'ol', 'mw', 'win', 'lose', 'neu'); root.classList.add(kind, win === true ? 'win' : win === false ? 'lose' : 'neu');
       view.innerHTML = kind === 'ol' ? olHtml(o.online) : kind === 'mw' ? mwHtml(o.online) : cineHtml(o);
       const g = E.gen;
-      setTimeout(() => { // через 0,9 с — дать доиграть взрыв потерянной машины
+      setTimeout(() => { // через 0,9 с - дать доиграть взрыв потерянной машины
         if (g !== E.gen) return; // за это время вышли в меню или начали новый бой
         root.classList.add('on'); document.body.classList.remove('flying'); document.body.classList.add('endOn'); E.on = true;
         if (kind === 'cine') playCine(); else playOnline(o.online);
@@ -257,7 +257,7 @@ export function createEndScreen(C) {
   // ═════════════ Заглушка ?endmock=solo-win | solo-lose | ol-win | ol-lose | mw-win | mw-lose ═════════════
   function mock(name) {
     const [kind, res] = String(name).split('-'), win = res !== 'lose';
-    C.setup.game = 'air'; C.start('air'); // фон — настоящий вылет
+    C.setup.game = 'air'; C.start('air'); // фон - настоящий вылет
     const nm = (p) => p.name;
     setTimeout(() => {
       C.ended = true; $('againBtn').textContent = kind === 'solo' ? tr('Ещё раз') : tr('В комнату');
@@ -291,7 +291,7 @@ export function createEndScreen(C) {
 }
 
 // ── данные табло из сообщения сервера 'end' (online.js) ──
-// «Вылет и оборона»: m = { winner: 'air' | 'pvo', valueK, players: [{ id, name, team, bot, kills, score }] }; me — свой игрок; nm — как показать ник
+// «Вылет и оборона»: m = { winner: 'air' | 'pvo', valueK, players: [{ id, name, team, bot, kills, score }] }; me - свой игрок; nm - как показать ник
 export function boardOl(m, me, nm = (p) => p.name) {
   const mk = (p) => ({ name: nm(p), bot: !!p.bot, k: p.kills || 0, s: Math.round(p.score || 0), me: !!(me && p.id === me.id) }), by = (t) => m.players.filter((p) => p.team === t).sort((a, b) => (b.score || 0) - (a.score || 0)).map(mk);
   const win = me ? m.winner === me.team : null;

@@ -1,11 +1,11 @@
-// airdef-progress — прокачка «Воздушного превосходства»: прочитать состояние, исследовать за опыт, купить за серебро,
+// airdef-progress - прокачка «Воздушного превосходства»: прочитать состояние, исследовать за опыт, купить за серебро,
 // выбрать текущую цель ветки (опыт за бой исследует её сам, когда хватит).
 //   { player_id, action: 'state' }                       → { progress }
-//   { player_id, action: 'research' | 'buy', id }        → { ok, progress } | { error } (цены и паритет — по progress.js)
+//   { player_id, action: 'research' | 'buy', id }        → { ok, progress } | { error } (цены и паритет - по progress.js)
 //   { player_id, action: 'goal', branch, id | null }     → { ok, progress }
 //   { player_id, action: 'quests' }                      → { progress, crystals } (задания: progress.quests; новый день начисляет незабранное)
 //   { player_id, action: 'quest', key }                  → { ok, progress, crystals, auto } | { error } («Забрать»: 'd:id', 'w:id', 'crate', 'chest')
-// Правила — _shared/airdef/progress.js (копия games/airdef/progress.js). Тратит только сервер.
+// Правила - _shared/airdef/progress.js (копия games/airdef/progress.js). Тратит только сервер.
 import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
 import { supabaseAdmin } from "../_shared/supabase-admin.ts";
 import { mskToday } from "../_shared/msk.ts";
@@ -20,13 +20,13 @@ Deno.serve(async (req) => {
     const { player_id, action, id, branch, key } = await req.json();
     if (typeof player_id !== "string" || player_id.length < 8 || player_id.length > 64) return jsonResponse({ error: "Некорректные параметры" }, 400);
     const db = supabaseAdmin(), today = mskToday();
-    const crystals = async () => { try { const w = await db.rpc("airdef_wallet_view", { p_player: player_id }); return w.error ? null : Number((w.data as { crystals?: number })?.crystals) || 0; } catch (_) { return null; } }; // кошелёк не прочитался — null, награда уже сохранена
+    const crystals = async () => { try { const w = await db.rpc("airdef_wallet_view", { p_player: player_id }); return w.error ? null : Number((w.data as { crystals?: number })?.crystals) || 0; } catch (_) { return null; } }; // кошелёк не прочитался - null, награда уже сохранена
     if (action === "state" || action === undefined || action === "quests") {
-      // награды закончившегося сезона (sql/024) — молча; сбой не мешает загрузке прокачки
+      // награды закончившегося сезона (sql/024) - молча; сбой не мешает загрузке прокачки
       if (action !== "quests") await settleSeasons(db).catch((e) => console.error("airdef-progress season", e));
       const { row, exists, needGame } = await load(db, player_id);
       if (!exists) return jsonResponse(NOT_FOUND, 404);
-      if (needGame) return jsonResponse(NEED_GAME, 403); // новичок с аккаунтом сайта — прогресс только на аккаунте игры
+      if (needGame) return jsonResponse(NEED_GAME, 403); // новичок с аккаунтом сайта - прогресс только на аккаунте игры
       let P = toProgress(row), x = extraOf(row);
       // новый день: выполненные, но не забранные задания начисляются сами; без начислений чтение ничего не пишет
       if (row && questsPending(x, today)) {

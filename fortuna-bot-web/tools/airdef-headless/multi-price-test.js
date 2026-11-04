@@ -11,10 +11,10 @@ const ok = (name, v) => { console.log(`${v ? 'OK  ' : 'FAIL'} ${name}`); if (!v)
 const items = ['east', 'west'].flatMap((s) => multiItems(s).map(([k]) => k));
 ok(`бюджет удара ${MULTI.budget} = стенд ${P.budget}, ПВО ${MULTI.sam} = ${P.samBudget}`, MULTI.budget === P.budget && MULTI.sam === P.samBudget);
 ok('цена каждой единицы удара = стенд (THREAT ↔ multi-prices.json atk)', items.every((k) => THREAT[k] === P.atk[k] && THREAT[k] > 0));
-ok('потолок каждой единицы удара = стенд (баллистика — правилом tbmCheck)', items.every((k) => (AG[k].kind === 'tbm' ? multiCap(k) >= 99 : multiCap(k) === P.cap[k])));
+ok('потолок каждой единицы удара = стенд (баллистика - правилом tbmCheck)', items.every((k) => (AG[k].kind === 'tbm' ? multiCap(k) >= 99 : multiCap(k) === P.cap[k])));
 const sams = Object.keys(SAM);
 ok(`бесполезные в режиме не продаются: ${MULTI.samOff.join(', ')}`, MULTI.samOff.every((k) => !M.samOk(k, SAM[k] ? SAM[k].side : 'east')));
-ok('у каждого продаваемого ЗРК — цена и потолок стенда', sams.filter(multiSamOk).every((k) => multiSamCost(k) === P.sam[k] && multiSamCap(k) === P.samCap[k]));
+ok('у каждого продаваемого ЗРК - цена и потолок стенда', sams.filter(multiSamOk).every((k) => multiSamCost(k) === P.sam[k] && multiSamCap(k) === P.samCap[k]));
 ok('у каждого ЗРК стенда (кроме убранных) есть модель в игре', Object.keys(P.sam).filter((k) => !MULTI.samOff.includes(k)).every((k) => !!SAM[k]));
 const n = Object.fromEntries(items.filter((k) => AG[k].side === 'east').map((k) => [k, 40]));
 const cp = M.cleanPlan({ n, cfg: {} }, 'east', new Set(), 1e5);

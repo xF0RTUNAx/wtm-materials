@@ -1,8 +1,8 @@
-// mp-ticket — билет для входа в онлайн-бой «Симулятора Летки» (игровой сервер — fortuna-bot-web/game-server).
-// Вход: { player_id }. Выход: { ticket } — base64url(JSON {pid, login, u, a, ng?, exp}) + "." + base64url(HMAC-SHA256(MP_SECRET, первая часть)).
+// mp-ticket - билет для входа в онлайн-бой «Симулятора Летки» (игровой сервер - fortuna-bot-web/game-server).
+// Вход: { player_id }. Выход: { ticket } - base64url(JSON {pid, login, u, a, ng?, exp}) + "." + base64url(HMAC-SHA256(MP_SECRET, первая часть)).
 // Билет живёт 10 минут: игра берёт новый при каждом подключении. Игровой сервер проверяет подпись тем же
-// секретом (server.js → checkTicket) и берёт ник из билета — подделать чужой ник без секрета нельзя.
-// Секрет: `supabase secrets set MP_SECRET=...` (тот же — в переменной окружения MP_SECRET игрового сервера).
+// секретом (server.js → checkTicket) и берёт ник из билета - подделать чужой ник без секрета нельзя.
+// Секрет: `supabase secrets set MP_SECRET=...` (тот же - в переменной окружения MP_SECRET игрового сервера).
 // Файл самодостаточный (без ../_shared): его можно и развернуть CLI, и вставить целиком в редактор функций панели Supabase.
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -35,26 +35,26 @@ Deno.serve(async (req) => {
     const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
     const { data: player, error } = await db.from("players").select("id, login, kind, full_name").eq("id", player_id).maybeSingle();
     if (error) throw error;
-    if (!player) return jsonResponse({ error: "Игрок не найден — перезайдите на сайт" }, 404);
+    if (!player) return jsonResponse({ error: "Игрок не найден - перезайдите на сайт" }, 404);
 
-    // u — купленные ракеты (в «Реализме» онлайн можно подвешивать только их и базовые — проверяет игровой сервер)
+    // u - купленные ракеты (в «Реализме» онлайн можно подвешивать только их и базовые - проверяет игровой сервер)
     const owned = await db.from("drone_missiles").select("missile").eq("player_id", player.id);
     const u = owned.error ? [] : (owned.data ?? []).map((r: { missile: string }) => r.missile);
-    // a — купленное в прокачке «Воздушного превосходства» (в «Реализме» онлайн — только оно и стартовое; проверяет игровой сервер)
+    // a - купленное в прокачке «Воздушного превосходства» (в «Реализме» онлайн - только оно и стартовое; проверяет игровой сервер)
     const ad = await db.from("airdef_progress").select("own").eq("player_id", player.id).maybeSingle();
     const a = ad.error ? [] : ((ad.data?.own ?? []) as string[]);
-    // Правило Mark 2026-10-25: новым игрокам «Воздушного превосходства» — только аккаунт игры. Аккаунт сайта без прогресса игры (нет строки
-    // airdef_progress и боёв airdef_mp_results) — «новичок»: из игры (game: "airdef") — 403; для остальных (билет общий с «Леткой») билет
+    // Правило Mark 2026-10-25: новым игрокам «Воздушного превосходства» - только аккаунт игры. Аккаунт сайта без прогресса игры (нет строки
+    // airdef_progress и боёв airdef_mp_results) - «новичок»: из игры (game: "airdef") - 403; для остальных (билет общий с «Леткой») билет
     // выдаётся с пометкой ng: 1, а игровой сервер /ad такой билет не принимает.
     let ng = false;
     if (player.kind === "site" && !ad.error && !ad.data) {
       const mp = await db.from("airdef_mp_results").select("match_id", { count: "exact", head: true }).eq("player_id", player.id);
       ng = !mp.error && (mp.count ?? 0) === 0;
     }
-    if (ng && game === "airdef") return jsonResponse({ error: "Создайте аккаунт игры — новым игрокам прогресс копится только на нём", need_game: true }, 403);
-    // имя в онлайне: у аккаунта «Воздушного превосходства» (sql/022, kind = airdef) — ник, у аккаунта сайта — логин
+    if (ng && game === "airdef") return jsonResponse({ error: "Создайте аккаунт игры - новым игрокам прогресс копится только на нём", need_game: true }, 403);
+    // имя в онлайне: у аккаунта «Воздушного превосходства» (sql/022, kind = airdef) - ник, у аккаунта сайта - логин
     const name = player.kind === "airdef" ? (player.full_name || String(player.login).replace(/^ad:/, "")) : player.login;
-    // надетые окраски (магазин «Воздушного превосходства», sql/028): игровой сервер показывает их другим игрокам; нет колонки или кошелька — без них
+    // надетые окраски (магазин «Воздушного превосходства», sql/028): игровой сервер показывает их другим игрокам; нет колонки или кошелька - без них
     const wl = await db.from("airdef_wallet").select("worn").eq("player_id", player.id).maybeSingle();
     const w = !wl.error && wl.data?.worn && typeof wl.data.worn === "object" ? wl.data.worn as Record<string, string> : {};
     const body = b64u(enc.encode(JSON.stringify({ pid: player.id, login: name, u, a, ...(Object.keys(w).length ? { w } : {}), ...(ng ? { ng: 1 } : {}), exp: Math.floor(Date.now() / 1000) + TTL })));

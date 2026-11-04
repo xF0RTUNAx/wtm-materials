@@ -1,8 +1,8 @@
-// Событие «Туманная топь» (Хеллоуин 2026, макет «В» — tools/airdef-mockups/heli-event.html, без наград и заданий): полноэкранный
+// Событие «Туманная топь» (Хеллоуин 2026, макет «В» - tools/airdef-mockups/heli-event.html, без наград и заданий): полноэкранный
 // экран поверх меню, как «Исследования» (research.js). Вкладки: «Вылет на вертолёте» (погода, сторона, режим, вертолёт и его
 // подвеска, «ВЗЛЁТ») и «Оборона от вертолётов» (обычная оборона на осенней карте: сторона ПВО, эпоха). Вертолётов в обычном
-// «Вылете» и «Съёмке» нет (menu.js) — только здесь. Карта и погода строятся при загрузке страницы: смена — перезагрузкой
-// (main.js: wantMap — вертолётная подвеска или setup.evd при go=air / go=defense).
+// «Вылете» и «Съёмке» нет (menu.js) - только здесь. Карта и погода строятся при загрузке страницы: смена - перезагрузкой
+// (main.js: wantMap - вертолётная подвеска или setup.evd при go=air / go=defense).
 import { AG, PLANES, ERAS, HELI_LOADOUTS } from './arsenal.js?v=20261104a';
 import { MODES } from './sim/strike.js?v=20261104a';
 import { RAID_HELI } from './sim/raid.js?v=20261104a';
@@ -15,7 +15,7 @@ import { orientGate } from '../orient-warn.js?v=20261011a';
 export const EVENT_END = new Date('2026-12-20T23:59:59+03:00');
 export const eventLeft = () => Math.max(0, EVENT_END.getTime() - Date.now());
 export const eventOn = () => eventLeft() > 0;
-// вкладка «Оборона от вертолётов»: false — видна с пометкой «скоро» и неактивна (проверено 2026-10-20: все 6 волн доходят до конца, см. defense.js, сторожок вертолётов)
+// вкладка «Оборона от вертолётов»: false - видна с пометкой «скоро» и неактивна (проверено 2026-10-20: все 6 волн доходят до конца, см. defense.js, сторожок вертолётов)
 const DEF_READY = true;
 const WX = { a_eve: tr('Вечер'), a_dusk: tr('Сумерки'), a_fog: tr('Туман') };
 
@@ -90,10 +90,10 @@ const LK = (o) => { try { return JSON.parse(o || '{}') || {}; } catch (_) { retu
 
 export function createEvent(C) {
   const { $, setup, ls, snd } = C;
-  const style = document.createElement('style'); style.textContent = CSS; if (document.head) document.head.appendChild(style); // (заглушка DOM стенда — без head/body)
+  const style = document.createElement('style'); style.textContent = CSS; if (document.head) document.head.appendChild(style); // (заглушка DOM стенда - без head/body)
   const root = document.createElement('div'); root.id = 'event'; if (document.body && document.body.appendChild) document.body.appendChild(root);
   const KEY = 'fortuna_airdef_event';
-  // сторона вертолётов (hside), погода (wx), выбранный вертолёт (sel — «эпоха:индекс»), вкладка, ПВО и эпоха обороны (dside, dera)
+  // сторона вертолётов (hside), погода (wx), выбранный вертолёт (sel - «эпоха:индекс»), вкладка, ПВО и эпоха обороны (dside, dera)
   const S = Object.assign({ tab: 'fly', hside: 'east', wx: 'a_dusk', sel: '', dside: 'east', dera: 3 }, LK(ls.get(KEY)));
   if (!AUTUMN_KEYS.includes(S.wx)) S.wx = 'a_dusk';
   const save = () => ls.set(KEY, JSON.stringify(S));
@@ -105,7 +105,7 @@ export function createEvent(C) {
   const list = () => HELI_LOADOUTS.filter((L) => L.side === S.hside);
   const cur = () => { const l = list(); return l.find((L) => idOf(L) === S.sel) || l[0]; };
   const tagsOf = (L) => L.items.map(([k, n]) => `<span class="tg">${trIf(AG[k].short)} ×${n}</span>`).join('');
-  // выбранный вертолёт — всегда открытый, если такой есть (в «Реализме» закрытые выбрать нельзя)
+  // выбранный вертолёт - всегда открытый, если такой есть (в «Реализме» закрытые выбрать нельзя)
   function fixSel() { const l = list(), L = cur(); if (L && !open0(L)) { const o = l.find(open0); if (o) S.sel = idOf(o); } else if (L) S.sel = idOf(L); }
 
   const left = () => eventLeft();
@@ -129,8 +129,8 @@ export function createEvent(C) {
     return `<div class="pl">${mapPane()}${modePane()}</div>
       <div class="pc"><div class="hero">${hp ? `<img src="airdef/thumbs/heli_${hp}.webp?v=20261104a" alt="">` : ''}</div>
         <div class="dh"><h2>${tr('Оборона от вертолётов')}</h2>
-          <p>${tr('<b>Угроза{0}.</b> Налёт идёт самолётами; со 2-й волны к ним присоединяется вертолёт, с 4-й — пара. Они подходят низко, по оврагам, и прячутся за холмами.', [hp ? ': ' + trIf(PLANES[hp]) : ''])}</p>
-          <p class="lng">${tr('Ниже ~30 м за рельефом РЛС вертолёт не видит, поэтому берегите ближние комплексы: пушки, ЗРК ближнего действия, ПЗРК. Поражение — если потеряно 75 % ценности военных объектов. Волн: {0}.', [C.WAVES])}</p></div>
+          <p>${tr('<b>Угроза{0}.</b> Налёт идёт самолётами; со 2-й волны к ним присоединяется вертолёт, с 4-й - пара. Они подходят низко, по оврагам, и прячутся за холмами.', [hp ? ': ' + trIf(PLANES[hp]) : ''])}</p>
+          <p class="lng">${tr('Ниже ~30 м за рельефом РЛС вертолёт не видит, поэтому берегите ближние комплексы: пушки, ЗРК ближнего действия, ПЗРК. Поражение - если потеряно 75 % ценности военных объектов. Волн: {0}.', [C.WAVES])}</p></div>
         <div class="row"><span class="cap">${tr('Ваша ПВО')}</span>${seg('dside', S.dside, [['east', tr('Советская')], ['west', tr('Западная')]])}</div>
         <div class="row"><span class="cap">${tr('Эпоха')}</span>${seg('dera', S.dera, ERAS.map((e) => [e.id, e.short]))}</div>
         <button class="go" data-go="def">${tr('К расстановке')}</button></div>`;
@@ -145,11 +145,11 @@ export function createEvent(C) {
       <div class="body">${S.tab === 'def' && DEF_READY ? def() : fly()}</div>`;
     const p = root.querySelector('.pl'); if (p) p.scrollTop = st;
   }
-  // карта и погода строятся при загрузке: нужна осенняя карта и выбранная погода — иначе перезагрузка сразу в бой (go=…, weather=…)
+  // карта и погода строятся при загрузке: нужна осенняя карта и выбранная погода - иначе перезагрузка сразу в бой (go=…, weather=…)
   function launch(game) {
     setup.evd = game === 'defense'; C.saveSetup(); C.lastGame = game;
     if (C.MAP === 'autumn' && C.W_KEY === S.wx) { C.doors.run(() => { api.hide(); C.start(game); }); return; }
-    C.doors.run(() => { C.doors.carry('go'); go(game); }); // другая карта — перезагрузка за закрытыми створками
+    C.doors.run(() => { C.doors.carry('go'); go(game); }); // другая карта - перезагрузка за закрытыми створками
   }
   function go(game) {
     const u = new URL(location.href); u.searchParams.set('go', game); u.searchParams.set('weather', S.wx); if (game === 'air') u.searchParams.set('hlo', setup.lo); // подвеска вертолёта: меню на загрузке подменяет её самолётной
@@ -162,12 +162,12 @@ export function createEvent(C) {
     snd.click();
     if (t.dataset.close) { api.close(); return; }
     if (t.dataset.tab) { S.tab = t.dataset.tab; save(); draw(); return; }
-    if (t.dataset.need) { C.research.open(t.dataset.need); return; } // закрыто в «Реализме» — к нужному узлу дерева
+    if (t.dataset.need) { C.research.open(t.dataset.need); return; } // закрыто в «Реализме» - к нужному узлу дерева
     if (t.dataset.sel) { S.sel = t.dataset.sel; save(); draw(); return; }
     if (t.dataset.go === 'fly') {
       const L = cur();
-      if (!open0(L)) { C.research.open(C.progress.loadoutMissing(L)[0].id); return; } // «Реализм»: ни одного купленного вертолёта — в «Исследования»
-      // сторона ПВО города — противоположная стороне вертолёта; вылет один, без «Операции»
+      if (!open0(L)) { C.research.open(C.progress.loadoutMissing(L)[0].id); return; } // «Реализм»: ни одного купленного вертолёта - в «Исследования»
+      // сторона ПВО города - противоположная стороне вертолёта; вылет один, без «Операции»
       Object.assign(setup, { game: 'air', era: L.era, lo: L.i, op: false, side: S.hside === 'east' ? 'west' : 'east' });
       orientGate(() => launch('air'), C.IS_TOUCH); return;
     }
@@ -181,7 +181,7 @@ export function createEvent(C) {
     save(); draw();
   });
   addEventListener('keydown', (e) => { if (e.code === 'Escape' && root.classList.contains('on') && !(C.research && C.research.isOpen && C.research.isOpen())) api.close(); });
-  if (C.progress && C.progress.on) C.progress.on(draw); // купили в «Исследованиях» — замки на карточках обновляются
+  if (C.progress && C.progress.on) C.progress.on(draw); // купили в «Исследованиях» - замки на карточках обновляются
   addEventListener('resize', draw);
   let tmr = 0;
   const api = {
@@ -197,7 +197,7 @@ export function createEvent(C) {
   };
   // кнопка входа на фоне меню рядом с «Исследованиями»; после конца события скрыта
   const btn = $('evtBtn');
-  if ($('evtIco')) $('evtIco').innerHTML = ico('pumpkin'); // pumpkin-lantern — Lorc (game-icons.net, CC BY 3.0)
+  if ($('evtIco')) $('evtIco').innerHTML = ico('pumpkin'); // pumpkin-lantern - Lorc (game-icons.net, CC BY 3.0)
   if (btn) { btn.style.display = eventOn() ? 'flex' : 'none'; if ($('evtLeft')) $('evtLeft').textContent = tr('событие · {0}', [eventLeft() >= 864e5 ? tr('ещё {0} дн.', [Math.floor(eventLeft() / 864e5)]) : leftTxt()]); btn.onclick = () => { snd.click(); api.open(); }; }
   return api;
 }

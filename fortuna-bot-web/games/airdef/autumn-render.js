@@ -1,7 +1,7 @@
-// Осенняя карта «Туманная топь» (map-autumn.js) — отрисовка земли, погода, лес, дороги и вода болота. Остальное (небо, свет,
-// облака, дома, объекты) — общее с городом (city-render.js). Земля: сухая трава (деталь вблизи и снимок с высоты), опавшая
+// Осенняя карта «Туманная топь» (map-autumn.js) - отрисовка земли, погода, лес, дороги и вода болота. Остальное (небо, свет,
+// облака, дома, объекты) - общее с городом (city-render.js). Земля: сухая трава (деталь вблизи и снимок с высоты), опавшая
 // листва в лесу и рыжая крона издали, грязь на дне оврагов и в болоте, пашня и тыквенные поля, скалы Лысой горы; туман
-// стелется в низинах (над болотом и в оврагах) — гуще в сумерках. Нормали — из сетки высот (50 м).
+// стелется в низинах (над болотом и в оврагах) - гуще в сумерках. Нормали - из сетки высот (50 м).
 /* global THREE */
 import { tr } from './i18n.js?v=20261104a';
 import { ZONE } from './city.js?v=20261104a';
@@ -10,8 +10,8 @@ import { NOISE_ON, NOISE_GLSL, noiseTex } from './noise-tex.js?v=20261104a';
 import { FAR_U, FAR_GLSL, groundShadowChunk } from './ground-far.js?v=20261104a';
 import { ktxOn, ktxLoad } from './ktx.js?v=20261104a';
 
-// погода (панорамы — Poly Haven, CC0): осенний вечер (низкое солнце, голый лес у горизонта), сумерки (закат под облаками),
-// туман (пасмурно, всё в молоке). lowFog — плотность тумана в низинах (шейдер земли), 0…1
+// погода (панорамы - Poly Haven, CC0): осенний вечер (низкое солнце, голый лес у горизонта), сумерки (закат под облаками),
+// туман (пасмурно, всё в молоке). lowFog - плотность тумана в низинах (шейдер земли), 0…1
 export function autumnWeathers(W) {
   const D = W.day, O = W.overcast;
   return {
@@ -25,8 +25,8 @@ export function autumnWeathers(W) {
 }
 export const AUTUMN_KEYS = ['a_eve', 'a_dusk', 'a_fog'];
 
-// районы → две текстуры. tZ: r — лес, g — вода, b — площадки и деревня-объекты, a — деревня; tZ2: r — врезка оврага (÷60 м),
-// g — пашня, b — тыквенное поле, a — болото (суша в котловине)
+// районы → две текстуры. tZ: r - лес, g - вода, b - площадки и деревня-объекты, a - деревня; tZ2: r - врезка оврага (÷60 м),
+// g - пашня, b - тыквенное поле, a - болото (суша в котловине)
 export function autumnZoneTex(city, size) {
   const H = 16000, d = new Uint8Array(size * size * 4), d2 = new Uint8Array(size * size * 4);
   for (let j = 0; j < size; j++) for (let i = 0; i < size; i++) {
@@ -37,10 +37,10 @@ export function autumnZoneTex(city, size) {
   const mk = (a) => { const t = new THREE.DataTexture(a, size, size, THREE.RGBAFormat); t.magFilter = THREE.LinearFilter; t.minFilter = THREE.LinearMipmapLinearFilter; t.generateMipmaps = true; t.flipY = false; t.needsUpdate = true; return t; };
   return [mk(d), mk(d2)];
 }
-// текстуры осени (tex/a_*.jpg — Poly Haven и ambientCG, CC0) и скалы — общие с зимой
+// текстуры осени (tex/a_*.jpg - Poly Haven и ambientCG, CC0) и скалы - общие с зимой
 const ATEX = { aG: 'a_grass', aGN: 'a_grass_n', aGA: 'a_grassA', aL: 'a_leaves', aM: 'a_mud', aMA: 'a_mudA', aF: 'a_field', aRk: 'w_rock', aRA: 'w_rockA' };
-const ACOARSE = new Set(['aGA', 'aRA', 'aMA']); // снимки с высоты (плитка 200–1300 м) — без анизотропии: крупный рисунок не мылится, а выборка втрое дешевле (ground-far.js)
-// мелкие (трава, грязь, листва) — не больше 4: вдали они и так средним цветом (ground-far.js), а 8 против 4 на снимках не отличить (стенд 2026-10-25: −0,6 мс низко на «Высоком»)
+const ACOARSE = new Set(['aGA', 'aRA', 'aMA']); // снимки с высоты (плитка 200-1300 м) - без анизотропии: крупный рисунок не мылится, а выборка втрое дешевле (ground-far.js)
+// мелкие (трава, грязь, листва) - не больше 4: вдали они и так средним цветом (ground-far.js), а 8 против 4 на снимках не отличить (стенд 2026-10-25: −0,6 мс низко на «Высоком»)
 export function autumnTextures(aniso, stats) {
   const U = {};
   for (const [u, f] of Object.entries(ATEX)) {
@@ -50,28 +50,28 @@ export function autumnTextures(aniso, stats) {
     const jpg = () => fetch(new URL(`./tex/${f}.jpg?v=20261023a`, import.meta.url)).then((r) => (r.ok ? r.blob() : Promise.reject(new Error(f)))).then((b) => createImageBitmap(b))
       .then((bmp) => { t.image = bmp; t.needsUpdate = true; if (stats) stats.done++; }).catch((e) => { if (stats) stats.done++; console.warn('осенняя текстура не загрузилась:', e.message); });
     // KTX2 (Mark 2026-10-25: «сжать текстуры земли без значительной потери»; tools/airdef-tex/ktx.js): в памяти видеокарты ≈ 8 бит на пиксель
-    // против 32 у JPEG; нет поддержки, ?ktx=0 или ошибка — прежний JPEG
+    // против 32 у JPEG; нет поддержки, ?ktx=0 или ошибка - прежний JPEG
     if (ktxOn()) ktxLoad(f).then((k) => { k.wrapS = k.wrapT = THREE.RepeatWrapping; k.anisotropy = t.anisotropy; U[u].value = k; if (stats) stats.done++; }).catch(() => jpg());
     else jpg();
   }
   return U;
 }
-// цвет земли в точке P (мир) на расстоянии dist от камеры: rgb — цвет, a — туман низин без множителя расстояния. Один код — у материала земли
-// и у запекания (ground-bake.js: dist = 1e6 — вдали цвет от камеры не зависит: near = 0, far = 1). wN — нормаль рельефа (задаёт вызывающий)
+// цвет земли в точке P (мир) на расстоянии dist от камеры: rgb - цвет, a - туман низин без множителя расстояния. Один код - у материала земли
+// и у запекания (ground-bake.js: dist = 1e6 - вдали цвет от камеры не зависит: near = 0, far = 1). wN - нормаль рельефа (задаёт вызывающий)
 function aGroundGLSL(H) {
   return `vec4 aGround(vec3 P, float dist) {
   vec2 mp = (P.xz + ${H.toFixed(1)}) / ${(2 * H).toFixed(1)};
   vec4 Z = texture2D(tZ, mp), Z2 = texture2D(tZ2, mp);
   float slope = 1.0 - wN.y, hgt = P.y, near = 1.0 - smoothstep(200.0, 1200.0, dist);
-  // сухой луг: охра и оливковые пятна; рисунок — снимок с высоты (два масштаба) и сухая трава вблизи
+  // сухой луг: охра и оливковые пятна; рисунок - снимок с высоты (два масштаба) и сухая трава вблизи
   float gA = lum(texture2D(aGA, P.xz / 260.0).rgb), gA2 = lum(texture2D(aGA, P.xz / 1300.0 + 0.37).rgb);
   vec3 dG = near > 0.0 ? texF(aG, P.xz, 5.0, vec2(0.0)).rgb : vec3(0.3), dG2 = texF(aG, P.xz, 31.0, vec2(0.21)).rgb; dG = vec3(lum(dG)) * 0.6 + dG * 0.4;
   vec3 grass = mix(vec3(0.15, 0.135, 0.06), vec3(0.095, 0.105, 0.045), smoothstep(0.3, 0.7, vn(P.xz / 420.0) * 0.7 + gA2 * 0.6 - 0.15));
-  // пятна разной травы (ветошь, побуревшая, зеленоватая отава, рыжий клевер) — на 15–80 м, чтобы и с высоты луг был живой
+  // пятна разной травы (ветошь, побуревшая, зеленоватая отава, рыжий клевер) - на 15-80 м, чтобы и с высоты луг был живой
   float pv = vn(P.xz / 80.0) * 0.6 + vn(P.xz / 17.0) * 0.4;
   grass *= pv < 0.35 ? vec3(0.85, 0.95, 0.8) : pv < 0.55 ? vec3(1.0) : pv < 0.72 ? vec3(1.18, 1.05, 0.85) : vec3(1.2, 0.85, 0.65);
   grass *= (0.55 + 0.9 * gA) * mix(0.75 + 0.9 * lum(dG2), 1.0, near * 0.5) * mix(1.0, 0.3 + 2.4 * lum(dG), 0.6 * near) * mix(vec3(1.0), dG / max(lum(dG), 0.05), 0.3 * near);
-  // скалы: крутые склоны и голая Лысая гора (там же — бледная выгоревшая трава)
+  // скалы: крутые склоны и голая Лысая гора (там же - бледная выгоревшая трава)
   float rA = lum(texture2D(aRA, P.xz / 300.0).rgb), rl = near > 0.0 ? lum(texF(aRk, P.xz, 24.0, vec2(0.0)).rgb) : 0.5;
   vec3 rock = vec3(0.12, 0.11, 0.095) * (0.55 + 0.9 * rA) * mix(1.0, 0.6 + 0.8 * rl, near);
   float bald = 1.0 - smoothstep(uBald.z * 0.45, uBald.z * 0.85, distance(P.xz, uBald.xy) + 120.0 * (vn(P.xz / 90.0) - 0.5));
@@ -79,7 +79,7 @@ function aGroundGLSL(H) {
   float rk = smoothstep(0.32, 0.5, slope + 0.14 * (rA - 0.5) + 0.1 * (vn(P.xz / 60.0) - 0.5));
   rk = max(rk, bald * smoothstep(0.12, 0.28, slope + 0.2 * (rA - 0.5)) * 0.85);
   vec3 col = mix(grass, rock, rk);
-  // болото (суша в котловине): мох, осока, торф — тёмные бурые и оливковые пятна; вблизи — грязь с листвой
+  // болото (суша в котловине): мох, осока, торф - тёмные бурые и оливковые пятна; вблизи - грязь с листвой
   float mA = lum(texture2D(aMA, P.xz / 200.0).rgb);
   vec3 bog = mix(vec3(0.045, 0.05, 0.022), vec3(0.085, 0.08, 0.03), vn(P.xz / 70.0) * 0.7 + vn(P.xz / 13.0) * 0.3) * (0.6 + 0.8 * mA); // мох и осока
   bog = mix(bog, vec3(0.13, 0.11, 0.05), smoothstep(0.62, 0.8, vn(P.xz / 25.0)) * 0.6); // сухая осока куртинами
@@ -89,7 +89,7 @@ function aGroundGLSL(H) {
   float rv = smoothstep(0.6, 0.85, Z2.r + 0.15 * (vn(P.xz / 40.0) - 0.5)) * (1.0 - smoothstep(0.12, 0.28, slope)); // только дно (врезка глубже ~35 м и полого)
   vec3 mud = texF(aM, P.xz, 5.0, vec2(0.0)).rgb * 0.5 * mix(1.0, 0.7 + 0.6 * mA, 1.0 - near);
   col = mix(col, mud, rv * 0.75);
-  // лес: издали — рыжая, жёлтая, бурая крона и серый сухостой пятнами (импосторы редкие), вблизи под деревьями — листва
+  // лес: издали - рыжая, жёлтая, бурая крона и серый сухостой пятнами (импосторы редкие), вблизи под деревьями - листва
   float fr = smoothstep(0.2, 0.8, Z.r + 0.5 * (vn(P.xz / 160.0) - 0.5) + 0.3 * (vn(P.xz / 45.0) - 0.5)), far = smoothstep(300.0, 1600.0, dist);
   float ch = vn(P.xz / 38.0) * 0.65 + vn(P.xz / 9.0) * 0.35;
   vec3 canopy = ch < 0.3 ? vec3(0.28, 0.08, 0.015) : ch < 0.5 ? vec3(0.34, 0.17, 0.02) : ch < 0.7 ? vec3(0.3, 0.24, 0.035) : ch < 0.86 ? vec3(0.19, 0.1, 0.035) : vec3(0.12, 0.1, 0.08);
@@ -97,7 +97,7 @@ function aGroundGLSL(H) {
   vec3 litter = far < 1.0 ? texF(aL, P.xz, 4.0, vec2(0.0)).rgb * 0.6 : vec3(0.0);
   col = mix(col, canopy * (0.75 + 0.5 * vn(P.xz / 14.0)), fr * far * 0.85);
   col = mix(col, mix(col, litter, 0.7), fr * (1.0 - far));
-  // поля: пашня (бурые борозды) и тыквенные (вблизи — оранжевые точки по рядам, вдали — рыжий отлив)
+  // поля: пашня (бурые борозды) и тыквенные (вблизи - оранжевые точки по рядам, вдали - рыжий отлив)
   vec3 fld = texF(aF, P.xz, 9.0, vec2(0.0)).rgb * 0.55 * mix(0.9, 1.1, vn(P.xz / 30.0));
   float pf = smoothstep(0.3, 0.7, Z2.b), pl = smoothstep(0.3, 0.7, Z2.g);
   col = mix(col, fld, max(pl, pf) * 0.9);
@@ -109,8 +109,8 @@ function aGroundGLSL(H) {
   float za = smoothstep(0.1, 0.9, Z.a + 0.4 * (vn(P.xz / 80.0) - 0.5));
   vec3 dirt = texF(aM, P.xz, 6.0, vec2(0.0)).rgb * 0.5 * vec3(1.05, 1.0, 0.92);
   col = mix(col, dirt, zb * 0.85); col = mix(col, mix(col, dirt, 0.45), za * 0.6);
-  // туман в низинах: над болотом и в оврагах — плотная пелена (вдали сильнее — множитель расстояния у вызывающего, вблизи — дымка)
-  // (подмешивается после освещения — как туман, см. fog_fragment): клочьями
+  // туман в низинах: над болотом и в оврагах - плотная пелена (вдали сильнее - множитель расстояния у вызывающего, вблизи - дымка)
+  // (подмешивается после освещения - как туман, см. fog_fragment): клочьями
   return vec4(col, (1.0 - smoothstep(6.0, 70.0 + 50.0 * vn(P.xz / 900.0), hgt - ${AUTUMN.WY.toFixed(1)} - 40.0 * Z2.r)) * (0.85 + 0.3 * vn(P.xz / 600.0)));
 }
 `;
@@ -118,17 +118,17 @@ function aGroundGLSL(H) {
 const aHeadGLSL = () => `uniform vec3 uBald; uniform sampler2D tZ, tZ2, tNm, aG, aGN, aGA, aL, aM, aMA, aF, aRk, aRA;
       float lum(vec3 c) { return dot(c, vec3(0.3, 0.59, 0.11)); }
       float hs(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
-      ${NOISE_ON ? NOISE_GLSL + 'float vn(vec2 p) { return vnt(p); } // шум — текстурой (noise-tex.js): 24 вызова на пиксель были главной ценой земли' : 'float vn(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(hs(i), hs(i + vec2(1, 0)), f.x), mix(hs(i + vec2(0, 1)), hs(i + vec2(1, 1)), f.x), f.y); }'}
+      ${NOISE_ON ? NOISE_GLSL + 'float vn(vec2 p) { return vnt(p); } // шум - текстурой (noise-tex.js): 24 вызова на пиксель были главной ценой земли' : 'float vn(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(hs(i), hs(i + vec2(1, 0)), f.x), mix(hs(i + vec2(0, 1)), hs(i + vec2(1, 1)), f.x), f.y); }'}
       vec3 wN; float aLow;
       ${FAR_GLSL}
 `;
-// материал земли: Phong (свет, тени, туман — как у остального), цвет и нормаль — в шейдере. bake — запечённый цвет дальней земли (ground-bake.js)
+// материал земли: Phong (свет, тени, туман - как у остального), цвет и нормаль - в шейдере. bake - запечённый цвет дальней земли (ground-bake.js)
 export function autumnGroundMaterial(city, zt, nt, ENV, AT, W, bake) {
   const H = 16000, BA = AUTUMN.BALD, fogC = new THREE.Color(W.fog).convertSRGBToLinear();
   const m = new THREE.MeshPhongMaterial({ color: 0xffffff, specular: 0x0c0c0a, shininess: 10 }); m.userData.AT = AT; m.userData.farU = FAR_U;
-  m.extensions = { derivatives: true, shaderTextureLOD: true }; // земля вдали (ground-far.js) — на WebGL 1; на WebGL 2 и так есть
+  m.extensions = { derivatives: true, shaderTextureLOD: true }; // земля вдали (ground-far.js) - на WebGL 1; на WebGL 2 и так есть
   const GU = { uFar: FAR_U, tZ: { value: zt[0] }, tZ2: { value: zt[1] }, tNm: { value: nt }, tNoise: { value: NOISE_ON ? noiseTex() : null }, uBald: { value: new THREE.Vector3(BA.x, BA.z, BA.r) } };
-  m.userData.GU = GU; m.userData.groundGLSL = () => aHeadGLSL() + aGroundGLSL(H); // для запекания — те же текстуры и код
+  m.userData.GU = GU; m.userData.groundGLSL = () => aHeadGLSL() + aGroundGLSL(H); // для запекания - те же текстуры и код
   m.onBeforeCompile = (sh) => {
     Object.assign(sh.uniforms, AT, GU, { uCam: ENV.uCam, uLow: { value: new THREE.Vector4(fogC.r, fogC.g, fogC.b, W.lowFog ?? 0.5) } }, bake ? bake.U : {});
     sh.vertexShader = 'varying vec3 vWp;\n' + sh.vertexShader.replace('#include <project_vertex>', '#include <project_vertex>\n vWp = (modelMatrix * vec4(transformed, 1.0)).xyz;');
@@ -136,10 +136,10 @@ export function autumnGroundMaterial(city, zt, nt, ENV, AT, W, bake) {
       ${aHeadGLSL()}${aGroundGLSL(H)}${bake ? bake.GLSL : ''}
 ` + sh.fragmentShader.replace('#include <shadowmap_pars_fragment>', groundShadowChunk())
       .replace('#include <color_fragment>', `#include <color_fragment>
-  farInit(vWp.xz); // мелкие текстуры вдали — средним цветом (texF, ground-far.js); вблизи — только при ненулевом весе
+  farInit(vWp.xz); // мелкие текстуры вдали - средним цветом (texF, ground-far.js); вблизи - только при ненулевом весе
   wN = normalize(texture2D(tNm, (vWp.xz + ${H.toFixed(1)}) / ${(2 * H).toFixed(1)}).xyz * 2.0 - 1.0);
   float dist = length(vWp - uCam);
-  ${bake ? `float bk = bakeK(dist, vWp.xz); vec4 gC = vec4(0.0); // дальняя земля — запечённый цвет (ground-bake.js); в полосе перехода — смесь
+  ${bake ? `float bk = bakeK(dist, vWp.xz); vec4 gC = vec4(0.0); // дальняя земля - запечённый цвет (ground-bake.js); в полосе перехода - смесь
   if (bk < 1.0) gC = aGround(vWp, dist);
   if (bk > 0.0) gC = mix(gC, bakeAt(vWp.xz), bk);` : 'vec4 gC = aGround(vWp, dist);'}
   aLow = gC.a * mix(0.04, 1.0, smoothstep(300.0, 5000.0, dist));
@@ -155,11 +155,11 @@ export function autumnGroundMaterial(city, zt, nt, ENV, AT, W, bake) {
   };
   return m;
 }
-// лес: лиственные (городские импосторы, перекрашены цветом экземпляра — рыжие, жёлтые, бурые, багряные), сосны (свои, зелёные)
-// и сухостой (бурые); куртинами по району «лес», плотность — как у зимы
+// лес: лиственные (городские импосторы, перекрашены цветом экземпляра - рыжие, жёлтые, бурые, багряные), сосны (свои, зелёные)
+// и сухостой (бурые); куртинами по району «лес», плотность - как у зимы
 export function autumnTrees(city, P, rnd, gh = city.groundH) {
   const tl = [], want = Math.round((P.trees || 0) * 10), H = 15500, c = new THREE.Color();
-  // листва конца октября в сумерках — приглушённая: охра и ржавчина (насыщенность ≤ 0,45), четверть — ещё оливковые, редко — багряные
+  // листва конца октября в сумерках - приглушённая: охра и ржавчина (насыщенность ≤ 0,45), четверть - ещё оливковые, редко - багряные
   const leaf = () => { const r = rnd(); if (r < 0.25) c.setHSL(0.16 + rnd() * 0.07, 0.2 + rnd() * 0.12, 0.15 + rnd() * 0.05); else if (r < 0.33) c.setHSL(0.01 + rnd() * 0.02, 0.32 + rnd() * 0.12, 0.17 + rnd() * 0.05); else c.setHSL(0.05 + rnd() * 0.07, 0.25 + rnd() * 0.2, 0.17 + rnd() * 0.08); };
   for (let t = 0; t < want * 3 && tl.length < want; t++) {
     const cx = (rnd() * 2 - 1) * H, cz = (rnd() * 2 - 1) * H;
@@ -170,15 +170,15 @@ export function autumnTrees(city, P, rnd, gh = city.groundH) {
       if (city.zoneAt(x, z) !== ZONE.PARK) continue;
       const sp = rnd(), v = sp < 0.38 ? 0 : sp < 0.7 ? 1 : sp < 0.84 ? 2 : 3;
       const dead = v !== 2 && rnd() < 0.14;
-      if (v === 2) c.setHSL(0.28, 0.35, 0.2); // сосна — своя хвоя (перекраски нет)
-      else if (dead) c.setHSL(0.07, 0.15, 0.17); // сухостой — серо-бурый
+      if (v === 2) c.setHSL(0.28, 0.35, 0.2); // сосна - своя хвоя (перекраски нет)
+      else if (dead) c.setHSL(0.07, 0.15, 0.17); // сухостой - серо-бурый
       else leaf(); // охра, ржавчина, бурый, местами ещё оливково-зелёные
       c.convertSRGBToLinear();
       const ht = (v === 3 ? 5 : 10) + rnd() * (v === 3 ? 3 : 10);
       tl.push({ x, z, y: gh(x, z) - 0.4, sy: ht, v, color: c.clone(), ry: rnd() * 6.283 });
     }
   }
-  // балки: вдоль каждого оврага (через 40 м) — по 2–4 дерева на склонах по обе стороны (укрытие для полёта по оврагу)
+  // балки: вдоль каждого оврага (через 40 м) - по 2-4 дерева на склонах по обе стороны (укрытие для полёта по оврагу)
   for (const l of city.ravines || []) for (let k = 0; k < l.pts.length - 1; k++) {
     const [x0, z0] = l.pts[k], [x1, z1] = l.pts[k + 1], dl = Math.hypot(x1 - x0, z1 - z0) || 1, nx = -(z1 - z0) / dl, nz = (x1 - x0) / dl;
     const n = 2 + Math.floor(rnd() * 3);
@@ -193,8 +193,8 @@ export function autumnTrees(city, P, rnd, gh = city.groundH) {
   }
   return tl;
 }
-// дороги: грунтовки по рельефу (лентой чуть выше земли): колеи, лужи, трава по обочинам; гать — бревенчатый настил;
-// узкоколейка — насыпь со шпалами
+// дороги: грунтовки по рельефу (лентой чуть выше земли): колеи, лужи, трава по обочинам; гать - бревенчатый настил;
+// узкоколейка - насыпь со шпалами
 export function autumnRoads(scene, city, AT, P, gh = city.groundH) {
   const pos = [], uv = [], kd = [], idx = [];
   for (const r of city.roads || []) {
@@ -227,22 +227,22 @@ export function autumnRoads(scene, city, AT, P, gh = city.groundH) {
   };
   const mesh = new THREE.Mesh(g, m); mesh.receiveShadow = !!P.shadows; scene.add(mesh); return mesh;
 }
-// вода болота: маска (где вода) по котловине — для отсечения плоскости воды у берега (rimD в шейдере воды, м до берега)
+// вода болота: маска (где вода) по котловине - для отсечения плоскости воды у берега (rimD в шейдере воды, м до берега)
 export function autumnWaterMask(city) {
   const B = AUTUMN.BASIN, x0 = B.x - B.rx * 1.25, z0 = B.z - B.rz * 1.25, w = B.rx * 2.5, d = B.rz * 2.5, S = 512;
   const raw = new Float32Array(S * S);
   for (let j = 0; j < S; j++) for (let i = 0; i < S; i++) raw[j * S + i] = city.waterAt(x0 + (i + 0.5) * w / S, z0 + (j + 0.5) * d / S) ? 1 : 0;
-  const T = new Float32Array(S * S); // размытие ×3 (ячейка ~27 м): к берегу плавно — 0,5 на урезе
+  const T = new Float32Array(S * S); // размытие ×3 (ячейка ~27 м): к берегу плавно - 0,5 на урезе
   for (let it = 0; it < 3; it++) { T.set(raw); for (let j = 1; j < S - 1; j++) for (let i = 1; i < S - 1; i++) { const q = j * S + i; raw[q] = (T[q] * 2 + T[q - 1] + T[q + 1] + T[q - S] + T[q + S]) / 6; } }
   const a = new Uint8Array(S * S * 4); for (let q = 0; q < S * S; q++) { a[q * 4] = Math.round(raw[q] * 255); a[q * 4 + 3] = 255; }
   const t = new THREE.DataTexture(a, S, S, THREE.RGBAFormat); t.magFilter = THREE.LinearFilter; t.minFilter = THREE.LinearFilter; t.flipY = false; t.needsUpdate = true;
   return { tex: t, rect: new THREE.Vector4(x0, z0, w, d) };
 }
 // реквизит (map-autumn.js city.props: имя → [x, z, поворот, масштаб, …]): тыквы, надгробия, ограда, сено, колодцы, сухостой,
-// брошенные машины — моделями вблизи камеры (G.addNear, как детали улиц города); радиус — по размеру предмета
+// брошенные машины - моделями вблизи камеры (G.addNear, как детали улиц города); радиус - по размеру предмета
 const PROP_R = { pr_pumpkin: 0.35, pr_grave1: 0.4, pr_grave2: 0.45, pr_grave3: 0.45, pr_grave4: 0.3, pr_fence: 0.45, pr_fpost: 0.45, pr_hay: 0.5, pr_well: 0.5, pr_deadtree: 1.4, pr_oldtree: 1.4, c_vaz: 0.6 };
 export function autumnProps(G, city, P, gh = city.groundH) {
-  const R = P.propNear || P.bldNear || 0; if (!R || !G.addNear || !city.props) return; // propNear — ?full=1 (main.js)
+  const R = P.propNear || P.bldNear || 0; if (!R || !G.addNear || !city.props) return; // propNear - ?full=1 (main.js)
   const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), Y = new THREE.Vector3(0, 1, 0), p = new THREE.Vector3(), sc = new THREE.Vector3();
   for (const [name, arr] of Object.entries(city.props)) {
     const n = arr.length / 4, xz = new Float32Array(n * 2), mats = new Float32Array(n * 16), wy = AUTUMN.WY - 0.4; // в болоте сухостой стоит в воде

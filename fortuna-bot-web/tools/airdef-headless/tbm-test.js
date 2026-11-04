@@ -1,6 +1,6 @@
-// Перехват баллистики без браузера: один противоракетный ЗРК (ИИ-расчёт) прикрывает точку, по ней — баллистические ракеты.
+// Перехват баллистики без браузера: один противоракетный ЗРК (ИИ-расчёт) прикрывает точку, по ней - баллистические ракеты.
 //   deno run --allow-read tools/airdef-headless/tbm-test.js [ракет на пару]
-// Печатает по каждой паре «ЗРК — ракета»: пусков ЗУР, сближение ближе порога, сбито / долетело.
+// Печатает по каждой паре «ЗРК - ракета»: пусков ЗУР, сближение ближе порога, сбито / долетело.
 const dir = new URL('.', import.meta.url).pathname;
 (0, eval)(Deno.readTextFileSync(dir + '../drone-headless/three.min.js'));
 const { buildCity } = await import('../../games/airdef/city.js');
@@ -19,7 +19,7 @@ for (const [sk, wk] of PAIRS) {
     const S = createStrike({ city, rnd, mode: () => MODES.real, aircraft: () => [], laserSpot: () => null, night: 0, fx, hurt: () => {} });
     const u = S.addUnit(sk, 0, 0); u.skill = 0.8;
     const a = n * 2.4, R = CITY.HALF + 1500 + 60000 * rnd();
-    // цель — 1–4 км от ЗРК (прикрываемый объект)
+    // цель - 1-4 км от ЗРК (прикрываемый объект)
     const tx = Math.cos(a + 1) * (1000 + 3000 * rnd()), tz = Math.sin(a + 1) * (1000 + 3000 * rnd());
     S.spawnMun(wk, new THREE.Vector3(Math.cos(a) * R, city.groundH(Math.cos(a) * R, Math.sin(a) * R) + 8, Math.sin(a) * R), new THREE.Vector3(tx, 0, tz));
     let dmin = 1e9;
@@ -27,7 +27,7 @@ for (const [sk, wk] of PAIRS) {
       S.step(0.02);
       for (const m of S.sams) if (!m.dead && m.target && m.target.pos) dmin = Math.min(dmin, m.pos.distanceTo(m.target.pos));
     }
-    if (dmin < 100) close++; ds.push(dmin < 1e8 ? Math.round(dmin) : "—");
+    if (dmin < 100) close++; ds.push(dmin < 1e8 ? Math.round(dmin) : "-");
   }
   tot += N; totK += kill;
   console.log(`${sk.padEnd(8)} ↔ ${wk.padEnd(9)} пусков ЗУР ${launched}, сближений < 100 м: ${close}/${N}, сбито ${kill}, долетело ${lands} · сближение, м: ${ds.join(" ")}`);

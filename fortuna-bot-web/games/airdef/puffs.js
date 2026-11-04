@@ -1,14 +1,14 @@
 // Клубы дыма из Blender для следов подбитых самолётов (2026-10-24, Mark: «запечь дымы повреждений»): как makeParticles «Летки» (точки,
-// тот же emit — форму следа по траектории задаёт игра), но частица — не ровное пятно, а кадр настоящего клуба по её возрасту: плотный и
+// тот же emit - форму следа по траектории задаёт игра), но частица - не ровное пятно, а кадр настоящего клуба по её возрасту: плотный и
 // клубящийся → рваный → тающие пряди, со светом и самозатенением (tools/airdef-fx/explode/puff.py → fx/puff.ktx2: 4 варианта × 16 кадров, 8×8).
-// Клуб в листе всегда заполняет клетку (камера Blender — по границам дыма), разрастание — размером частицы, как было. Тон (серый / чёрный /
-// белёсая течь) — цвет частицы × белый дым листа; свет — небо и солнце сцены (как у раскадровок). Вариант и зеркало — случайные (повторов не видно).
-// ready = false, пока лист не пришёл (или его нет) — вызывающий шлёт частицы в прежний пул (мягкое пятно)
+// Клуб в листе всегда заполняет клетку (камера Blender - по границам дыма), разрастание - размером частицы, как было. Тон (серый / чёрный /
+// белёсая течь) - цвет частицы × белый дым листа; свет - небо и солнце сцены (как у раскадровок). Вариант и зеркало - случайные (повторов не видно).
+// ready = false, пока лист не пришёл (или его нет) - вызывающий шлёт частицы в прежний пул (мягкое пятно)
 /* global THREE */
 import { FXU, SOFT_GLSL, FOG_LIN, FOG_U } from '../drone/world.js?v=20261104a';
 import { ktxOn, ktxLoadUrl } from './ktx.js?v=20261104a';
 
-// cfg: ktx, url — лист; cols, rows, frames (на вариант), variants, times — время кадров съёмки, с; onTex(t) — текстура пришла
+// cfg: ktx, url - лист; cols, rows, frames (на вариант), variants, times - время кадров съёмки, с; onTex(t) - текстура пришла
 export function makePuffs(scene, N, cfg) {
   const web = typeof document !== 'undefined' && document.createElementNS, st = { ready: false };
   const pos = new Float32Array(N * 3), col = new Float32Array(N * 3), alp = new Float32Array(N), siz = new Float32Array(N), pf = new Float32Array(N * 2);
@@ -19,7 +19,7 @@ export function makePuffs(scene, N, cfg) {
   geo.setAttribute('alpha', new THREE.BufferAttribute(alp, 1)); geo.setAttribute('size', new THREE.BufferAttribute(siz, 1)); geo.setAttribute('pf', new THREE.BufferAttribute(pf, 2));
   for (const k of ['position', 'pcolor', 'alpha', 'size', 'pf']) geo.attributes[k].setUsage(THREE.DynamicDrawUsage);
   geo.setDrawRange(0, 0);
-  const F = cfg.frames, TM = cfg.times, T1 = TM[F - 1], K = cfg.k || 2, FI = cfg.fadeIn || 0, SQ = !!cfg.sqrtGrow; // sqrtGrow — рост ∝ √возраста (как ширина следа ракеты: турбулентная диффузия) // fadeIn — проявление, с (клубы следа ракеты у сопла не «выскакивают»)
+  const F = cfg.frames, TM = cfg.times, T1 = TM[F - 1], K = cfg.k || 2, FI = cfg.fadeIn || 0, SQ = !!cfg.sqrtGrow; // sqrtGrow - рост ∝ √возраста (как ширина следа ракеты: турбулентная диффузия) // fadeIn - проявление, с (клубы следа ракеты у сопла не «выскакивают»)
   const mat = new THREE.ShaderMaterial({
     uniforms: { map: { value: new THREE.Texture() }, uGrid: { value: new THREE.Vector2(cfg.cols, cfg.rows) }, uLight: { value: new THREE.Vector3(1, 1, 1) },
       scale: { value: 500 }, fogColor: { value: FOG_LIN }, fogDensity: FOG_U, ...FXU },
@@ -34,7 +34,7 @@ export function makePuffs(scene, N, cfg) {
         gl_PointSize = (d > 0.0 && alpha > 0.0) ? min(ps, 400.0) : 0.0; gl_Position = projectionMatrix * mv;
         #include <logdepthbuf_vertex>
       }`,
-    // pf.x — кадр (дробный: соседние кадры смешиваются), pf.y — номер клетки первого кадра варианта, со знаком — зеркало
+    // pf.x - кадр (дробный: соседние кадры смешиваются), pf.y - номер клетки первого кадра варианта, со знаком - зеркало
     fragmentShader: `#include <common>
       #include <logdepthbuf_pars_fragment>
       uniform sampler2D map; uniform vec2 uGrid; uniform vec3 uLight, fogColor; varying vec3 vC; varying float vA; varying float vF; varying vec2 vP;
@@ -62,16 +62,16 @@ export function makePuffs(scene, N, cfg) {
   const points = new THREE.Points(geo, mat); points.frustumCulled = false; scene.add(points);
   let head = 0, emitted = false, wasLive = false;
   const A = geo.attributes, range = (attr, lo, n, k) => { attr.updateRange.offset = lo * k; attr.updateRange.count = n * k; attr.needsUpdate = true; };
-  // возраст (доля жизни) → время съёмки → дробный кадр; t0 — с какого места листа начинать (у течи — с прядей)
+  // возраст (доля жизни) → время съёмки → дробный кадр; t0 - с какого места листа начинать (у течи - с прядей)
   const frameAt = (u) => { const t = u * T1; let k = 0; while (k < F - 2 && TM[k + 1] <= t) k++; return Math.min(F - 1, k + (t - TM[k]) / (TM[k + 1] - TM[k])); };
   return {
     mat, points, get ready() { return st.ready; },
-    // как makeParticles.emit; st — с какого места клуба (0…1: 0 — свежий, 0,5 — уже рваный); ex — прибавка размера, набираемая за ≈ et с
-    // (след ракеты: из факела клуб выходит узким и раздаётся; sqrtGrow), ag — клуб уже прожил ag с (ракета прошла эту точку раньше)
+    // как makeParticles.emit; st - с какого места клуба (0…1: 0 - свежий, 0,5 - уже рваный); ex - прибавка размера, набираемая за ≈ et с
+    // (след ракеты: из факела клуб выходит узким и раздаётся; sqrtGrow), ag - клуб уже прожил ag с (ракета прошла эту точку раньше)
     emit(x, y, z, vx, vy, vz, r, g, b, a, s, gr, l, dr, gv, start = 0, ex = 0, et = 0.3, ag = 0) {
       const i = head = (head + 1) % N, i3 = i * 3, v = Math.floor(Math.random() * cfg.variants);
       pos[i3] = x; pos[i3 + 1] = y; pos[i3 + 2] = z; vel[i3] = vx; vel[i3 + 1] = vy; vel[i3 + 2] = vz;
-      // клуб занимает меньше клетки, чем мягкое пятно своей точки, — размер × K: видимый — как был (иначе след издали — цепочка «бусин»)
+      // клуб занимает меньше клетки, чем мягкое пятно своей точки, - размер × K: видимый - как был (иначе след издали - цепочка «бусин»)
       col[i3] = r; col[i3 + 1] = g; col[i3 + 2] = b; a0[i] = alp[i] = a; s0[i] = siz[i] = s * K; grow[i] = gr * K; max[i] = l; life[i] = Math.max(0.01, l - ag); xs[i] = ex * K; xt[i] = et; drag[i] = dr; grav[i] = gv; t0[i] = start;
       pf[i * 2] = frameAt(start); pf[i * 2 + 1] = (v * F + 1) * (Math.random() < 0.5 ? -1 : 1);
       emitted = true;
@@ -87,7 +87,7 @@ export function makePuffs(scene, N, cfg) {
         const k = Math.max(0, 1 - drag[i] * dt); vel[i3] *= k; vel[i3 + 1] = vel[i3 + 1] * k + grav[i] * dt; vel[i3 + 2] *= k;
         if (SQ) { const ag = max[i] - life[i]; siz[i] = s0[i] + grow[i] * Math.sqrt(ag) + (xs[i] ? xs[i] * (1 - Math.exp(-ag / xt[i])) : 0); } else siz[i] += grow[i] * dt;
         const u = Math.max(0, life[i] / max[i]), age = 1 - u, e = Math.min(1, u * 4);
-        alp[i] = a0[i] * e * e * (3 - 2 * e) * (FI ? Math.min(1, (max[i] - life[i]) / FI) : 1); // клуб тает сам (кадры листа) — общая прозрачность уходит только в последней четверти жизни, по S-кривой
+        alp[i] = a0[i] * e * e * (3 - 2 * e) * (FI ? Math.min(1, (max[i] - life[i]) / FI) : 1); // клуб тает сам (кадры листа) - общая прозрачность уходит только в последней четверти жизни, по S-кривой
         pf[i * 2] = frameAt(t0[i] + (1 - t0[i]) * age);
         if (i < lo) lo = i; hi = i;
       }

@@ -3,30 +3,30 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"> <!-- «На экран „Домой“» — без панелей Safari -->
-<!-- значок на экране «Домой» — лого игры (Mark 2026-11-04), Android — манифест; новые имена файлов: старые значки телефоны держат в кэше -->
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"> <!-- «На экран „Домой“» - без панелей Safari -->
+<!-- значок на экране «Домой» - лого игры (Mark 2026-11-04), Android - манифест; новые имена файлов: старые значки телефоны держат в кэше -->
 <link rel="apple-touch-icon" href="../img/airdef-logo-180.png"><link rel="icon" type="image/png" sizes="192x192" href="../img/airdef-logo-192.png"><link rel="manifest" href="airdef.webmanifest"><link rel="preload" as="image" href="../img/airdef-logo-alpha.webp"><link rel="preload" as="image" href="airdef/ui/doors/hangar_l.webp?v=20261104a"><link rel="preload" as="image" href="airdef/ui/doors/hangar_r.webp?v=20261104a">
 <title>Air Superiority Online</title>
-<!-- перезагрузка под новую карту (doors.js carry): страница открывается уже с закрытыми створками — до загрузки модулей; потом их сменяют створки doors.js -->
+<!-- перезагрузка под новую карту (doors.js carry): страница открывается уже с закрытыми створками - до загрузки модулей; потом их сменяют створки doors.js -->
 <style>#doorsBoot { display: none; } html.dboot #doorsBoot { display: block; position: fixed; inset: 0; z-index: 2147482900; background: #171b14; }
   #doorsBoot > div { position: absolute; top: 0; bottom: 0; width: 50.2%; background: #171b14 center / cover no-repeat; }
   #doorsBoot .dl { left: 0; background-image: var(--dbl); background-position: right center; } #doorsBoot .dr { right: 0; background-image: var(--dbr); background-position: left center; }</style>
-<script>try { var dd = JSON.parse(sessionStorage.getItem('fortuna_ad_doors') || 'null'); if (dd && Date.now() - dd.t < 60000 && /^(has|hangar)$/.test(dd.s) && !matchMedia('(prefers-reduced-motion: reduce)').matches) { var dr = document.documentElement; dr.classList.add('dboot'); setTimeout(function () { dr.classList.remove('dboot'); }, 20000); /* игра не поднялась (ошибка до doors.js) — заглушка не висит вечно */
+<script>try { var dd = JSON.parse(sessionStorage.getItem('fortuna_ad_doors') || 'null'); if (dd && Date.now() - dd.t < 60000 && /^(has|hangar)$/.test(dd.s) && !matchMedia('(prefers-reduced-motion: reduce)').matches) { var dr = document.documentElement; dr.classList.add('dboot'); setTimeout(function () { dr.classList.remove('dboot'); }, 20000); /* игра не поднялась (ошибка до doors.js) - заглушка не висит вечно */
   dr.style.setProperty('--dbl', 'url(airdef/ui/doors/' + dd.s + '_l.webp?v=20261104a)'); dr.style.setProperty('--dbr', 'url(airdef/ui/doors/' + dd.s + '_r.webp?v=20261104a)'); } } catch (e) { /* нет хранилища */ }</script>
-<!-- превью ссылки (то же, что у fortunawtm.com/airsuperiority — Mark 2026-10-27) -->
+<!-- превью ссылки (то же, что у fortunawtm.com/airsuperiority - Mark 2026-10-27) -->
 <meta name="description" content="Современная авиация, вооружение и комплексы ПВО прямо в браузере! Специальный режим мульти-волны против баллистики, крылатых ракет, дронов и бомб по обе стороны. Онлайн, рейтинг, камуфляжи и многое другое. Попробуй прямо сейчас!"><meta property="og:type" content="website"><meta property="og:site_name" content="xFORTUNAx"><meta property="og:title" content="Air Superiority Online">
 <meta property="og:description" content="Современная авиация, вооружение и комплексы ПВО прямо в браузере! Специальный режим мульти-волны против баллистики, крылатых ракет, дронов и бомб по обе стороны. Онлайн, рейтинг, камуфляжи и многое другое. Попробуй прямо сейчас!"><meta property="og:image" content="https://fortunawtm.com/fortuna-bot-web/img/og-logo.jpg"><meta property="og:url" content="https://fortunawtm.com/airsuperiority"><meta name="twitter:card" content="summary_large_image">
 <style>
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  /* безопасные зоны: вырез/скругления (--sa-*) и кнопки Telegram (--tg-t) — выставляет main.js */
+  /* безопасные зоны: вырез/скругления (--sa-*) и кнопки Telegram (--tg-t) - выставляет main.js */
   :root { --m-tri: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath d='M106.854 106.002a26.003 26.003 0 0 0-25.64 29.326c16 124 16 117.344 0 241.344a26.003 26.003 0 0 0 35.776 27.332l298-124a26.003 26.003 0 0 0 0-48.008l-298-124a26.003 26.003 0 0 0-10.136-1.994z'/%3E%3C/svg%3E"); --m-triD: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cg transform='rotate(90 256 256)'%3E%3Cpath d='M106.854 106.002a26.003 26.003 0 0 0-25.64 29.326c16 124 16 117.344 0 241.344a26.003 26.003 0 0 0 35.776 27.332l298-124a26.003 26.003 0 0 0 0-48.008l-298-124a26.003 26.003 0 0 0-10.136-1.994z'/%3E%3C/g%3E%3C/svg%3E"); --sa-t: env(safe-area-inset-top, 0px); --sa-r: env(safe-area-inset-right, 0px); --sa-b: env(safe-area-inset-bottom, 0px); --sa-l: env(safe-area-inset-left, 0px);
     --tg-t: 0px; --top: calc(max(10px, var(--sa-t)) + var(--tg-t)); }
   html, body { margin: 0; height: 100%; overflow: hidden; background: #0b1016; color: #eaf6ff; overscroll-behavior: none;
     font-family: 'Golos Text', -apple-system, "Segoe UI", Roboto, sans-serif; user-select: none; -webkit-user-select: none; touch-action: none;
-    -webkit-text-size-adjust: 100%; text-size-adjust: 100%; } /* Safari в горизонтали сам укрупнял длинные строки (Mark 2026-10-27: «Наведение камерой» в настройках — заметно крупнее) */
+    -webkit-text-size-adjust: 100%; text-size-adjust: 100%; } /* Safari в горизонтали сам укрупнял длинные строки (Mark 2026-10-27: «Наведение камерой» в настройках - заметно крупнее) */
   canvas#c { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
   #fade { position: fixed; inset: 0; background: #000; opacity: 0; pointer-events: none; z-index: 5; transition: opacity .35s; }
-  /* загрузочное окно (Mark 2026-11-04, вариант C «Ворота ангара»): лого — сразу, ворота — как придут; всё загрузилось — лампы зеленеют, ворота разъезжаются в меню (main.js ldPaint, ldOpen) */
+  /* загрузочное окно (Mark 2026-11-04, вариант C «Ворота ангара»): лого - сразу, ворота - как придут; всё загрузилось - лампы зеленеют, ворота разъезжаются в меню (main.js ldPaint, ldOpen) */
   #loading { position: fixed; inset: 0; z-index: 60; overflow: hidden; background: #000; color: #e9e6dc; font-family: 'Golos Text', -apple-system, sans-serif; }
   #loading.open { background: transparent; pointer-events: none; }
   #loading .lgd { position: absolute; top: 0; bottom: 0; width: 50.2%; background: center / cover no-repeat; transition: transform 1.1s cubic-bezier(.65,0,.3,1); will-change: transform; }
@@ -43,7 +43,7 @@
   /* догрузка моделей и текстур после старта (меню уже на экране): статус внизу, исчезает, когда всё пришло */
   #assetLoad { position: fixed; z-index: 2147482000; left: 50%; transform: translateX(-50%); bottom: max(8px, var(--sa-b)); width: min(340px, 70vw); display: none; flex-direction: column; gap: 4px;
     background: rgba(16,20,15,.82); border: 1px solid #3a4334; padding: 6px 10px; color: #c9cebd; font: 500 11.5px 'Golos Text', sans-serif; text-align: center; pointer-events: none; }
-  /* в бою — без надписи: тонкая полоска у нижнего края экрана (Mark 2026-10-23: подпись посреди экрана мешала) */
+  /* в бою - без надписи: тонкая полоска у нижнего края экрана (Mark 2026-10-23: подпись посреди экрана мешала) */
   #assetLoad.on { display: flex; } body.playing #assetLoad { left: 0; right: 0; bottom: 0; transform: none; width: auto; padding: 0; border: 0; background: none; opacity: .55; }
   body.playing #alTxt { display: none; } body.playing #assetLoad .ldbar { height: 3px; background: rgba(0,0,0,.25); }
   button { font: inherit; }
@@ -56,24 +56,24 @@
   /* прокачка: закрытое в «Реализме», награда за бой, опыт и серебро в меню */
   .opt.lock { opacity: .62; } .opt.lock b .ic, .dcard .ic { width: 1em; height: 1em; vertical-align: -0.12em; }
   .opt .need, .hint.need { display: block; color: #f3c96f; font-size: 11.5px; margin-top: 2px; }
-  .opt .nm .tgn { display: block; margin-top: 1px; } /* «целей: N — по силе подвески» (2026-11-01) — строкой под оружием */
+  .opt .nm .tgn { display: block; margin-top: 1px; } /* «целей: N - по силе подвески» (2026-11-01) - строкой под оружием */
   .pgRes { margin: 0 0 8px; padding: 8px 10px; background: rgba(159,211,255,.07); border: 1px solid rgba(159,211,255,.25); text-align: left; font-size: 12.5px; }
   .pgRes .dim { color: #b3baa5; } .pgRes .ic { width: 1.1em; height: 1.1em; vertical-align: -0.17em; }
   .pgSum { display: flex; gap: 16px; font: 600 16px 'JetBrains Mono', monospace; margin-bottom: 4px; } .pgSum .xp { color: #9fd3ff; } .pgSum span { display: flex; align-items: center; gap: 5px; }
   .pgLines { display: grid; grid-template-columns: 1fr auto; gap: 1px 12px; color: #c9cebd; } .pgLines b { font-weight: 500; text-align: right; }
   .pgAuto { margin-top: 4px; color: #f3c96f; }
-  .pgBar { display: flex; flex-wrap: wrap; gap: 2px 10px; align-items: center; width: 100%; box-sizing: border-box; text-align: left; background: none; border: 0; padding: 4px 16px; color: #e9e6dc; font: 600 12.5px 'JetBrains Mono', monospace; cursor: pointer; } /* в узкой колонке меню — переносом, не вылезая вправо */
+  .pgBar { display: flex; flex-wrap: wrap; gap: 2px 10px; align-items: center; width: 100%; box-sizing: border-box; text-align: left; background: none; border: 0; padding: 4px 16px; color: #e9e6dc; font: 600 12.5px 'JetBrains Mono', monospace; cursor: pointer; } /* в узкой колонке меню - переносом, не вылезая вправо */
   .pgBar:empty { display: none; } .pgBar .xp { color: #9fd3ff; } .pgBar span { display: flex; align-items: center; gap: 4px; } .pgBar .ic { width: 1.05em; height: 1.05em; }
   .pgBar small { flex-basis: 100%; font: 500 11px 'Golos Text', sans-serif; color: #b3baa5; }
   #mtabs .mres { color: #f3c96f; }
   body.researchOn #menu { visibility: hidden; }
   /* кнопка «Исследования» в левом нижнем углу фона меню (Mark 2026-10-20) */
-  #mbtns { position: absolute; z-index: 2; left: calc(188px + var(--sa-l)); bottom: max(14px, var(--sa-b)); display: flex; align-items: stretch; gap: 10px; pointer-events: none; } #mbtns > button { pointer-events: auto; } /* свёрнутые разделы занимают место — пустота нажатия не ловит */
+  #mbtns { position: absolute; z-index: 2; left: calc(188px + var(--sa-l)); bottom: max(14px, var(--sa-b)); display: flex; align-items: stretch; gap: 10px; pointer-events: none; } #mbtns > button { pointer-events: auto; } /* свёрнутые разделы занимают место - пустота нажатия не ловит */
   #resBtn { display: flex; align-items: center; gap: 10px; padding: 9px 16px 9px 12px;
     background: rgba(16,20,15,.88); border: 1px solid #e8b04a; color: #f3c96f; font: 500 15px 'Oswald', -apple-system, sans-serif; letter-spacing: .03em; cursor: pointer; }
   #resBtn:hover { background: #232a1c; } #resBtn .ic { width: 30px; height: 30px; }
   #resBtn .tx { display: flex; flex-direction: column; text-align: left; } #resBtn small { display: none; font: 600 11.5px 'Golos Text', sans-serif; letter-spacing: 0; color: #8fe0b2; margin-top: 2px; white-space: nowrap; } #resBtn.note { box-shadow: 0 0 10px rgba(108,201,150,.5); }
-  /* табличка разделов: цель исследований готова или есть незабранные задания — светится, покачивается, показывает число (menu.js renderNotice) */
+  /* табличка разделов: цель исследований готова или есть незабранные задания - светится, покачивается, показывает число (menu.js renderNotice) */
   #mbFold { position: relative; } #mbFold .nt { display: none; position: absolute; right: -8px; top: -8px; min-width: 20px; height: 20px; padding: 0 5px; background: radial-gradient(circle at 35% 30%, #e8604f, #a8261c 72%); color: #fff; font: 700 12px/20px 'Golos Text', sans-serif; font-style: normal; text-align: center; border-radius: 10px; box-shadow: 0 0 0 1px rgba(255,220,170,.55), 0 1px 4px rgba(0,0,0,.7); }
   #mbFold.note { border-color: #e8b04a; color: #f3c96f; } #mbFold.note .ic { filter: drop-shadow(0 0 6px rgba(243,201,111,.85)); }
   #mbFold.note[aria-expanded="false"] { animation: mbBreath 2.6s ease-in-out infinite; } #mbFold.note[aria-expanded="false"] .ic { transform-origin: 50% 85%; animation: mbSway 6s ease-in-out infinite; }
@@ -88,18 +88,18 @@
   @media (max-height: 460px) { #qstBtn { padding: 4px 9px 4px 8px; font-size: 13px; gap: 7px; } #qstBtn .ic { width: 24px; height: 24px; } #qstBtn small { font-size: 10.5px; } #qstBtn .sg3 i { width: 14px; height: 6px; } }
   #evtBtn { display: none; flex-direction: row; align-items: center; gap: 9px; text-align: left; padding: 6px 16px 6px 10px; background: rgba(28,17,10,.9); border: 1px solid #e2762c; color: #ff9a3c; font: 500 15px 'Oswald', -apple-system, sans-serif; letter-spacing: .03em; cursor: pointer; }
   #evtBtn .tx { display: flex; flex-direction: column; } #evtBtn .ic { width: 30px; height: 30px; flex: none; } #evtBtn small { font: 600 11.5px 'Golos Text', sans-serif; letter-spacing: 0; color: #e9c9a8; margin-top: 2px; } #evtBtn:hover { background: #3a2210; }
-  /* «Рейтинг» (rating-ui.js): верхняя в столбике, разметка как у соседних; справа — место сезона */
+  /* «Рейтинг» (rating-ui.js): верхняя в столбике, разметка как у соседних; справа - место сезона */
   #ratBtn { display: flex; flex-direction: row; align-items: center; gap: 9px; text-align: left; padding: 6px 16px 6px 10px; background: rgba(16,20,15,.88); border: 1px solid #e8b04a; color: #f3c96f; font: 500 15px 'Oswald', -apple-system, sans-serif; letter-spacing: .03em; cursor: pointer; }
   #ratBtn:hover { background: #232a1c; } #ratBtn .tx { display: flex; flex-direction: column; } #ratBtn .ic { width: 30px; height: 30px; flex: none; }
   #ratBtn small { font: 600 11.5px 'Golos Text', sans-serif; letter-spacing: 0; color: #b3baa5; margin-top: 2px; white-space: nowrap; }
   #ratBtn .pl { margin-left: auto; padding-left: 8px; font: 600 15px 'JetBrains Mono', monospace; letter-spacing: 0; color: #f3c96f; white-space: nowrap; } #ratBtn .pl:empty { display: none; }
-  /* аккаунт игры в левом верхнем углу меню (account-ui.js): ник или «Войти», ниже — «Перенести прогресс», если касается */
+  /* аккаунт игры в левом верхнем углу меню (account-ui.js): ник или «Войти», ниже - «Перенести прогресс», если касается */
   .accBox { display: flex; flex-direction: column; } .accBox:empty { display: none; }
   .accBox button { display: flex; align-items: center; gap: 7px; width: 100%; box-sizing: border-box; text-align: left; background: none; border: 0; padding: 5px 16px; color: #e9e6dc; font: 500 13px 'Golos Text', -apple-system, sans-serif; cursor: pointer; }
   .accBox button:hover { background: #222a1f; } .accBox .av { width: 1.9em; height: 1.9em; flex: none; object-fit: cover; box-shadow: 0 0 0 1px #8a7232; } .accBox .ic { width: 1.15em; height: 1.15em; flex: none; color: #e8b04a; } .accBox .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
   .accBox button.in { color: #e8b04a; } .accBox button.xf { color: #f3c96f; font-size: 12.5px; padding-top: 2px; padding-bottom: 7px; }
   .ratLine { color: #f3c96f; } .ratLine b { font-family: 'JetBrains Mono', monospace; color: #fff; }
-  /* «Магазин» (Mark 2026-10-26, «Витрина» — shop-ui.js): кристаллы и окраски сезона; справа выглядывает самолёт в окраске сезона */
+  /* «Магазин» (Mark 2026-10-26, «Витрина» - shop-ui.js): кристаллы и окраски сезона; справа выглядывает самолёт в окраске сезона */
   #shopBtn { position: relative; display: flex; flex-direction: row; align-items: center; gap: 9px; text-align: left; padding: 6px 6px 6px 10px; cursor: pointer;
     background: linear-gradient(180deg, rgba(20,34,25,.94), rgba(14,22,17,.94)); border: 1px solid #3e6a50; color: #d9efe0; font: 500 15px 'Oswald', -apple-system, sans-serif; letter-spacing: .03em; }
   #shopBtn:hover { background: linear-gradient(180deg, rgba(26,44,32,.96), rgba(17,28,21,.96)); } #shopBtn .tx { display: flex; flex-direction: column; } #shopBtn .ic { width: 30px; height: 30px; flex: none; color: #59b884; }
@@ -108,14 +108,14 @@
   #shopBtn .thumb { flex: none; width: 68px; height: 38px; margin-left: 4px; object-fit: cover; border: 1px solid #3e6a50; transition: filter .25s; filter: saturate(.9); } #shopBtn:hover .thumb { filter: saturate(1.15) brightness(1.08); }
   @media (max-height: 460px) { #mbFold { width: 42px; min-height: 38px; } #mbFold .ic { width: 24px; height: 24px; } }
   @media (max-height: 460px) { #shopBtn { padding: 4px 5px 4px 8px; font-size: 13px; } #shopBtn .ic { width: 24px; height: 24px; } #shopBtn small { font-size: 10.5px; } #shopBtn .thumb { width: 56px; height: 31.5px; } }
-  /* разделы меню (Mark 2026-10-26): при входе свёрнуты в указатель (#mbFold); нажатие — кнопки выезжают из него по очереди, ещё нажатие — складываются обратно */
+  /* разделы меню (Mark 2026-10-26): при входе свёрнуты в указатель (#mbFold); нажатие - кнопки выезжают из него по очереди, ещё нажатие - складываются обратно */
   #mbFold { flex: none; align-self: stretch; width: 52px; min-height: 44px; display: grid; place-items: center; padding: 0; background: rgba(16,20,15,.9); border: 1px solid #8a6a3a; color: #d8b07a; cursor: pointer; transition: background .2s, color .2s, border-color .2s; }
   #mbFold:hover { background: #2a2418; color: #f0c88a; } #mbFold .ic { width: 30px; height: 30px; transition: transform .35s cubic-bezier(.2,.8,.2,1); }
   #mbFold[aria-expanded="true"] { background: #33281a; color: #f3c96f; border-color: #e8b04a; } #mbFold[aria-expanded="true"] .ic { transform: rotate(-10deg) scale(.92); }
   #mbtns.open > button:not(#mbFold) { transition: opacity .28s ease calc(var(--i, 1) * 45ms), transform .42s cubic-bezier(.2,.8,.2,1) calc(var(--i, 1) * 45ms), visibility 0s linear 0s; }
   #mbtns:not(.open) > button:not(#mbFold) { opacity: 0; visibility: hidden; pointer-events: none; transform: translateX(calc(var(--i, 1) * -46px)) scale(.6);
     transition: opacity .22s ease, transform .3s cubic-bezier(.5,0,.75,0), visibility 0s linear .3s; }
-  @media (max-width: 1000px) { #mbtns { flex-direction: column-reverse; } #mbFold { align-self: flex-start; height: 48px; } #mbtns:not(.open) > button:not(#mbFold) { transform: translateY(calc(var(--i, 1) * 34px)) scale(.6); } } /* узкий экран: справа панель задания — кнопка события над «Исследованиями» */
+  @media (max-width: 1000px) { #mbtns { flex-direction: column-reverse; } #mbFold { align-self: flex-start; height: 48px; } #mbtns:not(.open) > button:not(#mbFold) { transform: translateY(calc(var(--i, 1) * 34px)) scale(.6); } } /* узкий экран: справа панель задания - кнопка события над «Исследованиями» */
   @media (max-height: 460px) { #resBtn { padding: 6px 12px 6px 9px; font-size: 13px; } #resBtn .ic { width: 24px; height: 24px; } #resBtn small { font-size: 10.5px; } #ratBtn { padding: 4px 11px 4px 8px; font-size: 13px; } #ratBtn .ic { width: 24px; height: 24px; } #ratBtn small { font-size: 10.5px; } #ratBtn .pl { font-size: 13px; } .accBox button { padding-top: 3px; padding-bottom: 3px; } .accBox button.xf { padding-bottom: 4px; } #evtBtn { padding: 4px 11px 4px 8px; font-size: 13px; } #evtBtn .ic { width: 24px; height: 24px; } #evtBtn small { font-size: 10.5px; } }
   @keyframes scrIn { from { opacity: 0; } to { opacity: 1; } }
   .screen.on > .card { animation: cardIn .28s cubic-bezier(.2,.9,.3,1.2); }
@@ -137,7 +137,7 @@
   .btn { display: block; width: 100%; padding: 13px 14px; border-radius: 12px; border: 0; font-size: 15px; font-weight: 800; cursor: pointer;
     background: linear-gradient(180deg, #fb923c, #ea580c); color: #fff; margin-top: 8px; }
   .btn.alt { background: rgba(255,255,255,.1); font-weight: 600; }
-  /* окно урока (Mark 2026-10-21): кнопка всегда видна внизу (длинное окно на телефоне — без прокрутки до неё), ✕ и касание мимо окна закрывают */
+  /* окно урока (Mark 2026-10-21): кнопка всегда видна внизу (длинное окно на телефоне - без прокрутки до неё), ✕ и касание мимо окна закрывают */
   #lesson .card { position: relative; } #lesson .lbtns { position: sticky; bottom: -1px; display: flex; gap: 8px; flex-wrap: wrap; padding: 10px 0 2px; background: inherit; }
   #lesson .lbtns .btn { flex: 1 1 140px; } #lesson .lbtns .btn[hidden] { display: none; }
   #lessonX { position: sticky; top: 0; float: right; margin: -4px -4px 0 8px; width: 34px; height: 34px; border: 0; background: rgba(255,255,255,.08); color: inherit; font-size: 16px; cursor: pointer; z-index: 1; }
@@ -164,7 +164,7 @@
   .opt.on { border-color: #fb923c; background: rgba(251,146,60,.14); }
   .opt.done { border-color: rgba(74,222,128,.5); }
   .opt .nm { flex: 1; } .opt .nm b { display: block; font-size: 13px; } .opt .nm span { opacity: .7; font-size: 11px; }
-  /* роль подвески: охота за ПВО — красная, штурмовка — оранжевая */
+  /* роль подвески: охота за ПВО - красная, штурмовка - оранжевая */
   .role { display: inline-block; font-size: 10.5px !important; font-weight: 800; padding: 1px 7px; border-radius: 7px; margin: 2px 6px 2px 0; opacity: 1 !important; letter-spacing: .02em; }
   .role.sead { background: rgba(239,68,68,.22); color: #fca5a5; } .role.strike { background: rgba(251,146,60,.22); color: #fdba74; }
   .opt .pr { flex: none; font-size: 11px; font-weight: 800; color: #fde68a; }
@@ -183,7 +183,7 @@
   details.ref h4 { margin: 8px 0 3px; font-size: 12px; letter-spacing: 0; color: #fdba74; }
   details.ref p { margin: 0 0 6px; }
   details.credits { margin-top: 12px; } details.credits summary { font-size: 12.5px; font-weight: 700; opacity: .85; }
-  #tab-misc a, #tab-misc a:visited, details.credits a, details.credits a:visited { color: #7dd3fc; text-decoration: none; border-bottom: 1px dotted rgba(125,211,252,.5); } /* ссылки — голубые, отличаются от текста */
+  #tab-misc a, #tab-misc a:visited, details.credits a, details.credits a:visited { color: #7dd3fc; text-decoration: none; border-bottom: 1px dotted rgba(125,211,252,.5); } /* ссылки - голубые, отличаются от текста */
   table.tt { width: 100%; border-collapse: collapse; font-size: 12px; }
   table.tt td { padding: 3px 4px; border-bottom: 1px solid rgba(255,255,255,.07); vertical-align: top; }
   table.tt td:first-child { opacity: .7; width: 44%; }
@@ -193,8 +193,8 @@
   .gfx.on { border-color: #fb923c; background: rgba(251,146,60,.18); }
   label.chk { display: flex; gap: 8px; align-items: center; margin: 4px 0; cursor: pointer; font-size: 12.5px; }
   label.chk input[type=range] { flex: 1; }
-  /* галочки и ползунки — как кнопки-сегменты меню (Mark 2026-10-27: «в том же дизайне, что и остальная игра»): квадрат без скруглений,
-     рамка #4a5443, включено — светлая заливка #e9e6dc; ползунок — тонкая линия и прямоугольная ручка */
+  /* галочки и ползунки - как кнопки-сегменты меню (Mark 2026-10-27: «в том же дизайне, что и остальная игра»): квадрат без скруглений,
+     рамка #4a5443, включено - светлая заливка #e9e6dc; ползунок - тонкая линия и прямоугольная ручка */
   label.chk input[type=checkbox] { -webkit-appearance: none; appearance: none; flex: none; width: 17px; height: 17px; margin: 0; border: 1px solid #4a5443;
     background: rgba(233,230,220,.03); border-radius: 0; display: inline-grid; place-content: center; cursor: pointer; }
   label.chk input[type=checkbox]:checked { background: #e9e6dc; border-color: #e9e6dc; }
@@ -223,14 +223,14 @@
   /* кнопки поверх игры: выход, пауза, звук (ниже кнопок Telegram) */
   #exit, #mute, #pause { position: fixed; top: var(--top); width: 36px; height: 36px; border-radius: 10px; border: 1px solid rgba(255,255,255,.3);
     background: rgba(10,16,24,.55); color: #fff; font-size: 16px; display: none; align-items: center; justify-content: center; cursor: pointer; z-index: 25; }
-  /* пауза и звук — в ряд у верхнего края: в столбик на низких экранах (Android с панелью состояния и кнопками Telegram) налезали на «КАРТУ» */
+  /* пауза и звук - в ряд у верхнего края: в столбик на низких экранах (Android с панелью состояния и кнопками Telegram) налезали на «КАРТУ» */
   #exit { right: max(10px, var(--sa-r)); } #pause { right: max(10px, var(--sa-r)); } #mute { right: calc(max(10px, var(--sa-r)) + 44px); }
   body.playing #pause, body.playing #mute { display: flex; }
-  /* обучение: кнопка урока «?» (рядом со звуком, всегда подсвечена) и сворачиваемая панель — задание, что делать сейчас, как это работает */
+  /* обучение: кнопка урока «?» (рядом со звуком, всегда подсвечена) и сворачиваемая панель - задание, что делать сейчас, как это работает */
   #lsnBtn { position: fixed; top: var(--top); right: calc(max(10px, var(--sa-r)) + 88px); width: 36px; height: 36px; border-radius: 10px; border: 1px solid #e8b04a; background: rgba(232,176,74,.22); color: #f3c96f;
     font: 500 18px 'Oswald', sans-serif; display: none; align-items: center; justify-content: center; cursor: pointer; z-index: 25; box-shadow: 0 0 10px rgba(232,176,74,.45); }
   body.playing.training #lsnBtn { display: flex; animation: lsnGlow 2.6s ease-in-out infinite; } body.lsnOpen #lsnBtn { background: #e8b04a; color: #17190f; animation: none; }
-  @keyframes lsnGlow { 0%, 100% { background: rgba(16,20,15,.72); color: #f3c96f; } 50% { background: #e8b04a; color: #17190f; } } /* свёрнута — переливается: тёмная ↔ как нажатая */
+  @keyframes lsnGlow { 0%, 100% { background: rgba(16,20,15,.72); color: #f3c96f; } 50% { background: #e8b04a; color: #17190f; } } /* свёрнута - переливается: тёмная ↔ как нажатая */
   body.playing.training #lsnBtn.new { animation: lsnPulse 1.1s ease-in-out 4, lsnGlow 2.6s ease-in-out infinite; } @keyframes lsnPulse { 50% { box-shadow: 0 0 0 7px rgba(232,176,74,.35), 0 0 18px rgba(232,176,74,.8); transform: scale(1.08); } }
   #lsnPanel { position: fixed; top: calc(var(--top) + 44px); right: max(10px, var(--sa-r)); width: min(380px, calc(100vw - 24px)); max-height: calc(100% - var(--top) - 60px); overflow-y: auto; display: none; z-index: 24;
     background: rgba(16,20,15,.95); border: 1px solid #3a4334; color: #e9e6dc; padding: 12px 14px; font: 13.5px/1.45 'Golos Text', -apple-system, sans-serif; text-shadow: none; }
@@ -250,7 +250,7 @@
   #osd { position: absolute; top: var(--top); left: max(12px, var(--sa-l)); font-size: 13px; line-height: 1.4; color: #d6ffe0; }
   #osd b { font-size: 19px; } .dim { opacity: .75; font-size: 11.5px; }
   #perf { position: fixed; bottom: 4px; left: 50%; transform: translateX(-50%); font-size: 10.5px; opacity: .5; white-space: nowrap; z-index: 12; pointer-events: none; text-shadow: 0 0 4px #000; }
-  /* подробный счётчик — одна тонкая строка у самого верхнего края (кнопки начинаются ниже, с --top). Внизу он закрывал верх нижних кнопок,
+  /* подробный счётчик - одна тонкая строка у самого верхнего края (кнопки начинаются ниже, с --top). Внизу он закрывал верх нижних кнопок,
      и нажимать оставалось у полоски «домой», где iOS придерживает касания (Mark 2026-10-26) */
   body.perfhud #perf { opacity: .92; top: calc(var(--sa-t) + var(--tg-t)); bottom: auto; max-width: calc(100vw - 2 * max(12px, var(--sa-l), var(--sa-r))); overflow: hidden; text-overflow: ellipsis;
     font-size: 9px; line-height: 10px; z-index: 2147483000; background: rgba(8,12,18,.55); color: #e6edf5; padding: 0 6px; border-radius: 0 0 6px 6px; text-shadow: none; }
@@ -266,18 +266,18 @@
   #wpn .r.sel { opacity: 1; color: #fff; font-weight: 700; } #wpn .r.sel::before, #wpn .wl .r.sel::before { content: ""; display: inline-block; width: .75em; height: .75em; margin-right: .3em; vertical-align: -.05em; background: currentColor; -webkit-mask: var(--m-tri) center / contain no-repeat; mask: var(--m-tri) center / contain no-repeat; }
   #wpn .st { margin-top: 3px; font-weight: 700; color: #fde68a; min-height: 16px; }
   #wpn .cm { color: #fdba74; margin-top: 2px; } #wpn .fly { color: #93c5fd; }
-  /* одна панель: полёт, оружие, прицел, цель контейнера, ловушки, цели задания (полёт и цели — бывшие #osd и #mission) */
+  /* одна панель: полёт, оружие, прицел, цель контейнера, ловушки, цели задания (полёт и цели - бывшие #osd и #mission) */
   #osd, #mission { display: none; }
   #wpn .fl { font-size: 12px; white-space: nowrap; } #wpn .fl b { font-size: 16px; color: #fff; } #wpn .dim { font-size: inherit; } #wpn .okd { color: #86efac; }
-  /* «Бинокль» вылета (air.js): строка сверху по центру, окно «ТВ» и прицельные метки самолёта на время вида — спрятаны; кнопка — только у самолёта и если включена в настройках */
+  /* «Бинокль» вылета (air.js): строка сверху по центру, окно «ТВ» и прицельные метки самолёта на время вида - спрятаны; кнопка - только у самолёта и если включена в настройках */
   #binoBar { position: fixed; top: calc(var(--top) + 2px); left: 50%; transform: translateX(-50%); z-index: 14; display: none; pointer-events: none; padding: 5px 12px; background: rgba(16,20,15,.82);
     border: 1px solid #3a4334; color: #e9e6dc; font: 500 12.5px 'Golos Text', -apple-system, sans-serif; white-space: nowrap; max-width: calc(100vw - 420px); overflow: hidden; text-overflow: ellipsis; }
   #binoBar b { color: #f3c96f; font-weight: 700; } #binoBar span { color: #a9b19c; }
-  body.coarse #binoBar { top: auto; bottom: calc(max(8px, var(--sa-b)) + 6px); max-width: calc(100vw - 2 * max(12px, var(--sa-l)) - 420px); } /* телефон: вверху по центру — круг СПО */
+  body.coarse #binoBar { top: auto; bottom: calc(max(8px, var(--sa-b)) + 6px); max-width: calc(100vw - 2 * max(12px, var(--sa-l)) - 420px); } /* телефон: вверху по центру - круг СПО */
   body:not(.flying) #binoBar, body.heli #tBino, body.nobino #tBino { display: none !important; }
   body.binoOn #podBox { display: none !important; } body.binoOn #tBino { background: rgba(232,176,74,.85); color: #17190f; }
   #wpn .ab { color: #fb923c; }
-  /* оружие — одной строкой: выбранное ярче; тап по названию — выбор */
+  /* оружие - одной строкой: выбранное ярче; тап по названию - выбор */
   #wpn .wl { display: flex; flex-wrap: wrap; gap: 1px 9px; } #wpn .wl .r { display: inline; opacity: .55; padding: 1px 0; } #wpn .wl .r.sel { opacity: 1; color: #fff; font-weight: 800; }
   #wpn .tgl .tn { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
   #wpn .tgl { display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-top: 3px; color: #e2e8f0; }
@@ -291,15 +291,15 @@
   #tThr.ab { background: rgba(160,70,10,.65); border-color: #fb923c; }
   body.coarse #tCam { display: none; } body.coarse.spect #tCam { display: flex; }
   #rwr { position: absolute; right: max(14px, var(--sa-r)); bottom: 14px; width: 150px; height: 150px; }
-  /* вертолёт: «ПОНЯЛ» глушит писк захвата СПО (air.js rwrAck*); ПК — слева от СПО (справа внизу; над ней окно контейнера), телефон — справа от СПО вверху */
+  /* вертолёт: «ПОНЯЛ» глушит писк захвата СПО (air.js rwrAck*); ПК - слева от СПО (справа внизу; над ней окно контейнера), телефон - справа от СПО вверху */
   #rwrAck { position: absolute; display: none; pointer-events: auto; right: calc(max(14px, var(--sa-r)) + 162px); bottom: 68px; padding: 7px 14px; border-radius: 2px; border: 1.5px solid #fca5a5; background: rgba(127,29,29,.78); color: #fff;
     font: 700 12px 'Golos Text', -apple-system, Segoe UI, sans-serif; letter-spacing: .06em; cursor: pointer; touch-action: none; text-shadow: none; }
-  /* «ПОНЯЛ» — прямоугольная, мягко мерцает (Mark 2026-10-23): видно боковым зрением, но не дёргает */
+  /* «ПОНЯЛ» - прямоугольная, мягко мерцает (Mark 2026-10-23): видно боковым зрением, но не дёргает */
   @keyframes ackBlink { 0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(252,165,165,0); } 50% { opacity: .62; box-shadow: 0 0 10px 1px rgba(252,165,165,.55); } }
   #rwrAck.on { display: block; animation: ackBlink 1.2s ease-in-out infinite; } @media (prefers-reduced-motion: reduce) { #rwrAck.on { animation: none; } } body.coarse #rwrAck { right: auto; bottom: auto; left: calc(50% + 54px); top: var(--top); padding: 6px 10px; font-size: 11px; }
   #warn { position: fixed; top: 24%; left: 50%; transform: translateX(-50%); font-size: 16px; font-weight: 900; color: #ff5b5b; display: none; letter-spacing: .06em; text-align: center; z-index: 13; pointer-events: none; text-shadow: 0 0 5px #000; }
   #msg { position: fixed; top: 31%; left: 50%; transform: translateX(-50%); font-size: 14px; font-weight: 700; color: #fde68a; display: none; text-align: center; max-width: 80vw; z-index: 13; pointer-events: none; text-shadow: 0 0 5px #000; }
-  /* серое изображение и уровни окна «ТВ» — в шейдере (air.js outMat), не backdrop-filter: тот выбеливал небо и чернил тёмное */
+  /* серое изображение и уровни окна «ТВ» - в шейдере (air.js outMat), не backdrop-filter: тот выбеливал небо и чернил тёмное */
   #podBox { position: absolute; display: none; pointer-events: auto; border: 1.5px solid rgba(160,255,190,.55); border-radius: 4px; overflow: hidden; cursor: crosshair; touch-action: none; }
   #podBox .x { position: absolute; left: 50%; top: 50%; width: 46px; height: 46px; transform: translate(-50%,-50%); border: 1.5px solid rgba(255,255,255,.85); }
   #podBox .x::before, #podBox .x::after { content: ""; position: absolute; background: rgba(255,255,255,.85); }
@@ -316,7 +316,7 @@
   #hint { position: fixed; left: 50%; bottom: 150px; transform: translateX(-50%); width: min(92vw, 560px); display: none; text-align: center; z-index: 21; pointer-events: none; /* над картой полёта */
     font-size: 13.5px; line-height: 1.45; color: #eaf6ff; background: rgba(10,18,28,.78); border: 1px solid rgba(147,197,253,.35); border-radius: 12px; padding: 7px 12px; }
   #hint b { color: #fde68a; }
-  /* телефон: между панелью оружия слева и кнопками справа; оборона — левее панели расстановки */
+  /* телефон: между панелью оружия слева и кнопками справа; оборона - левее панели расстановки */
   body.coarse #hint { bottom: auto; top: calc(var(--top) + 64px); font-size: 11px; padding: 5px 9px; transform: none; width: auto; max-width: 420px; margin: 0 auto;
     left: calc(max(12px, var(--sa-l)) + min(30vw, 196px) + 8px); right: calc(max(10px, var(--sa-r)) + 172px); }
   body.defense.dmap #hint { top: calc(var(--top) + 30px); bottom: auto; transform: none; width: auto; max-width: 520px; margin: 0 auto;
@@ -330,24 +330,24 @@
   #touch { display: none; position: fixed; inset: 0; z-index: 10; }
   body.coarse.flying #touch { display: block; }
   #stickZone { position: absolute; left: 0; top: 0; bottom: 0; width: 50%; }
-  body.aimmode #stickZone { width: 100%; } /* наведение камерой — по всему свободному экрану (кнопки — поверх) */
+  body.aimmode #stickZone { width: 100%; } /* наведение камерой - по всему свободному экрану (кнопки - поверх) */
   #stickKnob { position: absolute; width: 56px; height: 56px; border-radius: 50%; border: 2px solid rgba(255,255,255,.6); background: rgba(255,255,255,.12); display: none; pointer-events: none; }
   .tb { position: absolute; width: 62px; height: 52px; border-radius: 12px; border: 1.5px solid rgba(255,255,255,.38); background: rgba(10,20,30,.45); color: #fff;
     font: 700 11px 'Golos Text', -apple-system, sans-serif; display: flex; align-items: center; justify-content: center; text-align: center; line-height: 1.1; cursor: pointer; }
   .tb.big { width: 82px; height: 70px; font-size: 13px; border-color: rgba(253,224,71,.7); }
   .tb.on { background: rgba(120,90,10,.6); }
-  /* «ПУСК» (сброс и пуск): заливка по часовой — перезарядка следующей единицы (--fb), внизу «готово×секунд»; .dry — пусто и пополнять нечем */
+  /* «ПУСК» (сброс и пуск): заливка по часовой - перезарядка следующей единицы (--fb), внизу «готово×секунд»; .dry - пусто и пополнять нечем */
   #tFire { --fb: 360deg; background: conic-gradient(rgba(232,176,74,.42) var(--fb), rgba(10,20,30,.45) 0); transition: opacity .2s; }
   #tFire span { display: flex; flex-direction: column; align-items: center; gap: 1px; } #tFire small { font: 600 9.5px 'Golos Text', -apple-system, sans-serif; opacity: .85; max-width: 74px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   #tFire em { font: 700 11px 'JetBrains Mono', ui-monospace, monospace; font-style: normal; color: #fde68a; text-transform: none; } #tFire.dry { opacity: .32; }
   .warnc { color: #fca5a5; font-weight: 700; }
-  /* крестовина: ▲▼ — тангаж, ⟲⟳ — крен (Настройки → «Крестовина»; в редакторе кнопок — двигается и меняет размер) */
+  /* крестовина: ▲▼ - тангаж, ⟲⟳ - крен (Настройки → «Крестовина»; в редакторе кнопок - двигается и меняет размер) */
   #tPad { left: max(16px, var(--sa-l)); bottom: 120px; width: auto; height: auto; background: transparent; border: 0; display: grid; grid-template: repeat(3, 48px) / repeat(3, 48px); gap: 3px; align-items: stretch; justify-items: stretch; }
   #tPad i { font-style: normal; display: flex; align-items: center; justify-content: center; border-radius: 10px; border: 2px solid rgba(255,255,255,.5); background: rgba(255,255,255,.14); font-size: 18px; pointer-events: none; }
   #tPad .pu { grid-area: 1 / 2; } #tPad .pl { grid-area: 2 / 1; } #tPad .pr { grid-area: 2 / 3; } #tPad .pd { grid-area: 3 / 2; } #tPad i.on { background: rgba(255,120,60,.55); }
-  body.nopad:not(.layoutEdit) #tPad { display: none; } body.heli.nopad #tPad { display: grid; } /* вертолёт: ▲▼ — высота, ◀▶ — шаг вбок («Аркада»; в «Реализме» ⟲⟳ — педали) — нужна всегда */ body.short #tPad { bottom: 10px; grid-template: repeat(3, 42px) / repeat(3, 42px); } /* низкий экран: под панелью оружия */
+  body.nopad:not(.layoutEdit) #tPad { display: none; } body.heli.nopad #tPad { display: grid; } /* вертолёт: ▲▼ - высота, ◀▶ - шаг вбок («Аркада»; в «Реализме» ⟲⟳ - педали) - нужна всегда */ body.short #tPad { bottom: 10px; grid-template: repeat(3, 42px) / repeat(3, 42px); } /* низкий экран: под панелью оружия */
   #tAuto.on, #opAuto.on { background: rgba(34,140,70,.6); border-color: #86efac; }
-  body.coarse #rwr { width: 88px; height: 88px; right: auto; left: calc(50% - 44px); bottom: auto; top: max(4px, var(--sa-t)); } /* СПО — у самого верха, между кнопками Telegram */
+  body.coarse #rwr { width: 88px; height: 88px; right: auto; left: calc(50% - 44px); bottom: auto; top: max(4px, var(--sa-t)); } /* СПО - у самого верха, между кнопками Telegram */
   body.coarse #warn { top: calc(max(4px, var(--sa-t)) + 94px); font-size: 14px; }
   body.coarse #wpn { font-size: 10px; line-height: 1.3; width: min(30vw, 196px); padding: 3px 6px; background: rgba(0,20,10,.24); border-color: rgba(140,255,170,.16); }
   body.coarse #wpn .fl { font-size: 10.5px; } body.coarse #wpn .fl b { font-size: 13px; } body.coarse #wpn .tvb { padding: 2px 6px; font-size: 10px; }
@@ -374,7 +374,7 @@
   #netChat .row { display: flex; gap: 5px; } #netChat input { flex: 1; min-width: 0; background: rgba(255,255,255,.08); color: #fff; border: 1px solid rgba(255,255,255,.2); border-radius: 6px; padding: 5px 7px; font-size: 13px; }
   #netChat button { background: #c2410c; color: #fff; border: 0; border-radius: 6px; padding: 0 10px; font-size: 14px; }
   body.coarse #netChat { font-size: 11px; width: min(260px, 36vw); }
-  /* подсказка урока — правее кнопки и ленты «Ход волны» (не закрывает их) */
+  /* подсказка урока - правее кнопки и ленты «Ход волны» (не закрывает их) */
   body.defense.dmap.evon #hint { left: calc(max(12px, var(--sa-l)) + 118px); }
   body.defense.dmap.evon.evopen #hint { left: calc(max(12px, var(--sa-l)) + 300px); } body.coarse.defense.dmap.evon.evopen #hint { left: calc(max(12px, var(--sa-l)) + 250px); }
   #evPanel { position: fixed; z-index: 15; top: calc(var(--top) + 62px); left: max(12px, var(--sa-l)); width: 290px; max-height: calc(100% - var(--top) - 170px); overflow-y: auto; display: none;
@@ -446,8 +446,8 @@
     background: rgba(15,23,34,.92); border: 1px solid rgba(255,255,255,.14); border-radius: 14px; padding: 10px; font-size: 12.5px; -webkit-overflow-scrolling: touch; }
   #netPlan h3 { margin: 2px 0 6px; font-size: 14px; } #netPlan .opt.no { opacity: .45; } #netPlan .pr { font-weight: 800; color: #fde68a; }
   body.short #netPlan { width: min(300px, 46vw); font-size: 11.5px; }
-  /* кнопки листания планов фона меню (над подписью справа внизу; карточка меню — ниже по z) */
-  /* «Съёмка» (photo.js): объект и ракурс внизу, справа — дальность, зум, скорость; .clean — без интерфейса */
+  /* кнопки листания планов фона меню (над подписью справа внизу; карточка меню - ниже по z) */
+  /* «Съёмка» (photo.js): объект и ракурс внизу, справа - дальность, зум, скорость; .clean - без интерфейса */
   #photoZone { position: fixed; inset: 0; z-index: 9; display: none; touch-action: none; }
   #photoUi { display: none; }
   body.photo #photoZone, body.photo #photoUi { display: block; }
@@ -463,29 +463,29 @@
   #phSide { position: fixed; z-index: 14; right: max(10px, var(--sa-r)); bottom: max(8px, var(--sa-b)); display: flex; flex-direction: column-reverse; gap: 5px; }
   #phSide button { width: 42px; padding: 0; font-size: 13px; }
   #phCap { position: fixed; z-index: 14; left: max(12px, var(--sa-l)); top: var(--top); max-width: calc(100vw - 150px); font: 600 12.5px 'Golos Text', -apple-system, Segoe UI, sans-serif; text-shadow: 0 0 4px #000; pointer-events: none; line-height: 36px; }
-  /* онлайн: время фазы, задержка и потери — значок слева от «Игроков» (Mark 2026-10-26: из строки внизу); жёлтое и красное — плохая связь */
+  /* онлайн: время фазы, задержка и потери - значок слева от «Игроков» (Mark 2026-10-26: из строки внизу); жёлтое и красное - плохая связь */
   #netChip { position: fixed; top: var(--top); right: calc(max(10px, var(--sa-r)) + 132px); width: 104px; height: 36px; display: none; flex-direction: column; justify-content: center; align-items: flex-end;
     padding: 0 8px; z-index: 25; pointer-events: none; background: var(--th-bg2); border: 1px solid var(--th-line); color: var(--th-tx); white-space: nowrap; }
   #netChip b { font: 600 14px/1.05 'JetBrains Mono', ui-monospace, monospace; color: #f3c96f; } #netChip b:empty { display: none; }
   #netChip small { font: 500 10px/1.15 'Golos Text', -apple-system, sans-serif; } #netChip .mid { color: #fbbf24; } #netChip .bad { color: #f87171; }
   body.playing.netOn #netChip { display: flex; } body.endOn #netChip { display: none; }
   /* полный экран слетел в бою (shell.js fsCheck; Mark 2026-10-27: «кнопкой, которая появляется в такие моменты», «где не будет мешать», один элемент
-     на устройство): Android, iPad, Telegram — кнопка ⛶ в ряду верхних кнопок, левее остальных (нажатие возвращает полный экран); iPhone Safari — плашка
+     на устройство): Android, iPad, Telegram - кнопка ⛶ в ряду верхних кнопок, левее остальных (нажатие возвращает полный экран); iPhone Safari - плашка
      #fsSwipe в пустой полосе у выреза слева, ниже «островка»: по нему проводят вверх. На время боя страница на iPhone чуть длиннее экрана (html.iosfs),
-     прокручивать разрешено только корню; плашка — прямо в <html>, вне <body> (в <body> всё touch-action: none — игровые жесты страницу не двигают);
-     ~ — элементы после <body> */
+     прокручивать разрешено только корню; плашка - прямо в <html>, вне <body> (в <body> всё touch-action: none - игровые жесты страницу не двигают);
+     ~ - элементы после <body> */
   #fsBtn { position: fixed; z-index: 2147482500; top: var(--top); right: calc(max(10px, var(--sa-r)) + 88px); width: 36px; height: 36px; display: none; align-items: center; justify-content: center;
     padding: 0; background: var(--th-bg2); border: 1px solid var(--th-ac); color: var(--th-ac); cursor: pointer; } #fsBtn .ic { width: 20px; height: 20px; }
   body.training #fsBtn { right: calc(max(10px, var(--sa-r)) + 132px); } body.netOn #fsBtn { right: calc(max(10px, var(--sa-r)) + 244px); }
   #fsSwipe { position: fixed; z-index: 2147482500; left: 50%; bottom: calc(max(8px, var(--sa-b)) + 14px); transform: translateX(-50%); display: none; align-items: center; gap: 9px;
     padding: 6px 14px 6px 10px; background: var(--th-bg2); border: 1px solid var(--th-ac); color: var(--th-tx); font: 600 12.5px 'Golos Text', -apple-system, sans-serif; white-space: nowrap;
     touch-action: pan-y; cursor: grab; } /* низ по центру, над полоской «Домой» и строкой счётчика (Mark 2026-10-27) */
-  body.defense ~ #fsSwipe, body.defense #fsSwipe { bottom: calc(max(10px, var(--sa-b)) + 50px); } /* «Оборона», «Мульти-волна»: внизу свои кнопки — выше них */
+  body.defense ~ #fsSwipe, body.defense #fsSwipe { bottom: calc(max(10px, var(--sa-b)) + 50px); } /* «Оборона», «Мульти-волна»: внизу свои кнопки - выше них */
   #fsSwipe .ch { display: flex; flex-direction: column; color: var(--th-ac); } #fsSwipe svg { width: 16px; height: 10px; } #fsSwipe svg + svg { margin-top: -4px; opacity: .6; }
   html.fsTap #fsBtn, html.fsSwipe #fsSwipe { display: flex; }
   body.endOn #fsBtn, body.menuing #fsBtn, body.endOn ~ #fsSwipe, body.menuing ~ #fsSwipe, body.endOn #fsSwipe, body.menuing #fsSwipe { display: none !important; }
   html.iosfs { height: auto; overflow-y: auto; touch-action: pan-y; } html.iosfs body { height: calc(100vh + 160px); }
-  html.iosfr { overscroll-behavior: auto; touch-action: pan-y; } /* игра во фрейме сайта: своя страница не прокручивается — свайп уходит странице сайта */
+  html.iosfr { overscroll-behavior: auto; touch-action: pan-y; } /* игра во фрейме сайта: своя страница не прокручивается - свайп уходит странице сайта */
   html.fsTap body.netOn #dtop { max-width: calc(100vw - max(12px, var(--sa-l)) - max(10px, var(--sa-r)) - 296px); }
   body.netOn #dtop { max-width: calc(100vw - max(12px, var(--sa-l)) - max(10px, var(--sa-r)) - 250px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } /* не наезжает на значок */
   /* онлайн: «Игроки» (кто в сети и кто готов), «ПОМОЩЬ» лётчика, подсветка кнопки карты при просьбе союзника */
@@ -502,12 +502,12 @@
   #plPanel .pll .pld { margin: 0 3px 0 1px; } #plPanel [data-pl="x"] .ic { width: 14px; height: 14px; }
   #plPanel .pld { width: 8px; height: 8px; border-radius: 50%; flex: none; display: inline-block; } .pld.on { background: #4ade80; } .pld.off { border: 1.5px solid #94a3b8; } .pld.bot { background: #94a3b8; border-radius: 1px; transform: rotate(45deg) scale(.8); }
   #tHelp { display: none; } body.netOn #tHelp { display: flex; }
-  #tPop { display: none; font-size: 10px; } body.heli #tPop, body.layoutEdit #tPop { display: flex; } /* подскок — только у вертолёта */
+  #tPop { display: none; font-size: 10px; } body.heli #tPop, body.layoutEdit #tPop { display: flex; } /* подскок - только у вертолёта */
   #tPop.on { background: rgba(34,140,70,.6); border-color: #86efac; }
   .helpGlow { box-shadow: 0 0 0 3px #facc15, 0 0 16px #facc15 !important; animation: helpGlow .5s ease-in-out infinite alternate; }
   @keyframes helpGlow { from { box-shadow: 0 0 0 2px #facc15, 0 0 6px #facc15; } to { box-shadow: 0 0 0 4px #facc15, 0 0 18px #facc15; } }
-  /* ── главное меню (решение Mark 2026-10-13, макет «А2»): слева — режимы, справа — «папка задания», фон — готовые кадры
-     (menubg.js) или живой бой, пока кадров нет; Арсенал / Справка / Настройки / Об игре — панель поверх (#msheet) ── */
+  /* ── главное меню (решение Mark 2026-10-13, макет «А2»): слева - режимы, справа - «папка задания», фон - готовые кадры
+     (menubg.js) или живой бой, пока кадров нет; Арсенал / Справка / Настройки / Об игре - панель поверх (#msheet) ── */
   #menu { display: none; padding: 0; align-items: stretch; justify-content: stretch; font-family: 'Golos Text', -apple-system, 'Segoe UI', sans-serif; }
   #menu.on { display: block; }
   #menuBg { position: absolute; inset: 0; display: none; background: #1d231b; overflow: hidden; }
@@ -528,7 +528,7 @@
   .mpanel { position: absolute; z-index: 2; top: calc(12px + var(--sa-t) + var(--tg-t)); bottom: max(12px, var(--sa-b)); right: max(12px, var(--sa-r)); width: min(330px, 42vw);
     box-sizing: border-box; background: #10140f; border: 1px solid #39422f; display: flex; flex-direction: column; color: #e9e6dc; }
   .mphead { padding: 12px 16px 8px; position: relative; }
-  /* главный экран — ангар (hangar.js, Mark 2026-11-04): режимы сверху, справа подвеска, снизу лента самолётов и «Взлёт»; без ангара — прежняя колонка */
+  /* главный экран - ангар (hangar.js, Mark 2026-11-04): режимы сверху, справа подвеска, снизу лента самолётов и «Взлёт»; без ангара - прежняя колонка */
   .mlg { display: none; } body:not(.hgOn) .mpanel { padding-bottom: 46px; } body:not(.hgOn) #menu #startBtn { position: absolute; z-index: 3; right: max(12px, var(--sa-r)); bottom: max(12px, var(--sa-b)); width: min(330px, 42vw); } #hgStrip, #hgHint { display: none; } body:not(.hgOn):not(.mpOpen) #menu #startBtn { display: none; } body.hgOn.msheetOn #mbtns { display: none; }
   body.hgOn #menu { touch-action: none; user-select: none; -webkit-user-select: none; }
   body.hgOn .mrail { right: 0; bottom: auto; width: auto; flex-direction: row; align-items: center; gap: 10px; padding: calc(7px + var(--sa-t) + var(--tg-t)) calc(58px + var(--sa-r)) 14px calc(14px + var(--sa-l)); background: linear-gradient(rgba(7,8,5,.8), rgba(7,8,5,.42) 70%, rgba(7,8,5,0)); touch-action: pan-x; overflow-x: auto; scrollbar-width: none; } body.hgOn .mrail::-webkit-scrollbar { display: none; }
@@ -567,7 +567,7 @@
   }
   @media (max-width: 760px) and (max-height: 500px) { body.hgOn .mlogo { display: none; } body.hgOn .accBox .nm { display: none; } body.hgOn #menu .modeSel button { padding: 4px 6px; font-size: 11.5px; } body.hgOn .mpanel { width: min(216px, 34vw); } body.hgOn #menu .mtabs { top: calc(34px + var(--sa-t) + var(--tg-t)); } }
   @media (max-aspect-ratio: 1/1) { body.hgOn .mpanel { left: 10px; right: 10px; width: auto; top: auto; bottom: calc(100px + var(--sa-b)); height: 42vh; } body.hgOn #menu #startBtn { width: 130px; height: 62px; font-size: 18px; } body.hgOn.hgAir #hgStrip { right: calc(150px + var(--sa-r)); } body.hgOn.hgAir #mpClose { left: auto; right: 8px; top: 8px; } body.hgOn.hgAir .mphead { height: 34px; } body.hgOn #menu .mtabs { top: calc(52px + var(--sa-t) + var(--tg-t)); } }
-  /* панель задания (Mark 2026-10-25): по умолчанию убрана, выезжает при выборе режима слева, «›» — убрать (смотреть фон); онлайн — открыта */
+  /* панель задания (Mark 2026-10-25): по умолчанию убрана, выезжает при выборе режима слева, «›» - убрать (смотреть фон); онлайн - открыта */
   .mpanel { transition: transform .42s cubic-bezier(.22, .9, .25, 1), opacity .3s ease, visibility 0s; }
   body:not(.mpOpen) .mpanel { transform: translateX(calc(100% + 16px + var(--sa-r))); opacity: 0; visibility: hidden; transition: transform .34s cubic-bezier(.55, 0, .7, .4), opacity .3s ease .04s, visibility 0s .34s; }
   #mpClose { position: absolute; top: 8px; right: 8px; width: 32px; height: 32px; padding: 6px; border: 1px solid #39422f; background: #10140f; color: #e9e6dc; cursor: pointer; }
@@ -586,14 +586,14 @@
   .mshead { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid #2c3426; font: 500 16px 'Oswald', -apple-system, sans-serif; }
   .mshead button { width: 34px; height: 34px; border: 1px solid #39422f; background: none; color: #e9e6dc; font-size: 15px; cursor: pointer; }
   .msbody { flex: 1; overflow-y: auto; padding: 10px 14px; }
-  /* содержимое панелей — без скруглений и «таблеток» */
+  /* содержимое панелей - без скруглений и «таблеток» */
   #menu .seg { border-radius: 0; background: none; gap: 4px; padding: 0; }
   #menu .seg button { border-radius: 0; border: 1px solid #4a5443; color: #e9e6dc; padding: 5px 9px; }
   #menu .seg button.on { background: #e9e6dc; color: #141912; border-color: #e9e6dc; }
   #menu .opt { border-radius: 0; background: #181e15; border: 1px solid #2c3426; }
   #menu .opt.on { border-color: #e8b04a; background: #232a1c; }
   #menu .cat-h { color: #b3baa5; font-family: 'Golos Text', -apple-system, sans-serif; font-weight: 600; letter-spacing: 0; }
-  /* настройки: категории — заголовок-полоса (Mark 2026-10-28, вариант «А»: «разделение категорий сделать явнее, а иначе всё сливается») */
+  /* настройки: категории - заголовок-полоса (Mark 2026-10-28, вариант «А»: «разделение категорий сделать явнее, а иначе всё сливается») */
   #menu #tab-set .cat-h { margin: 22px 0 8px; padding: 7px 10px 7px 12px; border-left: 3px solid #e8b04a; background: linear-gradient(90deg, rgba(232,176,74,.16), rgba(232,176,74,0) 70%);
     font: 500 15px 'Oswald', sans-serif; letter-spacing: .07em; text-transform: uppercase; color: #f3c96f; }
   #menu #tab-set .cat-h:first-child { margin-top: 4px; }
@@ -607,13 +607,13 @@
   #menu details.ref { border-radius: 0; background: #151a12; }
   #menu .btn.alt { border-radius: 0; }
   body.menuing #mute { top: calc(10px + var(--sa-t) + var(--tg-t)); bottom: auto; right: auto; left: calc(132px + var(--sa-l)); border-radius: 0; z-index: 31; } /* поверх меню, справа от названия */
-  #menu .opt { flex-wrap: wrap; } #menu .opt .nm { flex: 1 1 60%; min-width: 0; } #menu .opt .nm b { display: block; } /* подвески: название целиком, метки — строкой ниже */
+  #menu .opt { flex-wrap: wrap; } #menu .opt .nm { flex: 1 1 60%; min-width: 0; } #menu .opt .nm b { display: block; } /* подвески: название целиком, метки - строкой ниже */
   #menu .opt .tag { border-radius: 0; }
-  body.menuing #perf { display: none; } /* счётчик производительности — только в бою: меню ничего не рисует */
-  /* телефон вертикально — игра ждёт, пока его повернут (бой на паузе) */
+  body.menuing #perf { display: none; } /* счётчик производительности - только в бою: меню ничего не рисует */
+  /* телефон вертикально - игра ждёт, пока его повернут (бой на паузе) */
   #rotLock { display: none; position: fixed; inset: 0; z-index: 2147483600; background: #10140f; color: #e9e6dc; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 24px; text-align: center; font-family: 'Golos Text', sans-serif; }
   body.portrait #rotLock { display: flex; }
-  /* онлайн: окна поверх игры — переподключение, возвращение в комнату, «покинуть комнату?» (online.js) */
+  /* онлайн: окна поверх игры - переподключение, возвращение в комнату, «покинуть комнату?» (online.js) */
   #netModal { display: none; position: fixed; inset: 0; z-index: 2147483500; background: rgba(8,11,7,.72); align-items: center; justify-content: center; padding: 16px; }
   #netModal.on { display: flex; }
   #netModal .nmb { width: min(380px, 100%); background: #10140f; border: 1px solid #3a4334; color: #e9e6dc; padding: 18px; font-family: 'Golos Text', sans-serif; text-align: center; }
@@ -629,7 +629,7 @@
   @keyframes rotPh { 0%, 25% { transform: rotate(0); } 55%, 85% { transform: rotate(-90deg); } 100% { transform: rotate(0); } }
   #menu .gfx { border-radius: 0; border-color: #4a5443; background: #161c13; color: #e9e6dc; } #menu .gfx.on { border-color: #e8b04a; background: #2a2a17; }
   #promoNav { right: calc(min(330px, 42vw) + 26px + var(--sa-r)); bottom: max(16px, var(--sa-b)); }
-  @media (max-aspect-ratio: 1/1) { /* вертикально: режимы — полосой сверху, задание — снизу */
+  @media (max-aspect-ratio: 1/1) { /* вертикально: режимы - полосой сверху, задание - снизу */
     .mrail { right: 0; bottom: auto; width: auto; flex-direction: row; align-items: center; padding: calc(8px + var(--sa-t) + var(--tg-t)) 8px 8px; overflow-x: auto; }
     .mlogo { display: none; } .accBox { flex-direction: row; flex: none; } .accBox button { width: auto; white-space: nowrap; } #menu .modeSel { flex-direction: row; overflow: visible; } #menu .modeSel button { white-space: nowrap; padding: 9px 12px; }
     #menu .mtabs { margin: 0 0 0 8px; padding: 0; flex-wrap: nowrap; } #menu .mtabs button { white-space: nowrap; }
@@ -659,7 +659,7 @@
   body.layoutEdit .tb { cursor: grab; }
   body.layoutEdit .tb.ledOn { border-color: #fb923c; box-shadow: 0 0 0 3px rgba(251,146,60,.45); }
   body.layoutEdit #stickZone { outline: 2px dashed rgba(255,255,255,.18); outline-offset: -10px; pointer-events: none; }
-  body.layoutEdit #stickZone::after { content: 'зона ручки — палец в любом месте слева'; position: absolute; left: 50%; top: 58%; transform: translateX(-50%);
+  body.layoutEdit #stickZone::after { content: 'зона ручки - палец в любом месте слева'; position: absolute; left: 50%; top: 58%; transform: translateX(-50%);
     font-size: 12px; color: rgba(255,255,255,.45); white-space: nowrap; }
   #ledBar { position: fixed; z-index: 57; top: calc(max(8px, var(--sa-t)) + var(--tg-t, 0px)); left: 50%; transform: translateX(-50%); width: min(560px, calc(100vw - 24px));
     background: rgba(15,23,42,.94); border: 1px solid rgba(255,255,255,.14); border-radius: 12px; padding: 8px 10px; font-size: 12px; color: #e2e8f0; }
@@ -675,7 +675,7 @@
   #ledBar .btn { width: auto; display: inline-block; padding: 7px 12px; font-size: 12.5px; margin: 0; }
 
   /* ═════ Игра в стиле главного меню (2026-10-14): плоско, без скруглений, тёмно-оливковые панели, янтарный акцент, Russo One /
-     Golos Text / Oswald. Только вид (цвет, углы, шрифт) — места и размеры прежние. Меню (#menu …) этим не затрагивается ═════ */
+     Golos Text / Oswald. Только вид (цвет, углы, шрифт) - места и размеры прежние. Меню (#menu …) этим не затрагивается ═════ */
   :root { --th-bg: rgba(16,20,15,.9); --th-bg2: rgba(16,20,15,.58); --th-line: #3a4334; --th-ac: #e8b04a; --th-tx: #e9e6dc; --th-dim: #a9b19c; }
   #hud, #touch, #dside, #dtop, #evPanel, #netPlan, #plPanel, #netChat, #opHud, #photoUi, #wBar, .screen, #msg, #warn, #hint, #ask, #ledBar { font-family: 'Golos Text', -apple-system, 'Segoe UI', sans-serif; }
   /* окна: пауза, итоги, объяснение */
@@ -701,7 +701,7 @@
   #ask { border-radius: 0; background: var(--th-bg); border-color: rgba(232,176,74,.6); } #ask button { border-radius: 0; background: var(--th-ac); color: #17190f; font-family: 'Oswald', sans-serif; font-weight: 400; }
   #hint { border-radius: 0 !important; }
   /* сенсорные кнопки */
-  .tb { border-radius: 0; background: rgba(16,20,15,.5); border: 1px solid rgba(233,230,220,.26); color: var(--th-tx); font: 600 11.5px 'Golos Text', sans-serif; letter-spacing: 0; } /* без капса (Mark 2026-10-25) — подписи кнопок как написаны */
+  .tb { border-radius: 0; background: rgba(16,20,15,.5); border: 1px solid rgba(233,230,220,.26); color: var(--th-tx); font: 600 11.5px 'Golos Text', sans-serif; letter-spacing: 0; } /* без капса (Mark 2026-10-25) - подписи кнопок как написаны */
   .tb.big { border-color: var(--th-ac); font: 500 13px 'Oswald', sans-serif; letter-spacing: .05em; }
   .tb.on, #tAuto.on, #opAuto.on, #opBtns .tb.on, #opCam.on { background: rgba(232,176,74,.42); border-color: var(--th-ac); color: #fff; }
   #tFire { background: conic-gradient(rgba(232,176,74,.42) var(--fb), rgba(16,20,15,.5) 0); } #tFire small { font-family: 'Golos Text', sans-serif; text-transform: none; }
@@ -711,7 +711,7 @@
   #dside h3, #evPanel h3, #netPlan h3 { font: 500 15px 'Oswald', sans-serif; letter-spacing: .02em; color: #f4f1e8; }
   #dside .btn.mini, #evPanel .btn.mini2, #dside .btn.mini2 { border-radius: 0; }
   #dtop { color: var(--th-tx); } #dtop b { color: #f3c96f; }
-  /* окно сводки волны «Обороны» (Mark 2026-11-02, вариант А «Табло», defense.js wavePanel): клетки — волна, сбито, объекты, очки; ниже — что впереди */
+  /* окно сводки волны «Обороны» (Mark 2026-11-02, вариант А «Табло», defense.js wavePanel): клетки - волна, сбито, объекты, очки; ниже - что впереди */
   #dtop .dpan { display: inline-flex; flex-direction: column; background: var(--th-bg); border: 1px solid rgba(233,230,220,.22); box-shadow: 0 6px 18px rgba(0,0,0,.35); text-shadow: none; }
   #dtop .dpan .r { display: flex; align-items: stretch; }
   #dtop .dpan .c { display: flex; flex-direction: column; justify-content: center; gap: 2px; padding: 5px 12px; border-left: 1px solid rgba(233,230,220,.16); }
@@ -730,20 +730,20 @@
   .phRow button, #phSide button { border-radius: 0; background: var(--th-bg2); border-color: rgba(233,230,220,.26); } .phRow button.on { background: var(--th-ac); border-color: var(--th-ac); color: #17190f; }
   #plPanel .plh { font-family: 'JetBrains Mono', ui-monospace, monospace; }
   #ledBar { border-radius: 0; background: var(--th-bg); border: 1px solid var(--th-line); }
-  /* иконки управления (icons.js): вместо надписей; подпись — мелко под иконкой, где нужна (газ, пуск) */
+  /* иконки управления (icons.js): вместо надписей; подпись - мелко под иконкой, где нужна (газ, пуск) */
   .ic { width: 26px; height: 26px; display: block; flex: none; }
-  /* что сбивает комплекс (icons.js capsHtml) — цветные плашки (Mark 2026-10-25): дроны — зелёная, бомбы — оранжевая, крылатые — жёлтая, баллистика — красная */
+  /* что сбивает комплекс (icons.js capsHtml) - цветные плашки (Mark 2026-10-25): дроны - зелёная, бомбы - оранжевая, крылатые - жёлтая, баллистика - красная */
   .caps { display: inline-flex; gap: 3px; margin-left: 6px; vertical-align: -0.24em; } .caps > span { display: inline-grid; place-items: center; width: 1.35em; height: 1.35em; }
   .caps .ic { width: 1em; height: 1em; display: block; color: #10140f; }
   .caps .drone { background: #6fcf7f; } .caps .bomb { background: #f0a24a; } .caps .cruise { background: #f2d15c; } .caps .tbm { background: #ef6b5e; }
-  /* фильтр целей комплекса (icons.js tgtRowHtml): «Все» и плашки видов в цветах «что сбивает», самолёты — нейтральная; выключенный вид — тусклый */
+  /* фильтр целей комплекса (icons.js tgtRowHtml): «Все» и плашки видов в цветах «что сбивает», самолёты - нейтральная; выключенный вид - тусклый */
   .tgtrow { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin: 2px 0 6px; } .tgtrow .tl { font-size: 10.5px; opacity: .72; margin-right: 2px; }
   .tgtrow .tg { display: inline-flex; align-items: center; gap: 3px; padding: 4px 7px; font: 600 11.5px 'Golos Text', sans-serif; text-transform: none; letter-spacing: 0; color: #10140f; background: #c8ced3; border: 0; border-radius: 6px; cursor: pointer; opacity: .38; }
   .tgtrow .tg.on { opacity: 1; } .tgtrow .tg .ic { width: 1em; height: 1em; color: #10140f; }
   .tgtrow .tg.all { background: transparent; color: inherit; border: 1px solid rgba(255,255,255,.3); } .tgtrow .tg.all.on { background: rgba(255,255,255,.16); }
   .tgtrow .tg.drone { background: #6fcf7f; } .tgtrow .tg.bomb { background: #f0a24a; } .tgtrow .tg.cruise { background: #f2d15c; } .tgtrow .tg.tbm { background: #ef6b5e; }
   .ii { width: 1.05em; height: 1.05em; display: inline-block; vertical-align: -0.15em; margin-right: 2px; }
-  .sd { display: inline-block; width: .62em; height: .62em; margin: 0 .14em; border-radius: 50%; background: currentColor; vertical-align: .02em; } .sd.o { background: none; border: 1.6px solid currentColor; box-sizing: border-box; } .sd.d { border-radius: 1px; transform: rotate(45deg) scale(.82); } /* точки статуса вместо ● ○ ◆: цвет — как у текста */
+  .sd { display: inline-block; width: .62em; height: .62em; margin: 0 .14em; border-radius: 50%; background: currentColor; vertical-align: .02em; } .sd.o { background: none; border: 1.6px solid currentColor; box-sizing: border-box; } .sd.d { border-radius: 1px; transform: rotate(45deg) scale(.82); } /* точки статуса вместо ● ○ ◆: цвет - как у текста */
   .tb { flex-direction: column; gap: 2px; } .tb small { font: 600 10px 'Golos Text', sans-serif; text-transform: none; letter-spacing: 0; opacity: .9; }
   .tb.big .ic { width: 30px; height: 30px; } #tFire .ic, #opFire .ic { width: 28px; height: 28px; }
   #exit .ic, #mute .ic, #pause .ic, #plBtn .ic, #lsnBtn .ic { width: 20px; height: 20px; } #askBtn .ic { width: 18px; height: 18px; margin: auto; }
@@ -752,8 +752,8 @@
   #lessonX .ic, #lsnX .ic, #msClose .ic, #promoNav .ic, #phSide .ic { width: 1.15em; height: 1.15em; margin: auto; display: block; } #lessonX .ic, #msClose .ic { width: 16px; height: 16px; } #promoNav .ic { width: 18px; height: 18px; } #phSide .ic { width: 20px; height: 20px; }
   #netChat button .ic { width: 16px; height: 16px; display: block; margin: auto; }
   #evBtn .ic, #wNext .ic { width: 1.1em; height: 1.1em; vertical-align: -0.2em; margin: 0 5px 0 0; } #wNext .ic { margin: 0 0 0 5px; }
-  #tPop .ic { width: 36px; height: 36px; } body.short #tPop .ic { width: 30px; height: 30px; } /* вертолёт тонкий — крупнее соседних, чтобы читался так же */
-  #opBtns #opRadar.on { background: var(--th-ac); border-color: var(--th-ac); color: #17190f; } /* РЛС излучает — иконка закрашена */
+  #tPop .ic { width: 36px; height: 36px; } body.short #tPop .ic { width: 30px; height: 30px; } /* вертолёт тонкий - крупнее соседних, чтобы читался так же */
+  #opBtns #opRadar.on { background: var(--th-ac); border-color: var(--th-ac); color: #17190f; } /* РЛС излучает - иконка закрашена */
   #opBtns .tb.off { opacity: .45; }
   #opFire { --fb: 360deg; --fc: rgba(74,222,128,.5); background: conic-gradient(var(--fc) var(--fb), rgba(16,20,15,.5) 0); }
   #opFire span { display: flex; flex-direction: column; align-items: center; gap: 2px; } #opFire em { font: 700 12px 'JetBrains Mono', ui-monospace, monospace; font-style: normal; text-transform: none; color: #fff; }
@@ -764,8 +764,8 @@
   #mnZ { accent-color: var(--th-ac); } #podBox .zoom { border-radius: 0; }
 </style>
 <style>
-  /* шрифты (Mark 2026-10-25, набор «Б»): Oswald — заголовки, Golos Text — текст, JetBrains Mono — цифры; свои файлы (OFL, кириллица + латиница,
-     airdef/fonts, лицензии там же) — без Google: офлайн-кэш и игроки, у кого Google медленный */
+  /* шрифты (Mark 2026-10-25, набор «Б»): Oswald - заголовки, Golos Text - текст, JetBrains Mono - цифры; свои файлы (OFL, кириллица + латиница,
+     airdef/fonts, лицензии там же) - без Google: офлайн-кэш и игроки, у кого Google медленный */
   @font-face { font-family: 'Golos Text'; font-style: normal; font-weight: 400 800; font-display: swap; src: url(airdef/fonts/golos-text-cyrillic.woff2) format('woff2'); unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
   @font-face { font-family: 'Golos Text'; font-style: normal; font-weight: 400 800; font-display: swap; src: url(airdef/fonts/golos-text-latin.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
   @font-face { font-family: 'JetBrains Mono'; font-style: normal; font-weight: 400 700; font-display: swap; src: url(airdef/fonts/jetbrains-mono-cyrillic.woff2) format('woff2'); unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
@@ -792,9 +792,9 @@
 </div>
 <div id="warn"></div><div id="msg"></div><div id="perf"></div>
 <div id="netModal" role="dialog"></div>
-<div id="rotLock" role="alertdialog" aria-label="Поверните телефон"><div class="rph"></div><b>Поверните телефон горизонтально</b><span>Игра рассчитана на широкий экран. Как повернёте — продолжим с того же места.</span></div>
+<div id="rotLock" role="alertdialog" aria-label="Поверните телефон"><div class="rph"></div><b>Поверните телефон горизонтально</b><span>Игра рассчитана на широкий экран. Как повернёте - продолжим с того же места.</span></div>
 <div id="hint"></div>
-<div id="ask"><div><b id="askTxt"></b><small>объяснение — нажмите «?» (игра на паузе)</small></div><button id="askBtn" aria-label="Объяснение">?</button></div>
+<div id="ask"><div><b id="askTxt"></b><small>объяснение - нажмите «?» (игра на паузе)</small></div><button id="askBtn" aria-label="Объяснение">?</button></div>
 <canvas id="map"></canvas>
 
 <!-- оборона -->
@@ -849,7 +849,7 @@
 <div id="netPlan"></div>
 <div id="photoZone"></div>
 <div id="photoUi"><div id="phCap"></div><div class="phRow" id="phSubj"></div><div class="phRow" id="phAng"></div>
-  <div id="phSide"><button data-ph="hide" title="Спрятать интерфейс (H) — тап по экрану вернёт"></button><button data-ph="new" title="Новый бой (N)"></button><button data-ph="reset" title="Ракурс по умолчанию (R)"></button><button data-ph="speed" id="phSpd" title="Скорость: ×1 / ×½ / ×¼ / стоп-кадр">×1</button><button data-ph="zoom" id="phZoom" title="Угол поля зрения (Z)">Зум</button><button data-ph="far" title="Дальше (−)">－</button><button data-ph="near" title="Ближе (+)">＋</button></div></div>
+  <div id="phSide"><button data-ph="hide" title="Спрятать интерфейс (H) - тап по экрану вернёт"></button><button data-ph="new" title="Новый бой (N)"></button><button data-ph="reset" title="Ракурс по умолчанию (R)"></button><button data-ph="speed" id="phSpd" title="Скорость: ×1 / ×½ / ×¼ / стоп-кадр">×1</button><button data-ph="zoom" id="phZoom" title="Угол поля зрения (Z)">Зум</button><button data-ph="far" title="Дальше (−)">－</button><button data-ph="near" title="Ближе (+)">＋</button></div></div>
 <div id="promoNav"><button data-nav="-1" aria-label="Предыдущий план"></button><button data-nav="1" aria-label="Следующий план"></button></div>
 <div class="screen on" id="menu">
   <div id="menuBg" aria-hidden="true"><div class="mbi"></div><div class="mbi"></div></div>
@@ -899,10 +899,10 @@
 <div class="screen" id="end">
   <div class="endv"><div id="endView"></div><div id="endBtns"><button class="btn" id="againBtn">Ещё раз</button><button class="btn alt" id="closeBtn">В меню</button></div></div>
 </div>
-<script src="https://telegram.org/js/telegram-web-app.js"></script> <!-- Telegram Mini App (вне Telegram — пустой объект) -->
+<script src="https://telegram.org/js/telegram-web-app.js"></script> <!-- Telegram Mini App (вне Telegram - пустой объект) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="../config.js?v=20261104a"></script> <!-- адрес функции mp-ticket и ключ Supabase (билет онлайна) -->
-<script> // сервис-воркер: файлы игры — в кэше устройства (games/airdef-sw.js, airdef/offline.js); только на сайте или с ?sw=1. Версия — как у модулей: поднимается при деплое
+<script> // сервис-воркер: файлы игры - в кэше устройства (games/airdef-sw.js, airdef/offline.js); только на сайте или с ?sw=1. Версия - как у модулей: поднимается при деплое
   if ('serviceWorker' in navigator && (/fortunawtm\.com$/.test(location.hostname) || /[?&]sw=1/.test(location.search))) navigator.serviceWorker.register('airdef-sw.js?v=20261104a', { scope: './airdef' }).catch(() => {});
 </script>
 <script type="module" src="airdef/main.js?v=20261104a"></script>

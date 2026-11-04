@@ -1,11 +1,11 @@
-// airdef-shop — магазин окрасок «Воздушного превосходства» (shop-ui.js, Mark 2026-10-26 — «Витрина»; этап 2 — покупка, 2026-10-27). Кристаллы
-// начисляются за сезон рейтинга (sql/024 — молча), окраски «на выбор» (picks) — за 1-е место. Только аккаунт игры (kind = airdef).
+// airdef-shop - магазин окрасок «Воздушного превосходства» (shop-ui.js, Mark 2026-10-26 - «Витрина»; этап 2 - покупка, 2026-10-27). Кристаллы
+// начисляются за сезон рейтинга (sql/024 - молча), окраски «на выбор» (picks) - за 1-е место. Только аккаунт игры (kind = airdef).
 //   { player_id, action: 'state' }                → { season, wallet: { crystals, camos, picks, worn } }
-//   { player_id, action: 'buy',  key }            → { season, wallet } — за CAMO_PRICE кристаллов (sql/028 airdef_shop_buy)
-//   { player_id, action: 'pick', key }            → { season, wallet } — окраска на выбор
-//   { player_id, action: 'wear', key }            → { season, wallet } — надеть свою ('самолёт:окраска'); key: null + plane — снять с самолёта
-// Аватарки (Mark 2026-11-04) — те же действия и те же поля кошелька: ключ 'ava:a02', цена AVA_PRICE, каталог avaCatalog; снять — plane: 'ava'.
-// В магазине — окраски, вышедшие к сезону (arsenal.js camosOut; в межсезонье — следующего сезона, они уже на витрине). Списание — в SQL.
+//   { player_id, action: 'buy',  key }            → { season, wallet } - за CAMO_PRICE кристаллов (sql/028 airdef_shop_buy)
+//   { player_id, action: 'pick', key }            → { season, wallet } - окраска на выбор
+//   { player_id, action: 'wear', key }            → { season, wallet } - надеть свою ('самолёт:окраска'); key: null + plane - снять с самолёта
+// Аватарки (Mark 2026-11-04) - те же действия и те же поля кошелька: ключ 'ava:a02', цена AVA_PRICE, каталог avaCatalog; снять - plane: 'ava'.
+// В магазине - окраски, вышедшие к сезону (arsenal.js camosOut; в межсезонье - следующего сезона, они уже на витрине). Списание - в SQL.
 import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
 import { supabaseAdmin } from "../_shared/supabase-admin.ts";
 import { avaCatalog, AVA_PRICE, camosOut, CAMO_PRICE } from "../_shared/airdef/arsenal.js";
@@ -28,11 +28,11 @@ Deno.serve(async (req) => {
     const db = supabaseAdmin();
     const { data: pl, error } = await db.from("players").select("kind").eq("id", player_id).maybeSingle();
     if (error) throw error;
-    if (!pl) return jsonResponse({ error: "Игрок не найден — войдите в аккаунт игры", code: "not_found" }, 404);
-    if (pl.kind !== "airdef") return jsonResponse({ error: "Кристаллы и окраски — только у аккаунта игры", code: "need_game" }, 403);
+    if (!pl) return jsonResponse({ error: "Игрок не найден - войдите в аккаунт игры", code: "not_found" }, 404);
+    if (pl.kind !== "airdef") return jsonResponse({ error: "Кристаллы и окраски - только у аккаунта игры", code: "need_game" }, 403);
     const ts = new Date().toISOString();
     const [at, lv] = await Promise.all([db.rpc("airdef_season_at", { ts }), db.rpc("airdef_season_live", { ts })]);
-    // сезон окрасок: идущий; в межсезонье (sql/027) — следующий (его окраски уже в магазине)
+    // сезон окрасок: идущий; в межсезонье (sql/027) - следующий (его окраски уже в магазине)
     const season = Number(lv.data) || Number(at.data) || 1;
     if (action === "state" || action === undefined) {
       const w = await db.rpc("airdef_wallet_view", { p_player: player_id });

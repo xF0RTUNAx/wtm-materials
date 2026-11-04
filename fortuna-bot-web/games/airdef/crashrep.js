@@ -1,8 +1,8 @@
 // Отчёт о вылете (Mark 2026-10-27: «заставить устройство в такие моменты сообщать об ошибке и попросить логи»). Журналы iOS странице недоступны,
-// но она видит, что прошлый бой оборвался без выхода: в бою раз в 5 с — запись в хранилище вкладки (sessionStorage переживает вылет и
+// но она видит, что прошлый бой оборвался без выхода: в бою раз в 5 с - запись в хранилище вкладки (sessionStorage переживает вылет и
 // перезагрузку этой вкладки, новой вкладке не видна); обычный уход со страницы (pagehide: перезагрузка, закрытие, переход) и конец боя её
-// стирают, вылет — нет. Открылись с записью не старше 5 мин — окно «Игра закрылась с ошибкой»: «Отправить» — на игровой сервер (журнал
-// ad_crash, без входа), не вышло — «Скопировать» для Telegram. Онлайн-бой — без окна: там отчёт уходит сам (online.js 'reload')
+// стирают, вылет - нет. Открылись с записью не старше 5 мин - окно «Игра закрылась с ошибкой»: «Отправить» - на игровой сервер (журнал
+// ad_crash, без входа), не вышло - «Скопировать» для Telegram. Онлайн-бой - без окна: там отчёт уходит сам (online.js 'reload')
 import { adServerUrl } from './net.js?v=20261104a';
 import { tr } from './i18n.js?v=20261104a';
 
@@ -13,9 +13,9 @@ export function createCrashRep(C) {
   let prev = null;
   try { const o = JSON.parse(ss.get(K) || 'null'); if (o && Date.now() - o.t < 300000) prev = o; } catch (_) { /* испорчена */ }
   ss.del(K);
-  addEventListener('pagehide', () => ss.del(K)); // ушли сами — не вылет
+  addEventListener('pagehide', () => ss.del(K)); // ушли сами - не вылет
   let bt0 = 0;
-  setInterval(() => { try { tick(); } catch (_) { /* запись — не важнее игры (стенды без renderer.info и т. п.) */ } }, 5000);
+  setInterval(() => { try { tick(); } catch (_) { /* запись - не важнее игры (стенды без renderer.info и т. п.) */ } }, 5000);
   function tick() {
     if (C.state !== 'play' || C.ended) { if (bt0) { bt0 = 0; ss.del(K); } return; }
     if (!bt0) bt0 = Date.now();
@@ -35,7 +35,7 @@ export function createCrashRep(C) {
     });
   }
   function offer() {
-    if (!prev || C.LIVE || C.state === 'play') return; // онлайн — отчёт ушёл сам; уже в бою (?go=) — не мешаем
+    if (!prev || C.LIVE || C.state === 'play') return; // онлайн - отчёт ушёл сам; уже в бою (?go=) - не мешаем
     const rep = { ...prev, ago: Math.round((Date.now() - prev.t) / 1000) }, md = document.getElementById('netModal'); prev = null;
     if (!md) return;
     const ios = /iP(hone|ad|od)/.test(navigator.userAgent);
@@ -45,11 +45,11 @@ export function createCrashRep(C) {
       md.classList.add('on');
     };
     const close = () => { md.classList.remove('on'); md.innerHTML = ''; md.onclick = null; };
-    const copy = () => { try { navigator.clipboard.writeText(JSON.stringify(rep)); C.say(tr('Отчёт скопирован — перешлите его в Telegram'), 3); } catch (_) { /* нет буфера */ } close(); };
-    draw(`${tr('Похоже, в прошлый раз игра вылетела в бою. Отправьте отчёт — он поможет найти причину.')}${ios ? `<br><span class="dim">${tr('Если вылетает часто: «Настройки» → «Конфиденциальность и безопасность» → «Аналитика и улучшения» → «Данные аналитики» — перешлите файлы, начинающиеся с WebKit или Jetsam.')}</span>` : ''}`,
+    const copy = () => { try { navigator.clipboard.writeText(JSON.stringify(rep)); C.say(tr('Отчёт скопирован - перешлите его в Telegram'), 3); } catch (_) { /* нет буфера */ } close(); };
+    draw(`${tr('Похоже, в прошлый раз игра вылетела в бою. Отправьте отчёт - он поможет найти причину.')}${ios ? `<br><span class="dim">${tr('Если вылетает часто: «Настройки» → «Конфиденциальность и безопасность» → «Аналитика и улучшения» → «Данные аналитики» - перешлите файлы, начинающиеся с WebKit или Jetsam.')}</span>` : ''}`,
       [[tr('Отправить'), () => {
         draw(tr('Отправляем…'), []);
-        send(rep).then(() => { close(); C.say(tr('Отчёт отправлен — спасибо!'), 3); })
+        send(rep).then(() => { close(); C.say(tr('Отчёт отправлен - спасибо!'), 3); })
           .catch(() => draw(tr('Сервер игры сейчас недоступен. Скопируйте отчёт и перешлите его в Telegram.'), [[tr('Скопировать'), copy], [tr('Закрыть'), close, true]]));
       }], [tr('Не надо'), close, true]]);
   }

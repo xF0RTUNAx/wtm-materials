@@ -1,7 +1,7 @@
 // Стенд лётной модели «Воздушного превосходства» (games/airdef/sim/flight.js): каждому самолёту подбирает сопротивление
 // (cd0 и волновой рост aw) так, чтобы максимальная скорость у земли и на 11 км была SPEED_K (0,8) от реальной, пишет
 // games/airdef/sim/flight-fit.js и снимает характеристики: максимальная скорость по высотам, разгон, установившийся и
-// предельный вираж, скороподъёмность, сваливание. Отчёт — HTML с графиками (путь — аргумент, по умолчанию во временной папке).
+// предельный вираж, скороподъёмность, сваливание. Отчёт - HTML с графиками (путь - аргумент, по умолчанию во временной папке).
 //   deno run -A tools/airdef-headless/flight-stand.js [отчёт.html]
 import { SPECS, SPEED_K, accel, nMax, vStall, sound, thrust } from '../../games/airdef/sim/flight.js';
 const G = 9.81, KMH = 3.6;
@@ -10,7 +10,7 @@ const vmaxAt = (s, f, h, m = s.mNorm, ab = true) => { // наибольшая с
   let lo = best, hi = best + 2; for (let i = 0; i < 30; i++) { const mid = (lo + hi) / 2; if (accel(s, f, mid, h, m, 1, 1, ab, 0) > 0) lo = mid; else hi = mid; }
   return lo;
 };
-// типичное вредное сопротивление по классу (чистый самолёт): истребители ~0,02, штурмовик — больше, тяжёлые — меньше
+// типичное вредное сопротивление по классу (чистый самолёт): истребители ~0,02, штурмовик - больше, тяжёлые - меньше
 const CD0 = { e_su25: 0.03, e_b52: 0.017, e_b1b: 0.017, e_tu160: 0.016, e_tu22m3: 0.018, e_su24: 0.024, e_su17: 0.022, e_f4: 0.023,
   e_tu22m2: 0.018, e_a10: 0.032, e_f111: 0.022, e_tornado: 0.022, e_mig23: 0.022, e_mig27: 0.024, e_f15e: 0.021,
   e_mig21n: 0.021, e_mig25: 0.022, e_su7b: 0.022, e_tu16: 0.019, e_f100: 0.022, e_f117: 0.024, e_buccaneer: 0.022, e_harrier: 0.026, e_b2: 0.012,
@@ -19,11 +19,11 @@ function fit(s, k) {
   const tSL = SPEED_K * s.vSL / KMH, tAlt = SPEED_K * s.vAlt / KMH, hAlt = 11000;
   const f = { cd0: CD0[k] || 0.02, aw: 1.5, ex: 0.75, vq: 0 };
   for (let it = 0; it < 4; it++) {
-    // у земли: без ограничения тяги хватает на большее — ставим предельный напор; не хватает — меньше cd0
+    // у земли: без ограничения тяги хватает на большее - ставим предельный напор; не хватает - меньше cd0
     f.vq = 0; const free = vmaxAt(s, f, 0);
     if (free > tSL) { let lo = tSL / SPEED_K * 0.8, hi = tSL / SPEED_K * 1.2; for (let i = 0; i < 40; i++) { f.vq = (lo + hi) / 2; if (vmaxAt(s, f, 0) > tSL) hi = f.vq; else lo = f.vq; } f.vq = (lo + hi) / 2; }
     else { let lo = 0.005, hi = f.cd0; for (let i = 0; i < 40; i++) { f.cd0 = Math.sqrt(lo * hi); if (vmaxAt(s, f, 0) > tSL) lo = f.cd0; else hi = f.cd0; } f.cd0 = Math.sqrt(lo * hi); }
-    // на 11 км: волновой рост aw; не хватает тяги и при aw = 0,15 — тяга медленнее падает с высотой (ex ниже)
+    // на 11 км: волновой рост aw; не хватает тяги и при aw = 0,15 - тяга медленнее падает с высотой (ex ниже)
     if (tAlt / SPEED_K / sound(hAlt) > 0.7) {
       f.ex = 0.75; let lo = 0, hi = 12; for (let i = 0; i < 40; i++) { f.aw = (lo + hi) / 2; if (vmaxAt(s, f, hAlt) > tAlt) lo = f.aw; else hi = f.aw; } f.aw = (lo + hi) / 2;
       if (f.aw < 0.15) { f.aw = 0.15; let a = 0.02, b2 = 0.75; for (let i = 0; i < 40; i++) { f.ex = (a + b2) / 2; if (vmaxAt(s, f, hAlt) > tAlt) a = f.ex; else b2 = f.ex; } f.ex = (a + b2) / 2; }
@@ -31,7 +31,7 @@ function fit(s, k) {
   }
   return { cd0: +f.cd0.toFixed(5), aw: +f.aw.toFixed(3), ex: +f.ex.toFixed(3), vq: +f.vq.toFixed(1) };
 }
-// разгон у земли с форсажем (без — у кого его нет): с 400 км/ч·0,8 до 90 % максимума, с
+// разгон у земли с форсажем (без - у кого его нет): с 400 км/ч·0,8 до 90 % максимума, с
 function accelTime(s, f, h = 0) {
   const vmax = vmaxAt(s, f, h); let v = 400 * SPEED_K / KMH, t = 0; const dt = 0.05, ab = s.ab > 0;
   while (v < vmax * 0.9 && t < 600) { v += accel(s, f, v, h, s.mNorm, 1, 1, ab, 0) * dt; t += dt; }
@@ -61,7 +61,7 @@ for (const [k, s] of Object.entries(SPECS)) {
   rows.push({ k, s, f, v0, v5, v11, vMil, t90: accelTime(s, f), st, stv, it, itv, climb: climb(s, f), vs: vStall(s, 0, s.mNorm), env, acc, tw: thrust(s, 0, 0, 1, s.ab > 0) / (s.mNorm * G) });
 }
 Deno.writeTextFileSync(new URL('../../games/airdef/sim/flight-fit.js', import.meta.url),
-  `// Создано tools/airdef-headless/flight-stand.js — не править руками: подобранное сопротивление самолётов (скорости — ${SPEED_K} реальных)\nexport const FIT = ${JSON.stringify(FIT)};\n`);
+  `// Создано tools/airdef-headless/flight-stand.js - не править руками: подобранное сопротивление самолётов (скорости - ${SPEED_K} реальных)\nexport const FIT = ${JSON.stringify(FIT)};\n`);
 
 // ── отчёт ──
 const r0 = (x) => Math.round(x), r1 = (x) => x.toFixed(1);
@@ -82,7 +82,7 @@ body{background:var(--bg);color:var(--fg);font:14px/1.45 system-ui,sans-serif;ma
 .wrap{overflow-x:auto}table{border-collapse:collapse;font-size:13px;white-space:nowrap}td,th{border-bottom:1px solid var(--ln);padding:5px 8px;text-align:right}td:first-child,th:first-child{text-align:left}th{color:var(--mut);font-weight:500;vertical-align:bottom;white-space:normal;max-width:110px}
 .d{color:var(--mut)}.ch{width:100%;max-width:820px;height:auto}.gr{stroke:var(--ln);stroke-width:1}.ax{fill:var(--mut);font-size:11px}.lg{display:inline-block;margin:2px 10px 2px 0;font-size:12px}.lg i{display:inline-block;width:12px;height:3px;margin-right:5px;vertical-align:middle}p{color:var(--mut);max-width:820px}</style></head><body>
 <h1>Как летают самолёты в «Воздушном превосходстве»</h1>
-<p>В игре все скорости — 80 % от настоящих. Так бой не превращается в гонку, а разница между машинами остаётся. В столбцах скорости слева настоящая цифра, справа жирным — та, что будет в игре. Считали для обычного боевого веса и полного форсажа (у Су-25 и B-52 его нет, там максимальный режим двигателей). Виражи сняты на высоте 3 км. «Без потери скорости» — сколько градусов в секунду самолёт может крутить сколько угодно долго. «На пределе» — сколько он выжмет коротким рывком, теряя скорость. В скобках — скорость, на которой это получается лучше всего.</p>
+<p>В игре все скорости - 80 % от настоящих. Так бой не превращается в гонку, а разница между машинами остаётся. В столбцах скорости слева настоящая цифра, справа жирным - та, что будет в игре. Считали для обычного боевого веса и полного форсажа (у Су-25 и B-52 его нет, там максимальный режим двигателей). Виражи сняты на высоте 3 км. «Без потери скорости» - сколько градусов в секунду самолёт может крутить сколько угодно долго. «На пределе» - сколько он выжмет коротким рывком, теряя скорость. В скобках - скорость, на которой это получается лучше всего.</p>
 <div class="wrap"><table><tr><th>Самолёт</th><th>Сторона</th><th>Макс. у земли, км/ч</th><th>на 5 км</th><th>на 11 км</th><th>у земли без форсажа</th><th>тяга / вес</th><th>разгон с 320 км/ч до 90 % макс., с</th><th>вираж без потери скорости, °/с</th><th>вираж на пределе, °/с</th><th>скороподъёмность, м/с</th><th>сваливание, км/ч</th><th>перегрузка</th><th>крен, °/с</th></tr>${tbl}</table></div>
 <h2>Максимальная скорость по высоте (в игре), км/ч</h2>${svgChart(rows.map((r) => ({ name: r.s.name, pts: r.env.map(([h, v]) => [h / 1000, v]) })), 18, 2600, 'высота, км', 'км/ч', 2, 400)}<div>${legend}</div>
 <h2>Разгон у земли с 320 км/ч, км/ч</h2>${svgChart(rows.map((r) => ({ name: r.s.name, pts: r.acc })), 60, 1400, 'секунды', 'км/ч', 10, 200)}<div>${legend}</div>

@@ -1,9 +1,9 @@
-// Онлайн «Мульти-волны» (комнаты kind: 'multi' на /ad): бой считает сервер той же логикой, что одиночная игра —
-// sim/strike.js (ПВО, ЗУР, перехват, урон), sim/raid.js (носители) и sim/combined.js (у каждого атакующего — своя волна:
-// разведчик, дроны, носители, пусковые). Правила и числа — games/airdef/sim/online-multi.js.
+// Онлайн «Мульти-волны» (комнаты kind: 'multi' на /ad): бой считает сервер той же логикой, что одиночная игра -
+// sim/strike.js (ПВО, ЗУР, перехват, урон), sim/raid.js (носители) и sim/combined.js (у каждого атакующего - своя волна:
+// разведчик, дроны, носители, пусковые). Правила и числа - games/airdef/sim/online-multi.js.
 // Раунд: подготовка (одновременно: атака собирает наряд, ПВО ставит комплексы; чат команды) → волна → итоги раунда.
-// Два раунда со сменой сторон, победа — по сумме разрушенной ценности. Туман войны — на сервере: атакующим уходят только
-// засечённые комплексы ПВО, обороне — только оружие, которое увидела её сеть РЛС (или глаза рядом); план — никому, кроме автора.
+// Два раунда со сменой сторон, победа - по сумме разрушенной ценности. Туман войны - на сервере: атакующим уходят только
+// засечённые комплексы ПВО, обороне - только оружие, которое увидела её сеть РЛС (или глаза рядом); план - никому, кроме автора.
 /* global THREE */
 import { CITY, bldMask } from '../games/airdef/city.js?v=20260930m';
 import { createStrike, MODES } from '../games/airdef/sim/strike.js?v=20260930m';
@@ -20,7 +20,7 @@ import { battleParts } from '../games/airdef/rating.js?v=20261104a';
 const r1 = (v) => Math.round(v * 10) / 10;
 const opp = (s) => (s === 'east' ? 'west' : 'east');
 
-// ctx — общее с комнатами airdef-rooms.js: city, send, bcast, team, humans, J, sign, seal, clock, closeRoom, toLobby, sendRoom, FAST
+// ctx - общее с комнатами airdef-rooms.js: city, send, bcast, team, humans, J, sign, seal, clock, closeRoom, toLobby, sendRoom, FAST
 export function createMulti(ctx) {
   const { city, send, bcast, team, humans, J, sign, seal = async () => null, clock, sendRoom, FAST } = ctx;
   const PREP_T = FAST ? 8 : M.PREP_T, DEBRIEF_T = FAST ? 1 : M.DEBRIEF_T, RESULTS_T = FAST ? 3 : M.RESULTS_T, WAVE_MAX = M.WAVE_MAX;
@@ -31,8 +31,8 @@ export function createMulti(ctx) {
   // ═════════════ Раунды ═════════════
   function start(r) {
     r.first = Math.random() < 0.5 ? 'east' : 'west'; r.round = 0; r.scores = { east: 0, west: 0 }; r.startedAt = Date.now();
-    for (const p of r.players.values()) p.use = null; // профиль: ЗРК, стоявшие в бою (раунды за ПВО); налёт ведёт ИИ — самолёты не считаем (вылеты — только свои)
-    for (const p of r.players.values()) { p.kills = 0; p.deaths = 0; p.score = 0; p.icp = 0; p.icpC = 0; p.icpD = 0; p.icpT = 0; p.samk = 0; p.dmg = 0; p.bld = 0; } // icp — перехваты (раунд за ПВО), samk — комплексы, уничтоженные волной игрока, dmg — доля разрушенного волной игрока, % (экран итога)
+    for (const p of r.players.values()) p.use = null; // профиль: ЗРК, стоявшие в бою (раунды за ПВО); налёт ведёт ИИ - самолёты не считаем (вылеты - только свои)
+    for (const p of r.players.values()) { p.kills = 0; p.deaths = 0; p.score = 0; p.icp = 0; p.icpC = 0; p.icpD = 0; p.icpT = 0; p.samk = 0; p.dmg = 0; p.bld = 0; } // icp - перехваты (раунд за ПВО), samk - комплексы, уничтоженные волной игрока, dmg - доля разрушенного волной игрока, % (экран итога)
     J(r, 'start', { kind: 'multi', era: r.era, first: r.first, east: team(r, 'east').map((p) => p.name), west: team(r, 'west').map((p) => p.name) });
     nextRound(r);
   }
@@ -74,11 +74,11 @@ export function createMulti(ctx) {
     if (r.state !== 'play') return;
     const value = M.damageValue(r.S.objects), k = value / (r.v0 || 1);
     r.scores[r.atk] += value;
-    // вклад атакующих — по потраченным очкам угрозы (урон считает весь бой); у ПВО — свои перехваты (p.score по ходу)
+    // вклад атакующих - по потраченным очкам угрозы (урон считает весь бой); у ПВО - свои перехваты (p.score по ходу)
     const spent = atkTeam(r).reduce((s, p) => s + M.planCost(p.plan && p.plan.n), 0) || 1;
     for (const p of atkTeam(r)) { const share = M.planCost(p.plan && p.plan.n) / spent; p.score += Math.round(k * 1000 * share); p.dmg = Math.round(100 * k * share); p.bld = (p.bld || 0) + Math.round((r.bldN || 0) * share); } r.bldN = 0; // та же доля плана игрока × доля разрушенного раунда
     const last = r.round >= M.ROUNDS;
-    r.state = 'debrief'; r.t = 0; r.phaseT = last ? Math.min(DEBRIEF_T, 2.5) : DEBRIEF_T; r.last = last; // последний раунд — сразу к итогам боя
+    r.state = 'debrief'; r.t = 0; r.phaseT = last ? Math.min(DEBRIEF_T, 2.5) : DEBRIEF_T; r.last = last; // последний раунд - сразу к итогам боя
     const res = { round: r.round, atk: r.atk, why, value: Math.round(value), k: Math.round(k * 1000) / 1000, v0: r.v0, scores: { east: Math.round(r.scores.east), west: Math.round(r.scores.west) }, last,
       downs: r.downs || 0 };
     r.downs = 0;
@@ -90,9 +90,9 @@ export function createMulti(ctx) {
     const list = [...r.players.values()].map((p) => ({ id: p.id, name: p.name, team: p.team, bot: !!p.bot, kills: p.kills || 0, deaths: 0, score: Math.round(p.score || 0), icp: p.icp || 0, samk: p.samk || 0, dmg: p.dmg || 0, bld: p.bld || 0 }));
     const hm = humans(r).length * 2 > r.players.size ? 1 : 0;
     for (const p of humans(r)) {
-      // итог для наград — как у обычного онлайна (airdef-claim): team — роль первого раунда игрока, w — победа команды
-      // рейтинг (games/airdef/rating.js): только быстрый бой (своя комната рейтинга не даёт); ничья — winner null (×0,5 победы), надбавки за ранг
-      // в «Мульти-волне» нет; ope — id соперников-людей, запечатанные (seal в server.js, расшифровывает только airdef-claim)
+      // итог для наград - как у обычного онлайна (airdef-claim): team - роль первого раунда игрока, w - победа команды
+      // рейтинг (games/airdef/rating.js): только быстрый бой (своя комната рейтинга не даёт); ничья - winner null (×0,5 победы), надбавки за ранг
+      // в «Мульти-волне» нет; ope - id соперников-людей, запечатанные (seal в server.js, расшифровывает только airdef-claim)
       const all = [...r.players.values()], opp = all.filter((q) => q.team !== p.team);
       const rt = r.quick ? battleParts({ win: winner === null ? 0.5 : p.team === winner ? 1 : 0, score: p.score || 0, kills: p.kills || 0, teamScores: all.filter((q) => q.team === p.team).map((q) => q.score || 0), oppHumans: opp.filter((q) => !q.bot).length, oppTotal: opp.length, mode: r.mode, multi: true }) : null;
       const ope = await seal(opp.filter((q) => !q.bot && q.pid && !String(q.pid).startsWith('test-')).map((q) => q.pid));
@@ -106,10 +106,10 @@ export function createMulti(ctx) {
   }
 
   // ═════════════ Боты ═════════════
-  // эпох у игроков нет; r.era — скрытый уровень ботов (игроку не показывается; быстрый бой — по рангу людей, quickEra, свои комнаты — случайный)
-  // атака: состав ИИ этого уровня, урезанный под бюджет; цели — два случайных объекта, ложные цели — на ПВО
-  // состав и комплексы — сначала своего уровня, потом соседних (бюджет «Мульти-волны» один на всех: с ценами по силе и потолками типа бот низкого
-  // уровня тратил 8–38 из 100 очков удара и 990 из 2500 ПВО — его состав упирался в потолки дешёвых единиц; ревью 2026-10-29)
+  // эпох у игроков нет; r.era - скрытый уровень ботов (игроку не показывается; быстрый бой - по рангу людей, quickEra, свои комнаты - случайный)
+  // атака: состав ИИ этого уровня, урезанный под бюджет; цели - два случайных объекта, ложные цели - на ПВО
+  // состав и комплексы - сначала своего уровня, потом соседних (бюджет «Мульти-волны» один на всех: с ценами по силе и потолками типа бот низкого
+  // уровня тратил 8-38 из 100 очков удара и 990 из 2500 ПВО - его состав упирался в потолки дешёвых единиц; ревью 2026-10-29)
   const byLevel = (tab, lvl) => { const out = []; for (let d = 0; d < 5; d++) for (const l of d ? [lvl + d, lvl - d] : [lvl]) for (const [k] of (tab && tab[l]) || []) if (!out.includes(k)) out.push(k); return out; };
   function botAttack(r, p) {
     const base = byLevel(COMBINED[r.atk], levelIn(COMBINED[r.atk], r.era)).map((k) => [k]), n = {}; let cost = 0;
@@ -119,17 +119,17 @@ export function createMulti(ctx) {
     for (const [k, c] of Object.entries(n)) cfg[k] = { pts: [], alt: null, t: null, sam: false, tgt: null, units: Array.from({ length: c }, (_, i) => (AG[k].decoyMun ? { sam: true } : { sam: false, tgt: pick[i % 2].id })) };
     p.plan = { n, cfg }; p.spent = cost;
   }
-  // ПВО: дальние — между центром и объектами, средние и ближние — у объектов (целей атакующих бот не знает)
+  // ПВО: дальние - между центром и объектами, средние и ближние - у объектов (целей атакующих бот не знает)
   function botDefense(r, p) {
     const side = opp(r.atk), list = byLevel(DEFENSE[side], levelIn(DEFENSE[side], r.era)).filter((k) => M.samOk(k, side));
-    const top = list.filter((k) => O.samClass(k) === 'top'), order = [...top.slice(0, 1), ...list.filter((k) => O.samClass(k) === 'mid'), ...list.filter((k) => O.samClass(k) === 'near'), ...top.slice(1)]; // дальние других уровней — на остаток очков
+    const top = list.filter((k) => O.samClass(k) === 'top'), order = [...top.slice(0, 1), ...list.filter((k) => O.samClass(k) === 'mid'), ...list.filter((k) => O.samClass(k) === 'near'), ...top.slice(1)]; // дальние других уровней - на остаток очков
     const objs = r.S.objects.filter((o) => !o.noTarget);
     for (let g = 0; g < 60; g++) {
       const k = order.find((q) => multiSamCost(q) <= p.budget && ownN(r, p, q) < multiSamCap(q)); if (!k) break;
       const tgt = objs[(g + p.id) % objs.length], Sx = SAM[k], man = Sx.type === 'ir' && Sx.hp <= 15;
       const xz = Sx.rmax >= 15000 ? spotNear(city, Math.random, tgt.x * 0.5, tgt.z * 0.5, 600, 2500, false) : spotNear(city, Math.random, tgt.x, tgt.z, 250, man ? 1600 : 1400, man);
       buyUnit(r, p, k, xz[0], xz[1], xz[2], true);
-      if (O.samClass(k) === 'top' && order.length > 1) order.push(order.splice(order.indexOf(k), 1)[0]); // дальний — в конец: сначала разные, второй — если останутся очки (потолок multiSamCap)
+      if (O.samClass(k) === 'top' && order.length > 1) order.push(order.splice(order.indexOf(k), 1)[0]); // дальний - в конец: сначала разные, второй - если останутся очки (потолок multiSamCap)
     }
   }
   const ownN = (r, p, k) => r.S.units.filter((u) => u.owner === p.id && !u.dead && u.key === k).length; // комплексов типа k у игрока
@@ -140,8 +140,8 @@ export function createMulti(ctx) {
     if (ownN(r, p, k) >= multiSamCap(k)) return 'Больше этого типа нельзя'; // потолок «Мульти-волны» на игрока (MULTI.samCap)
     if (!Number.isFinite(x) || !Number.isFinite(z) || Math.abs(x) > CITY.HALF - 1500 || Math.abs(z) > CITY.HALF - 1500) return 'Вне карты';
     const Sx = SAM[k], man = Sx.type === 'ir' && Sx.hp <= 15;
-    if (roof) { if (!man) return 'На крышу — только ПЗРК'; const bi = buildingAt(city, x, z); if (bi < 0 || !roofOk(city, bi)) return 'Сюда на крышу нельзя'; }
-    else if (!freeGround(city, x, z, man ? 3 : 9)) return 'Место занято — нужна свободная земля';
+    if (roof) { if (!man) return 'На крышу - только ПЗРК'; const bi = buildingAt(city, x, z); if (bi < 0 || !roofOk(city, bi)) return 'Сюда на крышу нельзя'; }
+    else if (!freeGround(city, x, z, man ? 3 : 9)) return 'Место занято - нужна свободная земля';
     const u = r.S.addUnit(k, x, z, { roof: !!roof, skill: 0.75, yaw: Math.random() * 6.28 });
     u.owner = p.id; u.paid = cost; p.budget -= cost;
     pushTo(r, 'def', ['ua', u.id, k, r1(x), r1(z), roof ? 1 : 0, p.id, Math.round(u.yaw * 1000) / 1000]); flushPlan(r);
@@ -154,9 +154,9 @@ export function createMulti(ctx) {
   const v3 = (p) => [r1(p.x), r1(p.y), r1(p.z)];
   const wFlags = (w) => (w.W.kind === 'tbm' && w.phase === 'boost' ? M.W_BOOST : 0) | (w.decoy || w.W.decoyMun ? M.W_DECOY : 0);
   const wOwner = (w) => (w.owner ? w.owner.owner || 0 : 0);
-  // баллистика: + точка прицеливания, сколько летит и полное время (ПВО — оценка СПРН: в реализме клиент размывает до круга)
+  // баллистика: + точка прицеливания, сколько летит и полное время (ПВО - оценка СПРН: в реализме клиент размывает до круга)
   const wrEv = (w) => ['wr', w.id, w.key, wOwner(w), ...v3(w.pos), r1(w.vel.x), r1(w.vel.y), r1(w.vel.z), wFlags(w), ...(w.W.kind === 'tbm' && w.aim ? [r1(w.aim.x), r1(w.aim.z), r1(w.t), r1(w.T)] : [])];
-  // в плане ещё нет боя: события расстановки сразу (ua / ur / um — только своей команде ПВО)
+  // в плане ещё нет боя: события расстановки сразу (ua / ur / um - только своей команде ПВО)
   function flushPlan(r) { if (r.state === 'plan') { flush(r); } }
   function flush(r) {
     const ev = r.events; r.events = []; if (!ev.length) return;
@@ -170,12 +170,12 @@ export function createMulti(ctx) {
       samLaunch: (m) => { const t = m.target; pushTo(r, 'all', ['sl', m.id, m.unit.id, t ? (t.isMun ? -t.id : t.id) : 0, m.slot]); },
       samEnd: (m, hit) => {
         pushTo(r, 'all', ['se', m.id, hit ? 1 : 0, ...v3(m.pos)]);
-        if (hit && m.target && m.target.isMun && m.target.dead) { const p = r.players.get(m.unit.owner); if (p) { p.kills++; p.icp++; const W = AG[m.target.key] || {}; if (W.kind === 'tbm') p.icpT++; else if (W.uav) p.icpD++; else if (W.kind === 'cruise') p.icpC++; p.score += 5 * (THREAT[m.target.key] ?? 4); } /* виды — для заданий */ r.downs = (r.downs || 0) + 1; } // очки угрозы с 2026-10-28 — из 100 (было 10 × из 50)
+        if (hit && m.target && m.target.isMun && m.target.dead) { const p = r.players.get(m.unit.owner); if (p) { p.kills++; p.icp++; const W = AG[m.target.key] || {}; if (W.kind === 'tbm') p.icpT++; else if (W.uav) p.icpD++; else if (W.kind === 'cruise') p.icpC++; p.score += 5 * (THREAT[m.target.key] ?? 4); } /* виды - для заданий */ r.downs = (r.downs || 0) + 1; } // очки угрозы с 2026-10-28 - из 100 (было 10 × из 50)
       },
       wpnRelease: (w) => { pushTo(r, 'atk', wrEv(w)); },
       wpnEnd: (w, res) => { const e = ['we', w.id, ...v3(w.pos), res.intercepted ? 1 : 0]; pushTo(r, w.defSeen ? 'all' : 'atk', e); },
       explosion: (p, R, kind) => pushTo(r, 'all', ['x', ...v3(p), r1(R), kind]),
-      bldDestroyed: (o) => { r.bldN = (r.bldN || 0) + 1; pushTo(r, 'all', ['bd', o.id, bldMask(o)]); }, // постройка объекта-сцены разбита (city.js SITES); счёт — для заданий
+      bldDestroyed: (o) => { r.bldN = (r.bldN || 0) + 1; pushTo(r, 'all', ['bd', o.id, bldMask(o)]); }, // постройка объекта-сцены разбита (city.js SITES); счёт - для заданий
       objectDestroyed: (o, by, owner) => { if (!o.bld) r.bldN = (r.bldN || 0) + 1; pushTo(r, 'all', ['od', o.id]); const p = owner && r.players.get(owner.owner || owner.id); pushTo(r, 'all', ['kl', String(p ? p.name : M.TEAM_NAME[r.atk]).slice(0, 24), String(o.name).slice(0, 40), String(by || '').slice(0, 24), r.atk, r.atk === 'east' ? 'west' : 'east', '', '']); },
       unitDestroyed: (u, by, owner) => { pushTo(r, u.atkSeen ? 'all' : 'def', ['ud', u.id]); const p = owner && r.players.get(owner.owner || owner.id); if (p) { p.kills++; p.samk++; p.score += 40; }
         const v = r.players.get(u.owner); pushTo(r, u.atkSeen ? 'all' : 'def', ['kl', String(p ? p.name : M.TEAM_NAME[r.atk]).slice(0, 24), String(v ? v.name : 'ПВО').slice(0, 40), String(by || '').slice(0, 24), r.atk, opp(r.atk), '', 'u:' + u.key]); },
@@ -183,7 +183,7 @@ export function createMulti(ctx) {
   }
 
   // ═════════════ Туман войны ═════════════
-  // раз в 0,5 с: что атака знает о ПВО (засечённые — со всеми данными), что ПВО видит из волны (РЛС сети, оптика, рядом, старт баллистики)
+  // раз в 0,5 с: что атака знает о ПВО (засечённые - со всеми данными), что ПВО видит из волны (РЛС сети, оптика, рядом, старт баллистики)
   function fog(r) {
     const S = r.S, dU = S.units.filter((u) => !u.dead);
     for (const u of S.units) if (!u.atkSeen && samKnown(u)) { u.atkSeen = true; pushTo(r, 'atk', ['ua', u.id, u.key, r1(u.pos.x), r1(u.pos.z), u.roof ? 1 : 0, u.owner || 0, Math.round(u.yaw * 1000) / 1000]); }
@@ -194,13 +194,13 @@ export function createMulti(ctx) {
       if (seen) { w.defSeen = true; pushTo(r, 'def', wrEv(w)); }
     }
   }
-  // снимки: атаке — носители, засечённые комплексы, все ЗУР, своё оружие, пусковые; ПВО — свои комплексы, все ЗУР, увиденное оружие
+  // снимки: атаке - носители, засечённые комплексы, все ЗУР, своё оружие, пусковые; ПВО - свои комплексы, все ЗУР, увиденное оружие
   function snapshot(r) {
     const S = r.S, ev = r.events; r.events = [];
     const pick = (side) => ev.filter(([to]) => to === 'all' || to === side).map(([, e]) => e);
     const M_ = S.sams.filter((m) => !m.dead).map(O.packM), base = { t: 's', T: Math.round(r.wt * 100) / 100, k: r.k, V: Math.round(M.damageValue(S.objects)) };
     const W = (f) => S.wpns.filter((w) => !w.dead && w.ev && f(w)).map((w) => [...O.packW(w), wFlags(w)]);
-    const L = []; for (const E of r.E) for (const q of E.launchers) L.push([q.id, q.key, r1(q.pos.x), r1(q.pos.z), Math.round(q.yaw * 1000) / 1000, q.fired, Math.round((q.podEl || 0) * 100) / 100, q.n0, q.name, E.pid || 0]); // последнее — чья пусковая (союзники — своим цветом)
+    const L = []; for (const E of r.E) for (const q of E.launchers) L.push([q.id, q.key, r1(q.pos.x), r1(q.pos.z), Math.round(q.yaw * 1000) / 1000, q.fired, Math.round((q.podEl || 0) * 100) / 100, q.n0, q.name, E.pid || 0]); // последнее - чья пусковая (союзники - своим цветом)
     const A = r.raid.planes.filter((a) => !a.dead && !a.out && a.phase !== 'wait').map(O.packA);
     const ea = pick('atk'), ed = pick('def');
     bcast(r, { ...base, A, U: S.units.filter((u) => u.atkSeen).map(O.packU), M: M_, W: W(() => true), L, e: ea.length ? ea : undefined }, (q) => q.team === r.atk);
@@ -214,13 +214,13 @@ export function createMulti(ctx) {
       const E = p.E, u = {};
       if (E) for (const [k, n] of E.comp) { if (AG[k].recon) continue; u[k] = []; for (let i = 0; i < n; i++) { const f = E.unitInfo(k, i); u[k].push(f.launched ? [1] : [0, Math.round(f.t * 10) / 10, Math.round(f.earliest * 10) / 10]); } }
       const pack = (e) => [e.g, e.label, e.sub, e.eta === null ? null : Math.round(e.eta * 10) / 10, refOf(e.obj), refOf(e.cue)];
-      const ev = E ? E.events().map(pack) : []; // без своего наряда — только союзники
-      // союзники по атаке: их носители, пусковые и то, что летит (без подробностей плана) — отдельным разделом ленты
+      const ev = E ? E.events().map(pack) : []; // без своего наряда - только союзники
+      // союзники по атаке: их носители, пусковые и то, что летит (без подробностей плана) - отдельным разделом ленты
       const al = []; for (const q of atkTeam(r)) if (q !== p && q.E) for (const e of q.E.events().slice(0, 14)) al.push([q.name, ...pack(e)]);
       send(p, { t: 'sched', T: Math.round((E ? E.t : r.wt) * 10) / 10, u, ev, al });
     }
   }
-  // ПВО «за пультом» или над районом летит — время ×1, иначе ×3 (подлёт носителей, ожидание пусков)
+  // ПВО «за пультом» или над районом летит - время ×1, иначе ×3 (подлёт носителей, ожидание пусков)
   function quiet(r) {
     if (r.S.sams.some((m) => !m.dead)) return false;
     if (defTeam(r).some((p) => p.op)) return false;
@@ -231,14 +231,14 @@ export function createMulti(ctx) {
   // ═════════════ Такт ═════════════
   function step(r, dt) {
     if (r.state === 'plan') {
-      if (r.t >= r.phaseT || (!r.emptyT && [...r.players.values()].every((p) => p.ready || (!p.ws && !p.bot)))) startWave(r); // никого на связи — подготовка до конца срока (вернувшийся успеет)
+      if (r.t >= r.phaseT || (!r.emptyT && [...r.players.values()].every((p) => p.ready || (!p.ws && !p.bot)))) startWave(r); // никого на связи - подготовка до конца срока (вернувшийся успеет)
       return;
     }
     if (r.state === 'debrief') { if (r.t >= r.phaseT) { if (r.last) endBattle(r); else nextRound(r); } return; }
-    if (r.state === 'end') { if (r.t >= r.phaseT) ctx.toLobby(r); return; } // итоги показаны — снова лобби той же комнаты
+    if (r.state === 'end') { if (r.t >= r.phaseT) ctx.toLobby(r); return; } // итоги показаны - снова лобби той же комнаты
     if (r.state !== 'play') return;
     r.k = quiet(r) ? M.QUIET_K : 1;
-    for (let s = 0; s < r.k * (FAST ? 4 : 1); s++) { // AD_FAST (автопроверка) — ещё ×4
+    for (let s = 0; s < r.k * (FAST ? 4 : 1); s++) { // AD_FAST (автопроверка) - ещё ×4
       r.wt += dt;
       for (const E of r.E) E.step(dt);
       r.raid.step(dt); r.S.step(dt);
@@ -252,22 +252,22 @@ export function createMulti(ctx) {
     if (r.wt >= r.phaseT) return endRound(r, 'time');
     if (r.tick % (O.TICK_HZ * 5) === 0) J(r, 'state', { wt: Math.round(r.wt), k: r.k, wpns: r.S.wpns.length, sams: r.S.sams.length, V: Math.round(M.damageValue(r.S.objects)) });
   }
-  // полное состояние: ПВО — свои комплексы; атаке — засечённые; объекты — у всех
+  // полное состояние: ПВО - свои комплексы; атаке - засечённые; объекты - у всех
   function sendState(r, only) {
     if (!r.S) return;
     const objects = r.S.objects.filter((o) => o.dmgTaken > 0 || o.dead).map((o) => [o.id, Math.round(o.hp), o.dead ? 1 : 0, ...(o.bld ? [bldMask(o)] : [])]);
-    const unitsOf = (atk) => r.S.units.filter((u) => !atk || u.atkSeen).map((u) => [u.id, u.key, r1(u.pos.x), r1(u.pos.z), u.roof ? 1 : 0, u.owner || 0, Math.round(u.yaw * 1000) / 1000, u.dead ? 1 : 0, !atk && u.tgt ? [...u.tgt] : 0]); // последнее — фильтр целей (только своей команде ПВО)
+    const unitsOf = (atk) => r.S.units.filter((u) => !atk || u.atkSeen).map((u) => [u.id, u.key, r1(u.pos.x), r1(u.pos.z), u.roof ? 1 : 0, u.owner || 0, Math.round(u.yaw * 1000) / 1000, u.dead ? 1 : 0, !atk && u.tgt ? [...u.tgt] : 0]); // последнее - фильтр целей (только своей команде ПВО)
     const msg = (atk) => ({ t: 'state', kind: 'multi', round: r.round, atk: r.atk, era: r.era, mode: r.mode, units: unitsOf(atk), objects, scores: r.scores });
     if (only) send(only, msg(only.team === r.atk));
     else { bcast(r, msg(true), (q) => q.team === r.atk); bcast(r, msg(false), (q) => q.team !== r.atk); }
   }
-  // вид комнаты для мульти: раунд, кто атакует, план союзников-атакующих (сводка по целям) — только своей команде
+  // вид комнаты для мульти: раунд, кто атакует, план союзников-атакующих (сводка по целям) - только своей команде
   function viewExtra(r, me) {
     const out = { kind: 'multi', round: r.round || 0, rounds: M.ROUNDS, atk: r.atk || null, scores: r.scores ? { east: Math.round(r.scores.east), west: Math.round(r.scores.west) } : null, k: r.k || 1 };
     if (me && r.atk && me.team === r.atk) out.allies = atkTeam(r).map((p) => ({ id: p.id, name: p.name, cost: M.planCost(p.plan && p.plan.n), tbm: M.tbmOf(p.plan && p.plan.n), tbn: Object.fromEntries(Object.entries((p.plan && p.plan.n) || {}).filter(([k, v]) => v > 0 && AG[k] && AG[k].kind === 'tbm')), tg: tgSummary(p.plan) }));
     return out;
   }
-  function tgSummary(plan) { // { 'o12': 'Калибр 2, Дрон ударный 4' } — что союзник шлёт на какую цель
+  function tgSummary(plan) { // { 'o12': 'Калибр 2, Дрон ударный 4' } - что союзник шлёт на какую цель
     if (!plan) return {};
     const out = {};
     for (const [k, n] of Object.entries(plan.n || {})) { const c = plan.cfg[k] || {}; for (let i = 0; i < n; i++) { const u = (c.units || [])[i] || {}, key = u.sam ?? c.sam ? (u.sid != null ? 'u' + u.sid : 'sam') : (u.tgt ?? c.tgt) != null ? 'o' + (u.tgt ?? c.tgt) : 'free'; (out[key] = out[key] || {})[k] = (out[key][k] || 0) + 1; } }
@@ -277,14 +277,14 @@ export function createMulti(ctx) {
 
   // ═════════════ Сообщения игроков ═════════════
   function onMsg(c, r, m) {
-    // чат команды — на подготовке
+    // чат команды - на подготовке
     if (m.t === 'chat') {
       if (r.state !== 'plan' || (c.chatT !== undefined && clock() - c.chatT < M.CHAT_GAP)) return;
       const text = M.cleanChat(m.text); if (!text) return;
       c.chatT = clock(); bcast(r, { t: 'chat', id: c.id, name: c.name, text }, (q) => q.team === c.team); J(r, 'chat', { who: c.name, text });
       return;
     }
-    // «Помощь» обороны — метка на карте союзникам (всегда)
+    // «Помощь» обороны - метка на карте союзникам (всегда)
     if (m.t === 'help') {
       if (!r.atk || c.team === r.atk || (c.helpT !== undefined && clock() - c.helpT < O.HELP_CD - 0.5)) return;
       const p = Array.isArray(m.p) && m.p.length === 2 && m.p.every(Number.isFinite) ? [r1(m.p[0]), r1(m.p[1])] : c.op ? [r1(c.op.pos.x), r1(c.op.pos.z)] : null;
@@ -292,30 +292,30 @@ export function createMulti(ctx) {
       return;
     }
     if (m.t === 'ready' && r.state === 'plan') { c.ready = !!m.on; sendRoom(r); return; }
-    // план атакующего: целиком (подготовка и бой); в бою — новые единицы докупаются в волну, правки — ещё не пущенным
+    // план атакующего: целиком (подготовка и бой); в бою - новые единицы докупаются в волну, правки - ещё не пущенным
     if (m.t === 'plan') {
       if (!isAtk(r, c) || (r.state !== 'plan' && r.state !== 'play')) return;
       if (typeof m.json !== 'string' || m.json.length > M.PLAN_MAX || (c.planT && clock() - c.planT < M.PLAN_RATE)) return;
       let raw; try { raw = JSON.parse(m.json); } catch (_) { return; }
       const ids = new Set(r.S.objects.filter((o) => !o.noTarget).map((o) => o.id));
       const plan = M.cleanPlan(raw, r.atk, ids, CITY.HALF); if (!plan) return;
-      { const rw = realDeny(r.mode, c, strikeIds(plan.n)); if (rw) return send(c, { t: 'deny', msg: rw }); } // «Реализм» — только купленные удары
+      { const rw = realDeny(r.mode, c, strikeIds(plan.n)); if (rw) return send(c, { t: 'deny', msg: rw }); } // «Реализм» - только купленные удары
       const cost = M.planCost(plan.n);
       if (cost > c.budget) return send(c, { t: 'deny', msg: 'Не хватает очков угрозы' });
       { const others = M.sumN(...atkTeam(r).filter((p) => p !== c).map((p) => p.plan && p.plan.n)), old = (c.plan && c.plan.n) || {};
         const more = Object.keys(plan.n).some((k) => AG[k] && AG[k].kind === 'tbm' && (plan.n[k] || 0) > (old[k] || 0)), why = more && M.tbmCheck(M.sumN(others, plan.n), atkTeam(r).length);
-        if (why) return send(c, { t: 'deny', msg: `${why} на команду` }); } // меньше — можно всегда
-      if (r.state === 'play' && c.E) { // нельзя убрать то, что уже в бою: число единиц — не меньше прежнего
+        if (why) return send(c, { t: 'deny', msg: `${why} на команду` }); } // меньше - можно всегда
+      if (r.state === 'play' && c.E) { // нельзя убрать то, что уже в бою: число единиц - не меньше прежнего
         for (const [k, n0] of Object.entries(c.plan.n)) if ((plan.n[k] || 0) < n0) plan.n[k] = n0;
         const items = new Map(multiItems(r.atk));
         for (const [k, n] of Object.entries(plan.n)) {
           const n0 = c.plan.n[k] || 0, add = n - n0; if (add <= 0) continue;
           const cf = plan.cfg[k] = plan.cfg[k] || { pts: [], units: [] }; cf.units = cf.units || [];
-          for (let i = n0; i < n; i++) { const u = cf.units[i] = cf.units[i] || {}; if (u.t == null) u.t = Math.ceil(c.E.t + 30 + (i - n0) * 2); } // докупка в бою — пуск через 30 с после заказа
+          for (let i = n0; i < n; i++) { const u = cf.units[i] = cf.units[i] || {}; if (u.t == null) u.t = Math.ceil(c.E.t + 30 + (i - n0) * 2); } // докупка в бою - пуск через 30 с после заказа
           c.E.extend(k, add, items.get(k), plan.cfg);
         }
         c.E.applyPlan(plan.cfg);
-      } else if (r.state === 'play' && cost) { // в подготовке ничего не собрал — волна стартует сейчас
+      } else if (r.state === 'play' && cost) { // в подготовке ничего не собрал - волна стартует сейчас
         c.plan = plan; c.planT = clock(); c.spent = cost;
         const own = { id: c.id, owner: c.id }, E = createCombined(r.S, city, Math.random, { side: r.atk, era: r.era, raid: r.raid, comp: M.compOf(r.atk, plan.n), plan: plan.cfg, lim: M.LIM, owner: own, gate: () => r.S.wpns.length < M.INFLIGHT_CAP });
         E.start(r.S.objects.filter((o) => !o.noTarget && !o.dead)); E.pid = c.id; c.E = E; r.E.push(E); return;
@@ -324,10 +324,10 @@ export function createMulti(ctx) {
       return;
     }
     // ПВО: покупка, продажа, перенос (подготовка)
-    if (m.t === 'buyUnit') { if (r.state !== 'plan' || isAtk(r, c)) return; { const rw = realDeny(r.mode, c, multiSamFree(String(m.k)) ? [] : samIds(String(m.k))); if (rw) return send(c, { t: 'deny', msg: rw }); } /* эпоха I — без исследования (arsenal.js multiSamFree) */ const why = buyUnit(r, c, String(m.k), +m.x, +m.z, !!m.roof); if (why) send(c, { t: 'deny', msg: why }); return; }
+    if (m.t === 'buyUnit') { if (r.state !== 'plan' || isAtk(r, c)) return; { const rw = realDeny(r.mode, c, multiSamFree(String(m.k)) ? [] : samIds(String(m.k))); if (rw) return send(c, { t: 'deny', msg: rw }); } /* эпоха I - без исследования (arsenal.js multiSamFree) */ const why = buyUnit(r, c, String(m.k), +m.x, +m.z, !!m.roof); if (why) send(c, { t: 'deny', msg: why }); return; }
     if (m.t === 'sell') { const u = r.S && r.S.units.find((q) => q.id === +m.id); if (r.state !== 'plan' || !u || u.owner !== c.id) return; c.budget += Math.round((u.paid ?? multiSamCost(u.key)) * 0.7); r.S.removeUnit(u); pushTo(r, 'def', ['ur', u.id]); flush(r); sendRoom(r); return; }
     if (m.t === 'move') { const u = r.S && r.S.units.find((q) => q.id === +m.id); if (r.state !== 'plan' || !u || u.owner !== c.id || !Number.isFinite(+m.x) || !Number.isFinite(+m.z)) return; if (!(m.roof ? buildingAt(city, +m.x, +m.z) >= 0 : freeGround(city, +m.x, +m.z))) return send(c, { t: 'deny', msg: 'Место занято' }); r.S.moveUnit(u, +m.x, +m.z, !!m.roof); pushTo(r, 'def', ['um', u.id, r1(+m.x), r1(+m.z), m.roof ? 1 : 0]); flush(r); return; }
-    // фильтр целей своего комплекса (подготовка и бой): список видов, пустой — все; старый сервер команду не знает и пропускает
+    // фильтр целей своего комплекса (подготовка и бой): список видов, пустой - все; старый сервер команду не знает и пропускает
     if (m.t === 'tgt') { const u = r.S && (r.state === 'plan' || r.state === 'play') && !isAtk(r, c) && r.S.units.find((q) => q.id === +m.id && q.owner === c.id && !q.dead); if (u) r.S.setTgt(u, m.c); return; }
     if (r.state !== 'play' || isAtk(r, c)) return;
     // ПВО в бою: свой комплекс под ручное управление и пульт (как в обычном онлайне)
@@ -344,7 +344,7 @@ export function createMulti(ctx) {
   }
   // вернувшийся в бой: раунд, комплексы (по туману своей команды)
   function resume(r, c) { send(c, { t: 'start', kind: 'multi', round: r.round, rounds: M.ROUNDS, atk: r.atk, era: r.era, mode: r.mode, scores: r.scores, v0: r.v0, plan: c.team === r.atk && c.plan ? c.plan : undefined }); sendState(r, c); } // переподключение: и свой план (наряд атаки)
-  // ушёл игрок: его комплексы — ИИ-расчётам, его волна летит по плану
+  // ушёл игрок: его комплексы - ИИ-расчётам, его волна летит по плану
   function drop(r, p) { if (r.S) for (const u of r.S.units) if (u.owner === p.id) u.owner = 0; }
   return { start, step, onMsg, viewExtra, resume, drop, DT };
 }

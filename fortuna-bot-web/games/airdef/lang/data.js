@@ -1,9 +1,9 @@
 // Локализатор данных арсенала (Mark 2026-10-21, английский, этап 2). arsenal.js, sim/flight.js, sim/heli.js, progress.js копируются в
-// функции Supabase и работают на игровом сервере — их тексты остаются русскими и i18n.js они не импортируют. Здесь, на клиенте,
+// функции Supabase и работают на игровом сервере - их тексты остаются русскими и i18n.js они не импортируют. Здесь, на клиенте,
 // при LANG = en видимые русские строки в этих данных ПОДМЕНЯЮТСЯ английскими по словарю lang/en-data.js: названия и описания
 // оружия, комплексов, самолётов, вертолётов, подвесок, эпох, ролей, носителей, режимов, подписи и значения таблиц ТТХ, метки СПО.
-// Ключи и идентификаторы не трогаются — только значения-строки с кириллицей. Модуль надо импортировать ПЕРВЫМ в main.js (до
-// progress.js, чьё дерево копирует названия при импорте); localizeTree(TREE, BRANCHES) — страховка для уже построенного дерева.
+// Ключи и идентификаторы не трогаются - только значения-строки с кириллицей. Модуль надо импортировать ПЕРВЫМ в main.js (до
+// progress.js, чьё дерево копирует названия при импорте); localizeTree(TREE, BRANCHES) - страховка для уже построенного дерева.
 import { LANG } from '../i18n.js?v=20261104a';
 import EN from './en.js?v=20261104a';
 import * as ARS from '../arsenal.js?v=20261104a';
@@ -12,10 +12,10 @@ import { HSPECS } from '../sim/heli.js?v=20261104a';
 import { MODES } from '../sim/strike.js?v=20261104a';
 
 const CYR = /[А-Яа-яЁё]/;
-// Числа с единицами («≈ 500 кг», «0,5–5 км», «до ≈ 12 км с большой высоты», «≈ 3,6 М»): словарь их не хранит — собираем по правилам.
-// Десятичная запятая → точка, пробел тысяч → запятая, единицы и несколько фраз таблиц ТТХ — на английском.
+// Числа с единицами («≈ 500 кг», «0,5-5 км», «до ≈ 12 км с большой высоты», «≈ 3,6 М»): словарь их не хранит - собираем по правилам.
+// Десятичная запятая → точка, пробел тысяч → запятая, единицы и несколько фраз таблиц ТТХ - на английском.
 const PHRASE = [['в игре меньше', 'less in the game'], ['при подсвете', 'when lased'], ['с большой высоты', 'from high altitude'], ['с высоты', 'from altitude'],
-  ['в контейнере', 'in container'], ['без GPS', 'without GPS'], ['кумулятивная', 'shaped-charge'], ['MSE — больше', 'MSE: more'], ['выстр./мин', 'rpm'],
+  ['в контейнере', 'in container'], ['без GPS', 'without GPS'], ['кумулятивная', 'shaped-charge'], ['MSE - больше', 'MSE: more'], ['выстр./мин', 'rpm'],
   ['снарядов', 'rounds'], ['(оптика)', '(optical)'], ['залп', 'salvo'], ['высоты', 'altitude']];
 export function enNum(s) {
   if (typeof s !== 'string' || !CYR.test(s)) return s;
@@ -31,13 +31,13 @@ export function enNum(s) {
 }
 const tx = (s) => (EN[s] !== undefined ? EN[s] : enNum(s));
 
-// обход: любое строковое значение с кириллицей заменяется (массивы подписей ТТХ [['Страна', 'СССР'], …] — тоже)
+// обход: любое строковое значение с кириллицей заменяется (массивы подписей ТТХ [['Страна', 'СССР'], …] - тоже)
 function walk(o, seen) {
   if (!o || typeof o !== 'object' || seen.has(o)) return;
   seen.add(o);
   for (const k of Object.keys(o)) {
     const v = o[k];
-    if (typeof v === 'string') { if (CYR.test(v)) { try { o[k] = tx(v); } catch (_) { /* заморожено — оставляем */ } } } else walk(v, seen);
+    if (typeof v === 'string') { if (CYR.test(v)) { try { o[k] = tx(v); } catch (_) { /* заморожено - оставляем */ } } } else walk(v, seen);
   }
 }
 let done = false;
@@ -47,9 +47,9 @@ export function localizeData() {
   const seen = new Set();
   for (const v of Object.values(ARS)) walk(v, seen); // AG, SAM, PLANES, SPECS-подобное, LOADOUTS, HELI_LOADOUTS, ERAS, CARRIERS, ROLE_NAME, AG_KIND, SAM_TYPE, MULTI…
   walk(SPECS, seen); walk(HSPECS, seen); walk(MODES, seen);
-  if (ARS.AG.kalibr) ARS.AG.kalibr.short = 'Kalibr'; // ракета «Калибр» — не подпись «Калибр» (мм) из таблиц ТТХ: общий ключ словаря
+  if (ARS.AG.kalibr) ARS.AG.kalibr.short = 'Kalibr'; // ракета «Калибр» - не подпись «Калибр» (мм) из таблиц ТТХ: общий ключ словаря
 }
-// узлы дерева прокачки (progress.js строит TREE при импорте из SPECS / AG — если он успел раньше, названия там русские). Названия
+// узлы дерева прокачки (progress.js строит TREE при импорте из SPECS / AG - если он успел раньше, названия там русские). Названия
 // берём из уже переведённых данных тем же правилом, что в buildTree (так «Калибр»-ракета не путается с подписью «Калибр» в таблицах).
 export function localizeTree(TREE, BRANCHES, SIDE_NAME) {
   if (LANG !== 'en') return;

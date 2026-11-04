@@ -1,11 +1,11 @@
 // Стенд режима «Съёмка» (2026-10-27): сценарии ПВО и автопилот самолёта в безголовом прогоне (как ui-test.js: заглушки страницы, настоящий код игры).
-//   deno run -A tools/airdef-headless/photo-stand.js def   — ПВО: для каждого комплекса стороны (во всех эпохах, где он доступен) N секунд съёмки,
-//        время до первого пуска / очереди, число пусков за 60 с, самый долгий простой. pvs — против самолётов (air) и «Мульти-волны» (multi).
-//   deno run -A tools/airdef-headless/photo-stand.js air   — самолёт: связки × высота (low/mid/high), N минут: сколько раз «врезался» (в съёмке самолёт
-//        неуязвим — игра возвращает его на 150 м: считаем эти возвраты), развороты у границы карты, секунд у края карты и дальше 5 км от района целей.
+//   deno run -A tools/airdef-headless/photo-stand.js def   - ПВО: для каждого комплекса стороны (во всех эпохах, где он доступен) N секунд съёмки,
+//        время до первого пуска / очереди, число пусков за 60 с, самый долгий простой. pvs - против самолётов (air) и «Мульти-волны» (multi).
+//   deno run -A tools/airdef-headless/photo-stand.js air   - самолёт: связки × высота (low/mid/high), N минут: сколько раз «врезался» (в съёмке самолёт
+//        неуязвим - игра возвращает его на 150 м: считаем эти возвраты), развороты у границы карты, секунд у края карты и дальше 5 км от района целей.
 // Переменные: ENDS=1 (ПВО: только первая эпоха комплекса и IV), MAP=city|autumn|winter (по умолчанию city; карта выбирается при загрузке страницы), SIDE=east|west (ПВО), SECS=секунд на прогон,
 //   KEYS=ключи через запятую (комплексы или «эпоха:подвеска»), ERAS=1,2,3,4, PVS=air|multi|both, ALTS=low,mid,high, OUT=файл.jsonl (дописывать).
-// Время и случайности — по зерну (повторяемость): Date.now стоит на шаге прогона, Math.random — mulberry.
+// Время и случайности - по зерну (повторяемость): Date.now стоит на шаге прогона, Math.random - mulberry.
 const ARGS = Deno.args, MODE = ARGS[0] || 'def', ENV = (k, d) => Deno.env.get(k) ?? d;
 const DEBUG = +ENV('DEBUG', 0), MAP = ENV('MAP', 'city'), SECS = +ENV('SECS', MODE === 'air' ? 180 : 90), OUT = ENV('OUT', '');
 let runNo = +(Deno.env.get('RUN0') ?? 0), REP = +(Deno.env.get('REP') ?? 1); const T0 = Date.UTC(2026, 9, 27, 12);
@@ -66,7 +66,7 @@ if (MODE === 'def') {
   const only = list('KEYS', null);
   for (const side of sides) for (const era of eras) for (const key of Object.keys(SAM)) {
     const S0 = SAM[key]; if (S0.side !== side || S0.era > era || (only && !only.includes(key))) continue;
-    if (ENV('ENDS', '') && era !== S0.era && era !== 4) continue; // ENDS=1 — только первая эпоха комплекса и последняя (вдвое быстрее)
+    if (ENV('ENDS', '') && era !== S0.era && era !== 4) continue; // ENDS=1 - только первая эпоха комплекса и последняя (вдвое быстрее)
     for (const pvs of pvss) for (let rep = 0; rep < REP; rep++) {
       const att = side === 'east' ? 'west' : 'east';
       if (pvs === 'multi' && !combinedOk(att, era)) continue;
@@ -103,7 +103,7 @@ if (MODE === 'air') {
   for (const [era, lo] of combos) for (const palt of alts) for (let rep = 0; rep < REP; rep++) {
     runNo++;
     C.toMenu(); for (let i = 0; i < 3; i++) frame();
-    Object.assign(C.setup, { game: 'photo', pside: 'air', era, side: LOADOUTS[era][lo].side === 'west' ? 'east' : 'west', palt, lo }); C.start('photo'); // ПВО города — противоположная сторона
+    Object.assign(C.setup, { game: 'photo', pside: 'air', era, side: LOADOUTS[era][lo].side === 'west' ? 'east' : 'west', palt, lo }); C.start('photo'); // ПВО города - противоположная сторона
     const A = C.ctrls.air, cr = A.craft, crashes = [], saySeen = []; let t = 0, ok = true;
     const hist = [];
     C.say = (m) => { if (/Учебный вылет: высоту вернули/.test(m)) { crashes.push(t); if (DEBUG) console.log(`  ВРЕЗАНИЕ t${t.toFixed(1)}: ` + hist.map((h) => h.join(' ')).join(' | ')); } };
@@ -123,10 +123,10 @@ if (MODE === 'air') {
   }
 }
 
-// ── кнопка «Пуск» (F): нажатие сразу после старта и раз в 3 с; ожидание — от нажатия до появления ракеты / бомбы / очереди ──
+// ── кнопка «Пуск» (F): нажатие сразу после старта и раз в 3 с; ожидание - от нажатия до появления ракеты / бомбы / очереди ──
 const press = () => C.ctrl.onKey({ code: 'KeyF', repeat: false, preventDefault() {} }, true);
 const PRESSES = +ENV('PRESSES', 5);
-// n кадров подряд; cond() проверяется после каждого — вернуть число кадров до первого true (или null)
+// n кадров подряд; cond() проверяется после каждого - вернуть число кадров до первого true (или null)
 const waitFor = (cond, max = 45) => { for (let f = 0; f <= max; f++) { if (cond()) return f; if (f < max) frame(); } return null; };
 if (MODE === 'fdef') {
   const sides = ENV('SIDE', 'both') === 'both' ? ['east', 'west'] : [ENV('SIDE')], eras = list('ERAS', ['1', '2', '3', '4']).map(Number), pvss = ENV('PVS', 'both') === 'both' ? ['air', 'multi'] : [ENV('PVS')];
@@ -165,7 +165,7 @@ if (MODE === 'fair') {
     Object.assign(C.setup, { game: 'photo', pside: 'air', era, side: LOADOUTS[era][lo].side === 'west' ? 'east' : 'west', palt: ENV('PALT', 'mid'), lo }); C.start('photo');
     const A = C.ctrls.air, cr = A.craft;
     for (let i = 0; i < 90; i++) frame(); // самолёт летит к цели
-    if (subj === 'st') { C.ctrl.onKey({ code: 'ArrowDown', preventDefault() {} }, true); frame(); } // объект съёмки — оружие на первом пилоне
+    if (subj === 'st') { C.ctrl.onKey({ code: 'ArrowDown', preventDefault() {} }, true); frame(); } // объект съёмки - оружие на первом пилоне
     const waits = [], dists = [], keys = []; let decoys = 0;
     for (let i = 0; i < PRESSES; i++) {
       let top = -1; for (const w of C.S.wpns) if (w.owner === cr && w.id > top) top = w.id;
@@ -193,7 +193,7 @@ if (MODE === 'fmulti') {
       for (let i = 0; i < PRESSES; i++) {
         let top = -1; for (const w of C.S.wpns) if (w.ev && w.key === k && w.id > top) top = w.id;
         press();
-        const w = waitFor(() => C.S.wpns.some((q) => q.ev && q.key === k && q.id > top), 300); // пакет HIMARS / Lance поднимается плавно (~4–6 с)
+        const w = waitFor(() => C.S.wpns.some((q) => q.ev && q.key === k && q.id > top), 300); // пакет HIMARS / Lance поднимается плавно (~4-6 с)
         waits.push(w === null ? null : w / 30);
         for (let f = 0; f < 90; f++) frame();
       }

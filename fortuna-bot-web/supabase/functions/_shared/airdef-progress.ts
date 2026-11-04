@@ -1,7 +1,7 @@
 // Прокачка «Воздушного превосходства» на сервере: состояние игрока (опыт, серебро, исследованное, купленное, цели),
-// действия (исследовать / купить / цель ветки) и начисление за бой. Правила — те же, что у игры: _shared/airdef/progress.js
+// действия (исследовать / купить / цель ветки) и начисление за бой. Правила - те же, что у игры: _shared/airdef/progress.js
 // (копия games/airdef/progress.js, tools/airdef-headless/sync-shared.js). Тратить и начислять может только сервер.
-// Сохранение — с номером версии строки (airdef_progress_save): два одновременных запроса не задвоят опыт и не уйдут в минус.
+// Сохранение - с номером версии строки (airdef_progress_save): два одновременных запроса не задвоят опыт и не уйдут в минус.
 import {
   NODE, BRANCHES, newProgress, research, buy, canResearch, owned, battleReward, SOLO_DAY,
 } from "./airdef/progress.js";
@@ -12,7 +12,7 @@ export type Row = {
   player_id: string; xp: number; silver: number; res: string[]; own: string[]; goal: Record<string, string>;
   first_win_day: string | null; solo_day: string | null; solo_xp: number; quests?: Record<string, unknown>; version: number;
 };
-// crystals — кристаллы к начислению вместе с этим сохранением (задания); в строке прогресса их нет
+// crystals - кристаллы к начислению вместе с этим сохранением (задания); в строке прогресса их нет
 export type Extra = { first_win_day: string | null; solo_day: string | null; solo_xp: number; quests: Record<string, unknown>; crystals?: number };
 // deno-lint-ignore no-explicit-any
 type DB = any;
@@ -20,7 +20,7 @@ type DB = any;
 const BRANCH_IDS = new Set(BRANCHES.map((b: { id: string }) => b.id));
 const clampInt = (v: unknown, lo: number, hi: number) => Math.max(lo, Math.min(hi, Math.floor(Number(v) || 0)));
 
-// строка таблицы → состояние (неизвестные узлы — например, удалённые из игры — отбрасываются)
+// строка таблицы → состояние (неизвестные узлы - например, удалённые из игры - отбрасываются)
 export function toProgress(row: Partial<Row> | null): Progress {
   const P = newProgress() as Progress;
   if (!row) return P;
@@ -31,7 +31,7 @@ export function toProgress(row: Partial<Row> | null): Progress {
 }
 export const extraOf = (row: Partial<Row> | null): Extra => ({ first_win_day: row?.first_win_day ?? null, solo_day: row?.solo_day ?? null, solo_xp: Number(row?.solo_xp ?? 0), quests: row?.quests ?? {} });
 
-// действия игрока: research / buy / goal (branch + id; id пустой — снять цель)
+// действия игрока: research / buy / goal (branch + id; id пустой - снять цель)
 export function act(P: Progress, action: string, id: unknown, branch: unknown): { ok: boolean; why?: string } {
   if (action === "research" || action === "buy") {
     if (typeof id !== "string" || !NODE[id]) return { ok: false, why: "Нет такой единицы" };
@@ -49,7 +49,7 @@ export function act(P: Progress, action: string, id: unknown, branch: unknown): 
   return { ok: false, why: "Неизвестное действие" };
 }
 
-// итог боя от браузера — только в разумных пределах (сколько чего за бой вообще бывает)
+// итог боя от браузера - только в разумных пределах (сколько чего за бой вообще бывает)
 export type BattleEvents = { targets?: number[]; sams?: number; samsLong?: number; downs?: number; kills?: number; waves?: number[]; mwObj?: number; mwSam?: number; mwInt?: number; back?: boolean; win?: boolean; min?: number };
 export function cleanEvents(ev: unknown, minutes: number): BattleEvents {
   const e = (ev && typeof ev === "object" ? ev : {}) as Record<string, unknown>;
@@ -62,15 +62,15 @@ export function cleanEvents(ev: unknown, minutes: number): BattleEvents {
 }
 
 // начисление за бой: опыт и серебро, множители (Реализм, первая победа дня), пределы одиночной игры; цели веток,
-// на которые теперь хватает опыта, исследуются сами. used — узлы, на которых играли (в «Реализме» все должны быть куплены,
-// иначе — как в «Аркаде»: без множителя). Возвращает новое состояние и строки для экрана итогов.
-// o.quest — счётчики для заданий (онлайн: onlineCounters, «Оборона»: волны и победа); опыт боя добавляется здесь.
+// на которые теперь хватает опыта, исследуются сами. used - узлы, на которых играли (в «Реализме» все должны быть куплены,
+// иначе - как в «Аркаде»: без множителя). Возвращает новое состояние и строки для экрана итогов.
+// o.quest - счётчики для заданий (онлайн: onlineCounters, «Оборона»: волны и победа); опыт боя добавляется здесь.
 export function credit(P: Progress, x: Extra, ev: BattleEvents, o: { real: boolean; online: boolean; today: string; used?: unknown; training?: boolean; quest?: Record<string, number> | null }) {
   const used = Array.isArray(o.used) ? o.used.filter((id): id is string => typeof id === "string" && !!NODE[id]).slice(0, 40) : [];
   const realOk = o.real && used.every((id) => owned(P, id));
   const firstWin = x.first_win_day !== o.today;
   const soloToday = x.solo_day === o.today ? x.solo_xp : 0;
-  const r = battleReward(ev, { training: o.training, real: realOk, arcade: !realOk, firstWin, online: o.online, dayXp: soloToday }); // solo_xp — опыт за день по всем боям (дневной предел — и для онлайна)
+  const r = battleReward(ev, { training: o.training, real: realOk, arcade: !realOk, firstWin, online: o.online, dayXp: soloToday }); // solo_xp - опыт за день по всем боям (дневной предел - и для онлайна)
   P.xp += r.xp; P.silver += r.silver;
   let nx: Extra = { ...x };
   if (firstWin && ev.win && r.xp > 0) nx.first_win_day = o.today;
@@ -96,7 +96,7 @@ function payQuest(P: Progress, x: Extra, out: { q?: any; pay?: any }): Extra {
 // новый день или неделя: выполненное, но не забранное начисляется при первом обращении
 export const questsRolled = (P: Progress, x: Extra, today: string) => { const extra = payQuest(P, x, questRoll(x.quests, today)); return { ok: true as const, extra, auto: autoResearch(P) }; };
 export const questsPending = (x: Extra, today: string) => Object.keys(questRoll(x.quests, today).pay).length > 0; // есть что начислить за прошлый день
-// «Забрать»: key — 'd:id', 'w:id', 'crate', 'chest'
+// «Забрать»: key - 'd:id', 'w:id', 'crate', 'chest'
 export function questTake(P: Progress, x: Extra, key: unknown, today: string) {
   if (typeof key !== "string" || key.length > 32) return { ok: false as const, why: "Такого задания сейчас нет" };
   const out = questClaim(x.quests, today, key);
@@ -106,11 +106,11 @@ export function questTake(P: Progress, x: Extra, key: unknown, today: string) {
 }
 
 // ── база ──
-// Правило Mark 2026-10-25: новым игрокам — только аккаунт игры (kind = 'airdef'). Аккаунт сайта (kind = 'site') играет, только если у него
+// Правило Mark 2026-10-25: новым игрокам - только аккаунт игры (kind = 'airdef'). Аккаунт сайта (kind = 'site') играет, только если у него
 // УЖЕ есть прогресс игры: строка airdef_progress или бои в airdef_mp_results (то же правило, что у airdef-account → site_status).
-// Иначе load() отдаёт needGame, а функции — 403 с NEED_GAME.
-export const NEED_GAME = { error: "Создайте аккаунт игры — новым игрокам прогресс копится только на нём", need_game: true };
-export const NOT_FOUND = { error: "Игрок не найден — войдите в аккаунт игры" };
+// Иначе load() отдаёт needGame, а функции - 403 с NEED_GAME.
+export const NEED_GAME = { error: "Создайте аккаунт игры - новым игрокам прогресс копится только на нём", need_game: true };
+export const NOT_FOUND = { error: "Игрок не найден - войдите в аккаунт игры" };
 export async function load(db: DB, player_id: string): Promise<{ row: Row | null; exists: boolean; needGame?: boolean }> {
   const r = await db.from("airdef_progress").select("*").eq("player_id", player_id).maybeSingle();
   if (r.error) throw r.error;
@@ -133,7 +133,7 @@ async function save(db: DB, player_id: string, version: number, P: Progress, x: 
   if (r.error) throw r.error;
   return Number(r.data);
 }
-// прочитать → изменить → сохранить, если строку никто не изменил между делом (иначе — заново, до 5 раз)
+// прочитать → изменить → сохранить, если строку никто не изменил между делом (иначе - заново, до 5 раз)
 export async function mutate<T extends { ok: boolean }>(db: DB, player_id: string, fn: (P: Progress, x: Extra) => T & { extra?: Extra }):
   Promise<T & { P?: Progress; version?: number; notFound?: boolean; needGame?: boolean }> {
   for (let i = 0; i < 5; i++) {

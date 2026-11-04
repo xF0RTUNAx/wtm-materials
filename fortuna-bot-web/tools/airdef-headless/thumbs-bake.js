@@ -10,10 +10,10 @@ p.on('pageerror', (e) => console.log('  [ошибка]', e.message));
 await p.goto(`http://localhost:8935/fortuna-bot-web/tools/airdef-models/thumbs.html${Deno.args[0] ? '?ids=' + Deno.args[0] : ''}`, { waitUntil: 'load' });
 await p.waitForFunction(() => window.__ok, { timeout: 600000, polling: 500 });
 const th = await p.evaluate(() => window.__thumbs);
-if (Deno.env.get('SHEET')) await p.screenshot({ path: Deno.env.get('SHEET'), fullPage: true }); // лист всех миниатюр — посмотреть разом
+if (Deno.env.get('SHEET')) await p.screenshot({ path: Deno.env.get('SHEET'), fullPage: true }); // лист всех миниатюр - посмотреть разом
 await b.close();
 let n = 0;
 for (const [id, url] of Object.entries(th)) {
-  Deno.writeFileSync(OUT + id.replace(':', '_') + '.webp', Uint8Array.from(atob(url.split(',')[1]), (c) => c.charCodeAt(0))); n++; // webp — прямо из Chrome
+  Deno.writeFileSync(OUT + id.replace(':', '_') + '.webp', Uint8Array.from(atob(url.split(',')[1]), (c) => c.charCodeAt(0))); n++; // webp - прямо из Chrome
 }
 console.log(`миниатюр: ${n}`);

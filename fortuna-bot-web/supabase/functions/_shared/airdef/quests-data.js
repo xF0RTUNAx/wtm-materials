@@ -1,12 +1,12 @@
-// СГЕНЕРИРОВАНО tools/airdef-headless/sync-shared.js из games/airdef — не править здесь
-// Задания: пул ежедневных и еженедельных, очки маршрута недели, награды и правила счёта (экран — quests.js). Без DOM: те же правила у игры и у функций Supabase
+// СГЕНЕРИРОВАНО tools/airdef-headless/sync-shared.js из games/airdef - не править здесь
+// Задания: пул ежедневных и еженедельных, очки маршрута недели, награды и правила счёта (экран - quests.js). Без DOM: те же правила у игры и у функций Supabase
 // (копия в supabase/functions/_shared/airdef, tools/airdef-headless/sync-shared.js).
-// Ориентир наград: час в «Реализме» ≈ 4300 опыта и столько же серебра, в «Аркаде» — вдвое меньше (progress.js battleReward).
+// Ориентир наград: час в «Реализме» ≈ 4300 опыта и столько же серебра, в «Аркаде» - вдвое меньше (progress.js battleReward).
 // Mark 2026-11-04: всё засчитывается только в быстрых онлайн-боях (итог подписан игровым сервером, своя комната не считается), кроме заданий на «Оборону» (solo).
-// g — откуда задание: any — любая сторона, pvo — за ПВО, air — за авиацию и удар. c — счётчик боя (onlineCounters, questApply).
+// g - откуда задание: any - любая сторона, pvo - за ПВО, air - за авиацию и удар. c - счётчик боя (onlineCounters, questApply).
 export const DAILY_N = 3, WEEKLY_N = 5, PTS_DAILY = 10, PTS_WEEKLY = 20;
 export const CRATE = { silver: 150 }, CASE = { gem: 1, silver: 300 }; // за все три сегодня, за все пять недели
-// маршрут недели: неделя целиком — 21 × 10 + 5 × 20 = 310 очков, конец маршрута — 250: запас 60 очков (2 дня или 3 еженедельных)
+// маршрут недели: неделя целиком - 21 × 10 + 5 × 20 = 310 очков, конец маршрута - 250: запас 60 очков (2 дня или 3 еженедельных)
 export const ROUTE = [{ p: 0 }, { p: 50, r: { silver: 150 } }, { p: 100, r: { gem: 1 } }, { p: 150, r: { silver: 300 } }, { p: 200, r: { silver: 200, xp: 100 } }, { p: 250, r: { gem: 2, silver: 400 } }];
 export const ROUTE_MAX = ROUTE[ROUTE.length - 1].p;
 
@@ -44,7 +44,7 @@ export const WEEKLY = {
   mwsam: { g: 'air', c: 'mwsam', ic: 'task-strike-explosion-rays', t: 'Уничтожить 20 комплексов ударами волны', d: 'Онлайн, «Мульти-волна» за нападение', of: 20, r: { silver: 450, xp: 250 } },
 };
 
-// выбор на день и неделю — по номеру дня / недели, у всех игроков один (сервер посчитает так же)
+// выбор на день и неделю - по номеру дня / недели, у всех игроков один (сервер посчитает так же)
 const rng = (s) => () => { s = (s + 0x6D2B79F5) | 0; let t = Math.imul(s ^ (s >>> 15), 1 | s); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 const shuffled = (a, R) => { const b = a.slice(); for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(R() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
 const ids = (P, g, R) => shuffled(Object.keys(P).filter((k) => P[k].g === g), R);
@@ -53,7 +53,7 @@ export function pickDaily(day) {
   const R = rng(day * 7919 + 13);
   return [ids(DAILY, 'any', R)[0], ids(DAILY, 'pvo', R)[0], ids(DAILY, 'air', R)[0]];
 }
-// неделя: два на любую сторону, одно за ПВО, одно за авиацию, пятое — любое из остальных; с кристаллом — не больше двух
+// неделя: два на любую сторону, одно за ПВО, одно за авиацию, пятое - любое из остальных; с кристаллом - не больше двух
 export function pickWeekly(week) {
   const R = rng(week * 104729 + 7), any = ids(WEEKLY, 'any', R), pvo = ids(WEEKLY, 'pvo', R), air = ids(WEEKLY, 'air', R), L = [];
   const gems = (A) => A.filter((k) => WEEKLY[k].r.gem).length;
@@ -77,18 +77,18 @@ export function weekTotals(weeks = 200) {
 }
 
 // ── счёт ──
-// сутки по Москве и номера дня и недели (неделя — с понедельника)
+// сутки по Москве и номера дня и недели (неделя - с понедельника)
 export const mskDay = (now = Date.now()) => new Date(now + 3 * 3600e3).toISOString().slice(0, 10);
 export const dayNo = (day) => Math.floor(Date.parse(day + 'T00:00:00Z') / 864e5);
 export const weekNo = (day) => Math.floor((dayNo(day) + 3) / 7);
 const fresh = (L) => L.map((id) => ({ id, n: 0, st: '' }));
 const addTo = (pay, r) => { for (const k in r) pay[k] = (pay[k] || 0) + r[k]; };
 const allTaken = (L, P) => { const K = L.filter((q) => P[q.id]); return K.length > 0 && K.every((q) => q.st === 'taken'); }; // задания, снятые из пула, не мешают ящику и кейсу
-// точки маршрута: долетел — награда сразу
+// точки маршрута: долетел - награда сразу
 function payRoute(q, pay) { for (let i = (q.paid || 0) + 1; i < ROUTE.length && ROUTE[i].p <= q.pts; i++) { addTo(pay, ROUTE[i].r); q.paid = i; } }
 const takeAll = (L, P, pts, q, pay) => { for (const t of L) if (t.st === 'done' && P[t.id]) { t.st = 'taken'; addTo(pay, P[t.id].r); q.pts += pts; } };
-// новый день и неделя: выполненное, но не забранное начисляется само (сгорает только невыполненное). q — состояние (пустое у новичка); исходный объект не меняется.
-// Возвращает { q, pay } — pay: что начислить (silver, xp, gem)
+// новый день и неделя: выполненное, но не забранное начисляется само (сгорает только невыполненное). q - состояние (пустое у новичка); исходный объект не меняется.
+// Возвращает { q, pay } - pay: что начислить (silver, xp, gem)
 export function questRoll(q0, today) {
   const q = JSON.parse(JSON.stringify(q0 && q0.day ? q0 : { d: [], w: [], pts: 0, paid: 0, crate: 0, chest: 0 })), pay = {}, wk = weekNo(today); // копия: старые браузеры без structuredClone
   if (q.day !== today) {
@@ -105,7 +105,7 @@ export function questRoll(q0, today) {
   return { q, pay };
 }
 const stepTask = (t, P, c) => { const def = P[t.id]; if (!def || t.st) return false; const v = Number(c[def.c]) || 0; if (v <= 0) return false; t.n = Math.min(def.of, Math.round((t.n + v) * 10) / 10); if (t.n >= def.of) { t.st = 'done'; return true; } return false; };
-// бой: c — счётчики (onlineCounters или { waves, full } из «Обороны»); один бой идёт во все подходящие задания
+// бой: c - счётчики (onlineCounters или { waves, full } из «Обороны»); один бой идёт во все подходящие задания
 export function questApply(q0, today, c) {
   const { q, pay } = questRoll(q0, today); let done = 0;
   if (c.soloEnd) { if (c.soloStart < (q.soloEnd || 0)) return { q, pay }; q.soloEnd = c.soloEnd; } // одиночные бои идут только друг за другом: параллельные пуски не считаются
@@ -115,7 +115,7 @@ export function questApply(q0, today, c) {
   for (const t of q.w) stepTask(t, WEEKLY, c2);
   return { q, pay };
 }
-// «Забрать»: key — 'd:id', 'w:id', 'crate' (за все три), 'chest' (за все пять)
+// «Забрать»: key - 'd:id', 'w:id', 'crate' (за все три), 'chest' (за все пять)
 export function questClaim(q0, today, key) {
   const { q, pay } = questRoll(q0, today);
   if (key === 'crate' || key === 'chest') {
@@ -138,7 +138,7 @@ export function questView(q0, today) {
   return { day: q.day, d: q.d.filter((t) => DAILY[t.id]), w: q.w.filter((t) => WEEKLY[t.id]), pts: q.pts, paid: q.paid, crate: q.crate, chest: q.chest };
 }
 const int = (v, hi = 999) => Math.max(0, Math.min(hi, Math.floor(Number(v) || 0)));
-// «Оборона» (итог присылает браузер): волн не больше, чем успело пройти по времени сервера (минимум 20 с на волну: время боя можно ускорить); «до конца» — все волны и победа
+// «Оборона» (итог присылает браузер): волн не больше, чем успело пройти по времени сервера (минимум 20 с на волну: время боя можно ускорить); «до конца» - все волны и победа
 export const DEF_WAVES = 6; // defense.js WAVES
 const DEF_WAVE_MIN = 20;
 export function defenseCounters(ev, seconds, nowSec, wavesAll = DEF_WAVES) {
@@ -146,7 +146,7 @@ export function defenseCounters(ev, seconds, nowSec, wavesAll = DEF_WAVES) {
   return { waves, full: ev.win && waves >= wavesAll ? 1 : 0, soloStart: nowSec - seconds, soloEnd: nowSec };
 }
 // подписанный итог онлайн-боя → счётчики. Mark 2026-11-04: считаются все быстрые бои, бои в своей комнате в счёт не идут (rt есть только у быстрого боя).
-// null — не считается: своя комната или бой без очков и сбитых. Поля, которых нет у старого игрового сервера, просто дают 0
+// null - не считается: своя комната или бой без очков и сбитых. Поля, которых нет у старого игрового сервера, просто дают 0
 export function onlineCounters(p) {
   const e = (p && p.ev && typeof p.ev === 'object' ? p.ev : {}), mm = p.mm === 1, pvo = p.team === 'pvo', k = int(p.k), icp = int(e.icp), drones = int(e.icpD);
   if (!p.rt || (!(Number(p.s) > 0) && !(k > 0))) return null;

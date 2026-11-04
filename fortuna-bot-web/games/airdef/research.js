@@ -1,6 +1,6 @@
-// Экран «Исследования» (AIRDEF_PROGRESSION.md §7, §11; макет tools/airdef-ui/progress-mock.html, вариант 1 — досье справа):
-// ветки сверху, стороны слева (нейтрально), колонки — ранги I–IV, линии — от предыдущей единицы к следующей, карточка —
-// модель, название, ранг, цена; строка паритета над колонкой. Тап — досье: игровые ТТХ, аналог другой стороны,
+// Экран «Исследования» (AIRDEF_PROGRESSION.md §7, §11; макет tools/airdef-ui/progress-mock.html, вариант 1 - досье справа):
+// ветки сверху, стороны слева (нейтрально), колонки - ранги I-IV, линии - от предыдущей единицы к следующей, карточка -
+// модель, название, ранг, цена; строка паритета над колонкой. Тап - досье: игровые ТТХ, аналог другой стороны,
 // «Исследовать» / «Сделать целью» / «Купить». Тратит сервер (progress-net.js → airdef-progress).
 import { NODE, BRANCHES, SIDES, SIDE_NAME, RANKS, RANK_NAME, nodesOf, owned, researched, rankOpen, rankBlock, canBuy, canResearch, cardStats, pairOf, unitType, treeLayout, ranked } from './progress.js?v=20261104a';
 import { SAM, AG, ERAS, LOADOUTS } from './arsenal.js?v=20261104a';
@@ -16,7 +16,7 @@ const CSS = `
   --rt: calc(var(--sa-t, 0px) + var(--tg-t, 0px)); --hh: 58px; --cw: 184px; --ch: 82px; --gx: 26px; --gy: 14px; --line: #39422f; --line2: #2c3426; --ac: #e8b04a; --ac2: #f3c96f; --dim: #b3baa5; --dim2: #8f9884; --ok: #86c06c; --xp: #9fd3ff; }
 #research.on { display: block; }
 #research .ic { width: 1.15em; height: 1.15em; vertical-align: -0.17em; flex: none; }
-#research .rbg { position: absolute; left: -3%; right: -3%; top: -6%; bottom: -6%; background: center / cover no-repeat; opacity: 0; transition: opacity .8s ease; will-change: transform; } #research .rbg.on { opacity: 1; } #research .rui { position: absolute; inset: 0; } /* запас сверх экрана — на сдвиг фона при прокрутке */
+#research .rbg { position: absolute; left: -3%; right: -3%; top: -6%; bottom: -6%; background: center / cover no-repeat; opacity: 0; transition: opacity .8s ease; will-change: transform; } #research .rbg.on { opacity: 1; } #research .rui { position: absolute; inset: 0; } /* запас сверх экрана - на сдвиг фона при прокрутке */
 @media (max-height: 460px) { #research .rbg { top: -12%; bottom: -12%; } }
 #research .top { position: absolute; left: 0; right: 0; top: var(--rt); height: var(--hh); display: flex; align-items: center; gap: 14px; padding: 0 18px; padding-left: max(18px, var(--sa-l, 0px)); background: linear-gradient(#0b0e0a, rgba(11,14,10,.86)); z-index: 5; }
 #research::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: var(--rt); background: #0b0e0a; z-index: 5; }
@@ -25,7 +25,7 @@ const CSS = `
 #research .btabs { display: flex; margin-left: 10px; } #research .btabs button { border: 1px solid transparent; background: none; color: var(--dim); padding: 7px 13px; font: 500 14px 'Golos Text'; cursor: pointer; }
 #research .btabs button.on { color: #e9e6dc; border-color: #e9e6dc; } #research .btabs button i { font-style: normal; color: var(--dim2); font: 600 10.5px 'JetBrains Mono', monospace; margin-left: 5px; }
 #research .cur { display: flex; gap: 18px; margin-left: auto; font: 600 16px 'JetBrains Mono', monospace; padding-right: var(--sa-r, 0px); } #research .cur span { display: flex; align-items: center; gap: 6px; } #research .cur .xp { color: var(--xp); }
-#research .sides { position: absolute; left: 0; top: calc(var(--rt) + var(--hh)); bottom: 0; width: calc(122px + var(--sa-l, 0px)); /* вырез экрана слева — сверх ширины, а не за счёт подложки кнопок (Mark 2026-11-03: на телефоне «Восток» вылезал за подложку) */ padding: 22px 0 0 14px; padding-left: max(14px, var(--sa-l, 0px)); display: flex; flex-direction: column; gap: 10px; z-index: 4; }
+#research .sides { position: absolute; left: 0; top: calc(var(--rt) + var(--hh)); bottom: 0; width: calc(122px + var(--sa-l, 0px)); /* вырез экрана слева - сверх ширины, а не за счёт подложки кнопок (Mark 2026-11-03: на телефоне «Восток» вылезал за подложку) */ padding: 22px 0 0 14px; padding-left: max(14px, var(--sa-l, 0px)); display: flex; flex-direction: column; gap: 10px; z-index: 4; }
 #research .sides button { border: 0; background: rgba(16,20,15,.88); color: var(--dim); height: 74px; text-align: left; padding: 0 12px; font: 500 15px 'Oswald'; border-left: 3px solid transparent; cursor: pointer; }
 #research .sides button small { display: block; font: 500 11px 'Golos Text'; color: var(--dim2); margin-top: 3px; } #research .sides button.on { background: rgba(233,230,220,.12); color: #e9e6dc; border-left-color: #e9e6dc; }
 #research .note { position: absolute; left: 18px; bottom: 14px; width: 114px; font-size: 11px; color: var(--dim); line-height: 1.35; z-index: 4; text-shadow: 0 1px 3px #000; }
@@ -78,25 +78,25 @@ const CSS = `
 }`;
 
 const n2 = (v) => Math.round(v).toLocaleString(LANG === 'en' ? 'en-US' : 'ru-RU');
-// значения карточки из progress.js (cardStats): «480 км/ч», «1,5–30 км», «2,5 т», «есть» — единицы и запятая на выбранном языке
+// значения карточки из progress.js (cardStats): «480 км/ч», «1,5-30 км», «2,5 т», «есть» - единицы и запятая на выбранном языке
 const trVal = (v) => (LANG !== 'en' ? v : trIf(v).replace(/^none$/, 'no').replace(/(\d),(\d)/g, '$1.$2').replace(/ км\/ч/g, ' km/h').replace(/ км(?![А-Яа-я\/])/g, ' km').replace(/ м\/с/g, ' m/s').replace(/ кг/g, ' kg').replace(/ т$/g, ' t').replace(/ м$/g, ' m').replace(/ с$/g, ' s').replace(/°\/с/g, '°/s')
   .replace(/ снарядов$/, ' rounds').replace(/ · залп /, ' · salvo ').replace(/ \(оптика\)$/, ' (optical)'));
 const thumb = (n) => `airdef/thumbs/${n.branch}_${n.key}.webp?v=20261104a`;
-// подпись строки карточки; «Обзор» у ЗРК без РЛС — дальность обзора оптикой (Detection), а в словаре «Обзор» — кнопка камеры (View)
+// подпись строки карточки; «Обзор» у ЗРК без РЛС - дальность обзора оптикой (Detection), а в словаре «Обзор» - кнопка камеры (View)
 const statName = (k) => (LANG === 'en' && k === 'Обзор' ? 'Detection' : trIf(k));
-const GOAL_TAG = LANG === 'en' ? 'GOAL' : 'Цель'; // по-русски та же «ЦЕЛЬ», что кнопка захвата цели (словарь — один ключ на оба), по-английски это разные слова
-const era = (r) => (ERAS[r - 1] ? trIf(ERAS[r - 1].name).split('— ')[1] || '' : '');
+const GOAL_TAG = LANG === 'en' ? 'GOAL' : 'Цель'; // по-русски та же «ЦЕЛЬ», что кнопка захвата цели (словарь - один ключ на оба), по-английски это разные слова
+const era = (r) => (ERAS[r - 1] ? trIf(ERAS[r - 1].name).split('- ')[1] || '' : '');
 const guide = (n) => (n.branch === 'pvo' ? trIf(SAM[n.key]?.guide) : n.branch === 'air' || n.branch === 'heli' ? tr('Подвески: {0}.', [RANKS.flatMap((e) => (LOADOUTS[e] || []).filter((L) => L.plane === n.key).map((L) => trIf(L.name))).join(' · ')]) : trIf(AG[n.item || n.key]?.guide)) || '';
 
 export function createResearch(C, PG) {
-  const style = document.createElement('style'); style.textContent = CSS; if (document.head) document.head.appendChild(style); // (заглушка DOM стенда — без head/body)
+  const style = document.createElement('style'); style.textContent = CSS; if (document.head) document.head.appendChild(style); // (заглушка DOM стенда - без head/body)
   const root = document.createElement('div'); root.id = 'research'; if (document.body && document.body.appendChild) document.body.appendChild(root);
-  const mk = (c) => { const e = document.createElement('div'); e.className = c; if (root.appendChild) root.appendChild(e); return e; }, bgs = [mk('rbg'), mk('rbg')], ui = mk('rui'); // фон — вне перерисовки, иначе переход обрывается
+  const mk = (c) => { const e = document.createElement('div'); e.className = c; if (root.appendChild) root.appendChild(e); return e; }, bgs = [mk('rbg'), mk('rbg')], ui = mk('rui'); // фон - вне перерисовки, иначе переход обрывается
   const S = { B: 'air', side: 'east', sel: null, open: false, msg: '', msgErr: false };
   const P0 = { xp: 0, silver: 0, res: [], own: [], goal: {} };
   const P = () => PG.P || P0;
   const phone = () => innerHeight < 460 || innerWidth < 720;
-  // «Вертолёты» — своя ветка прокачки, но на экране — внутри «Авиации», третьей кнопкой слева (обе стороны в одном дереве)
+  // «Вертолёты» - своя ветка прокачки, но на экране - внутри «Авиации», третьей кнопкой слева (обе стороны в одном дереве)
   const EB = () => (S.B === 'air' && S.side === 'heli' ? 'heli' : S.B), sideOf = () => (S.side === 'heli' ? null : S.side);
 
   function st(n) {
@@ -123,8 +123,8 @@ export function createResearch(C, PG) {
   }
   function tree() {
     const cs = getComputedStyle(root), px = (v) => parseFloat(cs.getPropertyValue(v)), ph = phone();
-    const cw = px('--cw'), gx = px('--gx'), gy = px('--gy'), ch = px('--ch'), top = ph ? 76 : 72; // ниже шапки рангов (строка паритета — до двух строк)
-    // вертолёты: линии Востока, под ними — Запада, над каждой группой — подпись стороны
+    const cw = px('--cw'), gx = px('--gx'), gy = px('--gy'), ch = px('--ch'), top = ph ? 76 : 72; // ниже шапки рангов (строка паритета - до двух строк)
+    // вертолёты: линии Востока, под ними - Запада, над каждой группой - подпись стороны
     const hl = EB() === 'heli', rk = ranked(EB()), LS = hl ? SIDES.map((sd) => [sd, treeLayout('heli', sd)]) : [[S.side, treeLayout(S.B, S.side)]], pos = {}, grp = [], L = { cells: [], links: [] };
     let y0 = rk ? top : 14, cols = 4;
     for (const [sd, l] of LS) {
@@ -145,9 +145,9 @@ export function createResearch(C, PG) {
     if (!S.sel || !NODE[S.sel]) return '';
     const n = NODE[S.sel], s = st(n), p = pairOf(n), sp = p && st(p), goal = P().goal[n.branch] === n.id, busy = PG.busy, guest = PG.guest;
     const why = S.msg ? `<div class="why ${S.msgErr ? 'err' : ''}">${S.msg}</div>` : s.why ? `<div class="why">${trMsg(s.why)}</div>` : '';
-    const act = guest && s.k !== 'own' && s.k !== 'start' ? `<div class="why">${tr('Войдите в аккаунт игры — опыт и серебро копятся только в нём.')}</div><button class="rbtn" data-acc="1">${tr('Войти или создать аккаунт')}</button>`
+    const act = guest && s.k !== 'own' && s.k !== 'start' ? `<div class="why">${tr('Войдите в аккаунт игры - опыт и серебро копятся только в нём.')}</div><button class="rbtn" data-acc="1">${tr('Войти или создать аккаунт')}</button>`
       : s.k === 'buy' ? `<button class="rbtn" data-act="buy" ${s.can && !busy ? '' : 'disabled'}>${tr('Купить')} ${SV(n.cost)}</button>${why}`
-      : s.k === 'res' ? `<button class="rbtn" data-act="research" ${s.can && !busy ? '' : 'disabled'}>${tr('Исследовать')} ${XP(n.cost)}</button><button class="rbtn alt" data-act="goal" ${busy ? 'disabled' : ''}>${goal ? ico('ok', 'ii') + tr('Цель исследования (снять)') : tr('Сделать целью — опыт за бой пойдёт сюда')}</button>${why}`
+      : s.k === 'res' ? `<button class="rbtn" data-act="research" ${s.can && !busy ? '' : 'disabled'}>${tr('Исследовать')} ${XP(n.cost)}</button><button class="rbtn alt" data-act="goal" ${busy ? 'disabled' : ''}>${goal ? ico('ok', 'ii') + tr('Цель исследования (снять)') : tr('Сделать целью - опыт за бой пойдёт сюда')}</button>${why}`
       : s.k === 'lock' ? (n.parent && !researched(P(), n.parent) ? `<button class="rbtn alt" data-act="goal" ${busy ? 'disabled' : ''}>${goal ? ico('ok', 'ii') + tr('Цель (снять)') : tr('Сделать целью')}</button>` : '') + why
       : `<div class="why">${tr('Доступно в «Реализме».')}</div>`;
     const stats = `<div class="st">${cardStats(n).map(([k, v]) => `<span>${statName(k)}</span><b>${trVal(v)}</b>`).join('')}</div>`;
@@ -156,7 +156,7 @@ export function createResearch(C, PG) {
       <span class="mk">${ranked(n.branch) ? tr('{0} · ранг {1} · {2}', [trIf(SIDE_NAME[n.side]), RANK_NAME[n.rank], era(n.rank)]) : `${trIf(SIDE_NAME[n.side])} · ${trIf(n.lineName)}`}</span><h3>${trIf(n.name)}</h3><div class="ty">${trIf(unitType(n))}${n.branch === 'pvo' ? capsHtml(SAM[n.key]) : ''}</div>
       ${stats}<p>${guide(n)}</p>${an}</div><div class="acts">${act}</div></div>`;
   }
-  // фон категории (Mark 2026-11-04): у каждой ветки и стороны своя сцена, при смене — плавный переход двух слоёв; новая картинка показывается, когда загрузилась
+  // фон категории (Mark 2026-11-04): у каждой ветки и стороны своя сцена, при смене - плавный переход двух слоёв; новая картинка показывается, когда загрузилась
   let bgKey = '', bgN = 0;
   function setBg() {
     const key = `${S.B}.${S.side}`; if (key === bgKey) return; bgKey = key; const url = BG_SCENE[key] || BG_SCENE['pvo.east'];
@@ -183,12 +183,12 @@ export function createResearch(C, PG) {
     if (!phone() && !S.sel) S.sel = (nodesOf(EB(), sideOf(), 2)[0] || nodesOf(EB(), sideOf())[0]).id;
     root.classList.toggle('open', S.open);
     setBg(); ui.innerHTML = `<div class="top"><button class="back" data-close-all="1" aria-label="${tr('Назад')}">«</button><h1>${tr('Исследования')}</h1><div class="btabs">${BRANCHES.filter((b) => !b.sub).map((b) => `<button data-b="${b.id}" class="${b.id === S.B ? 'on' : ''}">${trIf(b.name)}${ranked(b.id) ? `<i>${RANKS.filter((r) => rankOpen(p, b.id, r)).length}/4</i>` : ''}</button>`).join('')}</div>
-      <div class="cur"><span class="xp" title="${tr('Опыт — исследовать')}">${XP(p.xp)}</span><span title="${tr('Серебро — покупать')}">${SV(p.silver)}</span></div></div>
+      <div class="cur"><span class="xp" title="${tr('Опыт - исследовать')}">${XP(p.xp)}</span><span title="${tr('Серебро - покупать')}">${SV(p.silver)}</span></div></div>
       <div class="sides">${SIDES.map((s) => `<button data-s="${s}" class="${s === S.side ? 'on' : ''}">${trIf(SIDE_NAME[s])}<small>${tr('куплено {0} из {1}', [nodesOf(S.B, s).filter((n) => owned(p, n.id)).length, nodesOf(S.B, s).length])}</small></button>`).join('')}${S.B === 'air' ? `<button data-s="heli" class="${S.side === 'heli' ? 'on' : ''}">${tr('Вертолёты')}<small>${tr('куплено {0} из {1}', [nodesOf('heli').filter((n) => owned(p, n.id)).length, nodesOf('heli').length])}</small></button>` : ''}</div>
-      <div class="note">${tr('Только для <b>«Реализма»</b>. Аркада и обучение — всё открыто.')}</div>
+      <div class="note">${tr('Только для <b>«Реализма»</b>. Аркада и обучение - всё открыто.')}</div>
       ${PG.guest ? `<div class="guest">${tr('Вы не вошли: показан стартовый набор. Опыт и серебро копятся в аккаунте.')}</div>` : PG.err ? `<div class="guest">${tr('Нет связи с сайтом: {0}', [trMsg(PG.err)])}</div>` : ''}
       <div class="wrap">${tree()}</div>${S.open || !phone() ? dossier() : ''}`;
-    if (scroll && !S.reset) { const w = root.querySelector('.wrap'); w.scrollLeft = scroll[0]; w.scrollTop = scroll[1]; } // выбор единицы, покупка — дерево стоит на месте
+    if (scroll && !S.reset) { const w = root.querySelector('.wrap'); w.scrollLeft = scroll[0]; w.scrollTop = scroll[1]; } // выбор единицы, покупка - дерево стоит на месте
     parTarget(root.querySelector('.wrap'));
     const sc0 = S.dosScroll; if (sc0 != null && root.querySelector('.dos .sc')) root.querySelector('.dos .sc').scrollTop = sc0; S.reset = false; S.dosScroll = null;
   }
@@ -201,7 +201,7 @@ export function createResearch(C, PG) {
       const n = NODE[S.sel]; if (!n) return;
       const goal = P().goal[n.branch] === n.id; const dsc = root.querySelector('.dos .sc'); S.dosScroll = dsc ? dsc.scrollTop : null;
       const r = await PG.act(t.dataset.act, t.dataset.act === 'goal' ? (goal ? null : n.id) : n.id, n.branch);
-      S.msg = r.ok ? (t.dataset.act === 'buy' ? tr('Куплено: {0} — доступно в «Реализме»', [trIf(n.short)]) : t.dataset.act === 'research' ? tr('Исследовано: {0}', [trIf(n.short)]) : goal ? tr('Цель снята') : tr('Цель выбрана')) : trMsg(r.why);
+      S.msg = r.ok ? (t.dataset.act === 'buy' ? tr('Куплено: {0} - доступно в «Реализме»', [trIf(n.short)]) : t.dataset.act === 'research' ? tr('Исследовано: {0}', [trIf(n.short)]) : goal ? tr('Цель снята') : tr('Цель выбрана')) : trMsg(r.why);
       S.msgErr = !r.ok; if (r.ok && C.snd) C.snd.click && C.snd.click();
       draw(); return;
     }
@@ -211,7 +211,7 @@ export function createResearch(C, PG) {
   PG.on(draw);
   addEventListener('resize', draw);
   const api = {
-    // открыть экран (по желанию — сразу на узле: из замка подвески «нужно: …»)
+    // открыть экран (по желанию - сразу на узле: из замка подвески «нужно: …»)
     open(id) {
       root.classList.add('on'); document.body.classList.add('researchOn');
       if (id && NODE[id]) { const h = NODE[id].branch === 'heli'; S.B = h ? 'air' : NODE[id].branch; S.side = h ? 'heli' : NODE[id].side; S.sel = id; S.open = true; }

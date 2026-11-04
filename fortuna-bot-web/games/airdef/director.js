@@ -1,12 +1,12 @@
-// Живой фон главного меню: настоящий бой — ИИ-налёт против ИИ-ПВО на этой же карте, без игрока. «Режиссёр» камеры
+// Живой фон главного меню: настоящий бой - ИИ-налёт против ИИ-ПВО на этой же карте, без игрока. «Режиссёр» камеры
 // выбирает планы по событиям боя:
-//   пуск ЗУР — с разных точек (сбоку от пусковой, сзади по направлению на цель, снизу от земли), дальше — полёт за ракетой
+//   пуск ЗУР - с разных точек (сбоку от пусковой, сзади по направлению на цель, снизу от земли), дальше - полёт за ракетой
 //   и встреча с целью у самолёта; пусковая разворачивается на цель; бомба до разрыва; трассы зенитки; пролёт ударников над
 //   городом; погоня; вид с улицы; общий вид; рядом с самолётом (ведомый, из-за плеча, подвеска снизу, облёт); зенитная
-//   машина крупно; объект-цель и улица города вблизи (готовые модели домов). У ПЗРК — без плана у стрелка: сразу за ракетой.
-// Кнопки ◀ ▶ — листать виды планов (выбранный держится дольше и не перебивается событиями).
-// Кадр строится только по свободной от карточки меню части экрана (карточка слева — на горизонтальном, снизу — на
-// вертикальном), чтобы ракета и пусковая не прятались под ней. Внизу справа — подпись, что сейчас в кадре.
+//   машина крупно; объект-цель и улица города вблизи (готовые модели домов). У ПЗРК - без плана у стрелка: сразу за ракетой.
+// Кнопки ◀ ▶ - листать виды планов (выбранный держится дольше и не перебивается событиями).
+// Кадр строится только по свободной от карточки меню части экрана (карточка слева - на горизонтальном, снизу - на
+// вертикальном), чтобы ракета и пусковая не прятались под ней. Внизу справа - подпись, что сейчас в кадре.
 // Раз в несколько минут бой начинается заново (город восстанавливается).
 /* global THREE */
 import { mulberry32 } from './city.js?v=20261104a';
@@ -23,7 +23,7 @@ export function createDirector(C) {
   let rnd = Math.random, targets = [], wave = 1, battleT = 0, shot = null, events = [], caption = '', capT = 0, pending = null, era = 2, side = 'east';
   const camPos = V3(), look = V3(), lookS = V3(), TMP = V3(), F = V3(), RT = V3(), OFF = V3(), BX = new THREE.Box3();
   const fade = document.getElementById('fade'), menuEl = document.getElementById('menu'), rail = menuEl.querySelector('.mrail'), card = menuEl.querySelector('.mpanel');
-  const sizeOf = new Map(); // полуразмер машины (с пусковыми) — для планов у пусковой
+  const sizeOf = new Map(); // полуразмер машины (с пусковыми) - для планов у пусковой
   function unitR(u) {
     if (sizeOf.has(u.id)) return sizeOf.get(u.id);
     const g = C.unitMeshes.get(u.id); const r = g ? Math.max(3, BX.setFromObject(g).getSize(TMP).length() * 0.5) : 10;
@@ -40,7 +40,7 @@ export function createDirector(C) {
       radarState: (u) => { if (u.track && !u.dead && trainable(LNCH[u.key])) events.push({ k: 'track', u, t: C.t }); },
     };
     targets = pickTargets(S, rnd, 3);
-    placeDefense(S, city, rnd, side, era, targets, 0.9, { same: true }); // состав — как в arsenal (без случайных замен вылета)
+    placeDefense(S, city, rnd, side, era, targets, 0.9, { same: true }); // состав - как в arsenal (без случайных замен вылета)
     C.syncUnits(); sizeOf.clear();
     wave = 1; C.raid.spawnWave(4, 2, targets, 7000 + rnd() * 2000);
     battleT = 0; shot = null; events = [];
@@ -83,10 +83,10 @@ export function createDirector(C) {
     const R = unitR(u), a0 = (u.track ? Math.atan2(u.track.pos.x - u.pos.x, u.track.pos.z - u.pos.z) : u.yaw) + (rnd() < 0.5 ? 0.9 : -0.9);
     const D = R * 2.2 + 5, p = new THREE.Vector3(u.pos.x + Math.sin(a0) * D, u.pos.y + R * 0.45 + 1, u.pos.z + Math.cos(a0) * D);
     p.y = Math.max(p.y, city.topAt(p.x, p.z) + 2);
-    return { kind: 'track', dur: 6, cap: tr('{0} · цель захвачена — пусковая разворачивается', [trIf(u.S.name)]),
+    return { kind: 'track', dur: 6, cap: tr('{0} · цель захвачена - пусковая разворачивается', [trIf(u.S.name)]),
       cam() { if (u.dead) return false; camPos.copy(p); look.copy(u.pos).y += R * 0.25; return true; } };
   }
-  // пуск ЗУР: сначала у пусковой (сбоку / сзади / снизу), потом за ракетой, на подлёте — у цели
+  // пуск ЗУР: сначала у пусковой (сбоку / сзади / снизу), потом за ракетой, на подлёте - у цели
   function samShot(m) {
     const u = m.unit, R = unitR(u), L = m.M.L, cold = m.ln && (m.ln.mode === 'cold' || m.ln.mode === 'vhot');
     const T = m.target ? m.target.pos : TMP.copy(u.pos).add(F.set(0, 500, -2000));
@@ -98,15 +98,15 @@ export function createDirector(C) {
     else { const D = R * 1.4 + 6; p.set(u.pos.x + sz * D * sd - sx * D * 0.5, u.pos.y - 0.6, u.pos.z - sx * D * sd - sz * D * 0.5); } // снизу у земли
     p.y = Math.max(p.y, city.topAt(p.x, p.z) + 1.2);
     const how = { cold: tr(' · «холодный» старт'), tube: tr(' · вышибной заряд'), vhot: tr(' · вертикальный старт'), box: tr(' · из наклонного контейнера') }[m.ln && m.ln.mode] || '';
-    const tube = m.ln && m.ln.mode === 'tube'; // ПЗРК: стрелка не показываем — сразу за ракетой
+    const tube = m.ln && m.ln.mode === 'tube'; // ПЗРК: стрелка не показываем - сразу за ракетой
     const hold = tube ? 0 : 2.6 + (m.ign || 0) + (variant === 'side' ? 1.2 : 0);
     let near = null, endT = 0;
     return { kind: 'sam', dur: 18, cap: tr('Пуск: {0} · {1}{2}', [trIf(u.S.name), trIf(SAM_TYPE[u.S.type]), how]),
       cam(dt, t) {
         shot.follow = null;
-        if (m.dead) { endT = endT || t; look.copy(m.pos); return t - endT < 2.5; } // подрыв — пара секунд на разрыв
+        if (m.dead) { endT = endT || t; look.copy(m.pos); return t - endT < 2.5; } // подрыв - пара секунд на разрыв
         if (t < hold) { camPos.copy(p); look.copy(u.pos).lerp(m.pos, Math.min(1, Math.max(0, (m.t - 0.2) / 1.8))); look.y += R * 0.2; return true; }
-        // подлёт: < 2,5 с до встречи — камера у цели, ракета влетает в кадр
+        // подлёт: < 2,5 с до встречи - камера у цели, ракета влетает в кадр
         const tg = m.target && !m.target.dead ? m.target : null;
         if (tg && !near && m.pos.distanceTo(tg.pos) < Math.max(400, m.speed * 2.5)) {
           near = tg.pos.clone().add(TMP.copy(m.dir).cross(F.set(0, 1, 0)).normalize().multiplyScalar(60 + rnd() * 40)); near.y += 15;
@@ -134,7 +134,7 @@ export function createDirector(C) {
   }
   const planeName = (a) => { const pm = planeModel(a.side, classOfRole(a.role), a.plane || raidPlane(a.side, C.raidEra, a.role)); return pm ? trIf(PLANES[pm.name]) : a.side === 'east' ? tr('Ударник') : 'Strike'; };
   const fighters = () => C.raid.alive().filter((a) => a.role !== 'decoy');
-  // рядом с самолётом: v — wing (ведомый сбоку), close (из-за плеча), under (подвеска снизу спереди), orbit (облёт)
+  // рядом с самолётом: v - wing (ведомый сбоку), close (из-за плеча), under (подвеска снизу спереди), orbit (облёт)
   function planeClose(v) {
     const ps = fighters(); if (!ps.length) return null;
     const a = ps[Math.floor(rnd() * ps.length)], sd = rnd() < 0.5 ? 1 : -1, a0 = rnd() * 6.28;
@@ -152,7 +152,7 @@ export function createDirector(C) {
         look.copy(a.pos).addScaledVector(F, la); shot.follow = a; return true;
       } };
   }
-  // зенитная машина крупно: медленный облёт (ПЗРК не показываем — без модели стрелка)
+  // зенитная машина крупно: медленный облёт (ПЗРК не показываем - без модели стрелка)
   function unitShot() {
     const us = C.S.units.filter((u) => !u.dead && !(LNCH[u.key] && LNCH[u.key].mode === 'tube')); if (!us.length) return null;
     const u = us[Math.floor(rnd() * us.length)], R = unitR(u), a0 = rnd() * 6.28, D = R * 2.6 + 6, sd = rnd() < 0.5 ? 1 : -1;
@@ -166,7 +166,7 @@ export function createDirector(C) {
     return { kind: 'obj', dur: 9, cap: tr('{0} вблизи', [trIf(o.name)]),
       cam(dt, t) { const g = a0 + t * 0.07 * sd, gy = groundAt(o.x, o.z); camPos.set(o.x + Math.sin(g) * D, gy + 38, o.z + Math.cos(g) * D); look.set(o.x, gy + 8, o.z); return true; } };
   }
-  // улица города: камера медленно едет вдоль панельного дома на высоте 3–4 этажа
+  // улица города: камера медленно едет вдоль панельного дома на высоте 3-4 этажа
   function cityShot() {
     const B = city.B;
     for (let k = 0; k < 60; k++) {
@@ -180,7 +180,7 @@ export function createDirector(C) {
     return null;
   }
   const latest = (arr) => { let m = null; for (const q of arr) if (!q.dead && (!m || q.id > m.id)) m = q; return m; };
-  // виды планов по порядку — для кнопок ◀ ▶
+  // виды планов по порядку - для кнопок ◀ ▶
   const KINDS = ['pan', 'flyby', 'chase', 'p_wing', 'p_close', 'p_under', 'p_orbit', 'street', 'city', 'unit', 'obj', 'aaa', 'sam', 'bomb'];
   function make(kind) {
     switch (kind) {
@@ -204,10 +204,10 @@ export function createDirector(C) {
   const roleName = (a) => ({ bomber: tr('бомбардировщик'), tv: tr('носитель ТВ-ракет'), sead: tr('охотник за РЛС'), low: tr('прорыв на малой высоте'), cruise: tr('носитель крылатых ракет'), decoyer: tr('носитель ложных целей'), decoy: tr('ложная цель') })[a.role] || tr('ударник');
   function pickShot() {
     const now = C.t; events = events.filter((e) => now - e.t < 1.5);
-    // события боя — чаще всего, но не всегда: остальное время — самолёты и город крупно
+    // события боя - чаще всего, но не всегда: остальное время - самолёты и город крупно
     const ev = rnd() < 0.65 && (events.find((e) => e.k === 'sam') || events.find((e) => e.k === 'wpn') || (rnd() < 0.5 && events.find((e) => e.k === 'track')));
     if (ev) { events.length = 0; return ev.k === 'sam' ? samShot(ev.m) : ev.k === 'wpn' ? bombShot(ev.w) : trackShot(ev.u); }
-    // спокойные планы: больше — у самолётов и вблизи (показать графику)
+    // спокойные планы: больше - у самолётов и вблизи (показать графику)
     const r = rnd();
     const kind = r < 0.07 ? 'aaa' : r < 0.17 ? 'street' : r < 0.25 ? 'city' : r < 0.35 ? 'unit' : r < 0.43 ? 'obj' : r < 0.5 ? 'p_wing' : r < 0.57 ? 'p_close'
       : r < 0.63 ? 'p_under' : r < 0.7 ? 'p_orbit' : r < 0.8 ? 'flyby' : r < 0.92 ? 'chase' : 'pan';
@@ -219,11 +219,11 @@ export function createDirector(C) {
     const alive = C.raid.planes.filter((a) => !a.dead && !a.out).length;
     if (alive < 2) { wave++; C.raid.spawnWave(3 + (wave % 3), 2 + (wave % 2), aliveTargets().length ? aliveTargets() : targets, 8000 + rnd() * 3000); }
   }
-  // кадр — по свободной от карточки части экрана: камера считает «экраном» только её, остальное видно под карточкой
+  // кадр - по свободной от карточки части экрана: камера считает «экраном» только её, остальное видно под карточкой
   function frameFree() {
     const VW = C.VW, VH = C.VH, r = card && card.getBoundingClientRect ? card.getBoundingClientRect() : null;
-    if (!(VW > 1 && VH > 1)) { camera.clearViewOffset(); return; } // окно ещё без размера (страница открыта в фоне) — без смещения
-    const q = rail && rail.getBoundingClientRect ? rail.getBoundingClientRect() : null; // меню: слева — режимы, справа (снизу) — задание
+    if (!(VW > 1 && VH > 1)) { camera.clearViewOffset(); return; } // окно ещё без размера (страница открыта в фоне) - без смещения
+    const q = rail && rail.getBoundingClientRect ? rail.getBoundingClientRect() : null; // меню: слева - режимы, справа (снизу) - задание
     if (VW >= VH) {
       const x0 = q && q.width ? q.left + q.width : VW * 0.2, x1 = r && r.width ? Math.min(VW, r.left - 8) : VW * 0.6, Wf = Math.max(VW * 0.25, x1 - x0);
       camera.aspect = Wf / VH; camera.setViewOffset(Wf, VH, -x0, 0, VW, VH);
@@ -238,13 +238,13 @@ export function createDirector(C) {
     if (!shot) { shot = panShot(); shot.t = 0; caption = shot.cap; }
     shot.t += dt;
     const ok = shot.cam(dt, shot.t);
-    // важное событие перебивает спокойный план; план кончился или потерял объект — новый
+    // важное событие перебивает спокойный план; план кончился или потерял объект - новый
     const ev = !shot.manual && !['sam', 'bomb'].includes(shot.kind) && shot.t > 6.5 && events.some((e) => e.k === 'sam' || e.k === 'wpn' || (e.k === 'track' && shot.kind !== 'track'));
     if (!ok || shot.t > shot.dur || ev) { const s = pickShot(); if (s) cut(() => { caption = s.cap; capT = 0; return s; }); }
     camPos.y = Math.max(camPos.y, city.topAt(camPos.x, camPos.z) + 1);
     if (shot.t < 0.05 || shot.snap) { shot.snap = false; shot.fo = null; camera.position.copy(camPos); lookS.copy(look); }
     else if (shot.follow) {
-      // за быстрым объектом сглаживаем смещение относительно него — камера не отстаёт
+      // за быстрым объектом сглаживаем смещение относительно него - камера не отстаёт
       const o = shot.follow;
       if (shot.fo !== o) { shot.fo = o; OFF.copy(camera.position).sub(o.pos); if (OFF.length() > 400) OFF.setLength(400); }
       OFF.lerp(TMP.copy(camPos).sub(o.pos), 1 - Math.exp(-dt * 3)); camera.position.copy(o.pos).add(OFF);

@@ -1,6 +1,6 @@
 // Залп НАР в онлайне (2026-10-22): лётчик берёт Viggen «Hydra ×4 + Mk 82 ×2» (эпоха II, запад), шлёт залп одним сообщением
-// { t: 'rel', k: 'hydra', n: 4 } — сервер должен пустить 4 ракеты (события 'wr'), блок пустеет через load/salvo залпов,
-// темп — один залп на токен (два подряд проходят). Сервер поднимается на :8798.
+// { t: 'rel', k: 'hydra', n: 4 } - сервер должен пустить 4 ракеты (события 'wr'), блок пустеет через load/salvo залпов,
+// темп - один залп на токен (два подряд проходят). Сервер поднимается на :8798.
 //   deno run --allow-net --allow-read --allow-env --allow-run game-server/airdef-nar-test.js
 const PORT = 8798;
 const srv = new Deno.Command('deno', { args: ['run', '--allow-net', '--allow-read', '--allow-env', new URL('./server.js', import.meta.url).pathname],
@@ -41,26 +41,26 @@ try {
   A.send({ t: 'ready', on: true }); P.send({ t: 'ready', on: true });
   const spawn = await A.wait('spawn', () => true, 8000); check('вылет', spawn && spawn.load);
   const L0 = spawn.load.find((l) => l.key === 'hydra'), W = AG.hydra, per = Math.ceil(W.load / W.salvo);
-  check('в подвеске — блоки Hydra', L0 && L0.n > 0);
+  check('в подвеске - блоки Hydra', L0 && L0.n > 0);
   let s = spawn.s.slice(); const yaw = s[3] || 0;
   const fly = async (n) => { for (let i = 0; i < n; i++) { s[0] += -Math.sin(yaw) * 13; s[2] += -Math.cos(yaw) * 13; A.send({ t: 'st', s: [s[0], 1500, s[2], yaw, -0.1, 0, 260, 0.9, 0] }); await sleep(50); } };
   await fly(10);
   A.send({ t: 'rel', k: 'hydra', n: W.salvo, aim: null, tg: 0 }); await fly(6);
   A.send({ t: 'rel', k: 'hydra', n: W.salvo, aim: null, tg: 0 }); await fly(30);
   const evs = A.msgs.filter((m) => m.t === 's' && m.e).flatMap((m) => m.e), wr = evs.filter((e) => e[0] === 'wr' && e[2] === 'hydra');
-  check(`залп — ${W.salvo} ракет на сообщение (пущено ${wr.length} за 2 залпа)`, wr.length === 2 * W.salvo);
+  check(`залп - ${W.salvo} ракет на сообщение (пущено ${wr.length} за 2 залпа)`, wr.length === 2 * W.salvo);
   check('ракеты летят со скоростью самолёта и больше', wr.every((e) => Math.hypot(e[7], e[8], e[9]) > 100));
-  // блок пустеет через per залпов: шлём ещё (per*n0) залпов с паузами — подвеска кончится, лишние — отказ
+  // блок пустеет через per залпов: шлём ещё (per*n0) залпов с паузами - подвеска кончится, лишние - отказ
   const n0 = L0.n; let deny = 0; P.msgs.length = 0;
   for (let k = 0; k < per * n0 + 2; k++) { A.send({ t: 'rel', k: 'hydra', n: W.salvo }); await fly(6); }
   await fly(10);
   const wr2 = A.msgs.filter((m) => m.t === 's' && m.e).flatMap((m) => m.e).filter((e) => e[0] === 'wr' && e[2] === 'hydra').length;
   deny = A.msgs.filter((m) => m.t === 'deny').length;
   check(`блоков ${n0} × ${per} залпов × ${W.salvo} = ${n0 * per * W.salvo} ракет (как у клиента, air.js rocketsOf), пущено ${wr2}`, wr2 === n0 * per * W.salvo);
-  check('пустой блок — отказ', deny >= 1);
+  check('пустой блок - отказ', deny >= 1);
   A.send({ t: 'leave' }); P.send({ t: 'leave' }); await sleep(400);
-  // боты авиации выбирают и связки с НАР (с 2026-10-22 самолётный ИИ sim/raid.js пускает их залпами — стенд tools/airdef-headless/heli-raid-test.js);
-  // 6 комнат 3 × 3 — по два бота в воздушной команде: выбор проходит, комнаты не падают
+  // боты авиации выбирают и связки с НАР (с 2026-10-22 самолётный ИИ sim/raid.js пускает их залпами - стенд tools/airdef-headless/heli-raid-test.js);
+  // 6 комнат 3 × 3 - по два бота в воздушной команде: выбор проходит, комнаты не падают
   let botsSeen = 0, botsNar = 0;
   for (let k = 0; k < 6; k++) {
     A.msgs.length = 0;

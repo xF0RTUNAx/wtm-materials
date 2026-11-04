@@ -1,10 +1,10 @@
 // Фильтр целей комплекса ПВО (u.tgt, sim/strike.js tgtCat / cleanTgt / setTgt) без браузера:
 //   deno run --allow-read --allow-env tools/airdef-headless/tgt-filter-test.js
-// 1) разбор видов целей: самолёт, ложная цель, бомба, дрон, крылатая, баллистика; cleanTgt (мусор, пустой и полный набор — «все»);
-// 2) «Мульти-волна»: С-400 без дронов не пускает по дронам и пускает по крылатым, без фильтра — по обоим;
-// 3) оборона: «Панцирь» только по «бомбам» не стреляет по самолёту (ни ракетой, ни пушкой), без фильтра — стреляет; оператор (manual) фильтра не знает;
-// 4) строка «Цели» в «Обороне» (вся игра на заглушках страницы, как ui-test.js): в налёте — «самолёты» и «бомбы», последняя волна «Мульти-волной»
-//    (расстановка перед ней и сама волна) — «дроны» и «крылатые» (Mark 2026-11-02: кнопки «дроны» не было), «Обычный налёт» последней — как в налёте.
+// 1) разбор видов целей: самолёт, ложная цель, бомба, дрон, крылатая, баллистика; cleanTgt (мусор, пустой и полный набор - «все»);
+// 2) «Мульти-волна»: С-400 без дронов не пускает по дронам и пускает по крылатым, без фильтра - по обоим;
+// 3) оборона: «Панцирь» только по «бомбам» не стреляет по самолёту (ни ракетой, ни пушкой), без фильтра - стреляет; оператор (manual) фильтра не знает;
+// 4) строка «Цели» в «Обороне» (вся игра на заглушках страницы, как ui-test.js): в налёте - «самолёты» и «бомбы», последняя волна «Мульти-волной»
+//    (расстановка перед ней и сама волна) - «дроны» и «крылатые» (Mark 2026-11-02: кнопки «дроны» не было), «Обычный налёт» последней - как в налёте.
 const dir = new URL('.', import.meta.url).pathname;
 (0, eval)(Deno.readTextFileSync(dir + '../drone-headless/three.min.js'));
 const { buildCity } = await import('../../games/airdef/city.js');
@@ -18,13 +18,13 @@ let seed = 7; const rnd = () => ((seed = (seed * 16807) % 2147483647) / 21474836
 
 // ── 1. виды и разбор ──
 const mun = (key, o = {}) => ({ isMun: true, W: AG[key], ...o });
-check('самолёт — air', tgtCat({ role: 'bomber' }) === 'air' && tgtCat({ heli: true }) === 'air');
-check('ложная цель налёта: в «Мульти-волне» — cruise, в обороне от налёта — air (плашки «крылатые» там нет)', tgtCat({ role: 'decoy' }) === 'cruise' && tgtCat({ role: 'decoy' }, false) === 'air');
-check('бомба и ракета с самолёта — bomb', tgtCat(mun('gbu39')) === 'bomb' && tgtCat(mun('jassm')) === 'bomb' && tgtCat(mun('kab500kr')) === 'bomb');
-check('дроны — drone', tgtCat(mun('shahed', { ev: true })) === 'drone' && tgtCat(mun('scout_e', { ev: true })) === 'drone');
-check('крылатые и планирующие «Мульти-волны» — cruise', tgtCat(mun('kh101', { ev: true })) === 'cruise' && tgtCat(mun('jsow', { ev: true })) === 'cruise' && tgtCat(mun('slam', { ev: true })) === 'cruise');
-check('баллистика — tbm', tgtCat(mun('iskander', { ev: true })) === 'tbm' && tgtCat(mun('atacms', { ev: true })) === 'tbm');
-check('cleanTgt: мусор, пусто, полный набор — «все»', cleanTgt(null) === null && cleanTgt([]) === null && cleanTgt(['x', 5, {}]) === null && cleanTgt('air') === null && cleanTgt([...TGT_CATS]) === null);
+check('самолёт - air', tgtCat({ role: 'bomber' }) === 'air' && tgtCat({ heli: true }) === 'air');
+check('ложная цель налёта: в «Мульти-волне» - cruise, в обороне от налёта - air (плашки «крылатые» там нет)', tgtCat({ role: 'decoy' }) === 'cruise' && tgtCat({ role: 'decoy' }, false) === 'air');
+check('бомба и ракета с самолёта - bomb', tgtCat(mun('gbu39')) === 'bomb' && tgtCat(mun('jassm')) === 'bomb' && tgtCat(mun('kab500kr')) === 'bomb');
+check('дроны - drone', tgtCat(mun('shahed', { ev: true })) === 'drone' && tgtCat(mun('scout_e', { ev: true })) === 'drone');
+check('крылатые и планирующие «Мульти-волны» - cruise', tgtCat(mun('kh101', { ev: true })) === 'cruise' && tgtCat(mun('jsow', { ev: true })) === 'cruise' && tgtCat(mun('slam', { ev: true })) === 'cruise');
+check('баллистика - tbm', tgtCat(mun('iskander', { ev: true })) === 'tbm' && tgtCat(mun('atacms', { ev: true })) === 'tbm');
+check('cleanTgt: мусор, пусто, полный набор - «все»', cleanTgt(null) === null && cleanTgt([]) === null && cleanTgt(['x', 5, {}]) === null && cleanTgt('air') === null && cleanTgt([...TGT_CATS]) === null);
 const cl = cleanTgt(['air', 'zzz', 'bomb', 'air']);
 check('cleanTgt: оставляет известные виды', cl && cl.size === 2 && cl.has('air') && cl.has('bomb'));
 
@@ -71,7 +71,7 @@ console.log('  без фильтра', JSON.stringify({ ...pAll, u: 0 }), '· т
 check('«Панцирь» без фильтра стреляет по самолёту', pAll.sams + pAll.guns > 0);
 check('«Панцирь» только по бомбам не стреляет по самолёту и не сопровождает его', pBomb.sams === 0 && pBomb.guns === 0 && !pBomb.track);
 check('«Панцирь» по бомбам и дронам не стреляет по самолёту', pBombDrone.sams === 0 && pBombDrone.guns === 0);
-// бомба, идущая на комплекс: «Панцирь» с фильтром «бомбы» её берёт, с фильтром «самолёты» — нет
+// бомба, идущая на комплекс: «Панцирь» с фильтром «бомбы» её берёт, с фильтром «самолёты» - нет
 function bombRun(tgt) {
   seed = 7;
   const a = makeCraft({ speed: 200 }); a.rcs = 5; a.hp = 1e6; a.pos.set(X0, 2500, Z0 + 5000); a.vel.set(0, 0, -200);
@@ -87,7 +87,7 @@ const bAll = bombRun(null), bBomb = bombRun(['bomb']), bAir = bombRun(['air']);
 console.log('  по бомбе: без фильтра', bAll, '· «бомбы»', bBomb, '· «самолёты»', bAir);
 check('«Панцирь» по бомбам берёт бомбу', bBomb > 0);
 check('«Панцирь» только по самолётам бомбу не берёт', bAir === 0);
-// оператор: ограничений нет — назначенный самолёт сопровождается, хотя фильтр его не включает
+// оператор: ограничений нет - назначенный самолёт сопровождается, хотя фильтр его не включает
 {
   seed = 7; const a = makeCraft({ speed: 200 }); a.rcs = 5; a.hp = 1e6; a.pos.set(X0 + 300, 600, Z0 + 3000); a.vel.set(0, 0, -50);
   const S = createStrike({ city, rnd, mode: () => MODES.real, aircraft: () => [a], laserSpot: () => null, night: 0, hurt() {}, fx: {} });
@@ -107,7 +107,7 @@ check('«Панцирь» только по самолётам бомбу не �
   check('с фильтром «бомбы» самолёт заново не берётся', !u.track);
   S.setTgt(u, null);
   for (let t = 0; t < 10 && !u.track; t += 0.05) { a.pos.addScaledVector(a.vel, 0.05); S.step(0.05); }
-  check('«Все» — самолёт снова берётся', u.track === a);
+  check('«Все» - самолёт снова берётся', u.track === a);
 }
 
 // ── 4. «Оборона»: строка «Цели» в последней волне «Мульти-волной» (defense.js tmode) ──
@@ -132,7 +132,7 @@ check('«Панцирь» только по самолётам бомбу не �
   });
   Object.defineProperty(globalThis, 'localStorage', { value: { getItem: (k) => store[k] ?? null, setItem: (k, v) => { store[k] = String(v); } }, configurable: true, writable: true });
   let rafCb = null; globalThis.requestAnimationFrame = (f) => { rafCb = f; return 1; };
-  THREE.WebGLRenderer = class { // рендерер-заглушка: все вызовы WebGL — пустые
+  THREE.WebGLRenderer = class { // рендерер-заглушка: все вызовы WebGL - пустые
     constructor() { this.shadowMap = { enabled: false, autoUpdate: true }; this.capabilities = { isWebGL2: true, getMaxAnisotropy: () => 4 }; this.toneMapping = 0; this.outputEncoding = 0; this.toneMappingExposure = 1; this.autoClear = true; this._pr = 1; this.domElement = el('c'); this.info = { memory: {}, programs: [], render: { calls: 0, triangles: 0 }, reset() {} }; }
     setPixelRatio(p) { this._pr = p; } getPixelRatio() { return this._pr; } setSize() {} render() {} compile() {} setRenderTarget() {} getRenderTarget() { return null; }
     setScissor() {} setScissorTest() {} setViewport() {} clear() {} getContext() { return {}; } getClearColor(c) { return c; } getClearAlpha() { return 1; } setClearColor() {}
@@ -153,15 +153,15 @@ check('«Панцирь» только по самолётам бомбу не �
   st.wave = st.waves - 1; // как будто прошли все волны, кроме последней
   C.setup.cs = false; const kPlain = show(); C.setup.cs = true; const kPlan = show();
   D.startWave(); frames(10); const kWave = show();
-  console.log(`  «Панцирь», кнопки «Цели»: налёт — ${k1} · перед последней «Мульти-волной» — ${kPlan} · в ней — ${kWave} · «Обычный налёт» последней — ${kPlain}`);
+  console.log(`  «Панцирь», кнопки «Цели»: налёт - ${k1} · перед последней «Мульти-волной» - ${kPlan} · в ней - ${kWave} · «Обычный налёт» последней - ${kPlain}`);
   check('«Оборона», налёт: «самолёты» и «бомбы»', k1 === 'air,bomb');
   check('«Оборона», расстановка перед последней волной «Мульти-волной»: «дроны» и «крылатые»', kPlan === 'drone,cruise');
   check('«Оборона», последняя волна «Мульти-волной» идёт: «дроны» и «крылатые»', !!C.ev && kWave === 'drone,cruise', C.ev ? '' : 'удара нет');
   check('«Оборона», последняя волна «Обычным налётом»: как в налёте', kPlain === 'air,bomb');
   press('tg', 'cruise');
-  check('последняя волна: «крылатые» выключены — дроны берутся, самолёты (кнопки нет) не выключаются', u.tgt && u.tgt.has('drone') && !u.tgt.has('cruise') && u.tgt.has('air'), u.tgt ? [...u.tgt].join(',') : 'все');
-  check('последняя волна: в сводке комплекса — «цели: дроны»', byId('dside').innerHTML.includes('цели: дроны'));
-  press('tgall'); check('последняя волна: «Все» — снова все', !u.tgt);
+  check('последняя волна: «крылатые» выключены - дроны берутся, самолёты (кнопки нет) не выключаются', u.tgt && u.tgt.has('drone') && !u.tgt.has('cruise') && u.tgt.has('air'), u.tgt ? [...u.tgt].join(',') : 'все');
+  check('последняя волна: в сводке комплекса - «цели: дроны»', byId('dside').innerHTML.includes('цели: дроны'));
+  press('tgall'); check('последняя волна: «Все» - снова все', !u.tgt);
   check('ошибок выполнения нет', !errors.length, errors.slice(0, 3).join(' | '));
 }
 console.log(fails ? `ИТОГ: ошибок ${fails}` : 'ИТОГ: всё прошло');

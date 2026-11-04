@@ -11,7 +11,7 @@ export async function ticket(pid, login) {
   const body = b64u(enc.encode(JSON.stringify({ pid, login, exp: Math.floor(Date.now() / 1000) + 600 })));
   return body + '.' + b64u(new Uint8Array(await crypto.subtle.sign('HMAC', key, enc.encode(body))));
 }
-// итог боя: проверить подпись и вернуть тело (null — подпись неверна)
+// итог боя: проверить подпись и вернуть тело (null - подпись неверна)
 export async function readResult(token) {
   key ||= await crypto.subtle.importKey('raw', enc.encode(SECRET), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign', 'verify']);
   const [body, sig] = String(token || '').split('.');

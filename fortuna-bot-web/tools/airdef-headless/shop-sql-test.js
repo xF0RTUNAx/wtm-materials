@@ -1,4 +1,4 @@
-// Проверка sql/028_airdef_shop.sql без боевой базы (PGlite, как season-sql-test.js): магазин окрасок — купить за кристаллы, взять «на выбор»,
+// Проверка sql/028_airdef_shop.sql без боевой базы (PGlite, как season-sql-test.js): магазин окрасок - купить за кристаллы, взять «на выбор»,
 // надеть и снять; чужую, «будущую» и уже свою окраску не купить, кристаллы в минус не уходят, повторное нажатие не списывает дважды; права.
 //   deno run -A tools/airdef-headless/shop-sql-test.js
 import { PGlite } from 'npm:@electric-sql/pglite@0.2.17';
@@ -12,7 +12,7 @@ await db.exec(`create role service_role; create role anon; create role authentic
   create table players (id uuid primary key default gen_random_uuid(), login text unique not null, password_hash text not null, full_name text,
     created_at timestamptz not null default now(), last_seen timestamptz not null default now());`);
 for (const f of ['020_airdef_online.sql', '021_airdef_progress.sql', '022_airdef_accounts_rating.sql', '024_airdef_season_rewards.sql', '025_airdef_rating_slots.sql', '027_airdef_offseason.sql', '028_airdef_shop.sql']) await db.exec(Deno.readTextFileSync(SQL + f));
-await db.exec(Deno.readTextFileSync(SQL + '028_airdef_shop.sql')); // повторно — без ошибок
+await db.exec(Deno.readTextFileSync(SQL + '028_airdef_shop.sql')); // повторно - без ошибок
 ok(true, 'миграции 020…028 (и 028 повторно) применились');
 
 const CAT = camosOut(1), [A, B] = CAT;
@@ -24,19 +24,19 @@ const wear = (pl, sk) => one('select airdef_shop_wear($1, $2, $3) r', [p, pl, sk
 const view = () => one('select airdef_wallet_view($1) r', [p]).then((x) => x.r);
 
 let v = await view();
-ok(v.crystals === 0 && v.camos.length === 0 && v.picks === 0 && JSON.stringify(v.worn) === '{}', 'кошелька нет — пустой вид');
+ok(v.crystals === 0 && v.camos.length === 0 && v.picks === 0 && JSON.stringify(v.worn) === '{}', 'кошелька нет - пустой вид');
 ok((await buy(A)).error === 'no_crystals', 'без кристаллов не купить');
 await db.query('update airdef_wallet set crystals = 320 where player_id = $1', [p]);
-ok((await buy('e_f35:sakura')).error === 'not_sold', 'окраска не из магазина (не вышла) — не купить');
+ok((await buy('e_f35:sakura')).error === 'not_sold', 'окраска не из магазина (не вышла) - не купить');
 let r = await buy(A);
 ok(r.wallet && r.wallet.crystals === 170 && r.wallet.camos.includes(A), `купить ${A}: 320 → ${r.wallet && r.wallet.crystals}`);
-ok((await buy(A)).error === 'owned', 'свою — второй раз не купить (кристаллы не списаны)');
+ok((await buy(A)).error === 'owned', 'свою - второй раз не купить (кристаллы не списаны)');
 ok((await view()).crystals === 170, 'после отказа кристаллов столько же');
 r = await buy(B);
 ok(r.wallet && r.wallet.crystals === 20 && r.wallet.camos.length === 2, 'вторая покупка: 170 → 20');
 await db.query('update airdef_wallet set camos = $2, crystals = 100 where player_id = $1', [p, [A]]);
-ok((await buy(B)).error === 'no_crystals' && (await view()).crystals === 100, 'не хватает — отказ, в минус не уходит');
-// два нажатия сразу (обе в одной транзакции не проверить; проверяем, что второе после первого — «уже своя»)
+ok((await buy(B)).error === 'no_crystals' && (await view()).crystals === 100, 'не хватает - отказ, в минус не уходит');
+// два нажатия сразу (обе в одной транзакции не проверить; проверяем, что второе после первого - «уже своя»)
 await db.query('update airdef_wallet set crystals = 300 where player_id = $1', [p]);
 const [x1, x2] = [await buy(B), await buy(B)];
 ok(x1.wallet && x2.error === 'owned' && (await view()).crystals === 150, 'повторное нажатие «Купить» не списывает дважды');
@@ -44,23 +44,23 @@ ok(x1.wallet && x2.error === 'owned' && (await view()).crystals === 150, 'пов
 await db.query('update airdef_wallet set camos = $2, picks = 0 where player_id = $1', [p, [A]]);
 ok((await pick(B)).error === 'no_pick', 'без «на выбор» не взять');
 await db.query('update airdef_wallet set picks = 1 where player_id = $1', [p]);
-ok((await pick(A)).error === 'owned', '«на выбор» — свою не взять, выбор не сгорает');
+ok((await pick(A)).error === 'owned', '«на выбор» - свою не взять, выбор не сгорает');
 r = await pick(B);
 ok(r.wallet && r.wallet.picks === 0 && r.wallet.camos.includes(B) && r.wallet.crystals === 150, 'взять на выбор: picks 1 → 0, кристаллы те же');
-ok((await pick('e_tu22:milk')).error === 'not_sold', '«на выбор» — только из магазина');
+ok((await pick('e_tu22:milk')).error === 'not_sold', '«на выбор» - только из магазина');
 // надеть / снять
 ok((await wear('e_f35', 'sakura')).error === 'not_owned', 'чужую окраску не надеть');
 r = await wear('e_f15e', 'inferno');
 ok(r.wallet && r.wallet.worn.e_f15e === 'inferno', 'надеть «Инферно» на F-15E');
 r = await wear('e_mig31', 'dragon');
-ok(r.wallet && r.wallet.worn.e_f15e === 'inferno' && r.wallet.worn.e_mig31 === 'dragon', 'вторая — на другой самолёт, первая на месте');
+ok(r.wallet && r.wallet.worn.e_f15e === 'inferno' && r.wallet.worn.e_mig31 === 'dragon', 'вторая - на другой самолёт, первая на месте');
 r = await wear('e_f15e', null);
 ok(r.wallet && !('e_f15e' in r.wallet.worn) && r.wallet.worn.e_mig31 === 'dragon', 'снять с F-15E');
 let threw = false; try { await wear("x'; drop", null); } catch (_) { threw = true; }
 ok(threw, 'имя самолёта проверяется');
 threw = false; try { await buy(A, 0); } catch (_) { threw = true; }
-ok(threw, 'нулевая цена — ошибка');
-// аватарки (Mark 2026-11-04): те же функции и поля кошелька, ключ 'ava:…', своя цена и каталог; файлы — tools/airdef-ui/avatars-import.js
+ok(threw, 'нулевая цена - ошибка');
+// аватарки (Mark 2026-11-04): те же функции и поля кошелька, ключ 'ava:…', своя цена и каталог; файлы - tools/airdef-ui/avatars-import.js
 {
   ok(AVA_SHOP.length === 10 && new Set(AVA_SHOP).size === 10 && !AVA_SHOP.includes(AVA_DEFAULT) && AVA_PRICE === 20, `каталог аватарок: 10 разных, не считая ${AVA_DEFAULT} по умолчанию, цена ${AVA_PRICE}`);
   const AV = new URL('../../games/airdef/ui/avatars/', import.meta.url).pathname, has = (f) => { try { return Deno.statSync(AV + f).size > 0; } catch (_) { return false; } };
@@ -70,7 +70,7 @@ ok(threw, 'нулевая цена — ошибка');
   const awear = (sk) => one('select airdef_shop_wear($1, $2, $3) r', [id, 'ava', sk]).then((r) => r.r);
   ok((await abuy(avaKey(x))).error === 'no_crystals', 'аватарка: без кристаллов не купить');
   await db.query('update airdef_wallet set crystals = 25 where player_id = $1', [id]);
-  ok((await abuy('ava:' + AVA_DEFAULT)).error === 'not_sold' && (await abuy('ava:a03')).error === 'not_sold', 'аватарка: по умолчанию и не из магазина — не купить');
+  ok((await abuy('ava:' + AVA_DEFAULT)).error === 'not_sold' && (await abuy('ava:a03')).error === 'not_sold', 'аватарка: по умолчанию и не из магазина - не купить');
   ok((await awear(x)).error === 'not_owned', 'аватарка: чужую не надеть');
   const b1 = await abuy(avaKey(x));
   ok(b1.wallet && b1.wallet.crystals === 5 && b1.wallet.camos.includes(avaKey(x)), 'аватарка: куплена за 20, осталось 5');

@@ -1,82 +1,82 @@
 // Онлайн «Воздушного превосходства»: общие правила сервера (game-server/airdef-rooms.js) и клиента (airdef/online.js).
-// Решения Mark — AIRDEF_PLAN.md, «Онлайн — решения Mark». Команды: авиация (air) против ПВО (pvo), три волны.
+// Решения Mark - AIRDEF_PLAN.md, «Онлайн - решения Mark». Команды: авиация (air) против ПВО (pvo), три волны.
 // Бой целиком считает сервер той же логикой, что одиночная игра (sim/strike.js, sim/raid.js); клиенты рисуют по снимкам.
 /* global THREE */
 import { tr } from '../i18n.js?v=20261104a';
 import { AG, SAM, SAM_COST, LOADOUTS, PLANES, loadoutRole, ROLE_NAME } from '../arsenal.js?v=20261104a';
 
-export const AD_PATH = '/ad';             // адрес WebSocket на том же сервере, что «Летка» (/ws — её)
+export const AD_PATH = '/ad';             // адрес WebSocket на том же сервере, что «Летка» (/ws - её)
 export const AD_MODES = ['arcade', 'real'];
 export const AD_SIZES = [1, 2, 3, 4, 5, 6]; // комнаты 1×1 … 6×6
 export const WAVES = 3;
-export const PLAN_T = 45;                 // расстановка и покупки перед волной, с (все «Готов» — раньше)
+export const PLAN_T = 45;                 // расстановка и покупки перед волной, с (все «Готов» - раньше)
 export const WAVE_T = 300;                // волна длится не дольше, с
 export const DEBRIEF_T = 10;              // итоги волны, с
 export const RESULTS_T = 25;              // итоги боя, с
 export const TICK_HZ = 30, SNAP_HZ = 15;
 export const RESPAWNS = [1, 3, 5];        // возрождений у лётчика на волну (1-я, 2-я, 3-я)
-export const RESPAWN_T = 6;               // через столько секунд после сбития — новый вылет с края карты
-export const WIN_K = 0.75;                // авиация побеждает, уничтожив столько ценности целей (иначе — ПВО)
+export const RESPAWN_T = 6;               // через столько секунд после сбития - новый вылет с края карты
+export const WIN_K = 0.75;                // авиация побеждает, уничтожив столько ценности целей (иначе - ПВО)
 export const QUEUE_MIN = 2;               // очередь: минимум 2 на 2 (люди по ролям; «любая» добирает недостающих)
-export const QUEUE_EXTRA_T = 15;          // набралось 2 на 2 — ждём ещё столько (вдруг зайдут ещё: 3 на 3, 4 на 4 …)
-export const QUEUE_BOTS_T = 60;           // людей мало дольше минуты — добираем ботами
+export const QUEUE_EXTRA_T = 15;          // набралось 2 на 2 - ждём ещё столько (вдруг зайдут ещё: 3 на 3, 4 на 4 …)
+export const QUEUE_BOTS_T = 60;           // людей мало дольше минуты - добираем ботами
 export const MAX_HP = 100;
 
-// классы ПВО для лимита первой волны (на игрока): 1 топовый и 1 средний; ближние (пушки, ПЗРК, «Стрела-1») — только за очки
+// классы ПВО для лимита первой волны (на игрока): 1 топовый и 1 средний; ближние (пушки, ПЗРК, «Стрела-1») - только за очки
 export const TOP = new Set(['s75', 's300', 's400', 'patriot', 'pac3', 'hawk', 'sampt']);
 export const MID = new Set(['s125', 'kub', 'bukm3', 'osa', 'tor', 'torm2', 'pantsir', 'nasams', 'roland', 'rapier', 'tunguska', 'hawk21']);
 export const samClass = (k) => (TOP.has(k) ? 'top' : MID.has(k) ? 'mid' : 'near');
-export const LIMIT1 = { top: 1, mid: 1 }; // первая волна: на игрока ПВО — 1 дальний и 1 средний комплекс
+export const LIMIT1 = { top: 1, mid: 1 }; // первая волна: на игрока ПВО - 1 дальний и 1 средний комплекс
 export const samCost = (k) => SAM_COST[k] || 100;
 
-// связка авиации — самолёт и подвеска из LOADOUTS эпохи: цена по самолёту и оружию
+// связка авиации - самолёт и подвеска из LOADOUTS эпохи: цена по самолёту и оружию
 const KIND_COST = { bomb: 12, lgb: 35, tvb: 40, gps: 45, agm: 45, arm: 55, cruise: 110, decoy: 35, ecm: 30 };
 export const PLANE_COST = 120;
 export const loadoutCost = (L) => PLANE_COST + L.items.reduce((s, [k, n]) => s + (KIND_COST[(AG[k] || {}).kind] || 40) * n, 0) + (L.pod ? 20 : 0);
-// роль связки в лобби: «охота за ПВО» (ПРР) или «штурмовка» (бомбы, ракеты по объектам) — arsenal.js loadoutRole
+// роль связки в лобби: «охота за ПВО» (ПРР) или «штурмовка» (бомбы, ракеты по объектам) - arsenal.js loadoutRole
 export const approachOf = (L) => ROLE_NAME[loadoutRole(L)];
 // ── баланс онлайна (решения Mark, 2026-10-13) ──
-// роли авиации: охотников за ПВО — не больше половины команды (при 1–2 лётчиках — один); остальные — штурмовка
+// роли авиации: охотников за ПВО - не больше половины команды (при 1-2 лётчиках - один); остальные - штурмовка
 export const huntCap = (nAir) => (nAir <= 2 ? 1 : Math.floor(nAir / 2));
-// others — подвески остальных лётчиков команды (null — ещё не выбрал); причина отказа или null
+// others - подвески остальных лётчиков команды (null - ещё не выбрал); причина отказа или null
 export function roleDeny(L, others, nAir) {
   if (loadoutRole(L) !== 'sead') return null;
   const h = others.filter((x) => x && loadoutRole(x) === 'sead').length, cap = huntCap(nAir);
-  return h >= cap ? tr('Охотников за ПВО в команде уже {0} (лимит {1}) — возьмите штурмовку', [h, cap]) : null;
+  return h >= cap ? tr('Охотников за ПВО в команде уже {0} (лимит {1}) - возьмите штурмовку', [h, cap]) : null;
 }
 // две фазы волны: первые SUPPRESS_T с у ПВО полная готовность, дальше каждый уничтоженный в этой волне комплекс с РЛС
-// замедляет перезарядку уцелевших на SUPPRESS_PER (не больше SUPPRESS_MAX) — охотник помогает ударникам, даже не разбив ни одной цели
+// замедляет перезарядку уцелевших на SUPPRESS_PER (не больше SUPPRESS_MAX) - охотник помогает ударникам, даже не разбив ни одной цели
 export const SUPPRESS_T = 90, SUPPRESS_PER = 0.15, SUPPRESS_MAX = 0.6;
 export const reloadKOf = (t, radarKills) => (t < SUPPRESS_T ? 1 : 1 + Math.min(SUPPRESS_MAX, radarKills * SUPPRESS_PER));
-// догоняющая механика: ведущая сторона (lead) платит больше — авиация за все связки, ПВО за дальние комплексы; отстающая авиация
+// догоняющая механика: ведущая сторона (lead) платит больше - авиация за все связки, ПВО за дальние комплексы; отстающая авиация
 // получает +1 возрождение на следующую волну (проигрывающим и так +20 % бюджета)
 export const LEAD_K = { air: 1.1, pvo: 1.15 };
 export const loadoutCostFor = (L, lead) => Math.round(loadoutCost(L) * (lead === 'air' ? LEAD_K.air : 1));
 export const samCostFor = (k, lead) => Math.round(samCost(k) * (lead === 'pvo' && samClass(k) === 'top' ? LEAD_K.pvo : 1));
-// в онлайн — без вертолётов и без подвесок с НАР (сервер пока не умеет залп НАР одним сообщением: 4 сброса подряд → «Слишком часто»)
-export const netOk = (L) => !L.heli; // вертолёты — пока только одиночная игра; НАР — с 2026-10-22 (залп одним сообщением 'rel' n)
+// в онлайн - без вертолётов и без подвесок с НАР (сервер пока не умеет залп НАР одним сообщением: 4 сброса подряд → «Слишком часто»)
+export const netOk = (L) => !L.heli; // вертолёты - пока только одиночная игра; НАР - с 2026-10-22 (залп одним сообщением 'rel' n)
 export const bundleOf = (era, side, i) => { const L = LOADOUTS[era][i]; return L && L.side === side && netOk(L) ? L : null; };
 export const bundleName = (L) => `${PLANES[L.plane] || L.plane} · ${L.name}`;
 
-// бюджеты: первая волна — поровну; дальше — база + за результат волны, проигрывающей стороне +20 %
+// бюджеты: первая волна - поровну; дальше - база + за результат волны, проигрывающей стороне +20 %
 export const BUDGET0 = { air: 420, pvo: 1100 };
-// res: { valueK — доля ценности целей, уничтоженная за волну; downs — сбито самолётов; unitKills — уничтожено комплексов }
+// res: { valueK - доля ценности целей, уничтоженная за волну; downs - сбито самолётов; unitKills - уничтожено комплексов }
 export function waveBudget(team, res, losing) {
-  // ПВО: за сбитого охотника за ПВО — больше (он опаснее для комплексов): 90 против 70
+  // ПВО: за сбитого охотника за ПВО - больше (он опаснее для комплексов): 90 против 70
   const b = team === 'air' ? 380 + res.valueK * 700 + res.unitKills * 50 : 450 + res.downs * 70 + (res.downsSead || 0) * 20 + (1 - res.valueK) * 300;
   return Math.round(b * (losing ? 1.2 : 1));
 }
 
-// снимок самолёта: [id, флаги, hp, x, y, z, yaw, pitch, roll, speed, thr] — флаги: 1 жив, 2 форсаж, 4 улетел (вне карты)
+// снимок самолёта: [id, флаги, hp, x, y, z, yaw, pitch, roll, speed, thr] - флаги: 1 жив, 2 форсаж, 4 улетел (вне карты)
 export const A_ALIVE = 1, A_AB = 2, A_OUT = 4;
 const r1 = (v) => Math.round(v * 10) / 10, r3 = (v) => Math.round(v * 1000) / 1000;
 export const packA = (a) => [a.id, (a.dead ? 0 : A_ALIVE) | (a.ab ? A_AB : 0) | (a.out ? A_OUT : 0), Math.round(a.hp), r1(a.pos.x), r1(a.pos.y), r1(a.pos.z),
   r3(a.yaw), r3(a.pitch), r3(a.roll), Math.round(a.speed), r3(a.thr || 0)];
-// комплекс: [id, флаги, lyaw, lel, track (id самолёта; летящее оружие — минус id; 0 — нет), ammo, reloadT, hp] — флаги: 1 уничтожен, 2 излучает, 4 пушка стреляет, 8 ручное
+// комплекс: [id, флаги, lyaw, lel, track (id самолёта; летящее оружие - минус id; 0 - нет), ammo, reloadT, hp] - флаги: 1 уничтожен, 2 излучает, 4 пушка стреляет, 8 ручное
 export const U_DEAD = 1, U_EMIT = 2, U_GUN = 4, U_MAN = 8;
 export const packU = (u) => [u.id, (u.dead ? U_DEAD : 0) | (u.emit ? U_EMIT : 0) | (u.gunOn ? U_GUN : 0) | (u.manual ? U_MAN : 0), r3(u.lyaw), r3(u.lel),
-  u.track ? (u.track.isMun ? -u.track.id : u.track.id) : 0, Math.round(u.ammo * 10) / 10, r1(u.reloadT), Math.round(u.hp), r1(u.seeT || 0)]; // seeT — набор захвата (процент у оператора)
-// ЗУР: [id, x, y, z, dx, dy, dz, speed, флаги, target] — флаги: 1 двигатель запущен, 2 ускоритель отделён, 4 потеряла цель / уведена
+  u.track ? (u.track.isMun ? -u.track.id : u.track.id) : 0, Math.round(u.ammo * 10) / 10, r1(u.reloadT), Math.round(u.hp), r1(u.seeT || 0)]; // seeT - набор захвата (процент у оператора)
+// ЗУР: [id, x, y, z, dx, dy, dz, speed, флаги, target] - флаги: 1 двигатель запущен, 2 ускоритель отделён, 4 потеряла цель / уведена
 export const M_MOTOR = 1, M_STAGED = 2, M_LOST = 4;
 export const packM = (m) => [m.id, r1(m.pos.x), r1(m.pos.y), r1(m.pos.z), r3(m.dir.x), r3(m.dir.y), r3(m.dir.z), Math.round(m.speed),
   (m.lit ? M_MOTOR : 0) | (m.staged ? M_STAGED : 0) | (m.lost || m.decoy ? M_LOST : 0), m.target ? m.target.id : 0];
@@ -95,13 +95,13 @@ export const cleanCode = (s) => String(s || '').toUpperCase().replace(/[^A-Z0-9]
 export const ROLE_NAMES = { air: tr('Авиация'), pvo: tr('ПВО') };
 export const samOk = (k, era, side) => !!SAM[k] && SAM[k].era <= era && SAM[k].side === side;
 
-// ── зона пополнения (решение Mark 2026-10-12): круг радиусом R над землёй; лётчик пробыл в нём STAY с — пополнение: топливо
-// (FUEL раз за вылет) и боекомплект с ловушками (AMMO раз за вылет). Раз в MOVE с зона переезжает — но не пока в ней кто-то
-// пополняется: дождётся конца. Одиночный «Вылет» считает её у себя (air.js), онлайн — сервер (airdef-rooms.js) ──
+// ── зона пополнения (решение Mark 2026-10-12): круг радиусом R над землёй; лётчик пробыл в нём STAY с - пополнение: топливо
+// (FUEL раз за вылет) и боекомплект с ловушками (AMMO раз за вылет). Раз в MOVE с зона переезжает - но не пока в ней кто-то
+// пополняется: дождётся конца. Одиночный «Вылет» считает её у себя (air.js), онлайн - сервер (airdef-rooms.js) ──
 // «Нужна помощь»: не чаще раза в HELP_CD с (сервер и игра); метка у союзников горит HELP_T с
 export const HELP_CD = 20, HELP_T = 5;
 export const ZONE = { R: 1200, STAY: 12, MOVE: 30, FUEL: 1, AMMO: 2 };
-// новое место: кольцо 6,5–11,5 км от центра, не ближе 5 км к прежнему
+// новое место: кольцо 6,5-11,5 км от центра, не ближе 5 км к прежнему
 export function zoneSpot(rnd, prev) {
   for (let k = 0; k < 40; k++) {
     const a = rnd() * Math.PI * 2, d = 6500 + rnd() * 5000, x = Math.round(Math.sin(a) * d), z = Math.round(Math.cos(a) * d);
@@ -110,7 +110,7 @@ export function zoneSpot(rnd, prev) {
   return { x: prev ? -prev.x : 8000, z: prev ? -prev.z : 0 };
 }
 export const newZone = (rnd) => ({ ...zoneSpot(rnd, null), t: 0, busy: false });
-// шаг: list — лётчики { pos, zT }; need(it) → { fuel, ammo } (что ему ещё можно и нужно); grant(it, n) — выдать.
+// шаг: list - лётчики { pos, zT }; need(it) → { fuel, ammo } (что ему ещё можно и нужно); grant(it, n) - выдать.
 // Возвращает true, если зона переехала
 export function zoneStep(Z, list, dt, rnd, need, grant) {
   Z.t += dt; let busy = false;
@@ -124,5 +124,5 @@ export function zoneStep(Z, list, dt, rnd, need, grant) {
   if (Z.t >= ZONE.MOVE && !busy) { Object.assign(Z, zoneSpot(rnd, Z)); Z.t = 0; return true; }
   return false;
 }
-// снимок зоны: [x, z, секунд до переезда (0 — ждёт пополняющегося)]
+// снимок зоны: [x, z, секунд до переезда (0 - ждёт пополняющегося)]
 export const packZ = (Z) => [Z.x, Z.z, Z.busy && Z.t >= ZONE.MOVE ? 0 : Math.max(0, Math.round(ZONE.MOVE - Z.t))];

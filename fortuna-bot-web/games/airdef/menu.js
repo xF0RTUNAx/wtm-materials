@@ -1,5 +1,5 @@
-// Главное меню: слева — режимы, справа — «папка задания» (настройки режима и старт), Арсенал / Справка / Настройки /
-// Об игре — панель поверх. Фон — готовые кадры (menubg.js), пока их нет — живой бой (director.js).
+// Главное меню: слева - режимы, справа - «папка задания» (настройки режима и старт), Арсенал / Справка / Настройки /
+// Об игре - панель поверх. Фон - готовые кадры (menubg.js), пока их нет - живой бой (director.js).
 import { LANG, LANGS, setLang, tr, trIf, trDom } from './i18n.js?v=20261104a';
 import { CITY, ZONE } from './city.js?v=20261104a';
 import { AG, SAM, ERAS, LOADOUTS, DEFENSE, SAM_TYPE, AG_KIND, SAM_COST, PLANES, loadoutsOf, loadoutRole, loadoutTargets, ROLE_NAME, COMBINED, CARRIERS, MULTI, multiBudget, multiItems } from './arsenal.js?v=20261104a';
@@ -29,15 +29,15 @@ const GAMES = [
 ];
 const TIPS = [
   tr('Здания закрывают РЛС обзор: на малой высоте между домами комплекс видит вас урывками и не успевает выстрелить.'),
-  tr('Лазерную бомбу нужно подсвечивать до попадания. Отвернули так, что контейнер закрыло корпусом, — бомба упадёт мимо.'),
-  tr('Shrike летит только на включённую РЛС. HARM и Х-58 помнят место станции — спасёт лишь переезд.'),
-  tr('Против полуактивной ракеты («Куб», Hawk) — «траверз»: поставьте РЛС на 3 или 9 часов и снижайтесь, когерентная станция потеряет вас в доплеровском провале.'),
-  tr('Диполи хорошо работают против старых РЛС (С-75), а против когерентных — только если идти поперёк луча.'),
+  tr('Лазерную бомбу нужно подсвечивать до попадания. Отвернули так, что контейнер закрыло корпусом, - бомба упадёт мимо.'),
+  tr('Shrike летит только на включённую РЛС. HARM и Х-58 помнят место станции - спасёт лишь переезд.'),
+  tr('Против полуактивной ракеты («Куб», Hawk) - «траверз»: поставьте РЛС на 3 или 9 часов и снижайтесь, когерентная станция потеряет вас в доплеровском провале.'),
+  tr('Диполи хорошо работают против старых РЛС (С-75), а против когерентных - только если идти поперёк луча.'),
   tr('ПЗРК на крышах не видны на СПО: о них предупредит только датчик пуска. Отстреливайте ловушки сразу.'),
   tr('В обороне смотрите на «тени» зон: здание рядом с комплексом может закрыть целый сектор на малой высоте.'),
   tr('Оператору командного ЗРК: «три точки» надёжнее по манёвренной цели, «половинное спрямление» экономит энергию ракеты по быстрой цели, идущей поперёк.'),
-  tr('Опытный расчёт выключает РЛС при пуске противорадиолокационной ракеты. В обороне это делаете вы — кнопка «РЛС».'),
-  // «ТВ-головки ночью не видят…» — вернуть вместе с ночью (сейчас темнота боя только у ночи: main.js NIGHT; вечером совет был бы неверен)
+  tr('Опытный расчёт выключает РЛС при пуске противорадиолокационной ракеты. В обороне это делаете вы - кнопка «РЛС».'),
+  // «ТВ-головки ночью не видят…» - вернуть вместе с ночью (сейчас темнота боя только у ночи: main.js NIGHT; вечером совет был бы неверен)
   tr('Засада: комплекс с выключенной РЛС не виден на СПО и включается, только когда сеть ПВО сообщит о цели рядом.'),
   tr('Пушкам нужно упреждение: ведите ствол в кружок впереди самолёта, а не на сам самолёт.'),
 ];
@@ -61,34 +61,34 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
     $('mpKind').textContent = G.name; $('mpTitle').textContent = G.desc[0].toUpperCase() + G.desc.slice(1);
     $('startBtn').textContent = setup.game === 'online' ? C.online.primaryText() : setup.game === 'training' ? tr('Начать урок') : setup.game === 'photo' ? tr('Снимать') : setup.game === 'defense' || (setup.game === 'multi' && setup.mrole !== 'atk') ? tr('К расстановке') : setup.game === 'multi' ? tr('К плану волны') : tr('Взлёт');
   }
-  // пройденные уроки по id; записи прежнего обучения («air0»… — по номеру) переносятся на те же уроки нового учебника
+  // пройденные уроки по id; записи прежнего обучения («air0»… - по номеру) переносятся на те же уроки нового учебника
   const OLD = { air: ['ctl', 'bomb', 'lgb', 'agm', 'arm', 'evade'], def: ['d_plan', 'd_op', 'd_gun', 'd_ir', 'd_arm', 'd_short'] };
   function lessonsDone() { const l = stats().lessons || {}, out = { ...l }; for (const sd in OLD) OLD[sd].forEach((id, i) => { if (l[sd + i]) out[id] = 1; }); return out; }
-  // панель задания справа (Mark 2026-10-25): при запуске убрана, выезжает при выборе режима, «›» — убрать; открыта ли — на сеанс вкладки
-  // (смена режима с другой картой перезагружает страницу — панель должна остаться открытой); онлайн по ссылке — сразу открыта
+  // панель задания справа (Mark 2026-10-25): при запуске убрана, выезжает при выборе режима, «›» - убрать; открыта ли - на сеанс вкладки
+  // (смена режима с другой картой перезагружает страницу - панель должна остаться открытой); онлайн по ссылке - сразу открыта
   const mpKey = 'fortuna_airdef_mpanel';
-  function panel(on) { document.body.classList.toggle('mpOpen', on); if (C.hangar && C.hangar.panelChanged) C.hangar.panelChanged(); try { sessionStorage.setItem(mpKey, on ? '1' : '0'); } catch (_) { /* нет хранилища — только на эту загрузку */ } }
-  { const q = new URLSearchParams(location.search), must = q.get('mp') === '1' || q.has('ad'); let on = q.get('oldbg') !== '1'; /* ангар: подвеска на виду, «›» — убрать */ try { const st = sessionStorage.getItem(mpKey); on = st === '1' || (on && st !== '0'); } catch (_) { /* как есть */ } panel(on || must); }
+  function panel(on) { document.body.classList.toggle('mpOpen', on); if (C.hangar && C.hangar.panelChanged) C.hangar.panelChanged(); try { sessionStorage.setItem(mpKey, on ? '1' : '0'); } catch (_) { /* нет хранилища - только на эту загрузку */ } }
+  { const q = new URLSearchParams(location.search), must = q.get('mp') === '1' || q.has('ad'); let on = q.get('oldbg') !== '1'; /* ангар: подвеска на виду, «›» - убрать */ try { const st = sessionStorage.getItem(mpKey); on = st === '1' || (on && st !== '0'); } catch (_) { /* как есть */ } panel(on || must); }
   $('mpClose').onclick = () => { snd.click(); panel(false); };
   $('hgStrip').onclick = (e) => { const b = e.target.closest('[data-hgp]'); if (!b) return; panel(true); if (b.dataset.hgp === hgPlane) return; snd.click(); hgPlane = b.dataset.hgp; render(); save(); };
   $('modeSel').onclick = (e) => {
-    const b = e.target.closest('button'); if (!b) return; panel(true); setup.game = b.dataset.g; setup.evd = false; save(); // evd — оборона события на осенней карте (event.js): обычное меню её сбрасывает
-    if (setup.game === 'online' && C.RAND_MAPS.includes(C.MAP)) C.ls.set('fortuna_ad_omap', C.MAP); // онлайн «Вылет и оборона»: карту даст комната — пока подходит загруженная
-    if (C.wantMap(setup.game, setup.pmap, setup.era, -1, false) !== C.MAP) { const u = new URL(location.href); u.searchParams.delete('mp'); u.searchParams.delete('ad'); if (setup.game === 'online') u.searchParams.set('mp', '1'); location.replace(u.href); return; } // «Мульти-волна» — на зимней карте, остальное — на городе
+    const b = e.target.closest('button'); if (!b) return; panel(true); setup.game = b.dataset.g; setup.evd = false; save(); // evd - оборона события на осенней карте (event.js): обычное меню её сбрасывает
+    if (setup.game === 'online' && C.RAND_MAPS.includes(C.MAP)) C.ls.set('fortuna_ad_omap', C.MAP); // онлайн «Вылет и оборона»: карту даст комната - пока подходит загруженная
+    if (C.wantMap(setup.game, setup.pmap, setup.era, -1, false) !== C.MAP) { const u = new URL(location.href); u.searchParams.delete('mp'); u.searchParams.delete('ad'); if (setup.game === 'online') u.searchParams.set('mp', '1'); location.replace(u.href); return; } // «Мульти-волна» - на зимней карте, остальное - на городе
     if (tab !== 'play') { tab = 'play'; showTab(); } if (C.ctrl && C.ctrl.modeChanged) C.ctrl.modeChanged();
-    // ночи в онлайне пока нет (решение Mark 2026-10-12): погода строится при загрузке — перезагрузка вечером, сразу в раздел онлайна
+    // ночи в онлайне пока нет (решение Mark 2026-10-12): погода строится при загрузке - перезагрузка вечером, сразу в раздел онлайна
     if (setup.game === 'online' && C.W_KEY === 'night') { const u = new URL(location.href); u.searchParams.set('weather', 'evening'); u.searchParams.set('mp', '1'); location.href = u.href; return; }
     render();
   };
   function renderPlay() {
     const g = setup.game, el = $('tab-play'); C.realBlock = false;
-    if (g === 'online') { C.online.panel(el); return; } // онлайн — свой раздел (online.js)
+    if (g === 'online') { C.online.panel(el); return; } // онлайн - свой раздел (online.js)
     if (g === 'training' && !setup.tlist) { el.innerHTML = renderFirst(); return; } // «Первые шаги»
     if (g === 'training') {
       const done = lessonsDone(), list = LESSONS[setup.tside];
-      // учебник: уроки по разделам («Основы», «Системы», «Бомбы»… / «Оборона», «Комплексы»…), номер — сквозной
-      const mw = setup.tside === 'matk' || setup.tside === 'mdef'; // учебник «Мульти-волны» — свои две ветки
-      let h = `<p class="hint"><button class="fsl" data-fs="wiz">${tr('‹ Первые шаги — подобрать урок по ответам')}</button></p><div class="prow"><span>${tr('Учебник')}</span>${seg('tbook', mw ? 'multi' : 'base', [['base', tr('Вылет и оборона')], ['multi', tr('Мульти-волна')]])}</div>
+      // учебник: уроки по разделам («Основы», «Системы», «Бомбы»… / «Оборона», «Комплексы»…), номер - сквозной
+      const mw = setup.tside === 'matk' || setup.tside === 'mdef'; // учебник «Мульти-волны» - свои две ветки
+      let h = `<p class="hint"><button class="fsl" data-fs="wiz">${tr('‹ Первые шаги - подобрать урок по ответам')}</button></p><div class="prow"><span>${tr('Учебник')}</span>${seg('tbook', mw ? 'multi' : 'base', [['base', tr('Вылет и оборона')], ['multi', tr('Мульти-волна')]])}</div>
         <div class="prow"><span>${tr('Сторона')}</span>${seg('tside', setup.tside, mw ? [['matk', tr('За волну')], ['mdef', tr('За ПВО')]] : [['air', tr('За самолёт')], ['heli', tr('За вертолёт')], ['def', tr('За ПВО')]])}</div>${mw ? '' : `
         <div class="prow"><span>${tr('Чьей техникой')}</span>${seg('tnat', setup.tside !== 'def' ? (setup.side === 'east' ? 'west' : 'east') : setup.side, [['east', tr('Восток')], ['west', tr('Запад')]])}</div>`}`, sec = null;
       list.forEach((l, i) => {
@@ -96,7 +96,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
         h += `<button class="opt ${i === setup.tl ? 'on' : ''} ${done[l.id] ? 'done' : ''}" data-tl="${i}"><div class="nm"><b>${i + 1}. ${trIf(l.name)}${done[l.id] ? ' ' + ico('ok', 'ii') : ''}</b><span>${trIf(l.desc)}</span></div></button>`;
       });
       el.innerHTML = h + (mw ? '<p class="hint">' + tr('Каждый урок: объяснение и шаги с подсказками в панели «Урок» (кнопка вверху справа; пока она открыта, игра на паузе). Уроки идут по порядку: от карты и первой покупки до контрольной волны.') + '</p>'
-        : '<p class="hint">' + tr('Каждый урок: объяснение, показ (самолёт всё делает сам), затем вы. Проиграть нельзя: урона нет, боеприпасы пополняются. Шаги — в панели «Урок» вверху справа (пока она открыта, игра на паузе). Кнопка «?» объясняет оружие или комплекс.') + '</p>');
+        : '<p class="hint">' + tr('Каждый урок: объяснение, показ (самолёт всё делает сам), затем вы. Проиграть нельзя: урона нет, боеприпасы пополняются. Шаги - в панели «Урок» вверху справа (пока она открыта, игра на паузе). Кнопка «?» объясняет оружие или комплекс.') + '</p>');
       return;
     }
     if (g === 'multi') { el.innerHTML = renderMulti(); return; }
@@ -108,17 +108,17 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
       const hg = C.hangar && C.hangar.has();
       const setRow = `<p class="hint">${tr('Комплексы: {0}.', [DEFENSE[setup.side][setup.era].map(([k]) => trIf(SAM[k].short)).join(', ')])}</p>`;
       const segs = h; if (!hg) h += `${setRow}<div class="cat-h">${tr('Подвеска')}</div>`;
-      // подвески стороны, которая атакует выбранную ПВО; у каждой — свой самолёт
-      const att = setup.side === 'east' ? 'west' : 'east', mine = loadoutsOf(setup.era, att).filter(([L]) => !L.heli); // вертолёты — в событии «Туманная топь» (event.js)
-      // «Реализм»: только подвески, у которых куплены самолёт и всё оружие (прокачка); закрытая — с замком и «нужно: …»
+      // подвески стороны, которая атакует выбранную ПВО; у каждой - свой самолёт
+      const att = setup.side === 'east' ? 'west' : 'east', mine = loadoutsOf(setup.era, att).filter(([L]) => !L.heli); // вертолёты - в событии «Туманная топь» (event.js)
+      // «Реализм»: только подвески, у которых куплены самолёт и всё оружие (прокачка); закрытая - с замком и «нужно: …»
       const can = ([L]) => !realLock() || C.progress.loadoutOk(L), open = mine.filter(can);
       if (!open.some(([, i]) => i === setup.lo)) setup.lo = (open[0] || mine[0])[1];
       const loBtn = ([L, i], attr, on) => { const miss = can([L]) ? [] : C.progress.loadoutMissing(L);
-        return `<button class="opt ${on && !miss.length ? 'on' : ''} ${miss.length ? 'lock' : ''}" ${miss.length ? `data-need="${miss[0].id}"` : `${attr}="${i}"`}><div class="nm"><b>${miss.length ? ico('lock') + ' ' : ''}${trIf(PLANES[L.plane])} · ${trIf(L.name)}</b><span class="role ${loadoutRole(L)}">${trIf(ROLE_NAME[loadoutRole(L)])}</span><span>${L.items.map(([k, n]) => `${trIf(AG[k].short)} ×${n}`).join(' · ')}${L.pod ? tr(' · контейнер') : ''}</span>${loadoutRole(L) !== 'sead' ? `<span class="tgn">${tr('целей: {0} — по силе подвески', [loadoutTargets(L)])}</span>` : ''}${miss.length ? `<span class="need">${tr('{0} — открыть в «Исследованиях»', [C.progress.needText(miss)])}</span>` : ''}</div>${L.items.map(([k]) => tags(AG[k].kind, trIf(AG_KIND[AG[k].kind]).split(',')[0].split(' ')[0])).filter((v, j, a) => a.indexOf(v) === j).join(' ')}</button>`; };
+        return `<button class="opt ${on && !miss.length ? 'on' : ''} ${miss.length ? 'lock' : ''}" ${miss.length ? `data-need="${miss[0].id}"` : `${attr}="${i}"`}><div class="nm"><b>${miss.length ? ico('lock') + ' ' : ''}${trIf(PLANES[L.plane])} · ${trIf(L.name)}</b><span class="role ${loadoutRole(L)}">${trIf(ROLE_NAME[loadoutRole(L)])}</span><span>${L.items.map(([k, n]) => `${trIf(AG[k].short)} ×${n}`).join(' · ')}${L.pod ? tr(' · контейнер') : ''}</span>${loadoutRole(L) !== 'sead' ? `<span class="tgn">${tr('целей: {0} - по силе подвески', [loadoutTargets(L)])}</span>` : ''}${miss.length ? `<span class="need">${tr('{0} - открыть в «Исследованиях»', [C.progress.needText(miss)])}</span>` : ''}</div>${L.items.map(([k]) => tags(AG[k].kind, trIf(AG_KIND[AG[k].kind]).split(',')[0].split(' ')[0])).filter((v, j, a) => a.indexOf(v) === j).join(' ')}</button>`; };
       C.realBlock = !open.length; C.realNeed = null;
       const noneHint = !open.length ? `<p class="hint need">${tr('В «Реализме» эпохи {0} нет подвески за эту сторону. Купите самолёт и оружие в «Исследованиях» или играйте в «Аркаде».', [ERAS[setup.era - 1].short])}</p>` : '';
       if (!hg) h += noneHint;
-      // «Операция»: два вылета — сначала охота за ПВО, потом удар (у стороны нет охотничьей подвески — только одиночный вылет)
+      // «Операция»: два вылета - сначала охота за ПВО, потом удар (у стороны нет охотничьей подвески - только одиночный вылет)
       const sead = mine.filter(([L]) => loadoutRole(L) === 'sead'), strike = mine.filter(([L]) => loadoutRole(L) !== 'sead');
       const seadOk = sead.filter(can), strikeOk = strike.filter(can);
       const canOp = seadOk.length > 0 && strikeOk.length > 0; if (!canOp) setup.op = false;
@@ -129,33 +129,33 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
         if (!seadOk.some(([, i]) => i === setup.lo1)) setup.lo1 = seadOk[0][1];
         if (!strikeOk.some(([, i]) => i === setup.lo2)) setup.lo2 = strikeOk[0][1];
         h += `<p class="hint">${tr('Сначала подавить ПВО, потом бить по городу. Разбитое в первом вылете остаётся разбитым, уцелевшие комплексы перезарядятся. Очки считаются за оба вылета, +300 за два возвращения.')}</p>`;
-        h += `<div class="cat-h">${tr('Вылет 1 — охота за ПВО')}</div>` + sead.map((x) => loBtn(x, 'data-lo1', x[1] === setup.lo1)).join('');
-        h += `<div class="cat-h">${tr('Вылет 2 — штурмовка')}</div>` + strike.map((x) => loBtn(x, 'data-lo2', x[1] === setup.lo2)).join('');
+        h += `<div class="cat-h">${tr('Вылет 1 - охота за ПВО')}</div>` + sead.map((x) => loBtn(x, 'data-lo1', x[1] === setup.lo1)).join('');
+        h += `<div class="cat-h">${tr('Вылет 2 - штурмовка')}</div>` + strike.map((x) => loBtn(x, 'data-lo2', x[1] === setup.lo2)).join('');
       } else if (hg) {
-        // лента внизу — самолёты стороны; в панели — подвески выбранного. Закрытый в «Реализме» самолёт можно смотреть, «Взлёт» ведёт в «Исследования»
+        // лента внизу - самолёты стороны; в панели - подвески выбранного. Закрытый в «Реализме» самолёт можно смотреть, «Взлёт» ведёт в «Исследования»
         const planes = mine.map(([L]) => L.plane).filter((p, i, a) => a.indexOf(p) === i), loPlane = LOADOUTS[setup.era][setup.lo].plane;
         if (!planes.includes(hgPlane)) hgPlane = planes.includes(loPlane) ? loPlane : planes[0];
         const own = mine.filter(([L]) => L.plane === hgPlane), ownOpen = own.filter(can);
         if (ownOpen.length && !ownOpen.some(([, i]) => i === setup.lo)) setup.lo = ownOpen[0][1];
-        if (!ownOpen.length) { C.realBlock = true; C.realNeed = C.progress.loadoutMissing(own[0][0])[0].id; hgGuide = own[0][0]; } else hgGuide = null; // описание внизу — про то, что на экране
+        if (!ownOpen.length) { C.realBlock = true; C.realNeed = C.progress.loadoutMissing(own[0][0])[0].id; hgGuide = own[0][0]; } else hgGuide = null; // описание внизу - про то, что на экране
         h += own.map(([L, i]) => { const miss = can([L, i]) ? [] : C.progress.loadoutMissing(L), onn = i === setup.lo && !miss.length;
-          return `<div class="opt hgl ${onn ? 'on' : ''} ${miss.length ? 'lock' : ''}" role="button" tabindex="0" ${miss.length ? `data-need="${miss[0].id}"` : `data-lo="${i}"`}><span class="hgr${planeMeta(L.plane) && planeMeta(L.plane).internal ? ' inb' : ''}">${wpnRows(L)}${planeMeta(L.plane) && planeMeta(L.plane).internal ? `<span class="hgw"><span class="wn"><i>${tr('во внутренних отсеках — снаружи не видно')}</i></span></span>` : ''}${L.pod ? `<span class="hgw"><span class="wn"><i>${tr('прицельный контейнер')}</i></span></span>` : ''}</span><span class="hgm"><span class="role ${loadoutRole(L)}">${trIf(ROLE_NAME[loadoutRole(L)])}</span>${loadoutRole(L) !== 'sead' ? `<span class="tgn">${tr('целей: {0} — по силе подвески', [loadoutTargets(L)])}</span>` : ''}</span>${miss.length ? `<span class="need">${miss.length ? ico('lock') + ' ' : ''}${tr('{0} — открыть в «Исследованиях»', [C.progress.needText(miss)])}</span>` : ''}</div>`; }).join('');
+          return `<div class="opt hgl ${onn ? 'on' : ''} ${miss.length ? 'lock' : ''}" role="button" tabindex="0" ${miss.length ? `data-need="${miss[0].id}"` : `data-lo="${i}"`}><span class="hgr${planeMeta(L.plane) && planeMeta(L.plane).internal ? ' inb' : ''}">${wpnRows(L)}${planeMeta(L.plane) && planeMeta(L.plane).internal ? `<span class="hgw"><span class="wn"><i>${tr('во внутренних отсеках - снаружи не видно')}</i></span></span>` : ''}${L.pod ? `<span class="hgw"><span class="wn"><i>${tr('прицельный контейнер')}</i></span></span>` : ''}</span><span class="hgm"><span class="role ${loadoutRole(L)}">${trIf(ROLE_NAME[loadoutRole(L)])}</span>${loadoutRole(L) !== 'sead' ? `<span class="tgn">${tr('целей: {0} - по силе подвески', [loadoutTargets(L)])}</span>` : ''}</span>${miss.length ? `<span class="need">${miss.length ? ico('lock') + ' ' : ''}${tr('{0} - открыть в «Исследованиях»', [C.progress.needText(miss)])}</span>` : ''}</div>`; }).join('');
         $('hgStrip').innerHTML = planes.map((p) => { const lk = !mine.some((x) => x[0].plane === p && can(x)); return `<button class="hgc${p === hgPlane ? ' on' : ''}${lk ? ' lock' : ''}" data-hgp="${p}"><b>${lk ? ico('lock') + ' ' : ''}${trIf(PLANES[p])}</b><img src="airdef/thumbs/air_${p}.webp?v=20261104a" alt="" loading="lazy"></button>`; }).join('');
         const sel = $('hgStrip').querySelector && $('hgStrip').querySelector('.hgc.on'); if (sel && sel.scrollIntoView) sel.scrollIntoView({ block: 'nearest', inline: 'nearest' });
-      } else h += mine.map((x) => loBtn(x, 'data-lo', x[1] === setup.lo)).join('') + `<p class="hint">${tr('«Охота за ПВО» — уничтожить комплексы с РЛС, «штурмовка» — цели города.')}</p>`;
+      } else h += mine.map((x) => loBtn(x, 'data-lo', x[1] === setup.lo)).join('') + `<p class="hint">${tr('«Охота за ПВО» - уничтожить комплексы с РЛС, «штурмовка» - цели города.')}</p>`;
       const L = (!setup.op && hgGuide) || LOADOUTS[setup.era][setup.op ? setup.lo1 : setup.lo];
-      h += `<p class="hint">${L.items.map(([k]) => `<b>${trIf(AG[k].short)}</b> — ${trIf(AG[k].guide)}`).join('<br>')}</p>`;
+      h += `<p class="hint">${L.items.map(([k]) => `<b>${trIf(AG[k].short)}</b> - ${trIf(AG[k].guide)}`).join('<br>')}</p>`;
     } else {
-      // последняя волна — «Мульти-волна» (если у атакующей стороны в эпохе есть чем ударить)
+      // последняя волна - «Мульти-волна» (если у атакующей стороны в эпохе есть чем ударить)
       const attS = setup.side === 'east' ? 'west' : 'east';
       if (combinedOk(attS, setup.era)) {
         h += `<div class="prow"><span>${tr('Последняя волна')}</span>${seg('cs', setup.cs === false ? 'off' : 'on', [['on', trIf(COMBINED_NAME)], ['off', tr('Обычный налёт')]])}</div>`;
-        if (setup.cs !== false) h += `<p class="hint">${tr('{0}: разведчик и {1}, затем крылатые ракеты с нескольких направлений на малой высоте, в конце оперативно-тактические: {2}. Баллистику сбивают только противоракетные комплексы ({3}).', [trIf(COMBINED_NAME), attS === 'east' && setup.era >= 4 ? tr('ударные дроны') : tr('ложные цели'), COMBINED[attS][setup.era].filter(([k]) => AG[k].kind === 'tbm').map(([k]) => trIf(AG[k].short)).join(', ') || tr('нет'), ['s300', 's400', 'patriot', 'pac3', 'bukm3'].filter((k) => SAM[k] && SAM[k].side === setup.side && SAM[k].era <= setup.era).map((k) => trIf(SAM[k].short)).join(', ') || tr('в этой эпохе — никто')])}</p>`;
+        if (setup.cs !== false) h += `<p class="hint">${tr('{0}: разведчик и {1}, затем крылатые ракеты с нескольких направлений на малой высоте, в конце оперативно-тактические: {2}. Баллистику сбивают только противоракетные комплексы ({3}).', [trIf(COMBINED_NAME), attS === 'east' && setup.era >= 4 ? tr('ударные дроны') : tr('ложные цели'), COMBINED[attS][setup.era].filter(([k]) => AG[k].kind === 'tbm').map(([k]) => trIf(AG[k].short)).join(', ') || tr('нет'), ['s300', 's400', 'patriot', 'pac3', 'bukm3'].filter((k) => SAM[k] && SAM[k].side === setup.side && SAM[k].era <= setup.era).map((k) => trIf(SAM[k].short)).join(', ') || tr('в этой эпохе - никто')])}</p>`;
       }
       const list = Object.entries(SAM).filter(([, s]) => s.side === setup.side && s.era <= setup.era);
       h += `<div class="cat-h">${tr('Комплексы в вашем распоряжении')}</div>` + list.map(([k, s]) => { const lk = realLock() && !C.progress.samOk(k);
-        return `<div class="opt ${lk ? 'lock' : ''}" ${lk ? `data-need="pvo:${k}"` : ''}><div class="nm"><b>${lk ? ico('lock') + ' ' : ''}${trIf(s.name)}${capsHtml(s, setup.game === 'multi' ? 'multi' : 'def')}</b><span>${tr('{0} · до {1} км, высота до {2} км', [trIf(SAM_TYPE[s.type]), (s.rmax / 1000).toFixed(1), (s.hmax / 1000).toFixed(1)])}</span>${lk ? `<span class="need">${tr('в «Реализме» — после покупки в «Исследованиях»')}</span>` : ''}</div><span class="pr">${tr('{0} очк', [SAM_COST[k]])}</span></div>`; }).join('') +
-        `<p class="hint">${tr('Перед каждой волной расставьте комплексы за очки обороны; между волнами можно докупить, перевезти и продать. Волн: {0}. Поражение — если потеряно 75 % ценности военных объектов. В бою можно сесть в любой комплекс оператором.', [C.WAVES])}</p>`;
+        return `<div class="opt ${lk ? 'lock' : ''}" ${lk ? `data-need="pvo:${k}"` : ''}><div class="nm"><b>${lk ? ico('lock') + ' ' : ''}${trIf(s.name)}${capsHtml(s, setup.game === 'multi' ? 'multi' : 'def')}</b><span>${tr('{0} · до {1} км, высота до {2} км', [trIf(SAM_TYPE[s.type]), (s.rmax / 1000).toFixed(1), (s.hmax / 1000).toFixed(1)])}</span>${lk ? `<span class="need">${tr('в «Реализме» - после покупки в «Исследованиях»')}</span>` : ''}</div><span class="pr">${tr('{0} очк', [SAM_COST[k]])}</span></div>`; }).join('') +
+        `<p class="hint">${tr('Перед каждой волной расставьте комплексы за очки обороны; между волнами можно докупить, перевезти и продать. Волн: {0}. Поражение - если потеряно 75 % ценности военных объектов. В бою можно сесть в любой комплекс оператором.', [C.WAVES])}</p>`;
     }
     el.innerHTML = h;
   }
@@ -170,29 +170,29 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
         [['random', tr('Случайная')], ...(C.MAP === 'winter' ? WINTER_KEYS : WEATHER_KEYS).map((k) => [k, trIf(WEATHERS[k].name)])])}</div>
       <p class="hint">${tr('Сейчас: {0}. Смена карты и погоды перезапускает страницу.', [trIf(C.W.name)])}</p>`;
     if (ps === 'air') {
-      const mine = loadoutsOf(setup.era, att).filter(([L]) => !L.heli); // вертолёты — в событии «Туманная топь»
+      const mine = loadoutsOf(setup.era, att).filter(([L]) => !L.heli); // вертолёты - в событии «Туманная топь»
       if (!mine.some(([, i]) => i === setup.lo)) setup.lo = mine[0][1];
       h += `<div class="prow"><span>${tr('Высота')}</span>${seg('palt', setup.palt || 'mid', [['low', tr('250 м')], ['mid', tr('1,5 км')], ['high', tr('4 км')]])}</div><div class="cat-h">${tr('Самолёт и подвеска')}</div>` +
         mine.map(([L, i]) => `<button class="opt ${i === setup.lo ? 'on' : ''}" data-lo="${i}"><div class="nm"><b>${trIf(PLANES[L.plane])} · ${trIf(L.name)}</b><span>${L.items.map(([k, n]) => `${trIf(AG[k].short)} ×${n}`).join(' · ')}${L.pod ? tr(' · контейнер') : ''}</span></div></button>`).join('') +
         '<p class="hint">' + tr('Самолёт сам летит от цели к цели, сбрасывает, пускает и ставит ловушки. Урона нет, подвеска пополняется. Камеру можно привязать к любому оружию на пилоне: сход с подвески и полёт до разрыва. На 250 м контейнер не берёт цели, лазерные и ТВ не пускаются.') + '</p>';
     } else if (ps === 'def') {
-      const list = Object.entries(SAM).filter(([, s]) => s.side === setup.side && s.era <= setup.era && s.type !== 'jammer'); // глушилки GPS не пускают — в съёмке снимать нечего (Mark 2026-10-27)
+      const list = Object.entries(SAM).filter(([, s]) => s.side === setup.side && s.era <= setup.era && s.type !== 'jammer'); // глушилки GPS не пускают - в съёмке снимать нечего (Mark 2026-10-27)
       if (!list.some(([k]) => k === setup.psam)) setup.psam = list[0][0];
       const canM = combinedOk(att, setup.era);
       h += `<div class="prow"><span>${tr('Против')}</span>${seg('pvs', canM && setup.pvs === 'multi' ? 'multi' : 'air', canM ? [['air', tr('Самолётов')], ['multi', trIf(COMBINED_NAME)]] : [['air', tr('Самолётов')]])}</div><div class="cat-h">${tr('Комплекс')}</div>` +
         list.map(([k, s]) => `<button class="opt ${k === setup.psam ? 'on' : ''}" data-psam="${k}"><div class="nm"><b>${trIf(s.name)}${capsHtml(s)}</b><span>${tr('{0} · до {1} км', [trIf(SAM_TYPE[s.type]), (s.rmax / 1000).toFixed(1)])}</span></div></button>`).join('') +
-        '<p class="hint">' + tr('Комплекс стоит у цели и отражает налёт за налётом: неуязвим, быстро перезаряжается. Вокруг — ИИ-ПВО города.') + '</p>';
+        '<p class="hint">' + tr('Комплекс стоит у цели и отражает налёт за налётом: неуязвим, быстро перезаряжается. Вокруг - ИИ-ПВО города.') + '</p>';
     } else {
       const items = photoItems(att);
       if (!items.some(([k]) => k === setup.pmun) && items.length) setup.pmun = items[0][0];
       h += `<div class="cat-h">${tr('Оружие волны')}</div>` + (items.length ? items.map(([k, via]) => `<button class="opt ${k === setup.pmun ? 'on' : ''}" data-pmun="${k}"><div class="nm"><b>${trIf(AG[k].name)}</b><span>${AG[k].recon ? tr('разведчик') : AG[k].uav ? tr('дрон') : AG[k].kind === 'tbm' ? (via ? tr('аэробаллистическая') : tr('баллистическая, с пусковой')) : tr('крылатая / планирующая')}${via ? tr(' · носитель {0}', [trIf(CARRIERS[via].name)]) : ''}</span></div></button>`).join('')
-        : '<p class="hint">' + tr('В этой эпохе у этой стороны нечего снять — выберите другую эпоху.') + '</p>') +
-        '<p class="hint">' + tr('Выбранное оружие снова и снова идёт на город: носитель или пусковая → пуск → полёт → перехват или попадание. ПВО города — ИИ.') + '</p>';
+        : '<p class="hint">' + tr('В этой эпохе у этой стороны нечего снять - выберите другую эпоху.') + '</p>') +
+        '<p class="hint">' + tr('Выбранное оружие снова и снова идёт на город: носитель или пусковая → пуск → полёт → перехват или попадание. ПВО города - ИИ.') + '</p>';
     }
-    return h + `<p class="hint">${iconize(tr('{0} Внизу — что снимать и ракурс, справа — зум, скорость (×½, ×¼, стоп-кадр) и ◎ — убрать весь интерфейс (тап по экрану вернёт).', [C.IS_TOUCH ? tr('Тяните по экрану — камера вокруг объекта, два пальца — ближе/дальше.') : tr('Мышь — вокруг объекта, колесо — ближе/дальше, ←/→ ракурс, ↑/↓ объект, H — спрятать интерфейс.')]))}</p>`;
+    return h + `<p class="hint">${iconize(tr('{0} Внизу - что снимать и ракурс, справа - зум, скорость (×½, ×¼, стоп-кадр) и ◎ - убрать весь интерфейс (тап по экрану вернёт).', [C.IS_TOUCH ? tr('Тяните по экрану - камера вокруг объекта, два пальца - ближе/дальше.') : tr('Мышь - вокруг объекта, колесо - ближе/дальше, ←/→ ракурс, ↑/↓ объект, H - спрятать интерфейс.')]))}</p>`;
   }
   // «Первые шаги» в обучении: за кого → опыт → первый урок по ответам (решение Mark 2026-10-13). Ответ про опыт ведёт к
-  // уроку: впервые — с самого начала, немного — к оружию, уверенно — к защите от ПВО (у ПВО — к защите от ПРР)
+  // уроку: впервые - с самого начала, немного - к оружию, уверенно - к защите от ПВО (у ПВО - к защите от ПРР)
   const FIRST = {
     air: { q: tr('Вы уже летали в авиасимуляторах?'), a: [['ctl', tr('Нет, впервые'), tr('начнём с управления самолётом')], ['bomb', tr('Да, немного'), tr('сразу к бомбам и ракетам')], ['evade', tr('Да, уверенно'), tr('к уклонению от ракет ПВО')]] },
     def: { q: tr('Вы уже играли за ПВО в похожих играх?'), a: [['d_plan', tr('Нет, впервые'), tr('начнём с расстановки комплексов')], ['d_op', tr('Да, немного'), tr('сразу к стрельбе из комплекса')], ['d_arm', tr('Да, уверенно'), tr('к защите от противорадарных ракет')]] },
@@ -233,30 +233,30 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
       <div class="prow"><span>${tr('Режим')}</span>${seg('diff', setup.diff, Object.entries(MODES).map(([k, m]) => [k, trIf(m.name)]))}</div><p class="hint">${trIf(MODES[setup.diff].desc)}</p>
       <p class="hint">${tr('Карта «Северный рубеж»: зимняя горная долина. Объекты разнесены: авиабаза, ГЭС на плотине, РЛС на вершине, арсенал в ущелье. Хребты прикрывают от РЛС и ракет.')}</p>`;
     const items = multiItems(att), carriers = [...new Set(items.map(([, v]) => v).filter(Boolean))].map((v) => trIf(CARRIERS[v].name));
-    h += `<div class="cat-h">${tr('Как идёт волна')}</div><p class="hint">${tr('1. <b>Дрон разведчик</b> (без боевой части, с камерой) облетает город и засекает ПВО. 2. <b>{0} и ложные цели</b>: ПВО тратит на них ракеты и включает РЛС. 3. <b>Крылатые ракеты</b>: носители ({1}) заходят из-за края карты и пускают их с рубежа за краем района, куда ПВО не достаёт. Ракеты идут на малой высоте с 2–3 направлений. 4. <b>Баллистика</b>: с пусковых за городом, по крутой дуге с высоты 25–45 км. Расписание не ждёт: несбитые дроны долетают до целей, крылатые и баллистика приходят в свой срок.', [tr('Дроны'), carriers.join(', ') || '—'])}</p>
-      <p class="hint">${tr('<b>Баллистику</b> сбивают только противоракетные ЗРК: С-300, С-400, Patriot, PAC-3 (немного «Бук-М3»), и только на снижении, в последние ~20 с. О пуске предупреждает тревога. На карте ромб показывает высоту и время до падения, круг — район падения.')}</p>`;
-    if (atk) h += `<div class="cat-h">${tr('За волну')}</div><p class="hint">${tr('Бюджет — <b>{0}</b> очков угрозы, цена единицы — по её силе в бою: дрон и ложная цель — 1–2, крылатая — 5–10, баллистическая — 4–13. Одного типа — не больше 10 (дронов — 12, ложных целей — 8), баллистики — не больше 2. В волну идёт всё открытое оружие вместе. На карте выбираете 1–4 цели, состав, маршруты (до 3 точек), высоту, время прихода (эшелонами или разом) и долю по ПВО. Где ПВО, заранее неизвестно: её засекает разведчик, выдают излучение РЛС и пуски. В бою «Ход волны» показывает, что летит и когда пуски носителей и баллистики; «Смотреть» и «Ждать» — камера к событию, время ×4. ПВО противника — ИИ: чем мощнее оружие в наряде, тем современнее его комплексы. Волна прорвалась, если разрушено 50 % ценности целей.', [multiBudget()])}</p>`;
+    h += `<div class="cat-h">${tr('Как идёт волна')}</div><p class="hint">${tr('1. <b>Дрон разведчик</b> (без боевой части, с камерой) облетает город и засекает ПВО. 2. <b>{0} и ложные цели</b>: ПВО тратит на них ракеты и включает РЛС. 3. <b>Крылатые ракеты</b>: носители ({1}) заходят из-за края карты и пускают их с рубежа за краем района, куда ПВО не достаёт. Ракеты идут на малой высоте с 2-3 направлений. 4. <b>Баллистика</b>: с пусковых за городом, по крутой дуге с высоты 25-45 км. Расписание не ждёт: несбитые дроны долетают до целей, крылатые и баллистика приходят в свой срок.', [tr('Дроны'), carriers.join(', ') || '-'])}</p>
+      <p class="hint">${tr('<b>Баллистику</b> сбивают только противоракетные ЗРК: С-300, С-400, Patriot, PAC-3 (немного «Бук-М3»), и только на снижении, в последние ~20 с. О пуске предупреждает тревога. На карте ромб показывает высоту и время до падения, круг - район падения.')}</p>`;
+    if (atk) h += `<div class="cat-h">${tr('За волну')}</div><p class="hint">${tr('Бюджет - <b>{0}</b> очков угрозы, цена единицы - по её силе в бою: дрон и ложная цель - 1-2, крылатая - 5-10, баллистическая - 4-13. Одного типа - не больше 10 (дронов - 12, ложных целей - 8), баллистики - не больше 2. В волну идёт всё открытое оружие вместе. На карте выбираете 1-4 цели, состав, маршруты (до 3 точек), высоту, время прихода (эшелонами или разом) и долю по ПВО. Где ПВО, заранее неизвестно: её засекает разведчик, выдают излучение РЛС и пуски. В бою «Ход волны» показывает, что летит и когда пуски носителей и баллистики; «Смотреть» и «Ждать» - камера к событию, время ×4. ПВО противника - ИИ: чем мощнее оружие в наряде, тем современнее его комплексы. Волна прорвалась, если разрушено 50 % ценности целей.', [multiBudget()])}</p>`;
     else {
-      const sams = Object.keys(SAM).filter((k) => !realLock() || C.progress.samOk(k)), comp = COMBINED[att][levelIn(COMBINED[att], levelOfSams(me, sams))] || []; // ожидаемая волна — по скрытому уровню (sim/combined.js)
-      h += `<div class="cat-h">${tr('За ПВО')}</div><p class="hint">${tr('Одна большая волна по 3 целям. Расстановка — <b>{0}</b> очков обороны, докупки нет: берите любые открытые комплексы своей стороны, одного типа — не больше 6 (дальних — 2, ПЗРК — 12). Ожидается: {1}. Волна прорвалась, если разрушено 50 % ценности целей. Время в бою можно ускорить ×4; «Смотреть» — камера за ракетой.', [Math.round(MULTI.sam * (setup.diff === 'arcade' ? 1.2 : 1)), comp.filter(([k]) => k !== 'scout' && k !== 'scout_e').map(([k, n]) => `${trIf(AG[k].short)} ×${n}`).join(', ')])}</p>`;
+      const sams = Object.keys(SAM).filter((k) => !realLock() || C.progress.samOk(k)), comp = COMBINED[att][levelIn(COMBINED[att], levelOfSams(me, sams))] || []; // ожидаемая волна - по скрытому уровню (sim/combined.js)
+      h += `<div class="cat-h">${tr('За ПВО')}</div><p class="hint">${tr('Одна большая волна по 3 целям. Расстановка - <b>{0}</b> очков обороны, докупки нет: берите любые открытые комплексы своей стороны, одного типа - не больше 6 (дальних - 2, ПЗРК - 12). Ожидается: {1}. Волна прорвалась, если разрушено 50 % ценности целей. Время в бою можно ускорить ×4; «Смотреть» - камера за ракетой.', [Math.round(MULTI.sam * (setup.diff === 'arcade' ? 1.2 : 1)), comp.filter(([k]) => k !== 'scout' && k !== 'scout_e').map(([k, n]) => `${trIf(AG[k].short)} ×${n}`).join(', ')])}</p>`;
     }
     return h;
   }
   $('tab-play').onclick = (e) => {
     if (setup.game === 'online') { C.online.onClick(e); return; }
     const sum = e.target.closest('[data-hgset]'); if (sum) { snd.click(); hgSet = !hgSet; render(); return; }
-    const fw = e.target.closest('.hgl.on .hgr:not(.inb) [data-fw]'); if (fw) { snd.click(); C.hangar.focusWeapon(fw.dataset.fw); render(); return; } // оружие выбранной подвески — камера подлетает
+    const fw = e.target.closest('.hgl.on .hgr:not(.inb) [data-fw]'); if (fw) { snd.click(); C.hangar.focusWeapon(fw.dataset.fw); render(); return; } // оружие выбранной подвески - камера подлетает
     const f = e.target.closest('[data-fs]'); if (f) { firstClick(f.dataset.fs); snd.click(); render(); return; }
-    const nd = e.target.closest('[data-need]'); if (nd) { snd.click(); C.research.open(nd.dataset.need); return; } // закрыто в «Реализме» — к нужной единице дерева
+    const nd = e.target.closest('[data-need]'); if (nd) { snd.click(); C.research.open(nd.dataset.need); return; } // закрыто в «Реализме» - к нужной единице дерева
     const b = e.target.closest('[data-v]'), lo = e.target.closest('[data-lo]'), lo1 = e.target.closest('[data-lo1]'), lo2 = e.target.closest('[data-lo2]'), tl = e.target.closest('[data-tl]');
     if (b) {
       const id = b.parentNode.dataset.seg, v = b.dataset.v;
       if (id === 'diff' || id === 'era' || id === 'side') hgPlane = null; // ангар: снова самолёт выбранной подвески
-      if (id === 'pmap' || id === 'pwx') { // карта и погода «Съёмки» — перезапуск страницы (строятся при загрузке)
+      if (id === 'pmap' || id === 'pwx') { // карта и погода «Съёмки» - перезапуск страницы (строятся при загрузке)
         if (id === 'pmap') setup.pmap = v; else setup.pwx = { ...(setup.pwx || {}), [C.MAP]: v };
         save(); const u = new URL(location.href); u.searchParams.delete('weather'); u.searchParams.delete('map'); location.replace(u.href); return;
       }
-      if (id === 'pside') setup.pside = v; else if (id === 'palt') setup.palt = v; else if (id === 'pvs') setup.pvs = v; else if (id === 'op') setup.op = v === 'op'; else if (id === 'mrole') setup.mrole = v; else if (id === 'cs') setup.cs = v === 'on'; else if (id === 'diff') setup.diff = v; else if (id === 'era') { setup.era = +v; setup.lo = 0; } else if (id === 'side') setup.side = v; else if (id === 'tnat') setup.side = setup.tside !== 'def' ? (v === 'east' ? 'west' : 'east') : v; /* обучение: своя техника; setup.side — сторона ПВО */ else if (id === 'tside') { setup.tside = v; setup.tl = 0; } else if (id === 'tbook') { setup.tside = v === 'multi' ? 'matk' : 'air'; setup.tl = 0; }
+      if (id === 'pside') setup.pside = v; else if (id === 'palt') setup.palt = v; else if (id === 'pvs') setup.pvs = v; else if (id === 'op') setup.op = v === 'op'; else if (id === 'mrole') setup.mrole = v; else if (id === 'cs') setup.cs = v === 'on'; else if (id === 'diff') setup.diff = v; else if (id === 'era') { setup.era = +v; setup.lo = 0; } else if (id === 'side') setup.side = v; else if (id === 'tnat') setup.side = setup.tside !== 'def' ? (v === 'east' ? 'west' : 'east') : v; /* обучение: своя техника; setup.side - сторона ПВО */ else if (id === 'tside') { setup.tside = v; setup.tl = 0; } else if (id === 'tbook') { setup.tside = v === 'multi' ? 'matk' : 'air'; setup.tl = 0; }
     } else if (e.target.closest('[data-psam]')) setup.psam = e.target.closest('[data-psam]').dataset.psam; else if (e.target.closest('[data-pmun]')) setup.pmun = e.target.closest('[data-pmun]').dataset.pmun;
     else if (lo) setup.lo = +lo.dataset.lo; else if (lo1) setup.lo1 = +lo1.dataset.lo1; else if (lo2) setup.lo2 = +lo2.dataset.lo2; else if (tl) setup.tl = +tl.dataset.tl; else return;
     save(); render();
@@ -264,17 +264,17 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
   // ── Арсенал ──
   function specs(s) { return `<table class="tt">${s.specs.map(([a, b]) => `<tr><td>${trIf(a)}</td><td>${trIf(b)}</td></tr>`).join('')}</table>`; }
   function renderRef() {
-    let h = `<p class="hint">${tr('Реальные характеристики — округлённые открытые данные. Дальности в игре уменьшены под размер карты.')}</p>`;
+    let h = `<p class="hint">${tr('Реальные характеристики - округлённые открытые данные. Дальности в игре уменьшены под размер карты.')}</p>`;
     // самолёты: какие подвески несёт каждый
     const PL = { e_su17: [tr('Су-17М4'), tr('СССР · истребитель-бомбардировщик с крылом изменяемой стреловидности: ФАБ, ПРР Х-28 и Х-58, Х-25МЛ.')],
       e_su24: [tr('Су-24М'), tr('СССР / Россия · фронтовой бомбардировщик, встроенная лазерно-телевизионная система «Кайра»: КАБ-500Л, Х-58, Х-29Т, Х-31П.')],
-      e_su25: [tr('Су-25'), tr('СССР / Россия · бронированный штурмовик: ФАБ-500, Х-29Т, Х-25МЛ (у Су-25Т — встроенный «Шквал»).')],
+      e_su25: [tr('Су-25'), tr('СССР / Россия · бронированный штурмовик: ФАБ-500, Х-29Т, Х-25МЛ (у Су-25Т - встроенный «Шквал»).')],
       su30: [tr('Су-30'), tr('Россия · двухместный многоцелевой: КАБ-500, УМПК.')],
       mig29: [tr('МиГ-29СМТ'), tr('Россия · лёгкий фронтовой: ПРР Х-31П.')],
       e_su34: [tr('Су-34'), tr('Россия · фронтовой бомбардировщик, встроенный прицельный комплекс «Платан»: КАБ-500С, УМПК, Х-59М, Х-31П.')],
-      e_mig31: [tr('МиГ-31БМ'), tr('Россия · перехватчик, в модернизации — ПРР Х-31П против ПВО.')],
+      e_mig31: [tr('МиГ-31БМ'), tr('Россия · перехватчик, в модернизации - ПРР Х-31П против ПВО.')],
       e_su57: [tr('Су-57'), tr('Россия · малозаметный: оружие во внутренних отсеках (Х-59МК2 создавалась под них), выходит из отсека при пуске.')],
-      e_f4: ['F-4 Phantom II', tr('США · «Дикая ласка» F-4G — охотник за ПВО: Shrike, HARM.')],
+      e_f4: ['F-4 Phantom II', tr('США · «Дикая ласка» F-4G - охотник за ПВО: Shrike, HARM.')],
       f18: ['F/A-18 Hornet', tr('США · палубный многоцелевой: Mk 82, GBU-12, JDAM, HARM, AARGM.')],
       f16: ['F-16', tr('США · лёгкий многоцелевой: Mk 82, Maverick, HARM, JASSM.')],
       e_gripen: ['JAS 39 Gripen', tr('Швеция · лёгкий многоцелевой с контейнером LITENING: GBU-12, JDAM.')],
@@ -284,7 +284,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
     for (const e of ERAS.filter((x) => LOADOUTS[x.id])) {
       h += `<div class="cat-h">${tr('Зенитные комплексы · эпоха {0}', [e.short])}</div>`;
       for (const [k, s] of Object.entries(SAM)) if (s.era === e.id) h += `<details class="ref"><summary>${tags(s.type, { guns: tr('АРТ'), ir: tr('ИК'), sarh: tr('ПАРЛ'), saclos: tr('ЛВ'), tvm: 'TVM', arh: tr('АРЛ'), jammer: tr('РЭБ'), command: tr('РК') }[s.type])} ${trIf(s.name)}${capsHtml(s)}</summary><div class="body">
-        <p>${trIf(s.guide)}</p>${specs(s)}<h4>${tr('В игре')}</h4><p>${tr('{0} · {1}–{2} км · высоты {3}–{4} м{5}{6}{7}{8}{9} · стоимость в обороне {10}', [trIf(SAM_TYPE[s.type]), (s.rmin / 1000).toFixed(1), (s.rmax / 1000).toFixed(1), s.hmin, s.hmax, s.radar ? tr(' · РЛС видит цель ЭПР 5 м² с {0} км, захват {1} с{2}', [(s.radar.range / 1000).toFixed(0), s.radar.acq, s.radar.doppler ? tr(', когерентная — есть доплеровский провал') : '']) : s.type === 'jammer' ? tr(' · радиус подавления {0} км', [(s.jamR / 1000).toFixed(0)]) : tr(' · без РЛС — на СПО не виден'), s.channels > 1 ? tr(' · целевых каналов {0}', [s.channels]) : '', s.vls ? tr(' · вертикальный старт') : '', s.antiMun ? tr(' · сбивает бомбы и ракеты') : '', s.optTrack ? tr(' · оптический канал без излучения') : '', SAM_COST[k]])}</p></div></details>`;
+        <p>${trIf(s.guide)}</p>${specs(s)}<h4>${tr('В игре')}</h4><p>${tr('{0} · {1}-{2} км · высоты {3}-{4} м{5}{6}{7}{8}{9} · стоимость в обороне {10}', [trIf(SAM_TYPE[s.type]), (s.rmin / 1000).toFixed(1), (s.rmax / 1000).toFixed(1), s.hmin, s.hmax, s.radar ? tr(' · РЛС видит цель ЭПР 5 м² с {0} км, захват {1} с{2}', [(s.radar.range / 1000).toFixed(0), s.radar.acq, s.radar.doppler ? tr(', когерентная - есть доплеровский провал') : '']) : s.type === 'jammer' ? tr(' · радиус подавления {0} км', [(s.jamR / 1000).toFixed(0)]) : tr(' · без РЛС - на СПО не виден'), s.channels > 1 ? tr(' · целевых каналов {0}', [s.channels]) : '', s.vls ? tr(' · вертикальный старт') : '', s.antiMun ? tr(' · сбивает бомбы и ракеты') : '', s.optTrack ? tr(' · оптический канал без излучения') : '', SAM_COST[k]])}</p></div></details>`;
       h += `<div class="cat-h">${tr('Ударное оружие · эпоха {0}', [e.short])}</div>`;
       for (const [, w] of Object.entries(AG)) if (w.era === e.id) h += `<details class="ref"><summary>${tags(w.kind, { bomb: tr('ФАБ'), lgb: tr('ЛАЗ'), tvb: tr('ТВ'), arm: tr('ПРР'), gps: 'GPS', cruise: tr('КР'), decoy: tr('ЛЦ'), ecm: tr('РЭБ'), rocket: tr('НАР') }[w.kind] || (w.seeker === 'tv' ? tr('ТВ') : tr('ЛАЗ')))} ${trIf(w.name)}</summary><div class="body">
         <p>${trIf(w.guide)}</p>${specs(w)}<h4>${tr('В игре')}</h4><p>${tr('{0}{1} · радиус поражения {2} м', [trIf(AG_KIND[w.kind]), w.rmax ? tr(' · пуск до ≈ {0} км', [(w.rmax / 1000).toFixed(0)]) : '', w.blast])}</p></div></details>`;
@@ -297,7 +297,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
   // «Кастомный»: свои настройки (C.GO → localStorage, применяются перезапуском)
   function customPanel() {
     const o = C.GO, row = (label, key, items, cur) => `<div class="prow"><span>${label}</span><div class="seg" data-go="${key}">${items.map(([v, l]) => `<button data-v="${v}" class="${String(v) === String(cur) ? 'on' : ''}">${l}</button>`).join('')}</div></div>`;
-    return `<details class="ref" open><summary>${tr('Кастомный — свои настройки')}</summary><div class="body">
+    return `<details class="ref" open><summary>${tr('Кастомный - свои настройки')}</summary><div class="body">
       ${row(tr('Разрешение'), 'rs', [[0.4, '40%'], [0.5, '50%'], [0.6, '60%'], [0.7, '70%'], [0.8, '80%'], [0.9, '90%'], [1, '100%']], o.rs || 1)}
       ${row(tr('Динамическое'), 'dyn', [[1, tr('Вкл')], [0, tr('Выкл')]], o.dyn === false ? 0 : 1)}
       ${row(tr('Цель кадров'), 'fps', [[30, tr('30 к/с')], [60, tr('60 к/с')]], o.fps || 60)}
@@ -317,12 +317,12 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
       ${row(tr('Облака'), 'clouds', [[0, tr('Нет')], [0.5, tr('Мало')], [1, tr('Обычно')], [2, tr('Много')]], o.clouds ?? 1)}
       ${row(tr('Частицы'), 'parts', [[0.5, tr('Мало')], [1, tr('Обычно')], [1.5, tr('Много')]], o.parts || 1)}
       ${C.IS_TOUCH ? `<label class="chk"><input type="checkbox" id="sFull" ${o.fullRes ? 'checked' : ''}> ${tr('полное разрешение экрана')}</label>` : ''}
-      <p class="hint">${tr('Тяжелее всего: разрешение, тени, эффекты кадра, город «Полный» и окно контейнера. Слабому устройству: «Предел кадров 30», «Контейнер 30 к/с», «Тени через кадр» или без теней, разрешение 60–70%. Техника, ракеты, бомбы и самолёты одинаково подробны при любых настройках. «Детали улиц» работают при городе «Средний» или «Полный».')}</p>
+      <p class="hint">${tr('Тяжелее всего: разрешение, тени, эффекты кадра, город «Полный» и окно контейнера. Слабому устройству: «Предел кадров 30», «Контейнер 30 к/с», «Тени через кадр» или без теней, разрешение 60-70%. Техника, ракеты, бомбы и самолёты одинаково подробны при любых настройках. «Детали улиц» работают при городе «Средний» или «Полный».')}</p>
       <button class="btn" id="sApplyGfx">${tr('Применить (перезапуск)')}</button></div></details>`;
   }
-  // «Скачать всё заранее» (offline.js): модели, текстуры, звуки — в кэш устройства; идёт и при уходе с вкладки «Настройки»
+  // «Скачать всё заранее» (offline.js): модели, текстуры, звуки - в кэш устройства; идёт и при уходе с вкладки «Настройки»
   const pf = { run: false, done: false, k: 0, txt: '', stop: null, mb: 0 };
-  // объём — посчитан для этого устройства по списку файлов (offline.js prefetchSize), до ответа — без числа; округление до 10 МБ
+  // объём - посчитан для этого устройства по списку файлов (offline.js prefetchSize), до ответа - без числа; округление до 10 МБ
   const pfLabel = () => pf.run ? tr('Остановить') : pf.mb ? tr('Скачать всё заранее (≈ {0} МБ, лучше по Wi-Fi)', [pf.mb]) : tr('Скачать всё заранее (лучше по Wi-Fi)');
   let pfAsked = false; const pfSize = () => { if (pfAsked || !offlineOk()) return; pfAsked = true; prefetchSize(modelUrls()).then((b) => { if (!b) { pfAsked = false; return; } pf.mb = Math.round(b / 10485760) * 10; pfShow(); }).catch(() => { pfAsked = false; }); };
   const pfShow = () => { const b = $('pfBar'), f = $('pfFill'), t = $('pfTxt'), btn = $('sPrefetch'); if (f) f.style.width = (pf.k * 100).toFixed(1) + '%'; if (b) b.style.display = pf.run || pf.done ? '' : 'none'; if (t) t.textContent = pf.txt; if (btn) btn.textContent = pfLabel(); };
@@ -346,7 +346,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
       <p class="hint" id="offInfo">${tr('Скачанные модели, текстуры и звуки хранятся на устройстве и не догружаются ни в бою, ни при следующих запусках.')}</p>
       <button class="btn alt" id="sPrefetch">${pfLabel()}</button>
       <div class="ldbar" id="pfBar" style="margin-top:6px;${pf.run || pf.done ? '' : 'display:none'}"><i id="pfFill" style="width:${pf.k * 100}%"></i></div><p class="hint" id="pfTxt">${pf.txt}</p>
-      <p class="hint">${tr('Видеочип: {0}', [String(C.gpuName || '—').replace(/[<>&]/g, '').slice(0, 70)])}</p>
+      <p class="hint">${tr('Видеочип: {0}', [String(C.gpuName || '-').replace(/[<>&]/g, '').slice(0, 70)])}</p>
       <div class="cat-h">${tr('Время и погода')}</div>${seg('wx', C.weatherKey, [['random', tr('Случайная')], ...WEATHER_KEYS.map((k) => [k, trIf(WEATHERS[k].name)])])}
       <div class="cat-h">${tr('Управление')}</div>
       <div class="sub">${tr('Экран и кнопки')}</div>
@@ -357,32 +357,32 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
       <label class="chk"><input type="checkbox" id="sBinoThr" ${C.sens.binoThreat ? 'checked' : ''}${C.sens.bino === false ? ' disabled' : ''}> ${tr('бинокль работает и при пуске ракеты по вам')}</label>
       <div class="sub">${tr('Самолёт')}</div>
       <label class="chk">${tr('ручка (тангаж и крен)')} <input type="range" id="sStick" min="0.4" max="1.8" step="0.05" value="${C.sens.stick}"> <b id="vStick">×${C.sens.stick.toFixed(2)}</b></label>
-      <label class="chk"><input type="checkbox" id="sInv" ${C.sens.invert ? 'checked' : ''}> ${tr('инверсия тангажа: вверх — нос вниз (как в авиасимуляторах)')}</label>
-      ${C.IS_TOUCH ? `<label class="chk"><input type="checkbox" id="sAim" ${C.sens.aim !== false ? 'checked' : ''}> ${tr('наведение камерой: самолёт летит туда, куда смотрит камера (выкл — ручка в левой половине экрана)')}</label>` : ''}
+      <label class="chk"><input type="checkbox" id="sInv" ${C.sens.invert ? 'checked' : ''}> ${tr('инверсия тангажа: вверх - нос вниз (как в авиасимуляторах)')}</label>
+      ${C.IS_TOUCH ? `<label class="chk"><input type="checkbox" id="sAim" ${C.sens.aim !== false ? 'checked' : ''}> ${tr('наведение камерой: самолёт летит туда, куда смотрит камера (выкл - ручка в левой половине экрана)')}</label>` : ''}
       ${C.IS_TOUCH ? `<label class="chk"><input type="checkbox" id="sPadOn" ${C.sens.pad ? 'checked' : ''}> ${tr('крестовина: тангаж и крен кнопками (точные манёвры)')}</label>
       <label class="chk">${tr('сила крестовины')} <input type="range" id="sPadK" min="0.15" max="1" step="0.05" value="${C.sens.padK}"> <b id="vPadK">${Math.round(C.sens.padK * 100)}%</b></label>` : ''}
-      <label class="chk"><input type="checkbox" id="sCmBurst" ${C.sens.cmBurst ? 'checked' : ''}> ${tr('ловушки по нажатию: серия из 3 залпов (выкл — один залп). Удержание кнопки или X / C — очередью')}</label>
+      <label class="chk"><input type="checkbox" id="sCmBurst" ${C.sens.cmBurst ? 'checked' : ''}> ${tr('ловушки по нажатию: серия из 3 залпов (выкл - один залп). Удержание кнопки или X / C - очередью')}</label>
       <div class="sub">${tr('Оператор ЗРК')}</div>
       <label class="chk">${tr('поворот обзора оператора ЗРК')} <input type="range" id="sLook" min="0.3" max="2.5" step="0.05" value="${C.sens.look}"> <b id="vLook">×${C.sens.look.toFixed(2)}</b></label>
       <div class="sub">${tr('Помощь в бою')}</div>
-      <label class="chk"><input type="checkbox" id="sAuto" ${C.auto ? 'checked' : ''}> ${tr('«Авто» — помощь в бою (кнопка «Авто» или клавиша T)')}</label>
+      <label class="chk"><input type="checkbox" id="sAuto" ${C.auto ? 'checked' : ''}> ${tr('«Авто» - помощь в бою (кнопка «Авто» или клавиша T)')}</label>
       <p class="hint">${tr('«Авто» в вылете сбрасывает бомбы и пускает ракеты, у оператора ЗРК назначает цель, пускает и наводит пушку. Помогает, но не идеально: реагирует с задержкой и ошибается. Пилотирование, уклонение и выбор момента остаются за вами.')}</p>
-      ${C.IS_TOUCH ? '' : `<label class="chk"><input type="checkbox" id="sKeys" ${C.sens.keys ? 'checked' : ''}> ${tr('подсказки клавиш в бою: панель слева внизу (F1 — вкл. и выкл.)')}</label>`}
+      ${C.IS_TOUCH ? '' : `<label class="chk"><input type="checkbox" id="sKeys" ${C.sens.keys ? 'checked' : ''}> ${tr('подсказки клавиш в бою: панель слева внизу (F1 - вкл. и выкл.)')}</label>`}
       <div class="cat-h">${tr('Звук')}</div><label class="chk"><input type="checkbox" id="sMute" ${snd.muted ? '' : 'checked'}> ${tr('звук включён')}</label>
       <label class="chk">${tr('громкость')} <input type="range" id="sVol" min="0" max="1" step="0.05" value="${snd.volume}"></label>
       ${ECO_SELECT('sEco')}`;
-    trDom($('tab-set')); // блок «Звук для слабого устройства» — из общего модуля drone/audio.js (русский текст, перевод по словарю)
+    trDom($('tab-set')); // блок «Звук для слабого устройства» - из общего модуля drone/audio.js (русский текст, перевод по словарю)
   }
   // ── Прочее: об игре (дисклеймер) и благодарности авторам моделей, эффектов и звуков ──
   const A = (url, t) => `<a href="${url}" target="_blank" rel="noopener">${t}</a>`;
   function renderMisc() {
     $('tab-misc').innerHTML = `<div class="cat-h">${tr('Об игре')}</div>
-      <p class="hint">${tr('Air Superiority Online — игра, созданная исключительно в образовательных и развлекательных целях.')}</p>
+      <p class="hint">${tr('Air Superiority Online - игра, созданная исключительно в образовательных и развлекательных целях.')}</p>
       <p class="hint">${tr('Техника, вооружение, камуфляжи, обозначения, 3D-модели, звуки и игровые механики упрощены, несмотря на цель приблизиться к реализму, и служат только для того, чтобы создать атмосферу. Они не обязаны отражать реальные характеристики, тактику и боевое применение и не являются руководством к действию.')}</p>
       <p class="hint">${tr('Город, объекты, позывные и события в игре вымышлены. Любые совпадения с реальными местами, людьми, организациями и событиями случайны.')}</p>
       <p class="hint">${tr('Игра не пропагандирует войну и насилие и не выражает политических позиций. Названия и модели образцов техники используются только для узнаваемости и реалистичности; права на товарные знаки принадлежат их владельцам. Игра не связана с производителями техники, военными ведомствами и игровыми компаниями и не одобрена ими.')}</p>
       <div class="cat-h">${tr('Отдельное спасибо за помощь')}</div>
-      <p class="hint">${tr('3D-модели (для игры упрощены, разделены на части, текстуры уменьшены): {0}.', [MODEL_CREDITS.map((m) => `${A(m.url, `«${m.title}»`)} — ${m.author} (${A(m.licenseUrl, m.license)})`).join(' · ')])}</p>
+      <p class="hint">${tr('3D-модели (для игры упрощены, разделены на части, текстуры уменьшены): {0}.', [MODEL_CREDITS.map((m) => `${A(m.url, `«${m.title}»`)} - ${m.author} (${A(m.licenseUrl, m.license)})`).join(' · ')])}</p>
       <p class="hint">${tr('Звуки (обрезаны, обработаны, сведены в моно): {0}.', [[
         ['https://freesound.org/people/puniho/sounds/116677/', 'Stretched Canvas Bass Drum Granulated', 'Puniho', 'CC BY 3.0'],
         ['https://freesound.org/people/Benboncan/sounds/74242/', 'Military Helicopter', 'Benboncan', 'CC BY 4.0'],
@@ -396,7 +396,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
         ['https://freesound.org/people/Kolombooo/sounds/629020/', 'Button click', 'Kolombooo', 'CC0'],
         ['https://www.youtube.com/watch?v=kAVnPGU8CYw', 'F16 Fighter Jet Engine Idle', 'Sound Effect Database', tr('лицензия куплена')],
         ['https://www.youtube.com/watch?v=8VIxcncNPVA', 'Flares Sound Effect', 'Sound Effect Database', tr('лицензия куплена')],
-      ].map(([u, t, a, l]) => `${A(u, `«${t}»`)} — ${a} (${l})`).join(' · ')])}</p>`;
+      ].map(([u, t, a, l]) => `${A(u, `«${t}»`)} - ${a} (${l})`).join(' · ')])}</p>`;
   }
   $('tab-set').onclick = (e) => {
     const g = e.target.closest('[data-gfx]'), w = e.target.closest('[data-seg="wx"] [data-v]');
@@ -406,9 +406,9 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
       C.GO[k] = k === 'dyn' || k === 'fx' || k === 'props' ? num === 1 : Number.isFinite(num) ? num : v;
       ls.set('fortuna_airdef_gfxo', JSON.stringify(C.GO)); renderSet(); return;
     }
-    const fc = e.target.closest('[data-seg="fpsCap"] [data-v]'); if (fc) { C.setFpsCap(fc.dataset.v); renderSet(); return; } // предел кадров — сразу, без перезапуска
-    const sp = e.target.closest('[data-seg="sharp"] [data-v]'); if (sp) { if (sp.dataset.v !== C.SHARP) { ls.set('fortuna_airdef_sharp', sp.dataset.v); location.reload(); } return; } // чёткость — перезапуск
-    const lg = e.target.closest('[data-seg="lang"] [data-v]'); if (lg) { if (lg.dataset.v !== LANG) { setLang(lg.dataset.v); const u = new URL(location.href); u.searchParams.delete('lang'); location.href = u.href; } return; } // язык — перезагрузка (Mark 2026-10-21)
+    const fc = e.target.closest('[data-seg="fpsCap"] [data-v]'); if (fc) { C.setFpsCap(fc.dataset.v); renderSet(); return; } // предел кадров - сразу, без перезапуска
+    const sp = e.target.closest('[data-seg="sharp"] [data-v]'); if (sp) { if (sp.dataset.v !== C.SHARP) { ls.set('fortuna_airdef_sharp', sp.dataset.v); location.reload(); } return; } // чёткость - перезапуск
+    const lg = e.target.closest('[data-seg="lang"] [data-v]'); if (lg) { if (lg.dataset.v !== LANG) { setLang(lg.dataset.v); const u = new URL(location.href); u.searchParams.delete('lang'); location.href = u.href; } return; } // язык - перезагрузка (Mark 2026-10-21)
     if (e.target.id === 'sApplyGfx') { location.reload(); return; }
     if (e.target.id === 'sPrefetch') { prefetch(); return; }
     if (g) { ls.set('fortuna_airdef_gfx', g.dataset.gfx); const u = new URL(location.href); u.searchParams.delete('gfx'); location.href = u.href; }
@@ -424,7 +424,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
     if (e.target.id === 'sFull') { C.GO.fullRes = e.target.checked; ls.set('fortuna_airdef_gfxo', JSON.stringify(C.GO)); }
     if (e.target.id === 'sInv') { C.sens.invert = e.target.checked; C.saveSens(); }
     if (e.target.id === 'sBino') { C.sens.bino = e.target.checked; C.saveSens(); document.body.classList.toggle('nobino', !e.target.checked); const t = C.$('sBinoThr'); if (t) t.disabled = !e.target.checked; }
-    if (e.target.id === 'sBinoThr') { C.sens.binoThreat = e.target.checked; C.saveSens(); } // бинокль не гаснет при пуске ракеты по самолёту (по умолчанию — гаснет; air.js binoThreat)
+    if (e.target.id === 'sBinoThr') { C.sens.binoThreat = e.target.checked; C.saveSens(); } // бинокль не гаснет при пуске ракеты по самолёту (по умолчанию - гаснет; air.js binoThreat)
     if (e.target.id === 'sAim') { C.sens.aim = e.target.checked; C.saveSens(); }
     if (e.target.id === 'sCmBurst') { C.sens.cmBurst = e.target.checked; C.saveSens(); }
     if (e.target.id === 'sKeys') { C.sens.keys = e.target.checked; C.saveSens(); }
@@ -434,9 +434,9 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
     if (e.target.id === 'sFsHint') C.shell.setFsHint(e.target.checked); // Mark 2026-10-27: кнопку / плашку полного экрана можно убрать
     if (e.target.id === 'sMute') { snd.unlock(); snd.setMuted(!e.target.checked); C.muteIco(); }
   };
-  // Арсенал / Справка / Настройки / Об игре — панель поверх меню; повторное касание, ✕ или Esc — закрыть
+  // Арсенал / Справка / Настройки / Об игре - панель поверх меню; повторное касание, ✕ или Esc - закрыть
   const SHEET = { ref: tr('Арсенал'), guide: tr('Справка'), set: tr('Настройки'), misc: tr('Об игре') };
-  $('mtabs').onclick = (e) => { const b = e.target.closest('button'); if (!b) return; snd.click(); if (b.dataset.tab === 'research') { C.research.open(); return; } tab = tab === b.dataset.tab ? 'play' : b.dataset.tab; showTab(); }; // «Исследования» — свой экран (research.js)
+  $('mtabs').onclick = (e) => { const b = e.target.closest('button'); if (!b) return; snd.click(); if (b.dataset.tab === 'research') { C.research.open(); return; } tab = tab === b.dataset.tab ? 'play' : b.dataset.tab; showTab(); }; // «Исследования» - свой экран (research.js)
   $('msClose').onclick = () => { tab = 'play'; snd.click(); showTab(); };
   addEventListener('keydown', (e) => { if (e.code === 'Escape' && C.state === 'menu' && tab !== 'play') { tab = 'play'; showTab(); } });
   function showTab() {
@@ -449,31 +449,31 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
   function renderStats() {
     const s = stats(), g = setup.game;
     if (g === 'online') { $('lobbyStats').innerHTML = tr('Онлайн: авиация против ПВО города, три волны.'); return; }
-    if (g === 'photo') { $('lobbyStats').innerHTML = tr('Бой идёт сам, вы — оператор камеры.'); return; }
+    if (g === 'photo') { $('lobbyStats').innerHTML = tr('Бой идёт сам, вы - оператор камеры.'); return; }
     $('lobbyStats').innerHTML = g === 'training' ? tr('Обучение: {0} из {1} уроков пройдено.', [Object.values(LESSONS).flat().filter((l) => lessonsDone()[l.id]).length, Object.values(LESSONS).flat().length])
       : g === 'multi' ? (s.multi ? tr('Рекорд «Мульти-волны»: <b>{0}</b> очков · боёв {1}', [s.multi.best.toLocaleString(LOC), s.multi.runs]) : tr('Мульти-волну пока не играли.'))
       : g === 'air' ? (s.air ? tr('Рекорд вылета: <b>{0}</b> очков · вылетов {1}', [s.air.best.toLocaleString(LOC), s.air.runs]) : tr('Вылетов пока не было.'))
-        : (s.defense ? tr('Рекорд обороны: <b>{0}</b> очков · лучший итог — {1} волн', [s.defense.best.toLocaleString(LOC), s.defense.waves]) : tr('Обороны пока не было.'));
+        : (s.defense ? tr('Рекорд обороны: <b>{0}</b> очков · лучший итог - {1} волн', [s.defense.best.toLocaleString(LOC), s.defense.waves]) : tr('Обороны пока не было.'));
   }
   let tipI = Math.floor(Math.random() * TIPS.length), tipT = 0;
   function showTip(next) { if (next) tipI = (tipI + 1) % TIPS.length; const el = $('lobbyTip'); el.classList.remove('in'); void el.offsetWidth; el.classList.add('in'); el.innerHTML = `<b>${tr('Совет.')}</b> ${TIPS[tipI]}`; }
   $('lobbyTip').onclick = () => { tipT = 0; showTip(true); };
   setInterval(() => { if (C.state === 'menu' && (tipT += 1) > 12) { tipT = 0; showTip(true); } }, 1000);
   $('startBtn').onclick = () => orientGate(() => { if (setup.game === 'online') { C.online.primary(); return; }
-    if (C.realBlock && setup.game === 'air') { snd.deny && snd.deny(); C.research.open(C.realNeed || undefined); return; } // «Реализм»: нет купленной подвески — в «Исследования»
-    setup.evd = false; C.lastGame = setup.game; C.doors.run(() => C.start(setup.game)); }); // на телефоне вертикально — сначала совет повернуть; вход в бой — за створками
-  // опыт и серебро над режимами (тап — «Исследования»); гость — пусто (вход — в строке аккаунта выше)
+    if (C.realBlock && setup.game === 'air') { snd.deny && snd.deny(); C.research.open(C.realNeed || undefined); return; } // «Реализм»: нет купленной подвески - в «Исследования»
+    setup.evd = false; C.lastGame = setup.game; C.doors.run(() => C.start(setup.game)); }); // на телефоне вертикально - сначала совет повернуть; вход в бой - за створками
+  // опыт и серебро над режимами (тап - «Исследования»); гость - пусто (вход - в строке аккаунта выше)
   function renderPg() {
     const P = C.progress && C.progress.P; if (!P) { $('pgBar').innerHTML = ''; return; }
-    $('pgBar').innerHTML = C.progress.guest ? '' : `<span class="xp">${ico('xp')}${Math.round(P.xp).toLocaleString(LOC)}</span><span>${ico('silver')}${Math.round(P.silver).toLocaleString(LOC)}</span>`; // «Исследования» — кнопкой в углу фона (место в колонке — режимам)
+    $('pgBar').innerHTML = C.progress.guest ? '' : `<span class="xp">${ico('xp')}${Math.round(P.xp).toLocaleString(LOC)}</span><span>${ico('silver')}${Math.round(P.silver).toLocaleString(LOC)}</span>`; // «Исследования» - кнопкой в углу фона (место в колонке - режимам)
   }
   $('pgBar').onclick = () => { snd.click(); C.research.open(); };
   $('resIco').innerHTML = ico('research'); $('resBtn').onclick = () => { snd.click(); C.research.open(); }; // кнопка в углу фона меню
-  $('shopIco').innerHTML = ico('gem'); // «Магазин» — окно и подпись кнопки — shop-ui.js
-  // разделы (Mark 2026-10-26): при входе свёрнуты в указатель; нажатие разворачивает и складывает обратно (свёрнутые — вне фокуса клавиатуры)
+  $('shopIco').innerHTML = ico('gem'); // «Магазин» - окно и подпись кнопки - shop-ui.js
+  // разделы (Mark 2026-10-26): при входе свёрнуты в указатель; нажатие разворачивает и складывает обратно (свёрнутые - вне фокуса клавиатуры)
   $('mbFoldIco').innerHTML = ico('signpost');
   const mbOpen = (open) => {
-    const mb = $('mbtns'), f = $('mbFold'); mb.classList.toggle('open', open); if (f.setAttribute) f.setAttribute('aria-expanded', open ? 'true' : 'false'); // (заглушка DOM стенда — без setAttribute)
+    const mb = $('mbtns'), f = $('mbFold'); mb.classList.toggle('open', open); if (f.setAttribute) f.setAttribute('aria-expanded', open ? 'true' : 'false'); // (заглушка DOM стенда - без setAttribute)
     if (mb.querySelectorAll) for (const b of mb.querySelectorAll('button:not(#mbFold)')) b.inert = !open;
   };
   $('mbFold').onclick = () => { snd.click(); mbOpen(!$('mbtns').classList.contains('open')); };
@@ -487,7 +487,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
     $('resBtn').classList.toggle('note', ready.length > 0); sub.style.display = ready.length ? 'block' : 'none';
     sub.textContent = !ready.length ? '' : ready.length > 1 ? tr('Целей готово: {0}', [ready.length]) : tr(researched(P, ready[0]) ? 'Можно купить: {0}' : 'Можно исследовать: {0}', [trIf(NODE[ready[0]].short)]);
   }
-  // самолёт в ангаре и подпись кнопки — по тому, что выбрано (в обороне и других режимах — последний выбранный)
+  // самолёт в ангаре и подпись кнопки - по тому, что выбрано (в обороне и других режимах - последний выбранный)
   function syncHangar() {
     if (!C.hangar || !C.hangar.has()) return;
     const air = setup.game === 'air' && !setup.op;
@@ -498,7 +498,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
     const b = $('startBtn'); if (setup.game === 'air' && C.realBlock) b.textContent = tr('Исследования');
     if (b.classList) b.classList.toggle('long', b.textContent.length > 8);
   }
-  function render() { renderModeSel(); renderPlay(); syncHangar(); renderStats(); renderPg(); if (C.account) C.account.render(); if (C.rating) C.rating.touch(); if (C.shop) C.shop.touch(); if (C.quests) C.quests.touch(); renderNotice(); } // аккаунт игры и рейтинг — в углу меню
+  function render() { renderModeSel(); renderPlay(); syncHangar(); renderStats(); renderPg(); if (C.account) C.account.render(); if (C.rating) C.rating.touch(); if (C.shop) C.shop.touch(); if (C.quests) C.quests.touch(); renderNotice(); } // аккаунт игры и рейтинг - в углу меню
   $('weatherChip').textContent = `${trIf(C.W.name)} · ${C.P.name}`;
   render(); renderRef(); renderGuide(); showTip(false);
   // подложка карт: районы и крупные дома (общая для карты вылета и тактической карты обороны)
@@ -516,12 +516,12 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
     for (let i = 0; i < B.n; i++) if (B.h[i] > 18) x.fillRect((B.x[i] - B.w[i] / 2 + CITY.HALF) * k, (B.z[i] - B.d[i] / 2 + CITY.HALF) * k, Math.max(1, B.w[i] * k), Math.max(1, B.d[i] * k));
     return (baseCache[S2] = c);
   }
-  // зимняя карта — как топографическая: мягкая отмывка (свет с северо-запада + рассеянный), цвет по высоте, горизонтали
-  // (сглаженные, толщина — по крутизне), утолщённые — через 500 м; лес — размытой плотностью, лёд — по уровню берега
+  // зимняя карта - как топографическая: мягкая отмывка (свет с северо-запада + рассеянный), цвет по высоте, горизонтали
+  // (сглаженные, толщина - по крутизне), утолщённые - через 500 м; лес - размытой плотностью, лёд - по уровню берега
   function winterMapBase(c, x, city, S2) {
     const H = CITY.HALF, step = 2 * H / S2, img = x.createImageData(S2, S2), d = img.data, gh = city.groundH, e = Math.max(25, step * 0.75), AUT = city.kind === 'autumn';
     const CI = S2 >= 1200 ? 100 : 200, IX = S2 >= 1200 ? 500 : 1000; // шаг горизонталей и утолщённых
-    // плотность леса и лёд — по сетке 100 м, потом билинейно (края мягкие)
+    // плотность леса и лёд - по сетке 100 м, потом билинейно (края мягкие)
     const FG = 321, fs = 2 * H / (FG - 1), FD = new Float32Array(FG * FG), ID = new Float32Array(FG * FG);
     for (let j = 0; j < FG; j++) for (let i = 0; i < FG; i++) { const wx = -H + i * fs, wz = -H + j * fs; FD[j * FG + i] = city.zoneAt(wx, wz) === ZONE.PARK ? 1 : 0; ID[j * FG + i] = (AUT ? city.waterAt(wx, wz) : city.iceAt(wx, wz)) ? 1 : 0; }
     const blur = (A) => { const T = A.slice(); for (let j = 1; j < FG - 1; j++) for (let i = 1; i < FG - 1; i++) { const q = j * FG + i; A[q] = (4 * T[q] + T[q - 1] + T[q + 1] + T[q - FG] + T[q + FG]) / 8; } };
@@ -536,17 +536,17 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
       const hx = (gh(wx + e, wz) - gh(wx - e, wz)) / (2 * e), hz = (gh(wx, wz + e) - gh(wx, wz - e)) / (2 * e), g = Math.hypot(hx, hz), nl = Math.hypot(hx, 1, hz);
       const sh = 0.8 * ((-hx * L[0] + L[1] - hz * L[2]) / nl - L[1]) + 0.2 * (1 / nl - 1); // 0 на равнине
       const f = Math.max(0.7, Math.min(1.12, 1 + sh * 0.6));
-      // цвет по высоте: дно долины — светлый снег, к вершинам — серо-голубой; на крутых склонах — камень
-      const t = AUT ? sm(60, 750, h) : sm(100, 1700, h); // осень: низины — охра, холмы — бурее
+      // цвет по высоте: дно долины - светлый снег, к вершинам - серо-голубой; на крутых склонах - камень
+      const t = AUT ? sm(60, 750, h) : sm(100, 1700, h); // осень: низины - охра, холмы - бурее
       let r = AUT ? 196 - 40 * t : 214 - 52 * t, gg = AUT ? 184 - 44 * t : 220 - 46 * t, b = AUT ? 140 - 30 * t : 228 - 36 * t;
       const rk = sm(0.75, 1.15, g); r += (138 - r) * rk * 0.6; gg += (134 - gg) * rk * 0.6; b += (132 - b) * rk * 0.6;
-      const fo = sm(0.2, 0.8, bil(FD, wx, wz)) * 0.5, FC = AUT ? [170, 118, 72] : [120, 150, 124]; r += (FC[0] - r) * fo; gg += (FC[1] - gg) * fo; b += (FC[2] - b) * fo; // лес: зимой бледно-зелёный, осенью рыжий // лес — бледно-зелёный, рельеф под ним виден
-      // лёд: у льда на сетке, а берег — по высоте над уровнем льда
+      const fo = sm(0.2, 0.8, bil(FD, wx, wz)) * 0.5, FC = AUT ? [170, 118, 72] : [120, 150, 124]; r += (FC[0] - r) * fo; gg += (FC[1] - gg) * fo; b += (FC[2] - b) * fo; // лес: зимой бледно-зелёный, осенью рыжий // лес - бледно-зелёный, рельеф под ним виден
+      // лёд: у льда на сетке, а берег - по высоте над уровнем льда
       const iy = AUT ? city.autumn.WY : wz < damZ ? lakeN : Math.max(lakeS, 144 - wz * 0.004), ik = bil(ID, wx, wz) > 0.05 ? 1 - sm(0.4, 2.5, h - iy) : 0;
       const IC = AUT ? [92, 112, 110] : [156, 192, 214]; r += (IC[0] - r) * ik; gg += (IC[1] - gg) * ik; b += (IC[2] - b) * ik; // лёд / вода болота
       // горизонтали: расстояние до ближайшей в пикселях (по крутизне), сглаженная линия
       const dh = Math.abs(h - Math.round(h / CI) * CI), px = dh / (g * step + 1e-6), idx = Math.abs(h - Math.round(h / IX) * IX) < CI / 2;
-      const clF = sm(1.5, 3.5, CI / (g * step + 1e-6)); // на кручах горизонтали сливаются — там бледнее
+      const clF = sm(1.5, 3.5, CI / (g * step + 1e-6)); // на кручах горизонтали сливаются - там бледнее
       const cl = (1 - sm(idx ? 0.55 : 0.3, idx ? 1.25 : 0.95, px)) * (idx ? 0.5 : 0.3) * (1 - ik) * (idx ? 0.4 + 0.6 * clF : clF);
       const shore = ik > 0 && ik < 1 ? (1 - Math.abs(ik - 0.5) * 2) * 0.45 : 0;
       const q = (j * S2 + i) * 4, k = f * 0.86;
@@ -563,9 +563,9 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
     for (let i = 0; i < B.n; i++) x.fillRect((B.x[i] - B.w[i] / 2 + H) * k, (B.z[i] - B.d[i] / 2 + H) * k, Math.max(1, B.w[i] * k), Math.max(1, B.d[i] * k));
     return c;
   }
-  // «Туманная топь» — карта, по которой читается рельеф: послойная окраска (низина болота — зеленовато-серая, склоны — охра,
-  // вершины — светлее), сильная отмывка, горизонтали через 25 м (утолщённые — 100 м), лес — тёмно-оливковый с «крапом»,
-  // болото — штриховкой (знак топокарты), овраги — линиями тальвегов, гать — пунктиром, узкоколейка — «шпалами»; подписи местности
+  // «Туманная топь» - карта, по которой читается рельеф: послойная окраска (низина болота - зеленовато-серая, склоны - охра,
+  // вершины - светлее), сильная отмывка, горизонтали через 25 м (утолщённые - 100 м), лес - тёмно-оливковый с «крапом»,
+  // болото - штриховкой (знак топокарты), овраги - линиями тальвегов, гать - пунктиром, узкоколейка - «шпалами»; подписи местности
   function autumnMapBase(c, x, city, S2) {
     const H = CITY.HALF, step = 2 * H / S2, img = x.createImageData(S2, S2), d = img.data, gh = city.groundH, e = Math.max(25, step * 0.75), A = city.autumn, WY = A.WY;
     const CI = 25, IX = 100;
@@ -592,9 +592,9 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
       const sh = 0.8 * ((-hx * L[0] + L[1] - hz * L[2]) / nl - L[1]) + 0.2 * (1 / nl - 1);
       const f = Math.max(0.55, Math.min(1.2, 1 + sh * 1.1)); // отмывка сильнее, чем на зимней: холмы и овраги объёмные
       let [r, gg, b] = hyp(h);
-      const rv = sm(0.15, 0.7, bil(RV, wx, wz)); r += (120 - r) * rv * 0.3; gg += (92 - gg) * rv * 0.3; b += (66 - b) * rv * 0.3; // дно и склоны оврагов — бурее
-      const fo = sm(0.3, 0.8, bil(FD, wx, wz)); r += (112 - r) * fo * 0.36; gg += (118 - gg) * fo * 0.36; b += (80 - b) * fo * 0.36; // лес — тёмно-оливковый
-      if (fo > 0.6 && (i % sp === ((j / sp | 0) % 2 ? sp >> 1 : 0)) && j % sp === 0) { r *= 0.8; gg *= 0.82; b *= 0.8; } // крап — «деревья»
+      const rv = sm(0.15, 0.7, bil(RV, wx, wz)); r += (120 - r) * rv * 0.3; gg += (92 - gg) * rv * 0.3; b += (66 - b) * rv * 0.3; // дно и склоны оврагов - бурее
+      const fo = sm(0.3, 0.8, bil(FD, wx, wz)); r += (112 - r) * fo * 0.36; gg += (118 - gg) * fo * 0.36; b += (80 - b) * fo * 0.36; // лес - тёмно-оливковый
+      if (fo > 0.6 && (i % sp === ((j / sp | 0) % 2 ? sp >> 1 : 0)) && j % sp === 0) { r *= 0.8; gg *= 0.82; b *= 0.8; } // крап - «деревья»
       const ik = bil(ID, wx, wz) > 0.05 ? 1 - sm(0.3, 2.2, h - WY) : 0; [r, gg, b] = mix([r, gg, b], [78, 104, 112], ik); // вода
       const bg = sm(0.3, 0.7, bil(BG, wx, wz)) * (1 - ik);
       if (bg > 0) { [r, gg, b] = mix([r, gg, b], [138, 152, 136], bg * 0.6); if (j % sp === 0 && (i + (j / sp | 0) * 3) % sp < sp * 0.55) [r, gg, b] = mix([r, gg, b], [58, 92, 118], bg * 0.85); } // болото: штриховка
@@ -602,7 +602,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
       const clF = sm(1.2, 3, CI / (g * step + 1e-6));
       const cl = (1 - sm(idx ? 0.5 : 0.3, idx ? 1.2 : 0.9, px)) * (idx ? 0.55 : 0.22) * (1 - ik) * (idx ? 0.5 + 0.5 * clF : clF);
       const q = (j * S2 + i) * 4, k = f * 0.9;
-      d[q] = r * k * (1 - cl) + 110 * cl; d[q + 1] = gg * k * (1 - cl) + 78 * cl; d[q + 2] = b * k * (1 - cl) + 50 * cl; d[q + 3] = 255; // горизонтали — коричневые
+      d[q] = r * k * (1 - cl) + 110 * cl; d[q + 1] = gg * k * (1 - cl) + 78 * cl; d[q + 2] = b * k * (1 - cl) + 50 * cl; d[q + 3] = 255; // горизонтали - коричневые
     }
     x.putImageData(img, 0, 0);
     const k = S2 / (2 * H), P = (px, pz) => [(px + H) * k, (pz + H) * k], lw = Math.max(1, S2 / 700);
@@ -617,7 +617,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
     const a = city.airport; x.fillStyle = 'rgba(30,30,34,.9)'; if (a.rwyL) x.fillRect((a.x - a.rwyW / 2 + H) * k - 1, (a.z - a.rwyL / 2 + H) * k, Math.max(2, a.rwyW * k + 2), a.rwyL * k);
     const B = city.B; x.fillStyle = 'rgba(40,32,28,.8)';
     for (let i = 0; i < B.n; i++) x.fillRect((B.x[i] - B.w[i] / 2 + H) * k, (B.z[i] - B.d[i] / 2 + H) * k, Math.max(1, B.w[i] * k), Math.max(1, B.d[i] * k));
-    // вершина Лысой горы — треугольник с отметкой; подписи местности — курсивом, как на топокарте
+    // вершина Лысой горы - треугольник с отметкой; подписи местности - курсивом, как на топокарте
     { let bx = A.BALD.x, bz = A.BALD.z, bh = -1e9; for (let dz = -900; dz <= 900; dz += 60) for (let dx = -900; dx <= 900; dx += 60) { const hh = gh(A.BALD.x + dx, A.BALD.z + dz); if (hh > bh) { bh = hh; bx = A.BALD.x + dx; bz = A.BALD.z + dz; } }
       const [X, Y] = P(bx, bz), s = 4 * lw; x.fillStyle = 'rgba(60,40,26,.95)'; x.beginPath(); x.moveTo(X, Y - s); x.lineTo(X + s, Y + s * 0.7); x.lineTo(X - s, Y + s * 0.7); x.closePath(); x.fill();
       label(tr('Лысая гора'), bx, bz + 260, 1, Math.round(bh - WY) + tr(' м')); }
@@ -629,7 +629,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
     }
     const BA = A.BASIN || {}; label(tr('Гиблая топь'), (BA.x ?? 600) - 900, (BA.z ?? 600) + 1700, 1.25);
     label(tr('Чёрная вода'), A.OXBOW.x - A.OXBOW.r * 0.2, A.OXBOW.z - A.OXBOW.r - 250, 0.85);
-    { // овраги: тот, где кладбище техники, — «Костяной»; самый длинный из остальных — «Совиный яр»
+    { // овраги: тот, где кладбище техники, - «Костяной»; самый длинный из остальных - «Совиный яр»
       const wr = city.objects.find((o) => o.key === 'a_wreck'), dTo = (l) => (wr ? Math.min(...l.pts.map((p) => Math.hypot(p[0] - wr.x, p[1] - wr.z))) : 0);
       const rm = (city.ravines || []).filter((l) => l.main), first = rm.slice().sort((p, q) => dTo(p) - dTo(q))[0];
       const rest = rm.filter((l) => l !== first).sort((p, q) => q.pts.length - p.pts.length), names = [tr('Костяной овраг'), tr('Совиный яр')];

@@ -1,13 +1,13 @@
-// Язык интерфейса (Mark 2026-10-21): русский — исходный (строки остаются в коде), английский — словарь «русская строка →
-// английская» (lang/en.js, собирается из частей lang/en-*.js). tr(ru) — строка на выбранном языке (перевода нет — исходная);
-// tr('Сбито: {0}/{1}', [a, b]) — с подстановкой. trDom(root) — статичный HTML страницы (текст и title / aria-label / placeholder).
-// Выбор — «Настройки» → «Язык» (localStorage), для проверки — ?lang=en. Первый вход — язык устройства / Telegram и вопрос (askLang).
+// Язык интерфейса (Mark 2026-10-21): русский - исходный (строки остаются в коде), английский - словарь «русская строка →
+// английская» (lang/en.js, собирается из частей lang/en-*.js). tr(ru) - строка на выбранном языке (перевода нет - исходная);
+// tr('Сбито: {0}/{1}', [a, b]) - с подстановкой. trDom(root) - статичный HTML страницы (текст и title / aria-label / placeholder).
+// Выбор - «Настройки» → «Язык» (localStorage), для проверки - ?lang=en. Первый вход - язык устройства / Telegram и вопрос (askLang).
 // Без DOM при импорте: модуль годится для стендов Deno.
 import EN from './lang/en.js?v=20261104a';
 
 const LS_KEY = 'fortuna_airdef_lang';
-// язык устройства (Mark 2026-10-21: иностранца не пугать русским интерфейсом): в Telegram — язык аккаунта, иначе — браузера;
-// языки, где обычно понимают русский, — русский, остальные — английский
+// язык устройства (Mark 2026-10-21: иностранца не пугать русским интерфейсом): в Telegram - язык аккаунта, иначе - браузера;
+// языки, где обычно понимают русский, - русский, остальные - английский
 const RU_LIKE = /^(ru|be|kk|ky|uz|tg|tk|hy|az|uk)\b/i;
 export function sysLang() {
   let c = '';
@@ -17,13 +17,13 @@ export function sysLang() {
 }
 let saved = null;
 function detect() {
-  if (typeof document === 'undefined') return 'ru'; // онлайн-сервер (Deno 1.x: window есть, navigator.language — en-US) — сообщения по-русски, их переводит клиент
-  try { const Q = typeof location !== 'undefined' && location.search ? new URLSearchParams(location.search) : null, q = Q && Q.get('lang'); if (q === 'en' || q === 'ru') return q; if (Q && Q.get('test')) return 'ru'; /* стенды (Deno: navigator.language — en-US) — русский, если не ?lang= */ } catch (_) { /* нет location */ }
+  if (typeof document === 'undefined') return 'ru'; // онлайн-сервер (Deno 1.x: window есть, navigator.language - en-US) - сообщения по-русски, их переводит клиент
+  try { const Q = typeof location !== 'undefined' && location.search ? new URLSearchParams(location.search) : null, q = Q && Q.get('lang'); if (q === 'en' || q === 'ru') return q; if (Q && Q.get('test')) return 'ru'; /* стенды (Deno: navigator.language - en-US) - русский, если не ?lang= */ } catch (_) { /* нет location */ }
   try { const s = globalThis.localStorage && globalThis.localStorage.getItem(LS_KEY); if (s === 'en' || s === 'ru') { saved = s; return s; } } catch (_) { /* приватный режим */ }
   return typeof window === 'undefined' ? 'ru' : sysLang();
 }
 export const LANG = detect();
-// первый вход: язык ещё не выбран — один раз спросить (угаданный выделен); выбор запоминается, сменить — «Настройки» → «Язык»
+// первый вход: язык ещё не выбран - один раз спросить (угаданный выделен); выбор запоминается, сменить - «Настройки» → «Язык»
 export function askLang() {
   if (saved || typeof document === 'undefined' || !document.body || !document.body.appendChild) return;
   try { if (new URLSearchParams(location.search).get('lang') || new URLSearchParams(location.search).get('test')) return; } catch (_) { /* нет location */ }
@@ -47,7 +47,9 @@ export function tr(ru, args) {
   return sub(en !== undefined ? en : ru, args);
 }
 // перевод уже готовой строки, если она целиком есть в словаре (сообщения сервера, названия из данных)
-export const trIf = (s) => (LANG === 'en' && typeof s === 'string' && EN[s] !== undefined ? EN[s] : s);
+// ответы сервера: длинные тире убраны из всех текстов (Mark 2026-11-04), игровой сервер на ноутбуке может быть ещё старым
+const noDash = (s) => (typeof s === 'string' ? s.replace(/[\u2014\u2013]/g, '-') : s);
+export const trIf = (s0) => { const s = noDash(s0); return LANG === 'en' && typeof s === 'string' && EN[s] !== undefined ? EN[s] : s; };
 
 const ATTRS = ['title', 'aria-label', 'placeholder', 'alt'];
 export function trDom(root) {

@@ -1,8 +1,8 @@
-// Слияние сеток (2026-10-23, нагрев телефонов: каждая сетка — отдельный вызов отрисовки, а на телефоне вызов в разы дороже, чем на ПК).
-// mergeLocal — несколько геометрий в одну, каждая со своей матрицей: только использованные вершины, позиции и нормали — в общие оси,
-// упакованные целые (цвет затенения — байты) — как были, если у всех одного вида, иначе в float. bakeGroup — неподвижная группа: сетки с одним
-// материалом и тенью — в одну (подвижные части — винты, и всё под скрытыми узлами — не трогает).
-// Выглядит так же. Общие геометрии — по ключу (cache), если копии одинаковые (самолёты одной модели, одинаковые постройки)
+// Слияние сеток (2026-10-23, нагрев телефонов: каждая сетка - отдельный вызов отрисовки, а на телефоне вызов в разы дороже, чем на ПК).
+// mergeLocal - несколько геометрий в одну, каждая со своей матрицей: только использованные вершины, позиции и нормали - в общие оси,
+// упакованные целые (цвет затенения - байты) - как были, если у всех одного вида, иначе в float. bakeGroup - неподвижная группа: сетки с одним
+// материалом и тенью - в одну (подвижные части - винты, и всё под скрытыми узлами - не трогает).
+// Выглядит так же. Общие геометрии - по ключу (cache), если копии одинаковые (самолёты одной модели, одинаковые постройки)
 /* global THREE */
 const MN3 = new THREE.Matrix3(), MV = new THREE.Vector3(), M4 = new THREE.Matrix4();
 const NK = (A) => (!A.normalized ? 1 : A.array instanceof Uint8Array ? 1 / 255 : A.array instanceof Uint16Array ? 1 / 65535 : A.array instanceof Int8Array ? 1 / 127 : A.array instanceof Int16Array ? 1 / 32767 : 1);
@@ -15,7 +15,7 @@ export function mergeLocal(list) { // [{ g, m }] → THREE.BufferGeometry
   const nv = maps.reduce((s, q) => s + q.ord.length, 0), ni = maps.reduce((s, q) => s + q.L, 0), out = new THREE.BufferGeometry(), idx = new (nv > 65535 ? Uint32Array : Uint16Array)(ni);
   for (const a of names) {
     const A0 = g0.attributes[a], s = A0.itemSize, P0 = a === 'position' || (a === 'normal' && s === 3);
-    const raw = !P0 && A0.normalized && list.every(({ g }) => g.attributes[a].normalized && AT(g.attributes[a]) === AT(A0)); // байты цвета — байтами (память)
+    const raw = !P0 && A0.normalized && list.every(({ g }) => g.attributes[a].normalized && AT(g.attributes[a]) === AT(A0)); // байты цвета - байтами (память)
     const arr = new (raw ? AT(A0) : Float32Array)(nv * s); let o = 0;
     list.forEach(({ g, m }, j) => {
       const A = g.attributes[a], k = raw ? 1 : NK(A), P3 = a === 'position', N3 = a === 'normal' && s === 3; if (N3) MN3.getNormalMatrix(m);
@@ -29,8 +29,8 @@ export function mergeLocal(list) { // [{ g, m }] → THREE.BufferGeometry
   let io = 0, vo = 0; for (const { used, ord, L, ix } of maps) { for (let t = 0; t < L; t++) idx[io++] = used[ix ? ix[t] : t] + vo; vo += ord.length; }
   out.setIndex(new THREE.BufferAttribute(idx, 1)); out.computeBoundingSphere(); return out;
 }
-// неподвижная группа: все сетки внутри (кроме keep(q)) — по одной на материал / тень / видимость / порядок вывода, в осях группы.
-// cache + key — общая геометрия для одинаковых групп
+// неподвижная группа: все сетки внутри (кроме keep(q)) - по одной на материал / тень / видимость / порядок вывода, в осях группы.
+// cache + key - общая геометрия для одинаковых групп
 export function bakeGroup(root, keep = () => false, cache = null, key = '') {
   root.updateMatrixWorld(true); const inv = new THREE.Matrix4().copy(root.matrixWorld).invert(), by = new Map();
   const held = (q) => { for (let p = q; p && p !== root; p = p.parent) if ((p !== q && !p.visible) || p.userData.hub || p.userData.spin) return true; return false; }; // под скрытым узлом (стал бы виден) или вращается
@@ -46,7 +46,7 @@ export function bakeGroup(root, keep = () => false, cache = null, key = '') {
     mm.castShadow = s.castShadow; mm.receiveShadow = s.receiveShadow; mm.renderOrder = s.renderOrder; mm.visible = s.visible; mm.userData = { ...s.userData, baked: L.length }; mm.name = s.name;
     root.add(mm); for (const q of L) if (q.parent) q.parent.remove(q); n += L.length - 1;
   }
-  // пустые группы-узлы (остались без сеток) — убрать, чтобы их матрицы не пересчитывались каждый кадр
+  // пустые группы-узлы (остались без сеток) - убрать, чтобы их матрицы не пересчитывались каждый кадр
   const empty = []; root.traverse((q) => { if (q !== root && !q.isMesh && q.children.length === 0 && q.type === 'Group') empty.push(q); }); for (const q of empty) if (q.parent) q.parent.remove(q);
   return n;
 }

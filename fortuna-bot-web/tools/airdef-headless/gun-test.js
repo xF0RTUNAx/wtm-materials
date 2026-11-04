@@ -1,4 +1,4 @@
-// Пушки против дронов: N зениток у целей, волна «Шахедов» (sim/combined.js) — сколько сбито, сколько секунд каждая
+// Пушки против дронов: N зениток у целей, волна «Шахедов» (sim/combined.js) - сколько сбито, сколько секунд каждая
 // сопровождала цель и стреляла. deno run --allow-read --allow-env tools/airdef-headless/gun-test.js [ключ ЗРК] [число]
 const dir = new URL('.', import.meta.url).pathname;
 (0, eval)(Deno.readTextFileSync(dir + '../drone-headless/three.min.js'));
@@ -11,11 +11,11 @@ const { createCombined } = await import('../../games/airdef/sim/combined.js');
 const { SAM } = await import('../../games/airdef/arsenal.js');
 const city = buildCity(1); setGround(city.groundH);
 const KEY = Deno.args[0] || 'gepard', N = +(Deno.args[1] || 4), MODE = Deno.env.get('MODE') || 'arcade';
-const ATT = SAM[KEY].side === 'east' ? 'west' : 'east', DRONE = ATT === 'east' ? ['scout_e', 'shahed'] : ['scout', 'uav_w']; // дроны — стороны, против которой этот ЗРК
+const ATT = SAM[KEY].side === 'east' ? 'west' : 'east', DRONE = ATT === 'east' ? ['scout_e', 'shahed'] : ['scout', 'uav_w']; // дроны - стороны, против которой этот ЗРК
 let tot = 0, totL = 0, totR = 0, totRI = 0;
 for (let run = 0; run < 5; run++) {
   let seed = 11 + run * 977; const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
-  const st = { L: 0, I: 0, R: 0, RI: 0 }; // ударные дроны: пущено / сбито; разведчики — отдельно (раньше сбитый разведчик шёл в «сбито» ударных: 9 из 8)
+  const st = { L: 0, I: 0, R: 0, RI: 0 }; // ударные дроны: пущено / сбито; разведчики - отдельно (раньше сбитый разведчик шёл в «сбито» ударных: 9 из 8)
   const fx = { wpnRelease: (w) => { if (w.W.uav) st[w.W.recon ? 'R' : 'L']++; }, wpnEnd: (w, r) => { if (r.intercepted && w.W.uav) st[w.W.recon ? 'RI' : 'I']++; } };
   let raid = null;
   const S = createStrike({ city, rnd, mode: () => MODES[MODE], aircraft: () => raid.alive(), laserSpot: () => null, night: 0, fx, hurt: (a, d) => raid.hurt(a, d) });

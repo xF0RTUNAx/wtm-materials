@@ -65,7 +65,7 @@ scenario('GBU-12 с подсветом по складу горючего', (S, 
   S.release(a, 'gbu12', {}); setLaser(spot);
   return { steer: () => [0, 0] };
 }, 60);
-// 5. Х-58 по «Осе», которая не выключает РЛС / выключает (у Shrike — промах)
+// 5. Х-58 по «Осе», которая не выключает РЛС / выключает (у Shrike - промах)
 for (const key of ['kh58', 'agm45']) scenario(`${key} по Осе`, (S, a) => {
   const u = S.addUnit('osa', 0, 0, { skill: 1 }); u.emit = true;
   a.pos.set(0, 6000, 14000); a.yaw = 0; a.pitch = 0; a.speed = 250; fwdOf(a, a.vel).multiplyScalar(250);
@@ -93,7 +93,7 @@ function waveTest(defSide, era, n, wave, seed0) {
   raid.spawnWave(n, wave, targets);
   const dt = 1 / 30;
   for (let t = 0; t < 300; t += dt) { raid.step(dt); S.step(dt); if (raid.planes.every((a) => a.dead || a.out)) break; }
-  console.log(`  ПВО ${defSide} ${era}, волна ${wave} ×${n}: сбито ${ev.down}, ушли ${ev.out}, сбросов ${ev.rel}, пусков ЗУР ${ev.launches}, перехвачено ${ev.icpt}, ЛЦ ${ev.decoys}, помехи нав. ${ev.jam}; уничтожено: ${ev.kills.join(', ') || '—'}`);
+  console.log(`  ПВО ${defSide} ${era}, волна ${wave} ×${n}: сбито ${ev.down}, ушли ${ev.out}, сбросов ${ev.rel}, пусков ЗУР ${ev.launches}, перехвачено ${ev.icpt}, ЛЦ ${ev.decoys}, помехи нав. ${ev.jam}; уничтожено: ${ev.kills.join(', ') || '-'}`);
 }
 console.log('\n== волны');
 for (const [side, era] of [['east', 2], ['west', 2], ['east', 1], ['east', 3], ['west', 3], ['east', 4], ['west', 4]]) for (const w of [1, 3]) waveTest(side, era, 2 + w * 2, w, 11 + w);

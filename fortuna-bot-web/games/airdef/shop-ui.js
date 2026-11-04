@@ -1,10 +1,10 @@
-// Магазин «Воздушного превосходства» (Mark 2026-10-26 — вариант «Витрина»): особые окраски самолётов за кристаллы. В магазине — окраски, вышедшие к
+// Магазин «Воздушного превосходства» (Mark 2026-10-26 - вариант «Витрина»): особые окраски самолётов за кристаллы. В магазине - окраски, вышедшие к
 // текущему сезону (arsenal.js CAMOS: season), новые первыми. Окно: выбранный самолёт в полёте на фоне настоящего неба (Mark: «чтобы не бросалась в
-// глаза процедурная работа» — рендер Blender: модель с окраской, свет и фон — фото-панорама неба Poly Haven, CC0; tools/airdef-models/shop-sky-render.py),
-// при смене окраски небо плавно сменяется, самолёт влетает справа; слева — название, цена и кнопка; внизу плитки окрасок. Картинки — airdef/shop/
-// <самолёт>_<окраска>.webp (самолёт на прозрачном фоне), _sky.webp (небо), _s.webp (карточка). Данные — функция airdef-shop (кристаллы, свои окраски,
-// picks — окраски «на выбор», worn — надетые: самолёт → окраска); ?rmock=1 — заглушка account.js (?shop=token|owned|poor — её состояния для снимков).
-// Правила наград за сезон в игре не объявляются (Mark): в подсказке — только «за рейтинг, в конце сезона».
+// глаза процедурная работа» - рендер Blender: модель с окраской, свет и фон - фото-панорама неба Poly Haven, CC0; tools/airdef-models/shop-sky-render.py),
+// при смене окраски небо плавно сменяется, самолёт влетает справа; слева - название, цена и кнопка; внизу плитки окрасок. Картинки - airdef/shop/
+// <самолёт>_<окраска>.webp (самолёт на прозрачном фоне), _sky.webp (небо), _s.webp (карточка). Данные - функция airdef-shop (кристаллы, свои окраски,
+// picks - окраски «на выбор», worn - надетые: самолёт → окраска); ?rmock=1 - заглушка account.js (?shop=token|owned|poor - её состояния для снимков).
+// Правила наград за сезон в игре не объявляются (Mark): в подсказке - только «за рейтинг, в конце сезона».
 import { ico } from './icons.js?v=20261104a';
 import { tr, trIf, LANG } from './i18n.js?v=20261104a';
 import { activeAcc, callFn } from './account.js?v=20261104a';
@@ -15,7 +15,7 @@ const LOC = LANG === 'en' ? 'en-US' : 'ru-RU';
 const nf = (v) => Math.round(v).toLocaleString(LOC);
 const RM = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 const FRESH = 60000, RETRY = 30000;
-// вид окраски на витрине: название (первое слово — светлое, остальное — цветом окраски; одно слово — цветом), акценты и полоска цветов
+// вид окраски на витрине: название (первое слово - светлое, остальное - цветом окраски; одно слово - цветом), акценты и полоска цветов
 const LOOK = {
   'e_f15e:inferno': { name: 'Инферно', acc: '#ef7a2a', acc2: '#f6a04a', chips: ['#1d1d20', '#a3241a', '#e0531c', '#f39528', '#ffd264'] },
   'e_mig31:dragon': { name: 'Нефритовый дракон', acc: '#8cc49a', acc2: '#e3d3a8', chips: ['#173d2b', '#25563c', '#3c7a52', '#e9dfc2', '#e8542a'] },
@@ -34,7 +34,7 @@ const CSS = `
 #shopWin .ic { width: 1em; height: 1em; fill: currentColor; flex: none; display: inline-block; vertical-align: -0.14em; }
 #shopWin .gem { color: var(--jade); }
 #shopWin .sky { position: absolute; inset: -3%; z-index: -3; transform: translate(calc(var(--mx, 0) * -6px), calc(var(--my, 0) * -4px)); transition: transform .3s linear; }
-#shopWin .skyi { position: absolute; inset: 0; background: center / cover no-repeat; /* в кадре неба — только облака: горизонт с размытым низом панорамы — ниже кадра (shop-sky-render.py skyup) */ opacity: 0; transition: opacity 1s ease; animation: shpDrift 40s ease-in-out infinite alternate; }
+#shopWin .skyi { position: absolute; inset: 0; background: center / cover no-repeat; /* в кадре неба - только облака: горизонт с размытым низом панорамы - ниже кадра (shop-sky-render.py skyup) */ opacity: 0; transition: opacity 1s ease; animation: shpDrift 40s ease-in-out infinite alternate; }
 #shopWin .skyi.on { opacity: 1; }
 @keyframes shpDrift { from { transform: scale(1.04) translateX(0); } to { transform: scale(1.1) translateX(-1.5%); } }
 #shopWin .hero { position: absolute; z-index: 2; left: var(--hx); top: var(--hy); width: var(--hw); height: calc(var(--hw) * .5625); pointer-events: none;
@@ -127,19 +127,19 @@ const CSS = `
 `;
 
 export function createShop(C) {
-  const style = document.createElement('style'); style.textContent = CSS; if (document.head) document.head.appendChild(style); // (заглушка DOM стенда — без head/body)
+  const style = document.createElement('style'); style.textContent = CSS; if (document.head) document.head.appendChild(style); // (заглушка DOM стенда - без head/body)
   const root = document.createElement('div'); root.id = 'shopWin'; root.setAttribute && root.setAttribute('role', 'dialog'); root.setAttribute && root.setAttribute('aria-modal', 'true');
   if (document.body && document.body.appendChild) document.body.appendChild(root);
-  const S = { w: null, season: 1, err: '', key: null, at: 0, busy: false, sel: 0, shown: null, hint: false, act: false, built: '', cat: 'camo', asel: 0 }; // cat — вкладка: окраски или аватарки (asel — выбранная)
+  const S = { w: null, season: 1, err: '', key: null, at: 0, busy: false, sel: 0, shown: null, hint: false, act: false, built: '', cat: 'camo', asel: 0 }; // cat - вкладка: окраски или аватарки (asel - выбранная)
   const $ = (id) => document.getElementById(id);
   const q = (s) => root.querySelector(s);
   const gem = ico('gem', 'gem');
-  const out = () => CAMOS.filter((c) => c.season && c.season <= S.season && LOOK[c.key]).sort((a, b) => b.season - a.season).map((c) => c.key); // новые — первыми
+  const out = () => CAMOS.filter((c) => c.season && c.season <= S.season && LOOK[c.key]).sort((a, b) => b.season - a.season).map((c) => c.key); // новые - первыми
   const acc = () => activeAcc();
   const owned = (k) => !!S.w && S.w.camos.includes(k);
   const worn = (k) => { const [pl, id] = k.split(':'); return !!S.w && (S.w.worn || {})[pl] === id; };
 
-  // ── кнопка в меню: баланс (картинка — «Нефритовый дракон», Mark: в разметке) ──
+  // ── кнопка в меню: баланс (картинка - «Нефритовый дракон», Mark: в разметке) ──
   function paint() {
     const sub = S.w ? `${gem}<b>${nf(S.w.crystals)}</b>` : tr('окраски и аватарки');
     if ($('shopSub') && $('shopSub').innerHTML !== sub) $('shopSub').innerHTML = sub;
@@ -154,15 +154,15 @@ export function createShop(C) {
     let d = null, err = '';
     if (key) {
       try { d = await callFn('airdef-shop', { player_id: key, action: 'state' }); }
-      catch (e) { err = e.status === 404 && (!e.code || e.code === 'NOT_FOUND') ? 'soon' : trIf(e.message) || tr('Нет связи с сайтом'); } // NOT_FOUND — функции нет на сервере (Supabase)
+      catch (e) { err = e.status === 404 && (!e.code || e.code === 'NOT_FOUND') ? 'soon' : trIf(e.message) || tr('Нет связи с сайтом'); } // NOT_FOUND - функции нет на сервере (Supabase)
     }
     S.busy = false;
     if (key !== keyNow()) { S.at = 0; S.w = null; load(); return; } // пока ждали, сменили аккаунт
     if (d) { S.w = d.wallet; S.season = d.season || S.season; } else S.w = null;
     S.err = err; S.at = Date.now(); paint(); if (api.isOpen()) draw();
     if (C.account && C.account.render) C.account.render(); // своя аватарка у ника в меню
-    if (C.hangar && C.hangar.refresh) C.hangar.refresh(); // надетая окраска — на самолёт в ангаре
-    if (d && C.state === 'play' && C.ctrl && C.ctrl.modelsReady) C.ctrl.modelsReady(); // страница открылась сразу в бой (?go= после «Ещё раз» на другой карте): надетая окраска — когда пришёл кошелёк
+    if (C.hangar && C.hangar.refresh) C.hangar.refresh(); // надетая окраска - на самолёт в ангаре
+    if (d && C.state === 'play' && C.ctrl && C.ctrl.modelsReady) C.ctrl.modelsReady(); // страница открылась сразу в бой (?go= после «Ещё раз» на другой карте): надетая окраска - когда пришёл кошелёк
   }
   function touch() {
     if (C.state !== 'menu' || S.busy) return;
@@ -174,13 +174,13 @@ export function createShop(C) {
     let d = null, err = '';
     try { d = await callFn('airdef-shop', { player_id: keyNow(), action, key, ...extra }); } catch (e) { err = trIf(e.message) || tr('Нет связи с сайтом'); }
     S.act = false;
-    // на игровом сервере надетое — из билета при подключении: соединение в меню закрыть, панель «Онлайн» подключится с новым (в комнате, в бою и в поиске боя не трогаем)
+    // на игровом сервере надетое - из билета при подключении: соединение в меню закрыть, панель «Онлайн» подключится с новым (в комнате, в бою и в поиске боя не трогаем)
     const N = C.netc; if (d && action === 'wear' && N && N.accChanged && !N.queued && !N.search) N.accChanged();
     if (d && d.wallet) { const from = S.w ? S.w.crystals : 0; S.w = d.wallet; draw(); countTo(from, S.w.crystals); paint(); if (C.account && C.account.render) C.account.render(); if (C.hangar && C.hangar.refresh) C.hangar.refresh(); } else { S.err = err; draw(); S.err = ''; }
     return !!d;
   }
 
-  // ── раскладка: самолёт справа от плаката, размер — от экрана ──
+  // ── раскладка: самолёт справа от плаката, размер - от экрана ──
   function layout() {
     const vw = innerWidth, vh = innerHeight, r = root.style;
     const k = Math.max(0.82, Math.min(1.3, Math.min(vw / 932, vh / 430)));
@@ -191,20 +191,20 @@ export function createShop(C) {
     if (S.cat === 'ava') layoutAva(k, vw, vh);
     fitInfo();
   }
-  // аватарки (Mark: вариант «Картотека»): большая слева, под ней кнопка и строка «как увидят», справа плитки 5×2. Размеры — от экрана: всё помещается без прокрутки
+  // аватарки (Mark: вариант «Картотека»): большая слева, под ней кнопка и строка «как увидят», справа плитки 5×2. Размеры - от экрана: всё помещается без прокрутки
   function layoutAva(k, vw, vh) {
     const top = q('.top'); if (!top) return;
     const b = top.getBoundingClientRect(), y0 = b.bottom + 12 * k, low = vh < 520;
     const H = vh - y0 - 12 * k - (parseFloat(getComputedStyle(root).getPropertyValue('--sa-b')) || 0);
-    const under = (58 + 44 + 54 + (low ? 0 : 28)) * k, gap = 10 * k, cap = 24 * k; // под большой: кнопка, пояснение, строка «как увидят», её подпись; cap — цена под плиткой
+    const under = (58 + 44 + 54 + (low ? 0 : 28)) * k, gap = 10 * k, cap = 24 * k; // под большой: кнопка, пояснение, строка «как увидят», её подпись; cap - цена под плиткой
     const fs = Math.max(110, Math.min(300 * k, H - under));
     const ts = Math.max(56, Math.min((vw - b.left - fs - 24 * k - (vw - b.right) - 4 * gap) / 5, (H - gap) / 2 - cap));
     const h = Math.max(fs + under, 2 * (ts + cap) + gap);
     const r = root.style; r.setProperty('--fs', fs + 'px'); r.setProperty('--ts', ts + 'px'); r.setProperty('--at', y0 + Math.min(Math.max(0, (vh - 430 * k) * 0.25), Math.max(0, H - h)) + 'px');
     root.classList.toggle('lowh', low);
   }
-  // название, кнопка и подсказка — над плитками (Mark 2026-10-29: длинное название — два-три слова строками — уводило кнопку под плитки, тем более
-  // с отступом Telegram сверху и строкой «Окраска на выбор» снизу): не влезает по высоте или слово шире блока — название мельче, до 55 %
+  // название, кнопка и подсказка - над плитками (Mark 2026-10-29: длинное название - два-три слова строками - уводило кнопку под плитки, тем более
+  // с отступом Telegram сверху и строкой «Окраска на выбор» снизу): не влезает по высоте или слово шире блока - название мельче, до 55 %
   function fitInfo() {
     const info = q('.sinfo'), tray = q('.tray'), nm = q('.name'); if (!info || !tray || !nm || !api.isOpen() || S.cat === 'ava') return;
     nm.style.fontSize = '';
@@ -219,23 +219,23 @@ export function createShop(C) {
     root.innerHTML = `<div class="sky"><i class="skyi"></i><i class="skyi"></i></div><div class="hero"><img class="pl" alt=""><img class="pl" alt=""></div><div class="vign"></div>
       <header class="top"><div class="t"><h1>${tr('Магазин')}</h1><div class="cats"><button data-c="camo">${tr('Окраски')}</button><button data-c="ava">${tr('Аватарки')}</button></div><small class="ssub"></small></div>
         <div class="tok" title="${tr('Окраска на выбор')}">${ico('ticket')}<span class="tokN"></span></div>
-        <div class="bal" title="${tr('Кристаллы')}"><small>${tr('кристаллы')}</small>${gem}<b class="balN">—</b></div>
+        <div class="bal" title="${tr('Кристаллы')}"><small>${tr('кристаллы')}</small>${gem}<b class="balN">-</b></div>
         <button class="sq q" data-a="q" aria-expanded="false" title="${tr('Откуда кристаллы')}">?</button>
         <button class="sq" data-a="close" title="${tr('Закрыть')}" aria-label="${tr('Закрыть')}">${ico('close')}</button></header>
       <div class="sinfo"><div class="kick pln"></div><h2 class="name"></h2><div class="chips"></div><div class="act"></div><div class="note"></div><div class="stamp"></div></div>
-      <div class="tray"><span class="ticket">${ico('ticket')}${tr('Окраска на выбор — возьмите любую')}</span>
+      <div class="tray"><span class="ticket">${ico('ticket')}${tr('Окраска на выбор - возьмите любую')}</span>
         <div class="tiles">${list.map((k, i) => `<button class="tile" data-i="${i}" style="--acc:${LOOK[k].acc}"><img src="${img(k, 's')}" alt=""><span class="tt"><b>${camoName(k)}</b><small></small></span></button>`).join('')}</div></div>
       <div class="avaL"><img class="frame" alt=""><div class="aact"></div><div class="note anote"></div><div class="seenT">${tr('Так вас увидят в рейтинге и в онлайне:')}</div><div class="seen"><img alt=""><span><b></b><small></small></span></div><div class="stamp"></div></div>
       <div class="avaG">${AVA_SHOP.map((id, i) => `<button class="atile" data-ai="${i}" aria-label="${tr('Аватарка {0}', [i + 1])}"><img src="${avaSrc(id)}" alt=""><span class="pr"></span></button>`).join('')}</div>
       <div class="shint" role="dialog" aria-label="${tr('Откуда кристаллы')}"><h3>${gem}${tr('Откуда кристаллы')}</h3>
         <p>${tr('Задания')}<small>${tr('ежедневные и еженедельные')}</small></p>
         <p>${tr('Награда за онлайн-рейтинг')}<small>${tr('начисляются в конце сезона')}</small></p>
-        <p>${tr('Покупка — навсегда')}<small>${tr('надеть или снять — здесь же')}</small></p></div>`;
+        <p>${tr('Покупка - навсегда')}<small>${tr('надеть или снять - здесь же')}</small></p></div>`;
     for (const k of list) { const a = new Image(); a.src = img(k); const b = new Image(); b.src = img(k, 'sky'); } // смена окраски без мигания
     layout();
   }
 
-  // небо и самолёт выбранной окраски: небо — плавная смена, самолёт — влетает справа, прежний уходит влево
+  // небо и самолёт выбранной окраски: небо - плавная смена, самолёт - влетает справа, прежний уходит влево
   function scene(k, anim) {
     if (S.shown === k) return; const first = S.shown == null; S.shown = k;
     const [s0, s1] = root.querySelectorAll('.skyi'), [p0, p1] = root.querySelectorAll('.pl');
@@ -245,7 +245,7 @@ export function createShop(C) {
     pNew.src = img(k); pNew.alt = `${trIf(PLANES[k.split(':')[0]] || '')} · ${camoName(k)}`;
     pOld.classList.remove('on'); pNew.classList.add('on');
     if (!anim || first || RM || !pNew.animate) return;
-    // прежний уходит влево быстро, новый влетает справа после него — без наложения двух самолётов
+    // прежний уходит влево быстро, новый влетает справа после него - без наложения двух самолётов
     pOld.animate([{ opacity: 1, transform: 'translate(0, 0)' }, { opacity: 0, transform: 'translate(-34%, 6%) scale(.9)' }], { duration: 340, easing: 'cubic-bezier(.55,0,1,.45)' });
     pNew.animate([{ opacity: 0, transform: 'translate(38%, -7%) scale(.88)' }, { opacity: 1, transform: 'translate(0, 0) scale(1)' }], { duration: 900, delay: 260, easing: 'cubic-bezier(.2,.8,.2,1)', fill: 'backwards' });
   }
@@ -259,12 +259,12 @@ export function createShop(C) {
   function drawAva(anim) {
     sceneAva();
     const id = AVA_SHOP[S.asel], k = avaKey(id), a = acc(), w = S.w, tick = ico('ok'), busy = S.act ? ' disabled' : '', big = q('.frame'), src = avaSrc(id, true);
-    q('.balN').textContent = w ? nf(w.crystals) : '—';
+    q('.balN').textContent = w ? nf(w.crystals) : '-';
     if (big.getAttribute('src') !== src) { big.src = src; if (anim && !RM && big.animate) big.animate([{ opacity: 0.3, transform: 'scale(.985)' }, { opacity: 1, transform: 'none' }], { duration: 320, easing: 'cubic-bezier(.2,.8,.2,1)' }); }
     let html = '', note = '';
     if (!a || a.kind !== 'airdef') {
       html = `<button class="sbt main" data-a="${a ? 'xfer' : 'login'}">${a ? tr('Перенести прогресс') : tr('Войти')}</button>`;
-      note = tr('Кристаллы и аватарки — только у аккаунта игры.');
+      note = tr('Кристаллы и аватарки - только у аккаунта игры.');
     } else if (!w) {
       html = `<button class="sbt main" disabled>${tr('Купить')} ${gem}<b>${AVA_PRICE}</b></button>`;
       note = S.busy || !S.err ? tr('Загружаем…') : S.err === 'soon' ? tr('Магазин скоро откроется.') : `${S.err} <button data-a="retry">${tr('Повторить')}</button>`;
@@ -277,7 +277,7 @@ export function createShop(C) {
       html = `<button class="sbt main" data-a="buy"${busy}>${tr('Купить')} ${gem}<b>${AVA_PRICE}</b></button>`;
     } else {
       html = `<button class="sbt short" data-a="q">${tr('Не хватает')} ${gem}<b>${AVA_PRICE - w.crystals}</b></button>`;
-      note = `${tr('Кристаллы — за задания и рейтинг.')} <button data-a="q">${tr('Откуда?')}</button>`;
+      note = `${tr('Кристаллы - за задания и рейтинг.')} <button data-a="q">${tr('Откуда?')}</button>`;
     }
     q('.aact').innerHTML = html; const ne = q('.anote'); ne.innerHTML = note; ne.classList.toggle('err', !!S.err && !!w);
     if (S.err && w) ne.textContent = S.err;
@@ -304,7 +304,7 @@ export function createShop(C) {
     scene(k, anim);
     root.classList.toggle('has-token', !!w && w.picks > 0);
     q('.ssub').textContent = tr('окраски сезона {0}', [S.season]);
-    q('.balN').textContent = w ? nf(w.crystals) : '—';
+    q('.balN').textContent = w ? nf(w.crystals) : '-';
     q('.tokN').textContent = w ? tr('на выбор: {0}', [w.picks]) : '';
     const info = q('.sinfo'); info.style.setProperty('--acc', L.acc); info.style.setProperty('--acc2', L.acc2);
     q('.pln').textContent = trIf(PLANES[k.split(':')[0]] || '');
@@ -313,9 +313,9 @@ export function createShop(C) {
     q('.chips').innerHTML = L.chips.map((x) => `<i style="background:${x}"></i>`).join('');
     const tick = ico('ok'), busy = S.act ? ' disabled' : '';
     let html = '', note = '';
-    if (!a || a.kind !== 'airdef') { // гость или аккаунт сайта: покупки — только с аккаунтом игры
+    if (!a || a.kind !== 'airdef') { // гость или аккаунт сайта: покупки - только с аккаунтом игры
       html = `<button class="sbt main" data-a="${a ? 'xfer' : 'login'}">${a ? tr('Перенести прогресс') : tr('Войти')}</button>`;
-      note = tr('Кристаллы и окраски — только у аккаунта игры.');
+      note = tr('Кристаллы и окраски - только у аккаунта игры.');
     } else if (!w) {
       html = `<button class="sbt main" disabled>${tr('Купить')} ${gem}<b>${CAMO_PRICE}</b></button>`;
       note = S.busy || !S.err ? tr('Загружаем…') : S.err === 'soon' ? tr('Магазин скоро откроется.') : `${S.err} <button data-a="retry">${tr('Повторить')}</button>`;
@@ -330,7 +330,7 @@ export function createShop(C) {
       html = `<button class="sbt main" data-a="buy"${busy}>${tr('Купить')} ${gem}<b>${CAMO_PRICE}</b></button>`;
     } else {
       html = `<button class="sbt short" data-a="q">${tr('Не хватает')} ${gem}<b>${CAMO_PRICE - w.crystals}</b></button>`;
-      note = `${tr('Кристаллы — за задания и рейтинг.')} <button data-a="q">${tr('Откуда?')}</button>`;
+      note = `${tr('Кристаллы - за задания и рейтинг.')} <button data-a="q">${tr('Откуда?')}</button>`;
     }
     q('.act').innerHTML = html; const ne = q('.note'); ne.innerHTML = note; ne.classList.toggle('err', !!S.err && !!w);
     if (S.err && w) ne.textContent = S.err;
@@ -361,7 +361,7 @@ export function createShop(C) {
 
   // ── события ──
   root.addEventListener && root.addEventListener('click', async (e) => {
-    if (Date.now() - swipeAt < 400) return; // click сразу после свайпа — его же касание (ревью: свайп по плитке гасил сам себя)
+    if (Date.now() - swipeAt < 400) return; // click сразу после свайпа - его же касание (ревью: свайп по плитке гасил сам себя)
     const b = e.target.closest('[data-a]'), tile = e.target.closest('.tile'), at = e.target.closest('.atile'), cat = e.target.closest('[data-c]');
     if ((!b || b.dataset.a !== 'q') && S.hint && !e.target.closest('.shint')) { S.hint = false; draw(); }
     if (cat) { if (cat.dataset.c !== S.cat) { if (C.snd && C.snd.click) C.snd.click(); setCat(cat.dataset.c); } return; }
@@ -378,7 +378,7 @@ export function createShop(C) {
     else if (a === 'wear') await act('wear', k);
     else if (a === 'off') await act('wear', null, { plane: k.split(':')[0] });
   });
-  // свайп и лёгкий параллакс от мыши (небо — против движения, самолёт — по нему)
+  // свайп и лёгкий параллакс от мыши (небо - против движения, самолёт - по нему)
   let sx = null, tx = 0, ty = 0, mx = 0, my = 0, raf = 0, swipeAt = 0;
   root.addEventListener && root.addEventListener('pointerdown', (e) => { sx = e.clientX; });
   root.addEventListener && root.addEventListener('pointerup', (e) => {
@@ -399,12 +399,12 @@ export function createShop(C) {
   });
   addEventListener('resize', () => { if (api.isOpen()) layout(); });
   paint();
-  if (keyNow()) setTimeout(load, 0); // кошелёк — сразу при загрузке (а не только из меню): надетые окраски нужны и бою, открытому по ?go=
+  if (keyNow()) setTimeout(load, 0); // кошелёк - сразу при загрузке (а не только из меню): надетые окраски нужны и бою, открытому по ?go=
 
   const api = {
     open() {
       S.hint = false; root.classList.add('on'); layout(); draw(false);
-      if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitInfo); // Oswald пришёл позже — размеры другие
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitInfo); // Oswald пришёл позже - размеры другие
       if (!S.busy && Date.now() - S.at > 10000) { S.at = 0; load(); }
     },
     close() { root.classList.remove('on'); S.hint = false; },

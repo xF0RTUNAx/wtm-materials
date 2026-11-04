@@ -1,10 +1,10 @@
-// airdef-solo — опыт и серебро за одиночный бой «Воздушного превосходства» (вылет, «Оборона», «Мульти-волна»; обучение — без наград).
+// airdef-solo - опыт и серебро за одиночный бой «Воздушного превосходства» (вылет, «Оборона», «Мульти-волна»; обучение - без наград).
 //   { player_id, action: 'start', game: 'air'|'defense'|'multi', mode: 'arcade'|'real', era } → { run_id }
 //   { player_id, action: 'claim', run_id, ev, used }  → { xp, silver, lines, mult, auto, progress, … }
-//     ev — что сделано за бой (цели, комплексы, сбитые, волны…), used — узлы, на которых играли (самолёт, оружие, комплексы,
+//     ev - что сделано за бой (цели, комплексы, сбитые, волны…), used - узлы, на которых играли (самолёт, оружие, комплексы,
 //     удары): в «Реализме» все должны быть куплены, иначе бой засчитывается как «Аркада».
-// Браузеру верим только в разумных пределах: длительность боя меряет сервер (от start до claim), события — с пределами,
-// итог — не больше предела на минуту и на бой, после SOLO_DAY опыта за сутки — вдвое меньше (battleReward в progress.js).
+// Браузеру верим только в разумных пределах: длительность боя меряет сервер (от start до claim), события - с пределами,
+// итог - не больше предела на минуту и на бой, после SOLO_DAY опыта за сутки - вдвое меньше (battleReward в progress.js).
 import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
 import { supabaseAdmin } from "../_shared/supabase-admin.ts";
 import { mskToday } from "../_shared/msk.ts";
@@ -49,7 +49,7 @@ Deno.serve(async (req) => {
       let res: ReturnType<typeof credit> | null = null, x1: Extra | null = null;
       try {
         const out = await mutate(db, player_id, (P, x) => {
-          res = credit(P, x, ev, { real: run.mode === "real", online: false, today, used: body.used, quest: run.game === "defense" ? defenseCounters(ev, run.seconds, Date.now() / 1000) : undefined }); // задания: из одиночной игры — только «Оборона»
+          res = credit(P, x, ev, { real: run.mode === "real", online: false, today, used: body.used, quest: run.game === "defense" ? defenseCounters(ev, run.seconds, Date.now() / 1000) : undefined }); // задания: из одиночной игры - только «Оборона»
           x1 = res.extra; return { ok: true, extra: res.extra };
         });
         if (out.notFound || out.needGame) {
@@ -63,7 +63,7 @@ Deno.serve(async (req) => {
           minutes: Math.round(ev.min! * 10) / 10, solo_left: r.soloLeft, progress: view(out.P!, x1!, today),
         });
       } catch (e) {
-        await db.rpc("airdef_run_unclaim", { p_run: run_id }); // опыт не сохранился — бой можно засчитать повторно
+        await db.rpc("airdef_run_unclaim", { p_run: run_id }); // опыт не сохранился - бой можно засчитать повторно
         throw e;
       }
     }

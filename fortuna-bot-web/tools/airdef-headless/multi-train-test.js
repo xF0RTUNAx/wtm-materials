@@ -1,8 +1,8 @@
-// Обучение «Мульти-волны» на «Северном рубеже» (Mark 2026-10-21: уроки — на карте самого режима): все уроки за волну и за ПВО
-// запускаются за обе стороны и проходятся ботом.  deno run -A tools/airdef-headless/multi-train-test.js  (основа — event-test.js, боты — из ui-test.js)
+// Обучение «Мульти-волны» на «Северном рубеже» (Mark 2026-10-21: уроки - на карте самого режима): все уроки за волну и за ПВО
+// запускаются за обе стороны и проходятся ботом.  deno run -A tools/airdef-headless/multi-train-test.js  (основа - event-test.js, боты - из ui-test.js)
 // Стенд события «Туманная топь» (games/airdef/event.js): страница на осенней карте (?map=autumn) в безголовом прогоне, как ui-test.js.
 // Проверяет: меню без вертолётных подвесок, экран события (вкладки, замки «Реализма», «ВЗЛЁТ» на каждом вертолёте), оборона на осенней
-// карте — все волны до конца боя (вертолёты со 2-й волны, последняя — «Мульти-волна»).
+// карте - все волны до конца боя (вертолёты со 2-й волны, последняя - «Мульти-волна»).
 //   deno run -A tools/airdef-headless/event-test.js
 const dir = new URL('.', import.meta.url).pathname;
 (0, eval)(Deno.readTextFileSync(dir + '../drone-headless/three.min.js'));
@@ -33,7 +33,7 @@ Object.assign(globalThis, {
 });
 Object.defineProperty(globalThis, 'localStorage', { value: { getItem: (k) => store[k] ?? null, setItem: (k, v) => { store[k] = String(v); } }, configurable: true, writable: true });
 let rafCb = null; globalThis.requestAnimationFrame = (f) => { rafCb = f; return 1; };
-// рендерер-заглушка: все вызовы WebGL — пустые
+// рендерер-заглушка: все вызовы WebGL - пустые
 class FakeRenderer {
   constructor() { this.shadowMap = { enabled: false, autoUpdate: true }; this.capabilities = { isWebGL2: true, getMaxAnisotropy: () => 4 }; this.toneMapping = 0; this.outputEncoding = 0; this.toneMappingExposure = 1; this.autoClear = true; this._pr = 1; this.domElement = el('c'); }
   setPixelRatio(p) { this._pr = p; } getPixelRatio() { return this._pr; } setSize() {} render() {} compile() {} setRenderTarget() {} getRenderTarget() { return null; }
@@ -68,18 +68,18 @@ const passed = (side, i) => (C.ctrl && C.ctrl.T && C.ctrl.T.finished) || (JSON.p
 function runLesson(side, i, bot, sec) {
   C.toMenu(); frames(3); C.setup.game = 'training'; C.setup.tside = side; C.setup.tl = i; C.start('training');
   for (let k = 0; k < sec * 30 && !passed(side, i); k++) { if (byId('lesson')._cls.has('on')) C.closeLesson(); bot(C.ctrl.inner); frames(1); }
-  const ok = passed(side, i); check(`урок ${side} ${i + 1} пройден ботом${ok ? '' : ` — шаг ${C.ctrl.T.s}: ${(document.getElementById('hint').innerHTML || '').replace(/<[^>]+>/g, '').slice(0, 120)}`}`, ok);
+  const ok = passed(side, i); check(`урок ${side} ${i + 1} пройден ботом${ok ? '' : ` - шаг ${C.ctrl.T.s}: ${(document.getElementById('hint').innerHTML || '').replace(/<[^>]+>/g, '').slice(0, 120)}`}`, ok);
   if (byId('lesson')._cls.has('on')) C.closeLesson();
 }
-// «Мульти-волна»: бот делает то, что просит подсказка, — через состояние режима (как кнопки окна цели и настроек)
+// «Мульти-волна»: бот делает то, что просит подсказка, - через состояние режима (как кнопки окна цели и настроек)
 {
   const tg = (st, i = 0) => 'o' + st.targets[Math.min(i, st.targets.length - 1)].id;
   const add = (D, k, n, key) => { const st = D.st; for (let j = 0; j < n; j++) { const i = (st.plan.n[k] = (st.plan.n[k] || 0) + 1) - 1; D.setTkey(k, i, key); if (st.phase === 'wave') { st.addQ[k] = (st.addQ[k] || 0) + 1; st.addT = 0.05; } } };
   const once = (T, tag, f) => { if (T.d['b' + tag]) return; T.d['b' + tag] = 1; f(); };
-  // «Пуск» как кнопка: наряд — в бюджете урока (defense.js: кнопка выключена при перерасходе; ревью 2026-11-01 — урок с 4 «Калибрами» после смены цен)
-  // за ПВО план — волна противника; бюджет 0 — состояние прошлого урока в первые кадры
+  // «Пуск» как кнопка: наряд - в бюджете урока (defense.js: кнопка выключена при перерасходе; ревью 2026-11-01 - урок с 4 «Калибрами» после смены цен)
+  // за ПВО план - волна противника; бюджет 0 - состояние прошлого урока в первые кадры
   const go = (D) => { if (D.st.phase === 'plan') { const cost = Object.entries(D.st.plan.n).reduce((s, [k, n]) => s + (THREAT[k] ?? 3) * n, 0);
-    if (D.st.multi === 'atk' && D.st.budget > 0 && cost > D.st.budget) check(`наряд ${cost} — в бюджете урока ${D.st.budget}`, false);
+    if (D.st.multi === 'atk' && D.st.budget > 0 && cost > D.st.budget) check(`наряд ${cost} - в бюджете урока ${D.st.budget}`, false);
     D.st.edKey = null; D.st.tsel = null; D.startWave(); } D.st.timeK = 4; };
   const B = {
     m_scout: (D, T) => { const st = D.st; if (T.s === 0) st.tsel = tg(st); else if (T.s === 1) once(T, 1, () => add(D, 'shahed', 3, st.tsel)); else go(D); },
@@ -97,7 +97,7 @@ function runLesson(side, i, bot, sec) {
     md_tbm: (D, T) => { const st = D.st, u = C.S.units.find((q) => q.key === 'pac3'); if (T.s === 0) go(D); else if (T.s === 1) D.enterOp(u); else { st.timeK = 4; const w = C.S.wpns.find((q) => !q.dead && q.ev && q.W.kind === 'tbm' && q.vel.y < 0); if (w && st.op && u.desig !== w) D.designate(w); if (st.op && u.track) C.S.launch(u); } },
     md_final: (D, T) => { if (D.st.phase === 'plan') once(T, 0, () => { for (const [k, key, dx] of [['pac3', 'w_dam', 1500], ['nasams', 'w_fuel', 900], ['gepard', 'w_dam', 300], ['gepard', 'w_fuel', 300], ['stinger', 'w_air', 300]]) { const o = C.S.objects.find((q) => q.key === key); if (o) C.S.addUnit(k, o.x + dx, o.z + 200, {}); } C.syncUnits(); go(D); }); else D.st.timeK = 4; },
   };
-  for (const side of ['matk', 'mdef']) C.lessons[side].forEach((l, i) => runLesson(side, i, (D) => B[l.id](D, C.ctrl.T), 1800)); // поздние дроны (пуск до 5 мин) — волна идёт дольше
+  for (const side of ['matk', 'mdef']) C.lessons[side].forEach((l, i) => runLesson(side, i, (D) => B[l.id](D, C.ctrl.T), 1800)); // поздние дроны (пуск до 5 мин) - волна идёт дольше
 }
 
 console.log(errors.length ? `\nошибок: ${errors.length}\n${errors.slice(0, 8).join('\n')}` : '\nошибок нет');

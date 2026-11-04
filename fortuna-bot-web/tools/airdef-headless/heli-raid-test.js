@@ -26,7 +26,7 @@ function run(name, side, era, sams = [], T = 360, plane = null) {
     R.step(dt); S.step(dt);
     if (!a.dead && !a.out) { const agl = a.pos.y - city.groundH(a.pos.x, a.pos.z); st.minAgl = Math.min(st.minAgl, agl); st.maxAgl = Math.max(st.maxAgl, agl); st.near = Math.min(st.near, Math.hypot(a.pos.x - tgt.x, a.pos.z - tgt.z)); }
   }
-  console.log(`\n== ${name}: ${a.plane} · пусков ${st.fired} · попаданий ${st.hits} · ближе всего ${(st.near / 1000).toFixed(1)} км · высота ${st.minAgl.toFixed(0)}–${st.maxAgl.toFixed(0)} м · ${a.dead ? 'СБИТ/РАЗБИЛСЯ' : a.out ? 'ушёл' : 'в бою'} · объект ${tgt.name}: ${Math.max(0, tgt.hp).toFixed(0)} hp`);
+  console.log(`\n== ${name}: ${a.plane} · пусков ${st.fired} · попаданий ${st.hits} · ближе всего ${(st.near / 1000).toFixed(1)} км · высота ${st.minAgl.toFixed(0)}-${st.maxAgl.toFixed(0)} м · ${a.dead ? 'СБИТ/РАЗБИЛСЯ' : a.out ? 'ушёл' : 'в бою'} · объект ${tgt.name}: ${Math.max(0, tgt.hp).toFixed(0)} hp`);
   if (log.length) console.log(log.slice(0, 12).join('\n'));
   return { st, a };
 }
@@ -36,7 +36,7 @@ const r2 = run('Восток I, без ПВО (Ми-24: «Штурм» и С-8)'
 if (!r2.st.fired) { bad++; console.log('!! Ми-24 не стрелял'); }
 const r3 = run("Запад I, без ПВО (UH-1: только НАР)", "west", 1, [], 600);
 if (!r3.st.fired) { bad++; console.log('!! UH-1 не стрелял НАР'); }
-// 2026-10-21: новые вертолёты налёта по стороне и эпохе (RAID_HELI): Восток II — Ми-8МТВ (С-8), III — Ка-50, Запад II — UH-60 (Hellfire + Hydra), IV — RAH-66
+// 2026-10-21: новые вертолёты налёта по стороне и эпохе (RAID_HELI): Восток II - Ми-8МТВ (С-8), III - Ка-50, Запад II - UH-60 (Hellfire + Hydra), IV - RAH-66
 const r4 = run('Восток II, без ПВО (Ми-8МТВ: только С-8)', 'east', 2, [], 600);
 if (r4.a.plane !== 'h_mi8' || !r4.st.fired) { bad++; console.log('!! Ми-8МТВ не вылетел или не стрелял'); }
 const r5 = run('Восток III, без ПВО (Ка-50: «Атака» и С-8)', 'east', 3);
@@ -46,11 +46,11 @@ if (r6.a.plane !== 'h_uh60' || !r6.st.fired) { bad++; console.log('!! UH-60 не
 const r7 = run('Запад IV, без ПВО (RAH-66: Hellfire и Hydra)', 'west', 4);
 if (r7.a.plane !== 'h_rah66' || !r7.st.fired) { bad++; console.log('!! RAH-66 не вылетел или не стрелял'); }
 run('Запад III против «Тунгуски» и «Иглы-С» у цели', 'west', 3, [['tunguska', 300, 200], ['iglas', -250, 150]]);
-// 2026-10-22: самолёт с НАР (Viggen, Су-33, Draken) — заход с пикированием и залпы (раньше ветка ракет ждала W.fov — у НАР его нет, не стрелял)
+// 2026-10-22: самолёт с НАР (Viggen, Су-33, Draken) - заход с пикированием и залпы (раньше ветка ракет ждала W.fov - у НАР его нет, не стрелял)
 for (const [nm, sd, era, pl] of [['Запад, Viggen: Hydra ×4', 'west', 2, ['e_viggen', [['hydra', 4]]]], ['Восток, Су-33: С-8 ×2', 'east', 3, ['e_su33', [['s8', 2]]]],
   ['Запад, Draken: Mk 82 ×4 + Hydra ×2', 'west', 2, ['e_draken', [['mk82', 4], ['hydra', 2]]]]]) {
   const r = run(nm, sd, era, [], 420, pl), bombs = pl[1][0][0] === 'mk82';
-  // Draken: сначала Mk 82 — парами (вторая без нового прогноза) с повторным заходом, потом залпы Hydra (≥ 5 событий); раньше одна бомба и круги над целью до сваливания
+  // Draken: сначала Mk 82 - парами (вторая без нового прогноза) с повторным заходом, потом залпы Hydra (≥ 5 событий); раньше одна бомба и круги над целью до сваливания
   if (r.st.fired < (bombs ? 5 : 10) || !r.st.hits || r.a.dead) { bad++; console.log(`!! ${pl[0]}: ${bombs ? 'бомбы и потом НАР' : 'НАР'} не сброшены/не пущены, мимо или разбился`); }
 }
 console.log(bad ? `\nОШИБОК: ${bad}` : '\nошибок нет');

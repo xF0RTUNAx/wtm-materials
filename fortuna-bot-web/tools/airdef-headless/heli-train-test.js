@@ -1,7 +1,7 @@
-// Обучение «за вертолёт» (Mark 2026-10-21) — все уроки ветки heli на «Туманной топи» (основа — event-test.js)
+// Обучение «за вертолёт» (Mark 2026-10-21) - все уроки ветки heli на «Туманной топи» (основа - event-test.js)
 // Стенд события «Туманная топь» (games/airdef/event.js): страница на осенней карте (?map=autumn) в безголовом прогоне, как ui-test.js.
 // Проверяет: меню без вертолётных подвесок, экран события (вкладки, замки «Реализма», «ВЗЛЁТ» на каждом вертолёте), оборона на осенней
-// карте — все волны до конца боя (вертолёты со 2-й волны, последняя — «Мульти-волна»).
+// карте - все волны до конца боя (вертолёты со 2-й волны, последняя - «Мульти-волна»).
 //   deno run -A tools/airdef-headless/event-test.js
 const dir = new URL('.', import.meta.url).pathname;
 (0, eval)(Deno.readTextFileSync(dir + '../drone-headless/three.min.js'));
@@ -32,7 +32,7 @@ Object.assign(globalThis, {
 });
 Object.defineProperty(globalThis, 'localStorage', { value: { getItem: (k) => store[k] ?? null, setItem: (k, v) => { store[k] = String(v); } }, configurable: true, writable: true });
 let rafCb = null; globalThis.requestAnimationFrame = (f) => { rafCb = f; return 1; };
-// рендерер-заглушка: все вызовы WebGL — пустые
+// рендерер-заглушка: все вызовы WebGL - пустые
 class FakeRenderer {
   constructor() { this.shadowMap = { enabled: false, autoUpdate: true }; this.capabilities = { isWebGL2: true, getMaxAnisotropy: () => 4 }; this.toneMapping = 0; this.outputEncoding = 0; this.toneMappingExposure = 1; this.autoClear = true; this._pr = 1; this.domElement = el('c'); }
   setPixelRatio(p) { this._pr = p; } getPixelRatio() { return this._pr; } setSize() {} render() {} compile() {} setRenderTarget() {} getRenderTarget() { return null; }
@@ -102,7 +102,7 @@ if (!Deno.env.get('BOTS')) for (const ps of ['east', 'west']) for (let i = 0; i 
   const T = C.ctrl.T, cr = C.ctrl.inner.craft;
   check(`урок heli ${i + 1} «${LS[i].name}» (ПВО ${ps}): шаг ${T.s}${LS[i].air ? `, ${cr.heli ? 'вертолёт ' + cr.hm.key : 'НЕ вертолёт'}` : ''}`, ok && (!LS[i].air || cr.heli));
 }
-// бот: управление «Аркада» — газ, вверх, вниз, тормоз и шаг вбок, к цели
+// бот: управление «Аркада» - газ, вверх, вниз, тормоз и шаг вбок, к цели
 {
   start(0, 'east'); const K = (code, on) => C.ctrl.inner.onKey({ code, repeat: false, preventDefault: () => {} }, on); const T = C.ctrl.T;
   for (let k = 0; k < 30 * 240 && !passed(); k++) {
@@ -113,11 +113,11 @@ if (!Deno.env.get('BOTS')) for (const ps of ['east', 'west']) for (let i = 0; i 
   }
   check(`урок «${LS[0].name}» пройден ботом (шаг ${T.s})`, passed());
 }
-// посадка ботом не проверяется (бот не держит висение над площадкой) — урок проверен руками
+// посадка ботом не проверяется (бот не держит висение над площадкой) - урок проверен руками
 const keyOf = () => (code, on) => C.ctrl.inner.onKey({ code, repeat: false, preventDefault: () => {} }, on);
 const steer = (K, cr, x, z) => { let e = Math.atan2(-(x - cr.pos.x), -(z - cr.pos.z)) - cr.yaw; while (e > Math.PI) e -= 6.283; while (e < -Math.PI) e += 6.283; K('KeyA', e > 0.08); K('KeyD', e < -0.08); return e; };
-// бот: НАР и ПТУР — нос на цель, «АВТО» стреляет сам
-for (const id of ['h_atgm']) { // НАР бот не умеет (нужен наклон носа по прицелу) — проверяется руками
+// бот: НАР и ПТУР - нос на цель, «АВТО» стреляет сам
+for (const id of ['h_atgm']) { // НАР бот не умеет (нужен наклон носа по прицелу) - проверяется руками
   const i = LS.findIndex((l) => l.id === id); start(i, 'east'); const K = keyOf(), T = C.ctrl.T; C.setAuto(true);
   { const prev = C.hooks.wpnEnd; C.hooks.wpnEnd = (w, res) => { if (prev) prev(w, res); if (Deno.env.get('V')) console.log('   конец ракеты', w.key, JSON.stringify({ t: +w.t.toFixed(1), homing: w.homing, lost: !!w.lost, seeker: w.W.seeker, gap: +(w.pos.y - C.city.topAt(w.pos.x, w.pos.z)).toFixed(1), y: Math.round(w.pos.y), d: Math.round(w.pos.distanceTo(new THREE.Vector3(C.ctrl.inner.game.targets[0].x, w.pos.y, C.ctrl.inner.game.targets[0].z))) })); }; }
   for (let k = 0; k < 30 * 480 && !passed(); k++) {

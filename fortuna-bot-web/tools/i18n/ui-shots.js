@@ -1,4 +1,4 @@
-// Снимки интерфейса на выбранном языке (меню — все режимы и вкладки, «Исследования», событие, пауза): ПК 1280×720 и телефон 844×390.
+// Снимки интерфейса на выбранном языке (меню - все режимы и вкладки, «Исследования», событие, пауза): ПК 1280×720 и телефон 844×390.
 //   deno run -A tools/i18n/ui-shots.js [lang=en] [pc|phone]   (нужен сервер localhost:8935) → tools/i18n/shots/ui-<устройство>-<кадр>.png
 import puppeteer from 'npm:puppeteer-core@22.15.0';
 const LANG = Deno.args.find((a) => /^(en|ru)$/.test(a)) || 'en', DEV = Deno.args.find((a) => /^(pc|phone)$/.test(a)) || 'pc';
@@ -43,7 +43,7 @@ await click('#phSide [data-ph="hide"]'); await sleep(300); await click('#phSide 
 await p.keyboard.press('Escape'); await sleep(800); await click('#pauseExit'); await sleep(2000);
 if (!phone) {
   await click('#modeSel button[data-g="air"]');
-  await click('#startBtn'); await sleep(6000); await p.keyboard.press('F1'); /* F1 — включить подсказки клавиш */ await sleep(900); await shot('hints'); await click('#pause'); await click('#pauseExit'); await sleep(1500);
+  await click('#startBtn'); await sleep(6000); await p.keyboard.press('F1'); /* F1 - включить подсказки клавиш */ await sleep(900); await shot('hints'); await click('#pause'); await click('#pauseExit'); await sleep(1500);
 } else {
   await tab('set'); await click('#sLayout'); await sleep(800); await shot('layout'); await click('#ledDone'); await sleep(500);
 }

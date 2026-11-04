@@ -1,6 +1,6 @@
-// Экран «Задания»: ежедневные и еженедельные, маршрут недели с МиГ-31 (пул, награды и правила — quests-data.js; счёт и начисление — сервер, airdef-progress, progress-net.js).
-// Материалы — пререндер: ui/quests/ (штабной стол, карта, булавки, МиГ-31, корешки досье, ленты-закладки, плашки, латунная кнопка, печать, лампы), t_* — плитки наград.
-// Тестовый режим (?pgtest=1) — кнопка «ДЕМО»: продвинуть задания, следующий день и неделя, состояние в памяти.
+// Экран «Задания»: ежедневные и еженедельные, маршрут недели с МиГ-31 (пул, награды и правила - quests-data.js; счёт и начисление - сервер, airdef-progress, progress-net.js).
+// Материалы - пререндер: ui/quests/ (штабной стол, карта, булавки, МиГ-31, корешки досье, ленты-закладки, плашки, латунная кнопка, печать, лампы), t_* - плитки наград.
+// Тестовый режим (?pgtest=1) - кнопка «ДЕМО»: продвинуть задания, следующий день и неделя, состояние в памяти.
 import { DAILY, WEEKLY, ROUTE, ROUTE_MAX, PTS_DAILY, PTS_WEEKLY, CRATE, CASE, mskDay } from './quests-data.js?v=20261104a';
 import { QI } from './quest-icons.js?v=20261104a';
 import { tr, LANG } from './i18n.js?v=20261104a';
@@ -92,7 +92,7 @@ const cnt = (q) => q.u === 'h' ? `<b>${dec(q.n / 60)}</b> / ${tr('{0} ч', [q.of
 const leftOf = (q) => { const v = q.of - q.n; return tr('ещё {0}', [q.u === 'h' ? tr('{0} ч', [dec(Math.ceil(v / 6) / 10)]) : q.u === 'min' ? tr('{0} мин', [Math.ceil(v)]) : q.of >= 10000 ? tr('{0} тыс.', [dec(v / 1000)]) : num(v)]); };
 const chips = (r) => Object.entries(r).map(([k, v]) => `<span class="chip ${k}"><img src="${TILE[k]}" alt="">${num(v)}</span>`).join('');
 const seg = (q) => { const m = Math.min(q.of, 10), f = q.n >= q.of ? m : q.n > 0 ? Math.max(1, Math.floor(m * q.n / q.of)) : 0, c = q.n >= q.of ? 'ok' : 'on'; return `<span class="sg">${Array.from({ length: m }, (_, i) => `<i class="${i < f ? c : ''}"></i>`).join('')}</span>`; };
-// маршрут: x — по очкам, y — между путевыми точками плавно (проценты полосы)
+// маршрут: x - по очкам, y - между путевыми точками плавно (проценты полосы)
 const YS = [56, 47, 63, 49, 61, 51];
 const rX = (p) => 7 + p / ROUTE_MAX * 88.5;
 const rY = (p) => { p = Math.max(0, Math.min(ROUTE_MAX, p)); let i = 1; while (i < ROUTE.length - 1 && ROUTE[i].p < p) i++; const a = ROUTE[i - 1].p, b = ROUTE[i].p, t = (p - a) / (b - a); return YS[i - 1] + (YS[i] - YS[i - 1]) * (1 - Math.cos(Math.PI * t)) / 2; };
@@ -102,7 +102,7 @@ export function createQuests(C) {
   const $ = (id) => document.getElementById(id), snd = () => { if (C.snd && C.snd.click) C.snd.click(); };
   const css = document.createElement('style'); css.textContent = CSS; (document.head || document.body).appendChild(css);
   const root = document.createElement('div'); root.id = 'quests'; if (LANG === 'en') root.classList.add('en'); document.body.appendChild(root);
-  // на экране — то, что показано (МиГ, числа): догоняет настоящее состояние во время полёта и анимации наград
+  // на экране - то, что показано (МиГ, числа): догоняет настоящее состояние во время полёта и анимации наград
   const S = { tab: 'd', pop: false, shown: 0, paid: 0, disp: { xp: 0, silver: 0, gem: 0 }, raf: 0, fresh: null, msg: '', busy: false, flying: 0, mig: null };
   const PG = () => C.progress;
   const V = () => PG().quests;
@@ -112,7 +112,7 @@ export function createQuests(C) {
   const known = (L, P) => L.filter((q) => P[q.id]); // страница старее сервера: незнакомое задание не показываем
   const doneN = (L) => L.filter((q) => q.st === 'done').length;
   const count = (q) => doneN(q.d) + doneN(q.w) + (allTaken(q.d) && !q.crate ? 1 : 0) + (allTaken(q.w) && !q.chest ? 1 : 0);
-  // МиГ на маршруте: серый; у кого есть окраска «Нефритовый дракон» — дракон
+  // МиГ на маршруте: серый; у кого есть окраска «Нефритовый дракон» - дракон
   const migKey = () => { if (S.mig) return S.mig; const w = C.shop && C.shop.wallet && C.shop.wallet(); return w && w.camos && w.camos.includes('e_mig31:dragon') ? 'dragon' : 'grey'; };
 
   const row = (q, kind, i) => `<div class="row ${q.st || ''}"><span class="no">${qic(q.st === 'taken' ? 'done-check-mark' : q.ic)}</span>
@@ -139,7 +139,7 @@ export function createQuests(C) {
     const l = root.querySelector('.ptsT'); if (l) l.textContent = ptsLabel(V());
   }
   function showNum(k, pulse) { const el = root.querySelector(`.cur [data-c="${k}"]`); if (!el) return; el.querySelector('u').textContent = num(S.disp[k]); if (pulse) { el.classList.add('pulse'); setTimeout(() => el.classList.remove('pulse'), 180); } }
-  // когда всё долетело — числа точно как на сервере
+  // когда всё долетело - числа точно как на сервере
   function settle() { if (S.flying || S.raf) return; S.disp = cur(); for (const k of ['xp', 'silver', 'gem']) showNum(k); }
   // награда: значки летят к счётчикам, число меняется по прилёту (начислил уже сервер, это только показ)
   function give(r, a) {
@@ -152,7 +152,7 @@ export function createQuests(C) {
       an.onfinish = () => { im.remove(); S.flying--; S.disp[k] += v; showNum(k, true); settle(); };
     });
   }
-  // награда точки маршрута пришла с сервера; на экране — когда самолёт долетел
+  // награда точки маршрута пришла с сервера; на экране - когда самолёт долетел
   function reachPins() { for (let i = S.paid + 1; i < ROUTE.length; i++) { if (ROUTE[i].p > S.shown + 1e-6) break; S.paid = i; const el = root.querySelector(`.wp[data-w="${i}"]`); if (el) { el.classList.add('ping'); setTimeout(() => el.classList.remove('ping'), 320); } give(ROUTE[i].r, el && el.querySelector('.wr') && el.querySelector('.wr').getBoundingClientRect()); snd(); } }
   function fly() {
     cancelAnimationFrame(S.raf); S.raf = 0; const Q = V(), from = S.shown, to = Math.min(Q.pts, ROUTE_MAX);
@@ -168,7 +168,7 @@ export function createQuests(C) {
     const [k, id] = key.split(':'), r = key === 'crate' ? CRATE : key === 'chest' ? CASE : (k === 'd' ? DAILY : WEEKLY)[id].r, a = el.getBoundingClientRect(), g0 = cur().gem;
     const res = await PG().questClaim(key); S.busy = false;
     if (!res.ok) { S.msg = res.why || tr('Ошибка сервера'); draw(); PG().questsRefresh().then(() => { draw(); touch(); }); return; } // например, забрали в другой вкладке
-    if (cur().gem !== g0 && C.shop && C.shop.reset) C.shop.reset(); // кошелёк магазина — заново
+    if (cur().gem !== g0 && C.shop && C.shop.reset) C.shop.reset(); // кошелёк магазина - заново
     snd(); S.fresh = key; draw(); give(r, a); touch(); fly(); setTimeout(() => { S.fresh = null; }, 400);
   }
 
@@ -210,9 +210,9 @@ export function createQuests(C) {
   addEventListener('resize', () => { draw(); });
   let stale = 0;
   setInterval(() => { if (!isOpen()) return; tick(); if (V().day !== mskDay() && !PG().test && Date.now() - stale > 60000) { stale = Date.now(); PG().questsRefresh().then(() => { draw(); touch(); fly(); }); } }, 1000); // полночь при открытом экране
-  setInterval(() => { touch(); if (!isOpen() && PG() && !PG().test && !PG().guest && V().day !== mskDay() && Date.now() - stale > 600000) { stale = Date.now(); PG().questsRefresh(); } }, 30000); // полночь в меню: кнопка и табличка — про новый день
+  setInterval(() => { touch(); if (!isOpen() && PG() && !PG().test && !PG().guest && V().day !== mskDay() && Date.now() - stale > 600000) { stale = Date.now(); PG().questsRefresh(); } }, 30000); // полночь в меню: кнопка и табличка - про новый день
 
-  // кнопка в меню: подпись «сделано N из 3 · до обновления», три лампы, красная цифра — есть что забрать
+  // кнопка в меню: подпись «сделано N из 3 · до обновления», три лампы, красная цифра - есть что забрать
   function touch() {
     const b = $('qstBtn'); if (!b || !PG()) return; b.style.display = 'flex';
     const sub = $('qstSub'), seg3 = $('qstSeg'), dt = $('qstDot'), Q = V(), n = Q.d.filter((q) => q.st).length, c = PG().guest ? 0 : count(Q);
@@ -230,7 +230,7 @@ export function createQuests(C) {
     close() { cancelAnimationFrame(S.raf); S.raf = 0; root.classList.remove('on'); document.body.classList.remove('researchOn'); touch(); if (C.menu && C.menu.render) C.menu.render(); },
     isOpen,
     touch,
-    pending: () => (PG() && !PG().guest ? count(V()) : 0), // незабранные награды — для таблички меню
+    pending: () => (PG() && !PG().guest ? count(V()) : 0), // незабранные награды - для таблички меню
   };
   if ($('qstIco')) $('qstIco').innerHTML = qic('menu-scroll-unfurled');
   if ($('qstBtn')) $('qstBtn').onclick = () => { snd(); api.open(); };

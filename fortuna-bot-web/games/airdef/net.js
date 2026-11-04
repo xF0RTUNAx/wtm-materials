@@ -1,9 +1,9 @@
-// Онлайн «Воздушного превосходства» — клиент. Связь с сервером (адрес /ad того же сервера, что «Летка»), лобби, быстрый
+// Онлайн «Воздушного превосходства» - клиент. Связь с сервером (адрес /ad того же сервера, что «Летка»), лобби, быстрый
 // поиск и «зеркало» боя: бой считает сервер, клиент повторяет его по снимкам (SNAP_HZ) и событиям.
-// Зеркало — обычный бой sim/strike.js (его не шагаем): комплексы, ЗУР и оружие самолётов лежат в его массивах, поэтому
+// Зеркало - обычный бой sim/strike.js (его не шагаем): комплексы, ЗУР и оружие самолётов лежат в его массивах, поэтому
 // вся отрисовка, HUD, СПО, круговой обзор и подсказки работают как в одиночной игре. Команды игрока (сброс, ловушки,
-// пуск, захват, РЛС, ручное наведение, покупки) уходят серверу — их перехватывает обёртка методов зеркала (wrapMirror).
-// Чужие самолёты и боты — «зеркальные» самолёты в C.raid.planes; свой самолёт игрок ведёт сам (C.player).
+// пуск, захват, РЛС, ручное наведение, покупки) уходят серверу - их перехватывает обёртка методов зеркала (wrapMirror).
+// Чужие самолёты и боты - «зеркальные» самолёты в C.raid.planes; свой самолёт игрок ведёт сам (C.player).
 /* global THREE, CONFIG */
 import * as O from './sim/online.js?v=20261104a';
 import * as MW from './sim/online-multi.js?v=20261104a';
@@ -25,12 +25,12 @@ function account() {
   if (TEST) return { id: 'test-' + TEST, login: TEST };
   return activeAcc(); // аккаунт игры (ник для рейтинга), иначе аккаунт сайта
 }
-// билет сервера: строка, null (нет билета / сервер не настроен) или 'need_game' (сервер: у аккаунта сайта нет прогресса игры — нужен аккаунт игры)
+// билет сервера: строка, null (нет билета / сервер не настроен) или 'need_game' (сервер: у аккаунта сайта нет прогресса игры - нужен аккаунт игры)
 async function fetchTicket(acc) {
   try {
     if (typeof CONFIG === 'undefined' || !CONFIG.MP_TICKET_URL || String(acc.id).startsWith('test-') || String(acc.id).startsWith('rmock-')) return null;
     const key = String(CONFIG.SUPABASE_ANON_KEY).replace(/[^\x21-\x7E]/g, '');
-    const res = await fetch(CONFIG.MP_TICKET_URL, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + key, apikey: key }, body: JSON.stringify({ player_id: acc.id, game: 'airdef' }) }); // game: 'airdef' — сервер сразу отвечает 403 need_game аккаунту сайта без прогресса
+    const res = await fetch(CONFIG.MP_TICKET_URL, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + key, apikey: key }, body: JSON.stringify({ player_id: acc.id, game: 'airdef' }) }); // game: 'airdef' - сервер сразу отвечает 403 need_game аккаунту сайта без прогресса
     const d = await res.json().catch(() => ({}));
     if (res.status === 403 && d.need_game) return 'need_game';
     return res.ok && d.ticket ? d.ticket : null;
@@ -59,7 +59,7 @@ export function createNet(C) {
     ws.onopen = async () => {
       const ticket = await fetchTicket(acc); if (ws !== me) return; // пока шёл запрос, аккаунт сменили и соединение закрыли
       if (ticket === 'need_game') { needGame(acc); return; }
-      N.send({ t: 'hello', ticket, name: acc.nick || acc.login, pid: String(acc.id), maps: 1 }); // maps — понимает карту комнаты (r.map): старой вкладке сервер даёт только город
+      N.send({ t: 'hello', ticket, name: acc.nick || acc.login, pid: String(acc.id), maps: 1 }); // maps - понимает карту комнаты (r.map): старой вкладке сервер даёт только город
     };
     ws.onerror = () => { if (!N.re) { N.conn = 'error'; emit('conn'); } };
     ws.onclose = () => { if (ws === me) dropped(); };
@@ -67,13 +67,13 @@ export function createNet(C) {
   };
   N.close = () => { try { ws && ws.close(); } catch (_) { /* уже */ } };
   N.account = account;
-  // сервер: у аккаунта сайта нет прогресса игры (403 need_game от mp-ticket или 'err' с need_game от игрового сервера) — играть только с аккаунтом игры.
-  // «Старый» аккаунт сайта → кэш «прогресса нет», дальше как гость ('noacc', account.js оповестит); иначе — состояние 'needgame'
+  // сервер: у аккаунта сайта нет прогресса игры (403 need_game от mp-ticket или 'err' с need_game от игрового сервера) - играть только с аккаунтом игры.
+  // «Старый» аккаунт сайта → кэш «прогресса нет», дальше как гость ('noacc', account.js оповестит); иначе - состояние 'needgame'
   function needGame(acc) {
     if (acc && acc.kind === 'site') siteNoProgress();
     if (N.conn !== 'noacc') { N.needGame = true; N.conn = 'needgame'; N.close(); emit('conn'); }
   }
-  // аккаунт сменился (вход, регистрация, выход, перенос): соединение — со старым pid, итог боя потом не засчитается (403). Вне боя и комнаты соединение
+  // аккаунт сменился (вход, регистрация, выход, перенос): соединение - со старым pid, итог боя потом не засчитается (403). Вне боя и комнаты соединение
   // закрываем, при следующем показе панели «Онлайн» оно откроется с новым аккаунтом; в комнате и в бою не трогаем (окно аккаунта не даёт сменить его)
   N.accChanged = () => {
     if (N.room || N.battle || N.re) return false;
@@ -82,8 +82,8 @@ export function createNet(C) {
     N.conn = account() ? 'off' : 'noacc'; emit('conn'); return true;
   };
   // ═════════════ Обрыв связи и переподключение ═════════════
-  // в комнате или в бою связь пропала — переподключаемся сами (до RE_MAX с); сервер держит место (команда, комплексы, счёт,
-  // самолёт ведёт ИИ) и по тому же аккаунту возвращает в бой. Не вышло — «Связь потеряна». N.re — идёт переподключение
+  // в комнате или в бою связь пропала - переподключаемся сами (до RE_MAX с); сервер держит место (команда, комплексы, счёт,
+  // самолёт ведёт ИИ) и по тому же аккаунту возвращает в бой. Не вышло - «Связь потеряна». N.re - идёт переподключение
   const RE_MAX = 75000; let reTimer = 0, lastPong = 0;
   function dropped() {
     const old = ws; ws = null; if (old) { old.onclose = old.onmessage = old.onerror = null; try { old.close(); } catch (_) { /* уже */ } }
@@ -98,14 +98,14 @@ export function createNet(C) {
   function retry() {
     if (!N.re) return;
     if (performance.now() - N.re.t0 > RE_MAX) { giveUp(); return; }
-    if (document.hidden) { reTimer = setTimeout(retry, 1500); return; } // свёрнуто — продолжим, когда вернутся
+    if (document.hidden) { reTimer = setTimeout(retry, 1500); return; } // свёрнуто - продолжим, когда вернутся
     N.re.n++; emit('re'); N.connect();
   }
   function giveUp() { N.re = null; clearTimeout(reTimer); const b = N.battle; N.room = null; endMirror(); N.conn = 'off'; emit('conn'); emit('re'); if (b) { b.lost = true; emit('lost'); } emit('room', null); }
   N.stopRe = () => { if (!N.re) return; N.quit = true; giveUp(); N.quit = false; N.leave(); };
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) return;
-    if (N.re && !ws) { clearTimeout(reTimer); retry(); return; } // вернулись в игру — сразу пробуем
+    if (N.re && !ws) { clearTimeout(reTimer); retry(); return; } // вернулись в игру - сразу пробуем
     if (ws && ws.readyState === 1 && performance.now() - lastPong > 6000) dropped(); // за время в фоне связь умерла, а сокет об этом не знает
   });
   // лобби и очередь
@@ -114,8 +114,8 @@ export function createNet(C) {
   N.create = (o) => N.send({ t: 'create', ...o });
   N.join = (code, team) => N.send({ t: 'join', code, team });
   N.leave = () => N.send({ t: 'leave' });
-  N.back = () => N.send({ t: 'back' }); // «В КОМНАТУ» после итогов: все нажали — лобби сразу
-  // самолёт вёл ИИ (связь пропадала) — просим назад, пока на связи и на экране (сервер вернёт, если самолёт цел)
+  N.back = () => N.send({ t: 'back' }); // «В КОМНАТУ» после итогов: все нажали - лобби сразу
+  // самолёт вёл ИИ (связь пропадала) - просим назад, пока на связи и на экране (сервер вернёт, если самолёт цел)
   setInterval(() => { if ((N.myAI || performance.now() - (N.retakeT || -1e9) < 10000) && N.battle && N.conn === 'on' && !document.hidden && !N.myCraft) N.send({ t: 'retake' }); }, 1500);
   N.team = (team) => N.send({ t: 'team', team });
   N.ready = (on) => N.send({ t: 'ready', on });
@@ -130,7 +130,7 @@ export function createNet(C) {
   N.isAlly = (o) => !!(o && N.me && N.battle && N.battle.kind === 'multi' && (o.ownerPid || o.owner) && (o.ownerPid || o.owner) !== N.me.id); // «Мульти-волна»: чужое из своей команды
   N.myTeam = () => { const p = N.room && N.me && N.room.players.find((q) => q.id === N.me.id); return p ? p.team : null; };
   N.myPlayer = () => N.room && N.me && N.room.players.find((q) => q.id === N.me.id);
-  // «Мульти-волна»: роль в этом раунде, план атакующего (не чаще PLAN_RATE — последний), чат команды, «Помощь» с точкой
+  // «Мульти-волна»: роль в этом раунде, план атакующего (не чаще PLAN_RATE - последний), чат команды, «Помощь» с точкой
   N.myRole = () => (N.battle && N.battle.kind === 'multi' ? (N.myTeam() === N.battle.atk ? 'atk' : 'def') : null);
   let planJson = null, planTimer = 0;
   N.sendPlan = (plan) => { planJson = JSON.stringify(plan); if (!planTimer) planTimer = setTimeout(() => { planTimer = 0; if (planJson) N.send({ t: 'plan', json: planJson }); planJson = null; }, MW.PLAN_RATE * 1000 + 60); };
@@ -142,11 +142,11 @@ export function createNet(C) {
     switch (m.t) {
       case 'welcome': {
         N.me = { id: m.id, name: m.name }; N.conn = 'on'; N.search = m.search || null; N.resumed = !!m.resumed;
-        if (m.resumed) N.retakeT = performance.now(); // вернулись на место (и после перезагрузки страницы, где N.re нет): самолёт, который вёл ИИ, — просим назад (ревью 2026-10-27)
+        if (m.resumed) N.retakeT = performance.now(); // вернулись на место (и после перезагрузки страницы, где N.re нет): самолёт, который вёл ИИ, - просим назад (ревью 2026-10-27)
         const re = N.re; N.re = null; clearTimeout(reTimer);
         if (re) {
           N.clog('reconnect', m.resumed ? 'resumed' : 'seat_lost');
-          if (!m.resumed) { const b = N.battle; N.room = null; endMirror(); if (b) { b.lost = true; emit('lost'); } else if (re.code) N.join(re.code, re.team); } // лобби: место уже свободно — входим снова
+          if (!m.resumed) { const b = N.battle; N.room = null; endMirror(); if (b) { b.lost = true; emit('lost'); } else if (re.code) N.join(re.code, re.team); } // лобби: место уже свободно - входим снова
         }
         emit('conn'); emit('re'); return;
       }
@@ -158,7 +158,7 @@ export function createNet(C) {
       case 'room': {
         const was = N.room ? N.room.state : null;
         N.room = m; N.queued = null;
-        if (N.battle && m.state === 'lobby') { endMirror(); emit('lobby'); } // бой кончился — комната снова в лобби (те же игроки)
+        if (N.battle && m.state === 'lobby') { endMirror(); emit('lobby'); } // бой кончился - комната снова в лобби (те же игроки)
         if (N.battle) { N.battle.wave = m.wave; N.battle.state = m.state; }
         emit('room', was);
         return;
@@ -178,7 +178,7 @@ export function createNet(C) {
       case 'pong': { const t0 = pings.get(m.i); if (t0 === undefined) return; pings.delete(m.i); const rtt = performance.now() - t0; N.ping = N.ping ? N.ping * 0.7 + rtt * 0.3 : rtt; netRes.push(1); if (netRes.length > 20) netRes.shift(); return; }
     }
   }
-  // связь: пинг раз в 2 с; ответа нет за 3 с — потерян. N.ping — задержка (мс, сглаженная), N.pl — доля потерянных за последние 20, %
+  // связь: пинг раз в 2 с; ответа нет за 3 с - потерян. N.ping - задержка (мс, сглаженная), N.pl - доля потерянных за последние 20, %
   const pings = new Map(), netRes = []; let pingI = 0;
   N.ping = 0; N.pl = 0;
   setInterval(() => {
@@ -187,7 +187,7 @@ export function createNet(C) {
     N.pl = netRes.length ? Math.round(100 * netRes.filter((x) => !x).length / netRes.length) : 0;
     if (N.conn === 'on' && ws && ws.readyState === 1) {
       pings.set(++pingI, now); N.send({ t: 'ping', i: pingI });
-      if (!document.hidden && now - lastPong > 7000) dropped(); // 7 с ни одного сообщения от сервера — соединение мёртвое
+      if (!document.hidden && now - lastPong > 7000) dropped(); // 7 с ни одного сообщения от сервера - соединение мёртвое
     } else { pings.clear(); netRes.length = 0; N.ping = 0; N.pl = 0; }
   }, 2000);
 
@@ -197,13 +197,13 @@ export function createNet(C) {
   N.raid = { planes: [], alive: () => N.raid.planes.filter((a) => !a.dead && !a.out), spawn() {}, spawnWave() {}, spawnDecoy() {}, step() {}, hurt() {}, laserSpot: () => null };
   function startMirror(m) {
     endMirror();
-    N.battle = { era: m.era, sideAir: m.sideAir, mode: m.mode, map: m.map || 'city', targets: m.targets, waves: m.waves, wave: 0, state: 'plan', valueK: 0, T: 0 }; // map — карта боя (старый сервер не шлёт — город)
+    N.battle = { era: m.era, sideAir: m.sideAir, mode: m.mode, map: m.map || 'city', targets: m.targets, waves: m.waves, wave: 0, state: 'plan', valueK: 0, T: 0 }; // map - карта боя (старый сервер не шлёт - город)
     C.netBattle(N, { defSide: m.sideAir === 'east' ? 'west' : 'east', era: m.era, mode: m.mode, game: 'air' });
     wrapMirror(C.S);
   }
   function endMirror() { N.myAI = false; ac.clear(); sams.clear(); wpns.clear(); lnch.clear(); N.raid.planes.length = 0; N.battle = null; N.myCraft = false; N.sched = null; N.ev = null; }
-  // ── «Мульти-волна»: раунд — новое зеркало (город целый); C.ev — заместитель волны: пусковые и носители из снимков,
-  // расписание и лента «Ход волны» — от сервера (sched), правки плана — серверу
+  // ── «Мульти-волна»: раунд - новое зеркало (город целый); C.ev - заместитель волны: пусковые и носители из снимков,
+  // расписание и лента «Ход волны» - от сервера (sched), правки плана - серверу
   const lnch = new Map(), keys = new Set();
   function startMulti(m) {
     endMirror();
@@ -222,7 +222,7 @@ export function createNet(C) {
       unitInfo(k, i) { const s = N.sched && N.sched.u[k] && N.sched.u[k][i]; if (!s) return { launched: false, t: ev.t + 30, earliest: ev.t + 1 }; return s[0] ? { launched: true } : { launched: false, t: s[1], earliest: s[2] }; },
       events() {
         const S0 = N.sched, mk = (g, label, sub, eta, o, cue, ally) => ({ g, label, sub, eta: eta === null ? null : eta - (ev.t - S0.T), obj: refObj(o), cue: refObj(cue), ally });
-        return S0 ? [...(S0.ev || []).map((e) => mk(...e)), ...(S0.al || []).map(([name, ...e]) => mk(...e, name))] : []; // ally — ник союзника (его раздел ленты)
+        return S0 ? [...(S0.ev || []).map((e) => mk(...e)), ...(S0.al || []).map(([name, ...e]) => mk(...e, name))] : []; // ally - ник союзника (его раздел ленты)
       },
       pending: () => true, step() {}, start() {},
       applyPlan() {}, extend() {}, // план целиком уходит с правкой (defense.js afterEdit → N.sendPlan)
@@ -231,11 +231,11 @@ export function createNet(C) {
   }
   const want = () => { if (C.evReady && N.ev) C.evReady(N.ev); };
   const findAir = (id) => (id > 0 ? (N.me && id === N.me.id && C.player ? C.player : ac.get(id)) : id < 0 ? wpns.get(-id) : null) || null;
-  // команды игрока — серверу; на месте — только то, что нужно интерфейсу
+  // команды игрока - серверу; на месте - только то, что нужно интерфейсу
   function wrapMirror(S) {
     const o = { designate: S.designate, setManual: S.setManual, setEmit: S.setEmit };
-    S.release = (a, key, opts = {}) => { const p = opts.aim; N.send({ t: 'rel', k: key, aim: p ? [p.x, p.y, p.z] : null, tg: opts.target ? opts.target.id : 0, ...(opts.salvo ? { n: opts.salvo } : {}) }); return null; }; // n — залп НАР
-    S.dropCM = (a, type) => { N.send({ t: 'cm', type }); if (C.simFx.cmDrop) for (const k of type === 'both' ? ['flare', 'chaff'] : [type]) if (k !== 'flare' || cmOf(cmKey(a), a.cmSide).flare) C.simFx.cmDrop(a, k); }; // 'both' — пачка ЛТЦ и диполей (машина без ЛТЦ — одни диполи)
+    S.release = (a, key, opts = {}) => { const p = opts.aim; N.send({ t: 'rel', k: key, aim: p ? [p.x, p.y, p.z] : null, tg: opts.target ? opts.target.id : 0, ...(opts.salvo ? { n: opts.salvo } : {}) }); return null; }; // n - залп НАР
+    S.dropCM = (a, type) => { N.send({ t: 'cm', type }); if (C.simFx.cmDrop) for (const k of type === 'both' ? ['flare', 'chaff'] : [type]) if (k !== 'flare' || cmOf(cmKey(a), a.cmSide).flare) C.simFx.cmDrop(a, k); }; // 'both' - пачка ЛТЦ и диполей (машина без ЛТЦ - одни диполи)
     S.launch = (u) => { N.send({ t: 'launch', id: u.id }); return null; };
     S.designate = (u, t) => { o.designate(u, t); N.send({ t: 'desig', id: u.id, tg: t ? (t.isMun ? -t.id : t.id) : 0 }); };
     S.setEmit = (u, on) => { u.emit = !!on; N.send({ t: 'emit', id: u.id, on: !!on }); };
@@ -246,14 +246,14 @@ export function createNet(C) {
     const S = C.S; if (!S) return;
     N.battle.wave = m.wave;
     for (const u of [...S.units]) S.removeUnit(u);
-    for (const [id, k, x, z, roof, owner, yaw, dead, tg] of m.units) { if (!SAM[k]) continue; const u = S.addUnit(k, x, z, { id, roof: !!roof, yaw }); u.owner = owner; u.dead = !!dead; if (tg) S.setTgt(u, tg); /* фильтр целей своей команды (tg — список видов) */ if (N.battle.kind === 'multi') u.spotted = true; } // мульти-волна: атакующему сервер шлёт только засечённые
-    for (const [id, hp, dead, bm] of m.objects) { const o = S.objects.find((q) => q.id === id); if (o) { o.hp = hp; if (bm && o.bld) bldFromMask(o, bm, { ...C.simFx, bldDestroyed: (q, b) => C.simFx.bldDestroyed(q, b, false) }); /* снимок: разбитое — лежит, без вторичных взрывов */ if (dead && !o.dead) { o.dead = true; bldKillMains(o, C.simFx); C.objLook(id, true); } } } // bm — разбитые постройки объекта-сцены (city.js SITES)
+    for (const [id, k, x, z, roof, owner, yaw, dead, tg] of m.units) { if (!SAM[k]) continue; const u = S.addUnit(k, x, z, { id, roof: !!roof, yaw }); u.owner = owner; u.dead = !!dead; if (tg) S.setTgt(u, tg); /* фильтр целей своей команды (tg - список видов) */ if (N.battle.kind === 'multi') u.spotted = true; } // мульти-волна: атакующему сервер шлёт только засечённые
+    for (const [id, hp, dead, bm] of m.objects) { const o = S.objects.find((q) => q.id === id); if (o) { o.hp = hp; if (bm && o.bld) bldFromMask(o, bm, { ...C.simFx, bldDestroyed: (q, b) => C.simFx.bldDestroyed(q, b, false) }); /* снимок: разбитое - лежит, без вторичных взрывов */ if (dead && !o.dead) { o.dead = true; bldKillMains(o, C.simFx); C.objLook(id, true); } } } // bm - разбитые постройки объекта-сцены (city.js SITES)
     C.syncUnits();
   }
   function onSpawn(m) {
     if (N.me && m.id === N.me.id) { N.myCraft = true; N.myAI = false; N.lives = m.lives; emit('spawn', m); }
   }
-  // самолёт в зеркале: создаётся по событию «an» (или по первому снимку — как бомбардировщик)
+  // самолёт в зеркале: создаётся по событию «an» (или по первому снимку - как бомбардировщик)
   function mkAir(id, role = 'bomber', plane = '', decoyKey = '', owner = 0, load = '') {
     const a = { id, pos: V(), vel: V(), sp: V(), sv: V(), st: 0, yaw: 0, pitch: 0, roll: 0, ty: 0, tp: 0, tr: 0, speed: 0, thr: 0.9, ab: false, hp: 100, hpMax: role === 'human' ? 100 : 70,
       dead: false, out: false, side: N.battle ? N.battle.sideAir : 'west', role: role === 'human' ? 'bomber' : role, plane: plane || null, decoyKey: decoyKey || null, owner, phase: 'ingress',
@@ -341,8 +341,8 @@ export function createNet(C) {
         if (N.me && e[1] === N.me.id) { N.myCraft = false; emit('meDown'); return; }
         const a = ac.get(e[1]); if (!a || a.dead) return; a.dead = true; a.pos.copy(a.sp); C.raidFx.down(a); dropAir(a); return;
       }
-      case 'hp': { if (N.me && e[1] === N.me.id) { emit('meHit', e[2], e[3], e[4]); return; } const a = ac.get(e[1]); if (a) { a.hp = e[2]; if (e[4]) dmgUnpack(a, e[4]); } return; } // e[4] — зоны повреждений (sim/damage.js)
-      case 'ua': { const [, id, k, x, z, roof, owner, yaw] = e; if (!SAM[k] || S.units.some((u) => u.id === id)) return; const u = S.addUnit(k, x, z, { id, roof: !!roof, yaw }); u.owner = owner; u.spotted = true; C.syncUnits(); emit('units'); return; } // засечён разведкой / по излучению — атакующему виден (samKnown)
+      case 'hp': { if (N.me && e[1] === N.me.id) { emit('meHit', e[2], e[3], e[4]); return; } const a = ac.get(e[1]); if (a) { a.hp = e[2]; if (e[4]) dmgUnpack(a, e[4]); } return; } // e[4] - зоны повреждений (sim/damage.js)
+      case 'ua': { const [, id, k, x, z, roof, owner, yaw] = e; if (!SAM[k] || S.units.some((u) => u.id === id)) return; const u = S.addUnit(k, x, z, { id, roof: !!roof, yaw }); u.owner = owner; u.spotted = true; C.syncUnits(); emit('units'); return; } // засечён разведкой / по излучению - атакующему виден (samKnown)
       case 'ur': { const u = S.units.find((q) => q.id === e[1]); if (u) { S.removeUnit(u); C.syncUnits(); emit('units'); } return; }
       case 'um': { const u = S.units.find((q) => q.id === e[1]); if (u) { S.moveUnit(u, e[2], e[3], !!e[4]); u.cov = null; C.syncUnits(); emit('units'); } return; }
       case 'kl': emit('kill', e[1], e[2], e[3], e[4] || '', e[5] || '', e[6] || '', e[7] || ''); return;
@@ -355,7 +355,7 @@ export function createNet(C) {
   // ═════════════ Кадр: досчёт зеркала и отправка своего ═════════════
   N.update = (dt) => {
     if (!N.battle || !C.S) return;
-    // «Мульти-волна» в затишье идёт ×3 (N.battle.k): скорости в снимке — боевые, досчёт — во времени боя, иначе носители, ракеты
+    // «Мульти-волна» в затишье идёт ×3 (N.battle.k): скорости в снимке - боевые, досчёт - во времени боя, иначе носители, ракеты
     // и дроны отставали от сервера втрое и прыгали вперёд на каждом снимке (Mark 2026-10-26: «прерывания юнитов в мульти-волне»)
     const kT = N.battle.kind === 'multi' ? N.battle.k || 1 : 1;
     const now = performance.now() / 1000, S = C.S, kk = 1 - Math.exp(-dt * 10 * kT);
@@ -372,10 +372,10 @@ export function createNet(C) {
     }
     for (const w of wpns.values()) {
       const ahead = Math.min(AHEAD, now - w.st) * kT; w.pos.copy(w.sp).addScaledVector(w.vel, ahead); w.t += dt * kT;
-      w.trailT -= dt * kT; if (w.trailT <= 0 && !w.W.uav && !(w.W.kind === 'tbm' && w.phase !== 'boost')) { w.trailT = w.W.kind === 'tbm' ? 0.04 : 0.08; if (C.simFx.wpnTrail) C.simFx.wpnTrail(w); else C.fx.wpnTrail(w); } // дроны — без следа; баллистика — на разгоне
+      w.trailT -= dt * kT; if (w.trailT <= 0 && !w.W.uav && !(w.W.kind === 'tbm' && w.phase !== 'boost')) { w.trailT = w.W.kind === 'tbm' ? 0.04 : 0.08; if (C.simFx.wpnTrail) C.simFx.wpnTrail(w); else C.fx.wpnTrail(w); } // дроны - без следа; баллистика - на разгоне
     }
-    for (const u of S.units) if (u.slotT) for (const k in u.slotT) if (u.slotT[k] > 0) u.slotT[k] -= dt * kT; // след и пусковые — тоже во времени боя
-    for (const u of S.units) if (u.gunOn && u.track && !u.dead) C.simFx.gunFire(u, u.track, 0, dt); // трассы зениток — по флагу из снимка
+    for (const u of S.units) if (u.slotT) for (const k in u.slotT) if (u.slotT[k] > 0) u.slotT[k] -= dt * kT; // след и пусковые - тоже во времени боя
+    for (const u of S.units) if (u.gunOn && u.track && !u.dead) C.simFx.gunFire(u, u.track, 0, dt); // трассы зениток - по флагу из снимка
     // свой самолёт: состояние 20 Гц, подсвет лазером
     const a = C.player;
     if (N.myCraft && a && !a.dead) {
@@ -387,7 +387,7 @@ export function createNet(C) {
     if (u && (aimT -= dt) <= 0) { aimT = SEND_AIM; if (u.aimDir) N.send({ t: 'aim', id: u.id, d: [u.aimDir.x, u.aimDir.y, u.aimDir.z], f: u.gunFire ? 1 : 0 }); if (u.method !== lastMethod) { lastMethod = u.method; N.send({ t: 'method', id: u.id, m: u.method }); } }
   };
   N.selfCrash = () => N.send({ t: 'self' });
-  N.help = (p) => N.send({ t: 'help', p: p || undefined }); // p — [x, z]: самолёт, свой комплекс или место на карте
+  N.help = (p) => N.send({ t: 'help', p: p || undefined }); // p - [x, z]: самолёт, свой комплекс или место на карте
   N.clog = (k, d) => N.send({ t: 'clog', k, d: typeof d === 'string' ? d : JSON.stringify(d) }); // журнал боя на сервере (что видела игра)
   return N;
 }

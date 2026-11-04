@@ -1,15 +1,15 @@
 // Проверка английской локализации данных и руководства «Воздушного превосходства» (этап 2):
-//   deno run -A tools/i18n/data-check.js        — LANG = en: после localizeData() / localizeTree() в видимых полях AG / SAM / PLANES / SPECS /
+//   deno run -A tools/i18n/data-check.js        - LANG = en: после localizeData() / localizeTree() в видимых полях AG / SAM / PLANES / SPECS /
 //                                                 HSPECS / LOADOUTS / ERAS / MODES … и в узлах дерева прокачки нет кириллицы; руководство
-//                                                 (guide.js, обе раскладки — телефон и ПК) тоже без кириллицы
-//   deno run -A tools/i18n/data-check.js --late — то же, но progress.js импортирован раньше data.js: узлы дерева переименовывает localizeTree
-//   deno run -A tools/i18n/data-check.js --ru   — LANG = ru: данные не тронуты (на сервере LANG всегда ru), руководство собирается
-// Язык подставляется как ?lang=en через globalThis.location (как в браузере). Код выхода 1 — есть непереведённое.
+//                                                 (guide.js, обе раскладки - телефон и ПК) тоже без кириллицы
+//   deno run -A tools/i18n/data-check.js --late - то же, но progress.js импортирован раньше data.js: узлы дерева переименовывает localizeTree
+//   deno run -A tools/i18n/data-check.js --ru   - LANG = ru: данные не тронуты (на сервере LANG всегда ru), руководство собирается
+// Язык подставляется как ?lang=en через globalThis.location (как в браузере). Код выхода 1 - есть непереведённое.
 const RU = Deno.args.includes('--ru');
 const dir = new URL('.', import.meta.url).pathname;
 (0, eval)(Deno.readTextFileSync(dir + '../drone-headless/three.min.js'));
 globalThis.location = { search: RU ? '?lang=ru' : '?lang=en' };
-globalThis.document = globalThis.document || {}; // i18n.js без document считает себя онлайн-сервером и держит русский — изображаем страницу
+globalThis.document = globalThis.document || {}; // i18n.js без document считает себя онлайн-сервером и держит русский - изображаем страницу
 const A = '../../games/airdef/';
 const LATE = Deno.args.includes('--late'); // дерево прокачки построено ДО локализации (проверка localizeTree)
 if (LATE) await import(A + 'progress.js?v=20261104a');
@@ -38,10 +38,10 @@ if (!RU) {
   console.log(`данные: строк ${n}, с кириллицей ${bad}`);
 } else {
   // по-русски данные нетронуты: контрольные строки
-  const ok = ARS.AG.fab500.name === 'ФАБ-500М-62' && ARS.SAM.s300.short === 'С-300' && ARS.ERAS[0].name.startsWith('I —') && PR.TREE.some((x) => x.name === 'ФАБ-500М-62');
+  const ok = ARS.AG.fab500.name === 'ФАБ-500М-62' && ARS.SAM.s300.short === 'С-300' && ARS.ERAS[0].name.startsWith('I -') && PR.TREE.some((x) => x.name === 'ФАБ-500М-62');
   console.log('по-русски данные нетронуты:', ok ? 'да' : 'НЕТ'); if (!ok) bad++;
 }
-// руководство: обе раскладки; по-английски — без кириллицы
+// руководство: обе раскладки; по-английски - без кириллицы
 for (const touch of [true, false]) {
   const ch = guideChapters({ IS_TOUCH: touch });
   const html = ch.map(([t, b]) => t + '\n' + b).join('\n');
@@ -50,5 +50,5 @@ for (const touch of [true, false]) {
   console.log(`руководство (${touch ? 'телефон' : 'ПК'}): глав ${ch.length}, знаков ${html.length}${RU ? '' : `, кириллица: ${m.length}`}`);
   if (m.length) { bad += m.length; console.log('  ', [...new Set(m)].slice(0, 25).join(' | ')); }
 }
-console.log(bad ? `ИТОГ: непереведённого — ${bad}` : 'ИТОГ: кириллицы нет');
+console.log(bad ? `ИТОГ: непереведённого - ${bad}` : 'ИТОГ: кириллицы нет');
 Deno.exit(bad ? 1 : 0);

@@ -50,7 +50,7 @@ if (ONLY.includes('multi')) {
     if (role === 'atk') await p.evaluate(() => { const M = window.__a.ctrl, st = M.st; Object.assign(st.plan.n, { shahed: 6, kh555: 2, kalibr: 2 }); M.renderSide && M.renderSide(); });
     await sleep(800); if (role === 'atk') await shot(p, 'multi-atk-plan2');
     await p.evaluate(() => { window.__a.ctrl.startWave(); }); await sleep(12000); await shot(p, `multi-${role}-wave`);
-        if (role === 'atk') { // итог волны: один дрон, время ×4 — ждём конец боя
+        if (role === 'atk') { // итог волны: один дрон, время ×4 - ждём конец боя
       await p.close(); const q = await open('go=defense');
       await q.evaluate(() => { const C = window.__a; C.toMenu(); C.setup.era = 4; C.setup.side = 'east'; C.setup.mrole = 'atk'; C.setup.game = 'multi'; C.start('multi'); });
       await sleep(3000);

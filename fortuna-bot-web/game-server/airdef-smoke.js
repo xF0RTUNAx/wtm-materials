@@ -1,8 +1,8 @@
 // Автопроверка онлайна «Воздушного превосходства» без браузера: поднимает сервер на :8797 и играет двумя клиентами.
 //   deno run --allow-net --allow-read --allow-env --allow-run game-server/airdef-smoke.js
-// Лётчик создаёт комнату 1×1 (эпоха II, авиация — запад), второй входит за ПВО; оба «Готов» → расстановка: ПВО ставит
+// Лётчик создаёт комнату 1×1 (эпоха II, авиация - запад), второй входит за ПВО; оба «Готов» → расстановка: ПВО ставит
 // комплекс у цели, лётчик берёт связку; волна: лётчик летит к цели, ставит подсвет, сбрасывает оружие и ЛТЦ.
-// Ждём снимки с самолётом и комплексом, события сброса и подрывов. В конце — PASS/FAIL по пунктам.
+// Ждём снимки с самолётом и комплексом, события сброса и подрывов. В конце - PASS/FAIL по пунктам.
 const PORT = 8797;
 const srv = new Deno.Command('deno', { args: ['run', '--allow-net', '--allow-read', '--allow-env', new URL('./server.js', import.meta.url).pathname],
   env: { PORT: String(PORT), HOST: '127.0.0.1' }, stdout: 'piped', stderr: 'piped' }).spawn();
@@ -35,7 +35,7 @@ try {
   const st = await A.wait('start'); check('бой начался', st && st.targets && st.targets.length === 3);
   const plan = await P.wait('room', (m) => m.state === 'plan'); check('расстановка (волна 1)', plan && plan.wave === 1);
   const state = await P.wait('state');
-  // ПВО: «Оса» рядом с первой целью — ищем свободное место перебором (сервер проверяет землю)
+  // ПВО: «Оса» рядом с первой целью - ищем свободное место перебором (сервер проверяет землю)
   const { buildCity } = await import('../games/airdef/city.js?v=20260930m').catch(() => ({}));
   let placed = null;
   for (let k = 0; k < 40 && !placed; k++) {
@@ -45,7 +45,7 @@ try {
     if (ev) placed = ev.e.find((e) => e[0] === 'ua');
   }
   check('ПВО поставило комплекс', placed);
-  const limit = []; P.send({ t: 'buyUnit', k: 'hawk', x: 0, z: 0 }); // запад — у ПВО восток: не дадут
+  const limit = []; P.send({ t: 'buyUnit', k: 'hawk', x: 0, z: 0 }); // запад - у ПВО восток: не дадут
   check('чужой комплекс не продают', await P.wait('deny', () => true, 1500));
   // связка: первая из 2-й эпохи за запад, которая по карману (очки первой волны)
   globalThis.THREE = await import('npm:three@0.128.0');
@@ -57,7 +57,7 @@ try {
   check('связка авиации выбрана', chosen);
   A.send({ t: 'ready', on: true }); P.send({ t: 'ready', on: true });
   const spawn = await A.wait('spawn', () => true, 8000); check('вылет: самолёт на краю карты', spawn && spawn.s && spawn.load && spawn.load.length);
-  // летим к цели: шлём состояние 20 Гц по прямой, на подлёте — подсвет и сброс
+  // летим к цели: шлём состояние 20 Гц по прямой, на подлёте - подсвет и сброс
   let s = spawn.s.slice(), t = 0; const tgt = { x: 500, z: -300 };
   const yaw = Math.atan2(-(tgt.x - s[0]), -(tgt.z - s[2]));
   let released = 0, cms = 0;
@@ -73,10 +73,10 @@ try {
   }
   const snaps = A.msgs.filter((m) => m.t === 's');
   check('снимки идут', snaps.length > 100);
-  check('в снимке — зона пополнения', snaps.some((m) => Array.isArray(m.Z) && m.Z.length === 3));
-  check('комплекс в снимке — с набором захвата', snaps.some((m) => m.U.some((u) => u.length >= 9)));
-  check('в снимке — свой самолёт', snaps.some((m) => m.A.some((a) => a[0] === spawn.id || a[0] === A.last.welcome.id)));
-  check('в снимке — комплекс ПВО', snaps.some((m) => m.U.length > 0));
+  check('в снимке - зона пополнения', snaps.some((m) => Array.isArray(m.Z) && m.Z.length === 3));
+  check('комплекс в снимке - с набором захвата', snaps.some((m) => m.U.some((u) => u.length >= 9)));
+  check('в снимке - свой самолёт', snaps.some((m) => m.A.some((a) => a[0] === spawn.id || a[0] === A.last.welcome.id)));
+  check('в снимке - комплекс ПВО', snaps.some((m) => m.U.length > 0));
   const evs = A.msgs.filter((m) => m.t === 's' && m.e).flatMap((m) => m.e);
   check('сброс оружия по команде', evs.some((e) => e[0] === 'wr'));
   check('ловушки по команде', evs.some((e) => e[0] === 'cm'));
