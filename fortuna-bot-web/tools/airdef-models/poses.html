@@ -8,11 +8,11 @@
      window.__thumbs — { имя: dataURL webp }, window.__names — { id: короткое имя }. Сохраняет tools/airdef-headless/poses-bake.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script type="module">
-import { loadModels, planeModel, unitModelGlb, unitMissileGlb, launcherGlb, wantUnit, wantModel, anyModel, weaponMesh, wantWeapon, weaponPending, setWings, wantCamo } from '../../games/airdef/models.js?v=20261104a';
-import { unitModel, weaponGeo } from '../../games/airdef/units-render.js?v=20261104a';
-import { AG, SAM } from '../../games/airdef/arsenal.js?v=20261104a';
-import { cylPose } from '../../games/airdef/launchers.js?v=20261104a';
-import { TREE, NODE } from '../../games/airdef/progress.js?v=20261104a';
+import { loadModels, planeModel, unitModelGlb, unitMissileGlb, launcherGlb, wantUnit, wantModel, anyModel, weaponMesh, wantWeapon, weaponPending, setWings, wantCamo } from '../../games/airdef/models.js?v=20261104b';
+import { unitModel, weaponGeo } from '../../games/airdef/units-render.js?v=20261104b';
+import { AG, SAM } from '../../games/airdef/arsenal.js?v=20261104b';
+import { cylPose } from '../../games/airdef/launchers.js?v=20261104b';
+import { TREE, NODE } from '../../games/airdef/progress.js?v=20261104b';
 const Q = new URLSearchParams(location.search), SHOTS = (Q.get('s') || '').split(';').filter(Boolean).map((t) => { const [name, id, ...v] = t.split('~'); const f = v.map(Number); return { name, id, az: f[0], el: f[1], roll: f[2] || 0, pitch: f[3] || 0, yaw: f[4] || 0, fov: f[5] || 24 }; });
 const W = 800, H = 450, r = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true }); r.setPixelRatio(2); r.setSize(W, H); // 960×540 — досье показывает крупно r.outputEncoding = THREE.sRGBEncoding; r.setClearColor(0, 0);
 const unitMat = new THREE.MeshPhongMaterial({ vertexColors: true, specular: 0x222222, shininess: 18 }), wMat = new THREE.MeshPhongMaterial({ vertexColors: true, specular: 0x444444, shininess: 40 });
