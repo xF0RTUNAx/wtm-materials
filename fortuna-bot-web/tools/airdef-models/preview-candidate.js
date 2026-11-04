@@ -49,6 +49,8 @@ async function open(w, h, setup) {
   p.errs = []; p.on('pageerror', (e) => p.errs.push('ERR ' + e.message)); p.on('console', (m) => { if (m.type() === 'error' && !/404|favicon|KTX2/.test(m.text())) p.errs.push('CON ' + m.text()); });
   await p.setRequestInterception(true);
   p.on('request', (r) => { let u; try { u = new URL(r.url()); } catch { return r.continue(); }
+    // у ключа кандидата не брать сжатые текстуры игры: иначе на пилоне была бы чужая окраска, текстуры - из файла кандидата
+    if (u.pathname.endsWith('/models/ktx/index.json')) { fetch(r.url()).then((x) => x.json()).then((j) => { delete j[KEY]; r.respond({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: JSON.stringify(j) }); }).catch(() => r.continue()); return; }
     if (u.pathname.endsWith(`/games/airdef/models/${KEY}.glb`)) { hits++; r.respond({ status: 200, contentType: 'model/gltf-binary', headers: { 'access-control-allow-origin': '*' }, body: GLB }); } else r.continue(); });
   if (setup) await p.evaluateOnNewDocument((s) => { localStorage.setItem('fortuna_airdef_setup', JSON.stringify(s)); localStorage.setItem('fortuna_airdef_muted', '1'); }, setup);
   return p;
