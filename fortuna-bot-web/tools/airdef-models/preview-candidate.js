@@ -87,10 +87,12 @@ try {
     }
     if (!era || lo < 0) report.push(`подвеска: в arsenal.js нет подвески с оружием ${WEAPON} — сцена пропущена (задай --era N --lo N)`);
     else {
+      const L0 = LOADOUTS[era][lo], defSide = L0.side === 'west' ? 'east' : 'west'; // side в настройках - обороняющаяся сторона, самолёт подвески у обратной
+      console.log(`подвеска: самолёт ${L0.plane}, сторона ${L0.side}`);
       const SH = { side: ['бок', { az: 0.3, el: 0.05, k: 1.2 }], front: ['спереди', { az: 1.3, el: -0.25, k: 1.0 }], rear: ['сзади', { az: 2.4, el: -0.12, k: 1.4 }] };
       for (const v of VIEWS) {
         if (!SH[v]) continue;
-        const h0 = hits, setup = { game: 'photo', diff: 'arcade', pside: 'air', era, side: 'west', lo, palt: 'mid', pmap: 'city' }, shot = { s: WEAPON, a: 'side', ...SH[v][1], t: 8, max: 200 };
+        const h0 = hits, setup = { game: 'photo', diff: 'arcade', pside: 'air', era, side: defSide, lo, palt: 'mid', pmap: 'city' }, shot = { s: WEAPON, a: 'side', ...SH[v][1], t: 8, max: 200 };
         const p = await open(1400, 800, setup);
         await p.goto(`${BASE}games/airdef.html?go=photo&gfx=high&test=1&weather=day&shot=${encodeURIComponent(JSON.stringify(shot))}${opt('seed', '') ? '&seed=' + opt('seed', '') : ''}`, { waitUntil: 'load', timeout: 120000 });
         await p.waitForFunction(() => window.__shot === 'ready' || window.__shot === 'timeout', { timeout: 300000, polling: 500 });

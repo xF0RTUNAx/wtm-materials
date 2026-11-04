@@ -143,15 +143,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "AGM 65 MAVERICK",
-  "author": "HEAVYCLOUD",
-  "url": "https://sketchfab.com/3d-models/agm-65-maverick-5447a415b21840568fbfa01cf6dd166a",
-  "license": "CC-BY-4.0",
-  "files": [
-   "w_agm65b"
-  ]
- },
- {
   "title": "AIM-160A \"Screamer\"",
   "author": "Peter Primini",
   "url": "https://sketchfab.com/3d-models/aim-160a-screamer-5342783592684eaaa98238acae57fb0c",

@@ -18,7 +18,6 @@
 - "300 followers - free aircraft missile set" (https://sketchfab.com/3d-models/300-followers-free-aircraft-missile-set-2e70bc2ea0824897b2ccaea378809c9e) by NETRUNNER_pl — CC-BY-4.0 — `w_mk82.glb`, `aam_aim9.glb`, `aam_aim54.glb`
 - "Agm-158 - wings extended" (https://sketchfab.com/3d-models/agm-158-wings-extended-1b1f0f509249401297057ee97b511ee0) by samadsamadi — CC-BY-4.0 — `w_jassm.glb`
 - "AGM-88 HARM transport cart" (https://sketchfab.com/3d-models/agm-88-harm-transport-cart-2c60dcae416e4af1a3d69914ff72a198) by Tiltow — CC-BY-4.0 — `w_agm88.glb`
-- "AGM 65 MAVERICK" (https://sketchfab.com/3d-models/agm-65-maverick-5447a415b21840568fbfa01cf6dd166a) by HEAVYCLOUD — CC-BY-4.0 — `w_agm65b.glb`
 - "AIM-160A "Screamer"" (https://sketchfab.com/3d-models/aim-160a-screamer-5342783592684eaaa98238acae57fb0c) by Peter Primini — CC-BY-4.0 — `w_mald.glb`
 - "Harpy Drone" (https://sketchfab.com/3d-models/harpy-drone-84d8d2dc8ca14d64ac05b19e3c88b385) by KillCaptureDestroy — CC-BY-4.0 — `w_decoy_e.glb`
 - "RAFAEL AN/AAQ-28(V) Litening" (https://sketchfab.com/3d-models/rafael-anaaq-28v-litening-be90b1ca86bd46f4a87a86829d1e112c) by Vlad.Mojaev — CC-BY-4.0 — `w_pod.glb`

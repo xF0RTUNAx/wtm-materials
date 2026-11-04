@@ -1,0 +1,18 @@
+{
+ "key": "w_agm65b",
+ "weapon": "agm65b",
+ "name": "AGM-65B Maverick",
+ "rev": 1,
+ "files": {
+  "glb": "agm65b.glb",
+  "blend": "agm65b.blend",
+  "build": [
+   "build.py",
+   "agm_geo.py",
+   "_decals.py",
+   "bake.py",
+   "_collide.py",
+   "deliver.py"
+  ]
+ }
+}
