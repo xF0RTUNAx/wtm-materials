@@ -74,11 +74,8 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
   $('mtFold').innerHTML = ico('cog');
   $('mtFold').onclick = (e) => { e.stopPropagation(); snd.click(); $('mtabs').classList.toggle('open'); };
   $('hgStrip').onclick = (e) => { const b = e.target.closest('[data-hgp]'); if (!b) return; panel(true); if (b.dataset.hgp === hgPlane) return; snd.click(); hgPlane = b.dataset.hgp; render(); save(); };
-  const modesKind = (() => { try { const v = new URLSearchParams(location.search).get('modes'); if (v) { sessionStorage.setItem('fortuna_airdef_modes', v); return v; } return sessionStorage.getItem('fortuna_airdef_modes') || 'b'; } catch (_) { return 'b'; } })(); // проба на выбор Mark: a, b, c
-  document.body.classList.add('hgM-' + modesKind);
   $('modeSel').onclick = (e) => {
     const b = e.target.closest('button'); if (!b) return;
-    if (modesKind === 'a' && document.body.classList.contains('hgOn')) { const ms = $('modeSel'), was = ms.classList.contains('open'); ms.classList.toggle('open', !was); if (!was || b.classList.contains('on')) return; } // табличка режима: первое нажатие раскрывает список
     panel(true); setup.game = b.dataset.g; setup.evd = false; save(); // evd - оборона события на осенней карте (event.js): обычное меню её сбрасывает
     if (setup.game === 'online' && C.RAND_MAPS.includes(C.MAP)) C.ls.set('fortuna_ad_omap', C.MAP); // онлайн «Вылет и оборона»: карту даст комната - пока подходит загруженная
     if (C.wantMap(setup.game, setup.pmap, setup.era, -1, false) !== C.MAP) { const u = new URL(location.href); u.searchParams.delete('mp'); u.searchParams.delete('ad'); if (setup.game === 'online') u.searchParams.set('mp', '1'); location.replace(u.href); return; } // «Мульти-волна» - на зимней карте, остальное - на городе

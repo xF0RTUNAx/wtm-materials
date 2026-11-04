@@ -78,7 +78,7 @@ const CONFIG = {
   w_agm65b: { src: `${DL}/agm_65_maverick.glb`, scale: 2.49 / 1.31, axes: (x, y, z) => [x, z, -y], tex: () => 256, target: 60000, simpErr: 0.004, minPart: 0.012, pick: [-0.08, -1, -0.73, 0.23, 2, -0.42] }, // одна из трёх, стояла вертикально; у одной ~200 тыс. треугольников — до 60 тыс. с малой ошибкой (прежние 7000 — ломаная форма)
   w_mald: { src: `${DL}/aim-160a_screamer.glb`, scale: 2.84 / 2, nose: '-x', tex: () => 256, target: 7000, pickMesh: /./ },
   w_decoy_e: { colors: { '': [0.14, 0.16, 0.12] }, src: `${DL}/harpy_drone.glb`, scale: 0.1, nose: '+z', tex: () => 256, pickMesh: /./ }, // Harpy — ложная цель (без упрощения: у источника всего ~21 тыс. треугольников)
-  w_pod: { src: `${DL}/anaaq-28v_lightning_fbx.glb`, scale: 1, nose: '+z', tex: () => 256, target: 9000, simpErr: 0.3, cluster: true, minPart: 0.03, pickMesh: /./, // LITENING — прицельный контейнер
+  w_pod: { src: `${DL}/anaaq-28v_lightning_fbx.glb`, scale: 1, nose: '+z', tex: () => 256, texVf: 'hue=s=0.22,eq=brightness=0.03' /* корпус серый, не синий (Mark 2026-11-04) */, target: 9000, simpErr: 0.3, cluster: true, minPart: 0.03, pickMesh: /./, // LITENING — прицельный контейнер
     // файл — перезалив Jeyhun1985 «AN/AAQ-28(V) Lightning (FBX)»; автор модели — Vlad.Mojaev (CC BY 4.0, страница проверена 2026-10-24)
     orig: { title: 'RAFAEL AN/AAQ-28(V) Litening', author: 'Vlad.Mojaev', source: 'https://sketchfab.com/3d-models/rafael-anaaq-28v-litening-be90b1ca86bd46f4a87a86829d1e112c', license: 'CC-BY-4.0' } },
   w_gbu39: { src: `${DL}/gbu-39b_small_diameter_bomb_weapon_system.glb`, scale: 0.0496, axes: (x, y, z) => [x, -y, -z], /* нос из +Z в −Z и переворот: у автора крылья снизу — у настоящей SDB на спине */ tex: () => 512, pickMesh: /./,
@@ -143,7 +143,7 @@ const CONFIG = {
   // ── новые самолёты 2026-10-19 (manilov.ap, CC BY; как Су-24 — лежат повёрнутыми в XZ: fwd — нос по оси симметрии, tools: sym.js) ──
   e_tornado: { src: `${DL}/tornado.glb`, scale: 16.72 / 16.5, fwd: [-0.7339, 0.6793], rulesIn: 'game', tex: () => 512, centerX: true, /* ливрея автора — как есть (Mark 2026-10-19) */ // ось — x 4,16: без баков и контейнеров под крылом (пилоны — оставить)
     groups: (c) => (Math.abs(c.ctr[0] - 4.16) > 2.5 && c.ctr[1] < 1.9 ? null : 'body') },
-  e_f111: { src: `${DL}/f111.glb`, scale: 22.4 / 40.2, fwd: [-0.7716, 0.6361], rulesIn: 'game', tex: () => 512, centerX: true, // ось — x 3,97: без выпущенных шасси и створок
+  e_f111: { src: `${DL}/f111.glb`, scale: 22.4 / 40.2, fwd: [-0.7716, 0.6361], rulesIn: 'game', tex: () => 512, centerX: true, dropMat: /^F111(star2?|uh_[lr]|deth|bird)-FACES/ /* наклейки: в файле автора их картинки пустые, чёрные пятна на борту и киле (Mark 2026-11-04) */, // ось — x 3,97: без выпущенных шасси и створок
     groups: (c) => (c.ctr[1] < -1.9 && Math.abs(c.ctr[0] - 3.97) < 2.2 ? null : 'body') },
   e_mig23: { src: `${DL}/mig23.glb`, scale: 16.7 / 17.71, fwd: [-0.8192, 0.5736], rulesIn: 'game', tex: () => 512, centerX: true, // ось — x 3,77: без подфюзеляжного бака и ракет (подфюзеляжный киль — оставить)
     groups: (c) => ((c.size[2] > 4 && c.size[0] < 0.7 && Math.abs(c.ctr[0] - 3.77) < 0.3 && c.ctr[1] < 2.1) || (Math.abs(Math.abs(c.ctr[0] - 3.77) - 0.4) < 0.15 && c.ctr[1] < 2.3) ||

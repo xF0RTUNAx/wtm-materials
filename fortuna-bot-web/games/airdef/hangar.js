@@ -128,16 +128,18 @@ export function createHangar(C, renderer) {
     const obj = pm.obj; holder.add(obj); obj.position.set(0, 0, 0); pivot.updateMatrixWorld(true);
     const box0 = new THREE.Box3().setFromObject(obj), sz = box0.getSize(new THREE.Vector3());
     // подвеска - как в бою
-    let oi = 0; const parts = obj.children.slice(), hung = [];
+    let oi = 0; const parts = obj.children.slice(), hung = [], ms = [];
     for (const [key, n] of L.items.slice().sort((a, b) => AG[b[0]].mass - AG[a[0]].mass)) {
       for (let i = 0; i < n && oi < 8; i++) {
         const st = ST_ORDER[oi++], p = pm.stations[st]; if (!p) continue;
-        const W0 = AG[key].vis || {}, m = pylonMesh(key, AG[key], C.weaponGeo, C.mats.wMat); m.position.set(p.x, p.y - (W0.hang ?? W0.r ?? 0.2) - 0.05, p.z); m.visible = !pm.internal; obj.add(m); if (pm.internal) continue; hung.push(m); // во внутренних отсеках не видно, как в бою
-        let g = groups.find((x) => x.key === key); if (!g) groups.push(g = { key, pos: [] }); g.pos.push(m.position.clone());
+        const W0 = AG[key].vis || {}, m = pylonMesh(key, AG[key], C.weaponGeo, C.mats.wMat); m.position.set(p.x, p.y - (W0.hang ?? W0.r ?? 0.2) - 0.05, p.z); m.userData.y0 = m.position.y; m.visible = !pm.internal; obj.add(m); if (pm.internal) continue; hung.push(m); ms.push([key, m]); // во внутренних отсеках не видно, как в бою
       }
     }
-    if (L.pod && pm.pod) { const m = podModel() || new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 2.4, 10).rotateX(Math.PI / 2), new THREE.MeshPhongMaterial({ color: 0x5a636c })); m.position.copy(pm.pod); obj.add(m); hung.push(m); } // как в бою: контейнер ещё не пришёл - простая фигура
-    obj.updateMatrixWorld(true);
+    if (L.pod && pm.pod) { const m = podModel() || new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 2.4, 10).rotateX(Math.PI / 2), new THREE.MeshPhongMaterial({ color: 0x5a636c })); m.position.copy(pm.pod); m.userData.y0 = m.position.y; obj.add(m); hung.push(m); } // как в бою: контейнер ещё не пришёл - простая фигура
+    pivot.updateMatrixWorld(true);
+    hangStores(obj, parts, hung);
+    for (const [key, m] of ms) { let g = groups.find((x) => x.key === key); if (!g) groups.push(g = { key, pos: [] }); g.pos.push(m.position.clone()); }
+    pivot.updateMatrixWorld(true);
     const box = new THREE.Box3().setFromObject(obj);
     const size = Math.max(sz.x, sz.z), heavy = size > BIG;
     setView(wantView || (heavy ? 'heavy' : 'fighter'));
@@ -166,6 +168,31 @@ export function createHangar(C, renderer) {
     bakeShadow(obj, Math.max(sz.x, sz.z, box.max.z - box.min.z) * 0.62);
     baseZ = wantView === 'heavy' ? Math.max(1.12, Math.min(1.3, 50 / Math.max(size, 1))) : Math.max(1, Math.min(1.34, 23 / Math.max(size, 1))); // небольшой самолёт - крупнее; у большого запас, чтобы сдвинуть кадр от панели
     tAz = az; homeView();
+  }
+  // Точки подвески общие с боем и стоят приблизительно: вдали незаметно, в ангаре оружие висело в воздухе (Mark). Луч вверх от верха подвески до самолёта:
+  // зазор маленький — подвеска поднимается вплотную (там уже пилон автора или крыло), большой — между ними ставится пилон; слишком большой — подвеска ещё и подтягивается
+  const PY_TOUCH = 0.16, PY_MAX = 0.55;
+  let pyMat = null, pyStat = { hung: 0, pylons: 0, free: 0 };
+  function hangStores(obj, parts, hung) {
+    if (!pyMat) pyMat = new THREE.MeshPhongMaterial({ color: 0x6d7276, specular: 0x222222, shininess: 18, flatShading: true });
+    const ray = new THREE.Raycaster(), o = new THREE.Vector3(), up = new THREE.Vector3(0, 1, 0), P = { hung: hung.length, pylons: 0, free: 0 };
+    const gapAt = (x, z, y) => { ray.set(o.set(x, y, z), up); ray.far = 6; const h = ray.intersectObjects(parts, true)[0]; return h ? h.point.y - y : null; };
+    for (const m of hung) {
+      const b = new THREE.Box3().setFromObject(m), L = b.max.z - b.min.z, cx = (b.min.x + b.max.x) / 2, cz = (b.min.z + b.max.z) / 2, top = b.max.y - 0.02;
+      const probe = (x) => [gapAt(x, cz, top), gapAt(x, cz - L * 0.22, top), gapAt(x, cz + L * 0.22, top)].filter((v) => v != null);
+      let g = probe(cx), dx = 0;
+      if (!g.length) for (const k of [0.94, 0.88, 0.8, 0.72]) { g = probe(cx * k); if (g.length) { dx = cx * k - cx; break; } } // край крыла мимо: чуть ближе к фюзеляжу
+      if (!g.length) { P.free++; continue; } // законцовка и подобное: остаётся как есть
+      m.position.x += dx;
+      let gap = Math.min(...g);
+      if (gap > PY_MAX) { m.position.y += gap - PY_MAX; gap = PY_MAX; }
+      if (gap <= PY_TOUCH) { m.position.y += Math.max(0, gap - 0.015); continue; }
+      const h = gap + 0.1, c = Math.max(0.6, Math.min(1.9, L * 0.55)), geo = new THREE.BoxGeometry(0.09, h, c), pos = geo.attributes.position;
+      for (let i = 0; i < pos.count; i++) if (pos.getY(i) < 0) pos.setZ(i, pos.getZ(i) * 0.72); // обтекаемый: снизу короче
+      geo.computeVertexNormals();
+      const py = new THREE.Mesh(geo, pyMat); py.position.set(cx + dx, top + gap / 2 + (m.position.y - m.userData.y0 || 0), cz); py.position.y = b.max.y + (m.position.y - m.userData.y0) + gap / 2; obj.add(py); P.pylons++;
+    }
+    pyStat = P;
   }
   function setView(key) {
     if (key === viewKey && texA) return;
@@ -231,7 +258,7 @@ export function createHangar(C, renderer) {
   function listen() {
     const el = document.getElementById('menu');
     panelW = () => { if (!document.body.classList.contains('mpOpen') || innerWidth <= innerHeight) return 0; /* вертикально панель снизу */ const p = el.querySelector('.mpanel'); return p ? p.getBoundingClientRect().width : 0; };
-    el.addEventListener('click', (e) => { if (!on || inUi(e) || !focusKey) return; clearFocus(); if (C.menu && C.menu.render) C.menu.render(); }); // нажатие мимо панелей - обратно к самолёту целиком
+    el.addEventListener('click', (e) => { if (!on || !e.target.isConnected || inUi(e) || !focusKey) return; /* isConnected: панель перерисовалась от этого же нажатия */ clearFocus(); if (C.menu && C.menu.render) C.menu.render(); }); // нажатие мимо панелей - обратно к самолёту целиком
     el.addEventListener('wheel', (e) => { if (!on || inUi(e)) return; e.preventDefault(); tZ = Math.max(baseZ, Math.min(baseZ * 2, tZ * (e.deltaY > 0 ? 0.93 : 1.08))); dirty = true; }, { passive: false });
     document.addEventListener('visibilitychange', () => { if (!document.hidden) dirty = true; });
   }
@@ -282,7 +309,7 @@ export function createHangar(C, renderer) {
     resize() { dirty = true; if (!focusKey) homeView(); },
     paint, show, refresh, focusWeapon, clearFocus, focused: () => focusKey, panelChanged() { if (!focusKey) homeView(); },
     frames: () => nFrames, // сколько кадров посчитано: в покое не растёт (проверка нагрева)
-    stat: () => ({ jacks: jackG ? jackG.children.filter((c) => c.getObjectByName && c.getObjectByName('ram')).length : 0, maxSt: jackG ? Math.max(0, ...jackG.children.map((c) => { const r = c.getObjectByName && c.getObjectByName('ram'); return r ? r.scale.y : 0; })) : 0, H: holder ? holder.position.y : 0, view: viewKey, gap: jackG ? (() => { const J = jackG.children.filter((c) => c.getObjectByName && c.getObjectByName('ram')); let g = 99; for (let a = 0; a < J.length; a++) for (let b = a + 1; b < J.length; b++) g = Math.min(g, Math.hypot(J[a].position.x - J[b].position.x, J[a].position.z - J[b].position.z)); return g; })() : 0 }), // стенд: сколько подъёмников, ход и наименьшее расстояние между ними
+    stat: () => ({ py: pyStat, jacks: jackG ? jackG.children.filter((c) => c.getObjectByName && c.getObjectByName('ram')).length : 0, maxSt: jackG ? Math.max(0, ...jackG.children.map((c) => { const r = c.getObjectByName && c.getObjectByName('ram'); return r ? r.scale.y : 0; })) : 0, H: holder ? holder.position.y : 0, view: viewKey, gap: jackG ? (() => { const J = jackG.children.filter((c) => c.getObjectByName && c.getObjectByName('ram')); let g = 99; for (let a = 0; a < J.length; a++) for (let b = a + 1; b < J.length; b++) g = Math.min(g, Math.hypot(J[a].position.x - J[b].position.x, J[a].position.z - J[b].position.z)); return g; })() : 0 }), // стенд: сколько подъёмников, ход и наименьшее расстояние между ними
     update() {}, camera() {}, hud() {}, focus: () => C.camera.position,
   };
 }
