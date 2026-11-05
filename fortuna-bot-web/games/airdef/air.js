@@ -2,6 +2,7 @@
 // лазер), прицел точки падения, СПО и датчик пуска, метки целей, итоги. start(opts) - опции для обучения:
 // { items, pod, targets: [ключи], defense(S, rnd), invuln, spawn: {x,y,z,yaw}, noEnd, onTick(dt) }.
 /* global THREE */
+import { makeBay } from './bay.js?v=20261105a';
 import { tr } from './i18n.js?v=20261105a';
 import { CITY, ZONE_NAME, mulberry32, riverX, objAimXZ, objDist } from './city.js?v=20261105a';
 import { strikerGeo, attachFlames } from './units-render.js?v=20261105a';
@@ -55,8 +56,9 @@ export function createAir(C) {
       shipModel.traverse((o) => { if (o.isMesh && !o.userData.glass) o.castShadow = !!P.shadows; });
       flames = attachFlames(shipModel, pm.nozzles, pm.nr / 0.45, true, pm.dry, pm.name);
       craft.dmgVis = planeDamageVis(scene, shipModel, pm.name, planeMeta(pm.name), () => C.fx); craft.dmgVis.sync(craft); // зоны повреждений: отрыв частей, дым
+      shipBay = pm.internal && !craft.heli ? makeBay(shipModel, planeMeta(pm.name), ship) : null; craft.bayVis = shipBay; // отсеки со створками: пуск через них (bay.js)
     } else {
-      craft.dmgVis = null;
+      craft.dmgVis = null; shipBay = null; craft.bayVis = null;
       const sg = strikerGeo(side, true); stations = craft.heli ? heliStations(sg.stations) : sg.stations; podPos = craft.heli ? null : new THREE.Vector3(0, -1.6, -3.5);
       shipModel = new THREE.Group(); const m = new THREE.Mesh(sg.geo, shipMat); m.castShadow = !!P.shadows; shipModel.add(m);
       flames = attachFlames(shipModel, sg.nozzles, sg.nr / 0.45, true);
@@ -83,7 +85,7 @@ export function createAir(C) {
   }
   ship.visible = false; scene.add(ship);
   const pylonMeshes = [];
-  let seatExtra = null; // балки и надставки на пилонах (seat.js)
+  let seatExtra = null, shipBay = null; // балки и надставки на пилонах (seat.js); отсеки со створками (bay.js)
   function buildPylons() {
     for (const m of pylonMeshes) ship.remove(m);
     pylonMeshes.length = 0;
@@ -507,7 +509,7 @@ export function createAir(C) {
       return;
     }
     const st = l.st.pop(); l.n--;
-    const m = pylonMeshes.find((q) => q.userData.st === st); if (m) m.visible = false;
+    const m = pylonMeshes.find((q) => q.userData.st === st); if (m) { m.visible = false; if (shipBay) shipBay.fired(m.position); }
     C.S.release(craft, l.key, opts);
     updLoad(); logFire(l.key);
     if (C.hooks.trainFire) C.hooks.trainFire(l.key);
@@ -537,7 +539,7 @@ export function createAir(C) {
         if (l.rs <= 0) { l.st.pop(); l.n--; l.rs = per; }
       } else {
         const i = o.st !== undefined ? l.st.indexOf(o.st) : -1; stn = i >= 0 ? l.st.splice(i, 1)[0] : l.st.pop(); l.n--;
-        const m = pylonMeshes.find((q) => q.userData.st === stn); if (m) m.visible = false;
+        const m = pylonMeshes.find((q) => q.userData.st === stn); if (m) { m.visible = false; if (shipBay) shipBay.fired(m.position); }
         w = C.S.release(craft, l.key, opts);
       }
       updLoad(); logFire(l.key);
@@ -1128,6 +1130,7 @@ export function createAir(C) {
     if (game.net && craft.dead) { spectate(dt, t); return; } // за союзниками - только когда сбит (решение Mark)
     // модель самолёта - до отрисовки кадра, в ту же точку, по которой ставится камера (иначе самолёт «прыгает» на кадр)
     ship.position.copy(craft.pos); ship.rotation.set(craft.pitch, craft.yaw, craft.roll, 'YXZ');
+    if (shipBay) { shipBay.update(dt); for (const m of pylonMeshes) if (m.userData.st !== undefined) m.visible = shipBay.open(m.position.x) > 0.02 && loadout.some((l) => l.st.includes(m.userData.st)); } // в отсеке оружие видно, только пока створки открыты
     // дым и огонь из повреждённых зон - от модели в положении этого кадра (2026-10-25: был в systems() до шага полёта - след отставал на кадр);
     // время - шагов полёта с прошлого кадра (камера идёт и на паузе, и в замедлении - по ним дым не копится)
     if (craft.dmgVis && dmgDt > 0 && !craft.dead) craft.dmgVis.update(dmgDt, craft, C.windV || (C.windV = new THREE.Vector3(3.9, 0, 1.1)));

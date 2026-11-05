@@ -28,6 +28,7 @@ import { createRaid } from './sim/raid.js?v=20261105a';
 import { POD, RAIL, podLift } from './sim/combined.js?v=20261105a';
 import { unitModel, weaponGeo, samMissileMesh, mountWpnFlame, narMesh, flameOf, wpnNozzle, strikerGeo, createFx, attachFlames } from './units-render.js?v=20261105a';
 import { slotCount, LNCH, lnchToWorld, cylPose, mslView } from './launchers.js?v=20261105a';
+import { makeBay, bayHold } from './bay.js?v=20261105a';
 import { spinProps as spinRotors, spinSails, modelStats, loadModels, planeModel, heliModel, classOfRole, weaponMesh, pylonMesh, seatStores, unitModelGlb, unitMissileGlb, samMissileLo, samNose, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, wantUnitNear, bldModel, wantBuildings, wantModel, wantWeapon, weaponPending, anyModel, setWings, glideWings, spinVanes, planeMeta } from './models.js?v=20261105a';
 import { planeDamageVis, updateDebris, clearDebris } from './plane-damage.js?v=20261105a';
 import { createSound } from './sound.js?v=20261105a';
@@ -708,12 +709,13 @@ const simFx = {
 };
 // подвеска ИИ-самолёта с готовой моделью: тяжёлое - ближе к фюзеляжу (как у игрока); k - номер изделия этого типа
 const ST_ORDER = [3, 4, 2, 5, 1, 6, 0, 7], LOD_D = 2500; // дальше LOD_D - простая модель самолёта
-function hangLoad(g, stations, load, plane) {
+function hangLoad(g, stations, load, plane, inBay = false) {
   const out = [], seatL = []; let oi = 0;
   for (const l of [...load].sort((x, y) => AG[y.key].mass - AG[x.key].mass)) for (let k = 0; k < l.n && oi < 8; k++) {
     const st = ST_ORDER[oi++], W = AG[l.key], p = stations[st], m = pylonMesh(l.key, W, weaponGeo, wMat); if (weaponPending(l.key)) wantWeapon(l.key); // пришла - самолёты пересоберутся
     m.position.set(W.kind === 'tbm' ? 0 : p.x, p.y - (W.vis.hang ?? W.vis.r) - 0.05, p.z); g.add(m); out.push({ m, l, k }); if (W.kind !== 'tbm') seatL.push({ m, st, key: l.key, W }); // «Кинжал» - под фюзеляжем по оси
   }
+  if (inBay) return out; // в отсеке - на точке, без балок и надставок
   const extra = seatStores(g, plane, seatL); if (extra) out.push({ m: extra, l: { n: 1 }, k: 0 }); // балки и надставки: как подвеска, только вблизи
   return out;
 }
@@ -858,7 +860,7 @@ function syncWorld(dt, t) {
   for (const w of S.wpns) {
     let g = wpnMeshes.get(w.id);
     if (g && g.userData.stub && (w.stubT = (w.stubT || 0) - dt) <= 0) { w.stubT = 1; const g2 = relMesh(w); if (!g2.userData.stub) { scene.remove(g); scene.add(g2); wpnMeshes.set(w.id, g2); g = g2; } } // модель пришла - подменить временную
-    if (g) { g.position.copy(w.pos); if (w.vel.lengthSq() > 1e-4) g.lookAt(LP.copy(w.pos).sub(w.vel)); if (g.userData.props) spinProps(g, dt); if (g.userData.flame) flameOf(g, w);
+    if (g) { g.position.copy(w.pos); if (w.vel.lengthSq() > 1e-4) g.lookAt(LP.copy(w.pos).sub(w.vel)); const inBay = bayHold(w, g, dt); if (g.userData.props) spinProps(g, dt); if (g.userData.flame) { flameOf(g, w); if (inBay) g.userData.flame.set(0); }
       if (g.userData.wings) glideWings(g, dt, w.vel.lengthSq() > 1e-4); if (g.userData.vanes) spinVanes(g, dt); } } // крылья раскрываются через 0,3 с после сброса (УМПК: сперва переворот на 180°, см. models.js); крыльчатки взрывателей (AN-M65A1) крутятся
   syncEv();
   const pxK = VH / 2 / Math.tan(camera.fov * D2R / 2); // пикселей на метр на расстоянии 1 м
@@ -914,7 +916,7 @@ function syncWorld(dt, t) {
           g.userData.dv = planeDamageVis(scene, pm.obj, pm.name, planeMeta(pm.name), () => C.fx); // зоны повреждений: отрыв частей, дым из зон
           // пламя - у каждой модели своё (вдали - у простой): иначе у длинных самолётов (Су-34) факелы висели за простой моделью
           const fh = attachFlames(pm.obj, pm.nozzles, pm.nr / 0.45, false, pm.dry, pm.name), fl = attachFlames(lo, pm.nozzles.length ? sg.nozzles : [], sg.nr / 0.45, false, pm.dry, pm.name); // вдали - так же: нет пламени у B-2 и F-117, слабое - без форсажа
-          g.userData.flames = { update(t, ab) { fh.update(t, ab); fl.update(t, ab); } }; g.userData.hung = pm.internal ? [] : hangLoad(g, pm.stations, a.load, pm.name); // во внутренних отсеках - не видно
+          g.userData.flames = { update(t, ab) { fh.update(t, ab); fl.update(t, ab); } }; const bay = pm.internal ? makeBay(pm.obj, planeMeta(pm.name)) : null; if (bay) { g.userData.bay = bay; a.bayVis = bay; } g.userData.hung = pm.internal && !bay ? [] : hangLoad(g, pm.stations, a.load, pm.name, !!bay); // во внутренних отсеках без створок - не видно
           if (a.role === 'carrier') lo.visible = false; else g.userData.lod = { hi: pm.obj, lo }; // носитель велик - модель видна и издали
         } else g.userData.flames = attachFlames(g, sg.nozzles, sg.nr / 0.45);
       }
@@ -925,7 +927,8 @@ function syncWorld(dt, t) {
     spinRotors(g, dt, a.thr); // винты (Ту-95)
     const L = g.userData.lod, near = !L || camera.position.distanceToSquared(a.pos) < LOD_D * LOD_D;
     if (L) { L.hi.visible = near; L.lo.visible = !near; }
-    if (g.userData.hung) for (const h of g.userData.hung) h.m.visible = near && h.l.n > h.k;
+    const hb = g.userData.bay; if (hb) { hb.update(dt); for (const h of g.userData.hung) { const has = h.l.n > h.k; if (!has && !h.gone) { h.gone = true; hb.fired(h.m.position); } else if (has) h.gone = false; } } // в отсеке: пуск открывает створки, видно только в открытом
+    if (g.userData.hung) for (const h of g.userData.hung) h.m.visible = near && h.l.n > h.k && (!hb || hb.open(h.m.position.x) > 0.02);
   }
   // дым подбитых самолётов (ИИ и игрок): ветер - лёгкий, постоянный для боя. После того как модели встали на место этого кадра
   // (2026-10-25: раньше - до них, след выходил из прошлого положения: на 30 к/с в 6-10 м позади, в вираже - вбок)

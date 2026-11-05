@@ -120,11 +120,9 @@ const CONFIG = {
   // ── Gripen, F-22, F-35A (2026-10-12): нос в −Z, метры; без своих ракет, шасси и открытых створок
   e_gripen: { src: `${DL}/saab_jas-39_gripen_fighter_jet.glb`, scale: 1, nose: '+x', rulesIn: 'game', tex: () => 512, opaque: /^(Camo|material|White|Jet_m)$/, cutout: true, groups: (c) => (Math.abs(c.ctr[0]) > 1.5 && [1, 4, 5].includes(c.mat) ? null : 'body'), glassPart: (c) => c.mat === 3 && Math.abs(c.ctr[0]) < 0.6 && c.ctr[2] < -3 }, // свои ракеты и баки — долой, пилоны и направляющие — оставить
   e_f22: { src: `${DL}/lockheed_martin_f-22_raptor.glb`, scale: 18.92 / 12.11, nose: '-x', rulesIn: 'game', tex: () => 512, glassAny: /^glass$/, glassColor: [0.42, 0.36, 0.2, 0.45], /* у автора фонарь непрозрачный; у F-22 — золотистый */ groups: (c) => ([16, 17].includes(c.mat) ? null : 'body') }, // без встроенного выхлопа (plumes): пламя рисует игра
-  e_f35: { src: `${DL}/lockheed_martin_f35_lightning_ii.glb`, scale: 4.94, nose: '+z', rulesIn: 'game', tex: () => 512, glassColor: [0.42, 0.36, 0.2, 0.45], /* фонарь — золотистый */
-    // фото-текстуры автора (самолёт на фоне неба, на полу с сеткой) дают хромированный блеск и знаки — не берём; планер — матовое радиопоглощающее покрытие (FS 36170, линейный цвет ≈ 0,09 / 0,10 / 0,105), кромки и люки чуть светлее / темнее
-    noTex: /^(Darkness|Darker_back|F35_up_text|f35_tail|F35_back|F135_engine)$/, /* F135_engine у автора — оперение (фото с «70 YEARS») */ colors: { '^F135_engine$': [0.088, 0.095, 0.1], '^Darkness$': [0.09, 0.10, 0.105], '^Darker_back$': [0.075, 0.082, 0.088], '^F35_up_text$': [0.105, 0.115, 0.12], '^f35_tail$': [0.085, 0.092, 0.097], '^F35_back$': [0.098, 0.108, 0.113] }, groups: (c) => (F35_GEAR(c) ? null : 'body'),
-    glassPart: (c) => c.mat === 5 && c.ctr[1] > 2.4 && c.ctr[2] < 0 && c.size[1] > 0.5 }, // F-35A — andertan (CC BY 4.0; прежняя модель shangus930 — рип из мода DCS): без шасси, створок и их тяг; фонарь — стекло
-  // ── противник «Летки» (2026-10-11): нос в −Z, метры; без шасси и подставки
+  e_f35: { src: new URL('./own/f35.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 2048, nTex: () => 2048, pickMesh: /./, own: true, centerX: true, groups: (c) => { const m = /(^|\/)(bay_(?:in|out)_[lr])(\/|\||$)/.exec(c.path); return m ? m[2] : 'body'; } }, // створки отсеков - свои части (models.js META.bay, bay.js)
+ // // F-35A: своя модель (Blender, own/f35-build)
+  e_f35_gear: { src: new URL('./own/f35_gear.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 2048, nTex: () => 2048, pickMesh: /./, own: true, centerX: true }, // стойки F-35A для ангара: две метки по 1 мм дают тот же центр, что у самолёта, не удалять
   e_mig21: { src: `${DL}/mig-21_chibi.glb`, scale: 0.07, rulesIn: 'game', tex: () => 512, opaque: /mig21/, // «чиби»: стоял на подставке с креном ~10° — выравниваем
     axes: (x, y, z) => { const c = Math.cos(-0.174), s = Math.sin(-0.174); return [-x * c - y * s, -x * s + y * c, -z]; },
     groups: (c) => (c.size[2] > 14 || c.mat !== 2 ? null : c.ctr[1] < 0.98 && Math.max(...c.size) < 4.9 ? null : LS(c)) }, // длина 14,5 м // подставка, шасси и бак
@@ -905,7 +903,7 @@ CONFIG.site_port_lo = { ...CONFIG.site_fuel_city_lo, src: `${DL}/Свои/Пор
 for (const k of ['su30', 'mig29', 'e_su24', 'e_su25', 'f16', 'f18', 'e_f15e', 'e_a10', 'e_su34', 'e_mig31', 'h_mi24', 'h_ah64', 'h_mi8', 'h_uh60', 'zu23']) CONFIG[`pk_${k}`] = { ...CONFIG[k], target: 4000, simpErr: 0.05, tex: () => 256, nTex: null };
 for (const k of ['compact', 'coupe', 'hatch', 'van', 'offroad', 'pickup', 'sedan', 'sport', 'suv', 'wagon', 'police']) CONFIG[`c_${k}_lo`] = { ...CONFIG[`c_${k}`], target: 1000, simpErr: 0.05, tex: () => 128 };
 // дальние копии противника «Летки» (_lo): вдали тонкие крылья можно упрощать сильнее — дефектов не видно, а треугольников в разы меньше
-for (const [k, t] of [['e_mig21', 3000], ['e_mig31', 9000], ['e_su57', 7000], ['e_tu22m3', 7000], ['e_gripen', 3000], ['e_f22', 4000], ['e_f35', 9000]]) CONFIG[k + '_lo'] = { ...CONFIG[k], target: t, simpErr: 0.05, tex: () => 256 };
+for (const [k, t] of [['e_mig21', 3000], ['e_mig31', 9000], ['e_su57', 7000], ['e_tu22m3', 7000], ['e_gripen', 3000], ['e_f22', 4000], ['e_f35', 9000]]) CONFIG[k + '_lo'] = { ...CONFIG[k], target: t, simpErr: 0.05, tex: () => 256, nTex: null, ...(k === 'e_f35' ? { groups: undefined } : {}) };
 // часть лежит вдоль оси пакета: H — петля (z, y), A — направление оси (z, y), across — полутолщина, along — от и до
 function axis(c, H, A, across, a0, a1) { const dz = c.ctr[2] - H[0], dy = c.ctr[1] - H[1], al = dz * A[0] + dy * A[1]; return Math.abs(dz * A[1] - dy * A[0]) < across && al > a0 && al < a1; }
 // оси модели → оси игры (x вправо, y вверх, нос в −Z)

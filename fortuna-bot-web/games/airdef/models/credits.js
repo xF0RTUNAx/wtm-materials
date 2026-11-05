@@ -265,16 +265,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "Lockheed Martin F35 Lightning II",
-  "author": "andertan",
-  "url": "https://sketchfab.com/3d-models/lockheed-martin-f35-lightning-ii-db911de503c74285a8d506951df786d6",
-  "license": "CC-BY-4.0",
-  "files": [
-   "e_f35",
-   "e_f35_lo"
-  ]
- },
- {
   "title": "MiG-21 Chibi",
   "author": "Oleh",
   "url": "https://sketchfab.com/3d-models/mig-21-chibi-8a46e5b9d03d41a6b7611c1b5d6aacb6",

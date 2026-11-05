@@ -138,8 +138,9 @@ const META = {
     nozzles: [V(0, -0.94, 7.3)], nr: 0.24, pod: V(0.75, -1.5, -1.6) }, // JAS 39 Gripen (LITENING на подфюзеляжной точке)
   e_f22: { side: 'west', cls: 'strike', lazy: true, internal: true, stations: mirror([V(-1.3, -1.3, -1.5), V(-0.75, -1.7, 0.2), V(-0.45, -1.75, 1.0), V(-0.2, -1.8, 2.2)]),
     nozzles: [V(-0.75, -0.98, 7.33), V(0.75, -0.98, 7.33)], nr: 0.25, pod: null }, // F-22A: JDAM и SDB во внутренних отсеках, наведение по GPS
-  e_f35: { side: 'west', cls: 'strike', lazy: true, internal: true, stations: mirror([V(-0.9, -1.3, 2.4), V(-0.85, -1.3, 0.4), V(-0.65, -1.35, 1.0), V(-0.45, -1.4, 1.8)]),
-    nozzles: [V(0, -0.69, 6.3)], nr: 0.42, pod: null, matte: true }, // F-35A (EOTS встроена; matte - матовое покрытие без текстур автора); andertan: сопло - по срезу лепестков (z 6,25; кольцо R 0,64, горячая часть R ≈ 0,4, центр y −0,69), модель 15,67 × 10,87 м
+  e_f35: { side: 'west', cls: 'strike', lazy: true, internal: true, stations: mirror([V(-0.9, -1.056, -0.835), V(-0.9, -1.056, 0.265), V(-0.75, -1.056, 1.365), V(-1.05, -1.056, 2.365)]),
+    nozzles: [V(0, -0.726, 6.185)], nr: 0.405, pod: null, clearGlass: true, ...(paintOn ? { gearModel: 'e_f35_gear' } : {}),
+    bay: { doors: { bay_out_l: [[-1.474, -1.5582, 0.69], [0, -0.0184, -0.9998], 86], bay_in_l: [[-0.306, -1.61, 0.69], [0, 0.012, -0.9999], -92], bay_out_r: [[1.474, -1.5585, 0.69], [0, -0.0185, -0.9998], -86], bay_in_r: [[0.306, -1.6098, 0.69], [0, 0.0121, -0.9999], 92] }, sides: { L: ['bay_out_l', 'bay_in_l'], R: ['bay_out_r', 'bay_in_r'] } } }, // F-35A: своя модель, 8 точек в отсеках; bay - створки: шарнир в осях игры, ось, угол открытия (bay.js)
   // ── «Мульти-волна» (2026-10-13): грузится по требованию (lazy) - wantModel / anyModel
   w_tomahawk: { weapon: 'tomahawk', lazy: true, stations: [] }, // BGM-109 Tomahawk - Pan_Ar4ik
   w_kh555: { weapon: ['kh555'], lazy: true, stations: [] }, // Х-555 - собственная модель (tools/airdef-models/own/kh555; прежняя - перезалив CC BY-NC модели, 2026-10-24)
@@ -470,12 +471,13 @@ GLB_V.w_pod = '20261104b'; // серый корпус контейнера, бе
 GLB_V.w_agm88 = '20261104a'; // без синих ложементов тележки
 GLB_V.e_f111 = '20261104a'; // без чёрных наклеек
 GLB_V.e_tu160 = '20261104a'; // текстура 1024 вместо 512 (надписи в ангаре)
+GLB_V.e_f35 = GLB_V.e_f35_lo = GLB_V.e_f35_gear = '20261106a'; // своя модель и стойки
 GLB_V.e_f15e = '20261105a'; GLB_V.e_f15e_gear = '20261105a'; // своя модель и стойки
 // «Оса-М» ЗИФ-122 (KoreanNavy) и «Бук-М3» (Valera121) вместо моделей Jeyhun1985 (2026-10-22): новые файлы
 Object.assign(GLB_V, Object.fromEntries(['osa', 'osa_lo'].map((n) => [n, '20261024e'])));
 Object.assign(GLB_V, Object.fromEntries(['bukm3', 'bukm3_lo', 'msl_bukm3'].map((n) => [n, '20261024f'])));
 // F-35A (andertan), A-10 (AIRMAN Magazine) и Ту-22М3 (Real Slim Shady) вместо моделей shangus930 / Immersive3D / Jeyhun1985 (2026-10-22): новые файлы
-Object.assign(GLB_V, Object.fromEntries(['e_f35', 'e_f35_lo', 'e_a10', 'e_tu22m3', 'e_tu22m3_lo'].map((n) => [n, '20261024h'])));
+Object.assign(GLB_V, Object.fromEntries(['e_a10', 'e_tu22m3', 'e_tu22m3_lo'].map((n) => [n, '20261024h'])));
 // трубы ПЗРК перекрашены, в настоящий размер, Stinger развёрнут; расчёты ПЗРК вместо процедурных солдат (2026-10-27)
 Object.assign(GLB_V, Object.fromEntries(['mp_verba', 'mp_stinger', 'crew_e', 'crew_w'].map((n) => [n, '20261027c'])));
 Object.assign(GLB_V, Object.fromEntries(['h_log', 'h_khata', 'h_mobile'].map((n) => [n, '20261027b']))); // маленькие дома заново: упрощение без дыр в крыше и тёмных фасадов (prepare.js simpKeep, lockBorder; 2026-10-27)
@@ -490,7 +492,8 @@ GLB_V.e_su34 = '20261024l'; // Су-34 manilov.ap (CC BY 4.0) вместо 42man
 Object.assign(GLB_V, { hawk: '20261024m', w_gbu24: '20261024m' }); // Hawk: ракета без деталей пусковой (absorb 0); GBU-24 - AnirudhRao, своя окраска
 Object.assign(GLB_V, GLB_V_OWN);
 META.hg_jack = { lazy: true, matte: true, stations: [] }; // подъёмник ангара (hangar.js): части base, ram, head
-if (paintOn) META.e_f15e_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки F-15E для ангара (проба, ?paint=1): оси как у самолёта, низ колёс - пол
+if (paintOn) META.e_f15e_gear = { lazy: true, matte: true, paint: true, stations: [] };
+if (paintOn) META.e_f35_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки F-15E для ангара (проба, ?paint=1): оси как у самолёта, низ колёс - пол
 // разбор GLB: меши (позиции, нормали, UV, индексы), материалы, картинки текстур
 function parseGlb(buf) {
   const dv = new DataView(buf), jl = dv.getUint32(12, true), json = JSON.parse(new TextDecoder().decode(new Uint8Array(buf, 20, jl)));
@@ -715,6 +718,8 @@ async function load(name, base) {
     if (paintOn && glass && MM.clearGlass) { mat.opacity = Math.max(0.16, f[3]); mat.color.setRGB(f[0], f[1], f[2]); } // своя кабина внутри: стекло прозрачнее, цвет свой (прежний нижний предел 0,5 - для пустых фонарей чужих моделей) // краска, живая к миру (проба, paint.js)
     const mesh = new THREE.Mesh(g, mat); mesh.name = m.name; mesh.userData.glass = glass; const pt = partOf(m.name || ''); pt.add(mesh); if (m.hub) pt.userData.hub = m.hub;
   }
+  // створки отсеков (bay.js): начало части - на шарнире; userData.fx - зоны повреждений их не режут
+  if (MM.bay) for (const [n, d] of Object.entries(MM.bay.doors)) { const pt = parts[n]; if (!pt) continue; for (const q of pt.children) { q.geometry.translate(-d[0][0], -d[0][1], -d[0][2]); q.geometry.computeBoundingSphere(); q.userData.fx = true; } pt.position.set(...d[0]); }
   // винты (части prop*, Ту-95): ось - вдоль самолёта через центр ступицы; соосные ряды (чётный / нечётный номер) - в разные
   // стороны; крутит игра (spinProps). В userData - только число (клон модели копирует userData через JSON)
   for (const part of group.children.filter((c) => /^prop/.test(c.name))) {

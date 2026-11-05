@@ -29,7 +29,6 @@
 - "Low Poly Car" (https://sketchfab.com/3d-models/low-poly-car-54c466359f8b459dbccea0168ea01c85) by Roma — CC-BY-4.0 — `c_police.glb`, `c_police_lo.glb`
 - "Saab JAS-39С Gripen fighter jet" (https://sketchfab.com/3d-models/saab-jas-39-gripen-fighter-jet-54b84f308145465187658b074baf3cb7) by Lanko Mykhailo — CC-BY-4.0 — `e_gripen.glb`, `e_gripen_lo.glb`
 - "Lockheed Martin F-22 "Raptor"" (https://sketchfab.com/3d-models/lockheed-martin-f-22-raptor-7e7b3c372e374dda98e70208d09cfdcf) by andertan — CC-BY-4.0 — `e_f22.glb`, `e_f22_lo.glb`
-- "Lockheed Martin F35 Lightning II" (https://sketchfab.com/3d-models/lockheed-martin-f35-lightning-ii-db911de503c74285a8d506951df786d6) by andertan — CC-BY-4.0 — `e_f35.glb`, `e_f35_lo.glb`
 - "MiG-21 Chibi" (https://sketchfab.com/3d-models/mig-21-chibi-8a46e5b9d03d41a6b7611c1b5d6aacb6) by Oleh — CC-BY-4.0 — `e_mig21.glb`, `e_mig21_lo.glb`
 - "Миг - 31" (https://sketchfab.com/3d-models/31-b168fbca1f6c4ad0ad4e45b7a22f52bc) by mamont nikita — CC-BY-4.0 — `e_mig31.glb`, `e_mig31_lo.glb`
 - "Sukhoi Su-57 "Felon"" (https://sketchfab.com/3d-models/sukhoi-su-57-felon-09d546b4355c4fa6882ca46e05069bee) by andertan — CC-BY-4.0 — `e_su57.glb`, `e_su57_lo.glb`
