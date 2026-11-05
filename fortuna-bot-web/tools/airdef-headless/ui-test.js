@@ -65,7 +65,7 @@ console.log(`     фон за 40 с: пусков ЗУР ${C.S.sams.length}, с�
 { const { planeModel } = await import('../../games/airdef/models.js?v=20261105a');
   for (const [side, cls] of [['east', 'strike'], ['east', 'fighter'], ['west', 'strike'], ['west', 'fighter']]) {
     const pm = planeModel(side, cls); let tris = 0, tex = 0; if (pm) pm.obj.traverse((o) => { if (o.isMesh) { tris += o.geometry.index ? o.geometry.index.count / 3 : 0; if (o.material.map) tex++; } });
-    check(`готовая модель ${side}/${cls}: ${pm ? `${pm.name}, ${tris} треуг., мешей с текстурой ${tex}` : 'нет'}`, pm && pm.cls === cls);
+    check(`готовая модель ${side}/${cls}: ${pm ? `${pm.name}, ${tris} треуг., мешей с текстурой ${tex}` : 'нет'}`, pm && (pm.cls === cls || (side === 'west' && cls === 'strike'))); // запад: ударные грузятся по запросу (свой F/A-18E 8 МБ), на время загрузки - F-16
   } }
 { const { unitModelGlb, wantUnit } = await import('../../games/airdef/models.js?v=20261105a');
   const keys = ['bukm3', 'osa', 'tor', 'torm2', 'pantsir', 's400', 's300', 'patriot', 'pac3', 's75', 's125', 'kub', 'hawk', 'm163', 'gepard', 'nasams', 'gpsjam', 'gpsjamw']; for (const k of keys) wantUnit(k);

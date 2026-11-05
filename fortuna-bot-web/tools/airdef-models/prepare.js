@@ -48,8 +48,8 @@ const A10_STORE = (c) => (c.mat === 16 && c.ctr[2] > -7.5) /* подвеска �
 const CONFIG = {
   su30: { src: `${DL}/sukhoi_su-30_flanker_c.glb`, scale: 21.94 / 14.94, nose: '+x', rulesIn: 'game', tex: () => 1024, centerX: true,
     groups: (c) => (c.mat === 16 ? null : LS(c)) }, // Су-30МКИ — andertan (CC BY 4.0; прежняя модель Immersive3D): у автора чистый планер, без шасси и подвесок (пилоны рисует игра: station py); «Plumes» — диски выхлопа в соплах — долой (пламя рисует игра)
-  f18: { src: `${DL}/boeing_fa-18ef_super_hornet.glb`, scale: 1, nose: '+x', tex: () => 512, glassAny: /^glass$/, glassColor: [0.42, 0.36, 0.2, 0.45], /* фонарь у автора непрозрачный */
-    remove: (c) => c.max[1] < 0.12 && Math.abs(c.ctr[2]) > 2.5 }, // ракеты под крыльями и спарка (на концах крыльев — оставить)
+  f18: { src: new URL('./own/f18.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 2048, nTex: () => 2048, pickMesh: /./, own: true, centerX: true }, // F/A-18E: своя модель (Blender, own/f18-build)
+  f18_gear: { src: new URL('./own/f18_gear.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 2048, nTex: () => 2048, pickMesh: /./, own: true, centerX: true }, // стойки F/A-18E для ангара: две метки по 1 мм дают тот же центр, что у самолёта, не удалять
   f16: { src: `${DL}/lockheed_martin_f-16ef_fighting_falcon.glb`, scale: 15.03 / 26.83, nose: '+x', rulesIn: 'game', tex: () => 512, centerX: true,
     glassAny: /^(Not_so_Dark|Darker_blue_hue_glass|Material\.003)$/, glassColor: [0.42, 0.36, 0.2, 0.45], /* фонарь у автора непрозрачный; у F-16 — золотистый */
     // F-16E/F — andertan (CC BY 4.0; прежняя модель Muhamad Mirza Arrafi): подвеска автора под крылом (баки, ракеты) долой — пилоны (материалы 14, 15) оставлены; на законцовках — свои ракеты, оставлены; шасси у автора нет

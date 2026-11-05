@@ -25,8 +25,8 @@ const META = {
   mig29: { side: 'east', cls: 'fighter', stations: mirror([V(-4.06, -1.25, 3.41), V(-3.17, -1.24, 2.68), V(-2.23, -1.21, 1.96), V(-0.45, -1.4, 2.0, 0.26)]),
     nozzles: [V(-0.97, -1.35, 7.6), V(0.97, -1.35, 7.6)], nr: 0.45, pod: V(0, -1.55, 2.0) },
   // Boeing F/A-18E/F Super Hornet - andertan: запад, ударные загрузки (на концах крыльев - свои «Сайдуайндеры»)
-  f18: { side: 'west', cls: 'strike', stations: mirror([V(-4.70, -1.43, 2.04), V(-3.72, -1.44, 1.87), V(-2.6, -1.24, 1.9, 0.4), V(-1.48, -1.05, -0.3, 0.22)]),
-    nozzles: [V(-0.49, -0.94, 8.2), V(0.49, -0.94, 8.2)], nr: 0.4, pod: V(0, -1.96, 1.0) },
+  f18: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-4.359, -1.465, 3.275), V(-3.367, -1.515, 3.03), V(-2.394, -1.565, 2.8), V(-1.18, -1.945, 3.865)]),
+    nozzles: [V(-0.49, -1.025, 9.035), V(0.49, -1.025, 9.035)], nr: 0.385, pod: V(0, -1.705, 2.365), clearGlass: true, ...(paintOn ? { gearModel: 'f18_gear' } : {}) }, // F/A-18E: своя модель, 3 пилона на крыле + под воздухозаборником, контейнер по центру; грузится по запросу, файл теперь в 6 раз тяжелее
   // Lockheed Martin F-16E/F Block 60 - andertan (CC BY 4.0; с 2026-10-24, прежняя - Muhamad Mirza Arrafi): запад, ракетные загрузки
   // (на законцовках крыльев - свои ракеты автора, пилоны под крылом - его же, станции - по низу пилонов)
   f16: { side: 'west', cls: 'fighter', stations: mirror([V(-3.98, -1.69, 2.04), V(-3.13, -1.69, 1.29), V(-1.94, -1.65, 1.57), V(-0.95, -1.46, 0.5, 0.22)]),
@@ -401,7 +401,7 @@ const GLB_V_OWN = {
   pk_e_su24: '20261029b',
   pk_e_su25: '20261029b',
   pk_f16: '20261029b',
-  pk_f18: '20261029b',
+  pk_f18: '20261106a',
   pk_e_f15e: '20261105a',
   pk_e_a10: '20261029b',
   pk_e_su34: '20261029b',
@@ -472,6 +472,7 @@ GLB_V.w_agm88 = '20261104a'; // без синих ложементов теле�
 GLB_V.e_f111 = '20261104a'; // без чёрных наклеек
 GLB_V.e_tu160 = '20261104a'; // текстура 1024 вместо 512 (надписи в ангаре)
 GLB_V.e_f35 = GLB_V.e_f35_lo = GLB_V.e_f35_gear = '20261106a'; // своя модель и стойки
+GLB_V.f18 = GLB_V.f18_gear = '20261106a'; // своя модель и стойки
 GLB_V.e_f15e = '20261105a'; GLB_V.e_f15e_gear = '20261105a'; // своя модель и стойки
 // «Оса-М» ЗИФ-122 (KoreanNavy) и «Бук-М3» (Valera121) вместо моделей Jeyhun1985 (2026-10-22): новые файлы
 Object.assign(GLB_V, Object.fromEntries(['osa', 'osa_lo'].map((n) => [n, '20261024e'])));
@@ -493,7 +494,8 @@ Object.assign(GLB_V, { hawk: '20261024m', w_gbu24: '20261024m' }); // Hawk: ра
 Object.assign(GLB_V, GLB_V_OWN);
 META.hg_jack = { lazy: true, matte: true, stations: [] }; // подъёмник ангара (hangar.js): части base, ram, head
 if (paintOn) META.e_f15e_gear = { lazy: true, matte: true, paint: true, stations: [] };
-if (paintOn) META.e_f35_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки F-15E для ангара (проба, ?paint=1): оси как у самолёта, низ колёс - пол
+if (paintOn) META.e_f35_gear = { lazy: true, matte: true, paint: true, stations: [] };
+if (paintOn) META.f18_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки F-15E для ангара (проба, ?paint=1): оси как у самолёта, низ колёс - пол
 // разбор GLB: меши (позиции, нормали, UV, индексы), материалы, картинки текстур
 function parseGlb(buf) {
   const dv = new DataView(buf), jl = dv.getUint32(12, true), json = JSON.parse(new TextDecoder().decode(new Uint8Array(buf, 20, jl)));
