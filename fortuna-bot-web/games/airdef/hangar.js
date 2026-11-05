@@ -30,8 +30,15 @@ export function createHangar(C, renderer) {
     if (TEX[key]) return TEX[key];
     const big = Math.min(2, devicePixelRatio || 1) * Math.max(innerWidth, innerHeight) > 1700, src = `airdef/ui/hangar/${key}${big ? '' : '_s'}.jpg`, t = { tex: null, ok: false };
     TEX[key] = t;
-    t.tex = new THREE.TextureLoader().load(src, () => { t.ok = true; dirty = true; }, undefined, () => { t.bad = true; dirty = true; if (key === 'fighter' && on) { can = false; if (C.hangarFail) C.hangarFail(); } }); // основной зал не загрузился - прежний фон
-    t.tex.minFilter = THREE.LinearMipmapLinearFilter; t.tex.magFilter = THREE.LinearFilter; t.tex.generateMipmaps = true; // без перевода цвета: фон и кадр - сразу значения экрана
+    // один сбой сети не должен оставлять игрока без ангара на весь сеанс (Safari при первом заходе на сайт, 2026-11-05): ещё три попытки, и только потом прежний фон
+    const load = (n) => {
+      t.tex = new THREE.TextureLoader().load(n ? `${src}?r=${n}` : src, () => { t.ok = true; dirty = true; }, undefined, () => {
+        if (n < 3) { setTimeout(() => load(n + 1), 700 * (n + 1)); return; }
+        t.bad = true; dirty = true; if (key === 'fighter' && on) { can = false; if (C.hangarFail) C.hangarFail(); } // основной зал не загрузился - прежний фон
+      });
+      t.tex.minFilter = THREE.LinearMipmapLinearFilter; t.tex.magFilter = THREE.LinearFilter; t.tex.generateMipmaps = true; // без перевода цвета: фон и кадр - сразу значения экрана
+    };
+    load(0);
     return t;
   }
 
