@@ -140,7 +140,7 @@ export function planeDamageVis(scene, root, key, meta, fxOf) { // fxOf - эфф�
     return SAMP;
   }
   // материалы обшивки - свои у самолёта, с пробоинами (вырез + копоть); точки пробоин - общие uniform на все меши
-  const V4 = (n) => ({ value: Array.from({ length: n }, () => new THREE.Vector4()) });
+  const V4 = (n) => ({ value: Array.from({ length: n }, () => new THREE.Vector4(0, 0, 0, 0)) }); // w - радиус: без явного 0 у Vector4 w = 1, и у целого самолёта было пятно копоти в начале координат модели
   const U = { uHole: V4(NH), uHoleN: V4(NH), uMark: V4(NH), uScor: V4(NS), uHZ: { value: new Array(NH).fill(0) }, uMZ: { value: new Array(NH).fill(0) } };
   {
     const invR = new THREE.Matrix4().copy(root.matrixWorld).invert(), cache = new Map();
