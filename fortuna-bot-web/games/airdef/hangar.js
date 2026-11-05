@@ -44,6 +44,10 @@ export function createHangar(C, renderer) {
   }
 
   const MAIN_L = [-0.15, 0.96, 0.22]; // главный свет зала
+  // самолёт в зале (Mark 2026-11-05: «в Blender красивее»): своя тень на себе от главного света и обработка яркости у самолёта; фон и пол - картинка, их не трогаем. Сравнение: ?hgsh=0, ?hgtm=none|aces|cineon, ?hgexp=
+  const HQ = new URLSearchParams(location.search), SELF_SH = paintOn && !!renderer.shadowMap.enabled && HQ.get('hgsh') !== '0';
+  const HG_TM = !paintOn ? THREE.NoToneMapping : ({ none: THREE.NoToneMapping, cineon: THREE.CineonToneMapping }[HQ.get('hgtm')] ?? THREE.ACESFilmicToneMapping), HG_EXP = +HQ.get('hgexp') || 1.25;
+  let mainL = null, shAz = null;
   function init() {
     if (inited) return; inited = true;
     hs = new THREE.Scene();
@@ -52,6 +56,7 @@ export function createHangar(C, renderer) {
     // свет - по паспорту; сила подобрана по снимку на настоящей модели: пол вокруг светлый, борт самолёта не должен быть чёрным
     hs.add(new THREE.HemisphereLight(0xc9d3d9, 0x8a857a, paintOn ? 0.58 : 0.78)); // с отражениями зала рассеянного нужно меньше, а ведущий свет сильнее - появляется объём
     const main = new THREE.DirectionalLight(0xffedd1, paintOn ? 1.15 : 0.92); main.position.set(...MAIN_L); hs.add(main);
+    if (SELF_SH) { main.castShadow = true; const N = TOUCH ? 1024 : 2048; main.shadow.mapSize.set(N, N); main.shadow.bias = -0.0004; hs.add(main.target); mainL = main; }
     const fill = new THREE.DirectionalLight(0xfff4e6, 0.26); fill.position.set(0.1, 0.25, 1); hs.add(fill); // от пола и стен на ближний к камере борт
     const rim = new THREE.DirectionalLight(0xfff0d9, paintOn ? 0.42 : 0.24); rim.position.set(-0.5, 0.48, -0.72); hs.add(rim);
     // фон: прямоугольник на весь экран, окно в картинке - те же cx, cy, hw, hh, что у камеры; при приближении - размытие через младшие уровни картинки
@@ -170,14 +175,23 @@ export function createHangar(C, renderer) {
     const jS = heavy ? 1.3 : 1, top = (JACK_TOP + JACK_HEAD) * jS, H = gear ? -gearY : Math.max(-box.min.y + 0.3, ...pts.map((q) => top - q[2]), 1.2); if (gear) pts.length = 0; // на шасси: колёса на полу, подъёмников нет
     holder.position.set(-(box0.min.x + box0.max.x) / 2, H, -(box0.min.z + box0.max.z) / 2); pivot.updateMatrixWorld(true);
     for (const [x, zz, y] of pts) {
-      const j = anyModel('hg_jack'); if (!j) continue;
+      const j = anyModel('hg_jack'); if (!j) continue; j.traverse((o) => { if (o.isMesh) o.material.toneMapped = false; }); // подъёмник подобран под зал
       const ram = j.getObjectByName('ram'), head = j.getObjectByName('head'), st = Math.max(0, Math.min(JACK_MAX, (H + y - top) / jS));
       if (ram) { ram.position.y = JACK_TOP; ram.scale.y = Math.max(0.001, st); } if (head) head.position.y = JACK_TOP + st;
       j.scale.setScalar(jS); j.position.set(x + holder.position.x, 0, zz + holder.position.z); jackG.add(j);
     }
     bakeShadow(obj, Math.max(sz.x, sz.z, box.max.z - box.min.z) * 0.62);
+    if (mainL) fitSelfShadow(obj);
     baseZ = wantView === 'heavy' ? Math.max(1.12, Math.min(1.3, 50 / Math.max(size, 1))) : Math.max(1, Math.min(1.34, 23 / Math.max(size, 1))); // небольшой самолёт - крупнее; у большого запас, чтобы сдвинуть кадр от панели
     tAz = az; homeView();
+  }
+  // тень самолёта на себе: коробка карты - по сфере вокруг самолёта (он вращается на месте), считается заново только при смене самолёта или поворота
+  function fitSelfShadow(obj) {
+    obj.traverse((o) => { if (o.isMesh) { o.receiveShadow = true; o.castShadow = !o.userData.glass; } });
+    const b = new THREE.Box3().setFromObject(obj), R = b.getSize(tmp).length() / 2 + 0.5, cy = (b.min.y + b.max.y) / 2, c = mainL.shadow.camera, texel = 2 * R / mainL.shadow.mapSize.x;
+    c.left = c.bottom = -R; c.right = c.top = R; c.near = 0.1; c.far = 2 * R + 2; c.updateProjectionMatrix();
+    mainL.target.position.set(0, cy, 0); mainL.position.set(MAIN_L[0], MAIN_L[1], MAIN_L[2]).normalize().multiplyScalar(R + 1).add(mainL.target.position); mainL.target.updateMatrixWorld(); mainL.updateMatrixWorld();
+    mainL.shadow.normalBias = texel * 2.5; shAz = null;
   }
   // Посадка подвески на пилоны - общая с боем, по таблице (seat.js, seats-data.js); здесь только цвет пилонов под свет зала и проверка зазоров для тестов
   let pyMat = null, pyStat = { hung: 0, seated: 0 }, pyAudit = () => [];
@@ -230,7 +244,7 @@ export function createHangar(C, renderer) {
     for (const [a, b, dx, dy] of [[shA, shB, R, 0], [shB, shA, 0, R], ...(paintOn ? [] : [[shA, shB, R * 1.8, 0], [shB, shA, 0, R * 1.8]])]) { shM.uniforms.t.value = a.texture; shM.uniforms.d.value.set(dx, dy); renderer.setRenderTarget(b); renderer.render(qS, blitC); }
     renderer.setRenderTarget(null); renderer.setClearColor(bgC, bgA); renderer.autoClear = wasAuto; renderer.toneMapping = saveTM;
     q.geometry.dispose();
-    if (!shadow) { shadow = new THREE.Mesh(new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: paintOn ? 0x090907 : 0x24231f, alphaMap: shA.texture, transparent: true, opacity: paintOn ? 0.7 : 0.86, depthWrite: false, toneMapped: false })); shadow.renderOrder = -10; pivot.add(shadow); }
+    if (!shadow) { shadow = new THREE.Mesh(new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ toneMapped: false, color: paintOn ? 0x090907 : 0x24231f, alphaMap: shA.texture, transparent: true, opacity: paintOn ? 0.7 : 0.86, depthWrite: false, toneMapped: false })); shadow.renderOrder = -10; pivot.add(shadow); }
     shadow.visible = true; shadow.scale.set(E * 2, 1, E * 2); shadow.position.set(0, 0.015, 0);
     // пятна под основаниями подъёмников
     if (!jackBlob) { const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d'), g = x.createRadialGradient(32, 32, 6, 32, 32, 32); g.addColorStop(0, 'rgba(255,255,255,.8)'); g.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = g; x.fillRect(0, 0, 64, 64); jackBlob = new THREE.MeshBasicMaterial({ color: 0x1c1b18, map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false, toneMapped: false }); }
@@ -288,10 +302,11 @@ export function createHangar(C, renderer) {
     const U = bg.material.uniforms; U.a.value = texA; U.b.value = texB; U.t.value = texB ? fade : 0; U.win.value.set(X, Y, hw, hh); U.bias.value = Math.min(2.6, Math.max(0, z / baseZ - 1.05) * 2);
     pivot.rotation.y = az;
     ensureRT();
-    const tm = renderer.toneMapping, ac = renderer.autoClear; renderer.toneMapping = THREE.NoToneMapping; renderer.autoClear = true; // как у фона: без тонового сжатия боя
+    const tm = renderer.toneMapping, tx = renderer.toneMappingExposure, ac = renderer.autoClear, au = renderer.shadowMap.autoUpdate; renderer.toneMapping = HG_TM; renderer.toneMappingExposure = HG_EXP; renderer.autoClear = true; // свой тон у самолёта; у фона, пола и подъёмников toneMapped: false
+    if (mainL) { renderer.shadowMap.autoUpdate = false; if (shAz !== az) { renderer.shadowMap.needsUpdate = true; shAz = az; } }
     renderer.setRenderTarget(rt); renderer.render(hs, cam);
     renderer.setRenderTarget(null); renderer.render(blitS, blitC);
-    renderer.toneMapping = tm; renderer.autoClear = ac;
+    renderer.toneMapping = tm; renderer.toneMappingExposure = tx; renderer.autoClear = ac; renderer.shadowMap.autoUpdate = au;
   }
 
   return {

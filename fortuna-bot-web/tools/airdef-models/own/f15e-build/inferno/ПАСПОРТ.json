@@ -1,0 +1,26 @@
+{
+ "key": "e_f15e",
+ "rev": 4,
+ "files": {
+  "glb": "e_f15e.inferno.glb",
+  "blend": "../../../F-15E/f15e.blend",
+  "build": [
+   "../../../F-15E/paint.py (F15_SCHEME=inferno)",
+   "inferno_pat.py",
+   "../../../F-15E/_trial.py"
+  ]
+ },
+ "tex": 2048,
+ "nTex": 2048,
+ "base": "../../../F-15E/f15e_color.png",
+ "skins": [
+  {
+   "id": "inferno",
+   "name": "Инферно",
+   "file": "f15e_inferno_color.png",
+   "normal": "f15e_normal.png",
+   "orm": "f15e_orm.png"
+  }
+ ],
+ "note": "Геометрия, оси, развёртка и центр те же, что у Свои/F-15E/f15e.glb. Файл содержит все три карты 4096. Шасси общее: e_f15e_gear (Свои/F-15E/f15e_gear.glb) в обычной окраске."
+}
