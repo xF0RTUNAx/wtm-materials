@@ -4,7 +4,7 @@
 // Фон и самолёт масштабируются как одна картинка: «полный кадр» - весь рендер 16:9 с его камерой, экран - окно в нём (setViewOffset), поэтому пол и самолёт совпадают на любом экране.
 // Подвеска расставлена как в бою (air.js: order, buildPylons). Подъёмник: base, ram (шток, длина 1 м, scale.y = ход), head (седло). ?oldbg=1 - прежний фон.
 import { AG } from './arsenal.js?v=20261105a';
-import { setPaintHall } from './paint.js?v=20261105a';
+import { setPaintHall, paintOn } from './paint.js?v=20261105a';
 import { planeModel, planeMeta, classOf, wantModel, wantWeapon, weaponPending, weaponFailed, pylonMesh, seatStores, podModel, anyModel, modelLoaded, modelFailed, releaseModel, wantCamo, camoKnown, hiKnown } from './models.js?v=20261105a';
 
 const VIEWS = { // ПАСПОРТ.json сборщика
@@ -49,10 +49,10 @@ export function createHangar(C, renderer) {
     cam = new THREE.PerspectiveCamera(V.fov, FULL_W / FULL_H, 0.3, 400);
     pivot = new THREE.Group(); hs.add(pivot); holder = new THREE.Group(); pivot.add(holder); jackG = new THREE.Group(); pivot.add(jackG);
     // свет - по паспорту; сила подобрана по снимку на настоящей модели: пол вокруг светлый, борт самолёта не должен быть чёрным
-    hs.add(new THREE.HemisphereLight(0xc9d3d9, 0x8a857a, 0.78));
-    const main = new THREE.DirectionalLight(0xffedd1, 0.92); main.position.set(-0.15, 0.96, 0.22); hs.add(main);
+    hs.add(new THREE.HemisphereLight(0xc9d3d9, 0x8a857a, paintOn ? 0.58 : 0.78)); // с отражениями зала рассеянного нужно меньше, а ведущий свет сильнее - появляется объём
+    const main = new THREE.DirectionalLight(0xffedd1, paintOn ? 1.15 : 0.92); main.position.set(-0.15, 0.96, 0.22); hs.add(main);
     const fill = new THREE.DirectionalLight(0xfff4e6, 0.26); fill.position.set(0.1, 0.25, 1); hs.add(fill); // от пола и стен на ближний к камере борт
-    const rim = new THREE.DirectionalLight(0xfff0d9, 0.24); rim.position.set(-0.5, 0.48, -0.72); hs.add(rim);
+    const rim = new THREE.DirectionalLight(0xfff0d9, paintOn ? 0.42 : 0.24); rim.position.set(-0.5, 0.48, -0.72); hs.add(rim);
     // фон: прямоугольник на весь экран, окно в картинке - те же cx, cy, hw, hh, что у камеры; при приближении - размытие через младшие уровни картинки
     bg = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.ShaderMaterial({
       uniforms: { a: { value: null }, b: { value: null }, t: { value: 0 }, win: { value: new THREE.Vector4(0.5, 0.5, 0.5, 0.5) }, bias: { value: 0 } },

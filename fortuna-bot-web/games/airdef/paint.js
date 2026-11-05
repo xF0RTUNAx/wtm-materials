@@ -2,7 +2,7 @@
 // (тени, повреждения, камуфляж работают как были), шейдер добавляет то, чего у него нет:
 //  • отражение настоящего неба текущей погоды (панорама из drone/world.js), снизу - земля и дымка горизонта, в ангаре - размытая картинка зала;
 //  • Френель: под острым углом обшивка блестит сильнее; блик солнца и размытость отражения - по шероховатости точки;
-//  • шероховатость и металл: своя карта модели (glTF metallicRoughnessTexture: G шероховатость, B металл) или, пока её нет, шум и грязь по текстуре.
+//  • шероховатость, металл и затенение: своя карта модели (glTF metallicRoughnessTexture: R затенение щелей, 1 открыто; G шероховатость; B металл) или, пока её нет, шум и грязь по текстуре.
 // Включается ?paint=1 (проба), ?paint=0 - выключено. Дальние копии (_lo) и обломки стоянок - без неё.
 /* global THREE */
 let SRC = null, HALL = null;
@@ -60,25 +60,25 @@ export function paintMat(mat, o = {}) {
     sh.vertexShader = 'varying vec3 vPP;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\nvPP = position;');
     sh.fragmentShader = GLSL + sh.fragmentShader
       .replace('#include <lights_phong_fragment>', `#include <lights_phong_fragment>
-  float pRg = uPRough, pMt = uPMetal;
+  float pRg = uPRough, pMt = uPMetal, pOc = 1.0;
   #ifdef PAINT_ORM
-    { vec4 pO = texture2D(uPOrm, vUv); pRg = pO.g; pMt = pO.b; }
+    { vec4 pO = texture2D(uPOrm, vUv); pOc = pO.r; pRg = pO.g; pMt = pO.b; }
   #else
     ${glass ? '' : `{ float pN1 = pV(vPP * 1.7), pN2 = pV(vPP * 9.0), pL = dot(diffuseColor.rgb, vec3(0.3, 0.59, 0.11));
       pRg = clamp(pRg + (pN1 - 0.5) * 0.22 + (pN2 - 0.5) * 0.1 + (0.32 - pL) * 0.28, 0.12, 0.95); }`} // пока нет карты: пятна полировки и краски, тёмное и грязное - матовее
   #endif
   { float pA = pRg * pRg; material.specularShininess = clamp(2.0 / max(pA * pA, 0.0005) - 2.0, 4.0, 800.0);
-    material.specularColor = mix(vec3(0.05), diffuseColor.rgb, pMt) * (1.0 - pRg * 0.35); }`)
+    material.specularColor = mix(vec3(0.05), diffuseColor.rgb, pMt) * (1.0 - pRg * 0.35) * 0.32 * pOc; } // 0,32 ≈ 1/π: без физических единиц света three умножает блик на π, и солнце выбивало металл в белое`)
       .replace('#include <aomap_fragment>', `#include <aomap_fragment>
   { vec3 pVw = normalize(vViewPosition); float pNV = clamp(dot(normal, pVw), 0.0, 1.0);
     vec3 pDir = inverseTransformDirection(reflect(-pVw, normal), viewMatrix), pF0 = mix(vec3(${glass ? '0.08' : '0.045'}), diffuseColor.rgb, pMt);
     vec3 pF = pF0 + (max(vec3((1.0 - pRg) * ${glass ? '1.0' : '0.62'}), pF0) - pF0) * pow(1.0 - pNV, 5.0); // краска не зеркало: под острым углом блестит, но не хромом
-    float pAo = 1.0;
+    float pAo = pOc;
     #ifdef USE_COLOR
-      pAo = clamp(dot(vColor.rgb, vec3(0.3333)) * 1.25, 0.0, 1.0);
+      pAo *= clamp(dot(vColor.rgb, vec3(0.3333)) * 1.25, 0.0, 1.0);
     #endif
     reflectedLight.indirectSpecular += paintEnv(pDir, pRg) * pF * pAo * ${glass ? '1.6' : '1.0'};
-    reflectedLight.directDiffuse *= 1.0 - pMt * 0.85; reflectedLight.indirectDiffuse *= 1.0 - pMt * 0.85; }`);
+    reflectedLight.directDiffuse *= (1.0 - pMt * 0.85) * mix(1.0, pOc, 0.6); reflectedLight.indirectDiffuse *= (1.0 - pMt * 0.85) * pOc; }`);
   };
   mat.customProgramCacheKey = () => (was || '') + (glass ? 'paintG' : 'paint');
   return mat;
