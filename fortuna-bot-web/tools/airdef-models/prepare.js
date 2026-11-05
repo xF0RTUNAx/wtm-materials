@@ -1212,14 +1212,14 @@ async function prepare(name, views) {
   let off = 0;
   const add = (arr, target) => { const b = arr instanceof Uint8Array ? arr : new Uint8Array(arr.buffer, arr.byteOffset, arr.byteLength); chunks.push(b); const pad = (4 - (b.length % 4)) % 4; if (pad) chunks.push(new Uint8Array(pad)); views_.push({ buffer: 0, byteOffset: off, byteLength: b.length, ...(target ? { target } : {}) }); off += b.length + pad; return views_.length - 1; };
   const texCache = new Map(); let texBytes = 0;
-  async function texture(ti, size, png = false) { // png — с прозрачностью (листья, вырезка по альфе)
-    const key = `${J.textures[ti].source}:${size}:${png}`; if (texCache.has(key)) return texCache.get(key); // одна картинка у нескольких текстур (материалов) — один файл
+  async function texture(ti, size, png = false, data = false) { // png — с прозрачностью (листья, вырезка по альфе); data — данные, а не цвет: без перекраски texVf
+    const key = `${J.textures[ti].source}:${size}:${png}:${data}`; if (texCache.has(key)) return texCache.get(key); // одна картинка у нескольких текстур (материалов) — один файл
     const im = J.images[J.textures[ti].source], bv = J.bufferViews[im.bufferView];
     const ext = im.mimeType === 'image/jpeg' ? 'jpg' : 'png';
     Deno.writeFileSync(`${tmp}/t.${ext}`, g.bin.subarray(bv.byteOffset || 0, (bv.byteOffset || 0) + bv.byteLength));
     const of = png ? 'o.png' : 'o.jpg';
     let srcT = `${tmp}/t.${ext}`; // texVf — фильтр ffmpeg для перекраски (у прототипа Су-34 грунт жёлтый → серо-голубой строевой)
-    const vf = typeof cfg.texVf === 'function' ? cfg.texVf(J.textures[ti].source) : cfg.texVf; // функция — свой фильтр у каждой картинки (по номеру в исходнике)
+    const vf = data ? null : typeof cfg.texVf === 'function' ? cfg.texVf(J.textures[ti].source) : cfg.texVf; // функция — свой фильтр у каждой картинки (по номеру в исходнике)
     if (vf) { await new Deno.Command('ffmpeg', { args: ['-loglevel', 'error', '-y', '-i', srcT, '-vf', vf, `${tmp}/f.png`] }).output(); srcT = `${tmp}/f.png`; }
     // PREPARE_HI - картинка исходного размера (не больше 4096) и качество выше: версия «Максимальные текстуры» (hi-textures.js)
     const HI = !!Deno.env.get('PREPARE_HI'); if (HI) { const d = new TextDecoder().decode((await new Deno.Command('sips', { args: ['-g', 'pixelWidth', '-g', 'pixelHeight', srcT], stdout: 'piped', stderr: 'null' }).output()).stdout).match(/pixel\w+: (\d+)/g) || []; size = Math.min(4096, Math.max(...d.map((x) => +x.split(': ')[1]), 16)); }
@@ -1259,11 +1259,13 @@ async function prepare(name, views) {
     if (pbr.baseColorTexture && m.hasUv && !glass && !(cfg.noTex && cfg.noTex.test(nm))) /* noTex — без текстуры (растянутая по торцам выгорает) */ mat.pbrMetallicRoughness.baseColorTexture = { index: await texture(pbr.baseColorTexture.index, cfg.tex(src), mat.alphaMode === 'MASK') };
     // карта нормалей (у своих моделей запечена в Blender): PNG без потерь, размер cfg.nTex; у дальних копий (nTex: null) её нет
     if (src.normalTexture && m.hasUv && !glass && cfg.nTex) mat.normalTexture = { index: await texture(src.normalTexture.index, cfg.nTex(src), true), scale: src.normalTexture.scale ?? 1 };
+    // карта блеска (paint.js): G шероховатость, B металл; PNG без потерь, тот же размер, что у нормалей; у дальних копий (nTex: null) её нет
+    if (pbr.metallicRoughnessTexture && m.hasUv && !glass && cfg.nTex) { mat.pbrMetallicRoughness.metallicRoughnessTexture = { index: await texture(pbr.metallicRoughnessTexture.index, cfg.nTex(src), true, true) }; mat.pbrMetallicRoughness.metallicFactor = 1; mat.pbrMetallicRoughness.roughnessFactor = 1; }
     materials.push(mat);
     const pos = new Float32Array(m.pos), b = bbox(pos), n = pos.length / 3, attrs = {};
     accs.push({ bufferView: add(pos, 34962), componentType: 5126, count: n, type: 'VEC3', min: b.mn, max: b.mx }); attrs.POSITION = accs.length - 1;
     accs.push({ bufferView: add(new Float32Array(m.nor), 34962), componentType: 5126, count: n, type: 'VEC3' }); attrs.NORMAL = accs.length - 1;
-    if (mat.pbrMetallicRoughness.baseColorTexture || mat.normalTexture) { accs.push({ bufferView: add(new Float32Array(m.uv), 34962), componentType: 5126, count: n, type: 'VEC2' }); attrs.TEXCOORD_0 = accs.length - 1; }
+    if (mat.pbrMetallicRoughness.baseColorTexture || mat.normalTexture || mat.pbrMetallicRoughness.metallicRoughnessTexture) { accs.push({ bufferView: add(new Float32Array(m.uv), 34962), componentType: 5126, count: n, type: 'VEC2' }); attrs.TEXCOORD_0 = accs.length - 1; }
     const ix = n < 65536 ? Uint16Array.from(m.idx) : Uint32Array.from(m.idx);
     accs.push({ bufferView: add(ix, 34963), componentType: n < 65536 ? 5123 : 5125, count: m.idx.length, type: 'SCALAR' });
     // hubs: { rotor: [x, y, z], … } — центр втулки винта (в осях правил, до центровки): в extras меша — models.js вращает вокруг неё

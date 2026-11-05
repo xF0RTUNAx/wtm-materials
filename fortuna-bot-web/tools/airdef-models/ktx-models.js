@@ -40,11 +40,11 @@ if (names.length) for (const n of names) if (isSkip(n)) console.log(`${n}: зд�
 function readGlb(name) {
   const b = Deno.readFileSync(MD + name + '.glb'), dv = new DataView(b.buffer, b.byteOffset), jl = dv.getUint32(12, true);
   const json = JSON.parse(new TextDecoder().decode(b.subarray(20, 20 + jl))), bin = 28 + jl;
-  const role = new Map(); // номер картинки → 'c' (цвет) | 'n' (нормали) | 'x' (оба — не сжимаем)
+  const role = new Map(); // номер картинки → 'c' (цвет) | 'n' (нормали) | 'd' (карта блеска: данные, линейные) | 'x' (разное — не сжимаем)
   const put = (ti, r) => { const s = json.textures[ti].source; role.set(s, role.has(s) && role.get(s) !== r ? 'x' : r); };
-  for (const m of json.materials || []) { const p = m.pbrMetallicRoughness || {}; if (p.baseColorTexture) put(p.baseColorTexture.index, 'c'); if (m.normalTexture) put(m.normalTexture.index, 'n'); }
+  for (const m of json.materials || []) { const p = m.pbrMetallicRoughness || {}; if (p.baseColorTexture) put(p.baseColorTexture.index, 'c'); if (m.normalTexture) put(m.normalTexture.index, 'n'); if (p.metallicRoughnessTexture) put(p.metallicRoughnessTexture.index, 'd'); }
   const imgs = (json.images || []).map((im, i) => { const bv = json.bufferViews[im.bufferView], off = bin + (bv.byteOffset || 0); return { i, mime: im.mimeType, data: b.subarray(off, off + bv.byteLength), role: role.get(i) }; });
-  return imgs.filter((im) => im.role === 'c' || im.role === 'n');
+  return imgs.filter((im) => im.role === 'c' || im.role === 'n' || im.role === 'd');
 }
 
 // размер картинки по заголовку (PNG / JPEG) — для сводки «МБ и секунд на мегапиксель»
@@ -67,7 +67,7 @@ async function encode(im, out) {
   try {
     const alpha = await toPng(im, tmp);
     const a = ['-ktx2', '-uastc', '-uastc_level', '2', ...(RDO ? ['-uastc_rdo_l', RDO] : []), '-ktx2_zstandard_level', '18', '-mipmap', '-max_threads', '4',
-      ...(im.role === 'n' ? ['-linear', '-normal_map', '-mip_renorm'] : []), png, '-output_file', out, '-no_status_output'];
+      ...(im.role === 'n' ? ['-linear', '-normal_map', '-mip_renorm'] : im.role === 'd' ? ['-linear'] : []), png, '-output_file', out, '-no_status_output'];
     const t0 = performance.now(); await sh('basisu', a);
     return { ms: performance.now() - t0, alpha };
   } finally { for (const f of [tmp, png, `${tmp}.src`]) try { Deno.removeSync(f); } catch (_) { /* нет */ } }
