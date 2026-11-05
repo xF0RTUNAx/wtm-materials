@@ -37,7 +37,7 @@ export const PAIR = {
   e_mig21n: 'e_f5', e_su7b: 'e_f100', e_tu16: 'e_buccaneer', e_mig25: 'e_f4', e_f5: 'e_mig21n', e_f100: 'e_su7b', e_buccaneer: 'e_tu16', e_jaguar: 'e_mig27',
   e_su33: 'f18', e_mig29k: 'e_rafale', e_m4: 'e_vulcan', e_mig19: 'e_f100', e_mig17: 'e_hunter', e_t4: 'e_f111',
   e_harrier: 'e_yak38', e_vulcan: 'e_tu22m2', e_draken: 'e_mig21n', e_viggen: 'e_mig27', e_f117: 'e_su57', e_mirage: 'e_su24', e_rafale: 'su30', e_b2: 'e_tu22m2',
-  e_yak38: 'e_harrier', e_il28: 'e_hunter', e_tu22: 'e_buccaneer', e_tu95: 'e_b52', e_su27: 'e_f18c', e_su35: 'e_typhoon', e_tu22m3: 'e_b1b', e_tu160: 'e_b2',
+  e_yak38: 'e_a10', e_il28: 'e_hunter', e_tu22: 'e_vulcan', e_tu95: 'e_b52', e_su27: 'e_f18c', e_su35: 'e_typhoon', e_tu22m3: 'e_b1b', e_tu160: 'e_b2',
   e_hunter: 'e_il28', e_etendard: 'e_su17', e_mirage_f1: 'e_mig21n', e_f18c: 'e_su27', e_b52: 'e_tu95', e_b1b: 'e_tu22m3', e_typhoon: 'e_su35',
   f16: 'e_su25', e_f4: 'e_su24', f18: 'e_su17', e_gripen: 'mig29', e_f35: 'e_su57', e_f22: 'e_su57',
   fab500: 'mk82', kh28: 'agm45', kab500l: 'gbu12', kh58: 'agm88', kab500kr: 'agm65b', kh29t: 'agm65b', kh25ml: 'agm65b', kab500s: 'gbu31',
@@ -90,6 +90,11 @@ export const PARENT = {
   storm: 'agm65b', // оружие самолёта (wpn:storm), не удар (ревью: удалялось вместе со строками ударов)
   // удары - цепочка по порядку в ветке MULTI_LINES строится в buildTree (здесь не задаётся)
 };
+// сняты с продажи (Mark 2026-11-05): чтобы дерево стало чище, по 25 самолётов у сторон (6/7/7/5 по рангам). Новому игроку не видны, исследовать нельзя. Кто исследовал - может купить, кто купил - летает
+// как прежде, и покупка идёт в счёт открытия ранга: ни опыт, ни серебро, ни открытые ранги не пропадают. В бою они остаются врагами-ботами
+export const RETIRED = new Set(['e_tu16', 'e_m4', 'e_mig19', 'e_mig17', 'e_jaguar', 'e_buccaneer', 'e_tornado', 'e_harrier']);
+const isRetired = (n) => n.branch === 'air' && RETIRED.has(n.key);
+export const retiredHidden = (P, key) => RETIRED.has(key) && !(P && (P.res.includes('air:' + key) || P.own.includes('air:' + key)));
 // цена (опыт на исследование = серебро на покупку): «крупное» - самолёт, дальний/средний комплекс; остальное - «малое».
 // У «Ударов» вместо ранга - ступень 1-4 (сила импакта), цена по ней же
 export const COST = { big: [600, 2500, 6000, 12000], small: [300, 1000, 2500, 5000] };
@@ -136,8 +141,8 @@ const LATE = new Set(['air:e_vulcan', 'air:e_draken', 'air:e_viggen', 'wpn:bomb1
   'air:e_su33', 'air:e_m4', 'air:e_mig19', 'air:e_mig17', 'air:e_t4', 'air:e_mig29k']); // («Удары» - без рангов, строки strike:* убраны 2026-10-25)
 function rankNeed(P, branch, side, rank) {
   const extra = nodesOf(branch, side, rank).filter((n) => !n.start);
-  const need = Math.min(NEED, extra.filter((n) => !LATE.has(n.id)).length), got = extra.filter((n) => P.own.includes(n.id)).length;
-  return { need, got, left: extra.filter((n) => !P.own.includes(n.id)) };
+  const need = Math.min(NEED, extra.filter((n) => !LATE.has(n.id) && !isRetired(n)).length), got = extra.filter((n) => P.own.includes(n.id)).length;
+  return { need, got, left: extra.filter((n) => !P.own.includes(n.id) && !isRetired(n)) };
 }
 export function rankOpen(P, branch, rank) {
   if (rank <= 1 || !ranked(branch)) return true;
@@ -152,6 +157,7 @@ const boughtIn = (P, branch, side, rank) => nodesOf(branch, side, rank).filter((
 export function canResearch(P, id) {
   const n = NODE[id]; if (!n) return { ok: false, why: 'Нет такой единицы' };
   if (researched(P, id)) return { ok: false, why: 'Уже исследовано' };
+  if (isRetired(n)) return { ok: false, why: 'Снят с продажи' };
   if (!rankOpen(P, n.branch, n.rank)) return { ok: false, why: `Ранг ${RANK_NAME[n.rank]} закрыт - нужен паритет в ранге ${RANK_NAME[n.rank - 1]}` };
   if (n.parent && !researched(P, n.parent)) return { ok: false, why: `Сначала исследуйте ${NODE[n.parent].short}` };
   if (P.xp < n.cost) return { ok: false, why: `Не хватает опыта: ${n.cost - P.xp}` };
@@ -162,7 +168,7 @@ export function canBuy(P, id) {
   if (owned(P, id)) return { ok: false, why: 'Уже куплено' };
   if (!researched(P, id)) return { ok: false, why: 'Сначала исследуйте' };
   const other = n.side === 'east' ? 'west' : 'east', mine = boughtIn(P, n.branch, n.side, n.rank), theirs = boughtIn(P, n.branch, other, n.rank);
-  const room = nodesOf(n.branch, other, n.rank).filter((q) => !q.start && !P.own.includes(q.id)).length; // у другой стороны нечего купить - не держим
+  const room = nodesOf(n.branch, other, n.rank).filter((q) => !q.start && !P.own.includes(q.id) && !isRetired(q)).length; // у другой стороны нечего купить - не держим
   if (ranked(n.branch) && mine + 1 - theirs > GAP && room > 0) { const p = pairOf(n); return { ok: false, why: `Паритет: сначала купите единицу ранга ${RANK_NAME[n.rank]} за ${SIDE_NAME[other]}${p && !owned(P, p.id) && p.rank === n.rank ? ` - например, ${p.short}` : ''}` }; }
   if (P.silver < n.cost) return { ok: false, why: `Не хватает серебра: ${n.cost - P.silver}` };
   return { ok: true };
@@ -184,14 +190,14 @@ export const branchRank = (P, branch) => RANKS.filter((r) => rankOpen(P, branch,
 
 // ── раскладка дерева стороны (как в WTM): колонки - ранги, ряды - линии; первая следующая продолжает ряд, остальные
 // (развилка) - новыми рядами ниже. → { cells: [{ n, row, col }], links: [[из, в]], rows } ──
-export function treeLayout(branch, side) {
+export function treeLayout(branch, side, P = null) {
   if (branch === 'strike') { // без рангов: ряд - ветка нации (подпись), колонка - место в ветке
     const lines = MULTI_LINES[side] || [], ns = TREE.filter((n) => n.branch === branch && n.side === side);
     return { cells: ns.map((n) => ({ n, row: lines.findIndex(([id]) => id === n.line), col: n.slot })), links: ns.filter((n) => n.parent).map((n) => [n.parent, n.id]), rows: lines.length,
       labels: lines.map(([, name], row) => ({ row, name })), cols: Math.max(...ns.map((n) => n.slot)) + 1 };
   }
-  const ns = TREE.filter((n) => n.branch === branch && n.side === side), kids = (id) => ns.filter((q) => q.parent === id).sort((a, b) => a.rank - b.rank);
-  const roots = ns.filter((n) => !n.parent).sort((a, b) => a.rank - b.rank || (b.start - a.start));
+  const ns = TREE.filter((n) => n.branch === branch && n.side === side && !(isRetired(n) && retiredHidden(P, n.key))), kids = (id) => ns.filter((q) => q.parent === id).sort((a, b) => a.rank - b.rank);
+  const roots = ns.filter((n) => !n.parent || !ns.some((q) => q.id === n.parent)).sort((a, b) => a.rank - b.rank || (b.start - a.start));
   const cells = [], links = []; let row = 0;
   const place = (n, r) => { cells.push({ n, row: r, col: n.rank - 1 }); kids(n.id).forEach((k, i) => { links.push([n.id, k.id]); place(k, i === 0 && k.rank > n.rank ? r : ++row); }); }; // тот же ранг (Су-7Б → Су-17) - строкой ниже
   for (const n of roots) { place(n, row); row++; }

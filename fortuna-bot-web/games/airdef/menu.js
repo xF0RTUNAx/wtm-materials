@@ -16,7 +16,7 @@ import { ECO_SELECT, setAudioEcoMode } from '../drone/audio.js?v=20261105a';
 import { photoItems } from './photo.js?v=20261105a';
 import { guideChapters } from './guide.js?v=20261105a';
 import { iconize, ico, capsHtml } from './icons.js?v=20261105a';
-import { NODE, owned, researched, canBuy, canResearch } from './progress.js?v=20261105a';
+import { NODE, owned, researched, canBuy, canResearch, retiredHidden } from './progress.js?v=20261105a';
 
 const LOC = LANG === 'en' ? 'en-US' : 'ru-RU'; // разделитель тысяч в числах
 const GAMES = [
@@ -113,7 +113,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
       const setRow = `<p class="hint">${tr('Комплексы: {0}.', [DEFENSE[setup.side][setup.era].map(([k]) => trIf(SAM[k].short)).join(', ')])}</p>`;
       const segs = h; if (!hg) h += `${setRow}<div class="cat-h">${tr('Подвеска')}</div>`;
       // подвески стороны, которая атакует выбранную ПВО; у каждой - свой самолёт
-      const att = setup.side === 'east' ? 'west' : 'east', mine = loadoutsOf(setup.era, att).filter(([L]) => !L.heli); // вертолёты - в событии «Туманная топь» (event.js)
+      const att = setup.side === 'east' ? 'west' : 'east', mine = loadoutsOf(setup.era, att).filter(([L]) => !L.heli && !retiredHidden(C.progress && C.progress.P, L.plane)); // вертолёты - в событии «Туманная топь» (event.js); снятые с продажи - только у купивших
       // «Реализм»: только подвески, у которых куплены самолёт и всё оружие (прокачка); закрытая - с замком и «нужно: …»
       const can = ([L]) => !realLock() || C.progress.loadoutOk(L), open = mine.filter(can);
       if (!open.some(([, i]) => i === setup.lo)) setup.lo = (open[0] || mine[0])[1];
@@ -174,7 +174,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
         [['random', tr('Случайная')], ...(C.MAP === 'winter' ? WINTER_KEYS : WEATHER_KEYS).map((k) => [k, trIf(WEATHERS[k].name)])])}</div>
       <p class="hint">${tr('Сейчас: {0}. Смена карты и погоды перезапускает страницу.', [trIf(C.W.name)])}</p>`;
     if (ps === 'air') {
-      const mine = loadoutsOf(setup.era, att).filter(([L]) => !L.heli); // вертолёты - в событии «Туманная топь»
+      const mine = loadoutsOf(setup.era, att).filter(([L]) => !L.heli && !retiredHidden(C.progress && C.progress.P, L.plane)); // вертолёты - в событии «Туманная топь»
       if (!mine.some(([, i]) => i === setup.lo)) setup.lo = mine[0][1];
       h += `<div class="prow"><span>${tr('Высота')}</span>${seg('palt', setup.palt || 'mid', [['low', tr('250 м')], ['mid', tr('1,5 км')], ['high', tr('4 км')]])}</div><div class="cat-h">${tr('Самолёт и подвеска')}</div>` +
         mine.map(([L, i]) => `<button class="opt ${i === setup.lo ? 'on' : ''}" data-lo="${i}"><div class="nm"><b>${trIf(PLANES[L.plane])} · ${trIf(L.name)}</b><span>${L.items.map(([k, n]) => `${trIf(AG[k].short)} ×${n}`).join(' · ')}${L.pod ? tr(' · контейнер') : ''}</span></div></button>`).join('') +

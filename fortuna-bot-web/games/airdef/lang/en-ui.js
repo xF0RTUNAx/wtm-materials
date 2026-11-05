@@ -798,6 +798,7 @@ export default {
   "Удар: комплексы": "Strike: sites",
   "Удар: разрушено": "Strike: destroyed",
   "Уже исследовано": "Already researched",
+  "Снят с продажи": "No longer available",
   "Уже куплено": "Already bought",
   "Урон": "Damage",
   "Удар (ФАБ-500 = 100)": "Strike (FAB-500 = 100)",

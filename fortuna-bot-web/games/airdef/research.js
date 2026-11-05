@@ -125,7 +125,7 @@ export function createResearch(C, PG) {
     const cs = getComputedStyle(root), px = (v) => parseFloat(cs.getPropertyValue(v)), ph = phone();
     const cw = px('--cw'), gx = px('--gx'), gy = px('--gy'), ch = px('--ch'), top = ph ? 76 : 72; // ниже шапки рангов (строка паритета - до двух строк)
     // вертолёты: линии Востока, под ними - Запада, над каждой группой - подпись стороны
-    const hl = EB() === 'heli', rk = ranked(EB()), LS = hl ? SIDES.map((sd) => [sd, treeLayout('heli', sd)]) : [[S.side, treeLayout(S.B, S.side)]], pos = {}, grp = [], L = { cells: [], links: [] };
+    const hl = EB() === 'heli', rk = ranked(EB()), LS = hl ? SIDES.map((sd) => [sd, treeLayout('heli', sd)]) : [[S.side, treeLayout(S.B, S.side, P())]], pos = {}, grp = [], L = { cells: [], links: [] };
     let y0 = rk ? top : 14, cols = 4;
     for (const [sd, l] of LS) {
       if (hl) { grp.push(`<div class="grp" style="top:${y0 + 2}px">${trIf(SIDE_NAME[sd])}</div>`); y0 += 22; }

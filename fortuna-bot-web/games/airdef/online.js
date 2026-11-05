@@ -9,6 +9,7 @@ import { createNet } from './net.js?v=20261105a';
 import * as O from './sim/online.js?v=20261105a';
 import * as MW from './sim/online-multi.js?v=20261105a';
 import { AG, SAM, CARRIERS, LOADOUTS, PLANES, ERAS, loadoutRole } from './arsenal.js?v=20261105a';
+import { retiredHidden } from './progress.js?v=20261105a';
 import { MODES } from './sim/strike.js?v=20261105a';
 import { ICON, ico } from './icons.js?v=20261105a';
 import { activeAcc, siteAcc, siteNoProgress } from './account.js?v=20261105a';
@@ -156,7 +157,7 @@ export function createOnline(C, ctrls) {
   function renderPlan() {
     const r = N.room, show = N.battle && N.battle.kind !== 'multi' && r && r.state === 'plan' && team() === 'air';
     planEl.style.display = show ? 'block' : 'none'; if (!show) return;
-    const B = N.battle, me = N.myPlayer(), list = LOADOUTS[B.era].map((L, i) => [L, i]).filter(([L]) => L.side === B.sideAir && O.netOk(L)); // вертолёты - пока только одиночная игра (НАР в онлайне - с 2026-10-22)
+    const B = N.battle, me = N.myPlayer(), list = LOADOUTS[B.era].map((L, i) => [L, i]).filter(([L]) => L.side === B.sideAir && O.netOk(L) && !retiredHidden(C.progress && C.progress.P, L.plane)); // вертолёты - пока только одиночная игра (НАР в онлайне - с 2026-10-22)
     const allies = r.players.filter((p) => p.team === 'air' && p.id !== me.id), others = allies.map((p) => (p.choice !== null ? LOADOUTS[B.era][p.choice] : null));
     const nAir = allies.length + 1, hunters = others.filter((x) => x && loadoutRole(x) === 'sead').length;
     planEl.innerHTML = `<h3>${tr('Волна {0}/{1} · выбор связки · {2} с', [r.wave, O.WAVES, r.left ?? ''])}</h3><div>${tr('Очки: <b style="color:#fde68a">{0}</b> · вылетов на волну: {1}{2}', [me.budget, me.lives ?? O.RESPAWNS[r.wave - 1] + 1, r.lead === 'pvo' ? tr(' (+1: команда отстаёт)') : ''])}</div>

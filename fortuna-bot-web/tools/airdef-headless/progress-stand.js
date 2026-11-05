@@ -4,7 +4,8 @@
 import { TREE, BRANCHES, ranked, START, rankBlock, branchRank, SIDES, SIDE_NAME, RANKS, RANK_NAME, nodesOf, newProgress, research, buy, rankOpen, canBuy, canResearch, battleReward, cardStats, pairOf, loadoutMissing, NODE, treeLayout, DAY_FULL } from '../../games/airdef/progress.js';
 import { LOADOUTS, MULTI, MULTI_LINES } from '../../games/airdef/arsenal.js';
 
-import { owned as owned0 } from '../../games/airdef/progress.js';
+import { owned as owned0, RETIRED } from '../../games/airdef/progress.js';
+const sold = (n) => !(n.branch === 'air' && RETIRED.has(n.key)); // снятые с продажи (2026-11-05) новый игрок не покупает
 const readLate = () => Deno.readTextFileSync(new URL('../../games/airdef/progress.js', import.meta.url)).split('\n').filter((l) => /^const LATE|^  '/.test(l)).join('');
 let bad = 0; const ok = (t, c) => { console.log((c ? 'OK   ' : 'FAIL ') + t); if (!c) bad++; };
 // темп: типичный вылет «Реализма» ≈ 8 мин - 160 основа + 2 цели + 1 комплекс + возврат → ×1,5
@@ -23,13 +24,13 @@ for (const b of BRANCHES) {
 // жадно: покупать самое дешёвое доступное по всем веткам; считать опыт до открытия ранга IV в каждой ветке и до всего
 const P = newProgress(); let spent = 0; const at = {};
 for (let guard = 0; guard < 500; guard++) {
-  const cand = TREE.filter((n) => !n.start && !P.own.includes(n.id) && rankOpen(P, n.branch, n.rank)).sort((a, b) => a.cost - b.cost || a.rank - b.rank);
+  const cand = TREE.filter((n) => sold(n) && !n.start && !P.own.includes(n.id) && rankOpen(P, n.branch, n.rank)).sort((a, b) => a.cost - b.cost || a.rank - b.rank);
   const n = cand.find((q) => { const t = { ...newProgress(), xp: 1e9, silver: 1e9, res: [...P.res], own: [...P.own] }; if (!canResearch(t, q.id).ok) return false; t.res.push(q.id); return canBuy(t, q.id).ok; });
   if (!n) break;
   P.xp += n.cost; P.silver += n.cost; research(P, n.id); buy(P, n.id); spent += n.cost;
   for (const b of BRANCHES) if (!at[b.id] && rankOpen(P, b.id, 4)) at[b.id] = spent;
 }
-ok('всё дерево покупается без тупиков паритета', TREE.every((n) => n.start || P.own.includes(n.id)));
+ok('всё дерево покупается без тупиков паритета', TREE.every((n) => !sold(n) || n.start || P.own.includes(n.id)));
 ok('ранг IV открывается во всех ветках', BRANCHES.every((b) => rankOpen(P, b.id, 4)));
 console.log('\nСуммы (опыт; серебра столько же):');
 for (const b of BRANCHES) {
@@ -38,7 +39,7 @@ for (const b of BRANCHES) {
   // ранг IV по одной ветке отдельно: жадно только в ней
   const Q = newProgress(); let sp = 0;
   for (let g = 0; g < 200 && !rankOpen(Q, b.id, 4); g++) {
-    const n = TREE.filter((q) => q.branch === b.id && !q.start && !Q.own.includes(q.id) && rankOpen(Q, b.id, q.rank)).sort((a, c) => a.cost - c.cost)
+    const n = TREE.filter((q) => sold(q) && q.branch === b.id && !q.start && !Q.own.includes(q.id) && rankOpen(Q, b.id, q.rank)).sort((a, c) => a.cost - c.cost)
       .find((q) => { const t = { ...newProgress(), xp: 1e9, silver: 1e9, res: [...Q.res], own: [...Q.own] }; if (!canResearch(t, q.id).ok) return false; t.res.push(q.id); return canBuy(t, q.id).ok; });
     if (!n) break; Q.xp += n.cost; Q.silver += n.cost; research(Q, n.id); buy(Q, n.id); sp += n.cost;
   }
@@ -60,7 +61,8 @@ ok('старт: ранг II закрыт там, где в ранге I есть
 }
 { const T = { ...newProgress(), xp: 1e6, silver: 1e6, own: ['wpn:gbu10', 'wpn:bomb1000', 'wpn:fab250', 'wpn:fab100', 'wpn:kh58', 'wpn:kh29t', 'wpn:gbu12', 'wpn:agm88'] }; const r = research(T, 'wpn:kab500s'); ok(`линия: КАБ-500С без КАБ-500Л нельзя («${r.why}»)`, !r.ok && rankOpen(T, 'wpn', 3)); }
 ok('линии: предыдущая - та же ветка и сторона, ранг (у ударов - ступень) не выше', TREE.every((n) => !n.parent || (NODE[n.parent].side === n.side && NODE[n.parent].rank <= n.rank)));
-ok('раскладка: каждая единица в дереве ровно один раз', BRANCHES.every((b) => SIDES.every((s) => { const L = treeLayout(b.id, s); return L.cells.length === nodesOf(b.id, s).length && new Set(L.cells.map((c) => c.row + ':' + c.col)).size === L.cells.length; })));
+{ const T = { ...newProgress(), xp: 1e6, silver: 1e6 }; ok('снятый с продажи: новому нельзя, в дереве не виден', !research(T, 'air:e_tu16').ok && !treeLayout('air', 'east', T).cells.some((c) => c.n.key === 'e_tu16')); const O = { ...newProgress(), res: ['air:e_tu16', 'air:e_m4', 'air:e_jaguar', 'air:e_buccaneer'], own: ['air:e_tu16', 'air:e_m4', 'air:e_jaguar', 'air:e_buccaneer'] }; ok('снятый с продажи: у купившего виден и идёт в счёт ранга', rankOpen(O, 'air', 2) && treeLayout('air', 'east', O).cells.some((c) => c.n.key === 'e_tu16')); }
+ok('раскладка: каждая единица в дереве ровно один раз', BRANCHES.every((b) => SIDES.every((s) => { const L = treeLayout(b.id, s); return L.cells.length === nodesOf(b.id, s).filter(sold).length && new Set(L.cells.map((c) => c.row + ':' + c.col)).size === L.cells.length; })));
 ok('у каждой единицы есть аналог другой стороны', TREE.every((n) => { const p = pairOf(n); return p && p.side !== n.side; }));
 ok('у каждой единицы есть ТТХ для карточки', TREE.every((n) => cardStats(n).length >= 2));
 const miss = TREE.filter((n) => { const p = pairOf(n); return !p || p.side === n.side; }).map((n) => n.id); if (miss.length) console.log('  без аналога:', miss.join(' '));
