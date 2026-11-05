@@ -330,7 +330,7 @@ export const SAM_COST = { strela1: 100, s75: 320, s125: 240, hawk: 280, kub: 300
 //     в любую погоду и ночью; glide - планирующее (дальше); 'cruise' - крылатая ракета: малая высота, огибание
 //     застройки, малая ЭПР; 'decoy' - ложная цель (MALD): для РЛС выглядит как самолёт; 'ecm' - подвесная
 //     станция помех: РЛС видят самолёт ближе (до «прожига»), сопровождение срывается чаще.
-//   arm с mmw - ПРР с миллиметровой ГСН (AARGM): находит выключенную станцию, если та не уехала.
+//   arm с mmw - ПРР с миллиметровой ГСН (AARGM-ER): находит выключенную станцию, если та не уехала.
 Object.assign(SAM_TYPE, { tvm: 'через ракету (TVM)', arh: 'активная ГСН', jammer: 'подавление навигации' });
 Object.assign(AG_KIND, { gps: 'спутниковая (GPS/ГЛОНАСС)', cruise: 'крылатая ракета', decoy: 'ложная цель', ecm: 'станция помех' });
 Object.assign(SAM, {
@@ -492,10 +492,10 @@ Object.assign(AG, {
     guide: 'Крылатая ракета с малой заметностью: малая высота, огибание рельефа и застройки, оптическая ГСН на конце.',
     specs: [['Страна', 'Россия'], ['Масса', '≈ 900 кг'], ['Дальность', '≈ 290 км (в игре меньше)']],
     vis: { L: 4.2, r: 0.3, kind: 'cruise', color: 0x8a8f86 } },
-  aargm: { name: 'AGM-88E AARGM', short: 'AARGM', side: 'west', era: 4, kind: 'arm', mass: 360, acc: 150, burn: 6, kd: 1.0, g: 18, life: 70, fov: 45, rmax: 38000, mem: true, mmw: true, dmg: 60, blast: 23, rcs: 0.3,
+  aargm: { name: 'AARGM-ER', short: 'AARGM-ER', side: 'west', era: 4, kind: 'arm', mass: 360, acc: 150, burn: 6, kd: 1.0, g: 18, life: 70, fov: 45, rmax: 38000, mem: true, mmw: true, dmg: 60, blast: 23, rcs: 0.3,
     guide: 'Развитие HARM: помнит место РЛС, а на конечном участке миллиметровая ГСН находит саму машину - выключение не спасает, нужен переезд.',
     specs: [['Страна', 'США / Италия'], ['Масса', '≈ 360 кг'], ['ГСН', 'пассивная РЛ + активная ММВ + GPS']],
-    vis: { L: 4.17, r: 0.127, kind: 'missile', color: 0xdedede } },
+    vis: { L: 4.1, r: 0.127, kind: 'missile', color: 0xdedede } },
   mald: { name: 'ADM-160 MALD', short: 'MALD', side: 'west', era: 4, kind: 'decoy', mass: 115, speed: 230, life: 240, rcs: 5, rmax: 80000,
     guide: 'Миниатюрная ложная цель: для РЛС выглядит как самолёт, летит к цели и отвлекает на себя зенитные ракеты.',
     specs: [['Страна', 'США'], ['Масса', '≈ 115 кг'], ['Дальность', '≈ 900 км']],
@@ -737,7 +737,7 @@ LOADOUTS[4] = [
   { side: 'east', plane: 'e_su57', name: 'Ракеты: Х-59МК2 + Х-29Т', items: [['kh59mk2', 2], ['kh29t', 2]], pod: true },
   { side: 'west', plane: 'e_f35', name: 'SDB + JASSM + MALD + помехи', items: [['gbu39', 4], ['jassm', 1], ['mald', 2], ['ecm_w', 1]], pod: true },
   { side: 'west', plane: 'e_f22', name: 'Малозаметный: JDAM ×2 + SDB ×4', items: [['gbu31', 2], ['gbu39', 4], ['ecm_w', 1]] }, // всё - в отсеках, цели по координатам (контейнера у F-22 нет)
-  { side: 'west', plane: 'f18', name: 'AARGM + JDAM (охота за ПВО)', items: [['aargm', 4], ['gbu31', 2], ['ecm_w', 1]], pod: true, role: 'sead' },
+  { side: 'west', plane: 'f18', name: 'AARGM-ER + JDAM (охота за ПВО)', items: [['aargm', 4], ['gbu31', 2], ['ecm_w', 1]], pod: true, role: 'sead' },
   { side: 'west', plane: 'f16', name: 'Крылатые JASSM ×2 + MALD', items: [['jassm', 2], ['mald', 2], ['agm88', 2]], pod: true },
   { side: 'west', plane: 'e_rafale', name: 'Rafale: Storm Shadow (SCALP) ×2 + GBU-12 ×2 + помехи', items: [['storm', 2], ['gbu12', 2], ['ecm_w', 1]], pod: true },
   { side: 'west', plane: 'e_b2', name: 'B-2A: GBU-57 ×2 (в отсеках)', items: [['gbu57', 2]] },

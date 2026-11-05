@@ -254,7 +254,7 @@ export default {
   "Ракеты: Х-59МК2 + Х-29Т": "Missiles: Kh-59MK2 + Kh-29T",
   "SDB + JASSM + MALD + помехи": "SDB + JASSM + MALD + ECM",
   "Малозаметный: JDAM ×2 + SDB ×4": "Stealth: JDAM ×2 + SDB ×4",
-  "AARGM + JDAM (охота за ПВО)": "AARGM + JDAM (SEAD hunt)",
+  "AARGM-ER + JDAM (охота за ПВО)": "AARGM-ER + JDAM (SEAD hunt)",
   "Крылатые JASSM ×2 + MALD": "JASSM cruise missiles ×2 + MALD",
   "Rafale: Storm Shadow (SCALP) ×2 + GBU-12 ×2 + помехи": "Rafale: Storm Shadow (SCALP) ×2 + GBU-12 ×2 + ECM",
   "B-2A: GBU-57 ×2 (в отсеках)": "B-2A: GBU-57 ×2 (in bays)",

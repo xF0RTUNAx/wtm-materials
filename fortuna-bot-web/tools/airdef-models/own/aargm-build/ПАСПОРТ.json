@@ -1,0 +1,17 @@
+{
+ "key": "w_aargm",
+ "weapon": "aargm",
+ "name": "AARGM-ER",
+ "rev": 1,
+ "files": {
+  "glb": "aargm.glb",
+  "blend": "aargm.blend",
+  "build": [
+   "build.py",
+   "_collide.py",
+   "bake_maps.py",
+   "paint.py",
+   "deliver.py"
+  ]
+ }
+}

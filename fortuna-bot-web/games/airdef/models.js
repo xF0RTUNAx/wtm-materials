@@ -216,7 +216,8 @@ const META = {
   w_kab500l: { weapon: 'kab500l', lazy: true, stations: [] }, // КАБ-500Л — собственная модель (tools/airdef-models/own/kab500l)
   w_mk82: { weapon: 'mk82', stations: [] }, // Mk 82 — собственная модель (tools/airdef-models/own/mk82)
   w_jassm: { weapon: 'jassm', wings: 'deploy', wingAx: { wing1: [0.215, -0.2535, -0.49, 65], wing2: [-0.215, -0.2535, -0.49, -65] }, hinge: { fin: [0, 0.1223, 1.81, 0, -0.1989, 0.98, 90] }, stations: [] }, // AGM-158 JASSM — собственная модель (tools/airdef-models/own/jassm)
-  w_agm88: { weapon: ['agm88', 'aargm'], stations: [] }, // AGM-88 HARM (с тележки) - и для AARGM
+  w_agm88: { weapon: 'agm88', stations: [] }, // AGM-88 HARM (с тележки)
+  w_aargm: { weapon: 'aargm', lazy: true, stations: [] }, // AARGM-ER: своя модель (tools/airdef-models/own/aargm)
   w_mald: { weapon: ['mald', 'quail'], stations: [] }, // ADM-160 MALD («AIM-160A Screamer»)
   w_decoy_e: { weapon: 'decoy_e', wings: 'deploy', wingAx: { wing1: [0.165, -0.2045, -0.4, 80], wing2: [-0.165, -0.2045, -0.4, -80] }, stations: [] }, // Ложная цель (имитатор) — собственная модель (tools/airdef-models/own/decoy_e)
   w_gbu39: { weapon: ['gbu39', 'sdb'], wings: 'fold', stations: [] }, // GBU-39 SDB (и для «Мульти-волны»)
@@ -462,6 +463,7 @@ const GLB_V_OWN = {
   w_agm45: '20261103u',
   w_decoy_e: '20261103w',
   w_jassm: '20261103z',
+  w_aargm: '20261105b',
 };
 GLB_V.hg_jack = '20261104b'; // подъёмник, ревизия 2: матовый, с износом
 GLB_V.w_pod = '20261104b'; // серый корпус контейнера, без комьев от упрощения

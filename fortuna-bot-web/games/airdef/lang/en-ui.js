@@ -165,7 +165,7 @@ export default {
   "Су-57": "Su-57",
   "Россия · малозаметный: оружие во внутренних отсеках (Х-59МК2 создавалась под них), выходит из отсека при пуске.": "Russia · stealth: weapons in internal bays (the Kh-59MK2 was designed for them), extended at launch.",
   "США · «Дикая ласка» F-4G - охотник за ПВО: Shrike, HARM.": "USA · F-4G \"Wild Weasel\", a SEAD hunter: Shrike, HARM.",
-  "США · палубный многоцелевой: Mk 82, GBU-12, JDAM, HARM, AARGM.": "USA · carrier-based multirole: Mk 82, GBU-12, JDAM, HARM, AARGM.",
+  "США · палубный многоцелевой: Mk 82, GBU-12, JDAM, HARM, AARGM-ER.": "USA · carrier-based multirole: Mk 82, GBU-12, JDAM, HARM, AARGM-ER.",
   "США · лёгкий многоцелевой: Mk 82, Maverick, HARM, JASSM.": "USA · light multirole: Mk 82, Maverick, HARM, JASSM.",
   "Швеция · лёгкий многоцелевой с контейнером LITENING: GBU-12, JDAM.": "Sweden · light multirole with a LITENING pod: GBU-12, JDAM.",
   "США · малозаметный: JDAM и SDB во внутренних отсеках, наведение по GPS (прицельного контейнера нет).": "USA · stealth: JDAM and SDB in internal bays, GPS guidance (no targeting pod).",
