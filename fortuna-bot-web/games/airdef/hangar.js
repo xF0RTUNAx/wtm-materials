@@ -44,9 +44,12 @@ export function createHangar(C, renderer) {
   }
 
   const MAIN_L = [-0.15, 0.96, 0.22]; // главный свет зала
-  // самолёт в зале (Mark 2026-11-05: «в Blender красивее»): своя тень на себе от главного света и обработка яркости у самолёта; фон и пол - картинка, их не трогаем. Сравнение: ?hgsh=0, ?hgtm=none|aces|cineon, ?hgexp=
+  // самолёт в зале (Mark 2026-11-05: «в Blender красивее»): своя тень на себе от главного света и обработка яркости у самолёта; фон и пол - картинка, их не трогаем. Сравнение: ?hgsh=0, ?hgtm=none|aces, ?hgexp=
   const HQ = new URLSearchParams(location.search), SELF_SH = paintOn && !!renderer.shadowMap.enabled && HQ.get('hgsh') !== '0';
-  const HG_TM = !paintOn ? THREE.NoToneMapping : ({ none: THREE.NoToneMapping, cineon: THREE.CineonToneMapping }[HQ.get('hgtm')] ?? THREE.ACESFilmicToneMapping), HG_EXP = +HQ.get('hgexp') || 1.25;
+  // тон самолёта: до 0,6 как было, выше - мягкое плечо: блики не выгорают. ACES здесь не подошёл (Mark: «разводы»): кривая поднимает контраст средних тонов и вытаскивает грязь из текстуры
+  const CT0 = 'vec3 CustomToneMapping( vec3 color ) { return color; }';
+  if (THREE.ShaderChunk.tonemapping_pars_fragment.includes(CT0)) THREE.ShaderChunk.tonemapping_pars_fragment = THREE.ShaderChunk.tonemapping_pars_fragment.replace(CT0, 'vec3 CustomToneMapping( vec3 color ) { color *= toneMappingExposure; vec3 k = vec3(0.6); return mix(color, k + 0.4 * (1.0 - exp(-(color - k) / 0.4)), step(k, color)); }');
+  const HG_TM = !paintOn ? THREE.NoToneMapping : ({ none: THREE.NoToneMapping, aces: THREE.ACESFilmicToneMapping }[HQ.get('hgtm')] ?? THREE.CustomToneMapping), HG_EXP = +HQ.get('hgexp') || 1;
   let mainL = null, shAz = null;
   function init() {
     if (inited) return; inited = true;
