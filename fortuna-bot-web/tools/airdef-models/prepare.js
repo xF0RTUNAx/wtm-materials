@@ -156,11 +156,8 @@ const CONFIG = {
       return (c.max[1] < -2.3 && Math.max(...c.size) < 3) || (c.ctr[1] < -1.95 && c.ctr[2] > -11 && c.ctr[2] < -6.5 && dx < 1) /* носовая стойка и створки */ ||
         (c.ctr[1] < -1.6 && dx > 0.9 && dx < 6.2 && c.ctr[2] > 1 && c.ctr[2] < 9 && Math.max(...c.size) < 4) /* основные стойки и открытые створки */ ? null : 'body'; } },
   e_a10: { src: `${DL}/a-10_thunderbolt_ii.glb`, scale: 1.22, nose: '-z', rulesIn: 'game', tex: () => 1024, centerX: true, crease: 35, groups: (c) => (A10_STORE(c) ? (Deno.env.get('MARK') ? 'mark' : null) : 'body') }, // A-10 — AIRMAN Magazine (Alfredo Tirado), заготовка
-  e_f15e: { src: `${DL}/mcdonnell_douglas_f-15e_strike_eagle.glb`, scale: 0.1044, axes: (x, y, z) => [-(0.9211 * x - 0.3894 * z), -0.1329 * x + 0.9399 * y - 0.3145 * z, -(0.366 * x + 0.3414 * y + 0.8657 * z)], /* у автора в полёте: курс 67°, тангаж 20° — главная ось (pca3.js); нос — в −Z */ rulesIn: 'game', tex: () => 256, target: 60000, simpErr: 0.02, centerX: true, // F-15E — Spark_Customs: без текстур — «ганшип грей»
-    colors: { '#soot': [0.03, 0.028, 0.026], '': [0.1, 0.105, 0.115] } /* первое совпадение — его цвет: '' — последним */, perTri: true, // подвески автора (по треугольникам; правила до центровки: x −0,104, y −4,418, z +1,588): под крылом и под конформными баками
-    groups: (c) => { const X = Math.abs(c.ctr[0] - 0.104), Y = c.ctr[1] - 4.418;
-      if (Math.hypot(X - 0.71, Y + 1.35) < 0.4 && c.ctr[2] + 1.588 > 8.18) return 'body#soot'; // конусные заглушки в соплах (Mark: «может убрать?») — тёмные, как закопчённое сопло изнутри: удалить нельзя — за ними пусто, видно небо
-      return (X > 1.95 && X < 4.6 && Y < -0.97 && c.ctr[2] + 1.588 < 5.2) /* не стабилизаторы (хвост — дальше 5,5 м) */ || (X > 1.0 && X < 1.95 && Y < -1.75) ? null : 'body'; } }, // крыло снизу — около −0,8 м
+  e_f15e: { src: new URL('./own/f15e.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 2048, nTex: () => 2048, pickMesh: /./, own: true, centerX: true }, // F-15E: своя модель (Blender, own/f15e-build), первый свой самолёт; карта блеска: R затенение, G шероховатость, B металл
+  e_f15e_gear: { src: new URL('./own/f15e_gear.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 2048, nTex: () => 2048, pickMesh: /./, own: true, centerX: true }, // стойки F-15E для ангара: две метки по 1 мм дают тот же центр, что у самолёта, не удалять
   // ── третья партия 2026-10-19 (manilov.ap, CC BY): fwd — по оси симметрии (sym.js; у F-117 и B-2 нет киля-подсказки — нос проверен по виду сбоку); без упрощения;
   // шасси и подвески автора — долой (strip): x оси, низ фюзеляжа и крыла — по LS=1 --groups и видам --views ──
   e_mig21n: { src: `${DL}/mig21.glb`, scale: 0.99190, fwd: [-0.8359, 0.5488], rulesIn: 'game', tex: () => 512, centerX: true, groups: strip(-0.26, 1.48, 1.0, 1.3, 2.0, (c, d) => d < 0.3 && c.size[2] > 3) /* подфюзеляжный киль — оставить */ },
@@ -904,7 +901,7 @@ CONFIG.site_port_lo = { ...CONFIG.site_fuel_city_lo, src: `${DL}/Свои/Пор
 // машины: дальние копии (_lo, ~1000 треуг.) — для движения на дорогах дальше 250 м
 // самолёты, вертолёты и ЗУ-23 на стоянках объектов-сцен (SITES place, «Военный аэродром»): лёгкие копии pk_* ~4 тыс. треугольников (полные — 3–256 тыс.:
 // 16 самолётов, 2 вертолёта и 3 ЗУ-23 на аэродроме дали бы ~2 млн треугольников и сотни вызовов отрисовки вблизи)
-for (const k of ['su30', 'mig29', 'e_su24', 'e_su25', 'f16', 'f18', 'e_f15e', 'e_a10', 'e_su34', 'e_mig31', 'h_mi24', 'h_ah64', 'h_mi8', 'h_uh60', 'zu23']) CONFIG[`pk_${k}`] = { ...CONFIG[k], target: 4000, simpErr: 0.05, tex: () => 256 };
+for (const k of ['su30', 'mig29', 'e_su24', 'e_su25', 'f16', 'f18', 'e_f15e', 'e_a10', 'e_su34', 'e_mig31', 'h_mi24', 'h_ah64', 'h_mi8', 'h_uh60', 'zu23']) CONFIG[`pk_${k}`] = { ...CONFIG[k], target: 4000, simpErr: 0.05, tex: () => 256, nTex: null };
 for (const k of ['compact', 'coupe', 'hatch', 'van', 'offroad', 'pickup', 'sedan', 'sport', 'suv', 'wagon', 'police']) CONFIG[`c_${k}_lo`] = { ...CONFIG[`c_${k}`], target: 1000, simpErr: 0.05, tex: () => 128 };
 // дальние копии противника «Летки» (_lo): вдали тонкие крылья можно упрощать сильнее — дефектов не видно, а треугольников в разы меньше
 for (const [k, t] of [['e_mig21', 3000], ['e_mig31', 9000], ['e_su57', 7000], ['e_tu22m3', 7000], ['e_gripen', 3000], ['e_f22', 4000], ['e_f35', 9000]]) CONFIG[k + '_lo'] = { ...CONFIG[k], target: t, simpErr: 0.05, tex: () => 256 };

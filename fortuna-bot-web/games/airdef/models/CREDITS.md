@@ -41,7 +41,6 @@
 - "Mig27" (https://sketchfab.com/3d-models/mig27-a9d22acdb582444a91c2adc8b123d674) by manilov.ap — CC-BY-4.0 — `e_mig27.glb`
 - "TU26" (https://sketchfab.com/3d-models/tu26-52e40c8b03224f1bbba836965520a362) by manilov.ap — CC-BY-4.0 — `e_tu22m2.glb`
 - "A-10 Thunderbolt II" (https://sketchfab.com/3d-models/a-10-thunderbolt-ii-9521ff6ba5d448958ea45a89e94ab23d) by AIRMAN Magazine — CC-BY-4.0 — `e_a10.glb`
-- "McDonnell Douglas F-15E Strike Eagle" (https://sketchfab.com/3d-models/mcdonnell-douglas-f-15e-strike-eagle-4b8a5abf87a34373af4b0c8adaf18b11) by Spark_Customs — CC-BY-4.0 — `e_f15e.glb`
 - "Mig21" (https://sketchfab.com/3d-models/mig21-4e2b33b33fcb43948c78783867e3b166) by manilov.ap — CC-BY-4.0 — `e_mig21n.glb`
 - "Mig25" (https://sketchfab.com/3d-models/mig25-afe67617c5294dce9056106a22f640ff) by manilov.ap — CC-BY-4.0 — `e_mig25.glb`
 - "Su7b" (https://sketchfab.com/3d-models/su7b-faaf874e2c344f889a66451c4b93fa6b) by manilov.ap — CC-BY-4.0 — `e_su7b.glb`

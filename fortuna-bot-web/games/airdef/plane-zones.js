@@ -19,7 +19,7 @@ export const ZCUT = {
   e_f22: { tailK: 0.8 }, e_tu160: { tailK: 0.82 }, // стабилизаторы вплотную к крылу - «перетяжки» нет
 };
 // два киля на мотогондолах (корни - ниже гаргрота): киль - любая стоячая поверхность над обшивкой в задней части
-const TWIN = new Set(['su30', 'mig29', 'e_su34', 'e_su57', 'e_mig31', 'f18', 'e_f18c', 'e_f22', 'e_f35']);
+const TWIN = new Set(['su30', 'mig29', 'e_su34', 'e_su57', 'e_mig31', 'f18', 'e_f18c', 'e_f22', 'e_f35', 'e_f15e']);
 const CACHE = new Map();
 // опалённая рваная кромка: тёмный налёт поверх обшивки у линии разрыва
 const SCAR_MAT = new THREE.MeshBasicMaterial({ color: 0x15110d, transparent: true, opacity: 0.82, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2, depthWrite: false });

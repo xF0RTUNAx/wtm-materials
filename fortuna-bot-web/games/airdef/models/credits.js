@@ -378,15 +378,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "McDonnell Douglas F-15E Strike Eagle",
-  "author": "Spark_Customs",
-  "url": "https://sketchfab.com/3d-models/mcdonnell-douglas-f-15e-strike-eagle-4b8a5abf87a34373af4b0c8adaf18b11",
-  "license": "CC-BY-4.0",
-  "files": [
-   "e_f15e"
-  ]
- },
- {
   "title": "Mig21",
   "author": "manilov.ap",
   "url": "https://sketchfab.com/3d-models/mig21-4e2b33b33fcb43948c78783867e3b166",

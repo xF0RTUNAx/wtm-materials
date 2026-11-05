@@ -15,5 +15,6 @@ exclude:
   - fortuna-bot-web/games/airdef/models/*.glb
   - fortuna-bot-web/games/airdef/models/ktx
   - fortuna-bot-web/games/airdef/models/camo
+  - fortuna-bot-web/tools/airdef-models/own
 include:
   - .htaccess
