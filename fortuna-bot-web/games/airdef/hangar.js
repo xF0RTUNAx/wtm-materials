@@ -43,6 +43,7 @@ export function createHangar(C, renderer) {
     return t;
   }
 
+  const MAIN_L = [-0.15, 0.96, 0.22]; // главный свет зала
   function init() {
     if (inited) return; inited = true;
     hs = new THREE.Scene();
@@ -50,7 +51,7 @@ export function createHangar(C, renderer) {
     pivot = new THREE.Group(); hs.add(pivot); holder = new THREE.Group(); pivot.add(holder); jackG = new THREE.Group(); pivot.add(jackG);
     // свет - по паспорту; сила подобрана по снимку на настоящей модели: пол вокруг светлый, борт самолёта не должен быть чёрным
     hs.add(new THREE.HemisphereLight(0xc9d3d9, 0x8a857a, paintOn ? 0.58 : 0.78)); // с отражениями зала рассеянного нужно меньше, а ведущий свет сильнее - появляется объём
-    const main = new THREE.DirectionalLight(0xffedd1, paintOn ? 1.15 : 0.92); main.position.set(-0.15, 0.96, 0.22); hs.add(main);
+    const main = new THREE.DirectionalLight(0xffedd1, paintOn ? 1.15 : 0.92); main.position.set(...MAIN_L); hs.add(main);
     const fill = new THREE.DirectionalLight(0xfff4e6, 0.26); fill.position.set(0.1, 0.25, 1); hs.add(fill); // от пола и стен на ближний к камере борт
     const rim = new THREE.DirectionalLight(0xfff0d9, paintOn ? 0.42 : 0.24); rim.position.set(-0.5, 0.48, -0.72); hs.add(rim);
     // фон: прямоугольник на весь экран, окно в картинке - те же cx, cy, hw, hh, что у камеры; при приближении - размытие через младшие уровни картинки
@@ -95,7 +96,8 @@ export function createHangar(C, renderer) {
   }
   const refresh = () => { const L = (want && want.L) || lastL; if (L) show(L); }; // кошелёк обновился: окраска сменилась - пересборка, нет - show ничего не делает
   const keyOf = (q) => (q.skin ? `${q.plane}@${q.skin}` : q.plane);
-  const fullyHere = (q) => modelLoaded(keyOf(q)) && modelLoaded('hg_jack') && !q.L.items.some(([k]) => weaponPending(k) && !weaponFailed(k));
+  const gearOf = (plane) => (paintOn && planeMeta(plane) && planeMeta(plane).gearModel) || null; // своя модель со стойками: в ангаре на шасси, а не на подъёмниках (проба, ?paint=1)
+  const fullyHere = (q) => modelLoaded(keyOf(q)) && modelLoaded('hg_jack') && (!gearOf(q.plane) || modelLoaded(gearOf(q.plane)) || modelFailed(gearOf(q.plane))) && !q.L.items.some(([k]) => weaponPending(k) && !weaponFailed(k));
   function stepBuild() {
     if (!on) return;
     // показали замену, потому что нужная модель не успела: пришла - пересобрать
@@ -107,7 +109,7 @@ export function createHangar(C, renderer) {
       want.asked = true;
       if (!modelLoaded(keyOf(want))) mine.add(keyOf(want));
       if (want.skin) wantCamo(want.plane, want.skin); else wantModel(want.plane);
-      wantModel('hg_jack'); for (const [k] of want.L.items) wantWeapon(k);
+      wantModel('hg_jack'); if (gearOf(want.plane)) wantModel(gearOf(want.plane)); for (const [k] of want.L.items) wantWeapon(k);
     }
     if (want.skin && modelFailed(keyOf(want))) { want.skin = null; want.asked = false; wantT = now - PICK_WAIT; return; } // файл с окраской или большими текстурами не пришёл - обычная модель
     const q = want, broke = modelFailed(q.plane) || modelFailed('hg_jack'), here = fullyHere(q);
@@ -147,8 +149,9 @@ export function createHangar(C, renderer) {
     pivot.updateMatrixWorld(true);
     hangStores(obj, pm.name, hung, seatL);
     for (const [key, m] of ms) { let g = groups.find((x) => x.key === key); if (!g) groups.push(g = { key, pos: [] }); g.pos.push(m.position.clone()); }
+    const gK = gearOf(pm.name), gear = gK && modelLoaded(gK) ? anyModel(gK) : null; if (gear) { gear.position.set(0, 0, 0); obj.add(gear); } // стойки в тех же осях, что самолёт; не пришли - обычные подъёмники
     pivot.updateMatrixWorld(true);
-    const box = new THREE.Box3().setFromObject(obj);
+    const box = new THREE.Box3().setFromObject(obj), gearY = gear ? new THREE.Box3().setFromObject(gear).min.y : null;
     const size = Math.max(sz.x, sz.z), heavy = size > BIG;
     setView(wantView || (heavy ? 'heavy' : 'fighter'));
     // подъёмники: нос и две основные точки; опора - настоящий низ модели (луч снизу), мимо подвески
@@ -164,7 +167,7 @@ export function createHangar(C, renderer) {
     const mL = pick(-xM0, box0.min.z + L0 * 0.64, -1, KX) || pick(-xM0, box0.min.z + L0 * 0.64, 1, KX), mR = mL ? [-mL[0], mL[1], under(-mL[0], mL[1]) ?? mL[2]] : null;
     for (const q of [nose, mL, mR]) if (q) pts.push(q);
     if (!mL) { const c = pick(0, box0.min.z + L0 * 0.68, -1, [1]) || pick(0, box0.min.z + L0 * 0.68, 1, [1]); if (c) pts.push(c); } // подвеска заняла всё под крылом - задняя опора на оси
-    const jS = heavy ? 1.3 : 1, top = (JACK_TOP + JACK_HEAD) * jS, H = Math.max(-box.min.y + 0.3, ...pts.map((q) => top - q[2]), 1.2);
+    const jS = heavy ? 1.3 : 1, top = (JACK_TOP + JACK_HEAD) * jS, H = gear ? -gearY : Math.max(-box.min.y + 0.3, ...pts.map((q) => top - q[2]), 1.2); if (gear) pts.length = 0; // на шасси: колёса на полу, подъёмников нет
     holder.position.set(-(box0.min.x + box0.max.x) / 2, H, -(box0.min.z + box0.max.z) / 2); pivot.updateMatrixWorld(true);
     for (const [x, zz, y] of pts) {
       const j = anyModel('hg_jack'); if (!j) continue;
@@ -206,24 +209,28 @@ export function createHangar(C, renderer) {
     vertexShader: 'varying vec2 u; void main() { u = position.xy * 0.5 + 0.5; gl_Position = vec4(position.xy, 0.0, 1.0); }',
     fragmentShader: 'uniform sampler2D t; uniform vec2 d; varying vec2 u; void main() { float s = 0.0; s += texture2D(t, u - 4.0 * d).g * 0.05; s += texture2D(t, u - 3.0 * d).g * 0.09; s += texture2D(t, u - 2.0 * d).g * 0.12; s += texture2D(t, u - d).g * 0.15; s += texture2D(t, u).g * 0.18; s += texture2D(t, u + d).g * 0.15; s += texture2D(t, u + 2.0 * d).g * 0.12; s += texture2D(t, u + 3.0 * d).g * 0.09; s += texture2D(t, u + 4.0 * d).g * 0.05; gl_FragColor = vec4(s, s, s, 1.0); }' });
   let shA = null, shB = null, shM = null, jackBlob = null, blobGeo = null;
-  function bakeShadow(obj, E) {
-    const N = 256, O = { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, depthBuffer: true, stencilBuffer: false };
+  function bakeShadow(obj, E0) {
+    const E = paintOn ? E0 * 1.3 : E0, N = paintOn ? 1024 : 256, O = { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, depthBuffer: true, stencilBuffer: false };
     if (!shA) { shA = new THREE.WebGLRenderTarget(N, N, O); shB = new THREE.WebGLRenderTarget(N, N, O); shM = blurMat(); }
     const sc = new THREE.Scene(), oc = new THREE.OrthographicCamera(-E, E, E, -E, 0.1, 200), par = holder.parent, wasAuto = renderer.autoClear, bgC = new THREE.Color(), bgA = renderer.getClearAlpha();
     renderer.getClearColor(bgC);
     oc.position.set(0, 100, 0); oc.up.set(0, 0, -1); oc.lookAt(0, 0, 0);
-    sc.overrideMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide, toneMapped: false });
+    // ?paint=1: чёткая тень - настоящая проекция на пол вдоль главного света (сдвиг растёт с высотой точки), почти без размытия
+    const Lc = Math.cos(az), Ls = Math.sin(az), LX = (MAIN_L[0] * Lc - MAIN_L[2] * Ls) / MAIN_L[1], LZ = (MAIN_L[0] * Ls + MAIN_L[2] * Lc) / MAIN_L[1];
+    sc.overrideMaterial = paintOn ? new THREE.ShaderMaterial({ side: THREE.DoubleSide, toneMapped: false, uniforms: { uL: { value: new THREE.Vector2(LX, LZ) } },
+      vertexShader: 'uniform vec2 uL; void main() { vec4 w = modelMatrix * vec4(position, 1.0); w.xz -= w.y * uL; w.y = 0.0; gl_Position = projectionMatrix * viewMatrix * w; }', fragmentShader: 'void main() { gl_FragColor = vec4(1.0); }' })
+      : new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide, toneMapped: false });
     const saveTM = renderer.toneMapping; renderer.toneMapping = THREE.NoToneMapping;
     const rot = pivot.rotation.y; pivot.rotation.y = 0; sc.add(pivot); pivot.updateMatrixWorld(true);
     jackG.visible = false; if (shadow) shadow.visible = false;
     renderer.setClearColor(0x000000, 1); renderer.autoClear = true;
     renderer.setRenderTarget(shA); renderer.render(sc, oc);
     sc.remove(pivot); hs.add(pivot); pivot.rotation.y = rot; jackG.visible = true; sc.overrideMaterial = null;
-    const qS = new THREE.Scene(), q = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), shM); q.frustumCulled = false; qS.add(q); const R = 2.2 / N;
-    for (const [a, b, dx, dy] of [[shA, shB, R, 0], [shB, shA, 0, R], [shA, shB, R * 1.8, 0], [shB, shA, 0, R * 1.8]]) { shM.uniforms.t.value = a.texture; shM.uniforms.d.value.set(dx, dy); renderer.setRenderTarget(b); renderer.render(qS, blitC); }
+    const qS = new THREE.Scene(), q = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), shM); q.frustumCulled = false; qS.add(q); const R = (paintOn ? 0.9 : 2.2) / N;
+    for (const [a, b, dx, dy] of [[shA, shB, R, 0], [shB, shA, 0, R], ...(paintOn ? [] : [[shA, shB, R * 1.8, 0], [shB, shA, 0, R * 1.8]])]) { shM.uniforms.t.value = a.texture; shM.uniforms.d.value.set(dx, dy); renderer.setRenderTarget(b); renderer.render(qS, blitC); }
     renderer.setRenderTarget(null); renderer.setClearColor(bgC, bgA); renderer.autoClear = wasAuto; renderer.toneMapping = saveTM;
     q.geometry.dispose();
-    if (!shadow) { shadow = new THREE.Mesh(new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0x24231f, alphaMap: shA.texture, transparent: true, opacity: 0.86, depthWrite: false, toneMapped: false })); shadow.renderOrder = -10; pivot.add(shadow); }
+    if (!shadow) { shadow = new THREE.Mesh(new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: paintOn ? 0x090907 : 0x24231f, alphaMap: shA.texture, transparent: true, opacity: paintOn ? 0.7 : 0.86, depthWrite: false, toneMapped: false })); shadow.renderOrder = -10; pivot.add(shadow); }
     shadow.visible = true; shadow.scale.set(E * 2, 1, E * 2); shadow.position.set(0, 0.015, 0);
     // пятна под основаниями подъёмников
     if (!jackBlob) { const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d'), g = x.createRadialGradient(32, 32, 6, 32, 32, 32); g.addColorStop(0, 'rgba(255,255,255,.8)'); g.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = g; x.fillRect(0, 0, 64, 64); jackBlob = new THREE.MeshBasicMaterial({ color: 0x1c1b18, map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false, toneMapped: false }); }
