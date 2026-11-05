@@ -13,6 +13,7 @@ import { CREDITS } from './models/credits.js?v=20261105a';
 import { HI_PLANES } from './models/hi-list.js?v=20261105a';
 import { mergeLocal } from './merge.js?v=20261105a';
 import { cachedFetch } from './offline.js?v=20261105a';
+import { paintMat, paintOn } from './paint.js?v=20261105a';
 import { ktxOn, ktxParse, ktxFree, ktxIndexUrl, ktxUrlOf } from './ktx.js?v=20261105a';
 const V = (x, y, z, py = 0) => Object.assign(new THREE.Vector3(x, y, z), { py });
 const mirror = (L) => [...L, ...L.slice().reverse().map((p) => V(-p.x, p.y, p.z, p.py))]; // L3 L2 L1 Ф1 → … Ф2 R1 R2 R3
@@ -497,7 +498,7 @@ function parseGlb(buf) {
   // hash - отпечаток байтов картинки (FNV-1a + длина): одинаковые картинки внутри файла и между файлами (у «Шилки» 65 текстур, разных 22;
   // у её дальней копии - те же) грузятся на видеокарту один раз (load: TEXC)
   const hashes = [], images = (json.images || []).map((im) => { const ab = slice(json.bufferViews[im.bufferView]), u8 = new Uint8Array(ab); let h = 0x811c9dc5; for (let i = 0; i < u8.length; i++) h = Math.imul(h ^ u8[i], 0x01000193); hashes.push(`${(h >>> 0).toString(36)}.${u8.length}`); return new Blob([ab], { type: im.mimeType }); });
-  return { meshes, images, hashes, textures: json.textures || [], nrm: new Set((json.materials || []).filter((m) => m.normalTexture).map((m) => m.normalTexture.index)) }; // nrm - номера карт нормалей (данные, не цвет)
+  return { meshes, images, hashes, textures: json.textures || [], nrm: new Set([...(json.materials || []).filter((m) => m.normalTexture).map((m) => m.normalTexture.index), ...(json.materials || []).filter((m) => m.pbrMetallicRoughness && m.pbrMetallicRoughness.metallicRoughnessTexture).map((m) => m.pbrMetallicRoughness.metallicRoughnessTexture.index)]) }; // nrm - номера карт нормалей (данные, не цвет)
 }
 // камуфляж техники без текстур (краска «#camo» из prepare.js): узор - в шейдере по координатам точки модели: крупные пятна
 // с ровными краями (шум со смещением области), не по треугольникам сетки. META.camo: { scheme, size - размер пятна, м }.
@@ -707,6 +708,7 @@ async function load(name, base) {
     else if (!m.fold && !map && !glass && f[0] === 1 && f[1] === 0 && f[2] === 1) mat.color.setHex(0x2e3128); // пурпурная «нет текстуры» - в нейтральный тёмный
     if (MM.camo && !glass && (MM.camo.tex ? map : /#camo$/.test(m.mat.name || ''))) camoMat(mat, MM.camo, !/_lo$/.test(name) && !/[?&]det=0/.test(typeof location !== 'undefined' ? location.search : '')); // узор - шейдером (tex - по краске текстуры; зернистость - только у ближней модели)
     else if ((MM.weapon || MM.samMissile || /^w_nar_/.test(name)) && !glass) { wearMat(mat); if (!matte) { mat.specular.setHex(0x262626); mat.shininess = 24; } } // оружие - краска с потёртостями, полуматовая
+    if (paintOn && MM.cls && !/_lo$/.test(name)) paintMat(mat, glass ? { glass: true, rough: 0.06 } : { rough: matte ? 0.58 : 0.46, orm: pbr.metallicRoughnessTexture ? tex[pbr.metallicRoughnessTexture.index] : null }); // краска, живая к миру (проба, paint.js)
     const mesh = new THREE.Mesh(g, mat); mesh.name = m.name; mesh.userData.glass = glass; const pt = partOf(m.name || ''); pt.add(mesh); if (m.hub) pt.userData.hub = m.hub;
   }
   // винты (части prop*, Ту-95): ось - вдоль самолёта через центр ступицы; соосные ряды (чётный / нечётный номер) - в разные

@@ -4,6 +4,7 @@
 // Фон и самолёт масштабируются как одна картинка: «полный кадр» - весь рендер 16:9 с его камерой, экран - окно в нём (setViewOffset), поэтому пол и самолёт совпадают на любом экране.
 // Подвеска расставлена как в бою (air.js: order, buildPylons). Подъёмник: base, ram (шток, длина 1 м, scale.y = ход), head (седло). ?oldbg=1 - прежний фон.
 import { AG } from './arsenal.js?v=20261105a';
+import { setPaintHall } from './paint.js?v=20261105a';
 import { planeModel, planeMeta, classOf, wantModel, wantWeapon, weaponPending, weaponFailed, pylonMesh, seatStores, podModel, anyModel, modelLoaded, modelFailed, releaseModel, wantCamo, camoKnown, hiKnown } from './models.js?v=20261105a';
 
 const VIEWS = { // ПАСПОРТ.json сборщика
@@ -293,7 +294,7 @@ export function createHangar(C, renderer) {
     ready: () => !can || (!!built && !!texA && !!TEX[viewKey] && !!TEX[viewKey].ok && !want),
     start() {
       init(); on = true; dirty = true;
-      document.body.classList.add('hgOn'); moveTabs(true);
+      document.body.classList.add('hgOn'); moveTabs(true); setPaintHall(() => texA);
       const old = document.getElementById('menuBg'); if (old) old.style.display = 'none';
       C.snd.ambient(true, C.setup.game);
       if (!texA) setView(viewKey);
@@ -303,7 +304,7 @@ export function createHangar(C, renderer) {
       on = false;
       // телефон: большие текстуры ангара в бою не нужны (бой берёт @hi только при настройке «максимальные»): освободить, вернёмся в меню - самолёт соберётся заново
       if (TOUCH && !(C.texMax && C.texMax('battle')) && holder) { const hi = [...mine].filter((n) => n.endsWith('@hi')); if (hi.length) { while (holder.children.length) holder.remove(holder.children[0]); for (const n of hi) releaseModel(n); cur = null; built = false; } }
-      mine.clear(); looked = []; document.body.classList.remove('hgOn', 'hgAir'); moveTabs(false); // с этого боя все загруженные модели - его, не освобождать
+      mine.clear(); looked = []; document.body.classList.remove('hgOn', 'hgAir'); moveTabs(false); setPaintHall(null); // с этого боя все загруженные модели - его, не освобождать
       C.snd.ambient(false);
       if (rt) { rt.dispose(); rt = null; rtW = rtH = 0; } // бою память нужнее; вернёмся в меню - создадим заново
       for (const k in TEX) if (TEX[k].tex) TEX[k].tex.dispose();

@@ -14,6 +14,7 @@
 import { CITY, ZONE, KIND, AIRPORT, groundH, zoneAt, riverX, mulberry32, lineW, RN, RS, RURAL_HW, SITES } from './city.js?v=20261105a';
 import { part, mergeParts, M } from '../drone/models.js?v=20261105a';
 import { WEATHERS, ATMO, skyMaterial, skyUniforms, skyPano, SKY, FXU, FX_LAYER, FX_ADD_LAYER } from '../drone/world.js?v=20261105a';
+import { setPaintSky } from './paint.js?v=20261105a';
 import { ktxOn, ktxLoad, ktxMeta } from './ktx.js?v=20261105a';
 import { winterWeathers, winterZoneTex, winterNormalTex, winterTextures, winterGroundMaterial, winterTrees, makeSnowfall, winterRoads } from './winter-render.js?v=20261105a';
 import { autumnWeathers, autumnZoneTex, autumnTextures, autumnGroundMaterial, autumnTrees, autumnRoads, autumnWaterMask, autumnProps } from './autumn-render.js?v=20261105a';
@@ -1395,7 +1396,7 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
   const SU = { sunDir: { value: sunDir }, zenith: { value: lin(W.zenith) }, horizon: { value: lin(W.horizon) }, ground: { value: lin(W.fog).multiplyScalar(0.75) },
     glow: { value: lin(W.glow).multiplyScalar(W.glowK || 0) }, haze: { value: lin(W.haze) }, sunCol: { value: lin(W.sun).lerp(new THREE.Color(1, 0.95, 0.85), W.el < 20 ? 0.25 : 0.5) },
     hazeK: { value: W.hazeK }, halo: { value: W.halo }, discK: { value: W.disc }, flash: { value: 0 }, ...skyUniforms() };
-  SKY.hi = !P.skyOnly && renderer.capabilities.maxTextureSize >= 8192; skyPano(SU, W); // панорама неба (Poly Haven); 8K - не на телефонных пресетах
+  SKY.hi = !P.skyOnly && renderer.capabilities.maxTextureSize >= 8192; skyPano(SU, W); setPaintSky(SU); // панорама неба (Poly Haven); 8K - не на телефонных пресетах
   const sky = new THREE.Mesh(new THREE.SphereGeometry(42000, 48, 24), skyMaterial(SU, 1));
   // небо - после земли (renderOrder 1), последним из непрозрачного (2026-10-26): закрытое землёй, домами и техникой не считается; кадр ГП −1…−4 %
   // (frame-ab.js, 3 карты × «Средний»/«Высокий»), снимки те же. ?sko=0 - первым, как раньше
