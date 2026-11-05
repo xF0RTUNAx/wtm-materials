@@ -97,14 +97,16 @@ console.log('5. авторы чужого набора: ' + (credRemoved || newM
 // (2026-10-25: «Кинжал» снимался как wpn:kinzhal — такого узла нет, миниатюра не обновилась)
 const { NODE } = await import(WEB + 'games/airdef/progress.js');
 const TID = NODE['wpn:' + P.weapon] ? 'wpn:' + P.weapon : NODE['strike:' + P.weapon] ? 'strike:' + P.weapon : 'wpn:' + P.weapon, TFILE = `games/airdef/thumbs/${TID.replace(':', '_')}.webp`;
+// оружие и заказ «Волны» у одной модели (Х-101, JASSM…): у удара своя миниатюра strike_<ключ>_s (2026-11-05: в «Волне» осталась старая Х-101)
+const TID2 = NODE['strike:' + P.weapon + '_s'] ? 'strike:' + P.weapon + '_s' : null, TFILE2 = TID2 ? `games/airdef/thumbs/${TID2.replace(':', '_')}.webp` : null;
 const up = async () => { try { return (await fetch('http://localhost:8935/fortuna-bot-web/games/airdef.html', { method: 'HEAD' })).ok; } catch { return false; } };
 if (NOTHUMB || DRY) console.log('6. миниатюра пропущена');
-else if (!(await up())) console.log(`6. сервер :8935 не запущен — миниатюру позже: deno run -A tools/airdef-headless/thumbs-bake.js ${TID}`);
-else { const r = new Deno.Command(Deno.execPath(), { args: ['run', '-A', WEB + 'tools/airdef-headless/thumbs-bake.js', TID], stdout: 'piped', stderr: 'piped' }).outputSync(); console.log('6. миниатюра ' + (r.success ? 'снята' : 'не снялась')); }
+else if (!(await up())) console.log(`6. сервер :8935 не запущен — миниатюру позже: deno run -A tools/airdef-headless/thumbs-bake.js ${TID}${TID2 ? ',' + TID2 : ''}`);
+else { const r = new Deno.Command(Deno.execPath(), { args: ['run', '-A', WEB + 'tools/airdef-headless/thumbs-bake.js', TID + (TID2 ? ',' + TID2 : '')], stdout: 'piped', stderr: 'piped' }).outputSync(); console.log('6. миниатюра ' + (r.success ? 'снята' : 'не снялась')); }
 
 // ── 7. коммит (только по --commit) ──
 const gitPaths = ['tools/airdef-models/prepare.js', `tools/airdef-models/own/${base}.glb`, `tools/airdef-models/own/${base}.blend`, `tools/airdef-models/own/${base}-build`, 'games/airdef/models.js',
-  `games/airdef/models/${KEY}.glb`, 'games/airdef/models/credits.js', 'games/airdef/models/CREDITS.md', TFILE].filter((x) => exists(WEB + x));
+  `games/airdef/models/${KEY}.glb`, 'games/airdef/models/credits.js', 'games/airdef/models/CREDITS.md', TFILE, TFILE2].filter((x) => x).filter((x) => exists(WEB + x));
 if (COMMIT) {
   if (DRY) console.log('7. [dry] коммит только путей: ' + gitPaths.join(', '));
   else {
