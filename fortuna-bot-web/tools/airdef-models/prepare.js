@@ -50,10 +50,8 @@ const CONFIG = {
     groups: (c) => (c.mat === 16 ? null : LS(c)) }, // Су-30МКИ — andertan (CC BY 4.0; прежняя модель Immersive3D): у автора чистый планер, без шасси и подвесок (пилоны рисует игра: station py); «Plumes» — диски выхлопа в соплах — долой (пламя рисует игра)
   f18: { src: new URL('./own/f18.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 2048, nTex: () => 2048, pickMesh: /./, own: true, centerX: true }, // F/A-18E: своя модель (Blender, own/f18-build)
   f18_gear: { src: new URL('./own/f18_gear.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 2048, nTex: () => 2048, pickMesh: /./, own: true, centerX: true }, // стойки F/A-18E для ангара: две метки по 1 мм дают тот же центр, что у самолёта, не удалять
-  f16: { src: `${DL}/lockheed_martin_f-16ef_fighting_falcon.glb`, scale: 15.03 / 26.83, nose: '+x', rulesIn: 'game', tex: () => 512, centerX: true,
-    glassAny: /^(Not_so_Dark|Darker_blue_hue_glass|Material\.003)$/, glassColor: [0.42, 0.36, 0.2, 0.45], /* фонарь у автора непрозрачный; у F-16 — золотистый */
-    // F-16E/F — andertan (CC BY 4.0; прежняя модель Muhamad Mirza Arrafi): подвеска автора под крылом (баки, ракеты) долой — пилоны (материалы 14, 15) оставлены; на законцовках — свои ракеты, оставлены; шасси у автора нет
-    groups: (c) => (Math.abs(c.ctr[0]) > 1.6 && Math.abs(c.ctr[0]) < 4.7 && c.ctr[1] < 0.12 && c.mat !== 14 && c.mat !== 15 ? null : LS(c)) },
+  f16: { src: new URL('./own/f16.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 2048, nTex: () => 2048, pickMesh: /./, own: true, centerX: true }, // F-16D: своя модель (Blender, own/f16-build)
+  f16_gear: { src: new URL('./own/f16_gear.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 2048, nTex: () => 2048, pickMesh: /./, own: true, centerX: true }, // стойки F-16D для ангара: метки центра не удалять
   // оружие из моделей самолётов: pick — коробка [x0,y0,z0, x1,y1,z1] в осях модели, берутся части с центром внутри;
   // модель ставится центром габаритов в начало координат
   w_umpk: { src: new URL('./own/umpk.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 512, nTex: () => 512, pickMesh: /./, own: true, groups: (c) => (c.size[0] > 0.9 && c.size[1] < 0.06 ? (c.size[0] > 2 ? 'wingA' : 'wingB') : 'body') }, // ФАБ-500 с УМПК: своя модель (Blender, own/umpk.glb); крылья-доски (размах 2,5 и ≈ 1 м) — свои части wingA / wingB: на подвеске сложены вдоль модуля, после сброса раскрываются (models.js, META wings: 'fold')

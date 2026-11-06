@@ -29,8 +29,8 @@ const META = {
     nozzles: [V(-0.49, -1.025, 9.035), V(0.49, -1.025, 9.035)], nr: 0.385, pod: V(0, -1.705, 2.365), clearGlass: true, ...(paintOn ? { gearModel: 'f18_gear' } : {}) }, // F/A-18E: своя модель, 3 пилона на крыле + под воздухозаборником, контейнер по центру; грузится по запросу, файл теперь в 6 раз тяжелее
   // Lockheed Martin F-16E/F Block 60 - andertan (CC BY 4.0; с 2026-10-24, прежняя - Muhamad Mirza Arrafi): запад, ракетные загрузки
   // (на законцовках крыльев - свои ракеты автора, пилоны под крылом - его же, станции - по низу пилонов)
-  f16: { side: 'west', cls: 'fighter', stations: mirror([V(-3.98, -1.69, 2.04), V(-3.13, -1.69, 1.29), V(-1.94, -1.65, 1.57), V(-0.95, -1.46, 0.5, 0.22)]),
-    nozzles: [V(0, -1.19, 7.08)], nr: 0.45, pod: V(0.95, -1.55, -1.0) },
+  f16: { side: 'west', cls: 'fighter', lazy: true, stations: mirror([V(-4.12, -1.152, 2.64), V(-3.1, -1.372, 1.99), V(-2.04, -1.432, 1.455), V(-0.72, -1.872, -0.35)]),
+    nozzles: [V(0, -1.012, 7.13)], nr: 0.465, pod: V(0.5, -2.012, -1.78), clearGlass: true, ...(paintOn ? { gearModel: 'f16_gear' } : {}) }, // F-16D: своя модель; грузится по запросу, файл тяжёлый, запасной западный самолёт на время загрузки - F-5
   // ── свой самолёт у каждой подвески (2026-10-12); lazy - грузится, когда нужен (выбран в подвеске или летит в налёте),
   // pod: null - прицельная система встроенная (контейнер не вешается); internal - оружие во внутренних отсеках (не видно до пуска)
   e_su24: { side: 'east', cls: 'strike', lazy: true, stations: mirror([V(-4.8, -1.13, 3.4, 0.3), V(-2.08, -1.39, 1.87), V(-0.5, -2.1, 3.0), V(-0.4, -2.12, -0.4)]),
@@ -61,7 +61,7 @@ const META = {
     nozzles: [V(-1.86, -2.72, 3.1), V(1.86, -2.72, 3.1)], nr: 0.45, pod: null, dry: true }, // Ту-16
   e_f100: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-3.58, -2.02, 1.75, 0.3), V(-2.66, -2.04, 1.1, 0.3), V(-1.85, -2.05, 0.6, 0.3), V(-0.45, -2.25, 0.8, 0.2)]),
     nozzles: [V(-0.18, -1.19, 6.44)], nr: 0.38, pod: null }, // F-100D
-  e_f5: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-2.6, -1.57, 2.25, 0.3), V(-1.6, -1.55, 1.6, 0.3), V(-0.35, -1.55, -0.6, 0.22), V(-0.35, -1.6, 1.4, 0.22)]),
+  e_f5: { side: 'west', cls: 'strike', stations: mirror([V(-2.6, -1.57, 2.25, 0.3), V(-1.6, -1.55, 1.6, 0.3), V(-0.35, -1.55, -0.6, 0.22), V(-0.35, -1.6, 1.4, 0.22)]),
     nozzles: [V(-0.27, -0.95, 7.2), V(0.27, -0.95, 7.2)], nr: 0.22, pod: null }, // F-5E
   e_f117: { side: 'west', cls: 'strike', lazy: true, internal: true, stations: mirror([V(-0.78, -0.644, -0.6), V(-0.44, -0.644, 1.05), V(-0.44, -0.644, -2.25), V(-0.44, -0.644, -0.6)]), // последняя точка - основная, под замками балки
     nozzles: [], nr: 0.12, pod: null, clearGlass: true, ...(paintOn ? { gearModel: 'e_f117_gear' } : {}), // F-117A: своя модель, пламени нет (щели скрывают сопла)
@@ -404,7 +404,7 @@ const GLB_V_OWN = {
   pk_mig29: '20261029b',
   pk_e_su24: '20261029b',
   pk_e_su25: '20261029b',
-  pk_f16: '20261029b',
+  pk_f16: '20261106a',
   pk_f18: '20261106a',
   pk_e_f15e: '20261105a',
   pk_e_a10: '20261029b',
@@ -477,6 +477,7 @@ GLB_V.e_f111 = '20261104a'; // без чёрных наклеек
 GLB_V.e_tu160 = '20261104a'; // текстура 1024 вместо 512 (надписи в ангаре)
 GLB_V.e_f35 = GLB_V.e_f35_lo = GLB_V.e_f35_gear = '20261106a'; // своя модель и стойки
 GLB_V.f18 = GLB_V.f18_gear = '20261106a'; // своя модель и стойки
+GLB_V.f16 = GLB_V.f16_gear = '20261106a'; // своя модель и стойки
 GLB_V.e_f22 = GLB_V.e_f22_lo = GLB_V.e_f22_gear = GLB_V.e_f117 = GLB_V.e_f117_gear = '20261106a'; // свои модели и стойки
 GLB_V.e_f15e = '20261105a'; GLB_V.e_f15e_gear = '20261105a'; // своя модель и стойки
 // «Оса-М» ЗИФ-122 (KoreanNavy) и «Бук-М3» (Valera121) вместо моделей Jeyhun1985 (2026-10-22): новые файлы
@@ -491,7 +492,7 @@ GLB_V.h_ka52 = '20261024i'; // Ка-52 maddex88 (CC BY 4.0), переделан 
 // «Тунгуска» (SIpriv) и «Панцирь-С1» (SanderWolf) - свои перекрашенные и запечённые модели вместо usedm / 42manako, ракета 9М311, Storm Shadow (Viktor_) без декалей вместо вырезанной из Су-24 (2026-10-22): новые файлы
 Object.assign(GLB_V, Object.fromEntries(['tunguska', 'tunguska_lo', 'pantsir', 'pantsir_lo', 'msl_9m311'].map((n) => [n, '20261024j'])));
 GLB_V.w_storm = '20261024k'; // Storm Shadow: консоли крыла - свои части (сложены на подвеске)
-Object.assign(GLB_V, { su30: '20261024p', f16: '20261024p' }); // Су-30МКИ и F-16E/F - andertan (CC BY 4.0) вместо Immersive3D и Muhamad Mirza Arrafi (сомнительные права: F-16 помечен на Sketchfab как сгенерированный нейросетью, у Immersive3D - рипы Unreal) (2026-10-24)
+Object.assign(GLB_V, { su30: '20261024p' }); // Су-30МКИ и F-16E/F - andertan (CC BY 4.0) вместо Immersive3D и Muhamad Mirza Arrafi (сомнительные права: F-16 помечен на Sketchfab как сгенерированный нейросетью, у Immersive3D - рипы Unreal) (2026-10-24)
 Object.assign(GLB_V, { e_b1b: '20261024q', e_f18c: '20261024q', e_su25: '20261024q' }); // B-1B и F/A-18C - manilov.ap, Су-25 - mamont nikita (все CC BY 4.0) вместо моделей Muhamad Mirza Arrafi, Rhine_Lab_Muelsyse и Immersive3D (сомнительные права) (2026-10-24)
 Object.assign(GLB_V, { l_iskander: '20261024s', w_tbmdec: '20261024r' }); // «Искандер» и ложная цель («Кинжал» - своя модель с 2026-10-25, GLB_V_OWN) - dofash_76 «ISKANDER» (CC BY 4.0) вместо 42manako (перезалив модели из 3D Warehouse - лицензия недействительна) (2026-10-24)
 GLB_V.e_su34 = '20261024l'; // Су-34 manilov.ap (CC BY 4.0) вместо 42manako, без шасси (2026-10-22)
@@ -501,6 +502,7 @@ META.hg_jack = { lazy: true, matte: true, stations: [] }; // подъёмник 
 if (paintOn) META.e_f15e_gear = { lazy: true, matte: true, paint: true, stations: [] };
 if (paintOn) META.e_f35_gear = { lazy: true, matte: true, paint: true, stations: [] };
 if (paintOn) META.f18_gear = { lazy: true, matte: true, paint: true, stations: [] };
+if (paintOn) META.f16_gear = { lazy: true, matte: true, paint: true, stations: [] };
 if (paintOn) { META.e_f22_gear = { lazy: true, matte: true, paint: true, stations: [] }; META.e_f117_gear = { lazy: true, matte: true, paint: true, stations: [] }; } // стойки F-15E для ангара (проба, ?paint=1): оси как у самолёта, низ колёс - пол
 // разбор GLB: меши (позиции, нормали, UV, индексы), материалы, картинки текстур
 function parseGlb(buf) {

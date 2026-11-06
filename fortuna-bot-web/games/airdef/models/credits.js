@@ -19,15 +19,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "Lockheed Martin F-16e/f \"Fighting Falcon\"",
-  "author": "andertan",
-  "url": "https://sketchfab.com/3d-models/lockheed-martin-f-16ef-fighting-falcon-d54c72e055a647ad9173e01548e50db3",
-  "license": "CC-BY-4.0",
-  "files": [
-   "f16"
-  ]
- },
- {
   "title": "FAB-100-120",
   "author": "4ikalka",
   "url": "https://sketchfab.com/3d-models/fab-100-120-38f8bd043c854b9ab648e824ed812ffd",
