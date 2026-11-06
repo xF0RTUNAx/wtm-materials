@@ -254,16 +254,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "Lockheed Martin F-22 \"Raptor\"",
-  "author": "andertan",
-  "url": "https://sketchfab.com/3d-models/lockheed-martin-f-22-raptor-7e7b3c372e374dda98e70208d09cfdcf",
-  "license": "CC-BY-4.0",
-  "files": [
-   "e_f22",
-   "e_f22_lo"
-  ]
- },
- {
   "title": "MiG-21 Chibi",
   "author": "Oleh",
   "url": "https://sketchfab.com/3d-models/mig-21-chibi-8a46e5b9d03d41a6b7611c1b5d6aacb6",
@@ -418,15 +408,6 @@ export const CREDITS = [
   "license": "CC-BY-4.0",
   "files": [
    "e_f5"
-  ]
- },
- {
-  "title": "F117",
-  "author": "manilov.ap",
-  "url": "https://sketchfab.com/3d-models/f117-dfdd7ac4c75a4ac0802c9e1c05aa5338",
-  "license": "CC-BY-4.0",
-  "files": [
-   "e_f117"
   ]
  },
  {

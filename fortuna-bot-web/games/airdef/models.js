@@ -63,8 +63,9 @@ const META = {
     nozzles: [V(-0.18, -1.19, 6.44)], nr: 0.38, pod: null }, // F-100D
   e_f5: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-2.6, -1.57, 2.25, 0.3), V(-1.6, -1.55, 1.6, 0.3), V(-0.35, -1.55, -0.6, 0.22), V(-0.35, -1.6, 1.4, 0.22)]),
     nozzles: [V(-0.27, -0.95, 7.2), V(0.27, -0.95, 7.2)], nr: 0.22, pod: null }, // F-5E
-  e_f117: { side: 'west', cls: 'strike', lazy: true, internal: true, stations: mirror([V(-0.6, -1.3, -1.5), V(-0.6, -1.3, -0.3), V(-0.6, -1.3, 0.9), V(-0.6, -1.3, 2.1)]),
-    nozzles: [], nr: 0.12, pod: null, bright: 1.3 }, // F-117A (IRADS встроена, бомбы - во внутреннем отсеке)
+  e_f117: { side: 'west', cls: 'strike', lazy: true, internal: true, stations: mirror([V(-0.78, -0.644, -0.6), V(-0.44, -0.644, 1.05), V(-0.44, -0.644, -2.25), V(-0.44, -0.644, -0.6)]), // последняя точка - основная, под замками балки
+    nozzles: [], nr: 0.12, pod: null, clearGlass: true, ...(paintOn ? { gearModel: 'e_f117_gear' } : {}), // F-117A: своя модель, пламени нет (щели скрывают сопла)
+    bay: { doors: { bay_l: [[-0.9, -1.195, -0.6], [0, 0, -1], 95], bay_r: [[0.9, -1.195, -0.6], [0, 0, 1], 95] }, sides: { L: ['bay_l'], R: ['bay_r'] } } },
   e_jaguar: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-2.73, -0.85, 2.85, 0.35), V(-2.03, -0.82, 2.36, 0.35), V(-0.45, -1.75, -0.5, 0.22), V(-0.45, -1.78, 1.5, 0.22)]),
     nozzles: [V(-0.43, -1.21, 5.55), V(0.43, -1.21, 5.55)], nr: 0.3, pod: null }, // Jaguar GR.1
   e_buccaneer: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-4.96, -1.5, 0.9, 0.3), V(-3.4, -1.52, 0.6, 0.3), V(-2.3, -1.55, 0.1, 0.3), V(-0.45, -2.25, 0.5, 0.15)]),
@@ -136,9 +137,12 @@ const META = {
     nozzles: [V(-0.72, -0.99, 5.6), V(0.72, -0.99, 5.6)], nr: 0.42, pod: V(0, -1.55, 1.0) }, // F-4 Phantom II - andertan («Пэйв Тэк» под фюзеляжем); срез сопел z 5,6 (был 3,45 - факел начинался внутри трубы) Phantom II - andertan («Пэйв Тэк» под фюзеляжем)
   e_gripen: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-4.18, -1.06, 3.77), V(-2.92, -1.4, 3.03), V(-1.95, -1.41, 1.77), V(-0.45, -1.62, 0.2, 0.1)]),
     nozzles: [V(0, -0.94, 7.3)], nr: 0.24, pod: V(0.75, -1.5, -1.6) }, // JAS 39 Gripen (LITENING на подфюзеляжной точке)
-  e_f22: { side: 'west', cls: 'strike', lazy: true, internal: true, stations: mirror([V(-1.3, -1.3, -1.5), V(-0.75, -1.7, 0.2), V(-0.45, -1.75, 1.0), V(-0.2, -1.8, 2.2)]),
-    nozzles: [V(-0.75, -0.98, 7.33), V(0.75, -0.98, 7.33)], nr: 0.25, pod: null }, // F-22A: JDAM и SDB во внутренних отсеках, наведение по GPS
-  e_f35: { side: 'west', cls: 'strike', lazy: true, internal: true, stations: mirror([V(-0.9, -1.056, -0.835), V(-0.9, -1.056, 0.265), V(-0.75, -1.056, 1.365), V(-1.05, -1.056, 2.365)]),
+  e_f22: { side: 'west', cls: 'strike', lazy: true, internal: true, stations: mirror([V(-1.28, -1.916, -0.706), V(-0.56, -1.451, 0.694), V(-0.56, -1.451, -1.706), V(-0.56, -1.451, -0.506)]), // тяжёлое идёт на последнюю точку: средний держатель, длинная бомба входит в отсек только на нём
+    nozzles: [V(-0.72, -0.986, 7.904), V(0.72, -0.986, 7.904)], nr: 0.2, pod: null, clearGlass: true, ...(paintOn ? { gearModel: 'e_f22_gear' } : {}),
+    bay: { doors: { bay_cf_l: [[-1.116, -2.0342, -1.483], [0, 0.0001, -1], 95], bay_ca_l: [[-1.116, -2.0341, 0.471], [0, 0, -1], 95], bay_cf_r: [[1.116, -2.0342, -1.483], [0, 0.0001, -1], -95], bay_ca_r: [[1.116, -2.0341, 0.471], [0, 0, -1], -95], bay_s_l: [[-1.794, -1.3775, -0.706], [0, 0.0425, -0.9991], 105], arm_s_l: [[-1.28, -1.4761, -0.706], [0, 0, -1], 58], bay_s_r: [[1.794, -1.3775, -0.706], [0, 0.0425, -0.9991], -105], arm_s_r: [[1.28, -1.4761, -0.706], [0, 0, -1], -58] },
+      groups: [{ x0: -9, x1: -0.9, doors: ['bay_s_l', 'arm_s_l'] }, { x0: -0.9, x1: 0, doors: ['bay_cf_l', 'bay_ca_l'] }, { x0: 0, x1: 0.9, doors: ['bay_cf_r', 'bay_ca_r'] }, { x0: 0.9, x1: 9, doors: ['bay_s_r', 'arm_s_r'] }] } }, // F-22A: своя модель; центральный отсек и боковые с рычагом
+  e_f35: { side: 'west', cls: 'strike', lazy: true, internal: true, stations: mirror([V(-1.05, -1.056, 2.365), V(-0.75, -1.056, 1.365), V(-0.9, -1.056, -0.835), V(-0.9, -1.056, 0.265)]), // тяжёлое идёт на последнюю точку: середина отсека
+   
     nozzles: [V(0, -0.726, 6.185)], nr: 0.405, pod: null, clearGlass: true, ...(paintOn ? { gearModel: 'e_f35_gear' } : {}),
     bay: { doors: { bay_out_l: [[-1.474, -1.5582, 0.69], [0, -0.0184, -0.9998], 86], bay_in_l: [[-0.306, -1.61, 0.69], [0, 0.012, -0.9999], -92], bay_out_r: [[1.474, -1.5585, 0.69], [0, -0.0185, -0.9998], -86], bay_in_r: [[0.306, -1.6098, 0.69], [0, 0.0121, -0.9999], 92] }, sides: { L: ['bay_out_l', 'bay_in_l'], R: ['bay_out_r', 'bay_in_r'] } } }, // F-35A: своя модель, 8 точек в отсеках; bay - створки: шарнир в осях игры, ось, угол открытия (bay.js)
   // ── «Мульти-волна» (2026-10-13): грузится по требованию (lazy) - wantModel / anyModel
@@ -473,6 +477,7 @@ GLB_V.e_f111 = '20261104a'; // без чёрных наклеек
 GLB_V.e_tu160 = '20261104a'; // текстура 1024 вместо 512 (надписи в ангаре)
 GLB_V.e_f35 = GLB_V.e_f35_lo = GLB_V.e_f35_gear = '20261106a'; // своя модель и стойки
 GLB_V.f18 = GLB_V.f18_gear = '20261106a'; // своя модель и стойки
+GLB_V.e_f22 = GLB_V.e_f22_lo = GLB_V.e_f22_gear = GLB_V.e_f117 = GLB_V.e_f117_gear = '20261106a'; // свои модели и стойки
 GLB_V.e_f15e = '20261105a'; GLB_V.e_f15e_gear = '20261105a'; // своя модель и стойки
 // «Оса-М» ЗИФ-122 (KoreanNavy) и «Бук-М3» (Valera121) вместо моделей Jeyhun1985 (2026-10-22): новые файлы
 Object.assign(GLB_V, Object.fromEntries(['osa', 'osa_lo'].map((n) => [n, '20261024e'])));
@@ -495,7 +500,8 @@ Object.assign(GLB_V, GLB_V_OWN);
 META.hg_jack = { lazy: true, matte: true, stations: [] }; // подъёмник ангара (hangar.js): части base, ram, head
 if (paintOn) META.e_f15e_gear = { lazy: true, matte: true, paint: true, stations: [] };
 if (paintOn) META.e_f35_gear = { lazy: true, matte: true, paint: true, stations: [] };
-if (paintOn) META.f18_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки F-15E для ангара (проба, ?paint=1): оси как у самолёта, низ колёс - пол
+if (paintOn) META.f18_gear = { lazy: true, matte: true, paint: true, stations: [] };
+if (paintOn) { META.e_f22_gear = { lazy: true, matte: true, paint: true, stations: [] }; META.e_f117_gear = { lazy: true, matte: true, paint: true, stations: [] }; } // стойки F-15E для ангара (проба, ?paint=1): оси как у самолёта, низ колёс - пол
 // разбор GLB: меши (позиции, нормали, UV, индексы), материалы, картинки текстур
 function parseGlb(buf) {
   const dv = new DataView(buf), jl = dv.getUint32(12, true), json = JSON.parse(new TextDecoder().decode(new Uint8Array(buf, 20, jl)));

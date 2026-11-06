@@ -28,7 +28,6 @@
 - "Generic passenger car pack" (https://sketchfab.com/3d-models/generic-passenger-car-pack-20f9af9b8a404d5cb022ac6fe87f21f5) by Comrade1280 — CC-BY-4.0 — `c_compact.glb`, `c_coupe.glb`, `c_hatch.glb`, `c_van.glb`, `c_offroad.glb`, `c_pickup.glb`, `c_sedan.glb`, `c_sport.glb`, `c_suv.glb`, `c_wagon.glb`, `c_compact_lo.glb`, `c_coupe_lo.glb`, `c_hatch_lo.glb`, `c_van_lo.glb`, `c_offroad_lo.glb`, `c_pickup_lo.glb`, `c_sedan_lo.glb`, `c_sport_lo.glb`, `c_suv_lo.glb`, `c_wagon_lo.glb`
 - "Low Poly Car" (https://sketchfab.com/3d-models/low-poly-car-54c466359f8b459dbccea0168ea01c85) by Roma — CC-BY-4.0 — `c_police.glb`, `c_police_lo.glb`
 - "Saab JAS-39С Gripen fighter jet" (https://sketchfab.com/3d-models/saab-jas-39-gripen-fighter-jet-54b84f308145465187658b074baf3cb7) by Lanko Mykhailo — CC-BY-4.0 — `e_gripen.glb`, `e_gripen_lo.glb`
-- "Lockheed Martin F-22 "Raptor"" (https://sketchfab.com/3d-models/lockheed-martin-f-22-raptor-7e7b3c372e374dda98e70208d09cfdcf) by andertan — CC-BY-4.0 — `e_f22.glb`, `e_f22_lo.glb`
 - "MiG-21 Chibi" (https://sketchfab.com/3d-models/mig-21-chibi-8a46e5b9d03d41a6b7611c1b5d6aacb6) by Oleh — CC-BY-4.0 — `e_mig21.glb`, `e_mig21_lo.glb`
 - "Миг - 31" (https://sketchfab.com/3d-models/31-b168fbca1f6c4ad0ad4e45b7a22f52bc) by mamont nikita — CC-BY-4.0 — `e_mig31.glb`, `e_mig31_lo.glb`
 - "Sukhoi Su-57 "Felon"" (https://sketchfab.com/3d-models/sukhoi-su-57-felon-09d546b4355c4fa6882ca46e05069bee) by andertan — CC-BY-4.0 — `e_su57.glb`, `e_su57_lo.glb`
@@ -46,7 +45,6 @@
 - "Tu16" (https://sketchfab.com/3d-models/tu16-9c4ee54ca28e44d7a4604be112acab9f) by manilov.ap — CC-BY-4.0 — `e_tu16.glb`
 - "F100" (https://sketchfab.com/3d-models/f100-a9ea47d5af0f4833a50f76350bd99417) by manilov.ap — CC-BY-4.0 — `e_f100.glb`
 - "F5" (https://sketchfab.com/3d-models/f5-8089d66a8a8748b2a4b049b3c06f6a02) by manilov.ap — CC-BY-4.0 — `e_f5.glb`
-- "F117" (https://sketchfab.com/3d-models/f117-dfdd7ac4c75a4ac0802c9e1c05aa5338) by manilov.ap — CC-BY-4.0 — `e_f117.glb`
 - "Jaguar" (https://sketchfab.com/3d-models/jaguar-b09a0ee965bb424aaf14ebd06b698f96) by manilov.ap — CC-BY-4.0 — `e_jaguar.glb`
 - "Buccaneer" (https://sketchfab.com/3d-models/buccaneer-db82ad0e1f5644ccaee1b25b77566dc7) by manilov.ap — CC-BY-4.0 — `e_buccaneer.glb`
 - "Harrier" (https://sketchfab.com/3d-models/harrier-9ccfd6758680413bb19d656db4f46185) by manilov.ap — CC-BY-4.0 — `e_harrier.glb`

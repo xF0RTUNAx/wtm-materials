@@ -10,13 +10,13 @@ const smooth = (x) => { const k = Math.min(1, Math.max(0, x)); return k * k * (3
 // obj - модель самолёта (копия с частями створок), root - группа, в осях которой точки подвески; нет описания или частей - обычная модель без отсеков, возвращает null
 export function makeBay(obj, meta, root = obj) {
   const B = meta && meta.bay; if (!B) return null;
-  const sides = {};
-  for (const sd of ['L', 'R']) {
-    const doors = (B.sides[sd] || []).map((n) => { const d = B.doors[n], part = obj.getObjectByName(n); return part ? { part, a: new THREE.Vector3(...d[1]).normalize(), rad: d[2] * Math.PI / 180 } : null; });
-    if (doors.some((d) => !d)) return null;
-    sides[sd] = { doors, k: 0, t: 0, shown: -1 };
-  }
-  const queue = [], sideOf = (x) => (x < 0 ? sides.L : sides.R);
+  // группы створок: точка подвески открывает группу по своему x. Обычно две стороны (sides: L, R), у F-22A ещё боковые отсеки (groups)
+  const G = (B.groups || [{ x0: -99, x1: 0, doors: B.sides.L }, { x0: 0, x1: 99, doors: B.sides.R }]).map((g) => {
+    const doors = g.doors.map((n) => { const d = B.doors[n], part = obj.getObjectByName(n); return part ? { part, a: new THREE.Vector3(...d[1]).normalize(), rad: d[2] * Math.PI / 180 } : null; });
+    return { x0: g.x0, x1: g.x1, doors, k: 0, t: 0, shown: -1 };
+  });
+  if (G.some((g) => g.doors.some((d) => !d))) return null;
+  const queue = [], sideOf = (x) => G.find((g) => x >= g.x0 && x < g.x1) || G[0];
   return {
     root,
     // открыта ли сторона этой точки: 0 - закрыта, 1 - открыта
@@ -26,7 +26,7 @@ export function makeBay(obj, meta, root = obj) {
     // точка для только что появившегося оружия: самое раннее из ещё не взятых, свежее секунды (ложная цель - не оружие, её запись устаревает здесь)
     take() { const now = performance.now(); while (queue.length) { const q = queue.shift(); if (now - q.at < 1000) return q.p; } return null; },
     update(dt) {
-      for (const s of Object.values(sides)) {
+      for (const s of G) {
         if (s.t > 0) { s.t -= dt; s.k = Math.min(1, s.k + dt / OPEN_T); } else if (s.k > 0) s.k = Math.max(0, s.k - dt / CLOSE_T);
         if (s.k === s.shown) continue; s.shown = s.k;
         const e = smooth(s.k); for (const d of s.doors) d.part.quaternion.setFromAxisAngle(AX.copy(d.a), d.rad * e);
