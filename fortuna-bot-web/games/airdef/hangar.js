@@ -3,9 +3,9 @@
 // на видеокарту (models.js). Кадр считается только когда что-то меняется: в покое ни 3D, ни нагрева (как прежний фон на кадрах menubg.js).
 // Фон и самолёт масштабируются как одна картинка: «полный кадр» - весь рендер 16:9 с его камерой, экран - окно в нём (setViewOffset), поэтому пол и самолёт совпадают на любом экране.
 // Подвеска расставлена как в бою (air.js: order, buildPylons). Подъёмник: base, ram (шток, длина 1 м, scale.y = ход), head (седло). ?oldbg=1 - прежний фон.
-import { AG } from './arsenal.js?v=20261106a';
-import { setPaintHall, paintOn } from './paint.js?v=20261106a';
-import { planeModel, planeMeta, classOf, wantModel, wantWeapon, weaponPending, weaponFailed, pylonMesh, seatStores, podModel, anyModel, modelLoaded, modelFailed, releaseModel, wantCamo, camoKnown, hiKnown } from './models.js?v=20261106a';
+import { AG } from './arsenal.js?v=20261107a';
+import { setPaintHall, paintOn } from './paint.js?v=20261107a';
+import { planeModel, planeMeta, classOf, wantModel, wantWeapon, weaponPending, weaponFailed, pylonMesh, seatStores, podModel, anyModel, modelLoaded, modelFailed, releaseModel, wantCamo, camoKnown, hiKnown } from './models.js?v=20261107a';
 
 const VIEWS = { // ПАСПОРТ.json сборщика
   // near, far - не из паспорта: буфер со сглаживанием держит 16 бит глубины, при near 0,3 на 31 м различал только 5 см, и близкие поверхности мерцали лесенкой (Mark, телефон)

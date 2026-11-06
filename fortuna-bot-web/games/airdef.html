@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"> <!-- «На экран „Домой“» - без панелей Safari -->
 <!-- значок на экране «Домой» - лого игры (Mark 2026-11-04), Android - манифест; новые имена файлов: старые значки телефоны держат в кэше -->
-<link rel="apple-touch-icon" href="../img/airdef-logo-180.png"><link rel="icon" type="image/png" sizes="192x192" href="../img/airdef-logo-192.png"><link rel="manifest" href="airdef.webmanifest"><link rel="preload" as="image" href="../img/airdef-logo-alpha.webp"><link rel="preload" as="image" href="airdef/ui/doors/hangar_l.webp?v=20261106a"><link rel="preload" as="image" href="airdef/ui/doors/hangar_r.webp?v=20261106a">
+<link rel="apple-touch-icon" href="../img/airdef-logo-180.png"><link rel="icon" type="image/png" sizes="192x192" href="../img/airdef-logo-192.png"><link rel="manifest" href="airdef.webmanifest"><link rel="preload" as="image" href="../img/airdef-logo-alpha.webp"><link rel="preload" as="image" href="airdef/ui/doors/hangar_l.webp?v=20261107a"><link rel="preload" as="image" href="airdef/ui/doors/hangar_r.webp?v=20261107a">
 <title>Air Superiority Online</title>
 <!-- перезагрузка под новую карту (doors.js carry): страница открывается уже с закрытыми створками - до загрузки модулей; потом их сменяют створки doors.js -->
 <style>#doorsBoot { display: none; } html.dboot #doorsBoot { display: block; position: fixed; inset: 0; z-index: 2147482900; background: #171b14; }
   #doorsBoot > div { position: absolute; top: 0; bottom: 0; width: 50.2%; background: #171b14 center / cover no-repeat; }
   #doorsBoot .dl { left: 0; background-image: var(--dbl); background-position: right center; } #doorsBoot .dr { right: 0; background-image: var(--dbr); background-position: left center; }</style>
 <script>try { var dd = JSON.parse(sessionStorage.getItem('fortuna_ad_doors') || 'null'); if (dd && Date.now() - dd.t < 60000 && /^(has|hangar)$/.test(dd.s) && !matchMedia('(prefers-reduced-motion: reduce)').matches) { var dr = document.documentElement; dr.classList.add('dboot'); setTimeout(function () { dr.classList.remove('dboot'); }, 20000); /* игра не поднялась (ошибка до doors.js) - заглушка не висит вечно */
-  dr.style.setProperty('--dbl', 'url(airdef/ui/doors/' + dd.s + '_l.webp?v=20261106a)'); dr.style.setProperty('--dbr', 'url(airdef/ui/doors/' + dd.s + '_r.webp?v=20261106a)'); } } catch (e) { /* нет хранилища */ }</script>
+  dr.style.setProperty('--dbl', 'url(airdef/ui/doors/' + dd.s + '_l.webp?v=20261107a)'); dr.style.setProperty('--dbr', 'url(airdef/ui/doors/' + dd.s + '_r.webp?v=20261107a)'); } } catch (e) { /* нет хранилища */ }</script>
 <!-- превью ссылки (то же, что у fortunawtm.com/airsuperiority - Mark 2026-10-27) -->
 <meta name="description" content="Современная авиация, вооружение и комплексы ПВО прямо в браузере! Специальный режим мульти-волны против баллистики, крылатых ракет, дронов и бомб по обе стороны. Онлайн, рейтинг, камуфляжи и многое другое. Попробуй прямо сейчас!"><meta property="og:type" content="website"><meta property="og:site_name" content="xFORTUNAx"><meta property="og:title" content="Air Superiority Online">
 <meta property="og:description" content="Современная авиация, вооружение и комплексы ПВО прямо в браузере! Специальный режим мульти-волны против баллистики, крылатых ракет, дронов и бомб по обе стороны. Онлайн, рейтинг, камуфляжи и многое другое. Попробуй прямо сейчас!"><meta property="og:image" content="https://fortunawtm.com/fortuna-bot-web/img/airdef-logo-512.png"><meta property="og:url" content="https://fortunawtm.com/airsuperiority"><meta name="twitter:card" content="summary_large_image">
@@ -30,7 +30,7 @@
   #loading { position: fixed; inset: 0; z-index: 60; overflow: hidden; background: #000; color: #e9e6dc; font-family: 'Golos Text', -apple-system, sans-serif; }
   #loading.open { background: transparent; pointer-events: none; }
   #loading .lgd { position: absolute; top: 0; bottom: 0; width: 50.2%; background: center / cover no-repeat; transition: transform 1.1s cubic-bezier(.65,0,.3,1); will-change: transform; }
-  #loading .lgl { left: 0; background-image: url(airdef/ui/doors/hangar_l.webp?v=20261106a); background-position: right center; } #loading .lgr { right: 0; background-image: url(airdef/ui/doors/hangar_r.webp?v=20261106a); background-position: left center; }
+  #loading .lgl { left: 0; background-image: url(airdef/ui/doors/hangar_l.webp?v=20261107a); background-position: right center; } #loading .lgr { right: 0; background-image: url(airdef/ui/doors/hangar_r.webp?v=20261107a); background-position: left center; }
   #loading.open .lgl { transform: translateX(-101%); } #loading.open .lgr { transform: translateX(101%); }
   #loading .ldb { position: absolute; left: 50%; top: 47%; transform: translate(-50%, -50%); width: min(460px, 86vw, 118vh); padding: 20px 18px 16px; background: rgba(6,7,5,.88); box-shadow: 0 0 0 1px rgba(233,230,220,.16), 0 10px 26px rgba(0,0,0,.6); transition: opacity .3s; }
   #loading.open .ldb { opacity: 0; }
@@ -910,10 +910,10 @@
 </div>
 <script src="https://telegram.org/js/telegram-web-app.js"></script> <!-- Telegram Mini App (вне Telegram - пустой объект) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="../config.js?v=20261106a"></script> <!-- адрес функции mp-ticket и ключ Supabase (билет онлайна) -->
+<script src="../config.js?v=20261107a"></script> <!-- адрес функции mp-ticket и ключ Supabase (билет онлайна) -->
 <script> // сервис-воркер: файлы игры - в кэше устройства (games/airdef-sw.js, airdef/offline.js); только на сайте или с ?sw=1. Версия - как у модулей: поднимается при деплое
-  if ('serviceWorker' in navigator && (/fortunawtm\.com$/.test(location.hostname) || /[?&]sw=1/.test(location.search))) navigator.serviceWorker.register('airdef-sw.js?v=20261106a', { scope: './airdef' }).catch(() => {});
+  if ('serviceWorker' in navigator && (/fortunawtm\.com$/.test(location.hostname) || /[?&]sw=1/.test(location.search))) navigator.serviceWorker.register('airdef-sw.js?v=20261107a', { scope: './airdef' }).catch(() => {});
 </script>
-<script type="module" src="airdef/main.js?v=20261106a"></script>
+<script type="module" src="airdef/main.js?v=20261107a"></script>
 </body>
 </html>
