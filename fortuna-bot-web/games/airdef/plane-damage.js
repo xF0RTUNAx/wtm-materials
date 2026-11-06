@@ -2,8 +2,8 @@
 // отлетевшая консоль или хвост прячутся на самолёте и падают отдельным обломком (кувыркаются, дымят), из повреждённых зон
 // тянется след: серый дым (повреждено), чёрный (сильно), огонь (горит двигатель или бак). Один объект на модель самолёта.
 /* global THREE */
-import { splitPlane } from './plane-zones.js?v=20261105a';
-import { mergeLocal } from './merge.js?v=20261105a';
+import { splitPlane } from './plane-zones.js?v=20261106a';
+import { mergeLocal } from './merge.js?v=20261106a';
 const W = new THREE.Vector3(), M4 = new THREE.Matrix4(), Q = new THREE.Quaternion(), S = new THREE.Vector3();
 const debris = []; // общие для всех самолётов обломки: { g, v, w, t }
 const SAMPS = new Map(); // точки обшивки по зонам - по ключу модели (зависят только от геометрии)
@@ -24,7 +24,7 @@ float dn3(vec3 p) { vec3 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f)
              mix(mix(dh3(i + vec3(0, 0, 1)), dh3(i + vec3(1, 0, 1)), f.x), mix(dh3(i + vec3(0, 1, 1)), dh3(i + vec3(1, 1, 1)), f.x), f.y), f.z); }
 `;
 function dmgMaterial(src, U, toRoot, zid) {
-  const m = src.clone(), prev = src.onBeforeCompile; m.side = THREE.DoubleSide; // изнанка - для глубины в пробоине (в шейдере - только рядом с дырой)
+  const m = src.clone(), prev = src.onBeforeCompile, prevKey = src.customProgramCacheKey ? src.customProgramCacheKey() : ''; if (src.defines) m.defines = { ...src.defines }; /* clone() не копирует defines: без них терялась карта блеска своих самолётов */ m.side = THREE.DoubleSide; // изнанка - для глубины в пробоине (в шейдере - только рядом с дырой)
   m.onBeforeCompile = (sh, r) => {
     if (prev) prev(sh, r);
     sh.uniforms.uHole = U.uHole; sh.uniforms.uHoleN = U.uHoleN; sh.uniforms.uMark = U.uMark; sh.uniforms.uScor = U.uScor; sh.uniforms.uHZ = U.uHZ; sh.uniforms.uMZ = U.uMZ; sh.uniforms.uZid = { value: zid }; sh.uniforms.uToRoot = { value: toRoot };
@@ -50,7 +50,7 @@ function dmgMaterial(src, U, toRoot, zid) {
     diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.24, 0.22, 0.2), hot * 0.55);
     if (inHole) diffuseColor.rgb = vec3(0.05, 0.045, 0.04); } // изнанка обшивки у пробоины - тёмное нутро`);
   };
-  m.customProgramCacheKey = () => (prev ? String(prev) : '') + 'dmgholes';
+  m.customProgramCacheKey = () => prevKey + 'dmgholes'; // ключ исходного материала: у всех материалов с краской один и тот же текст onBeforeCompile, по нему камуфляж и обычные части получали один шейдер
   return m;
 }
 

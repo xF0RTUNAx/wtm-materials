@@ -6,15 +6,15 @@
 // tools/airdef-models/planes-view.html?ortho=1; dry - двигатель без форсажа: только слабое свечение; нет сопел - пламени не видно: B-2, F-117) и место
 // контейнера. Авторы и лицензии - MODEL_CREDITS (показываются в «Настройках»).
 /* global THREE */
-import { SEATS } from './seats-data.js?v=20261105a';
-import { pylonTris, geoOf, seatOne } from './seat.js?v=20261105a';
-import { tr } from './i18n.js?v=20261105a';
-import { CREDITS } from './models/credits.js?v=20261105a';
-import { HI_PLANES } from './models/hi-list.js?v=20261105a';
-import { mergeLocal } from './merge.js?v=20261105a';
-import { cachedFetch } from './offline.js?v=20261105a';
-import { paintMat, paintOn } from './paint.js?v=20261105a';
-import { ktxOn, ktxParse, ktxFree, ktxIndexUrl, ktxUrlOf } from './ktx.js?v=20261105a';
+import { SEATS } from './seats-data.js?v=20261106a';
+import { pylonTris, geoOf, seatOne } from './seat.js?v=20261106a';
+import { tr } from './i18n.js?v=20261106a';
+import { CREDITS } from './models/credits.js?v=20261106a';
+import { HI_PLANES } from './models/hi-list.js?v=20261106a';
+import { mergeLocal } from './merge.js?v=20261106a';
+import { cachedFetch } from './offline.js?v=20261106a';
+import { paintMat, paintOn } from './paint.js?v=20261106a';
+import { ktxOn, ktxParse, ktxFree, ktxIndexUrl, ktxUrlOf } from './ktx.js?v=20261106a';
 const V = (x, y, z, py = 0) => Object.assign(new THREE.Vector3(x, y, z), { py });
 const mirror = (L) => [...L, ...L.slice().reverse().map((p) => V(-p.x, p.y, p.z, p.py))]; // L3 L2 L1 Ф1 → … Ф2 R1 R2 R3
 const META = {

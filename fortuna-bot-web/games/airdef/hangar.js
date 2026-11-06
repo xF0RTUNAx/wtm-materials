@@ -3,9 +3,9 @@
 // на видеокарту (models.js). Кадр считается только когда что-то меняется: в покое ни 3D, ни нагрева (как прежний фон на кадрах menubg.js).
 // Фон и самолёт масштабируются как одна картинка: «полный кадр» - весь рендер 16:9 с его камерой, экран - окно в нём (setViewOffset), поэтому пол и самолёт совпадают на любом экране.
 // Подвеска расставлена как в бою (air.js: order, buildPylons). Подъёмник: base, ram (шток, длина 1 м, scale.y = ход), head (седло). ?oldbg=1 - прежний фон.
-import { AG } from './arsenal.js?v=20261105a';
-import { setPaintHall, paintOn } from './paint.js?v=20261105a';
-import { planeModel, planeMeta, classOf, wantModel, wantWeapon, weaponPending, weaponFailed, pylonMesh, seatStores, podModel, anyModel, modelLoaded, modelFailed, releaseModel, wantCamo, camoKnown, hiKnown } from './models.js?v=20261105a';
+import { AG } from './arsenal.js?v=20261106a';
+import { setPaintHall, paintOn } from './paint.js?v=20261106a';
+import { planeModel, planeMeta, classOf, wantModel, wantWeapon, weaponPending, weaponFailed, pylonMesh, seatStores, podModel, anyModel, modelLoaded, modelFailed, releaseModel, wantCamo, camoKnown, hiKnown } from './models.js?v=20261106a';
 
 const VIEWS = { // ПАСПОРТ.json сборщика
   // near, far - не из паспорта: буфер со сглаживанием держит 16 бит глубины, при near 0,3 на 31 м различал только 5 см, и близкие поверхности мерцали лесенкой (Mark, телефон)
@@ -33,7 +33,7 @@ export function createHangar(C, renderer) {
     TEX[key] = t;
     // один сбой сети не должен оставлять игрока без ангара на весь сеанс (Safari при первом заходе на сайт, 2026-11-05): ещё три попытки, и только потом прежний фон
     const load = (n) => {
-      t.tex = new THREE.TextureLoader().load(n ? `${src}?r=${n}` : src, () => { t.ok = true; dirty = true; }, undefined, () => {
+      t.tex = new THREE.TextureLoader().load(n ? `${src}?r=${n}` : src, () => { t.ok = true; dirty = true; if (key === viewKey) { if (texB) texB = t.tex; else texA = t.tex; } /* после повтора t.tex - новая текстура, а зал ещё держит пустую первую */ }, undefined, () => {
         if (n < 3) { setTimeout(() => load(n + 1), 700 * (n + 1)); return; }
         t.bad = true; dirty = true; if (key === 'fighter' && on) { can = false; if (C.hangarFail) C.hangarFail(); } // основной зал не загрузился - прежний фон
       });
@@ -117,7 +117,7 @@ export function createHangar(C, renderer) {
       want.asked = true;
       if (!modelLoaded(keyOf(want))) mine.add(keyOf(want));
       if (want.skin) wantCamo(want.plane, want.skin); else wantModel(want.plane);
-      wantModel('hg_jack'); if (gearOf(want.plane)) wantModel(gearOf(want.plane)); for (const [k] of want.L.items) wantWeapon(k);
+      wantModel('hg_jack'); { const gk = gearOf(want.plane); if (gk) { if (!modelLoaded(gk)) mine.add(gk); wantModel(gk); } } for (const [k] of want.L.items) wantWeapon(k); // стойки делят картинки с самолётом: освобождать их вместе с ним, иначе текстуры остаются в памяти
     }
     if (want.skin && modelFailed(keyOf(want))) { want.skin = null; want.asked = false; wantT = now - PICK_WAIT; return; } // файл с окраской или большими текстурами не пришёл - обычная модель
     const q = want, broke = modelFailed(q.plane) || modelFailed('hg_jack'), here = fullyHere(q);
@@ -129,7 +129,7 @@ export function createHangar(C, renderer) {
     wantView = q.view; build(pm, q.L); cur = q.key; lastL = q.L; want = null; built = true; dirty = true;
     if (!here && !modelFailed(keyOf(q))) retry = q; // замена или простые фигуры оружия - на время
     // телефон: просмотренные в этом меню и загруженные ради ангара самолёты не копятся
-    if (TOUCH && prev !== q.plane) { const kq = keyOf(q); looked = [kq, ...looked.filter((n) => n !== kq)]; const shown = pm.skin ? `${pm.name}@${pm.skin}` : pm.name; for (const n of looked.slice(KEEP_LOOKED)) { looked = looked.filter((x) => x !== n); if (mine.has(n) && n !== kq && n !== shown) { mine.delete(n); releaseModel(n); } } } // shown: нужная не пришла, а на экране замена из списка - её текстуры заняты
+    if (TOUCH && prev !== q.plane) { const kq = keyOf(q); looked = [kq, ...looked.filter((n) => n !== kq)]; const shown = pm.skin ? `${pm.name}@${pm.skin}` : pm.name; for (const n of looked.slice(KEEP_LOOKED)) { looked = looked.filter((x) => x !== n); if (mine.has(n) && n !== kq && n !== shown) { mine.delete(n); releaseModel(n); const gn = gearOf(n.split('@')[0]); if (gn && mine.has(gn) && gn !== gearOf(q.plane)) { mine.delete(gn); releaseModel(gn); } } } } // shown: нужная не пришла, а на экране замена из списка - её текстуры заняты
   }
   // зал определяется размером самолёта; пока его картинка не загрузилась, стоит прежний зал. Не загрузилась совсем - самолёт в основном зале
   function hallReady(q) {
@@ -332,6 +332,7 @@ export function createHangar(C, renderer) {
       mine.clear(); looked = []; document.body.classList.remove('hgOn', 'hgAir'); moveTabs(false); setPaintHall(null); // с этого боя все загруженные модели - его, не освобождать
       C.snd.ambient(false);
       if (rt) { rt.dispose(); rt = null; rtW = rtH = 0; } // бою память нужнее; вернёмся в меню - создадим заново
+      if (TOUCH) { if (shA) { shA.dispose(); shB.dispose(); shA = shB = null; if (shadow) { shadow.material.dispose(); pivot.remove(shadow); shadow = null; } cur = null; } if (mainL && mainL.shadow.map) { mainL.shadow.map.dispose(); mainL.shadow.map = null; shAz = null; } } // телефон: тень на полу и своя тень самолёта - тоже; при возврате самолёт пересоберётся
       for (const k in TEX) if (TEX[k].tex) TEX[k].tex.dispose();
       dirty = true;
     },

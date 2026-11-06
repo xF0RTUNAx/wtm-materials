@@ -6,8 +6,8 @@
 //  • Браузер: полный экран (без адресной строки) по первому касанию и при старте боя - если включено в настройках;
 //    экран не гаснет (Wake Lock); «Назад» в бою - пауза, а не выход; закрытие вкладки в бою - с подтверждением.
 //    iPhone Safari полный экран страницам не даёт - там помогает «На экран „Домой“»; iPad и Android - дают.
-import { tr } from './i18n.js?v=20261105a';
-import { ico } from './icons.js?v=20261105a';
+import { tr } from './i18n.js?v=20261106a';
+import { ico } from './icons.js?v=20261106a';
 export function createShell(C, { IS_TOUCH, ls }) {
   const TG = (() => {
     try {
