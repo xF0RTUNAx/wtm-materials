@@ -82,7 +82,6 @@
 - "Tupolev TU-160" (https://sketchfab.com/3d-models/tupolev-tu-160-d3af9e67f8024dcc9b23a3e91d492e40) by KOG_THORNS — CC-BY-4.0 — `e_tu160.glb`
 - "B1" (https://sketchfab.com/3d-models/b1-59371234237e496da0f67cfcdc3acb20) by manilov.ap — CC-BY-4.0 — `e_b1b.glb`
 - "Boeing B-52 Stratofortress" (https://sketchfab.com/3d-models/boeing-b-52-stratofortress-38b0c64bd552431394efa8625d7f5144) by bohmerang — CC-BY-4.0 — `e_b52.glb`
-- "Eurofighter Typhoon EF-2000" (https://sketchfab.com/3d-models/eurofighter-typhoon-ef-2000-84c33660f1824d14babc9267967af865) by andertan — CC-BY-4.0 — `e_typhoon.glb`
 - "UGM-84 Harpoon (FREE)" (https://sketchfab.com/3d-models/ugm-84-harpoon-free-d62d60fac04f4d6b86e24ad06a1f99c6) by FeriseCAT — CC-BY-4.0 — `w_slam.glb`
 - "AGM-154 JSOW missile" (https://sketchfab.com/3d-models/agm-154-jsow-missile-03148c5054e54a1c99980aff68952c0f) by RickSlash — CC-BY-4.0 — `w_jsow.glb`
 - "ISKANDER" (https://sketchfab.com/3d-models/iskander-244b511ee2ca4f3794d118b872ee229c) by dofash_76 — CC-BY-4.0 — `w_tbmdec.glb`, `l_iskander.glb`

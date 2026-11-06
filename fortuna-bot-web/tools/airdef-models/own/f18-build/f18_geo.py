@@ -540,7 +540,7 @@ def canopy():
     for sg in (1, -1):
         rail = lambda a, d, h: P3(a, sg * (CAN_T[1](a) + d), SILL(a) + h)
         st2 = stations(a0, a1, 0.25)
-        b.loft([[rail(a, 0.004, 0.014) for a in st2], [rail(a, 0.018, 0.012) for a in st2], [rail(a, 0.018, 0.030) for a in st2], [rail(a, -0.012, 0.046) for a in st2], [rail(a, -0.012, 0.024) for a in st2]], G_SKIN)
+        b.loft([[rail(a, 0.004, 0.014), rail(a, 0.018, 0.012), rail(a, 0.018, 0.030), rail(a, -0.012, 0.046), rail(a, -0.012, 0.024)] for a in st2], G_DARK, cap0=G_DARK, cap1=G_DARK)     # тёмный уплотнитель, как принято в ревизии 1
     strip(b, [can_ring(a1 - 0.03, 0.006), can_ring(a1 - 0.03, -0.020), can_ring(a1 + 0.02, -0.020), can_ring(a1 + 0.02, 0.006), can_ring(a1 - 0.03, 0.006)], G_SKIN)
     for sg in (1, -1):
         for a in (5.20, 5.80, 6.40, 7.00):
@@ -560,7 +560,7 @@ def canopy():
 def windscreen():
     a1 = ARCH_A - 0.05; st = stations(3.620, a1, 0.08)
     b = B(); strip(b, [can_ring(a) for a in st], G_GLASS); gl = b.finish('screen_glass', sharp_deg=60)
-    b2 = B(); frame_arch(b2, ARCH_A - 0.056, 0.024, h=0.022); frame_arch(b2, 3.655, 0.030, inset=0.035, h=0.012, drop=0.07); fr = b2.finish('screen_frame', sharp_deg=45)
+    b2 = B(); frame_arch(b2, ARCH_A - 0.030, 0.028, h=0.022); frame_arch(b2, 3.655, 0.030, inset=0.035, h=0.012, drop=0.07); fr = b2.finish('screen_frame', sharp_deg=45)
     return [gl, fr]
 
 

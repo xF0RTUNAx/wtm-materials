@@ -557,7 +557,7 @@ def canopy():
     for sg in (1, -1):
         rail = lambda a, d, h: P3(a, sg * (CAN_T[1](a) + d), SILL(a) + h)
         st2 = stations(2.92, a1, 0.16)
-        b.loft([[rail(a, 0.006, 0.006) for a in st2], [rail(a, 0.020, 0.006) for a in st2], [rail(a, 0.016, 0.028) for a in st2], [rail(a, -0.014, 0.046) for a in st2], [rail(a, -0.014, 0.018) for a in st2]], G_SKIN)
+        b.loft([[rail(a, 0.006, 0.006), rail(a, 0.020, 0.006), rail(a, 0.016, 0.028), rail(a, -0.014, 0.046), rail(a, -0.014, 0.018)] for a in st2], G_SKIN, cap0=G_SKIN, cap1=G_SKIN)
         for a in (3.45, 4.05, 4.65, 5.25, 5.85):
             y = SILL(a); x = sg * (CAN_T[1](a) - 0.028)
             b.loft([[P3(a, x - 0.009, y + 0.006), P3(a + 0.05, x - 0.009, y + 0.006), P3(a + 0.05, x + 0.009, y + 0.006), P3(a, x + 0.009, y + 0.006)], [P3(a, x - 0.009, y + 0.018), P3(a + 0.05, x - 0.009, y + 0.018), P3(a + 0.05, x + 0.009, y + 0.018), P3(a, x + 0.009, y + 0.018)]], G_METAL, cap0=G_METAL, cap1=G_METAL)

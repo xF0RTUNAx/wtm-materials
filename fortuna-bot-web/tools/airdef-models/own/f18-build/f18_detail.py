@@ -329,7 +329,7 @@ def cockpit_detail():
     for sg in (1, -1):
         rail = lambda a, d, h: P3(a, sg * (g.CK_HW(a) + d), g.fore_y(a, g.CK_HW(a) + 0.01) + h)
         st = g.stations(4.45, 7.2, 0.18)
-        b.loft([[rail(a, -0.040, -0.05) for a in st], [rail(a, 0.003, -0.05) for a in st], [rail(a, 0.003, 0.012) for a in st], [rail(a, -0.040, 0.012) for a in st]], G_COCK)
+        b.loft([[rail(a, -0.040, -0.05), rail(a, 0.003, -0.05), rail(a, 0.003, 0.012), rail(a, -0.040, 0.012)] for a in st], G_COCK, cap0=G_COCK, cap1=G_COCK)
     return b.finish('cockpit_int', sharp_deg=40)
 
 

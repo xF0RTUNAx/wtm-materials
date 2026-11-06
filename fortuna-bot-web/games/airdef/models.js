@@ -29,7 +29,7 @@ const META = {
     nozzles: [V(-0.49, -1.025, 9.035), V(0.49, -1.025, 9.035)], nr: 0.385, pod: V(0, -1.705, 2.365), clearGlass: true, ...(paintOn ? { gearModel: 'f18_gear' } : {}) }, // F/A-18E: своя модель, 3 пилона на крыле + под воздухозаборником, контейнер по центру; грузится по запросу, файл теперь в 6 раз тяжелее
   // Lockheed Martin F-16E/F Block 60 - andertan (CC BY 4.0; с 2026-10-24, прежняя - Muhamad Mirza Arrafi): запад, ракетные загрузки
   // (на законцовках крыльев - свои ракеты автора, пилоны под крылом - его же, станции - по низу пилонов)
-  f16: { side: 'west', cls: 'fighter', lazy: true, stations: mirror([V(-4.12, -1.152, 2.64), V(-3.1, -1.372, 1.99), V(-2.04, -1.432, 1.455), V(-0.72, -1.872, -0.35)]),
+  f16: { side: 'west', cls: 'fighter', lazy: true, stations: mirror([V(-0.72, -1.872, -0.35), V(-4.12, -1.152, 2.64), V(-3.1, -1.372, 1.99), V(-2.04, -1.432, 1.455)]),
     nozzles: [V(0, -1.012, 7.13)], nr: 0.465, pod: V(0.5, -2.012, -1.78), clearGlass: true, ...(paintOn ? { gearModel: 'f16_gear' } : {}) }, // F-16D: своя модель; грузится по запросу, файл тяжёлый, запасной западный самолёт на время загрузки - F-5
   // ── свой самолёт у каждой подвески (2026-10-12); lazy - грузится, когда нужен (выбран в подвеске или летит в налёте),
   // pod: null - прицельная система встроенная (контейнер не вешается); internal - оружие во внутренних отсеках (не видно до пуска)
@@ -48,7 +48,7 @@ const META = {
     nozzles: [V(-0.96, -2.67, 18.75), V(0.96, -2.67, 18.75)], nr: 0.72, pod: null }, // Ту-22М2 (сопла по срезу стволов: были выше на 1,4 м, радиус 0,4 → 0,72)
   e_a10: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-5.74, -1.01, -0.34), V(-4.7, -1.06, -0.11), V(-3.62, -1.19, -0.2), V(-1.53, -1.27, -0.2)]), // по низу пилонов модели AIRMAN Magazine (подвеска автора убрана; пилоны на 5,74 / 4,70 / 3,62 / 1,53 м от оси)
     nozzles: [V(-1.45, 0.31, 5.0), V(1.45, 0.31, 5.0)], nr: 0.33, pod: V(-0.6, -1.62, -0.27), dry: true }, // A-10A (сопла по срезу гондол: кольцо R 0,43, горячая часть R ≈ 0,33; контейнер - на подфюзеляжном пилоне x −0,6)
-  e_f15e: { side: 'west', cls: 'fighter', lazy: true, stations: mirror([V(-3.55, -1.844, 3.535), V(-1.78, -2.359, -0.315), V(-1.8, -2.398, 1.585), V(-1.8, -2.38, 3.485)]),
+  e_f15e: { side: 'west', cls: 'fighter', lazy: true, stations: mirror([V(-1.78, -2.359, -0.315), V(-1.8, -2.38, 3.485), V(-1.8, -2.398, 1.585), V(-3.55, -1.844, 3.535)]),
     nozzles: [V(-0.69, -1.364, 8.635), V(0.69, -1.364, 8.635)], nr: 0.48, pod: V(1.2, -2.247, -0.815), clearGlass: true, ...(paintOn ? { gearModel: 'e_f15e_gear' } : {}) }, // F-15E: своя модель, 1 пилон крыла + 3 на конформном баке, LANTIRN под правым воздухозаборником
   // ── 2026-10-19, третья партия manilov.ap: точки подвески - по низу крыла (лучи по треугольникам) и пилонам автора ──
   e_mig21n: { side: 'east', cls: 'strike', lazy: true, stations: mirror([V(-2.76, -1.14, 2.1, 0.3), V(-1.95, -1.08, 0.7), V(-0.45, -1.3, 2.2, 0.2), V(-0.3, -1.3, 0.2, 0.2)]),
@@ -119,7 +119,7 @@ const META = {
   e_mirage_f1: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-2.41, -1.13, 1.9, 0.28), V(-1.75, -1.07, 1.55, 0.28), V(-0.45, -1.9, 0.3, 0.15), V(-0.45, -1.9, 2.3, 0.15)]),
     nozzles: [V(0, -1.03, 7.63)], nr: 0.45, pod: null, camo: { scheme: 'fr', size: 2.6 } }, // Mirage F1
   // F/A-18C - manilov.ap «F18» (CC BY 4.0; с 2026-10-24, прежняя - Rhine_Lab_Muelsyse; AN/AAS-38 у воздухозаборника); у автора пилонов под крылом нет - дорисованы (py 0,36), станция 3 - по низу ракетных рельсов фюзеляжа (x 1,07, низ −1,72), сопла - по срезу колец (z 8,03, R 0,46)
-  e_f18c: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-3.75, -1.35, 1.785), V(-3.25, -1.35, 1.785), V(-2.25, -1.4, 1.485), V(-1.08, -1.82, 3.215)]),
+  e_f18c: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-3.75, -1.35, 1.785), V(-1.08, -1.82, 3.215), V(-3.25, -1.35, 1.785), V(-2.25, -1.4, 1.485)]),
     nozzles: [V(-0.49, -0.9, 8.535), V(0.49, -0.9, 8.535)], nr: 0.385, pod: V(0.72, -1.85, 0.415), clearGlass: true, ...(paintOn ? { gearModel: 'e_f18c_gear' } : {}) }, // F/A-18C: своя модель, 2 держателя на внешнем пилоне + внутренний + под воздухозаборником, контейнер на правом борту
   e_su25: { side: 'east', cls: 'strike', lazy: true, stations: mirror([V(-4.34, -1.23, 0.70), V(-3.56, -1.18, 0.45), V(-2.77, -1.14, 0.21), V(-1.97, -1.12, -0.16)]),
     nozzles: [V(-0.78, -1.5, 3.55), V(0.78, -1.5, 3.55)], nr: 0.3, pod: null, dry: true }, // Су-25 - mamont nikita (CC BY 4.0; с 2026-10-24, прежняя - Immersive3D; «Шквал» у Су-25Т встроен); станции - по низу пилонов автора (x 4,34 / 3,56 / 2,77 / 1,97; пятый, x 5,07 - не используется), сопла - по срезу чаш двигателей (z 3,55, R ≈ 0,3, ниже сечения гондолы)
@@ -180,7 +180,7 @@ const META = {
   e_tu160: { side: 'east', cls: 'carrier', only: true, lazy: true, internal: true, stations: mirror([V(-0.7, -3.8, -4.0), V(-0.7, -3.8, -1.5), V(-0.7, -3.8, 1.0), V(-0.7, -3.8, 3.5)]), nozzles: [V(-5.75, -4.31, 11.1), V(-3.97, -4.31, 11.1), V(3.97, -4.31, 11.1), V(5.75, -4.31, 11.1)], nr: 0.9 }, // Ту-160 - KOG_THORNS (с 2026-10-19 и в «Авиации»: точки - в отсеках); носитель «Мульти-волны»
   e_b1b: { side: 'west', cls: 'carrier', only: true, lazy: true, internal: true, stations: mirror([V(-0.6, -2.5, -5.0), V(-0.6, -2.5, -2.5), V(-0.6, -2.5, 0.0), V(-0.6, -2.5, 2.5)]), nozzles: [V(-4.55, -3.4, 5.86), V(-2.95, -3.4, 5.86), V(2.95, -3.4, 5.86), V(4.55, -3.4, 5.86)], nr: 0.55 }, // B-1B - manilov.ap «B1» (CC BY 4.0; с 2026-10-24, прежняя - Muhamad Mirza Arrafi); крыло сложено назад (стреловидность ≈ 58°), станции - по оси отсека, на 0,4 м выше низа фюзеляжа (y −3,1); сопла - по срезу гондол (z 5,86, пары x ±2,95 / ±4,55); носитель «Мульти-волны»
   e_b52: { side: 'west', cls: 'carrier', only: true, lazy: true, internal: true, stations: mirror([V(-0.6, -5.2, -3.0), V(-0.6, -5.2, -1.0), V(-0.6, -5.2, 1.0), V(-0.6, -5.2, 3.0)]), nozzles: [], nr: 0.4 }, // B-52H - bohmerang; носитель «Мульти-волны» (без форсажа - пламени нет)
-  e_typhoon: { side: 'west', cls: 'carrier', only: true, lazy: true, stations: mirror([V(-3.88, -1.93, 3.0, 0.3), V(-2.77, -1.91, 2.24, 0.3), V(-1.94, -1.85, 1.74, 0.3), V(-0.6, -2.1, 1.0, 0.15)]), nozzles: [V(-0.54, -1.46, 6.68), V(0.54, -1.46, 6.68)], nr: 0.42 }, // Eurofighter Typhoon - andertan; носитель Storm Shadow
+  e_typhoon: { side: 'west', cls: 'carrier', only: true, lazy: true, stations: mirror([V(-0.7, -1.834, 2.42), V(-4.35, -1.654, 3.42), V(-3.35, -1.734, 2.77), V(-2.35, -1.814, 1.82)]), nozzles: [V(-0.475, -1.294, 7.3), V(0.475, -1.294, 7.3)], nr: 0.355, pod: V(0, -1.894, 1.47), clearGlass: true, ...(paintOn ? { gearModel: 'e_typhoon_gear' } : {}) }, // Eurofighter Typhoon: своя модель, носитель Storm Shadow: тяжёлое идёт на последнюю точку, это внутренний пилон
   w_nar_hydra: { lazy: true, stations: [], matte: true }, // НАР Hydra 70 в полёте - собственная модель (Blender, tools/airdef-models/own)
   w_nar_s8: { lazy: true, stations: [], matte: true }, // НАР С-8КОМ в полёте - собственная модель (Blender, tools/airdef-models/own)
   w_tbmdec: { lazy: true, stations: [] }, // ложная цель «Искандера» - головная часть его ракеты
@@ -325,6 +325,7 @@ const FX_CREDITS = [
 export const MODEL_CREDITS = [...CREDITS, TEX_CREDIT, PH_CREDIT, ...FX_CREDITS].map((c) => ({ ...c, licenseUrl: c.licenseUrl || (/CC0/.test(c.license) ? 'https://creativecommons.org/publicdomain/zero/1.0/' : 'http://creativecommons.org/licenses/by/4.0/') }));
 const LOADED = {};
 // версия файла модели (сброс кэша) - у пересобранных моделей своя, остальные не перекачиваются
+// порядок точек своих самолётов на стойках: тяжёлое идёт на последнюю в mirror(), поэтому там точка с запасом до пола (Mark 2026-11-06: JASSM лежали на земле в ангаре)
 const GLB_V = Object.fromEntries(['w_gbu10', 'w_ecm', 'gepard', 'gepard_lo', 'roland', 'rapier', 'rapier_lo', 'tunguska', 'tunguska_lo', 'strela1', 'zsu234', 'zsu234_lo', 'strela10', 'm163', 'm163_lo', 'chaparral', 'chaparral_lo', 'avenger', 'avenger_lo', 'w_gbu39', 'l_scud', 'pantsir', 'pantsir_lo', 'w_umpk', 'w_decoy_e', 'w_kh101', 'w_jsow', 'w_fab500', 'e_tornado', 'e_f111', 'e_mig23', 'e_mig27', 'e_tu22m2', 'e_a10', 'e_f15e', 'e_su24', 'm163', 'zsu234', 'strela10', 'avenger', 'chaparral', 'w_kh59m', 'w_kh25ml', 'w_kh58', 'w_gbu31', 'w_jassm', 'w_agm65b', 't_kc10'].map((n) => [n, '20261022c']).concat(
   ['roland', 'strela10', 'zsu234', 'zsu234_lo', 'strela1', 'tunguska', 'tunguska_lo', 'gepard', 'gepard_lo', 'chaparral', 'chaparral_lo', 'm163', 'm163_lo', 'rapier', 'rapier_lo', 'avenger', 'avenger_lo', 'w_gbu39', 'pantsir', 'pantsir_lo', 'w_gbu10', 'w_ecm', 'e_mig21n', 'e_mig25', 'e_su7b', 'e_tu16', 'e_f100', 'e_f5', 'e_f117', 'e_jaguar', 'e_buccaneer', 'e_harrier', 'e_mirage', 'e_rafale', 'e_b2'].map((n) => [n, '20261022i'])).concat(
   ['zsu234', 'zsu234_lo', 'zu23', 'buk', 'phalanx', 'w_fab100', 'w_ofab250', 'w_fab250', 'w_fab1000', 'w_gbu24', 'w_gbu57', 'w_umpk', 'e_yak38', 'e_il28', 'e_tu22', 'e_hunter', 'e_su27', 'e_su35', 'e_etendard', 'e_mirage_f1', 'e_f18c'].map((n) => [n, '20261022k'])).concat([['e_tu95', '20261022l'], ['w_agm65b', '20261022l'], ['w_decoy_e', '20261022l']].concat(['h_mi24', 'h_mi28', 'h_ka52', 'h_ah64', 'h_ah1', 'h_uh1', 'w_shturm', 'w_b8', 'w_hellfire', 'aam_stinger'].map((n) => [n, '20261022m'])).concat([['w_shturm', '20261022n']])).concat(['h_ah64', 'h_mi28'].map((n) => [n, '20261022p'])).concat([['h_uh1', '20261022r']]).concat(['w_lau61', 'obj_mill', 'pr_hay', 'pr_well', 'pr_pumpkin', 'pr_grave1', 'pr_grave2', 'pr_grave3', 'pr_grave4', 'pr_fence', 'pr_fpost', 'pr_deadtree', 'pr_oldtree', 'c_vaz'].map((n) => [n, '20261022o'])).concat(['e_vulcan', 'e_draken', 'e_viggen', 'w_bomb1000'].map((n) => [n, '20261023b'])).concat(['h_ka50', 'h_mi8', 'h_uh60', 'h_rah66'].map((n) => [n, '20261023c'])).concat([['w_nar_hydra', '20261024a'], ['w_nar_s8', '20261024a'], ['e_draken', '20261023d'], ['w_bomb1000', '20261023d'], ['h_ka50', '20261023d']]).concat(['e_su33', 'e_m4', 'e_mig19', 'e_mig17', 'e_t4', 'e_mig29k'].map((n) => [n, '20261023e']))); // 20261023e - шестая партия: Су-33, М-4, МиГ-19, МиГ-17, Т-4 (2026-10-21) // 20261023c - четыре вертолёта manilov.ap (2026-10-21) // 20261023b - Vulcan, Draken, Viggen, бомба 1000 lb (2026-10-21) // l - 2026-10-20: Ту-95 без нарисованных дисков, Maverick и Harpy без сильного упрощения // l - Ту-95 без нарисованных дисков винтов (2026-10-20) // j - четвёртая партия, новая «Шилка», УМПК без сжатия // i - ЗРК без упрощения, камуфляж шейдером, третья партия самолётов (2026-10-19); c - замены моделей 2026-10-19; остальные пересобраны 2026-10-18 (затенение в стыках) - общая версия ниже
@@ -404,8 +405,8 @@ const GLB_V_OWN = {
   pk_mig29: '20261029b',
   pk_e_su24: '20261029b',
   pk_e_su25: '20261029b',
-  pk_f16: '20261106a',
-  pk_f18: '20261106a',
+  pk_f16: '20261106b',
+  pk_f18: '20261106b',
   pk_e_f15e: '20261105a',
   pk_e_a10: '20261029b',
   pk_e_su34: '20261029b',
@@ -476,10 +477,11 @@ GLB_V.w_agm88 = '20261104a'; // без синих ложементов теле�
 GLB_V.e_f111 = '20261104a'; // без чёрных наклеек
 GLB_V.e_tu160 = '20261104a'; // текстура 1024 вместо 512 (надписи в ангаре)
 GLB_V.e_f35 = GLB_V.e_f35_lo = GLB_V.e_f35_gear = '20261106a'; // своя модель и стойки
-GLB_V.f18 = GLB_V.f18_gear = '20261106a'; // своя модель и стойки
-GLB_V.f16 = GLB_V.f16_gear = '20261106a'; // своя модель и стойки
+GLB_V.f18 = GLB_V.f18_gear = '20261106b'; // своя модель и стойки, ревизия 2: без планки через кабину
+GLB_V.f16 = GLB_V.f16_gear = '20261106b'; // своя модель и стойки, ревизия 2: без планки через кабину
 GLB_V.e_f22 = GLB_V.e_f22_lo = GLB_V.e_f22_gear = GLB_V.e_f117 = GLB_V.e_f117_gear = '20261106a'; // свои модели и стойки
 GLB_V.e_f18c = GLB_V.e_f18c_gear = '20261106b'; // своя модель и стойки
+GLB_V.e_typhoon = GLB_V.e_typhoon_gear = '20261106b'; // своя модель и стойки
 GLB_V.e_f15e = '20261105a'; GLB_V.e_f15e_gear = '20261105a'; // своя модель и стойки
 // «Оса-М» ЗИФ-122 (KoreanNavy) и «Бук-М3» (Valera121) вместо моделей Jeyhun1985 (2026-10-22): новые файлы
 Object.assign(GLB_V, Object.fromEntries(['osa', 'osa_lo'].map((n) => [n, '20261024e'])));
@@ -504,7 +506,7 @@ if (paintOn) META.e_f15e_gear = { lazy: true, matte: true, paint: true, stations
 if (paintOn) META.e_f35_gear = { lazy: true, matte: true, paint: true, stations: [] };
 if (paintOn) META.f18_gear = { lazy: true, matte: true, paint: true, stations: [] };
 if (paintOn) META.f16_gear = { lazy: true, matte: true, paint: true, stations: [] };
-if (paintOn) META.e_f18c_gear = { lazy: true, matte: true, paint: true, stations: [] };
+if (paintOn) { META.e_f18c_gear = { lazy: true, matte: true, paint: true, stations: [] }; META.e_typhoon_gear = { lazy: true, matte: true, paint: true, stations: [] }; }
 if (paintOn) { META.e_f22_gear = { lazy: true, matte: true, paint: true, stations: [] }; META.e_f117_gear = { lazy: true, matte: true, paint: true, stations: [] }; } // стойки F-15E для ангара (проба, ?paint=1): оси как у самолёта, низ колёс - пол
 // разбор GLB: меши (позиции, нормали, UV, индексы), материалы, картинки текстур
 function parseGlb(buf) {
@@ -926,7 +928,7 @@ const CAMO_R = (() => { try { const q = new URLSearchParams(location.search); re
 // Модель сборщика с новой развёрткой и картинкой окраски (tools/airdef-shots/camo-glb.js --game → models/camo/<самолёт>.<окраска>.glb, JPEG) грузится,
 // только когда окраска надета и самолёт в бою; оси, масштаб и центр - как у обычной модели, описание (подвески, сопла, зоны) - её же (mOf).
 // В LOADED - под ключом '<самолёт>@<окраска>'; пока не пришла - обычная модель, потом самолёт пересобирается (modelsReady)
-const CAMO_V = { 'e_f15e@inferno': '20261105a', 'e_mig31@dragon': '20261028a' };
+const CAMO_V = { 'e_f15e@inferno': '20261105a', 'e_mig31@dragon': '20261028a', 'e_typhoon@harlequin': '20261106b' };
 // Максимальные текстуры (настройка «Текстуры», Mark 2026-11-04): та же модель с картинками исходного размера, models/camo/<самолёт>.hi.glb (tools/airdef-models/hi-textures.js), тот же механизм, что у окраски
 for (const n of HI_PLANES) CAMO_V[`${n}@hi`] = '20261104a';
 export const hiKnown = (name) => !!CAMO_V[`${name}@hi`];

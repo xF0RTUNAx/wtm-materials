@@ -25,14 +25,14 @@ def rd(f):
 col = rd('_live/collide.json'); gaps = rd('_live/gaps.json'); styk = rd('_стыки/_стыки.json')
 mk.export(os.path.join(HERE, 'f16_sketchfab.glb'), os.path.join(HERE, 'f16.blend')); print('Sketchfab', os.path.getsize(os.path.join(HERE, 'f16_sketchfab.glb')) // 1024, 'КБ')
 GEAR = [o for o in sc.objects if o.type == 'MESH' and o.name.startswith('gear')]
-R = mk.passport(os.path.join(HERE, 'ПАСПОРТ.json'), key='f16', weapon='', name='F-16D', name_en='F-16D Fighting Falcon', glb='f16.glb', blend='f16.blend', rev=1,
+R = mk.passport(os.path.join(HERE, 'ПАСПОРТ.json'), key='f16', weapon='', name='F-16D', name_en='F-16D Fighting Falcon', glb='f16.glb', blend='f16.blend', rev=2,
     build=['build.py', 'f16_geo.py', 'f16_detail.py', 'f16_gear.py', 'uv_f16.py', 'gbuf.py', 'paint.py', '_trial.py', '_collide.py', '_gaps.py', '_стенд.js', 'deliver.py'], previews_=prev,
     checks={'deploy': col, 'связность': gaps.get('висит'), 'стыки': {k: v.get('плохо') for k, v in (styk.get('детали') or {}).items() if v.get('плохо')}, 'silhouette_iou': {'бок': 'наложение на фото 06 и 07, снизу на f16_12 (_снимки/лист_1_форма.jpg)'}, 'game': 'игра: ангар и бой, день и вечер, ошибок страницы нет (превью-игра); на телефоне не проверено'},
     sketchfab={'title': 'F-16D Fighting Falcon - Game-Ready Jet', 'lead': 'Two-seat F-16D without conformal tanks, in a two-tone grey scheme. Moving parts on their own pivots: canopy, rudder, stabilators, flaperons, leading edge flaps, split speedbrakes, refuelling door and landing gear. Round-nose control surfaces, recessed panel lines, raised access lids, detailed cockpit, nozzle petals and intake with splitter.',
                'parts': ['airframe', 'fin and rudder', 'stabilators', 'flaperons', 'leading edge flaps', 'speedbrakes', 'canopy', 'cockpit', 'intake', 'nozzle', 'gear', 'pylons'],
                'tags': ['f-16', 'f-16d', 'fighting-falcon', 'fighter', 'jet', 'aircraft', 'military', 'usaf', 'game-ready', 'pbr', 'textured', 'blender'],
                'dimensions': f'length {LEN:.2f} m, span {SPAN:.2f} m, height {HGT:.2f} m on gear', 'textures': '4096 px colour, normal and metallic-roughness maps', 'based': 'Built from scratch in Blender from reference images.', 'glb': 'f16_sketchfab.glb'},
-    notes='Ревизия 1 (2026-11-06). Свои меши по фото Mark f16_01...12, пиксели фото не использованы. Без конформных баков (слово Mark). Буквы XF и номер AF 16 042 придуманы, эмблем нет. Схема: два серых, знаки США одним серым. Швы - V-канавки, крышки - плиты с фаской, нормали обшивки взяты с гладкой поверхности до резки (smooth_normals). Карты: цвет без света, нормали по высоте, R затенение, G шероховатость, B металл. В файле Sketchfab и .blend створки открыты, в файле игры закрыты.')
+    notes='Ревизия 2 (2026-11-06): убрана прямая планка через кабину (рельс фонаря и кабины был замкнут кольцом). Форма, краска, знаки, точки подвески не менялись. Прежняя запись: Ревизия 1 (2026-11-06). Свои меши по фото Mark f16_01...12, пиксели фото не использованы. Без конформных баков (слово Mark). Буквы XF и номер AF 16 042 придуманы, эмблем нет. Схема: два серых, знаки США одним серым. Швы - V-канавки, крышки - плиты с фаской, нормали обшивки взяты с гладкой поверхности до резки (smooth_normals). Карты: цвет без света, нормали по высоте, R затенение, G шероховатость, B металл. В файле Sketchfab и .blend створки открыты, в файле игры закрыты.')
 R['model'].update(length_m=LEN, span_m=SPAN, height_m=HGT); json.dump(R, open(os.path.join(HERE, 'ОТЧЁТ.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
 # файл игры: без стоек, створки закрыты; файл шасси: только стойки и метки центра
 for n_, d_ in DOORS: pose(n_, -d_)
@@ -69,6 +69,7 @@ for nm_, D in g.PARTS.items():
     if D.get('retracted') is not None: parts[nm_]['retracted_deg'] = D['retracted']
 P['parts'] = parts; P['twin'] = 'один двигатель: ключ не входит в TWIN'
 P['gear_note'] = 'f16_gear.glb: стойки и колёса, только для ангара. Две метки по 1 мм дают тот же центр prepare.js, что у самолёта. Створки в файле самолёта закрыты, отдельных открытых нет.'
+P['rev2_note'] = 'Те же имена и ключи. При подмене: новый GLB_V у f16 и f16_gear, затем seats-gen.js f16: таблица посадки привязана к версии.'
 json.dump(P, open(os.path.join(HERE, 'ПАСПОРТ.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
 json.dump(dict(stations=P['stations_game']['order_left'], pod=P['pod_game']['center'], nozzle=P['nozzles_game'][0], nr=P['nr']), open(os.path.join(HERE, 'точки.json'), 'w', encoding='utf-8'))
 print('сдача готова', LEN, SPAN, HGT, 'тр. всего', R['model']['tris'], 'сопло', P['nozzles_game'], 'контейнер', P['pod_game']['center'])

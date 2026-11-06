@@ -29,14 +29,14 @@ mk.export(os.path.join(HERE, 'f18_sketchfab.glb'), os.path.join(HERE, 'f18.blend
 GEAR = [o for o in sc.objects if o.type == 'MESH' and o.name.startswith('gear')]
 G2 = lambda v: [round(v.x, 4), round(v.z, 4), round(-v.y, 4)]
 # отчёт и основа паспорта: пока в сцене все детали
-R = mk.passport(os.path.join(HERE, 'ПАСПОРТ.json'), key='f18', weapon='', name='F/A-18E', name_en='F/A-18E Super Hornet', glb='f18.glb', blend='f18.blend', rev=1,
+R = mk.passport(os.path.join(HERE, 'ПАСПОРТ.json'), key='f18', weapon='', name='F/A-18E', name_en='F/A-18E Super Hornet', glb='f18.glb', blend='f18.blend', rev=2,
     build=['build.py', 'f18_geo.py', 'f18_detail.py', 'f18_gear.py', 'uv_f18.py', 'gbuf.py', 'paint.py', '_trial.py', '_collide.py', '_стенд.js', 'deliver.py'], previews_=prev,
     checks={'deploy': col, 'стыки': dict(плохо=sty, разбор='стабилизатор: щель снизу в основном 1,9 см, у сопла до 7 см, нужен ход; складка крыла 1 см, отметка 17 см - уступ передней кромки; фонарь и рама козырька - край кабины, на крупном плане щели нет; гак - его конец отдельно'), 'silhouette_iou': {'бок': 'наложение на фото 07 и 14, сверху и снизу на выпрямленный вид фото 06 (_снимки)'}, 'game': 'игра: ангар и бой, день и вечер, ошибок страницы нет (_проба/стенд); на телефоне не проверено'},
     sketchfab={'title': 'F/A-18E Super Hornet - Game-Ready Jet', 'lead': 'F/A-18E Super Hornet single-seat carrier fighter in navy grey. Moving parts on their own pivots: stabilisers, rudders, flaps, ailerons, slats, wing fold, LEX spoilers, canopy, refuelling probe, arresting hook and landing gear. Detailed cockpit, nozzles with petals, intakes with a visible fan. PBR maps with panel tones, rivets and soot.',
                'parts': ['airframe', 'fins and rudders', 'stabilisers', 'flaps and ailerons', 'slats', 'wing fold', 'canopy', 'cockpit', 'intakes', 'nozzles', 'gear', 'pylons'],
                'tags': ['fa-18', 'super-hornet', 'f18', 'fighter', 'jet', 'aircraft', 'military', 'navy', 'game-ready', 'pbr', 'textured', 'blender'],
                'dimensions': f'length {LEN:.2f} m, span {SPAN:.2f} m, height {HGT:.2f} m on gear', 'textures': '4096 px colour, normal and metallic-roughness maps', 'based': 'Built from scratch in Blender from reference images.', 'glb': 'f18_sketchfab.glb'},
-    notes='Ревизия 1 (2026-11-06). Свои меши по фото fa18_01, 02, 03, 05, 06, 07, 14 (форма); fa18_08-12 только детали; fa18_04, 13 только планка качества. Пиксели картинок не использованы. Знаки нарисованы заново; номер 207, NX, VFA-199 и эмблема придуманные. Вентилятор стоит ближе и по центру проёма по просьбе Mark: на настоящем самолёте спереди его почти не видно. Карты: цвет без света, нормали по высоте, R затенение, G шероховатость, B металл.')
+    notes='Ревизия 2 (2026-11-06): убрана прямая планка через кабину (рельс фонаря и кабины был замкнут кольцом), закрыта щель между дугой козырька и дугой фонаря, рельс фонаря - тёмный уплотнитель, как выглядел в ревизии 1. Форма, краска, знаки, точки подвески не менялись. Прежняя запись: Ревизия 1 (2026-11-06). Свои меши по фото fa18_01, 02, 03, 05, 06, 07, 14 (форма); fa18_08-12 только детали; fa18_04, 13 только планка качества. Пиксели картинок не использованы. Знаки нарисованы заново; номер 207, NX, VFA-199 и эмблема придуманные. Вентилятор стоит ближе и по центру проёма по просьбе Mark: на настоящем самолёте спереди его почти не видно. Карты: цвет без света, нормали по высоте, R затенение, G шероховатость, B металл.')
 R['model'].update(length_m=LEN, span_m=SPAN, height_m=HGT); json.dump(R, open(os.path.join(HERE, 'ОТЧЁТ.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
 # файл игры: без стоек, створки закрыты; файл шасси: только стойки и метки центра
 COLS = {o.name: list(o.users_collection) for o in GEAR}
@@ -71,5 +71,6 @@ for nm_, D in g.PARTS.items():
 P['parts'] = parts; P['twin'] = 'два сопла; поля TWIN в plane-zones задаёт игра'
 P['gear_note'] = 'f18_gear.glb: стойки и колёса, только для ангара. Две метки по 1 мм дают тот же центр prepare.js, что у самолёта. Створки в файле самолёта закрыты, отдельных открытых нет.'
 P['swap_note'] = 'После подмены обязательно: seats-gen.js f18 (таблица посадки подвески и дорисованные пилоны). Прежняя запись для старой модели ставит блоки и штыри перед воздухозаборником; на стенде она отключена. Рецепт prepare.js у f18 пока со старым источником.'
+P['rev2_note'] = 'Те же имена и ключи. При подмене: новый GLB_V у f18 и f18_gear, затем seats-gen.js f18: таблица посадки привязана к версии.'
 json.dump(P, open(os.path.join(HERE, 'ПАСПОРТ.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
 print('сдача готова', LEN, SPAN, HGT, 'тр. всего', R['model']['tris'], 'сопла', P['nozzles_game'], 'контейнер', P['pod_game']['attach'])

@@ -744,15 +744,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "Eurofighter Typhoon EF-2000",
-  "author": "andertan",
-  "url": "https://sketchfab.com/3d-models/eurofighter-typhoon-ef-2000-84c33660f1824d14babc9267967af865",
-  "license": "CC-BY-4.0",
-  "files": [
-   "e_typhoon"
-  ]
- },
- {
   "title": "UGM-84 Harpoon (FREE)",
   "author": "FeriseCAT",
   "url": "https://sketchfab.com/3d-models/ugm-84-harpoon-free-d62d60fac04f4d6b86e24ad06a1f99c6",

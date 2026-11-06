@@ -260,8 +260,8 @@ const CONFIG = {
     swing: { mat: [11, 13], axisX: 0, pivot: [3.85, -7.24], ang: -42 * Math.PI / 180 },
     groups: LS }, // без шасси (у автора его нет)
   e_b52: { src: `${DL}/boeing_b-52_stratofortress.glb`, scale: 1, nose: '-z', rulesIn: 'game', tex: () => 512, groups: LS }, // B-52H — 48,5 м; носитель «Мульти-волны»
-  e_typhoon: { src: `${DL}/eurofighter_typhoon_ef-2000.glb`, scale: 15.96 / 18.72, nose: '+x', rulesIn: 'game', tex: () => 512, target: 20000, pickMesh: /Eurofighter typhoon/,
-    groups: (c) => (c.ctr[1] < -0.8 && Math.abs(c.ctr[0]) > 0.4 && !(c.size[0] < 0.12 && c.size[1] > 0.3) ? null : LS(c)) }, // подвеска модели (ракеты, баки) — долой, пилоны остаются // Eurofighter Typhoon — 16 м; носитель Storm Shadow
+  e_typhoon: { src: new URL('./own/typhoon.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 2048, nTex: () => 2048, pickMesh: /./, own: true, centerX: true }, // Eurofighter Typhoon: своя модель (Blender, own/typhoon-build)
+  e_typhoon_gear: { src: new URL('./own/typhoon_gear.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 2048, nTex: () => 2048, pickMesh: /./, own: true, centerX: true }, // стойки Typhoon для ангара: две метки по 1 мм дают тот же центр, что у самолёта, не удалять
   w_slam: { src: `${DL}/ugm-84_harpoon_free.glb`, scale: 4.49 / 7.3, nose: '+x', tex: () => 256, target: 5000, pickMesh: /./ }, // AGM-84E SLAM (по Harpoon) — 4,49 м
   // AGM-154 JSOW — RickSlash (CC BY, с текстурами; 2026-10-19 вместо набора NETRUNNER_pl): 2 → 4,1 м, крылья — две пластины сверху (сложены)
   w_jsow: { src: `${DL}/agm-154_jsow_missile.glb`, scale: 2.05, nose: '+z', rulesIn: 'game', tex: () => 512, pickMesh: /./,

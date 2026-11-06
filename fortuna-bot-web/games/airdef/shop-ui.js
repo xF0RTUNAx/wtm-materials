@@ -18,6 +18,7 @@ const FRESH = 60000, RETRY = 30000;
 // вид окраски на витрине: название (первое слово - светлое, остальное - цветом окраски; одно слово - цветом), акценты и полоска цветов
 const LOOK = {
   'e_f15e:inferno': { name: 'Инферно', acc: '#ef7a2a', acc2: '#f6a04a', chips: ['#1d1d20', '#a3241a', '#e0531c', '#f39528', '#ffd264'] },
+  'e_typhoon:harlequin': { name: 'Арлекин', acc: '#247e6c', acc2: '#a9cf5a', chips: ['#0d1f45', '#2a1a6e', '#247e6c', '#a9cf5a', '#f0802a', '#ffd84a'] }, // в резерве, сезон 0 (arsenal.js CAMOS): витрина появится, когда Mark выведет в продажу
   'e_mig31:dragon': { name: 'Нефритовый дракон', acc: '#8cc49a', acc2: '#e3d3a8', chips: ['#173d2b', '#25563c', '#3c7a52', '#e9dfc2', '#e8542a'] },
 };
 export const camoName = (key) => tr((LOOK[key] || {}).name || key);
