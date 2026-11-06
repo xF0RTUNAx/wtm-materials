@@ -119,8 +119,8 @@ const META = {
   e_mirage_f1: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-2.41, -1.13, 1.9, 0.28), V(-1.75, -1.07, 1.55, 0.28), V(-0.45, -1.9, 0.3, 0.15), V(-0.45, -1.9, 2.3, 0.15)]),
     nozzles: [V(0, -1.03, 7.63)], nr: 0.45, pod: null, camo: { scheme: 'fr', size: 2.6 } }, // Mirage F1
   // F/A-18C - manilov.ap «F18» (CC BY 4.0; с 2026-10-24, прежняя - Rhine_Lab_Muelsyse; AN/AAS-38 у воздухозаборника); у автора пилонов под крылом нет - дорисованы (py 0,36), станция 3 - по низу ракетных рельсов фюзеляжа (x 1,07, низ −1,72), сопла - по срезу колец (z 8,03, R 0,46)
-  e_f18c: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-4.45, -1.08, 2.6, 0.36), V(-3.5, -1.08, 2.35, 0.36), V(-2.55, -1.08, 2.0, 0.36), V(-1.07, -1.72, 3.0)]),
-    nozzles: [V(-0.48, -0.95, 8.03), V(0.48, -0.95, 8.03)], nr: 0.38, pod: V(0.75, -0.95, -1.2) },
+  e_f18c: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-3.75, -1.35, 1.785), V(-3.25, -1.35, 1.785), V(-2.25, -1.4, 1.485), V(-1.08, -1.82, 3.215)]),
+    nozzles: [V(-0.49, -0.9, 8.535), V(0.49, -0.9, 8.535)], nr: 0.385, pod: V(0.72, -1.85, 0.415), clearGlass: true, ...(paintOn ? { gearModel: 'e_f18c_gear' } : {}) }, // F/A-18C: своя модель, 2 держателя на внешнем пилоне + внутренний + под воздухозаборником, контейнер на правом борту
   e_su25: { side: 'east', cls: 'strike', lazy: true, stations: mirror([V(-4.34, -1.23, 0.70), V(-3.56, -1.18, 0.45), V(-2.77, -1.14, 0.21), V(-1.97, -1.12, -0.16)]),
     nozzles: [V(-0.78, -1.5, 3.55), V(0.78, -1.5, 3.55)], nr: 0.3, pod: null, dry: true }, // Су-25 - mamont nikita (CC BY 4.0; с 2026-10-24, прежняя - Immersive3D; «Шквал» у Су-25Т встроен); станции - по низу пилонов автора (x 4,34 / 3,56 / 2,77 / 1,97; пятый, x 5,07 - не используется), сопла - по срезу чаш двигателей (z 3,55, R ≈ 0,3, ниже сечения гондолы)
   e_su34: { side: 'east', cls: 'strike', lazy: true, stations: mirror([V(-6.01, -1.56, 5.59), V(-4.7, -1.6, 4.57), V(-3.4, -1.56, 4.0), V(-1.2, -2.66, 3.0, 0.2)]),
@@ -479,6 +479,7 @@ GLB_V.e_f35 = GLB_V.e_f35_lo = GLB_V.e_f35_gear = '20261106a'; // своя мо�
 GLB_V.f18 = GLB_V.f18_gear = '20261106a'; // своя модель и стойки
 GLB_V.f16 = GLB_V.f16_gear = '20261106a'; // своя модель и стойки
 GLB_V.e_f22 = GLB_V.e_f22_lo = GLB_V.e_f22_gear = GLB_V.e_f117 = GLB_V.e_f117_gear = '20261106a'; // свои модели и стойки
+GLB_V.e_f18c = GLB_V.e_f18c_gear = '20261106b'; // своя модель и стойки
 GLB_V.e_f15e = '20261105a'; GLB_V.e_f15e_gear = '20261105a'; // своя модель и стойки
 // «Оса-М» ЗИФ-122 (KoreanNavy) и «Бук-М3» (Valera121) вместо моделей Jeyhun1985 (2026-10-22): новые файлы
 Object.assign(GLB_V, Object.fromEntries(['osa', 'osa_lo'].map((n) => [n, '20261024e'])));
@@ -493,7 +494,7 @@ GLB_V.h_ka52 = '20261024i'; // Ка-52 maddex88 (CC BY 4.0), переделан 
 Object.assign(GLB_V, Object.fromEntries(['tunguska', 'tunguska_lo', 'pantsir', 'pantsir_lo', 'msl_9m311'].map((n) => [n, '20261024j'])));
 GLB_V.w_storm = '20261024k'; // Storm Shadow: консоли крыла - свои части (сложены на подвеске)
 Object.assign(GLB_V, { su30: '20261024p' }); // Су-30МКИ и F-16E/F - andertan (CC BY 4.0) вместо Immersive3D и Muhamad Mirza Arrafi (сомнительные права: F-16 помечен на Sketchfab как сгенерированный нейросетью, у Immersive3D - рипы Unreal) (2026-10-24)
-Object.assign(GLB_V, { e_b1b: '20261024q', e_f18c: '20261024q', e_su25: '20261024q' }); // B-1B и F/A-18C - manilov.ap, Су-25 - mamont nikita (все CC BY 4.0) вместо моделей Muhamad Mirza Arrafi, Rhine_Lab_Muelsyse и Immersive3D (сомнительные права) (2026-10-24)
+Object.assign(GLB_V, { e_b1b: '20261024q', e_su25: '20261024q' }); // B-1B - manilov.ap, Су-25 - mamont nikita (все CC BY 4.0) вместо моделей Muhamad Mirza Arrafi, Rhine_Lab_Muelsyse и Immersive3D (сомнительные права) (2026-10-24)
 Object.assign(GLB_V, { l_iskander: '20261024s', w_tbmdec: '20261024r' }); // «Искандер» и ложная цель («Кинжал» - своя модель с 2026-10-25, GLB_V_OWN) - dofash_76 «ISKANDER» (CC BY 4.0) вместо 42manako (перезалив модели из 3D Warehouse - лицензия недействительна) (2026-10-24)
 GLB_V.e_su34 = '20261024l'; // Су-34 manilov.ap (CC BY 4.0) вместо 42manako, без шасси (2026-10-22)
 Object.assign(GLB_V, { hawk: '20261024m', w_gbu24: '20261024m' }); // Hawk: ракета без деталей пусковой (absorb 0); GBU-24 - AnirudhRao, своя окраска
@@ -503,6 +504,7 @@ if (paintOn) META.e_f15e_gear = { lazy: true, matte: true, paint: true, stations
 if (paintOn) META.e_f35_gear = { lazy: true, matte: true, paint: true, stations: [] };
 if (paintOn) META.f18_gear = { lazy: true, matte: true, paint: true, stations: [] };
 if (paintOn) META.f16_gear = { lazy: true, matte: true, paint: true, stations: [] };
+if (paintOn) META.e_f18c_gear = { lazy: true, matte: true, paint: true, stations: [] };
 if (paintOn) { META.e_f22_gear = { lazy: true, matte: true, paint: true, stations: [] }; META.e_f117_gear = { lazy: true, matte: true, paint: true, stations: [] }; } // стойки F-15E для ангара (проба, ?paint=1): оси как у самолёта, низ колёс - пол
 // разбор GLB: меши (позиции, нормали, UV, индексы), материалы, картинки текстур
 function parseGlb(buf) {

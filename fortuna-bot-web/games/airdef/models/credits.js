@@ -618,15 +618,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "F18",
-  "author": "manilov.ap",
-  "url": "https://sketchfab.com/3d-models/f18-1078f49726f34447ba5ec116b6ee50d0",
-  "license": "CC-BY-4.0",
-  "files": [
-   "e_f18c"
-  ]
- },
- {
   "title": "Su-25",
   "author": "mamont nikita",
   "url": "https://sketchfab.com/3d-models/su-25-88b71eb848cf4418a95dff497c07cefc",
