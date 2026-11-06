@@ -429,15 +429,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "Mirage2000",
-  "author": "manilov.ap",
-  "url": "https://sketchfab.com/3d-models/mirage2000-3efefc5b6230418eb5d39a4afcb95657",
-  "license": "CC-BY-4.0",
-  "files": [
-   "e_mirage"
-  ]
- },
- {
   "title": "Rafale",
   "author": "manilov.ap",
   "url": "https://sketchfab.com/3d-models/rafale-225c7fba25d54b4b98b1de1e38921f9d",
@@ -519,15 +510,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "Ja37",
-  "author": "manilov.ap",
-  "url": "https://sketchfab.com/3d-models/ja37-de85a256699d44d486ea3560f47ce3a1",
-  "license": "CC-BY-4.0",
-  "files": [
-   "e_viggen"
-  ]
- },
- {
   "title": "Sukhoi Su-33 Сухой Су-33",
   "author": "andertan",
   "url": "https://sketchfab.com/3d-models/sukhoi-su-33-33-d80603a8a13b49bda90f19d80cac61d4",
@@ -597,15 +579,6 @@ export const CREDITS = [
   "license": "CC-BY-4.0",
   "files": [
    "e_su35"
-  ]
- },
- {
-  "title": "super-etendard",
-  "author": "helijah",
-  "url": "https://sketchfab.com/3d-models/super-etendard-3589004316f54dba90ed7f34455eeeb2",
-  "license": "CC-BY-4.0",
-  "files": [
-   "e_etendard"
   ]
  },
  {

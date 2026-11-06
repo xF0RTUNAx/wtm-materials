@@ -72,8 +72,8 @@ const META = {
     nozzles: [V(-1.28, -1.15, 3.5), V(1.28, -1.15, 3.5)], nr: 0.3, pod: V(0.6, -2.3, -1.0), dry: true }, // Buccaneer S.2B («Пэйв Спайк»)
   e_harrier: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-2.92, -1.2, 0.75), V(-1.93, -0.95, 0.35), V(-0.3, -1.75, -1.5, 0.15), V(-0.3, -1.75, 0.5, 0.15)]),
     nozzles: [V(-1.0, -0.95, 1.2), V(1.0, -0.95, 1.2)], nr: 0.22, pod: null, dry: true }, // Harrier GR.3 (два задних «горячих» поворотных сопла за крылом, срез z 1,2)
-  e_mirage: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-2.8, -2.0, 3.1, 0.28), V(-2.08, -1.98, 2.45, 0.28), V(-0.6, -2.05, -0.5, 0.2), V(-0.6, -2.05, 2.0, 0.2)]),
-    nozzles: [V(0, -1.11, 7.18)], nr: 0.42, pod: V(0, -2.15, 0.6) }, // Mirage 2000D
+  e_mirage: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-0.55, -1.92, -0.205), V(-0.6, -1.94, 3.77), V(-3.45, -1.82, 3.77), V(-2.35, -1.96, 3.07)]),
+    nozzles: [V(0, -1.08, 7.31)], nr: 0.5, pod: V(0, -1.92, 0.45), clearGlass: true, ...(paintOn ? { gearModel: 'e_mirage_gear' } : {}) }, // Mirage 2000D: своя модель, тяжёлое на внутренних пилонах крыла
   e_rafale: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-3.75, -1.85, 3.6), V(-2.6, -1.85, 2.6, 0.3), V(-1.6, -1.85, 1.6, 0.3), V(-0.6, -2.15, 1.0, 0.15)]),
     nozzles: [V(-0.72, -1.24, 6.56), V(0.72, -1.24, 6.56)], nr: 0.3, pod: V(0.6, -2.2, -1.0) }, // Rafale («Дамокл» под воздухозаборником)
   e_b2: { side: 'west', cls: 'bomber', lazy: true, internal: true, stations: mirror([V(-3, -1.0, -1.5), V(-3, -1.0, 0.5), V(-2, -1.0, -1.5), V(-2, -1.0, 0.5)]),
@@ -99,8 +99,8 @@ const META = {
     nozzles: [V(-3.47, -2.6, 11.85), V(-2.22, -2.6, 11.85), V(2.22, -2.6, 11.85), V(3.47, -2.6, 11.85)], nr: 0.42, pod: null, dry: true }, // Vulcan B.2 (сопла по срезу: y −2,36 → −2,6) (бомбы - в отсеке; четыре «Олимпа» в корне крыла, без форсажа)
   e_draken: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-3.4, -1.36, 4.0, 0.3), V(-2.6, -1.38, 3.3, 0.3), V(-1.6, -1.5, 1.8, 0.3), V(-0.5, -1.47, 0.0, 0.15)]),
     nozzles: [V(0, -0.56, 7.67)], nr: 0.35, pod: null }, // Saab 35 Draken (J35F)
-  e_viggen: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-1.8, -1.98, 3.2, 0.3), V(-4.11, -1.78, 4.7), V(-2.9, -1.82, 4.4), V(-1.1, -1.95, 2.4, 0.2)]), // подвески: внутренние под крылом (L1/R1) и внешние (L2/R2) - на пилонах автора (балки 3,9 м и 2,1 м), бока фюзеляжа (Ф) - пилон дорисован
-    nozzles: [V(0, -1.15, 7.47)], nr: 0.45, pod: null, matte: true }, // Saab AJ 37 Viggen (matte: на скользящем свете рёбра элевонов блестели белыми полосами)
+  e_viggen: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-0.6, -1.975, 4.73), V(-4.15, -1.815, 4.53), V(-2.96, -1.875, 3.73), V(-0.9, -1.795, -0.57)]), // тяжёлое идёт на последнюю точку, под заборник
+    nozzles: [V(0, -1.075, 7.46)], nr: 0.6, pod: null, clearGlass: true, ...(paintOn ? { gearModel: 'e_viggen_gear' } : {}) }, // Saab Viggen: своя модель, серебристый металл
   // ── 2026-10-21, шестая партия (Восток): Су-33 (andertan), М-4, МиГ-17 и Т-4 (manilov.ap), МиГ-19 (Tom Zimmermann); подвески - по виду снизу / сбоку (planes-view.html?heli=1 - красные точки), сопла - по срезу ?ortho=1 ──
   e_su33: { side: 'east', cls: 'strike', lazy: true, stations: mirror([V(-5.06, -1.31, 3.0, 0.3), V(-3.98, -1.31, 2.8, 0.3), V(-2.89, -1.31, 2.0, 0.3), V(-0.6, -1.75, 1.0, 0.2)]),
     nozzles: [V(-1.3, -1.62, 9.62), V(1.3, -1.62, 9.62)], nr: 0.42, pod: null }, // Су-33
@@ -114,8 +114,8 @@ const META = {
     nozzles: [V(-0.82, -0.87, 7.17), V(0.82, -0.87, 7.17)], nr: 0.3, pod: V(0, -1.45, 1.0), matte: true }, // МиГ-29К - KoreanNavy (matte: гладкая сетка после subdivision блестела волнами на скользящем свете)
   e_t4: { side: 'east', cls: 'strike', lazy: true, internal: true, stations: mirror([V(-0.4, -1.5, -4.0), V(-0.4, -1.5, -1.5), V(-0.4, -1.5, 1.0), V(-0.4, -1.5, 3.5)]),
     nozzles: [V(-2.04, -3.17, 16.1), V(-0.68, -3.17, 16.1), V(0.68, -3.17, 16.1), V(2.04, -3.17, 16.1)], nr: 0.62, pod: null }, // Т-4 «Сотка» (бомбы - в отсеке; четыре РД-36-41 в пакете под фюзеляжем)
-  e_etendard: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-2.64, -1.49, 1.85, 0.3), V(-1.92, -1.48, 1.23, 0.3), V(-0.4, -1.6, 0.0, 0.17), V(-0.4, -1.6, 1.8, 0.17)]),
-    nozzles: [V(0, -0.9, 6.2)], nr: 0.32, pod: V(0.4, -1.7, -1.0), dry: true }, // Super Étendard (ATLIS под фюзеляжем; сопло по срезу: y −0,9, z 6,2, nr 0,32 - пламя не выше среза сбоку)
+  e_etendard: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-0.38, -1.437, 2.195), V(-0.38, -1.396, 3.395), V(-3.05, -1.128, 1.62), V(-2.05, -1.078, 0.65)]),
+    nozzles: [V(0, -0.978, 5.705)], nr: 0.405, pod: V(0, -1.526, 0.145), dry: true, clearGlass: true, ...(paintOn ? { gearModel: 'e_etendard_gear' } : {}) }, // Super Étendard: своя модель, без форсажа, контейнер под фюзеляжем по оси
   e_mirage_f1: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-2.41, -1.13, 1.9, 0.28), V(-1.75, -1.07, 1.55, 0.28), V(-0.45, -1.9, 0.3, 0.15), V(-0.45, -1.9, 2.3, 0.15)]),
     nozzles: [V(0, -1.03, 7.63)], nr: 0.45, pod: null, camo: { scheme: 'fr', size: 2.6 } }, // Mirage F1
   // F/A-18C - manilov.ap «F18» (CC BY 4.0; с 2026-10-24, прежняя - Rhine_Lab_Muelsyse; AN/AAS-38 у воздухозаборника); у автора пилонов под крылом нет - дорисованы (py 0,36), станция 3 - по низу ракетных рельсов фюзеляжа (x 1,07, низ −1,72), сопла - по срезу колец (z 8,03, R 0,46)
@@ -482,6 +482,7 @@ GLB_V.f16 = GLB_V.f16_gear = '20261106b'; // своя модель и стойк
 GLB_V.e_f22 = GLB_V.e_f22_lo = GLB_V.e_f22_gear = GLB_V.e_f117 = GLB_V.e_f117_gear = '20261106a'; // свои модели и стойки
 GLB_V.e_f18c = GLB_V.e_f18c_gear = '20261106b'; // своя модель и стойки
 GLB_V.e_typhoon = GLB_V.e_typhoon_gear = '20261106b'; // своя модель и стойки
+GLB_V.e_mirage = GLB_V.e_mirage_gear = GLB_V.e_etendard = GLB_V.e_etendard_gear = GLB_V.e_viggen = GLB_V.e_viggen_gear = '20261107a'; // свои модели и стойки
 GLB_V.e_f15e = '20261105a'; GLB_V.e_f15e_gear = '20261105a'; // своя модель и стойки
 // «Оса-М» ЗИФ-122 (KoreanNavy) и «Бук-М3» (Valera121) вместо моделей Jeyhun1985 (2026-10-22): новые файлы
 Object.assign(GLB_V, Object.fromEntries(['osa', 'osa_lo'].map((n) => [n, '20261024e'])));
@@ -506,7 +507,7 @@ if (paintOn) META.e_f15e_gear = { lazy: true, matte: true, paint: true, stations
 if (paintOn) META.e_f35_gear = { lazy: true, matte: true, paint: true, stations: [] };
 if (paintOn) META.f18_gear = { lazy: true, matte: true, paint: true, stations: [] };
 if (paintOn) META.f16_gear = { lazy: true, matte: true, paint: true, stations: [] };
-if (paintOn) { META.e_f18c_gear = { lazy: true, matte: true, paint: true, stations: [] }; META.e_typhoon_gear = { lazy: true, matte: true, paint: true, stations: [] }; }
+if (paintOn) { META.e_f18c_gear = { lazy: true, matte: true, paint: true, stations: [] }; META.e_typhoon_gear = { lazy: true, matte: true, paint: true, stations: [] }; META.e_mirage_gear = { lazy: true, matte: true, paint: true, stations: [] }; META.e_etendard_gear = { lazy: true, matte: true, paint: true, stations: [] }; META.e_viggen_gear = { lazy: true, matte: true, paint: true, stations: [] }; }
 if (paintOn) { META.e_f22_gear = { lazy: true, matte: true, paint: true, stations: [] }; META.e_f117_gear = { lazy: true, matte: true, paint: true, stations: [] }; } // стойки F-15E для ангара (проба, ?paint=1): оси как у самолёта, низ колёс - пол
 // разбор GLB: меши (позиции, нормали, UV, индексы), материалы, картинки текстур
 function parseGlb(buf) {

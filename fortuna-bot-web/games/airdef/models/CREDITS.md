@@ -47,7 +47,6 @@
 - "Jaguar" (https://sketchfab.com/3d-models/jaguar-b09a0ee965bb424aaf14ebd06b698f96) by manilov.ap — CC-BY-4.0 — `e_jaguar.glb`
 - "Buccaneer" (https://sketchfab.com/3d-models/buccaneer-db82ad0e1f5644ccaee1b25b77566dc7) by manilov.ap — CC-BY-4.0 — `e_buccaneer.glb`
 - "Harrier" (https://sketchfab.com/3d-models/harrier-9ccfd6758680413bb19d656db4f46185) by manilov.ap — CC-BY-4.0 — `e_harrier.glb`
-- "Mirage2000" (https://sketchfab.com/3d-models/mirage2000-3efefc5b6230418eb5d39a4afcb95657) by manilov.ap — CC-BY-4.0 — `e_mirage.glb`
 - "Rafale" (https://sketchfab.com/3d-models/rafale-225c7fba25d54b4b98b1de1e38921f9d) by manilov.ap — CC-BY-4.0 — `e_rafale.glb`
 - "B2" (https://sketchfab.com/3d-models/b2-a9be2ca923aa44809194613209810d06) by manilov.ap — CC-BY-4.0 — `e_b2.glb`
 - "Yak-38" (https://sketchfab.com/3d-models/yak-38-7cf4151540e748b49015700e9ac3499a) by manilov.ap — CC-BY-4.0 — `e_yak38.glb`
@@ -57,7 +56,6 @@
 - "Hunter" (https://sketchfab.com/3d-models/hunter-0bdd0fc7a68e4d0b8306f4ddb2846a26) by manilov.ap — CC-BY-4.0 — `e_hunter.glb`
 - "Avro698" (https://sketchfab.com/3d-models/avro698-5259b4b3852a4cb4ad4b1745913ed039) by manilov.ap — CC-BY-4.0 — `e_vulcan.glb`
 - "J35" (https://sketchfab.com/3d-models/j35-3d6ddbf606dc4047a15d37f4d5ac56ca) by manilov.ap — CC-BY-4.0 — `e_draken.glb`
-- "Ja37" (https://sketchfab.com/3d-models/ja37-de85a256699d44d486ea3560f47ce3a1) by manilov.ap — CC-BY-4.0 — `e_viggen.glb`
 - "Sukhoi Su-33 Сухой Су-33" (https://sketchfab.com/3d-models/sukhoi-su-33-33-d80603a8a13b49bda90f19d80cac61d4) by andertan — CC-BY-4.0 — `e_su33.glb`
 - "M4" (https://sketchfab.com/3d-models/m4-65059c25184c48c5b6a1b9ac27d34db6) by manilov.ap — CC-BY-4.0 — `e_m4.glb`
 - "Mikoyan-Gurevich MiG-19" (https://sketchfab.com/3d-models/mikoyan-gurevich-mig-19-9204188bf7114b90904c35f64a110ed3) by Tom Zimmermann — CC-BY-4.0 — `e_mig19.glb`
@@ -66,7 +64,6 @@
 - "T4" (https://sketchfab.com/3d-models/t4-1b9171a6210b427fb2493af3947b1c26) by manilov.ap — CC-BY-4.0 — `e_t4.glb`
 - "Sukhoi Su-27 "Flanker"" (https://sketchfab.com/3d-models/sukhoi-su-27-flanker-2541c1dbc6c1499cb7b38b5bf1314750) by andertan — CC-BY-4.0 — `e_su27.glb`
 - "Sukhoi Su-35 Flanker-E (Сухой Су-35)" (https://sketchfab.com/3d-models/sukhoi-su-35-flanker-e-35-c98cf9b3b3e04017a04732798a31888a) by andertan — CC-BY-4.0 — `e_su35.glb`
-- "super-etendard" (https://sketchfab.com/3d-models/super-etendard-3589004316f54dba90ed7f34455eeeb2) by helijah — CC-BY-4.0 — `e_etendard.glb`
 - "Dassault Mirage F1" (https://sketchfab.com/3d-models/dassault-mirage-f1-9f7ea1b8ca934986833ab8f265f4b661) by Civorsky — CC-BY-4.0 — `e_mirage_f1.glb`
 - "Su-25" (https://sketchfab.com/3d-models/su-25-88b71eb848cf4418a95dff497c07cefc) by mamont nikita — CC-BY-4.0 — `e_su25.glb`
 - "Su34" (https://sketchfab.com/3d-models/su34-1c94f436be51453fa598e9eab50eb0a7) by manilov.ap — CC-BY-4.0 — `e_su34.glb`
