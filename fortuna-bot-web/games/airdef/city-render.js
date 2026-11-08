@@ -37,8 +37,8 @@ export const ENV = {
   uCam: { value: new THREE.Vector3() }, uPx: UPX, uSun: { value: new THREE.Vector3(0.4, 0.7, 0.4).normalize() },
   uZen: { value: new THREE.Color() }, uHor: { value: new THREE.Color() }, uGnd: { value: new THREE.Color() }, uSunCol: { value: new THREE.Color() },
   uNight: { value: 0 }, uTime: { value: 0 }, uSnowK: { value: 0 }, // uSnowK - снег на крышах и уступах (зимняя карта)
-  uMdlCol: { value: Array.from({ length: 24 }, () => new THREE.Vector4(0, 0, 0, 0)) }, // средний цвет модели вида (w = 1 - есть): дальняя коробка - в цвет своей модели
-  uMdl: { value: new Array(24).fill(0) }, // радиус, в котором коробки вида дома скрыты (вместо них - модели; 0 - модели нет)
+  uMdlCol: { value: Array.from({ length: 32 }, () => new THREE.Vector4(0, 0, 0, 0)) }, // средний цвет модели вида (w = 1 - есть): дальняя коробка - в цвет своей модели
+  uMdl: { value: new Array(32).fill(0) }, // радиус, в котором коробки вида дома скрыты (вместо них - модели; 0 - модели нет)
   uHide: { value: new THREE.Vector3() }, // центр этого радиуса: камера (в окне ТВ - точка, куда смотрит контейнер)
 };
 // ═════════════ Текстуры (ambientCG и Poly Haven, CC0): земля, дороги, обочины, тротуары, крыши, фасады ═════════════
@@ -439,13 +439,13 @@ function buildingMaterial() {
   const m = new THREE.MeshPhongMaterial({ specular: 0x8a8a8a, shininess: 90 }); m.userData.facU = FAC;
   m.onBeforeCompile = (sh) => {
     Object.assign(sh.uniforms, ENV, TEX, { uFac: FAC });
-    sh.vertexShader = 'attribute float aKind, aMdl;\nuniform vec3 uCam, uHide; uniform float uMdl[24];\nvarying float vKind, vMdl; varying vec3 vObj, vSize, vNw, vWp;\n' + sh.vertexShader.replace('#include <project_vertex>', `#include <project_vertex>
+    sh.vertexShader = 'attribute float aKind, aMdl;\nuniform vec3 uCam, uHide; uniform float uMdl[32];\nvarying float vKind, vMdl; varying vec3 vObj, vSize, vNw, vWp;\n' + sh.vertexShader.replace('#include <project_vertex>', `#include <project_vertex>
   // вблизи дом нарисован готовой моделью - коробку убираем за экран
   if (aMdl > 0.5 && distance(instanceMatrix[3].xz, uHide.xz) < uMdl[int(aMdl + 0.5)]) gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
   vWp = (modelMatrix * instanceMatrix * vec4(transformed, 1.0)).xyz; vKind = aKind; vMdl = aMdl; vObj = position;
   vNw = normalize(mat3(instanceMatrix) * normal);
   vSize = vec3(length(instanceMatrix[0].xyz), length(instanceMatrix[1].xyz), length(instanceMatrix[2].xyz));`);
-    sh.fragmentShader = 'varying float vKind, vMdl; varying vec3 vObj, vSize, vNw, vWp;\nuniform vec4 uMdlCol[24]; uniform float uFac;\nvec3 bEmis = vec3(0.0); float bSpec = 0.0;\n' + GLSL_COMMON + GLSL_TEX +
+    sh.fragmentShader = 'varying float vKind, vMdl; varying vec3 vObj, vSize, vNw, vWp;\nuniform vec4 uMdlCol[32]; uniform float uFac;\nvec3 bEmis = vec3(0.0); float bSpec = 0.0;\n' + GLSL_COMMON + GLSL_TEX +
       sh.fragmentShader.replace('#include <color_fragment>', `#include <color_fragment>
   float raised = vKind >= 9.5 ? 1.0 : 0.0;
   float kf = mod(vKind, 10.0), kindF = floor(kf + 0.001), seed = fract(kf) / 0.9;
@@ -570,12 +570,12 @@ function roofGeo() {
 // Импосторы деревьев (tools/airdef-trees/bake.html): каждое дерево снято с 6×6 направлений полусферы (полу-октаэдр), атлас 2×2
 // вида: цвет + покрытие и нормаль + затенение кроны. В шейдере - квадрат лицом к камере, кадр по направлению взгляда
 // (4 соседних кадра смешиваются), свет как у Phong (небо + солнце). city - модели ближнего кольца (дуб, липа, сосна, куст):
-// вдали то же дерево, что вблизи; winter - две ели и две сосны LOLIPOP (CC BY, TREES_W - они же вблизи). Вид: [радиус описанной сферы, центр по высоте, высота]
+// вдали то же дерево, что вблизи; winter - две ели и две сосны (свои, Свои/Периферия; TREES_W - они же вблизи). Вид: [радиус описанной сферы, центр по высоте, высота]
 export const TREE_IMP = {
-  city: { G: 6, tint: [0.1, 0.14, 0.085], snow: 0, sp: [[6.446, 5.18, 10.36], [6.812, 4.759, 9.519], [6.905, 6.353, 12.706], [4.679, 3.56, 7.12]] },
-  winter: { G: 6, tint: [0.1, 0.13, 0.095], snow: 0.7, sp: [[5.907, 4.654, 9.309], [5.189, 4.048, 8.096], [10.073, 8.444, 16.887], [11.48, 9.808, 19.617]] },
+  city: { G: 6, tint: [0.1, 0.14, 0.085], snow: 0, sp: [[7.501, 5.18, 10.36], [7.136, 4.76, 9.52], [7.59, 6.355, 12.71], [5.169, 3.56, 7.12]] }, // свои деревья (Свои/Периферия), перепечены 2026-11-08
+  winter: { G: 6, tint: [0.1, 0.13, 0.095], snow: 0.7, sp: [[6.126, 4.655, 9.31], [5.444, 4.05, 8.1], [10.483, 8.445, 16.89], [12.242, 9.81, 19.62]] },
   // осень: городской атлас, листва перекрашена цветом экземпляра (рыжие, жёлтые, багряные, сухостой), сосна (вид 2) - своя хвоя
-  autumn: { G: 6, atlas: 'city', recolor: 1, tint: [0.12, 0.12, 0.1], snow: 0, sp: [[6.446, 5.18, 10.36], [6.812, 4.759, 9.519], [6.905, 6.353, 12.706], [4.679, 3.56, 7.12]] },
+  autumn: { G: 6, atlas: 'city', recolor: 1, tint: [0.12, 0.12, 0.1], snow: 0, sp: [[7.501, 5.18, 10.36], [7.136, 4.76, 9.52], [7.59, 6.355, 12.71], [5.169, 3.56, 7.12]] },
 };
 function treeImpTex(f) { // → uniform { value }: KTX2, иначе WebP
   const t = new THREE.Texture(); t.flipY = false; t.minFilter = THREE.LinearMipmapLinearFilter; t.magFilter = THREE.LinearFilter;
@@ -584,7 +584,7 @@ function treeImpTex(f) { // → uniform { value }: KTX2, иначе WebP
   texStats.req++;
   if (ktxOn()) { ktxLoad(f).then((k) => { U.value = k; texStats.done++; }).catch(() => webp()); return U; }
   webp(); return U;
-  function webp() { fetch(new URL(`./tex/${f}.webp?v=20261022c`, import.meta.url)).then((r) => (r.ok ? r.blob() : Promise.reject(new Error(f))))
+  function webp() { fetch(new URL(`./tex/${f}.webp?v=20261108h`, import.meta.url)).then((r) => (r.ok ? r.blob() : Promise.reject(new Error(f))))
     .then((b) => createImageBitmap(b, { premultiplyAlpha: 'none', colorSpaceConversion: 'none' })).then((bmp) => { t.image = bmp; t.needsUpdate = true; texStats.done++; })
     .catch((e) => { texStats.done++; console.warn('деревья не загрузились:', e.message); }); }
 }
@@ -596,7 +596,7 @@ function treeImpMat(set, hi, hemi, sunL, a2c = false) {
       tA: treeImpTex(`tr_${atl}_a${sfx}`), tN: treeImpTex(`tr_${atl}_n${sfx}`), uSp: { value: sp }, uRec: { value: I.recolor || 0 },
       uHS: { value: hemi.color.clone().multiplyScalar(hemi.intensity) }, uHG: { value: hemi.groundColor.clone().multiplyScalar(hemi.intensity) },
       uSL: { value: sunL.color.clone().multiplyScalar(sunL.intensity) }, uTint: { value: new THREE.Vector3(...I.tint) }, uSnow: { value: I.snow } },
-    vertexShader: `attribute float aKind, aMdl; uniform vec3 uCam, uHide; uniform float uMdl[24]; uniform vec4 uSp[4];
+    vertexShader: `attribute float aKind, aMdl; uniform vec3 uCam, uHide; uniform float uMdl[32]; uniform vec4 uSp[4];
       varying vec2 vUv, vG0, vG1, vF; varying vec3 vAx, vAz, vCol; varying float vSp, vTint, vVar;
       #include <fog_pars_vertex>
       void main() {
@@ -905,14 +905,33 @@ export const BLD = [null, ['bld_p5', 16.24, 16.5, 53.0], ['bld_p9', 24.1, 25.4, 
   ['h_brick', 11.39, 7.53, 13.38, 1], ['h_house', 12.01, 7.4, 9.71, 1], ['h_log', 10.23, 5.96, 12.24, 1], ['h_khata', 9.64, 3.86, 13.31, 1], ['o_block', 25.6, 32, 30.7],
   ['h_shanty', 18.39, 14.25, 29.59, 1], ['h_mobile', 7.42, 5.97, 11.74, 1], null, null, null, null, // 14…17 - деревья
   // 18…: точечная девятиэтажка, 16-этажная «пластина», офисный корпус, стеклянные башни
-  ['bld_t9', 14.2, 28.42, 15], ['bld_a16', 16.25, 50.5, 50], ['o_tall', 37.09, 33.19, 18.36], ['g_amel', 25.15, 56.37, 27.19], ['g_fortune', 38.88, 111.23, 31.55]];
+  ['bld_t9', 14.2, 28.42, 15], ['bld_a16', 16.25, 50.5, 50], ['o_tall', 37.09, 33.19, 18.36], ['g_amel', 25.15, 56.37, 27.19], ['g_fortune', 38.88, 111.23, 31.55],
+  // 23…29: свои цеха и склады промзоны (Свои/Цеха и склады, 2026-11-08) - размер по стенам (рампы, свесы, трубы выходят за коробку нарочно), конёк вдоль Z;
+  // 30 - контейнерная площадка порта (не модель: раскладка контейнеров в nearHouses, yardSets)
+  ['wh_annex', 30, 14, 45], ['wh_arch', 30, 13, 40], ['wh_lantern', 36, 17.2, 54], ['wh_panel', 24, 7.8, 72], ['wh_ramp', 24, 9, 96], ['wh_saw', 40, 12.2, 40], ['wh_shed', 30, 12, 60], null];
+const WH = [23, 24, 25, 26, 27, 28, 29], YARD = 30;
+// цех v в коробке L × S: [копий вдоль, копий поперёк, растяжение вдоль, поперёк]
+const whGrid = (v, L, S) => { const [, mx, , mz] = BLD[v], nl = Math.max(1, Math.round(L / mz)), nw = Math.max(1, Math.round(S / mx)); return [nl, nw, L / nl / mz, S / nw / mx]; };
 // деревья вблизи (номер в uMdl - 14…17) и их высота при масштабе 1; фонарь
 const TREES = [[14, 'tr_oak', 10.36], [15, 'tr_lime', 9.52], [16, 'tr_pine', 12.71], [17, 'tr_bush', 7.12]];
 // зимний лес вблизи (те же номера: на зимней карте городских деревьев нет): две ели, две сосны - высота модели, м
 const TREES_W = [[14, 'w_fir1', 9.31], [15, 'w_fir3', 8.1], [16, 'w_pine1', 16.89], [17, 'w_pine2', 19.62]];
+// свои варианты для разнообразия (Свои/Периферия, 2026-11-08): вблизи - вперемешку с основным видом (половина деревьев по месту),
+// тот же номер uMdl и та же высота в игре; вдали - импостор основного вида. [имя, высота модели]
+const TREE_B = { tr_oak: ['tr_oak_b', 9.6], tr_lime: ['tr_lime_b', 10.8], tr_pine: ['tr_pine_b', 14.5], tr_bush: ['tr_bush_b', 5.6], w_fir1: ['w_fir_b', 11.5] };
+const treeB = (t) => !!(((Math.round(t.x * 7) * 73856093) ^ (Math.round(t.z * 7) * 19349663)) & 1); // вариант по месту - без своей случайности
+// набор деревьев вблизи: основной вид и вариант (если есть) - каждый своим набором, с покачиванием на ветру
+function addTrees(G, pre, slot, name, h, L, R) {
+  const m4 = new THREE.Matrix4(), qq = new THREE.Quaternion(), YY = new THREE.Vector3(0, 1, 0), pp = new THREE.Vector3(), ss = new THREE.Vector3(), V = TREE_B[name];
+  for (const [nm, mh, list] of V ? [[name, h, L.filter((t) => !treeB(t))], [V[0], V[1], L.filter(treeB)]] : [[name, h, L]]) {
+    const xz = new Float32Array(list.length * 2), mats = new Float32Array(list.length * 16);
+    list.forEach((t, j) => { m4.compose(pp.set(t.x, t.y + 0.3, t.z), qq.setFromAxisAngle(YY, t.ry), ss.setScalar(1.3 * t.sy / mh)); m4.toArray(mats, j * 16); xz[j * 2] = t.x; xz[j * 2 + 1] = t.z; });
+    G.addNear(pre + slot + (nm === name ? '' : 'b'), slot, nm, R, xz, mats, { wind: mh });
+  }
+}
 const HOUSES = [7, 8, 9, 10, 12, 13];
 // прятать процедурное вблизи (вершинный шейдер): у инстанса aMdl > 0 и до камеры меньше uMdl[aMdl] - за экран
-const HIDE_HEAD = 'attribute float aMdl;\nuniform vec3 uHide; uniform float uMdl[24];\n';
+const HIDE_HEAD = 'attribute float aMdl;\nuniform vec3 uHide; uniform float uMdl[32];\n';
 const HIDE_BODY = 'if (aMdl > 0.5 && distance(instanceMatrix[3].xz, uHide.xz) < uMdl[int(aMdl + 0.5)]) gl_Position = vec4(2.0, 2.0, 2.0, 1.0);';
 const roofH = (c) => 2.2 + c * 2.2; // высота скатной крыши частного дома (как у коробки с крышей)
 // какой моделью рисовать дом вблизи (0 - остаётся коробкой): пятиэтажки, длинные девятиэтажки,
@@ -924,7 +943,15 @@ function bldVariant(B, i) {
   const tower = (...vs) => { let best = 0, bk = 0.37; for (const v of vs) { const [, mx, my, mz] = BLD[v], kp = Math.sqrt((B.w[i] * B.d[i]) / (mx * mz)), d = Math.abs(Math.log((h / my) / kp)); if (d < bk && kp < 2) { bk = d; best = v; } } return best; }; // и не крупнее ×2 (окна - не огромные)
   if (k === KIND.PANEL) return L / S < 1.6 ? tower(18) : h < 20 ? 1 : h > 40 ? 19 : L > 100 && h < 30 ? 2 : 4;
   if (k === KIND.PLAIN) return S > 15 && h > 11 && h < 20 && L < 70 ? 5 : 0;
-  if (k === KIND.WAREHOUSE) return 0; // цеха и склады - свои коробки (модель-электростанция растягивалась в плоский блин и не совпадала с коробкой вдали)
+  // цеха и склады: в порту - контейнерная площадка; в промзоне - свой цех ближайших пропорций: длинная сторона делится на секции
+  // (как у домов), вид - с наименьшим растяжением по самой растянутой оси (на стенде сборщика 0,75…1,35 выглядит нормально)
+  if (k === KIND.WAREHOUSE) {
+    if (zoneAt(B.x[i], B.z[i]) === ZONE.PORT) return YARD;
+    // широкая коробка (до 158 м при модели до 40 м) - ряд копий и поперёк (whGrid): иначе цех расплющивался; не вышло без растяжения больше ×1,8 - коробка
+    let best = 0, bk = 1e9;
+    for (const v of WH) { const g = whGrid(v, L, S), d = Math.max(Math.abs(Math.log(g[2])), Math.abs(Math.log(g[3])), Math.abs(Math.log(h / BLD[v][2]))); if (d < bk) { bk = d; best = v; } }
+    return bk <= Math.log(1.8) ? best : 0; // на карте seed 1: среднее растяжение ×1,16, у 90 % не больше ×1,27; до ×1,8 - лучше цех, чем голая коробка среди цехов
+  }
   if (k === KIND.HOUSE) return HOUSES[Math.floor(B.c[i] * HOUSES.length) % HOUSES.length];
   if (k === KIND.OFFICE) return L / S < 1.5 ? (h > 20 && h < 45 ? 11 : 0) : h > 22 && h < 48 ? 20 : 0;
   if (k === KIND.GLASS) return L / S < 1.6 ? tower(21, 22) : 0;
@@ -933,13 +960,72 @@ function bldVariant(B, i) {
 // модели ставятся по готовым матрицам (растянуты по коробке дома, длинной стороной вдоль длинной стороны коробки);
 // раз в кадр берутся те, что ближе радиуса, - ровно те, чьи коробки шейдер прячет (тот же uCam)
 const GC = 150, gkey = (ix, iz) => (ix + 2048) * 4096 + iz + 2048; // ячейка сетки «моделей вблизи», м
+// цвет контейнера: атлас - 8 столбцов расцветок по 1/8 ширины, у файла - первый; сдвиг u в вершинном шейдере (одна текстура на все цвета)
+const COLM = new WeakMap(), WINDM = new WeakMap();
+function colMat(m0, k) {
+  let M = COLM.get(m0); if (!M) COLM.set(m0, M = new Map());
+  let m = M.get(k); if (m) return m;
+  m = m0.clone(); const prev = m0.onBeforeCompile, U = { value: k / 8 }, ck = m0.customProgramCacheKey ? m0.customProgramCacheKey() : '';
+  m.onBeforeCompile = (sh, r) => { if (prev) prev.call(m, sh, r); sh.uniforms.uColOff = U; sh.vertexShader = 'uniform float uColOff;\n' + sh.vertexShader.replace('#include <uv_vertex>', '#include <uv_vertex>\n#ifdef USE_UV\n  vUv.x += uColOff;\n#endif'); };
+  m.customProgramCacheKey = () => ck + '|col'; M.set(k, m); return m;
+}
+// покачивание дерева на ветру (Mark: деревья живые): сдвиг xz растёт как (y / H)², фаза - от места экземпляра; у кроны - мелкая дрожь
+function windMat(m0, H) {
+  let m = WINDM.get(m0); if (m) return m;
+  m = m0.clone(); const prev = m0.onBeforeCompile, UH = { value: H }, ck = m0.customProgramCacheKey ? m0.customProgramCacheKey() : '';
+  m.onBeforeCompile = (sh, r) => {
+    if (prev) prev.call(m, sh, r); sh.uniforms.uTime = ENV.uTime; sh.uniforms.uTreeH = UH;
+    sh.vertexShader = 'uniform float uTime, uTreeH;\n' + sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>
+  { float wk = clamp(position.y / uTreeH, 0.0, 1.0); wk *= wk;
+  #ifdef USE_INSTANCING
+    vec2 ph = instanceMatrix[3].xz * 0.031;
+  #else
+    vec2 ph = vec2(0.0);
+  #endif
+    float sw = sin(uTime * 1.1 + ph.x + ph.y) + 0.45 * sin(uTime * 2.3 + ph.x * 1.7 - ph.y);
+    transformed.xz += vec2(0.7, 0.45) * (sw * 0.012 * uTreeH * wk) + 0.004 * uTreeH * wk * sin(uTime * 6.5 + position.x * 3.1 + position.z * 2.3); }`);
+  };
+  m.customProgramCacheKey = () => ck + '|wind'; WINDM.set(m0, m); return m;
+}
+// контейнерные площадки порта: коробка KIND.WAREHOUSE в зоне порта (её высота - city.js, штабель в 3 яруса) - ряды по 5 штабелей
+// поперёк, проезды 9 м, шаг вдоль - 40 футов; ярусы 1-4, двадцатифутовые - парами. Своя случайность от номера коробки (застройка не меняется).
+// Типы: [ключ, высота яруса, расцветки (столбцы атласа: 0 синий, 1 красный, 2 зелёный, 3 серый, 4 бежевый, 5 белый, 6 рыжий, 7 бордовый)]
+const YT40 = [['c40', 2.591, [0, 1, 2, 3, 4, 6, 7], 0.6], ['c40hc', 2.896, [0, 1, 3, 4, 7], 0.28], ['c40r', 2.896, [5], 0.12]];
+const YT20 = [['c20', 2.591, [0, 1, 2, 3, 6, 7], 0.8], ['c20ot', 2.591, [2, 3], 0.1], ['c20tank', 2.591, [3, 5], 0.1]];
+function yardSets(G, B, ids, R) {
+  const per = new Map(), m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), Y = new THREE.Vector3(0, 1, 0), p = new THREE.Vector3(), one = new THREE.Vector3(1, 1, 1);
+  let cx = 0, cz = 0; // отбор по радиусу - по центру площадки (как у домов: коробка прячется по своему центру, контейнеры - вместе с ней)
+  const put = (name, col, x, y, z, ry) => { const key = col == null ? name : name + ':' + col; let L = per.get(key); if (!L) per.set(key, L = { name, col, xz: [], m: [] }); m4.compose(p.set(x, y, z), q.setFromAxisAngle(Y, ry), one); L.m.push(...m4.elements); L.xz.push(cx, cz); };
+  const pick = (T, r) => { let x = r(); for (const t of T) { if (x < t[3]) return t; x -= t[3]; } return T[0]; };
+  const PITCH = 2.75, BLK = 5, LANE = 9, SL = 12.8;
+  for (const i of ids) {
+    const r = mulberry32(i * 7349 + 101), longX = B.w[i] >= B.d[i], L = Math.max(B.w[i], B.d[i]), S = Math.min(B.w[i], B.d[i]); cx = B.x[i]; cz = B.z[i];
+    const at = (u, v) => (longX ? [B.x[i] + u, B.z[i] + v] : [B.x[i] + v, B.z[i] + u]); // u - вдоль длинной стороны, v - поперёк
+    const ry = longX ? Math.PI / 2 : 0, ns = Math.floor((L - 6) / SL); if (ns < 1) continue;
+    const nb = Math.max(1, Math.floor((S - 6 + LANE) / (BLK * PITCH + LANE))), W = nb * BLK * PITCH + (nb - 1) * LANE, u0 = -ns * SL / 2;
+    const rows = []; for (let b = 0; b < nb; b++) for (let k = 0; k < BLK; k++) { const v = -W / 2 + b * (BLK * PITCH + LANE) + (k + 0.5) * PITCH; if (Math.abs(v) <= S / 2 - 2) rows.push(v); }
+    for (const v of rows) for (let sl = 0; sl < ns; sl++) {
+      if (r() < 0.12) continue;
+      const x0 = r(), lv = x0 < 0.2 ? 1 : x0 < 0.55 ? 2 : 3, u = u0 + (sl + 0.5) * SL, [gx, gz] = at(u, v); let y = GH(gx, gz); // не выше 3 ярусов: коробка столкновений 7,8 м (city.js)
+      for (let l = 0; l < lv; l++) {
+        if (r() < 0.72) { const t = pick(YT40, r), [x, z] = at(u, v); put(t[0], t[2][Math.floor(r() * t[2].length)], x, y, z, ry + (r() < 0.5 ? Math.PI : 0)); y += t[1]; }
+        else { const t = pick(YT20, r); for (const du of [-3.2, 3.2]) { const [x, z] = at(u + du, v); put(t[0], t[2][Math.floor(r() * t[2].length)], x, y, z, ry + (r() < 0.5 ? Math.PI : 0)); } y += t[1]; }
+      }
+    }
+    // козловой кран над блоком (пролёт 24,8 м - поперёк рядов, по X модели) и ричстакер в проезде у торца
+    for (let b = 0; b < nb; b++) { const v = -W / 2 + b * (BLK * PITCH + LANE) + BLK * PITCH / 2; if (ns < 3 || Math.abs(v) + 13.8 > S / 2 || r() >= 0.8) continue; const u = u0 + (1 + Math.floor(r() * (ns - 2))) * SL, [x, z] = at(u, v); put('c_rtg', null, x, GH(x, z), z, longX ? -Math.PI / 2 : 0); } // пролёт 24,8 м: ноги в проездах по 9 м, не в соседних рядах
+    if (L - ns * SL > 26 && r() < 0.6) { const sd = r() < 0.5 ? -1 : 1, [x, z] = at(sd * (ns * SL / 2 + 7), rows[Math.floor(r() * rows.length)] || 0); put('c_reach', null, x, GH(x, z), z, ry + (sd < 0 ? 0 : Math.PI)); } // вдоль ряда, захватом к штабелю, 7 м от торца
+  }
+  for (const [key, L] of per) G.addNear('y_' + key, YARD, L.name, R, Float32Array.from(L.xz), Float32Array.from(L.m), { col: L.col });
+}
 function nearHouses(G, scene, B, near, P, sh) {
   const R = P.bldNear || 0, sets = new Map(), mtx = new THREE.Matrix4(), q = new THREE.Quaternion(), Y = new THREE.Vector3(0, 1, 0), p = new THREE.Vector3(), s = new THREE.Vector3();
   ENV.uMdl.value.fill(0); // город пересобран - коробки снова видны, пока не придут модели
   if (!R) return;
   // набор моделей вблизи: slot - номер в uMdl (коробки / процедурные деревья с этим aMdl прячутся в радиусе), 0 - прятать нечего
   // (фонари); xz - центры (по ним видимость), mats - готовые матрицы
-  G.addNear = (key, slot, name, Rs, xz, mats) => {
+  // o.col - цвет контейнера (сдвиг u атласа на col/8, colMat); o.wind - высота модели дерева (покачивание, windMat)
+  G.addNear = (key, slot, name, Rs, xz, mats, o = {}) => {
     const n = xz.length / 2; if (!n) return;
     const im = new THREE.InstancedBufferAttribute(new Float32Array(n * 16), 16); im.setUsage(THREE.DynamicDrawUsage);
     // сетка ячеек GC × GC м: отбор перебирает только ячейки в радиусе, а не все экземпляры города
@@ -949,7 +1035,7 @@ function nearHouses(G, scene, B, near, P, sh) {
       gb[0] = Math.min(gb[0], ix); gb[1] = Math.max(gb[1], ix); gb[2] = Math.min(gb[2], iz); gb[3] = Math.max(gb[3], iz);
     }
     const grid = new Map(); for (const [k, c] of cells) grid.set(k, Int32Array.from(c));
-    sets.set(key, { slot, name, xz, mats, im, n, meshes: [], R: Rs, grid, gb });
+    sets.set(key, { slot, name, xz, mats, im, n, meshes: [], R: Rs, grid, gb, col: o.col ?? null, wind: o.wind || 0 });
   };
   for (let v = 1; v < BLD.length; v++) {
     if (!BLD[v] || !near[v].length) continue;
@@ -957,23 +1043,29 @@ function nearHouses(G, scene, B, near, P, sh) {
     // длинный дом - несколькими секциями модели подряд (окна не растягиваются); видимость - по центру всего дома
     const mLongX = mx > mz, mL = Math.max(mx, mz), segs = [];
     for (const i of ids) {
-      const longX = B.w[i] > B.d[i], L = Math.max(B.w[i], B.d[i]), ns = house ? 1 : Math.max(1, Math.round(L / mL));
-      for (let k = 0; k < ns; k++) segs.push([i, longX, (k + 0.5) * L / ns - L / 2, L / ns, Math.min(B.w[i], B.d[i])]);
+      const longX = B.w[i] > B.d[i], L = Math.max(B.w[i], B.d[i]), S0 = Math.min(B.w[i], B.d[i]), wh = WH.includes(v), ns = house ? 1 : wh ? whGrid(v, L, S0)[0] : Math.max(1, Math.round(L / mL)), nw = wh ? whGrid(v, L, S0)[1] : 1;
+      for (let k = 0; k < ns; k++) for (let c = 0; c < nw; c++) segs.push([i, longX, (k + 0.5) * L / ns - L / 2, L / ns, S0 / nw, (c + 0.5) * S0 / nw - S0 / 2]); // цеха - и поперёк (whGrid)
     }
     const n = segs.length, xz = new Float32Array(n * 2), mats = new Float32Array(n * 16);
-    segs.forEach(([i, longX, off, sl, S], j) => {
+    segs.forEach(([i, longX, off, sl, S, co], j) => {
       const flip = ((i * 2654435761 + j * 40503) >>> 0) % 2 ? Math.PI : 0;
       q.setFromAxisAngle(Y, (mLongX === longX ? 0 : Math.PI / 2) + flip);
       s.set((mLongX ? sl : S) / mx, B.h[i] / my, (mLongX ? S : sl) / mz); // вдоль длинной оси модели - секция, поперёк - ширина дома
       if (house) s.setScalar(Math.min(s.x, s.z)); // частный дом - без растяжения: свои пропорции, вписан в участок
-      const x = B.x[i] + (longX ? off : 0), z = B.z[i] + (longX ? 0 : off);
+      const x = B.x[i] + (longX ? off : co), z = B.z[i] + (longX ? co : off);
       mtx.compose(p.set(x, GH(x, z) - 0.2, z), q, s); mtx.toArray(mats, j * 16);
       xz[j * 2] = B.x[i]; xz[j * 2 + 1] = B.z[i];
     });
     // мелких частных домов много - их радиус меньше; офисный корпус издали светлый и плоский - дальше коробки с фасадом
     G.addNear('b' + v, v, BLD[v][0], P.full ? R : house ? R * 0.6 : BLD[v][0] === 'o_block' ? Math.min(R, 700) : R, xz, mats); // ?full=1 - все полными моделями
   }
+  // контейнерные площадки порта (вид YARD): ряды штабелей вдоль длинной стороны коробки, проезды, козловой кран и ричстакер;
+  // радиус - как у частных домов (контейнеров много)
+  if (near[YARD] && near[YARD].length) yardSets(G, B, near[YARD], P.full ? R : R * 0.6);
   // модель пришла: по мешу на материал, общая матрица инстансов; коробки этого вида вблизи прячутся
+  // радиус моделей вблизи по роли (Mark 2026-11-08: «если играется самолет - то можно в самом минимальном разрешении это выдавать - в первую
+  // очередь то что на земле будет важно при игре на пво»): k = 1 - ПВО и меню, меньше - самолёт; коробки и импосторы прячутся в том же радиусе
+  G.nearScale = (k) => { for (const S of sets.values()) { if (S.R0 === undefined) S.R0 = S.R; S.R = S.R0 * k; if (S.R1 !== undefined) S.R1 = Math.max(120, S.R * 0.45); if (S.meshes.length && S.slot && !S.far) ENV.uMdl.value[S.slot] = S.R; } lx = 1e9; };
   G.attachBld = (name, group) => {
     for (const [key, S] of sets) {
       if (S.name !== name || S.meshes.length) continue;
@@ -981,7 +1073,7 @@ function nearHouses(G, scene, B, near, P, sh) {
       group.traverse((c) => {
         if (!c.isMesh) return;
         if (G.winter) snowify(c.material); // зимой - снег на крышах моделей
-        const m = new THREE.InstancedMesh(c.geometry, c.material, S.n); m.instanceMatrix = S.im; m.count = 0; m.frustumCulled = false; m.userData.set = key;
+        const m = new THREE.InstancedMesh(c.geometry, S.col != null ? colMat(c.material, S.col) : S.wind ? windMat(c.material, S.wind) : c.material, S.n); m.instanceMatrix = S.im; m.count = 0; m.frustumCulled = false; m.userData.set = key;
         m.castShadow = !!sh.cast && !c.material.alphaTest; m.receiveShadow = !!sh.receive; scene.add(m); S.meshes.push(m); cast = cast || m.castShadow;
       });
       // шар вокруг начала модели, вмещающий её, × масштаб экземпляра - для отсечения по полю зрения (+ запас на тень, если отбрасывает)
@@ -994,7 +1086,7 @@ function nearHouses(G, scene, B, near, P, sh) {
         S.cxyz[j * 3] = e[o + 12]; S.cxyz[j * 3 + 1] = e[o + 13]; S.cxyz[j * 3 + 2] = e[o + 14];
       }
       S.imPod = new THREE.InstancedBufferAttribute(new Float32Array(S.n * 16), 16); S.imPod.setUsage(THREE.DynamicDrawUsage);
-      if (S.slot) { ENV.uMdl.value[S.slot] = S.R; const mc = modelColor(group); if (mc) ENV.uMdlCol.value[S.slot].set(mc.r, mc.g, mc.b, 1); }
+      if (S.slot) { ENV.uMdl.value[S.slot] = S.R; const mc = S.slot === YARD || WH.includes(S.slot) ? null : modelColor(group); if (mc) ENV.uMdlCol.value[S.slot].set(mc.r, mc.g, mc.b, 1); if (S.slot === YARD) ENV.uMdlCol.value[YARD].set(0.2, 0.16, 0.15, 1); } // площадки вдали - один пёстро-ржавый цвет (наборов много, порядок прихода любой); цеха - своя палитра коробок
       lx = 1e9;
       // тяжёлая модель (больше 2500 треугольников) - на средней дальности упрощённой копией (~ четверть треугольников)
       let tri = 0; for (const m of S.meshes) tri += (m.geometry.index ? m.geometry.index.count : m.geometry.attributes.position.count) / 3;
@@ -1011,7 +1103,7 @@ function nearHouses(G, scene, B, near, P, sh) {
         S.R1 = Math.max(120, S.R * 0.45); lx = 1e9;
       }).catch(() => { /* без упрощения - модель целиком */ });
       // вдали (до P.bldFar) - сильно упрощённая та же модель вместо коробки; дальше - коробки в цвет модели (там здания - точки)
-      const RF = S.slot >= 14 && S.slot <= 17 ? (P.treeFar || 0) : (P.bldFar || 0);
+      const RF = S.slot === YARD ? 0 : S.slot >= 14 && S.slot <= 17 ? (P.treeFar || 0) : (P.bldFar || 0); // площадки порта вдали - коробки в цвет контейнеров (их тысячи)
       const big = tri >= 8000 && !(S.slot >= 14 && S.slot <= 17); // сталинки, высотки, «пластины» - мягче
       const tree = S.slot >= 14 && S.slot <= 17, imp = RF > S.R && S.slot && !tree ? makeImpostor(group, G.renderer, (() => { const b = new THREE.Box3().setFromObject(group), z = b.getSize(new THREE.Vector3()); return Math.max(z.x, z.z) > 60 ? 512 : big || S.R >= R ? 256 : 128; })()) : null; // дома - импостор (снимки модели), деревья - упрощённая сетка
       if (imp) {
@@ -1067,11 +1159,11 @@ function nearHouses(G, scene, B, near, P, sh) {
   };
   // окно ТВ: модели вблизи точки at (радиус R) в поле зрения cam - во втором буфере инстансов; коробки там прячет шейдер
   // (uHide = at). Возвращает, как вернуть основной кадр. Основной набор не трогается - нагрузки на остальной кадр нет
-  const podFr = new THREE.Frustum(), mdl0 = new Array(24), keep = [];
+  const podFr = new THREE.Frustum(), mdl0 = new Array(32), keep = [];
   G.nearPod = (cam, at, R) => {
     cam.updateMatrixWorld(); PM.multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse.copy(cam.matrixWorld).invert()); podFr.setFromProjectionMatrix(PM);
     const pl = podFr.planes, R2 = R * R, U = ENV.uMdl.value; keep.length = 0;
-    for (let i = 0; i < 24; i++) mdl0[i] = U[i];
+    for (let i = 0; i < 32; i++) mdl0[i] = U[i];
     for (const S of sets.values()) {
       if (!S.meshes.length) continue;
       const a = S.imPod.array, C3 = S.cxyz; let c = 0;
@@ -1094,7 +1186,7 @@ function nearHouses(G, scene, B, near, P, sh) {
     const h0 = ENV.uHide.value.clone(); ENV.uHide.value.copy(at);
     return () => {
       for (let i = 0; i < keep.length; i += 3) { const m = keep[i], S = sets.get(m.userData.set); m.instanceMatrix = m.userData.far ? S.imFar : m.userData.lo ? S.imLo : S.im; m.count = keep[i + 1]; m.visible = keep[i + 2]; }
-      for (let i = 0; i < 24; i++) U[i] = mdl0[i];
+      for (let i = 0; i < 32; i++) U[i] = mdl0[i];
       ENV.uHide.value.copy(h0);
     };
   };
@@ -1625,11 +1717,7 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
     if (G.addNear && P.treeNear) {
       const per = TREES_W.map(() => []), m4 = new THREE.Matrix4(), qq = new THREE.Quaternion(), YY = new THREE.Vector3(0, 1, 0), pp = new THREE.Vector3(), ss = new THREE.Vector3();
       for (const t of tl) { per[t.v].push(t); t.mdl = TREES_W[t.v][0]; }
-      TREES_W.forEach(([slot, name, h], v) => {
-        const L = per[v], xz = new Float32Array(L.length * 2), mats = new Float32Array(L.length * 16);
-        L.forEach((t, j) => { m4.compose(pp.set(t.x, t.y + 0.3, t.z), qq.setFromAxisAngle(YY, t.ry), ss.setScalar(1.3 * t.sy / h)); m4.toArray(mats, j * 16); xz[j * 2] = t.x; xz[j * 2 + 1] = t.z; });
-        G.addNear('w' + slot, slot, name, Math.round(P.treeNear * 1.6), xz, mats);
-      });
+      TREES_W.forEach(([slot, name, h], v) => addTrees(G, 'w', slot, name, h, per[v], Math.round(P.treeNear * 1.6)));
     }
     const li = tl.map((t) => ({ x: t.x, z: t.z, y: t.y + 0.3, sx: 1.3 * t.sy, sy: 1.3 * t.sy, sz: 1.3 * t.sy, kind: t.v, color: t.color, ry: t.ry, mdl: t.mdl || 0 }));
     G.tiles.push(...tiled(scene, li, q, treeImpMat('winter', P.trees >= 14000, hemi, sunL, !!P.perf && P.perf.aa === 'msaa'), { cast: false, receive: false }, 0.8));
@@ -1677,11 +1765,7 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
       const per = TREES.map(() => []);
       for (const t of tl) { per[t.v].push(t); t.mdl = TREES[t.v][0]; }
       const m4 = new THREE.Matrix4(), qq = new THREE.Quaternion(), YY = new THREE.Vector3(0, 1, 0), pp = new THREE.Vector3(), ss = new THREE.Vector3();
-      TREES.forEach(([slot, name, h], v) => {
-        const L = per[v], xz = new Float32Array(L.length * 2), mats = new Float32Array(L.length * 16);
-        L.forEach((t, j) => { m4.compose(pp.set(t.x, t.y + 0.3, t.z), qq.setFromAxisAngle(YY, t.ry), ss.setScalar(1.3 * t.sy / h)); m4.toArray(mats, j * 16); xz[j * 2] = t.x; xz[j * 2 + 1] = t.z; });
-        G.addNear('t' + slot, slot, name, P.treeNear, xz, mats);
-      });
+      TREES.forEach(([slot, name, h], v) => addTrees(G, 't', slot, name, h, per[v], P.treeNear));
       tMat.onBeforeCompile = (sh) => { Object.assign(sh.uniforms, { uHide: ENV.uHide, uMdl: ENV.uMdl }); sh.vertexShader = HIDE_HEAD + sh.vertexShader.replace('#include <project_vertex>', '#include <project_vertex>\n' + HIDE_BODY); };
     }
     // вдали - импосторы тех же деревьев (без ?treeimp=0); иначе - прежние простые кроны

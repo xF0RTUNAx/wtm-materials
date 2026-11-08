@@ -1,0 +1,592 @@
+{
+ "name": "Периферия",
+ "name_en": "Периферия",
+ "rev": 1,
+ "date": "2026-11-08",
+ "files": {
+  "glb": "periphery_sketchfab.glb",
+  "blend": "периферия.blend",
+  "game": [
+   "pr_deadtree.glb",
+   "pr_oldtree.glb",
+   "tr_bush.glb",
+   "tr_bush_b.glb",
+   "tr_lime.glb",
+   "tr_lime_b.glb",
+   "tr_oak.glb",
+   "tr_oak_b.glb",
+   "tr_pine.glb",
+   "tr_pine_b.glb",
+   "w_fir1.glb",
+   "w_fir3.glb",
+   "w_fir_b.glb",
+   "w_pine1.glb",
+   "w_pine2.glb",
+   "c_reach.glb",
+   "c_rtg.glb",
+   "p_lamp.glb",
+   "pr_bin.glb",
+   "pr_booth.glb",
+   "pr_bstop.glb",
+   "pr_fence.glb",
+   "pr_fpost.glb",
+   "pr_grave1.glb",
+   "pr_grave2.glb",
+   "pr_grave3.glb",
+   "pr_grave4.glb",
+   "pr_hay.glb",
+   "pr_pumpkin.glb",
+   "pr_rstop.glb",
+   "pr_vend.glb",
+   "pr_vend2.glb",
+   "pr_wbins.glb",
+   "pr_well.glb",
+   "sg_main.glb",
+   "sg_yield.glb",
+   "v_fence.glb",
+   "v_picket.glb",
+   "c20.glb",
+   "c20ot.glb",
+   "c20tank.glb",
+   "c40.glb",
+   "c40hc.glb",
+   "c40r.glb"
+  ],
+  "container_colors": "контейнеры_цвета/<тип>_<k>.glb, k = 1…7",
+  "atlases": "атлас/: листва_*.png и кора_*.png (деревья), мелочь_*.png (мелочь, кран, ричстакер, цеха), контейнеры_*.png",
+  "scripts": [
+   "_атлас.py",
+   "_атлас_сборка.py",
+   "_деревья.py",
+   "_атлас_мелочи.py",
+   "_мелочь.py",
+   "_атлас_контейнеры.py",
+   "_контейнеры.py",
+   "_сборка.sh",
+   "_пак.py",
+   "_паспорт.py",
+   "_стенд.js",
+   "_стенд_контейнеры.js"
+  ]
+ },
+ "axes": "оси игры: x вправо, y вверх, нос -z; низ каждой модели в y = 0, ничего не уходит под землю; начало - центр основания (контейнеры - центр дна)",
+ "trees": {
+  "pr_deadtree": {
+   "size_xyz_m": [
+    8.36,
+    10.0,
+    8.87
+   ],
+   "tris": 3240,
+   "replaces": false,
+   "old_height_m": null
+  },
+  "pr_oldtree": {
+   "size_xyz_m": [
+    8.54,
+    13.9,
+    9.88
+   ],
+   "tris": 3854,
+   "replaces": false,
+   "old_height_m": null
+  },
+  "tr_bush": {
+   "size_xyz_m": [
+    5.04,
+    7.12,
+    5.55
+   ],
+   "tris": 1122,
+   "replaces": true,
+   "old_height_m": 7.12
+  },
+  "tr_bush_b": {
+   "size_xyz_m": [
+    6.13,
+    5.6,
+    5.9
+   ],
+   "tris": 1192,
+   "replaces": false,
+   "old_height_m": null
+  },
+  "tr_lime": {
+   "size_xyz_m": [
+    7.0,
+    9.52,
+    8.01
+   ],
+   "tris": 2112,
+   "replaces": true,
+   "old_height_m": 9.52
+  },
+  "tr_lime_b": {
+   "size_xyz_m": [
+    7.57,
+    10.8,
+    6.74
+   ],
+   "tris": 1928,
+   "replaces": false,
+   "old_height_m": null
+  },
+  "tr_oak": {
+   "size_xyz_m": [
+    7.75,
+    10.36,
+    7.6
+   ],
+   "tris": 1832,
+   "replaces": true,
+   "old_height_m": 10.36
+  },
+  "tr_oak_b": {
+   "size_xyz_m": [
+    8.38,
+    9.6,
+    8.64
+   ],
+   "tris": 1832,
+   "replaces": false,
+   "old_height_m": null
+  },
+  "tr_pine": {
+   "size_xyz_m": [
+    5.9,
+    12.71,
+    5.83
+   ],
+   "tris": 1832,
+   "replaces": true,
+   "old_height_m": 12.71
+  },
+  "tr_pine_b": {
+   "size_xyz_m": [
+    6.96,
+    14.5,
+    6.96
+   ],
+   "tris": 1712,
+   "replaces": false,
+   "old_height_m": null
+  },
+  "w_fir1": {
+   "size_xyz_m": [
+    5.8,
+    9.31,
+    5.46
+   ],
+   "tris": 2420,
+   "replaces": true,
+   "old_height_m": 9.31
+  },
+  "w_fir3": {
+   "size_xyz_m": [
+    5.45,
+    8.1,
+    4.82
+   ],
+   "tris": 2016,
+   "replaces": true,
+   "old_height_m": 8.1
+  },
+  "w_fir_b": {
+   "size_xyz_m": [
+    5.6,
+    11.5,
+    5.73
+   ],
+   "tris": 2472,
+   "replaces": false,
+   "old_height_m": null
+  },
+  "w_pine1": {
+   "size_xyz_m": [
+    8.79,
+    16.89,
+    8.77
+   ],
+   "tris": 2162,
+   "replaces": true,
+   "old_height_m": 16.89
+  },
+  "w_pine2": {
+   "size_xyz_m": [
+    11.36,
+    19.62,
+    9.24
+   ],
+   "tris": 2174,
+   "replaces": true,
+   "old_height_m": 19.62
+  }
+ },
+ "props": {
+  "c_reach": {
+   "size_xyz_m": [
+    12.4,
+    8.0,
+    11.32
+   ],
+   "tris": 2176,
+   "front": "захват к -z, спредер поперёк (вдоль x), кабина слева (-x)"
+  },
+  "c_rtg": {
+   "size_xyz_m": [
+    27.27,
+    21.87,
+    12.4
+   ],
+   "tris": 4234,
+   "front": "пролёт по x (24,8 м между осями ног), ход по z; спредер вдоль z"
+  },
+  "p_lamp": {
+   "size_xyz_m": [
+    0.5,
+    6.86,
+    2.85
+   ],
+   "tris": 1896,
+   "front": "траверса вдоль z, фонарь к +z (как у старого)"
+  },
+  "pr_bin": {
+   "size_xyz_m": [
+    0.58,
+    0.76,
+    0.58
+   ],
+   "tris": 544,
+   "front": "круглая"
+  },
+  "pr_booth": {
+   "size_xyz_m": [
+    0.98,
+    2.18,
+    0.98
+   ],
+   "tris": 1512,
+   "front": "дверь в +x"
+  },
+  "pr_bstop": {
+   "size_xyz_m": [
+    2.5,
+    3.07,
+    6.53
+   ],
+   "tris": 2672,
+   "front": "открыта в +x, длина вдоль z"
+  },
+  "pr_fence": {
+   "size_xyz_m": [
+    0.54,
+    1.62,
+    0.04
+   ],
+   "tris": 316,
+   "front": "секция 0,54 м вдоль x (шаг игры 0,5316, есть нахлёст)"
+  },
+  "pr_fpost": {
+   "size_xyz_m": [
+    0.18,
+    1.66,
+    0.18
+   ],
+   "tris": 540,
+   "front": "симметричный"
+  },
+  "pr_grave1": {
+   "size_xyz_m": [
+    0.72,
+    0.92,
+    0.24
+   ],
+   "tris": 408,
+   "front": "лицо в -z"
+  },
+  "pr_grave2": {
+   "size_xyz_m": [
+    0.6,
+    1.13,
+    0.3
+   ],
+   "tris": 400,
+   "front": "крест в плоскости xy"
+  },
+  "pr_grave3": {
+   "size_xyz_m": [
+    2.44,
+    0.68,
+    1.22
+   ],
+   "tris": 540,
+   "front": "длина вдоль x"
+  },
+  "pr_grave4": {
+   "size_xyz_m": [
+    0.6,
+    0.24,
+    0.28
+   ],
+   "tris": 112,
+   "front": "вдоль x"
+  },
+  "pr_hay": {
+   "size_xyz_m": [
+    1.15,
+    0.91,
+    1.36
+   ],
+   "tris": 900,
+   "front": "три тюка"
+  },
+  "pr_pumpkin": {
+   "size_xyz_m": [
+    0.58,
+    0.56,
+    0.6
+   ],
+   "tris": 1616,
+   "front": "круглая"
+  },
+  "pr_rstop": {
+   "size_xyz_m": [
+    5.91,
+    3.13,
+    5.04
+   ],
+   "tris": 3494,
+   "front": "открыта в -z, табличка «А» у +x"
+  },
+  "pr_vend": {
+   "size_xyz_m": [
+    0.95,
+    1.82,
+    0.99
+   ],
+   "tris": 490,
+   "front": "стеклянная дверь в +z"
+  },
+  "pr_vend2": {
+   "size_xyz_m": [
+    1.12,
+    1.95,
+    1.28
+   ],
+   "tris": 436,
+   "front": "лицевая сторона в +x"
+  },
+  "pr_wbins": {
+   "size_xyz_m": [
+    2.76,
+    1.34,
+    0.89
+   ],
+   "tris": 2222,
+   "front": "три бака вдоль x, наклейки в -z, колёса на +z"
+  },
+  "pr_well": {
+   "size_xyz_m": [
+    2.19,
+    3.19,
+    2.17
+   ],
+   "tris": 2860,
+   "front": "ворот вдоль x, ручка на +x"
+  },
+  "sg_main": {
+   "size_xyz_m": [
+    0.18,
+    2.33,
+    0.72
+   ],
+   "tris": 512,
+   "front": "лицо в +x, столб позади"
+  },
+  "sg_yield": {
+   "size_xyz_m": [
+    0.18,
+    2.36,
+    0.86
+   ],
+   "tris": 488,
+   "front": "лицо в +x, столб позади"
+  },
+  "v_fence": {
+   "size_xyz_m": [
+    0.3,
+    1.48,
+    3.97
+   ],
+   "tris": 270,
+   "front": "вдоль z (старый был повёрнут на ~23°, в игре нигде не ставится)"
+  },
+  "v_picket": {
+   "size_xyz_m": [
+    0.46,
+    1.82,
+    3.17
+   ],
+   "tris": 574,
+   "front": "вдоль z, столбик на +z, жерди сзади (-x)"
+  }
+ },
+ "containers": {
+  "c20": {
+   "size_xyz_m": [
+    2.438,
+    2.591,
+    6.058
+   ],
+   "tris": 288,
+   "stack_step_m": 2.591
+  },
+  "c20ot": {
+   "size_xyz_m": [
+    2.438,
+    2.591,
+    6.058
+   ],
+   "tris": 358,
+   "stack_step_m": 2.591
+  },
+  "c20tank": {
+   "size_xyz_m": [
+    2.438,
+    2.591,
+    6.058
+   ],
+   "tris": 356,
+   "stack_step_m": 2.591
+  },
+  "c40": {
+   "size_xyz_m": [
+    2.438,
+    2.591,
+    12.192
+   ],
+   "tris": 318,
+   "stack_step_m": 2.591
+  },
+  "c40hc": {
+   "size_xyz_m": [
+    2.438,
+    2.896,
+    12.192
+   ],
+   "tris": 318,
+   "stack_step_m": 2.896
+  },
+  "c40r": {
+   "size_xyz_m": [
+    2.438,
+    2.896,
+    12.192
+   ],
+   "tris": 334,
+   "stack_step_m": 2.896
+  }
+ },
+ "container_atlas": {
+  "colors": [
+   "синий",
+   "красный",
+   "зелёный",
+   "серый",
+   "бежевый",
+   "белый",
+   "рыжий",
+   "бордовый"
+  ],
+  "carriers": [
+   "xFORTUNAx",
+   "RIVER JUNCTION",
+   "BEAN WOOD",
+   "NORTHERN FRONTIER",
+   "NOVELLAND",
+   "FISHMOUTH",
+   "AIR SUPERIORITY",
+   "MISTY MIRE"
+  ],
+  "owner_codes": [
+   "XFTU",
+   "RVJU",
+   "BNWU",
+   "NFRU",
+   "NVLU",
+   "FSMU",
+   "ASPU",
+   "MSTU"
+  ],
+  "ports": [
+   "CEDAR GULLY",
+   "PUKEKO NEST",
+   "BEAN WOOD",
+   "NOVELLAND",
+   "FISHMOUTH",
+   "RIVER JUNCTION",
+   "CEDAR GULLY",
+   "PUKEKO NEST"
+  ],
+  "col_width_u": 0.125,
+  "regions_px_from_top": {
+   "side": [
+    0,
+    1024
+   ],
+   "side_logo": [
+    1024,
+    2048
+   ],
+   "doors": [
+    2048,
+    2560
+   ],
+   "front": [
+    2560,
+    3072
+   ],
+   "roof": [
+    3072,
+    3584
+   ],
+   "frame": [
+    3584,
+    3840,
+    0,
+    256
+   ],
+   "fitting": [
+    3584,
+    3840,
+    256,
+    512
+   ],
+   "reefer": [
+    3840,
+    4096,
+    0,
+    256
+   ],
+   "tarp": [
+    3840,
+    4096,
+    256,
+    512
+   ]
+  }
+ },
+ "swap_notes": [
+  "Подмена - по словам Mark «периферия готова». Все ключи - свои меши и свои картинки; чужих текстур нет.",
+  "ВСЕМ ключам набора (деревья, мелочь, контейнеры, кран, ричстакер) в META models.js поставить matte: true. Без него Phong игры (specular 0x3a3a3a, shininess 38) даёт белые пятна на кроне на полкроны (Mark: «бликует, словно глянцевые»).",
+  "Рецепт prepare.js для деревьев: src - свой файл, scale 1, nose -z, unit: true, cutout: true, tex 1024 (или 512 для телефонов), nTex 512 (у коры есть карта нормалей; у листвы её нет нарочно). Без target - сетки уже лёгкие.",
+  "Высоты заменяемых деревьев равны старым (TREES / TREES_W, масштаб 1,3 · sy / h не меняется). Новые варианты для разнообразия (Mark: «чтобы не повторялись»): tr_oak_b 9.6 м, tr_lime_b 10.8 м, tr_bush_b 5.6 м, tr_pine_b 14.5 м, w_fir_b 11.5 м - новые ключи: расширить TREES / TREES_W, слоты uMdl и импосторы.",
+  "После подмены деревьев перепечь импосторы tools/airdef-trees/bake.html (TREE_IMP), иначе вдали останутся старые деревья.",
+  "pr_oldtree и pr_deadtree - точные размеры (осенние сцены ставят их без растяжения, масштаб 0,85-1,15).",
+  "Мелочь: лицевая сторона и ориентация как у старых моделей тех же ключей (поле front). Рецепт: scale 1, nose -z, unit: true, tex 2048, nTex 1024.",
+  "Контейнеры c20, c40, c40hc, c40r, c20ot, c20tank - новые ключи. Цвет k (0…7) - сдвиг u на k/8 в шейдере экземпляра; готовые файлы всех цветов - в контейнеры_цвета. Двери на +z, шаг штабеля = высота.",
+  "Кран c_rtg и ричстакер c_reach - новые ключи, для портовых площадок.",
+  "Покачивание деревьев на ветру (просьба Mark) - в коде игры, без правки моделей: сдвиг xz по (y / H)^2, фаза от позиции экземпляра; у листвы мелкая дрожь.",
+  "Уличные надписи на русском (остановки, «Родник», «Снежок», «ТЕЛЕФОН»); контейнеры и вывески цехов - на английском (Mark)."
+ ]
+}

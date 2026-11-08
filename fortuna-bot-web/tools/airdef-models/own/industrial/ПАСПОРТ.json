@@ -1,0 +1,129 @@
+{
+ "name": "Цеха и склады",
+ "name_en": "Цеха и склады",
+ "rev": 1,
+ "date": "2026-11-08",
+ "files": {
+  "glb": "industrial_sketchfab.glb",
+  "blend": "цеха.blend",
+  "game": [
+   "wh_annex.glb",
+   "wh_arch.glb",
+   "wh_lantern.glb",
+   "wh_panel.glb",
+   "wh_ramp.glb",
+   "wh_saw.glb",
+   "wh_shed.glb"
+  ],
+  "atlas": "общий атлас мелочи (Свои/Периферия/атлас/мелочь_*.png), у зданий ячейка 4 м"
+ },
+ "axes": "оси игры: x - короткая сторона, z - длинная, конёк вдоль z; низ в y = 0, центр основания в нуле",
+ "kinds": {
+  "wh_annex": {
+   "walls_x_z_m": [
+    30,
+    45
+   ],
+   "scale_height_m": 14,
+   "bbox_xyz_m": [
+    43.3,
+    32.8,
+    53.1
+   ],
+   "tris": 2690,
+   "aspect": 1.5
+  },
+  "wh_arch": {
+   "walls_x_z_m": [
+    30,
+    40
+   ],
+   "scale_height_m": 13,
+   "bbox_xyz_m": [
+    33.5,
+    14.05,
+    40.6
+   ],
+   "tris": 2344,
+   "aspect": 1.33
+  },
+  "wh_lantern": {
+   "walls_x_z_m": [
+    36,
+    54
+   ],
+   "scale_height_m": 17.2,
+   "bbox_xyz_m": [
+    37.4,
+    17.2,
+    54.6
+   ],
+   "tris": 2348,
+   "aspect": 1.5
+  },
+  "wh_panel": {
+   "walls_x_z_m": [
+    24,
+    72
+   ],
+   "scale_height_m": 7.8,
+   "bbox_xyz_m": [
+    28.0,
+    8.05,
+    72.2
+   ],
+   "tris": 3048,
+   "aspect": 3.0
+  },
+  "wh_ramp": {
+   "walls_x_z_m": [
+    24,
+    96
+   ],
+   "scale_height_m": 9,
+   "bbox_xyz_m": [
+    31.2,
+    9.9,
+    96.6
+   ],
+   "tris": 4808,
+   "aspect": 4.0
+  },
+  "wh_saw": {
+   "walls_x_z_m": [
+    40,
+    40
+   ],
+   "scale_height_m": 12.2,
+   "bbox_xyz_m": [
+    40.9,
+    12.2,
+    40.6
+   ],
+   "tris": 3164,
+   "aspect": 1.0
+  },
+  "wh_shed": {
+   "walls_x_z_m": [
+    30,
+    60
+   ],
+   "scale_height_m": 12,
+   "bbox_xyz_m": [
+    34.6,
+    13.05,
+    60.6
+   ],
+   "tris": 3598,
+   "aspect": 2.0
+  }
+ },
+ "swap_notes": [
+  "Подмена - по словам Mark «цеха и склады готовы». Заменяют коробки KIND.WAREHOUSE (bldVariant сейчас 0) на «Речном узле».",
+  "Выбрано целое здание, а не секция: конёк вдоль длины, торцы плоские. Игра делит длинную коробку на ns = round(L / длина модели) секций - торцы и фронтоны соседних копий уходят внутрь, крыша и стены идут сплошь; рампы, ворота, окна, водостоки на длинных сторонах повторяются как пролёты.",
+  "Для BLD: [ключ, mx, my, mz] = [walls_x, scale_height, walls_z] из kinds (масштаб по коробке - по стенам, а не по габариту: рампы, свесы, трубы и дефлекторы выходят за коробку нарочно; у wh_annex труба до 32,8 м).",
+  "Вид - по ближайшему отношению сторон L / S (aspect); на стенде так и выбиралось: |log(ar / aspect)|. Растяжение 0,75…1,35 по осям выглядит нормально.",
+  "Цвета стен не темнее палитры складов игры; META: matte: true. Рецепт prepare.js: scale 1, nose -z, unit: true, tex 2048, nTex 1024.",
+  "Вывески на английском: RIVER JUNCTION DEPOT, BEAN WOOD WORKS, CEDAR GULLY FREIGHT, NOVELLAND STEEL, FISHMOUTH COLD STORE."
+ ]
+}

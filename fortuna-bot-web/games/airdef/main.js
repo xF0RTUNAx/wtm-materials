@@ -1069,6 +1069,7 @@ C.start = function (game) {
   $('menu').classList.remove('on'); $('end').classList.remove('on'); $('pauseScr').classList.remove('on');
   document.body.classList.remove('menuing'); document.body.classList.add('playing');
   C.state = 'play'; C.camera.clearViewOffset(); C.shell.play(true);
+  if (C.G && C.G.nearScale) C.G.nearScale(game === 'air' && MAP !== 'autumn' ? 0.5 : 1); // вертолёт («Туманная топь») летает низко - полный радиус; за самолёт земля видна сверху и издали: деревья, мелочь, контейнеры и цеха вблизи - в половинном радиусе (ПВО - полный)
   C.ctrl = ctrls[game]; C.ctrl.start(); prewarm(); warmSoon(); // шейдеры сцены - сейчас, а не при первом взрыве или первом появлении техники
   if (C.progress) C.progress.runStart(game === 'multi' ? 'multi' : game, C.setup.diff === 'real' ? 'real' : 'arcade', C.setup.era); // опыт за бой (обучение, съёмка - без)
   resize();
@@ -1084,6 +1085,7 @@ C.toMenu = function () {
   for (const c of ['playing', 'flying', 'defense', 'dmap', 'oper']) document.body.classList.remove(c);
   document.body.classList.add('menuing');
   hx.setTransform(1, 0, 0, 1, 0, 0); hx.clearRect(0, 0, hc.width, hc.height);
+  if (C.G && C.G.nearScale) C.G.nearScale(1);
   C.state = 'menu'; C.shell.play(false); C.ctrl = ctrls.hangar.has() ? ctrls.hangar : ctrls.menuBg.has() ? ctrls.menuBg : ctrls.director; C.ctrl.start(); C.menu.show(); // фон: ангар (hangar.js), без него - кадры, иначе живой бой
   resize();
 };

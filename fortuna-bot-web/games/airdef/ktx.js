@@ -4,6 +4,8 @@
 /* global THREE */
 import { KTX2Loader } from './vendor/basis/KTX2Loader.js?v=20261107a';
 const V = '20261022c';
+// своя версия у перепечённых текстур (остальные игрокам заново не качать): импосторы деревьев - свои деревья, 2026-11-08
+const VN = Object.fromEntries(['tr_city_a', 'tr_city_n', 'tr_city_a_lo', 'tr_city_n_lo', 'tr_winter_a', 'tr_winter_n', 'tr_winter_a_lo', 'tr_winter_n_lo'].map((n) => [n, '20261108h']));
 let L = null, META = null;
 export function ktxInit(renderer) {
   if (L || !renderer || typeof Worker === 'undefined' || typeof WebAssembly === 'undefined') return;
@@ -41,7 +43,7 @@ const raw = (url) => new Promise((ok, no) => L.load(url, (t) => { t.encoding = T
 // текстура tex/<name>.ktx2 (картинка - сверху вниз, как ImageBitmap без переворота); шейдеры игры сами переводят sRGB
 export function ktxLoad(name) {
   if (!L) return Promise.reject(new Error('KTX2 выключен'));
-  const u = new URL(`./tex/${name}.ktx2?v=${V}`, import.meta.url).href; return raw(u).then((t) => ktxFree(t, () => raw(u)));
+  const u = new URL(`./tex/${name}.ktx2?v=${VN[name] || V}`, import.meta.url).href; return raw(u).then((t) => ktxFree(t, () => raw(u)));
 }
 // текстура по адресу (раскадровки эффектов, flipbook.js): как ktxLoad - сырые значения, шейдер сам переводит sRGB
 export function ktxLoadUrl(url) {

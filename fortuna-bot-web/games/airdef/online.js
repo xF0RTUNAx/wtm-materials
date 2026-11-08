@@ -148,6 +148,7 @@ export function createOnline(C, ctrls) {
     if (C.shop) C.shop.close(); if (C.rating) C.rating.close(); // бой нашёлся, пока открыто окно магазина или рейтинга (ревью)
     document.body.classList.remove('menuing'); document.body.classList.add('playing');
     C.state = 'play'; C.camera.clearViewOffset(); C.lastGame = 'online'; C.shell.play(true);
+    if (C.G && C.G.nearScale) C.G.nearScale(N.battle && N.battle.kind !== 'multi' && team() === 'air' ? 0.5 : 1); // за самолёт - земля вблизи в половинном радиусе (как в main.js start)
     if (N.battle && N.battle.kind === 'multi') { C.ctrl = ctrls.defense; ctrls.defense.startNetMulti(N); }
     else if (team() === 'air') { C.ctrl = ctrls.air; ctrls.air.startNet(N); } else { C.ctrl = ctrls.defense; ctrls.defense.startNet(N); }
     feed = []; helps = []; renderWait(); renderPlan();

@@ -1173,34 +1173,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "Bus Stop",
-  "author": "bloooob",
-  "url": "https://sketchfab.com/3d-models/bus-stop-367bdb5ca8c745978410c6e3ffd9b910",
-  "license": "CC-BY-4.0",
-  "files": [
-   "pr_bstop"
-  ]
- },
- {
-  "title": "Old Russian bus stop",
-  "author": "halkiridze",
-  "url": "https://sketchfab.com/3d-models/old-russian-bus-stop-074e11d7adb9420a83bc862e81579a9f",
-  "license": "CC-BY-4.0",
-  "files": [
-   "pr_rstop"
-  ]
- },
- {
-  "title": "Soviet Road Signs (Single Model From Asset Pack)",
-  "author": "Cherk",
-  "url": "https://sketchfab.com/3d-models/soviet-road-signs-single-model-from-asset-pack-bc83452e427647c098a93647244a66c0",
-  "license": "CC-BY-4.0",
-  "files": [
-   "sg_main",
-   "sg_yield"
-  ]
- },
- {
   "title": "Low Poly Barn",
   "author": "Periltek Games",
   "url": "https://sketchfab.com/3d-models/low-poly-barn-fce7ec6e083e41d7b6e32f9bfcab6cd0",
@@ -1234,24 +1206,6 @@ export const CREDITS = [
   "license": "CC-BY-4.0",
   "files": [
    "v_tractor"
-  ]
- },
- {
-  "title": "Fence (Wood)",
-  "author": "trentspi",
-  "url": "https://sketchfab.com/3d-models/fence-wood-e530c55db10348a3a547ef92149bdd10",
-  "license": "CC-BY-4.0",
-  "files": [
-   "v_fence"
-  ]
- },
- {
-  "title": "Wood Wooden fence Protector of the farm low poly",
-  "author": "adventurer",
-  "url": "https://sketchfab.com/3d-models/wood-wooden-fence-protector-of-the-farm-low-poly-ace00004692b48c6afee9f9d505e6e35",
-  "license": "CC-BY-4.0",
-  "files": [
-   "v_picket"
   ]
  },
  {
@@ -1324,84 +1278,6 @@ export const CREDITS = [
   "license": "CC-BY-4.0",
   "files": [
    "h_mobile"
-  ]
- },
- {
-  "title": "Trees Low Poly",
-  "author": "Igor_K.",
-  "url": "https://sketchfab.com/3d-models/trees-low-poly-1d2dcca2ccb1496c85b7cc5789a2a261",
-  "license": "CC-BY-4.0",
-  "files": [
-   "tr_oak",
-   "tr_lime"
-  ]
- },
- {
-  "title": "Low Poly Forest Tree Pack",
-  "author": "99.Miles",
-  "url": "https://sketchfab.com/3d-models/low-poly-forest-tree-pack-5ff5a51e74324845a4e4905f182dfb2b",
-  "license": "CC-BY-4.0",
-  "files": [
-   "tr_pine",
-   "tr_bush"
-  ]
- },
- {
-  "title": "Realistic fir trees pack (LODS, gameready)",
-  "author": "LOLIPOP",
-  "url": "https://sketchfab.com/3d-models/realistic-fir-trees-pack-lods-gameready-f58e8b6d733e4b0586e5b7db847b89e7",
-  "license": "CC-BY-4.0",
-  "files": [
-   "w_fir1",
-   "w_fir3"
-  ]
- },
- {
-  "title": "Pine trees pack (lowpoly, game ready, LODs)",
-  "author": "LOLIPOP",
-  "url": "https://sketchfab.com/3d-models/pine-trees-pack-lowpoly-game-ready-lods-e1e9c07b8e2e445c943fec660beefba2",
-  "license": "CC-BY-4.0",
-  "files": [
-   "w_pine1",
-   "w_pine2"
-  ]
- },
- {
-  "title": "Abandoned street lights pack",
-  "author": "sergeilihandristov",
-  "url": "https://sketchfab.com/3d-models/abandoned-street-lights-pack-c853eca300e8435d8fe9206bcb524eda",
-  "license": "CC-BY-4.0",
-  "files": [
-   "p_lamp"
-  ]
- },
- {
-  "title": "Low-poly Urban Street Props Pack (PS1 Style)",
-  "author": "S1lMoon",
-  "url": "https://sketchfab.com/3d-models/low-poly-urban-street-props-pack-ps1-style-381b65d98a5b4e3886ac2acace7e5c74",
-  "license": "CC-BY-4.0",
-  "files": [
-   "pr_vend",
-   "pr_booth",
-   "pr_bin"
-  ]
- },
- {
-  "title": "PSX - Vending Machine",
-  "author": "Kasugay𓅂",
-  "url": "https://sketchfab.com/3d-models/psx-vending-machine-aff31f282155471d8222287596c7ac59",
-  "license": "CC-BY-4.0",
-  "files": [
-   "pr_vend2"
-  ]
- },
- {
-  "title": "Garbage Bin",
-  "author": "Glen Ortiz",
-  "url": "https://sketchfab.com/3d-models/garbage-bin-fba6b5a8afdd4eb0a43be29aabceb3d6",
-  "license": "CC-BY-4.0",
-  "files": [
-   "pr_wbins"
   ]
  },
  {
@@ -1548,73 +1424,6 @@ export const CREDITS = [
   "license": "CC-BY-4.0",
   "files": [
    "obj_mill"
-  ]
- },
- {
-  "title": "Hay bales",
-  "author": "Zbrojmistrz",
-  "url": "https://sketchfab.com/3d-models/hay-bales-d6e087f9a2a9416c94918f0503943c17",
-  "license": "CC-BY-4.0",
-  "files": [
-   "pr_hay"
-  ]
- },
- {
-  "title": "The Wishing Well",
-  "author": "jadenmercado57",
-  "url": "https://sketchfab.com/3d-models/the-wishing-well-91d46451916745debcaa7d01d89446dc",
-  "license": "CC-BY-4.0",
-  "files": [
-   "pr_well"
-  ]
- },
- {
-  "title": "Pumpkin",
-  "author": "FantasyDragon",
-  "url": "https://sketchfab.com/3d-models/pumpkin-a0798c531d0e497299671c2969a3b2e0",
-  "license": "CC-BY-4.0",
-  "files": [
-   "pr_pumpkin"
-  ]
- },
- {
-  "title": "Grave Stone Collection",
-  "author": "Kigha",
-  "url": "https://sketchfab.com/3d-models/grave-stone-collection-216711532d5a4078b9c0d5020af01eb1",
-  "license": "CC-BY-4.0",
-  "files": [
-   "pr_grave1",
-   "pr_grave2",
-   "pr_grave3",
-   "pr_grave4"
-  ]
- },
- {
-  "title": "Cemetery Fence",
-  "author": "CollinPatrick",
-  "url": "https://sketchfab.com/3d-models/cemetery-fence-59f01ec5f6ad4f5fa9452addd7f58a1b",
-  "license": "CC-BY-4.0",
-  "files": [
-   "pr_fence",
-   "pr_fpost"
-  ]
- },
- {
-  "title": "Dead Tree",
-  "author": "MaX3Dd",
-  "url": "https://sketchfab.com/3d-models/dead-tree-33ccce6111604656a4b5709483670ec3",
-  "license": "CC-BY-4.0",
-  "files": [
-   "pr_deadtree"
-  ]
- },
- {
-  "title": "Old tree",
-  "author": "evolveduk",
-  "url": "https://sketchfab.com/3d-models/old-tree-3cb4d59eb4844dc4802480e9ee53785e",
-  "license": "CC-BY-4.0",
-  "files": [
-   "pr_oldtree"
   ]
  },
  {
