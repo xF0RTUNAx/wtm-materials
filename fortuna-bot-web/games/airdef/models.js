@@ -172,7 +172,11 @@ const META = {
   h_uh60: { side: 'west', cls: 'heli', heli: true, lazy: true, stations: mirror([V(-3.1, -0.91, -2.4, 0.3), V(-2.0, -0.91, -2.4, 0.3)]), nozzles: [], nr: 0.3, pod: null, matte: true }, // UH-60 (вооружённый, фермы ESSS)
   h_rah66: { side: 'west', cls: 'heli', heli: true, lazy: true, stations: mirror([V(-2.35, -0.75, -0.5, 0.25), V(-1.55, -0.75, -0.5, 0.25)]), nozzles: [], nr: 0.3, pod: null, matte: true }, // RAH-66 Comanche (фенестрон - trotor)
   // вертолётное оружие (heliModel / weaponMesh): подвес сверху, нос в −Z, центр габаритов в нуле
-  w_shturm: { weapon: ['shturm', 'ataka'], lazy: true, stations: [] }, // «Штурм» 9М114 - ТПК, timurwolf (и вид «Атаки»: контейнер почти тот же)
+  w_shturm: { weapon: 'shturm', lazy: true, matte: true, stations: [] }, // контейнер 9М114 «Штурм» - своя модель (Свои/9М114, 2026-11-08)
+  w_ataka: { weapon: 'ataka', lazy: true, matte: true, stations: [] }, // контейнер 9М120 «Атака» - своя модель (Свои/9М120, 2026-11-08)
+  // ПТУР в полёте - сама ракета (main.js relMesh, FLY в models.js): крылья и рули раскрываются на шарнирах (паспорта сборщиков) через 0,3 с после пуска
+  w_fly_shturm: { lazy: true, matte: true, stations: [], hinge: { wing1: [0.0431, 0.0431, 0.53, 0.0, 0.0, -1.0, 90.0], wing2: [-0.0431, 0.0431, 0.53, 0.0, 0.0, -1.0, 90.0], wing3: [-0.0431, -0.0431, 0.53, 0.0, 0.0, -1.0, 90.0], wing4: [0.0431, -0.0431, 0.53, 0.0, 0.0, -1.0, 90.0], fin1: [0.0, 0.0609, -0.4275, 0.0, 0.0, -1.0, 90.0], fin2: [-0.0, -0.0609, -0.4275, 0.0, 0.0, -1.0, 90.0] } },
+  w_fly_ataka: { lazy: true, matte: true, stations: [], hinge: { fin1: [0.046, 0.046, -0.215, -0.7071, 0.7071, -0.0, 90.0], fin2: [-0.046, 0.046, -0.215, -0.7071, -0.7071, -0.0, 90.0], fin3: [-0.046, -0.046, -0.215, 0.7071, -0.7071, -0.0, 90.0], fin4: [0.046, -0.046, -0.215, 0.7071, 0.7071, -0.0, 90.0], wing1: [0.0686, 0.0072, 0.7375, 0.0, 0.0, -1.0, 95.0], wing2: [-0.0072, 0.0686, 0.7375, 0.0, 0.0, -1.0, 95.0], wing3: [-0.0686, -0.0072, 0.7375, 0.0, 0.0, -1.0, 95.0], wing4: [0.0072, -0.0686, 0.7375, 0.0, 0.0, -1.0, 95.0] } },
   w_b8: { weapon: 's8', lazy: true, stations: [] }, // Б-8 — собственная модель (tools/airdef-models/own/b8)
   w_lau61: { weapon: 'hydra', lazy: true, stations: [] }, // LAU-61 — собственная модель (tools/airdef-models/own/lau61)
   w_hellfire: { weapon: 'hellfire', lazy: true, stations: [] }, // AGM-114 Hellfire — собственная модель (tools/airdef-models/own/agm114)
@@ -200,7 +204,7 @@ const META = {
   // оружие, взятое с моделей самолётов: на пилоне и в полёте вместо процедурного
   w_gbu12: { weapon: 'gbu12', stations: [] }, // GBU-12 Paveway II - собственная модель (tools/airdef-models/own/gbu12)
   w_fab500: { weapon: 'fab500', stations: [], matte: true }, // ФАБ-500М-62 - собственная модель (tools/airdef-models/own/fab500)
-  w_fab100: { weapon: 'fab100', stations: [], matte: true }, // ФАБ-100 - 4ikalka
+  w_fab100: { weapon: 'fab100', stations: [], matte: true }, // ФАБ-100 — собственная модель (tools/airdef-models/own/fab100)
   w_ofab250: { weapon: 'ofab250', stations: [], matte: true }, // ОФАБ-250-270 - 4ikalka
   w_fab250: { weapon: 'fab250', stations: [], matte: true }, // ФАБ-250 - CATholic
   w_fab1000: { weapon: 'fab1000', stations: [], matte: true }, // ФАБ-1000 - собственная модель (tools/airdef-models/own/fab1000)
@@ -336,6 +340,7 @@ const GLB_V = Object.fromEntries(['w_gbu10', 'w_ecm', 'gepard', 'gepard_lo', 'ro
   ['zsu234', 'zsu234_lo', 'zu23', 'buk', 'phalanx', 'w_fab100', 'w_ofab250', 'w_fab250', 'w_fab1000', 'w_gbu24', 'w_gbu57', 'w_umpk', 'e_yak38', 'e_il28', 'e_tu22', 'e_hunter', 'e_su27', 'e_su35', 'e_etendard', 'e_mirage_f1', 'e_f18c'].map((n) => [n, '20261022k'])).concat([['e_tu95', '20261022l'], ['w_agm65b', '20261022l'], ['w_decoy_e', '20261022l']].concat(['h_mi24', 'h_mi28', 'h_ka52', 'h_ah64', 'h_ah1', 'h_uh1', 'w_shturm', 'w_b8', 'w_hellfire', 'aam_stinger'].map((n) => [n, '20261022m'])).concat([['w_shturm', '20261022n']])).concat(['h_ah64', 'h_mi28'].map((n) => [n, '20261022p'])).concat([['h_uh1', '20261022r']]).concat(['w_lau61', 'obj_mill', 'pr_hay', 'pr_well', 'pr_pumpkin', 'pr_grave1', 'pr_grave2', 'pr_grave3', 'pr_grave4', 'pr_fence', 'pr_fpost', 'pr_deadtree', 'pr_oldtree', 'c_vaz'].map((n) => [n, '20261022o'])).concat(['e_vulcan', 'e_draken', 'e_viggen', 'w_bomb1000'].map((n) => [n, '20261023b'])).concat(['h_ka50', 'h_mi8', 'h_uh60', 'h_rah66'].map((n) => [n, '20261023c'])).concat([['w_nar_hydra', '20261024a'], ['w_nar_s8', '20261024a'], ['e_draken', '20261023d'], ['w_bomb1000', '20261023d'], ['h_ka50', '20261023d']]).concat(['e_su33', 'e_m4', 'e_mig19', 'e_mig17', 'e_t4', 'e_mig29k'].map((n) => [n, '20261023e']))); // 20261023e - шестая партия: Су-33, М-4, МиГ-19, МиГ-17, Т-4 (2026-10-21) // 20261023c - четыре вертолёта manilov.ap (2026-10-21) // 20261023b - Vulcan, Draken, Viggen, бомба 1000 lb (2026-10-21) // l - 2026-10-20: Ту-95 без нарисованных дисков, Maverick и Harpy без сильного упрощения // l - Ту-95 без нарисованных дисков винтов (2026-10-20) // j - четвёртая партия, новая «Шилка», УМПК без сжатия // i - ЗРК без упрощения, камуфляж шейдером, третья партия самолётов (2026-10-19); c - замены моделей 2026-10-19; остальные пересобраны 2026-10-18 (затенение в стыках) - общая версия ниже
 // версии файлов собственных моделей (Blender, tools/airdef-models/own): по строке на ключ; поднимает tools/airdef-models/integrate-own.js при каждом встраивании
 const GLB_V_OWN = {
+  w_shturm: '20261108i', w_ataka: '20261108i', w_fly_shturm: '20261108i', w_fly_ataka: '20261108i',
   // своя периферия и цеха (Свои/Периферия, Свои/Цеха и склады) - 2026-11-08
   tr_oak: '20261108h', tr_lime: '20261108h', tr_pine: '20261108h', tr_bush: '20261108h', w_fir1: '20261108h', w_fir3: '20261108h', w_pine1: '20261108h', w_pine2: '20261108h', pr_oldtree: '20261108h', pr_deadtree: '20261108h', v_fence: '20261108h', v_picket: '20261108h', pr_fence: '20261108h', pr_fpost: '20261108h', sg_main: '20261108h', sg_yield: '20261108h', pr_bstop: '20261108h', pr_rstop: '20261108h', p_lamp: '20261108h', pr_vend: '20261108h', pr_vend2: '20261108h', pr_booth: '20261108h', pr_bin: '20261108h', pr_wbins: '20261108h', pr_hay: '20261108h', pr_well: '20261108h', pr_pumpkin: '20261108h', pr_grave1: '20261108h', pr_grave2: '20261108h', pr_grave3: '20261108h', pr_grave4: '20261108h', tr_oak_b: '20261108h', tr_lime_b: '20261108h', tr_pine_b: '20261108h', tr_bush_b: '20261108h', w_fir_b: '20261108h', c20: '20261108h', c20ot: '20261108h', c20tank: '20261108h', c40: '20261108h', c40hc: '20261108h', c40r: '20261108h', c_rtg: '20261108h', c_reach: '20261108h', wh_annex: '20261108h', wh_arch: '20261108h', wh_lantern: '20261108h', wh_panel: '20261108h', wh_ramp: '20261108h', wh_saw: '20261108h', wh_shed: '20261108h',
   w_kh29t: '20261024c',
@@ -483,6 +488,7 @@ const GLB_V_OWN = {
   w_lau61: '20261108d',
   w_hellfire: '20261108e',
   w_b8: '20261108g',
+  w_fab100: '20261108h',
 };
 GLB_V.hg_jack = '20261104b'; // подъёмник, ревизия 2: матовый, с износом
 GLB_V.w_pod = '20261104b'; // серый корпус контейнера, без комьев от упрощения
@@ -986,7 +992,9 @@ export const bldModel = (name) => (META[name] && (META[name].bld || META[name].o
 const byKey = (f) => Object.fromEntries(Object.entries(META).filter(([, m]) => m[f]).flatMap(([n, m]) => [].concat(m[f]).map((k) => [k, n])));
 const WMODEL = byKey('weapon'), SAMMSL = byKey('samMissile'), LAUNCHER = byKey('launcher');
 // модель оружия по ключу AG - загрузить (lazy: оружие «Мульти-волны»)
-export function wantWeapon(key) { const n = WMODEL[key]; if (n && BASE) start(n); }
+// ПТУР: на подвеске - контейнер (WMODEL), в полёте - ракета (грузится вместе с контейнером)
+export const FLY = { shturm: 'w_fly_shturm', ataka: 'w_fly_ataka' };
+export function wantWeapon(key) { const n = WMODEL[key]; if (n && BASE) start(n); const f = FLY[key]; if (f && BASE && META[f]) start(f); }
 // прицельный контейнер игрока (или null - тогда цилиндр)
 // (у самолётов pod - место подвески контейнера: ищем именно модель контейнера, pod === true)
 export function podModel() { const n = Object.keys(META).find((k) => META[k].pod === true); return n && LOADED[n] ? LOADED[n].clone() : null; }

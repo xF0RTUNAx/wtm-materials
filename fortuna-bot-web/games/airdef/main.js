@@ -29,7 +29,7 @@ import { POD, RAIL, podLift } from './sim/combined.js?v=20261107a';
 import { unitModel, weaponGeo, samMissileMesh, mountWpnFlame, narMesh, flameOf, wpnNozzle, strikerGeo, createFx, attachFlames } from './units-render.js?v=20261107a';
 import { slotCount, LNCH, lnchToWorld, cylPose, mslView } from './launchers.js?v=20261107a';
 import { makeBay, bayHold } from './bay.js?v=20261107a';
-import { spinProps as spinRotors, spinSails, modelStats, loadModels, planeModel, heliModel, classOfRole, weaponMesh, pylonMesh, seatStores, unitModelGlb, unitMissileGlb, samMissileLo, samNose, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, wantUnitNear, bldModel, wantBuildings, wantModel, wantWeapon, weaponPending, anyModel, setWings, glideWings, spinVanes, planeMeta } from './models.js?v=20261107a';
+import { spinProps as spinRotors, spinSails, modelStats, loadModels, FLY, planeModel, heliModel, classOfRole, weaponMesh, pylonMesh, seatStores, unitModelGlb, unitMissileGlb, samMissileLo, samNose, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, wantUnitNear, bldModel, wantBuildings, wantModel, wantWeapon, weaponPending, anyModel, setWings, glideWings, spinVanes, planeMeta } from './models.js?v=20261107a';
 import { planeDamageVis, updateDebris, clearDebris } from './plane-damage.js?v=20261107a';
 import { createSound } from './sound.js?v=20261107a';
 import { ico, iconize } from './icons.js?v=20261107a';
@@ -764,6 +764,8 @@ function relMesh(w) {
     const own = anyModel('w_nar_' + w.key); if (!own) wantModel('w_nar_' + w.key);
     const g = own || narMesh(w.key, w.W, wMat); mountWpnFlame(w, g, false); return g;
   }
+  const fly = FLY[w.key]; // ПТУР: в полёте - сама ракета (крылья и рули раскрываются - glideWings), на подвеске - контейнер
+  if (fly) { const own = anyModel(fly); if (own) { own.traverse((q) => { if (q.isMesh) q.castShadow = !!P.shadows; }); mountWpnFlame(w, own, false); return own; } wantModel(fly); }
   const g = weaponMesh(w.key, w.W, weaponGeo, wMat); if (weaponPending(w.key)) { g.userData.stub = true; wantWeapon(w.key); }
   mountWpnFlame(w, g, false);
   return g;

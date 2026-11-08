@@ -5,7 +5,6 @@
 
 - "Sukhoi Su-30 flanker c" (https://sketchfab.com/3d-models/sukhoi-su-30-flanker-c-92ca062c90fd45ffb6ce8144dc46004a) by andertan — CC-BY-4.0 — `su30.glb`
 - "Boeing F/A-18E/F "Super Hornet"" (https://sketchfab.com/3d-models/boeing-fa-18ef-super-hornet-f71e9fea01e24fea9b1b380161d21d38) by andertan — CC-BY-4.0 — `msl_aim120.glb`
-- "FAB-100-120" (https://sketchfab.com/3d-models/fab-100-120-38f8bd043c854b9ab648e824ed812ffd) by 4ikalka — CC-BY-4.0 — `w_fab100.glb`
 - "OFAB-250-270" (https://sketchfab.com/3d-models/ofab-250-270-7276306219f5499296979764c3c50fe2) by 4ikalka — CC-BY-4.0 — `w_ofab250.glb`
 - "Fab-250| The soviet aviation bomb" (https://sketchfab.com/3d-models/fab-250-the-soviet-aviation-bomb-a85096c0d7594e5e9cc4551fcd59fdfd) by CATholic — CC-BY-4.0 — `w_fab250.glb`
 - "Low Poly GBU-24 laser guided bomb (окраска и запекание)" (https://sketchfab.com/3d-models/low-poly-gbu-24-laser-guided-bomb-8dcd4a634e924a52ab05d4e90b3e3e82) by AnirudhRao — CC-BY-4.0 — `w_gbu24.glb`
@@ -153,7 +152,6 @@
 - "Uh60" (https://sketchfab.com/3d-models/uh60-47b4230a324c4390a105f656ff1210b9) by manilov.ap — CC-BY-4.0 — `h_uh60.glb`
 - "Mi8" (https://sketchfab.com/3d-models/mi8-1bc2f674ad8345648710f16df847599a) by manilov.ap — CC-BY-4.0 — `h_mi8.glb`
 - "Rah66" (https://sketchfab.com/3d-models/rah66-f9f7a920d24b42c19d87a2d569e27436) by manilov.ap — CC-BY-4.0 — `h_rah66.glb`
-- "9М114 Штурм- Кокон" (https://sketchfab.com/3d-models/9114-42c7dd424a064efebf3e63ebd423afbb) by timurwolf — CC-BY-4.0 — `w_shturm.glb`
 - "FIM-92 Stinger (Low-Poly)" (https://sketchfab.com/3d-models/fim-92-stinger-low-poly-c97e321bae1249a78ac4eed43a932ed7) by GoldbergR — CC-BY-4.0 — `aam_stinger.glb`
 - "Windmill" (https://sketchfab.com/3d-models/windmill-0730705327e045bd8cb98a888bd0f954) by Yury Misiyuk — CC-BY-4.0 — `obj_mill.glb`
 - "VAZ-2104 FREE" (https://sketchfab.com/3d-models/vaz-2104-free-ba563a31b4754a66a5f0e7f893145922) by sMoKi — CC-BY-4.0 — `c_vaz.glb`

@@ -1,0 +1,15 @@
+{
+ "key": "w_fab100",
+ "weapon": "fab100",
+ "name": "ФАБ-100",
+ "rev": 1,
+ "files": {
+  "glb": "fab100.glb",
+  "blend": "fab100.blend",
+  "build": [
+   "build.py",
+   "bake.py",
+   "deliver.py"
+  ]
+ }
+}

@@ -19,15 +19,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "FAB-100-120",
-  "author": "4ikalka",
-  "url": "https://sketchfab.com/3d-models/fab-100-120-38f8bd043c854b9ab648e824ed812ffd",
-  "license": "CC-BY-4.0",
-  "files": [
-   "w_fab100"
-  ]
- },
- {
   "title": "OFAB-250-270",
   "author": "4ikalka",
   "url": "https://sketchfab.com/3d-models/ofab-250-270-7276306219f5499296979764c3c50fe2",
@@ -1397,15 +1388,6 @@ export const CREDITS = [
   "license": "CC-BY-4.0",
   "files": [
    "h_rah66"
-  ]
- },
- {
-  "title": "9М114 Штурм- Кокон",
-  "author": "timurwolf",
-  "url": "https://sketchfab.com/3d-models/9114-42c7dd424a064efebf3e63ebd423afbb",
-  "license": "CC-BY-4.0",
-  "files": [
-   "w_shturm"
   ]
  },
  {
