@@ -123,15 +123,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "GBU-39B Small Diameter Bomb Weapon System",
-  "author": "KillCaptureDestroy",
-  "url": "https://sketchfab.com/3d-models/gbu-39b-small-diameter-bomb-weapon-system-108c5bf859cb41c5b72163b4e2758f26",
-  "license": "CC-BY-4.0",
-  "files": [
-   "w_gbu39"
-  ]
- },
- {
   "title": "FIM-92 Stinger (перекрашена, развёрнута)",
   "author": "Pan_Ar4ik",
   "url": "https://sketchfab.com/3d-models/fim-92-stinger-925d78a613e847fcb2e7a60d54d3404c",

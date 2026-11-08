@@ -1,0 +1,16 @@
+{
+ "key": "w_gbu39",
+ "weapon": "gbu39",
+ "name": "GBU-39/B SDB",
+ "rev": 1,
+ "files": {
+  "glb": "gbu39.glb",
+  "blend": "gbu39.blend",
+  "build": [
+   "build.py",
+   "_collide.py",
+   "bake.py",
+   "deliver.py"
+  ]
+ }
+}

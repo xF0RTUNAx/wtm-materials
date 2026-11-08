@@ -225,7 +225,7 @@ const META = {
   w_aargm: { weapon: 'aargm', lazy: true, stations: [] }, // AARGM-ER: своя модель (tools/airdef-models/own/aargm)
   w_mald: { weapon: ['mald', 'quail'], wings: 'deploy', wingAx: { wing1: [0, 0, -0.2, 82], wing2: [0, 0, -0.2, 98] }, stations: [] }, // ADM-160 MALD — собственная модель (tools/airdef-models/own/mald): обе консоли на общей оси под корпусом, сложенные - wing1 назад, wing2 вперёд, раскрываются в одну сторону (стреловидность 8°)
   w_decoy_e: { weapon: 'decoy_e', wings: 'deploy', wingAx: { wing1: [0.165, -0.2045, -0.4, 80], wing2: [-0.165, -0.2045, -0.4, -80] }, stations: [] }, // Ложная цель (имитатор) — собственная модель (tools/airdef-models/own/decoy_e)
-  w_gbu39: { weapon: ['gbu39', 'sdb'], wings: 'fold', stations: [] }, // GBU-39 SDB (и для «Мульти-волны»)
+  w_gbu39: { weapon: ['gbu39', 'sdb'], wings: 'deploy', flip: true, wingAx: { wing1: [0, -0.1135, -0.27, 60], wing2: [0, -0.1235, -0.27, -60], wing1s: [0.03, -0.104, 0.03, 85], wing2s: [-0.03, -0.104, 0.03, -85] }, stations: [] }, // GBU-39/B SDB — собственная модель (tools/airdef-models/own/gbu39): висит крылом вниз, после сброса переворот (flip, как УМПК), крылья на общей оси и подкосы на своих - из паспорта
   w_gbu31: { weapon: 'gbu31', stations: [] }, // GBU-31 JDAM — собственная модель (tools/airdef-models/own/gbu31)
   w_pod: { pod: true, stations: [] }, // AN/AAQ-28 LITENING - прицельный контейнер
   // постройки военных объектов (целей) - расставляются по OBJ_DIMS из city.js
@@ -472,6 +472,7 @@ const GLB_V_OWN = {
   w_aargm: '20261105b',
   w_mald: '20261108a',
   w_agm88: '20261108b',
+  w_gbu39: '20261108c',
 };
 GLB_V.hg_jack = '20261104b'; // подъёмник, ревизия 2: матовый, с износом
 GLB_V.w_pod = '20261104b'; // серый корпус контейнера, без комьев от упрощения
