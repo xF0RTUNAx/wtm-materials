@@ -1,0 +1,16 @@
+{
+ "key": "w_agm88",
+ "weapon": "agm88",
+ "name": "AGM-88 HARM",
+ "rev": 1,
+ "files": {
+  "glb": "agm88.glb",
+  "blend": "agm88.blend",
+  "build": [
+   "build.py",
+   "_collide.py",
+   "bake.py",
+   "deliver.py"
+  ]
+ }
+}

@@ -114,15 +114,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "AGM-88 HARM transport cart",
-  "author": "Tiltow",
-  "url": "https://sketchfab.com/3d-models/agm-88-harm-transport-cart-2c60dcae416e4af1a3d69914ff72a198",
-  "license": "CC-BY-4.0",
-  "files": [
-   "w_agm88"
-  ]
- },
- {
   "title": "RAFAEL AN/AAQ-28(V) Litening",
   "author": "Vlad.Mojaev",
   "url": "https://sketchfab.com/3d-models/rafael-anaaq-28v-litening-be90b1ca86bd46f4a87a86829d1e112c",

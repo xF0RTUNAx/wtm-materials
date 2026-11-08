@@ -221,7 +221,7 @@ const META = {
   w_kab500l: { weapon: 'kab500l', lazy: true, stations: [] }, // КАБ-500Л — собственная модель (tools/airdef-models/own/kab500l)
   w_mk82: { weapon: 'mk82', stations: [] }, // Mk 82 — собственная модель (tools/airdef-models/own/mk82)
   w_jassm: { weapon: 'jassm', wings: 'deploy', wingAx: { wing1: [0.215, -0.2535, -0.49, 65], wing2: [-0.215, -0.2535, -0.49, -65] }, hinge: { fin: [0, 0.1223, 1.81, 0, -0.1989, 0.98, 90] }, stations: [] }, // AGM-158 JASSM — собственная модель (tools/airdef-models/own/jassm)
-  w_agm88: { weapon: 'agm88', stations: [] }, // AGM-88 HARM (с тележки)
+  w_agm88: { weapon: 'agm88', stations: [] }, // AGM-88 HARM — собственная модель (tools/airdef-models/own/agm88)
   w_aargm: { weapon: 'aargm', lazy: true, stations: [] }, // AARGM-ER: своя модель (tools/airdef-models/own/aargm)
   w_mald: { weapon: ['mald', 'quail'], wings: 'deploy', wingAx: { wing1: [0, 0, -0.2, 82], wing2: [0, 0, -0.2, 98] }, stations: [] }, // ADM-160 MALD — собственная модель (tools/airdef-models/own/mald): обе консоли на общей оси под корпусом, сложенные - wing1 назад, wing2 вперёд, раскрываются в одну сторону (стреловидность 8°)
   w_decoy_e: { weapon: 'decoy_e', wings: 'deploy', wingAx: { wing1: [0.165, -0.2045, -0.4, 80], wing2: [-0.165, -0.2045, -0.4, -80] }, stations: [] }, // Ложная цель (имитатор) — собственная модель (tools/airdef-models/own/decoy_e)
@@ -471,10 +471,10 @@ const GLB_V_OWN = {
   w_jassm: '20261103z',
   w_aargm: '20261105b',
   w_mald: '20261108a',
+  w_agm88: '20261108b',
 };
 GLB_V.hg_jack = '20261104b'; // подъёмник, ревизия 2: матовый, с износом
 GLB_V.w_pod = '20261104b'; // серый корпус контейнера, без комьев от упрощения
-GLB_V.w_agm88 = '20261104a'; // без синих ложементов тележки
 GLB_V.e_f111 = '20261104a'; // без чёрных наклеек
 GLB_V.e_tu160 = '20261104a'; // текстура 1024 вместо 512 (надписи в ангаре)
 GLB_V.e_f35 = GLB_V.e_f35_lo = GLB_V.e_f35_gear = '20261106a'; // своя модель и стойки
