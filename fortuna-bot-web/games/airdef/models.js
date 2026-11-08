@@ -174,7 +174,7 @@ const META = {
   // вертолётное оружие (heliModel / weaponMesh): подвес сверху, нос в −Z, центр габаритов в нуле
   w_shturm: { weapon: ['shturm', 'ataka'], lazy: true, stations: [] }, // «Штурм» 9М114 - ТПК, timurwolf (и вид «Атаки»: контейнер почти тот же)
   w_b8: { weapon: 's8', lazy: true, stations: [] }, // блок НАР Б-8В20 (20 труб) - timurwolf
-  w_lau61: { weapon: 'hydra', lazy: true, stations: [] }, // блок Hydra 70 LAU-61 (19 труб) - сетка блока Б-8 timurwolf, 1,7 × 0,4 м, олив NATO
+  w_lau61: { weapon: 'hydra', lazy: true, stations: [] }, // LAU-61 — собственная модель (tools/airdef-models/own/lau61)
   w_hellfire: { weapon: 'hellfire', lazy: true, stations: [] }, // AGM-114 Hellfire - из MH-60R (touka1212)
   aam_stinger: { weapon: 'aam_stinger', lazy: true, stations: [] }, // ракета FIM-92 Stinger «воздух-воздух» для вертолётов - GoldbergR
   e_tu160: { side: 'east', cls: 'carrier', only: true, lazy: true, internal: true, stations: mirror([V(-0.7, -3.8, -4.0), V(-0.7, -3.8, -1.5), V(-0.7, -3.8, 1.0), V(-0.7, -3.8, 3.5)]), nozzles: [V(-5.75, -4.31, 11.1), V(-3.97, -4.31, 11.1), V(3.97, -4.31, 11.1), V(5.75, -4.31, 11.1)], nr: 0.9 }, // Ту-160 - KOG_THORNS (с 2026-10-19 и в «Авиации»: точки - в отсеках); носитель «Мульти-волны»
@@ -473,6 +473,7 @@ const GLB_V_OWN = {
   w_mald: '20261108a',
   w_agm88: '20261108b',
   w_gbu39: '20261108c',
+  w_lau61: '20261108d',
 };
 GLB_V.hg_jack = '20261104b'; // подъёмник, ревизия 2: матовый, с износом
 GLB_V.w_pod = '20261104b'; // серый корпус контейнера, без комьев от упрощения

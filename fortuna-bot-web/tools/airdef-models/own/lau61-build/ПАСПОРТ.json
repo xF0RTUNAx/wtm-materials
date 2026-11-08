@@ -1,0 +1,16 @@
+{
+ "key": "w_lau61",
+ "weapon": "hydra",
+ "name": "LAU-61",
+ "rev": 1,
+ "files": {
+  "glb": "lau61.glb",
+  "blend": "lau61.blend",
+  "build": [
+   "build.py",
+   "_collide.py",
+   "bake.py",
+   "deliver.py"
+  ]
+ }
+}

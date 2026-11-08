@@ -1542,15 +1542,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "Блок НАР Б8И20  версия 1 (адаптация под LAU-61)",
-  "author": "timurwolf",
-  "url": "https://sketchfab.com/3d-models/820-1-2905fcb5f5fd4c7284adc362bcdc39d1",
-  "license": "CC-BY-4.0",
-  "files": [
-   "w_lau61"
-  ]
- },
- {
   "title": "SH60B OBJ",
   "author": "touka1212",
   "url": "https://sketchfab.com/3d-models/sh60b-obj-31aa8c39ce394a3795e89b1727058d0c",

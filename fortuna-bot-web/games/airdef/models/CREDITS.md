@@ -168,7 +168,6 @@
 - "Rah66" (https://sketchfab.com/3d-models/rah66-f9f7a920d24b42c19d87a2d569e27436) by manilov.ap — CC-BY-4.0 — `h_rah66.glb`
 - "9М114 Штурм- Кокон" (https://sketchfab.com/3d-models/9114-42c7dd424a064efebf3e63ebd423afbb) by timurwolf — CC-BY-4.0 — `w_shturm.glb`
 - "Блок НАР Б8И20  версия 1" (https://sketchfab.com/3d-models/820-1-2905fcb5f5fd4c7284adc362bcdc39d1) by timurwolf — CC-BY-4.0 — `w_b8.glb`
-- "Блок НАР Б8И20  версия 1 (адаптация под LAU-61)" (https://sketchfab.com/3d-models/820-1-2905fcb5f5fd4c7284adc362bcdc39d1) by timurwolf — CC-BY-4.0 — `w_lau61.glb`
 - "SH60B OBJ" (https://sketchfab.com/3d-models/sh60b-obj-31aa8c39ce394a3795e89b1727058d0c) by touka1212 — CC-BY-4.0 — `w_hellfire.glb`
 - "FIM-92 Stinger (Low-Poly)" (https://sketchfab.com/3d-models/fim-92-stinger-low-poly-c97e321bae1249a78ac4eed43a932ed7) by GoldbergR — CC-BY-4.0 — `aam_stinger.glb`
 - "Windmill" (https://sketchfab.com/3d-models/windmill-0730705327e045bd8cb98a888bd0f954) by Yury Misiyuk — CC-BY-4.0 — `obj_mill.glb`
