@@ -1,0 +1,16 @@
+{
+ "key": "w_mald",
+ "weapon": "mald",
+ "name": "ADM-160 MALD",
+ "rev": 1,
+ "files": {
+  "glb": "mald.glb",
+  "blend": "mald.blend",
+  "build": [
+   "build.py",
+   "_collide.py",
+   "bake.py",
+   "deliver.py"
+  ]
+ }
+}

@@ -16,7 +16,6 @@
 - "KH-58/U Anti-Radiation Missile" (https://sketchfab.com/3d-models/kh-58u-anti-radiation-missile-765d0250b6a0434b97d6e0434032f4da) by Narni_Tchereskov — CC-BY-4.0 — `w_kh58.glb`
 - "300 followers - free aircraft missile set" (https://sketchfab.com/3d-models/300-followers-free-aircraft-missile-set-2e70bc2ea0824897b2ccaea378809c9e) by NETRUNNER_pl — CC-BY-4.0 — `aam_aim9.glb`, `aam_aim54.glb`
 - "AGM-88 HARM transport cart" (https://sketchfab.com/3d-models/agm-88-harm-transport-cart-2c60dcae416e4af1a3d69914ff72a198) by Tiltow — CC-BY-4.0 — `w_agm88.glb`
-- "AIM-160A "Screamer"" (https://sketchfab.com/3d-models/aim-160a-screamer-5342783592684eaaa98238acae57fb0c) by Peter Primini — CC-BY-4.0 — `w_mald.glb`
 - "RAFAEL AN/AAQ-28(V) Litening" (https://sketchfab.com/3d-models/rafael-anaaq-28v-litening-be90b1ca86bd46f4a87a86829d1e112c) by Vlad.Mojaev — CC-BY-4.0 — `w_pod.glb`
 - "GBU-39B Small Diameter Bomb Weapon System" (https://sketchfab.com/3d-models/gbu-39b-small-diameter-bomb-weapon-system-108c5bf859cb41c5b72163b4e2758f26) by KillCaptureDestroy — CC-BY-4.0 — `w_gbu39.glb`
 - "FIM-92 Stinger (перекрашена, развёрнута)" (https://sketchfab.com/3d-models/fim-92-stinger-925d78a613e847fcb2e7a60d54d3404c) by Pan_Ar4ik — CC-BY-4.0 — `mp_stinger.glb`

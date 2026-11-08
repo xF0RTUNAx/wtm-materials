@@ -905,7 +905,7 @@ function syncWorld(dt, t) {
     let g = planeMeshes.get(a.id);
     if (!g) {
       g = new THREE.Group(); g.rotation.order = 'YXZ';
-      if (a.role === 'decoy') { const dm = weaponMesh(a.decoyKey, AG[a.decoyKey], weaponGeo, wMat); setWings(dm, 1); /* в полёте крылья раскрыты */ g.add(dm); g.userData.flames = { update() {} }; }
+      if (a.role === 'decoy') { const dm = weaponMesh(a.decoyKey, AG[a.decoyKey], weaponGeo, wMat); setWings(dm, 0); g.userData.dm = dm; /* крылья сложены, раскрываются после пуска (glideWings ниже, Mark 2026-11-08) */ g.add(dm); g.userData.flames = { update() {} }; }
       else if (a.heli) { // вертолёт налёта: ждём свою модель (пока грузится - не рисуем: иначе встал бы самолёт стороны), подвески - без отрисовки
         const hm = heliModel(a.plane); if (!hm) continue;
         hm.obj.traverse((o) => { if (o.isMesh && !o.userData.glass) o.castShadow = !!P.shadows; }); g.add(hm.obj); g.userData.flames = { update() {} };
@@ -926,6 +926,7 @@ function syncWorld(dt, t) {
     g.position.copy(a.pos); g.rotation.set(a.pitch, a.yaw, a.roll);
     g.userData.flames.update(a.thr, a.ab);
     spinRotors(g, dt, a.thr); // винты (Ту-95)
+    if (g.userData.dm && g.userData.dm.userData.wings) glideWings(g.userData.dm, dt, false); // ложная цель: крылья раскрываются через 0,3 с после пуска за 0,8 с
     const L = g.userData.lod, near = !L || camera.position.distanceToSquared(a.pos) < LOD_D * LOD_D;
     if (L) { L.hi.visible = near; L.lo.visible = !near; }
     const hb = g.userData.bay; if (hb) hb.update(dt); // в отсеке: оружие видно только в открытом

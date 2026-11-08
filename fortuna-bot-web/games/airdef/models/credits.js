@@ -123,15 +123,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "AIM-160A \"Screamer\"",
-  "author": "Peter Primini",
-  "url": "https://sketchfab.com/3d-models/aim-160a-screamer-5342783592684eaaa98238acae57fb0c",
-  "license": "CC-BY-4.0",
-  "files": [
-   "w_mald"
-  ]
- },
- {
   "title": "RAFAEL AN/AAQ-28(V) Litening",
   "author": "Vlad.Mojaev",
   "url": "https://sketchfab.com/3d-models/rafael-anaaq-28v-litening-be90b1ca86bd46f4a87a86829d1e112c",
