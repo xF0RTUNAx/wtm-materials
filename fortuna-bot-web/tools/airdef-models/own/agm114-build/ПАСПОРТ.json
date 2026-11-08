@@ -1,0 +1,16 @@
+{
+ "key": "w_hellfire",
+ "weapon": "hellfire",
+ "name": "AGM-114 Hellfire",
+ "rev": 1,
+ "files": {
+  "glb": "agm114.glb",
+  "blend": "agm114.blend",
+  "build": [
+   "build.py",
+   "_collide.py",
+   "bake.py",
+   "deliver.py"
+  ]
+ }
+}

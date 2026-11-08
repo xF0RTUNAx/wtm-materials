@@ -1542,15 +1542,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "SH60B OBJ",
-  "author": "touka1212",
-  "url": "https://sketchfab.com/3d-models/sh60b-obj-31aa8c39ce394a3795e89b1727058d0c",
-  "license": "CC-BY-4.0",
-  "files": [
-   "w_hellfire"
-  ]
- },
- {
   "title": "FIM-92 Stinger (Low-Poly)",
   "author": "GoldbergR",
   "url": "https://sketchfab.com/3d-models/fim-92-stinger-low-poly-c97e321bae1249a78ac4eed43a932ed7",

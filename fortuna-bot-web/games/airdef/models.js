@@ -175,7 +175,7 @@ const META = {
   w_shturm: { weapon: ['shturm', 'ataka'], lazy: true, stations: [] }, // «Штурм» 9М114 - ТПК, timurwolf (и вид «Атаки»: контейнер почти тот же)
   w_b8: { weapon: 's8', lazy: true, stations: [] }, // блок НАР Б-8В20 (20 труб) - timurwolf
   w_lau61: { weapon: 'hydra', lazy: true, stations: [] }, // LAU-61 — собственная модель (tools/airdef-models/own/lau61)
-  w_hellfire: { weapon: 'hellfire', lazy: true, stations: [] }, // AGM-114 Hellfire - из MH-60R (touka1212)
+  w_hellfire: { weapon: 'hellfire', lazy: true, stations: [] }, // AGM-114 Hellfire — собственная модель (tools/airdef-models/own/agm114)
   aam_stinger: { weapon: 'aam_stinger', lazy: true, stations: [] }, // ракета FIM-92 Stinger «воздух-воздух» для вертолётов - GoldbergR
   e_tu160: { side: 'east', cls: 'carrier', only: true, lazy: true, internal: true, stations: mirror([V(-0.7, -3.8, -4.0), V(-0.7, -3.8, -1.5), V(-0.7, -3.8, 1.0), V(-0.7, -3.8, 3.5)]), nozzles: [V(-5.75, -4.31, 11.1), V(-3.97, -4.31, 11.1), V(3.97, -4.31, 11.1), V(5.75, -4.31, 11.1)], nr: 0.9 }, // Ту-160 - KOG_THORNS (с 2026-10-19 и в «Авиации»: точки - в отсеках); носитель «Мульти-волны»
   e_b1b: { side: 'west', cls: 'carrier', only: true, lazy: true, internal: true, stations: mirror([V(-0.6, -2.5, -5.0), V(-0.6, -2.5, -2.5), V(-0.6, -2.5, 0.0), V(-0.6, -2.5, 2.5)]), nozzles: [V(-4.55, -3.4, 5.86), V(-2.95, -3.4, 5.86), V(2.95, -3.4, 5.86), V(4.55, -3.4, 5.86)], nr: 0.55 }, // B-1B - manilov.ap «B1» (CC BY 4.0; с 2026-10-24, прежняя - Muhamad Mirza Arrafi); крыло сложено назад (стреловидность ≈ 58°), станции - по оси отсека, на 0,4 м выше низа фюзеляжа (y −3,1); сопла - по срезу гондол (z 5,86, пары x ±2,95 / ±4,55); носитель «Мульти-волны»
@@ -474,6 +474,7 @@ const GLB_V_OWN = {
   w_agm88: '20261108b',
   w_gbu39: '20261108c',
   w_lau61: '20261108d',
+  w_hellfire: '20261108e',
 };
 GLB_V.hg_jack = '20261104b'; // подъёмник, ревизия 2: матовый, с износом
 GLB_V.w_pod = '20261104b'; // серый корпус контейнера, без комьев от упрощения

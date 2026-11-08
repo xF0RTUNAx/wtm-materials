@@ -706,12 +706,7 @@ const CONFIG = {
   w_shturm: { src: `${DL}/42c7dd424a064efebf3e63ebd423afbb.glb`, scale: 1.83 / 67.65, axes: (x, y, z) => [z, -y, x], tex: () => 256, pickMesh: /./, perTri: true, colors: { '': [0.09, 0.1, 0.075] }, groups: (c) => (Math.hypot(c.ctr[1] - 8.51, c.ctr[2] + 97.49) < 3.4 ? 'body' : null) }, // «Штурм» 9М114: ОДИН ТПК (труба; вторая и балка автора убраны), 1,83 м, перевёрнут — timurwolf
   w_b8: { src: `${DL}/2905fcb5f5fd4c7284adc362bcdc39d1.glb`, scale: 2.0 / 63.38, nose: '-x', tex: () => 256, pickMesh: /./, colors: { '': [0.07, 0.08, 0.055] } }, // блок НАР Б-8В20 (20 труб Ø 80 мм — по снимку именно Б-8, не Б-13) — timurwolf, 2,0 м
   w_lau61: { src: new URL('./own/lau61.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 1024, nTex: () => 512, pickMesh: /./, own: true }, // LAU-61: своя модель (Blender, own/lau61.glb)
-  w_hellfire: { src: `${DL}/sh60b_obj.glb`, scale: 1.63 / 59.28, nose: '-z', tex: () => 256, centerX: true, /* одна из четырёх AGM-114 на левой ЕССШ MH-60R — touka1212: тело, обтекатель, сопло, оперение и пояски; направляющая, замки и пилон не берутся */
-    colors: { '#nose$': [0.03, 0.03, 0.03], '#yellow$': [0.55, 0.42, 0.02], '#brown$': [0.12, 0.06, 0.02], '': [0.095, 0.118, 0.056] },
-    groups: (c) => { const [x, y, z] = c.ctr; if (!(x > -88 && x < -82.5 && y > 27 && y < 33.5 && z > -185 && z < -100)) return null; if (c.mat === 3 && y > 32.5) return null; // коробка одной ракеты; замки и полозки на спине — долой
-      if (z < -166.5) return 'body#nose'; // носовой обтекатель головки
-      if (c.size[2] < 0.5 && c.mat === 2) { if (Math.abs(z + 155.41) < 0.5) return 'body#yellow'; if (Math.abs(z + 128.5) < 0.5) return 'body#brown'; } // три пояска из плоских накладок: у БЧ — жёлтый, у двигателя — коричневый
-      return 'body'; } },
+  w_hellfire: { src: new URL('./own/agm114.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 1024, nTex: () => 512, pickMesh: /./, own: true }, // AGM-114 Hellfire: своя модель (Blender, own/agm114.glb)
   aam_stinger: { src: `${DL}/fim-92_stinger_low-poly.glb`, scale: 1.1875, nose: '+z', tex: () => 256, pickMesh: /./, dropMat: /^FIM-92_Stinger_1_Material/ }, // ракета FIM-92 Stinger (без трубы) — GoldbergR
   // ── Хеллоуин, осенняя карта «Туманная топь» (2026-10-20): постройки-цели obj_*, реквизит pr_* / c_vaz (все CC BY 4.0, Sketchfab); unit — земля y = 0, центр по корпусу.
   // skin — скинированные лопасти мельницы; ground — высота «земли» модели (м, после масштаба), если ниже подошвы уходит корень или основание
