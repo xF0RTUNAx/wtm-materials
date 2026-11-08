@@ -173,7 +173,7 @@ const META = {
   h_rah66: { side: 'west', cls: 'heli', heli: true, lazy: true, stations: mirror([V(-2.35, -0.75, -0.5, 0.25), V(-1.55, -0.75, -0.5, 0.25)]), nozzles: [], nr: 0.3, pod: null, matte: true }, // RAH-66 Comanche (фенестрон - trotor)
   // вертолётное оружие (heliModel / weaponMesh): подвес сверху, нос в −Z, центр габаритов в нуле
   w_shturm: { weapon: ['shturm', 'ataka'], lazy: true, stations: [] }, // «Штурм» 9М114 - ТПК, timurwolf (и вид «Атаки»: контейнер почти тот же)
-  w_b8: { weapon: 's8', lazy: true, stations: [] }, // блок НАР Б-8В20 (20 труб) - timurwolf
+  w_b8: { weapon: 's8', lazy: true, stations: [] }, // Б-8 — собственная модель (tools/airdef-models/own/b8)
   w_lau61: { weapon: 'hydra', lazy: true, stations: [] }, // LAU-61 — собственная модель (tools/airdef-models/own/lau61)
   w_hellfire: { weapon: 'hellfire', lazy: true, stations: [] }, // AGM-114 Hellfire — собственная модель (tools/airdef-models/own/agm114)
   aam_stinger: { weapon: 'aam_stinger', lazy: true, stations: [] }, // ракета FIM-92 Stinger «воздух-воздух» для вертолётов - GoldbergR
@@ -475,6 +475,7 @@ const GLB_V_OWN = {
   w_gbu39: '20261108c',
   w_lau61: '20261108d',
   w_hellfire: '20261108e',
+  w_b8: '20261108g',
 };
 GLB_V.hg_jack = '20261104b'; // подъёмник, ревизия 2: матовый, с износом
 GLB_V.w_pod = '20261104b'; // серый корпус контейнера, без комьев от упрощения
@@ -1035,16 +1036,19 @@ export const planeNames = () => Object.keys(META).filter(planeSeated);
 export const weaponModelName = (key) => WMODEL[key] || null;
 export const podModelName = () => Object.keys(META).find((k) => META[k].pod === true) || null;
 export const glbVerOf = (n) => glbVer(n);
-export function pylonMesh(key, W, geoFn, mat) {
+// heli - подвеска вертолёта: у блока Б-8 части cone (обтекатель Б-8М1 с носами ракет в нём) и heli (носы ракет у срезов труб
+// вертолётного Б-8В20) - одна из двух; пока у модели нет части heli - обтекатель везде (Mark 2026-11-08)
+export function pylonMesh(key, W, geoFn, mat, heli = false) {
   const n = WMODEL[key]; if (!n || !LOADED[n]) return weaponMesh(key, W, geoFn, mat);
-  let P = PYLON.get(n);
+  const ch = LOADED[n].children, hasH = ch.some((c) => c.name === 'heli'), noCone = heli && hasH && ch.some((c) => c.name === 'cone'), pk = noCone ? n + '|heli' : n;
+  let P = PYLON.get(pk);
   if (!P) {
-    const src = LOADED[n].clone(); setWings(src, 0); src.updateMatrixWorld(true); PI4.copy(src.matrixWorld).invert();
+    const src = LOADED[n].clone(); setWings(src, 0); if (hasH) for (const c of src.children) { if (c.name === 'cone') c.visible = !noCone; else if (c.name === 'heli') c.visible = noCone; } src.updateMatrixWorld(true); PI4.copy(src.matrixWorld).invert();
     const by = new Map(); let ok = true;
     src.traverse((q) => { if (!q.isMesh) return; if (q.isSkinnedMesh || q.morphTargetInfluences || Array.isArray(q.material)) ok = false; let v = true; for (let p = q; p && p !== src; p = p.parent) if (!p.visible) v = false; if (!v) return;
       (by.get(q.material) || by.set(q.material, []).get(q.material)).push({ g: q.geometry, m: new THREE.Matrix4().multiplyMatrices(PI4, q.matrixWorld) }); });
     P = ok && by.size ? { q: src.quaternion.clone(), s: src.scale.clone(), parts: [...by].map(([m, gs]) => ({ m, g: mergeLocal(gs) })) } : 'orig';
-    PYLON.set(n, P);
+    PYLON.set(pk, P);
   }
   if (P === 'orig') return weaponMesh(key, W, geoFn, mat); // особая модель (кости, морфы, несколько материалов на сетке) - как есть
   const o = new THREE.Group(); o.quaternion.copy(P.q); o.scale.copy(P.s);

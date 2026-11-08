@@ -1533,15 +1533,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "Блок НАР Б8И20  версия 1",
-  "author": "timurwolf",
-  "url": "https://sketchfab.com/3d-models/820-1-2905fcb5f5fd4c7284adc362bcdc39d1",
-  "license": "CC-BY-4.0",
-  "files": [
-   "w_b8"
-  ]
- },
- {
   "title": "FIM-92 Stinger (Low-Poly)",
   "author": "GoldbergR",
   "url": "https://sketchfab.com/3d-models/fim-92-stinger-low-poly-c97e321bae1249a78ac4eed43a932ed7",

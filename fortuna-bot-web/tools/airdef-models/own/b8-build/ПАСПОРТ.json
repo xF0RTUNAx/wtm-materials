@@ -1,0 +1,16 @@
+{
+ "key": "w_b8",
+ "weapon": "s8",
+ "name": "Б-8",
+ "rev": 2,
+ "files": {
+  "glb": "b8.glb",
+  "blend": "b8.blend",
+  "build": [
+   "build.py",
+   "_collide.py",
+   "bake.py",
+   "deliver.py"
+  ]
+ }
+}
