@@ -1,0 +1,16 @@
+{
+ "key": "w_tomahawk",
+ "weapon": "tomahawk",
+ "name": "BGM-109 Tomahawk",
+ "rev": 1,
+ "files": {
+  "glb": "tlam.glb",
+  "blend": "tlam.blend",
+  "build": [
+   "build.py",
+   "_collide.py",
+   "bake.py",
+   "deliver.py"
+  ]
+ }
+}

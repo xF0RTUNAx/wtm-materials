@@ -146,7 +146,7 @@ const META = {
     nozzles: [V(0, -0.726, 6.185)], nr: 0.405, pod: null, clearGlass: true, ...(paintOn ? { gearModel: 'e_f35_gear' } : {}),
     bay: { doors: { bay_out_l: [[-1.474, -1.5582, 0.69], [0, -0.0184, -0.9998], 86], bay_in_l: [[-0.306, -1.61, 0.69], [0, 0.012, -0.9999], -92], bay_out_r: [[1.474, -1.5585, 0.69], [0, -0.0185, -0.9998], -86], bay_in_r: [[0.306, -1.6098, 0.69], [0, 0.0121, -0.9999], 92] }, sides: { L: ['bay_out_l', 'bay_in_l'], R: ['bay_out_r', 'bay_in_r'] } } }, // F-35A: своя модель, 8 точек в отсеках; bay - створки: шарнир в осях игры, ось, угол открытия (bay.js)
   // ── «Мульти-волна» (2026-10-13): грузится по требованию (lazy) - wantModel / anyModel
-  w_tomahawk: { weapon: 'tomahawk', lazy: true, stations: [] }, // BGM-109 Tomahawk - Pan_Ar4ik
+  w_tomahawk: { weapon: 'tomahawk', lazy: true, matte: true, wings: 'deploy', wingAx: { wing1: [0, 0.045, -0.07, -90], wing2: [0, 0.075, -0.07, 90] }, hinge: { fin1: [0, 0.2053, 2.59, 0, -0.2784, 0.9605, -90], fin2: [0.2053, 0, 2.59, -0.2784, 0, 0.9605, -90], fin3: [0, -0.2053, 2.59, 0, 0.2784, 0.9605, -90], fin4: [-0.2053, 0, 2.59, 0.2784, 0, 0.9605, -90], intake: [0, -0.264, 1.674, 1, 0, 0, -13] }, stations: [] }, // BGM-109 Tomahawk - собственная модель (Свои/Tomahawk, 2026-11-09): после пуска крыло из щели, рули и заборник раскрываются (паспорт)
   w_kh555: { weapon: ['kh555'], lazy: true, stations: [] }, // Х-555 - собственная модель (tools/airdef-models/own/kh555; прежняя - перезалив CC BY-NC модели, 2026-10-24)
   w_kh55: { weapon: ['kh55', 'kh55d'], lazy: true, stations: [] }, // Х-55 и ложная Х-55 (макетная часть - тот же корпус) - собственная модель (tools/airdef-models/own/kh55)
   w_kalibr: { weapon: 'kalibr', lazy: true, stations: [] }, // «Калибр» - mmickel
@@ -205,7 +205,7 @@ const META = {
   w_gbu12: { weapon: 'gbu12', stations: [] }, // GBU-12 Paveway II - собственная модель (tools/airdef-models/own/gbu12)
   w_fab500: { weapon: 'fab500', stations: [], matte: true }, // ФАБ-500М-62 - собственная модель (tools/airdef-models/own/fab500)
   w_fab100: { weapon: 'fab100', stations: [], matte: true }, // ФАБ-100 — собственная модель (tools/airdef-models/own/fab100)
-  w_ofab250: { weapon: 'ofab250', stations: [], matte: true }, // ОФАБ-250-270 - 4ikalka
+  w_ofab250: { weapon: 'ofab250', stations: [], matte: true }, // ОФАБ-250-270 — собственная модель (tools/airdef-models/own/w_ofab250)
   w_fab250: { weapon: 'fab250', stations: [], matte: true }, // ФАБ-250 — собственная модель (tools/airdef-models/own/fab250)
   w_fab1000: { weapon: 'fab1000', stations: [], matte: true }, // ФАБ-1000 - собственная модель (tools/airdef-models/own/fab1000)
   w_gbu24: { weapon: 'gbu24', stations: [] }, // GBU-24 Paveway III - AnirudhRao, своя окраска и запекание (Свои/GBU-24)
@@ -491,6 +491,8 @@ const GLB_V_OWN = {
   w_b8: '20261108g',
   w_fab100: '20261108h',
   w_fab250: '20261108i',
+  w_ofab250: '20261108j',
+  w_tomahawk: '20261108k',
 };
 GLB_V.hg_jack = '20261104b'; // подъёмник, ревизия 2: матовый, с износом
 GLB_V.w_pod = '20261104b'; // серый корпус контейнера, без комьев от упрощения

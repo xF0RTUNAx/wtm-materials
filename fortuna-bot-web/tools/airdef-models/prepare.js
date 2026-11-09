@@ -58,7 +58,7 @@ const CONFIG = {
   // ── четвёртая партия (2026-10-19), без упрощения: ФАБ-100 и ОФАБ-250 — 4ikalka (мм / свои единицы, без текстур — оливковые),
   // ФАБ-250 — CATholic (текстура автора), ФАБ-1000 — United4192, GBU-24 и GBU-57 — Rhine_Lab_Muelsyse (US Weapon Pack)
   w_fab100: { src: new URL('./own/fab100.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 1024, nTex: () => 512, pickMesh: /./, own: true }, // ФАБ-100: своя модель (Blender, own/fab100.glb)
-  w_ofab250: { src: `${DL}/ofab-250-270.glb`, scale: 1.48 / 21.06, nose: '-x', tex: () => 256, pickMesh: /./, colors: { '': [0.07, 0.08, 0.055] } },
+  w_ofab250: { src: new URL('./own/w_ofab250.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 1024, nTex: () => 512, pickMesh: /./, own: true }, // ОФАБ-250-270: своя модель (Blender, own/w_ofab250.glb)
   w_fab250: { src: new URL('./own/fab250.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 1024, nTex: () => 512, pickMesh: /./, own: true }, // ФАБ-250: своя модель (Blender, own/fab250.glb)
   w_fab1000: { src: new URL('./own/fab1000.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 1024, nTex: () => 512, pickMesh: /./, own: true }, // ФАБ-1000: своя модель (Blender, own/fab1000.glb)
   w_gbu24: { src: `${DL}/Свои/GBU-24/gbu24_game.glb`, scale: 1, nose: '-z', tex: () => 512, pickMesh: /./, credit: 'окраска и запекание' }, /* без карты нормалей: сетка частая (24 тыс. мелких граней), three.js строит касательные по пикселям — на хвосте шли полосы */ // GBU-24 Paveway III — AnirudhRao (CC BY 4.0; Свои/GBU-24: 4,39 м, БЧ оливковая с жёлтым пояском, блок наведения и хвост серые — запечено 1024; прежняя — Rhine_Lab US Weapon Pack)
@@ -242,7 +242,7 @@ const CONFIG = {
       if (y < -0.1 && ax < 1.75 && s[0] < 0.25 && s[1] < 0.25 && s[2] > 2) return null; // «Спарроу» в нишах
       return LS(c); } },
   // ── «Мульти-волна» (2026-10-13): крылатые ракеты, дроны, носители, пусковые оперативно-тактических ракет
-  w_tomahawk: { src: `${DL}/tomahawk.glb`, scale: 1.44, nose: '-z', rulesIn: 'game', tex: () => 256, groups: LS }, // BGM-109 — 5,56 м
+  w_tomahawk: { src: new URL('./own/tlam.glb', import.meta.url).pathname, scale: 1, nose: '-z', axisX: 0, axisZ: 0, centerY: 0 /* начало как в файле: оси из паспорта */, tex: () => 1024, nTex: () => 512, pickMesh: /./, own: true, groups: (c) => { const m = /(^|\/)(wing\d|fin\d|intake)(\/|$)/.exec(c.path); return m ? m[2] : 'body'; } }, // BGM-109 Tomahawk: своя модель (Blender, own/tlam.glb); крыло, рули и заборник - свои части (integrate-own стирает groups - вернуть)
   // Х-101 — HappyBattleSheep, Thingiverse (CC BY): STL в мм, Z вверх; stl2glb.js → Downloads/stl-glb/kh101.glb
   // GBU-10 — PhilCiborowski, Thingiverse (CC BY; 1/72, мм): снизу «пенёк» для печати — долой
   w_gbu10: { src: new URL('./own/gbu10.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 1024, nTex: () => 512, pickMesh: /./, own: true }, // GBU-10 Paveway: своя модель (Blender, own/gbu10.glb)

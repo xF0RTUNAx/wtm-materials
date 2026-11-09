@@ -19,15 +19,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "OFAB-250-270",
-  "author": "4ikalka",
-  "url": "https://sketchfab.com/3d-models/ofab-250-270-7276306219f5499296979764c3c50fe2",
-  "license": "CC-BY-4.0",
-  "files": [
-   "w_ofab250"
-  ]
- },
- {
   "title": "Low Poly GBU-24 laser guided bomb (окраска и запекание)",
   "author": "AnirudhRao",
   "url": "https://sketchfab.com/3d-models/low-poly-gbu-24-laser-guided-bomb-8dcd4a634e924a52ab05d4e90b3e3e82",
@@ -561,15 +552,6 @@ export const CREDITS = [
   "license": "CC-BY-4.0",
   "files": [
    "e_f4"
-  ]
- },
- {
-  "title": "TOMAHAWK",
-  "author": "Pan_Ar4ik",
-  "url": "https://sketchfab.com/3d-models/tomahawk-7f2cda9c50864d8ab136a63659ca0658",
-  "license": "CC-BY-4.0",
-  "files": [
-   "w_tomahawk"
   ]
  },
  {
