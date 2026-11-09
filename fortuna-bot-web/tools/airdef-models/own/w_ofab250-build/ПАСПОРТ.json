@@ -1,0 +1,18 @@
+{
+ "key": "w_ofab250",
+ "weapon": "ofab250",
+ "name": "ОФАБ-250-270",
+ "rev": 1,
+ "files": {
+  "glb": "w_ofab250.glb",
+  "blend": "ofab250.blend",
+  "build": [
+   "офаб.py",
+   "_виды.py",
+   "_данные.py",
+   "_краска.py",
+   "_проба.py",
+   "_сдача.py"
+  ]
+ }
+}
