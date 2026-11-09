@@ -447,15 +447,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "Hunter",
-  "author": "manilov.ap",
-  "url": "https://sketchfab.com/3d-models/hunter-0bdd0fc7a68e4d0b8306f4ddb2846a26",
-  "license": "CC-BY-4.0",
-  "files": [
-   "e_hunter"
-  ]
- },
- {
   "title": "Avro698",
   "author": "manilov.ap",
   "url": "https://sketchfab.com/3d-models/avro698-5259b4b3852a4cb4ad4b1745913ed039",
@@ -543,15 +534,6 @@ export const CREDITS = [
   "license": "CC-BY-4.0",
   "files": [
    "e_su35"
-  ]
- },
- {
-  "title": "Dassault Mirage F1",
-  "author": "Civorsky",
-  "url": "https://sketchfab.com/3d-models/dassault-mirage-f1-9f7ea1b8ca934986833ab8f265f4b661",
-  "license": "CC-BY-4.0",
-  "files": [
-   "e_mirage_f1"
   ]
  },
  {
