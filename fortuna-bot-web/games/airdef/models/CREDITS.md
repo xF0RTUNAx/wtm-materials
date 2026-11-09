@@ -41,7 +41,6 @@
 - "Jaguar" (https://sketchfab.com/3d-models/jaguar-b09a0ee965bb424aaf14ebd06b698f96) by manilov.ap — CC-BY-4.0 — `e_jaguar.glb`
 - "Buccaneer" (https://sketchfab.com/3d-models/buccaneer-db82ad0e1f5644ccaee1b25b77566dc7) by manilov.ap — CC-BY-4.0 — `e_buccaneer.glb`
 - "Harrier" (https://sketchfab.com/3d-models/harrier-9ccfd6758680413bb19d656db4f46185) by manilov.ap — CC-BY-4.0 — `e_harrier.glb`
-- "Rafale" (https://sketchfab.com/3d-models/rafale-225c7fba25d54b4b98b1de1e38921f9d) by manilov.ap — CC-BY-4.0 — `e_rafale.glb`
 - "B2" (https://sketchfab.com/3d-models/b2-a9be2ca923aa44809194613209810d06) by manilov.ap — CC-BY-4.0 — `e_b2.glb`
 - "Yak-38" (https://sketchfab.com/3d-models/yak-38-7cf4151540e748b49015700e9ac3499a) by manilov.ap — CC-BY-4.0 — `e_yak38.glb`
 - "Il28" (https://sketchfab.com/3d-models/il28-20bb9aa23d4b48978be1d0ee5e1890ca) by manilov.ap — CC-BY-4.0 — `e_il28.glb`
@@ -150,3 +149,4 @@
 - "FIM-92 Stinger (Low-Poly)" (https://sketchfab.com/3d-models/fim-92-stinger-low-poly-c97e321bae1249a78ac4eed43a932ed7) by GoldbergR — CC-BY-4.0 — `aam_stinger.glb`
 - "Windmill" (https://sketchfab.com/3d-models/windmill-0730705327e045bd8cb98a888bd0f954) by Yury Misiyuk — CC-BY-4.0 — `obj_mill.glb`
 - "VAZ-2104 FREE" (https://sketchfab.com/3d-models/vaz-2104-free-ba563a31b4754a66a5f0e7f893145922) by sMoKi — CC-BY-4.0 — `c_vaz.glb`
+- "Dassault Rafale (из неё - часть носа корпуса; остальная модель своя)" (https://sketchfab.com/3d-models/dassault-rafale-fce1a5076caf4710917c14624b4d7d22) by CloudHub — CC-BY-4.0 — `e_rafale.glb`

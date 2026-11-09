@@ -375,15 +375,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "Rafale",
-  "author": "manilov.ap",
-  "url": "https://sketchfab.com/3d-models/rafale-225c7fba25d54b4b98b1de1e38921f9d",
-  "license": "CC-BY-4.0",
-  "files": [
-   "e_rafale"
-  ]
- },
- {
   "title": "B2",
   "author": "manilov.ap",
   "url": "https://sketchfab.com/3d-models/b2-a9be2ca923aa44809194613209810d06",
@@ -1370,6 +1361,15 @@ export const CREDITS = [
   "license": "CC-BY-4.0",
   "files": [
    "c_vaz"
+  ]
+ },
+ {
+  "title": "Dassault Rafale (из неё - часть носа корпуса; остальная модель своя)",
+  "author": "CloudHub",
+  "url": "https://sketchfab.com/3d-models/dassault-rafale-fce1a5076caf4710917c14624b4d7d22",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_rafale"
   ]
  }
 ];
