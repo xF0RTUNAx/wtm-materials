@@ -59,7 +59,7 @@ const CONFIG = {
   // ФАБ-250 — CATholic (текстура автора), ФАБ-1000 — United4192, GBU-24 и GBU-57 — Rhine_Lab_Muelsyse (US Weapon Pack)
   w_fab100: { src: new URL('./own/fab100.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 1024, nTex: () => 512, pickMesh: /./, own: true }, // ФАБ-100: своя модель (Blender, own/fab100.glb)
   w_ofab250: { src: `${DL}/ofab-250-270.glb`, scale: 1.48 / 21.06, nose: '-x', tex: () => 256, pickMesh: /./, colors: { '': [0.07, 0.08, 0.055] } },
-  w_fab250: { src: `${DL}/fab-250_the_soviet_aviation_bomb.glb`, scale: 1.5 / 2.25, nose: '-x', tex: () => 256, pickMesh: /./ },
+  w_fab250: { src: new URL('./own/fab250.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 1024, nTex: () => 512, pickMesh: /./, own: true }, // ФАБ-250: своя модель (Blender, own/fab250.glb)
   w_fab1000: { src: new URL('./own/fab1000.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 1024, nTex: () => 512, pickMesh: /./, own: true }, // ФАБ-1000: своя модель (Blender, own/fab1000.glb)
   w_gbu24: { src: `${DL}/Свои/GBU-24/gbu24_game.glb`, scale: 1, nose: '-z', tex: () => 512, pickMesh: /./, credit: 'окраска и запекание' }, /* без карты нормалей: сетка частая (24 тыс. мелких граней), three.js строит касательные по пикселям — на хвосте шли полосы */ // GBU-24 Paveway III — AnirudhRao (CC BY 4.0; Свои/GBU-24: 4,39 м, БЧ оливковая с жёлтым пояском, блок наведения и хвост серые — запечено 1024; прежняя — Rhine_Lab US Weapon Pack)
   w_gbu57: { src: new URL('./own/gbu57.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 1024, nTex: () => 512, pickMesh: /./, own: true }, // GBU-57: своя модель (Blender, own/gbu57.glb)

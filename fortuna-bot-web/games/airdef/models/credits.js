@@ -28,15 +28,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "Fab-250| The soviet aviation bomb",
-  "author": "CATholic",
-  "url": "https://sketchfab.com/3d-models/fab-250-the-soviet-aviation-bomb-a85096c0d7594e5e9cc4551fcd59fdfd",
-  "license": "CC-BY-4.0",
-  "files": [
-   "w_fab250"
-  ]
- },
- {
   "title": "Low Poly GBU-24 laser guided bomb (окраска и запекание)",
   "author": "AnirudhRao",
   "url": "https://sketchfab.com/3d-models/low-poly-gbu-24-laser-guided-bomb-8dcd4a634e924a52ab05d4e90b3e3e82",

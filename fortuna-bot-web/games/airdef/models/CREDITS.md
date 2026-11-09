@@ -6,7 +6,6 @@
 - "Sukhoi Su-30 flanker c" (https://sketchfab.com/3d-models/sukhoi-su-30-flanker-c-92ca062c90fd45ffb6ce8144dc46004a) by andertan — CC-BY-4.0 — `su30.glb`
 - "Boeing F/A-18E/F "Super Hornet"" (https://sketchfab.com/3d-models/boeing-fa-18ef-super-hornet-f71e9fea01e24fea9b1b380161d21d38) by andertan — CC-BY-4.0 — `msl_aim120.glb`
 - "OFAB-250-270" (https://sketchfab.com/3d-models/ofab-250-270-7276306219f5499296979764c3c50fe2) by 4ikalka — CC-BY-4.0 — `w_ofab250.glb`
-- "Fab-250| The soviet aviation bomb" (https://sketchfab.com/3d-models/fab-250-the-soviet-aviation-bomb-a85096c0d7594e5e9cc4551fcd59fdfd) by CATholic — CC-BY-4.0 — `w_fab250.glb`
 - "Low Poly GBU-24 laser guided bomb (окраска и запекание)" (https://sketchfab.com/3d-models/low-poly-gbu-24-laser-guided-bomb-8dcd4a634e924a52ab05d4e90b3e3e82) by AnirudhRao — CC-BY-4.0 — `w_gbu24.glb`
 - "US Weapon Pack" (https://sketchfab.com/3d-models/us-weapon-pack-c0783151b0024554a97d8ed6e5082745) by Rhine_Lab_Muelsyse — CC-BY-4.0 — `aam_aim7.glb`, `aam_aim9x.glb`
 - "Russian weapon pack" (https://sketchfab.com/3d-models/russian-weapon-pack-af00b7135a184ecfb2812a0e54458a8a) by Rhine_Lab_Muelsyse — CC-BY-4.0 — `aam_r73.glb`, `aam_r77.glb`, `aam_r27.glb`, `aam_r33.glb`

@@ -206,7 +206,7 @@ const META = {
   w_fab500: { weapon: 'fab500', stations: [], matte: true }, // ФАБ-500М-62 - собственная модель (tools/airdef-models/own/fab500)
   w_fab100: { weapon: 'fab100', stations: [], matte: true }, // ФАБ-100 — собственная модель (tools/airdef-models/own/fab100)
   w_ofab250: { weapon: 'ofab250', stations: [], matte: true }, // ОФАБ-250-270 - 4ikalka
-  w_fab250: { weapon: 'fab250', stations: [], matte: true }, // ФАБ-250 - CATholic
+  w_fab250: { weapon: 'fab250', stations: [], matte: true }, // ФАБ-250 — собственная модель (tools/airdef-models/own/fab250)
   w_fab1000: { weapon: 'fab1000', stations: [], matte: true }, // ФАБ-1000 - собственная модель (tools/airdef-models/own/fab1000)
   w_gbu24: { weapon: 'gbu24', stations: [] }, // GBU-24 Paveway III - AnirudhRao, своя окраска и запекание (Свои/GBU-24)
   w_gbu57: { weapon: 'gbu57', stations: [] }, // GBU-57 - собственная модель (tools/airdef-models/own/gbu57)
@@ -490,6 +490,7 @@ const GLB_V_OWN = {
   w_hellfire: '20261108e',
   w_b8: '20261108g',
   w_fab100: '20261108h',
+  w_fab250: '20261108i',
 };
 GLB_V.hg_jack = '20261104b'; // подъёмник, ревизия 2: матовый, с износом
 GLB_V.w_pod = '20261104b'; // серый корпус контейнера, без комьев от упрощения
