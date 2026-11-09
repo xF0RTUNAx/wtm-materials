@@ -4,12 +4,12 @@
 // оружия, комплексов, самолётов, вертолётов, подвесок, эпох, ролей, носителей, режимов, подписи и значения таблиц ТТХ, метки СПО.
 // Ключи и идентификаторы не трогаются - только значения-строки с кириллицей. Модуль надо импортировать ПЕРВЫМ в main.js (до
 // progress.js, чьё дерево копирует названия при импорте); localizeTree(TREE, BRANCHES) - страховка для уже построенного дерева.
-import { LANG } from '../i18n.js?v=20261107a';
-import EN from './en.js?v=20261107a';
-import * as ARS from '../arsenal.js?v=20261107a';
-import { SPECS } from '../sim/flight.js?v=20261107a';
-import { HSPECS } from '../sim/heli.js?v=20261107a';
-import { MODES } from '../sim/strike.js?v=20261107a';
+import { LANG } from '../i18n.js?v=20261109a';
+import EN from './en.js?v=20261109a';
+import * as ARS from '../arsenal.js?v=20261109a';
+import { SPECS } from '../sim/flight.js?v=20261109a';
+import { HSPECS } from '../sim/heli.js?v=20261109a';
+import { MODES } from '../sim/strike.js?v=20261109a';
 
 const CYR = /[А-Яа-яЁё]/;
 // Числа с единицами («≈ 500 кг», «0,5-5 км», «до ≈ 12 км с большой высоты», «≈ 3,6 М»): словарь их не хранит - собираем по правилам.

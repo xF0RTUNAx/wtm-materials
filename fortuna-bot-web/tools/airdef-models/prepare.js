@@ -169,7 +169,7 @@ const CONFIG = {
   e_harrier: { src: `${DL}/harrier.glb`, scale: 1.01656, fwd: [-0.7400, 0.6726], rulesIn: 'game', tex: () => 512, centerX: true, groups: strip(0, 1.3, 1.3, 1.6, 3.5) /* баки под крылом и стойки на концах крыла (обтекатели — оставить) */ },
   e_mirage: { src: new URL('./own/mirage2000d.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 2048, nTex: () => 2048, pickMesh: /./, own: true, centerX: true }, // Mirage 2000D: своя модель (Blender, own/mirage2000d-build)
   e_mirage_gear: { src: new URL('./own/mirage2000d_gear.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 2048, nTex: () => 2048, pickMesh: /./, own: true, centerX: true }, // стойки Mirage 2000D для ангара: две метки по 1 мм дают тот же центр, что у самолёта, не удалять
-  e_rafale: { src: new URL('./own/rafale.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 2048, nTex: () => 2048, pickMesh: /./, own: true, centerX: true }, // Rafale C: своя модель (Blender, own/rafale-build, 2026-11-09); перёд корпуса - из «Dassault Rafale» CloudHub (CC BY 4.0, титры credits.js вручную)
+  e_rafale: { src: new URL('./own/rafale.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 2048, nTex: () => 2048, pickMesh: /./, own: true, centerX: true, credit: 'из неё - часть носа корпуса; остальная модель своя', orig: { title: 'Dassault Rafale', author: 'CloudHub', source: 'https://sketchfab.com/3d-models/dassault-rafale-fce1a5076caf4710917c14624b4d7d22', license: 'CC-BY-4.0' } }, // Rafale C: своя модель (Blender, own/rafale-build, 2026-11-09); перёд корпуса - из «Dassault Rafale» CloudHub (CC BY 4.0, титры credits.js вручную)
   e_rafale_gear: { src: new URL('./own/rafale_gear.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 2048, nTex: () => 2048, pickMesh: /./, own: true, centerX: true }, // стойки Rafale для ангара: две метки по 1 мм не удалять
   e_b2: { src: `${DL}/a9be2ca923aa44809194613209810d06.glb`, scale: 2.20126, fwd: [-0.9591, -0.2831], rulesIn: 'game', tex: () => 512, centerX: true, groups: (c) => (c.max[1] < 1.15 || (c.ctr[1] < 1.1 && Math.max(...c.size) < 2.2) || (c.ctr[1] - c.size[1] / 2 < 0 && Math.max(...c.size) < 3) ? null : LS(c)) /* и открытый бомбоотсек */ },
   // ── четвёртая партия 2026-10-19 (CC BY; без упрощения): manilov.ap — fwd по оси симметрии (sym.js), остальные — по осям автора ──
@@ -1469,7 +1469,7 @@ if (Deno.args[0] === '--credits') {
   const bySrc = new Map(), dir = new URL('../../games/airdef/models/', import.meta.url).pathname;
   for (const [name, cfg] of Object.entries(CONFIG)) {
     try { Deno.statSync(`${dir}${name}.glb`); } catch { continue; } // в игре только собранные
-    if (cfg.own) continue; // собственные модели (own: true) — своя работа, титров чужих авторов нет
+    if (cfg.own && !cfg.orig) continue; // собственные модели (own: true) — своя работа, титров чужих авторов нет; own + orig - в своей модели есть часть чужой (Rafale: нос CloudHub)
     const ck = cfg.src + (cfg.credit ? '|' + cfg.credit : ''); // credit — пометка об адаптации: отдельная запись титров (menu.js выводит её в названии)
     let e = bySrc.get(ck);
     // orig — исходник оказался перезаливом: в титрах настоящий автор и его страница (из asset.extras файла был бы тот, кто перезалил)

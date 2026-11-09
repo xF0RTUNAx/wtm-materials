@@ -44,7 +44,7 @@ try {
         const hits = cols.filter((q) => q[1] != null); if (!hits.length) return { none: true };
         const low = Math.min(...hits.map((q) => q[1])), band = hits.filter((q) => q[1] <= low + 0.04), wx = band[band.length - 1][0] - band[0][0], xP = x0 + (band[0][0] + band[band.length - 1][0]) / 2;
         const i0 = cols.indexOf(band[0]), i1 = cols.indexOf(band[band.length - 1]), edge = (q) => !q || q[1] == null || q[1] - low > 0.07;
-        if (!(wx <= 0.42 && Math.abs(low - y00) <= NEAR && edge(cols[i0 - 1]) && edge(cols[i1 + 1])) || used.some((u) => Math.abs(u[0] - xP) < 0.25 && Math.abs(u[1] - z0) < 1.2)) return {};
+        if (!(wx <= 0.42 && Math.abs(low - y00) <= NEAR && Math.abs(xP - x0) <= 0.45 /* соседний пилон дальше 0,45 м - не свой (Hunter: рельс −4,0 забирал пилон −3,45) */ && edge(cols[i0 - 1]) && edge(cols[i1 + 1])) || used.some((u) => Math.abs(u[0] - xP) < 0.25 && Math.abs(u[1] - z0) < 1.2)) return {};
         let z1 = null, z2 = null; for (let dz = -2; dz <= 2.001; dz += 0.08) { const y = under(xP, z0 + dz, y0); if (y != null && y <= low + 0.06) { if (z1 == null) z1 = dz; z2 = dz; } }
         const zP = z1 == null ? z0 : z0 + Math.max(-1.2, Math.min(1.2, (z1 + z2) / 2));
         if (![-0.12, 0, 0.12].some((k) => { const y = under(xP, zP + k * L, low - 0.05); return y != null && y <= low + 0.06; })) return {};

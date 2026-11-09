@@ -1,14 +1,14 @@
 // Модели и эффекты «Воздушного превосходства»: зенитные комплексы (процедурные, по мотивам реальных машин),
 // бомбы и ракеты, взрывы, дымные следы ЗУР, трассы зенитных пушек, ловушки, пожары на разрушенных объектах.
 /* global THREE */
-import { part, mergeParts, M, latheZ, plateXZ, plateZY, buildMissileGeo } from '../drone/models.js?v=20261107a';
-import { makeParticles, radialTex } from '../drone/world.js?v=20261107a';
-import { createPlumes, makeFlame, flameTick, motorOf, setFlameLayer, setTrailPuffs, trailPuffsOn, PUFF_MIN, setIgnition } from './plume.js?v=20261107a';
-import { FLAME_KIND, makeJetFlame, setJetLayer } from './jetflame.js?v=20261107a';
-import { createCmFx } from './cmfx.js?v=20261107a';
-import { LNCH, mslView } from './launchers.js?v=20261107a';
-import { createBook } from './flipbook.js?v=20261107a';
-import { makePuffs } from './puffs.js?v=20261107a';
+import { part, mergeParts, M, latheZ, plateXZ, plateZY, buildMissileGeo } from '../drone/models.js?v=20261109a';
+import { makeParticles, radialTex } from '../drone/world.js?v=20261109a';
+import { createPlumes, makeFlame, flameTick, motorOf, setFlameLayer, setTrailPuffs, trailPuffsOn, PUFF_MIN, setIgnition } from './plume.js?v=20261109a';
+import { FLAME_KIND, makeJetFlame, setJetLayer } from './jetflame.js?v=20261109a';
+import { createCmFx } from './cmfx.js?v=20261109a';
+import { LNCH, mslView } from './launchers.js?v=20261109a';
+import { createBook } from './flipbook.js?v=20261109a';
+import { makePuffs } from './puffs.js?v=20261109a';
 
 const OLIVE = 0x4f5c3c, OLIVE_D = 0x3c4630, SAND = 0x6e6a4c, NATO = 0x3f4a35, DARK = 0x1d2024, WHITE = 0xd8d8d0, STEEL = 0x707478;
 
@@ -397,14 +397,14 @@ export function mountWpnFlame(w, g, ev) {
       return;
     }
     if (W.kind !== 'agm' && W.kind !== 'arm' && W.kind !== 'cruise') return;
-    const nz = w.nzL = v.nz && !stub ? { x: v.nz[0], y: v.nz[1], z: v.nz[2] } : NZC[w.key] || nozzleOf(g, v.r, v.nzAx); if (!g.isMesh) NZC[w.key] = nz; // nz - сопло задано в модели вручную (как у «Мульти-волны» ниже); запоминаем только по готовой модели (не по временной)
+    const nz = w.nzL = v.nz && !stub ? { x: v.nz[0], y: v.nz[1], z: v.nz[2] } : NZC[(g.userData.fly ? 'fly:' : '') + w.key] || nozzleOf(g, v.r, v.nzAx); if (!g.isMesh) NZC[(g.userData.fly ? 'fly:' : '') + w.key] = nz; /* fly: - ПТУР в полёте (ракета), иначе контейнер */ // nz - сопло задано в модели вручную (как у «Мульти-волны» ниже); запоминаем только по готовой модели (не по временной)
     g.userData.flame = rocketFlame(g, nz.z, v.r, motorOf(w.key, W.kind, false)); g.userData.flame.at(nz.x, nz.y, nz.z); g.userData.fl = W.kind === 'cruise' ? 'jet' : 'rocket'; g.userData.flame.owner = w;
     return;
   }
   // баллистическая: факел двигателя на разгоне (у сопла - корма, +Z)
   if (W.kind === 'tbm') { const nz = nozzleOf(g, v.r); w.nzL = nz; g.userData.flame = rocketFlame(g, nz.z, v.r, motorOf(w.key, 'tbm', false)); g.userData.flame.move(nz.z); g.children.filter((c) => c.renderOrder === 5).forEach((c) => { c.position.x = nz.x; c.position.y = nz.y; }); g.userData.flame.owner = w; } // факел - из среза сопла
   if (W.kind === 'cruise' && !W.uav && !W.recon && !W.glide) { // крылатая (планирующая бомба - без двигателя): факел из среза сопла - ускоритель на старте, потом маршевый (слабый)
-    const nz = w.nzL = v.nz && !stub ? { x: v.nz[0], y: v.nz[1], z: v.nz[2] } : NZC[w.key] || nozzleOf(g, v.r, v.nzAx); if (!stub) NZC[w.key] = nz; // nz - сопло задано в модели вручную; по временной модели не запоминаем
+    const nz = w.nzL = v.nz && !stub ? { x: v.nz[0], y: v.nz[1], z: v.nz[2] } : NZC[(g.userData.fly ? 'fly:' : '') + w.key] || nozzleOf(g, v.r, v.nzAx); if (!stub) NZC[(g.userData.fly ? 'fly:' : '') + w.key] = nz; // nz - сопло задано в модели вручную; по временной модели не запоминаем
     g.userData.flame = rocketFlame(g, nz.z, v.r, motorOf(w.key, 'cruise', false)); g.userData.flame.at(nz.x, nz.y, nz.z); g.userData.fl = 'jet'; g.userData.flame.owner = w; // пуск с самолёта: запуск двигателя, потом маршевый
   }
 }
@@ -588,9 +588,9 @@ export function createFx(scene, P) {
   // столб дыма пожара (fx/ex_burn - снят в Blender как петля): высота - по размеру очага; начинается с разной фазы
   const colAdd = (b) => CB.add(b.pos, XJ.burn.height * Math.min(1.6, Math.max(0.35, b.r / XJ.burn.ref)), 1, { t0: -Math.random() * 4 });
   if (!(typeof location !== 'undefined' && /[?&]exnew=0/.test(location.search)) && typeof fetch === 'function' && typeof document !== 'undefined') {
-    fetch(new URL('./fx/explode.json?v=20261107a', import.meta.url)).then((r) => r.json()).then((J) => {
+    fetch(new URL('./fx/explode.json?v=20261109a', import.meta.url)).then((r) => r.json()).then((J) => {
       for (const [t, j] of Object.entries(J)) {
-        const u = (e) => new URL(`./fx/ex_${t}${P.fxLo || P.halfFx ? '_lo' : ''}.${e}?v=20261107a`, import.meta.url).href; // телефон и слабые пресеты - вдвое меньше (память)
+        const u = (e) => new URL(`./fx/ex_${t}${P.fxLo || P.halfFx ? '_lo' : ''}.${e}?v=20261109a`, import.meta.url).href; // телефон и слабые пресеты - вдвое меньше (память)
         if (t === 'puff') { // клубы дыма следов подбитых (tools/airdef-fx/explode/puff.py)
           // по умолчанию (2026-10-24: лист перепечён - клуб заполняет клетку, шаг следа fx.trailStep - «бусин» вдали нет); ?puff=0 - прежние пятна
           if (/[?&]puff=0/.test(location.search)) continue;
