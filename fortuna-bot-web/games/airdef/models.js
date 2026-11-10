@@ -100,8 +100,10 @@ const META = {
   e_hunter: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-4.5, -1.257, 1.06), V(-4.0, -1.272, 0.71), V(-3.45, -1.399, 0.31), V(-2.75, -1.424, -0.14)]),
     nozzles: [V(0, -0.759, 6.92)], nr: 0.355, pod: null, dry: true, clearGlass: true, ...(paintOn ? { gearModel: 'e_hunter_gear' } : {}) }, // Hunter FGA.9: своя модель (Свои/Hunter FGA.9, 2026-11-09), подвески - рельсы НУРС и пилоны (паспорт stations_game), без форсажа
   // ── 2026-10-21, пятая партия: manilov.ap (Vulcan, Draken, Viggen - без оружия в моделях; подвески по виду снизу / сбоку planes-view.html?ortho=1) ──
-  e_vulcan: { side: 'west', cls: 'bomber', lazy: true, internal: true, stations: mirror([V(-0.5, -2.5, -3.6), V(-0.5, -2.5, -1.4), V(-0.5, -2.5, 0.8), V(-0.5, -2.5, 3.0)]),
-    nozzles: [V(-3.47, -2.6, 11.85), V(-2.22, -2.6, 11.85), V(2.22, -2.6, 11.85), V(3.47, -2.6, 11.85)], nr: 0.42, pod: null, dry: true }, // Vulcan B.2 (сопла по срезу: y −2,36 → −2,6) (бомбы - в отсеке; четыре «Олимпа» в корне крыла, без форсажа)
+  e_vulcan: { side: 'west', cls: 'bomber', lazy: true, internal: true, stations: mirror([V(-0.4, -1.865, 5.74), V(-0.4, -1.865, -0.41), V(-0.4, -1.865, 3.69), V(-0.4, -1.865, 1.64)]), // 1000 lb ×8 в отсеке, последняя точка - середина
+    ext: { keys: ['agm45'], stations: mirror([V(-9.91, -2.98, 4.34), V(-9.29, -2.98, 4.34)]) }, // подвеска только из Shrike - снаружи, на сдвоенных балках пилонов под крылом (stationsFor)
+    nozzles: [V(-3.08, -2.045, 12.54), V(-1.78, -2.045, 12.54), V(3.08, -2.045, 12.54), V(1.78, -2.045, 12.54)], nr: 0.521, pod: null, dry: true, clearGlass: true, ...(paintOn ? { gearModel: 'e_vulcan_gear' } : {}), // Vulcan B.2: своя модель (Свои/Vulcan B.2, 2026-11-10)
+    bay: { doors: { bay_l: [[-0.975, -2.854, 2.69], [0, -0.0429, -0.9991], 95], bay_r: [[0.975, -2.854, 2.69], [0, 0.0429, 0.9991], 95] }, sides: { L: ['bay_l'], R: ['bay_r'] } } },
   e_draken: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-3.4, -1.36, 4.0, 0.3), V(-2.6, -1.38, 3.3, 0.3), V(-1.6, -1.5, 1.8, 0.3), V(-0.5, -1.47, 0.0, 0.15)]),
     nozzles: [V(0, -0.56, 7.67)], nr: 0.35, pod: null }, // Saab 35 Draken (J35F)
   e_viggen: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-0.6, -1.975, 4.73), V(-4.15, -1.815, 4.53), V(-2.96, -1.875, 3.73), V(-0.9, -1.795, -0.57)]), // тяжёлое идёт на последнюю точку, под заборник
@@ -346,6 +348,7 @@ const GLB_V = Object.fromEntries(['w_gbu10', 'w_ecm', 'gepard', 'gepard_lo', 'ro
 // версии файлов собственных моделей (Blender, tools/airdef-models/own): по строке на ключ; поднимает tools/airdef-models/integrate-own.js при каждом встраивании
 const GLB_V_OWN = {
   e_b2: '20261110b', e_b2_gear: '20261110b', // свой B-2A
+  e_vulcan: '20261110c', e_vulcan_gear: '20261110c', // свой Vulcan B.2
   l_himars: '20261110b', w_atacms: '20261110b', // свои M142 HIMARS и ATACMS
   e_f4: '20261110a', e_f4_gear: '20261110a', e_f100: '20261110a', e_f100_gear: '20261110a', // свои F-4 Phantom II и F-100D
   e_rafale: '20261109b', e_rafale_gear: '20261109b', // свой Rafale
@@ -539,6 +542,7 @@ if (paintOn) META.e_f35_gear = { lazy: true, matte: true, paint: true, stations:
 if (paintOn) META.f18_gear = { lazy: true, matte: true, paint: true, stations: [] };
 if (paintOn) META.f16_gear = { lazy: true, matte: true, paint: true, stations: [] };
 if (paintOn) META.e_rafale_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего Rafale для ангара
+if (paintOn) META.e_vulcan_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего Vulcan для ангара
 if (paintOn) META.e_b2_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего B-2A для ангара
 if (paintOn) { META.e_f4_gear = { lazy: true, matte: true, paint: true, stations: [] }; META.e_f100_gear = { lazy: true, matte: true, paint: true, stations: [] }; } // стойки своих F-4 и F-100D для ангара
 if (paintOn) { META.e_hunter_gear = { lazy: true, matte: true, paint: true, stations: [] }; META.e_mirage_f1_gear = { lazy: true, matte: true, paint: true, stations: [] }; } // стойки своих Hunter и Mirage F1 для ангара
@@ -1152,14 +1156,17 @@ export function spinProps(obj, dt, thr = 1) {
     else { const ax = p.userData.axis || 'z'; p.rotation[ax] += p.userData.spin * dt * (9 + 7 * thr) * (ax === 'x' ? 2 : 1); } // лопасти ≈ 2,5 об/с: быстро, но ещё без «стробоскопа» (4 лопасти - до ≈ 45° за кадр)
   }
 } // сопла, пилоны - для зон повреждений (plane-zones.js) и проверок
-export function planeModel(side, cls = 'strike', name = null, skin = null) {
-  if (skin && name && META[name] && wantCamo(name, skin)) { const m = META[name]; return { obj: LOADED[`${name}@${skin}`].clone(), stations: m.stations, pods4: !!m.pods4, nozzles: m.nozzles, nr: m.nr, dry: !!m.dry, pod: m.pod, name, skin, cls: m.cls, internal: !!m.internal }; } // надета окраска и модель пришла
+// точки подвески под конкретный набор оружия: у самолёта с отсеком часть подвесок висит снаружи (Vulcan B.2: Shrike на пилонах под крылом, META.ext) -
+// тогда свой список точек и подвеска видна; keys - ключи оружия подвески
+export const stationsFor = (name, keys) => { const m = META[name] || {}, e = m.ext; return e && keys && keys.length && keys.every((k) => e.keys.includes(k)) ? { stations: e.stations, internal: false } : { stations: m.stations || [], internal: !!m.internal }; };
+export function planeModel(side, cls = 'strike', name = null, skin = null, keys = null) {
+  if (skin && name && META[name] && wantCamo(name, skin)) { const m = META[name]; return { obj: LOADED[`${name}@${skin}`].clone(), pods4: !!m.pods4, nozzles: m.nozzles, nr: m.nr, dry: !!m.dry, pod: m.pod, name, skin, cls: m.cls, ...stationsFor(name, keys) }; } // надета окраска и модель пришла
   if (name && META[name] && !LOADED[name] && BASE) start(name); // своя модель подвески ещё не пришла - пока подходящая из загруженных
   const rank = ([n, m]) => (n === name ? -2 : m.cls === cls ? -1 : 0);
   const pick = Object.entries(META).filter(([n, m]) => m.side && m.side === side && LOADED[n] && (!m.only || n === name) && (!m.heli || n === name)).sort((a, b) => rank(a) - rank(b))[0];
   if (!pick) return null;
   const [n, m] = pick;
-  return { obj: LOADED[n].clone(), stations: m.stations, pods4: !!m.pods4, nozzles: m.nozzles, nr: m.nr, dry: !!m.dry, pod: m.pod, name: n, cls: m.cls, internal: !!m.internal }; // dry - без форсажа (только слабое свечение)
+  return { obj: LOADED[n].clone(), pods4: !!m.pods4, nozzles: m.nozzles, nr: m.nr, dry: !!m.dry, pod: m.pod, name: n, cls: m.cls, ...stationsFor(n, keys) }; // dry - без форсажа (только слабое свечение)
 }
 // вертолёт: готовая модель (копия) и точки подвески на консолях; нет модели (или ещё грузится - запрос послан) - null, подмены самолётом нет
 export function heliModel(name) {

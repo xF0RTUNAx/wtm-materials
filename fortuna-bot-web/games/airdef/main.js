@@ -948,7 +948,7 @@ function syncWorld(dt, t) {
         hm.obj.traverse((o) => { if (o.isMesh && !o.userData.glass) o.castShadow = !!P.shadows; }); g.add(hm.obj); g.userData.flames = { update() {} };
       } else {
         // вблизи - готовая модель (подвеска отдельными моделями на пилонах, сброшенное пропадает), вдали - простая
-        const pm = planeModel(a.mside || a.side, a.role === 'carrier' ? 'carrier' : classOfRole(a.role), a.plane || raidPlane(a.side, C.raidEra, a.role), a.camo || null) /* a.camo - окраска другого игрока онлайна */, sg = strikerGeo(a.side), lo = new THREE.Mesh(sg.geo, planeMat); lo.castShadow = !!P.shadows; g.add(lo);
+        const pm = planeModel(a.mside || a.side, a.role === 'carrier' ? 'carrier' : classOfRole(a.role), a.plane || raidPlane(a.side, C.raidEra, a.role), a.camo || null, (a.load || []).map((l) => l.key)) /* a.camo - окраска другого игрока онлайна */, sg = strikerGeo(a.side), lo = new THREE.Mesh(sg.geo, planeMat); lo.castShadow = !!P.shadows; g.add(lo);
         if (pm) {
           pm.obj.traverse((o) => { if (o.isMesh && !o.userData.glass) o.castShadow = !!P.shadows; }); g.add(pm.obj);
           g.userData.dv = planeDamageVis(scene, pm.obj, pm.name, planeMeta(pm.name), () => C.fx); // зоны повреждений: отрыв частей, дым из зон

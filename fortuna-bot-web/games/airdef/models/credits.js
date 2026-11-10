@@ -402,15 +402,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "Avro698",
-  "author": "manilov.ap",
-  "url": "https://sketchfab.com/3d-models/avro698-5259b4b3852a4cb4ad4b1745913ed039",
-  "license": "CC-BY-4.0",
-  "files": [
-   "e_vulcan"
-  ]
- },
- {
   "title": "J35",
   "author": "manilov.ap",
   "url": "https://sketchfab.com/3d-models/j35-3d6ddbf606dc4047a15d37f4d5ac56ca",

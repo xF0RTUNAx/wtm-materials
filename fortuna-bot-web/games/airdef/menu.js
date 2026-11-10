@@ -8,7 +8,7 @@ import { MODES } from './sim/strike.js?v=20261109a';
 import { WEATHERS } from '../drone/world.js?v=20261109a';
 import { WINTER_KEYS } from './winter-render.js?v=20261109a';
 import { LESSONS } from './training.js?v=20261109a';
-import { MODEL_CREDITS, modelUrls, planeMeta } from './models.js?v=20261109a';
+import { MODEL_CREDITS, modelUrls, planeMeta, stationsFor } from './models.js?v=20261109a';
 import { storageInfo, prefetchAll, prefetchSize, offlineOk } from './offline.js?v=20261109a';
 import { openLayoutEditor } from './layout.js?v=20261109a';
 import { orientGate } from '../orient-warn.js?v=20261011a';
@@ -143,7 +143,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
         if (ownOpen.length && !ownOpen.some(([, i]) => i === setup.lo)) setup.lo = ownOpen[0][1];
         if (!ownOpen.length) { C.realBlock = true; C.realNeed = C.progress.loadoutMissing(own[0][0])[0].id; }
         h += own.map(([L, i]) => { const miss = can([L, i]) ? [] : C.progress.loadoutMissing(L), onn = i === setup.lo && !miss.length;
-          return `<div class="opt hgl ${onn ? 'on' : ''} ${miss.length ? 'lock' : ''}" role="button" tabindex="0" ${miss.length ? `data-need="${miss[0].id}"` : `data-lo="${i}"`}>${onn ? '<i class="pin"></i>' : ''}<span class="hgh2"><b>${trIf(ROLE_NAME[loadoutRole(L)])}</b>${miss.length ? `<i class="need">${ico('lock')} ${C.progress.needText(miss)}</i>` : planeMeta(L.plane) && planeMeta(L.plane).internal ? `<i>${tr('в отсеках')}</i>` : ''}</span><span class="hgr${planeMeta(L.plane) && planeMeta(L.plane).internal ? ' inb' : ''}">${wpnTiles(L)}</span></div>`; }).join('');
+          return `<div class="opt hgl ${onn ? 'on' : ''} ${miss.length ? 'lock' : ''}" role="button" tabindex="0" ${miss.length ? `data-need="${miss[0].id}"` : `data-lo="${i}"`}>${onn ? '<i class="pin"></i>' : ''}<span class="hgh2"><b>${trIf(ROLE_NAME[loadoutRole(L)])}</b>${miss.length ? `<i class="need">${ico('lock')} ${C.progress.needText(miss)}</i>` : planeMeta(L.plane) && stationsFor(L.plane, L.items.map(([k]) => k)).internal ? `<i>${tr('в отсеках')}</i>` : ''}</span><span class="hgr${planeMeta(L.plane) && stationsFor(L.plane, L.items.map(([k]) => k)).internal ? ' inb' : ''}">${wpnTiles(L)}</span></div>`; }).join('');
         $('hgStrip').innerHTML = planes.map((p) => { const lk = !mine.some((x) => x[0].plane === p && can(x)); return `<button class="hgc${p === hgPlane ? ' on' : ''}${lk ? ' lock' : ''}" data-hgp="${p}"><b>${lk ? ico('lock') + ' ' : ''}${trIf(PLANES[p])}</b><img src="airdef/thumbs/air_${p}.webp?v=20261109a" alt="" loading="lazy"></button>`; }).join('');
         const sel = $('hgStrip').querySelector && $('hgStrip').querySelector('.hgc.on'); if (sel && sel.scrollIntoView) sel.scrollIntoView({ block: 'nearest', inline: 'nearest' });
       } else h += mine.map((x) => loBtn(x, 'data-lo', x[1] === setup.lo)).join('') + `<p class="hint">${tr('«Охота за ПВО» - уничтожить комплексы с РЛС, «штурмовка» - цели города.')}</p>`;

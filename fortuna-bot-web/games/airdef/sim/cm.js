@@ -144,7 +144,7 @@ const CM = {
     dir: [[0, -0.99, 0.11]] }, // F-100F
   e_draken: { flare: false, salvo: 2, at: [[0, -1.6, 5.15]],
     dir: [[0, -0.99, 0.11]] }, // Draken
-  e_vulcan: { flare: false, salvo: 2, at: [[0, -3, 11.85]],
+  e_vulcan: { flare: false, salvo: 2, at: [[0, -2.575, 13.64]],
     dir: [[0, -0.99, 0.11]] }, // Vulcan
 };
 

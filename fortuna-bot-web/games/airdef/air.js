@@ -6,7 +6,7 @@ import { makeBay } from './bay.js?v=20261109a';
 import { tr } from './i18n.js?v=20261109a';
 import { CITY, ZONE_NAME, mulberry32, riverX, objAimXZ, objDist } from './city.js?v=20261109a';
 import { strikerGeo, attachFlames } from './units-render.js?v=20261109a';
-import { planeModel, classOf, weaponMesh, pylonMesh, seatStores, podModel, weaponHasModel, planeMeta, spinProps, wantWeapon, hiKnown, stOrder } from './models.js?v=20261109a';
+import { planeModel, classOf, weaponMesh, pylonMesh, seatStores, podModel, weaponHasModel, planeMeta, spinProps, wantWeapon, hiKnown, stOrder, stationsFor } from './models.js?v=20261109a';
 import { ico, drawIco } from './icons.js?v=20261109a';
 import { applyLayout } from './layout.js?v=20261109a';
 import { clamp, makeCraft, pilotStep, fwdOf, D2R, angleBetween } from '../drone/sim/core.js?v=20261109a';
@@ -45,10 +45,10 @@ export function createAir(C) {
     // кроме «Съёмки» и обучения: её модель грузится по требованию, до прихода - обычная
     const skinW = name && C.shop && C.shop.wallet() && C.setup.game !== 'photo' && C.setup.game !== 'training' ? (C.shop.wallet().worn || {})[name] || null : null;
     const skin = skinW || (name && C.texMax && C.texMax('battle') && hiKnown(name) ? 'hi' : null); // настройка «Текстуры»: максимальные - у своего самолёта, остальные далеко
-    const pm = planeModel(side, cls, name, skin);
+    const pm = planeModel(side, cls, name, skin, loadout.map((l) => l.key));
     // shipReal - стоит именно модель подвески (пока она грузится - подходящая из загруженных, потом заменяется), с надетой окраской - когда пришла и она
     const exact = !!pm && (!name || pm.name === name) && (pm.skin || null) === skin;
-    if (shipSide === side && shipCls === cls && shipName === name && shipSkin === skin && (shipReal || !pm || (!exact && shipModel && shipModel.userData.pm === pm.name + (pm.skin ? '@' + pm.skin : '')))) return;
+    if (shipSide === side && shipCls === cls && shipName === name && shipSkin === skin && (craft.heli || !pm || !shipModel || pm.stations === stations) /* другой набор точек у того же самолёта (Vulcan: отсек или пилоны) - пересобрать */ && (shipReal || !pm || (!exact && shipModel && shipModel.userData.pm === pm.name + (pm.skin ? '@' + pm.skin : '')))) return;
     if (shipModel) ship.remove(shipModel);
     shipSide = side; shipCls = cls; shipName = name; shipSkin = skin; shipReal = exact; shipInternal = !!(pm && pm.internal);
     if (pm) {
@@ -1300,7 +1300,7 @@ export function createAir(C) {
     craft.ir = craft.heli ? craft.irBase * 0.55 : craft.irBase; // вертолёт: турбовальные двигатели с экранами выхлопа - тепловым ГСН труднее
     game.used = [(L.heli || craft.heli ? 'heli:' : 'air:') + L.plane, ...L.items.map(([k]) => 'wpn:' + k)]; // прокачка: на чём летали (в «Реализме» - должно быть куплено)
     hasPod = !!L.pod; for (const [k] of L.items) wantWeapon(k); // модели подвески (оружие «Мульти-волны» и новое - грузятся по запросу)
-    const pmL = !craft.heli && L.plane ? planeMeta(L.plane) : null, order = stOrder(pmL && pmL.stations ? pmL.stations.length : 8); let oi = 0; // у самолёта с шестью точками порядок свой (models.js stOrder)
+    const pmL = !craft.heli && L.plane && planeMeta(L.plane) ? stationsFor(L.plane, L.items.map(([k]) => k)) : null, order = stOrder(pmL ? pmL.stations.length : 8); let oi = 0; // у самолёта с шестью точками порядок свой (models.js stOrder)
     // запас на борт (ошибки, промахи): «Аркада» - ещё 2 полных комплекта (пополняются сами), «Реализм» - 1 пополнение на точке вылета;
     // обучение (opts.reload) - без ограничений
     const sets = opts.reload ? Infinity : (C.MODE().rearms ?? 1); homeLeft = sets;

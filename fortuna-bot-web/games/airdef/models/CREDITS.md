@@ -44,7 +44,6 @@
 - "Il28" (https://sketchfab.com/3d-models/il28-20bb9aa23d4b48978be1d0ee5e1890ca) by manilov.ap — CC-BY-4.0 — `e_il28.glb`
 - "Tu22" (https://sketchfab.com/3d-models/tu22-189799dc11b149a9a9d404904c97173d) by manilov.ap — CC-BY-4.0 — `e_tu22.glb`
 - "Tu95" (https://sketchfab.com/3d-models/tu95-1eac97ec49ed4f1da8b7deb1e1b2cc7a) by manilov.ap — CC-BY-4.0 — `e_tu95.glb`
-- "Avro698" (https://sketchfab.com/3d-models/avro698-5259b4b3852a4cb4ad4b1745913ed039) by manilov.ap — CC-BY-4.0 — `e_vulcan.glb`
 - "J35" (https://sketchfab.com/3d-models/j35-3d6ddbf606dc4047a15d37f4d5ac56ca) by manilov.ap — CC-BY-4.0 — `e_draken.glb`
 - "Sukhoi Su-33 Сухой Су-33" (https://sketchfab.com/3d-models/sukhoi-su-33-33-d80603a8a13b49bda90f19d80cac61d4) by andertan — CC-BY-4.0 — `e_su33.glb`
 - "M4" (https://sketchfab.com/3d-models/m4-65059c25184c48c5b6a1b9ac27d34db6) by manilov.ap — CC-BY-4.0 — `e_m4.glb`

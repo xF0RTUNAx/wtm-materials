@@ -124,7 +124,7 @@ export function createHangar(C, renderer) {
     if (!here && !broke && now - wantT < MODEL_WAIT) return;
     const meta = planeMeta(q.plane); if (!meta) { want = null; return; }
     if (!hallReady(q)) return; // зал для этого самолёта ещё не пришёл - прежний самолёт стоит в прежнем зале
-    const pm = planeModel(meta.side, classOf(q.L.items, AG), q.plane, q.skin); if (!pm) { if (now - wantT >= MODEL_WAIT) want = null; return; }
+    const pm = planeModel(meta.side, classOf(q.L.items, AG), q.plane, q.skin, q.L.items.map(([k]) => k)); if (!pm) { if (now - wantT >= MODEL_WAIT) want = null; return; }
     const prev = cur && cur.split('|')[0];
     wantView = q.view; build(pm, q.L); cur = q.key; lastL = q.L; want = null; built = true; dirty = true;
     if (!here && !modelFailed(keyOf(q))) retry = q; // замена или простые фигуры оружия - на время
