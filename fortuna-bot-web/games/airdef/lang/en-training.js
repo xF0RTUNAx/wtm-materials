@@ -369,7 +369,7 @@ export default {
   "Бомба летит в <b>координаты</b>: захват контейнером или цель задания впереди.": "The bomb flies to <b>coordinates</b> from a pod lock or a mission target ahead.",
   "Сброс при «<b>В зоне</b>», дальше - сама: ночью, в облаках, в дыму. Дальность {0} в игре - до {1} км, радиус поражения ~{2} м.": "Release at \"<b>In range</b>\"; then it guides itself, at night, through clouds and smoke. In-game {0} range: up to {1} km, blast radius ~{2} m.",
   "Подсвет не нужен - сразу уходите.": "No lasing needed: leave at once.",
-  "<b>Станция подавления навигации</b> ПВО (РЭБ, III-IV эпоха) в радиусе 9 км сбивает её на десятки метров - «мимо - помехи навигации».": "The enemy's <b>navigation jammer</b> (EW, eras III-IV) throws it off by tens of meters within 9 km: \"missed: navigation jammed\".",
+  "<b>Станция подавления навигации</b> ПВО (РЭБ, ранги III-IV) в радиусе 9 км сбивает её на десятки метров - «мимо - помехи навигации».": "The enemy's <b>navigation jammer</b> (EW, ranks III-IV) throws it off by tens of meters within 9 km: \"missed: navigation jammed\".",
   "Бросать в зоне РЭБ - промах. Сначала уничтожьте станцию или возьмите лазерное оружие.": "Dropping inside the EW zone: a miss. Destroy the jammer first or take laser-guided weapons.",
   "Сбрасывать с предела дальности на малой высоте - не долетит.": "Releasing from max range at low altitude: it falls short.",
   "Автопилот идёт на «Военно-морскую базу» на 4 км. Координаты есть - бомба уйдёт, когда будет «В зоне».": "The autopilot heads for the Naval Base at 4 km. Coordinates are set: the bomb goes at \"In range\".",

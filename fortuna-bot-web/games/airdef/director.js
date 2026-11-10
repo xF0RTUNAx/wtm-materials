@@ -55,7 +55,7 @@ export function createDirector(C) {
   }
   function panShot() {
     const o = aliveTargets()[0] || C.S.objects[0], a0 = rnd() * 6.28, R = 1400 + rnd() * 1200, h = 250 + rnd() * 500;
-    return { kind: 'pan', dur: 10, cap: tr('{0} · {1} ПВО, эпоха {2}', [trIf(o.name), side === 'east' ? tr('советская/российская') : tr('западная'), ['I', 'II', 'III', 'IV'][era - 1]]),
+    return { kind: 'pan', dur: 10, cap: tr('{0} · {1} ПВО, ранг {2}', [trIf(o.name), side === 'east' ? tr('советская/российская') : tr('западная'), ['I', 'II', 'III', 'IV'][era - 1]]),
       cam(dt, t) { const a = a0 + t * 0.05; camPos.set(o.x + Math.sin(a) * R, groundAt(o.x, o.z) + h, o.z + Math.cos(a) * R); look.set(o.x, groundAt(o.x, o.z) + 40, o.z); return true; } };
   }
   function planeShot(chase) {

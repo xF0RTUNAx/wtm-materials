@@ -1282,8 +1282,8 @@ export function createAir(C) {
     layoutTouch(); layoutPod();
     const entT = ent ? ' · ' + tr('Заход {0}, {1}', [ENT_DIR[ent.dir], ENT_ALT[ent.prof]]) : ''; // откуда и на какой высоте - в строке начала вылета
     if (C.op) { const left = S.units.filter((u) => !u.dead && u.S.radar).length; say((cont ? tr('Вылет 2 из 2 - удар: {0}. Комплексов с РЛС осталось: {1}', [game.targets.filter((o) => !o.dead).map((o) => o.name).join(', '), left]) : tr('Операция, вылет 1 из 2 - охота за ПВО: уничтожьте {0} комплекса с РЛС. Вторым вылетом - удар по целям города.', [game.hunt ? game.hunt.need : 1])) + entT, 7); }
-    else if (!opts.noIntro) say((game.hunt ? tr('Охота за ПВО: уничтожьте {0} из {1} комплексов с РЛС (цели города - по желанию).', [game.hunt.need, game.hunt.total]) : game.tgtN ? tr('Цели ({0} - по силе подвески): {1}. ПВО: {2}, эпоха {3}', [game.tgtN, game.targets.map((o) => o.name).join(', '), setup.side === 'east' ? tr('советская') : tr('западная'), ERAS[setup.era - 1].short])
-      : tr('Цели: {0}. ПВО: {1}, эпоха {2}', [game.targets.map((o) => o.name).join(', '), setup.side === 'east' ? tr('советская') : tr('западная'), ERAS[setup.era - 1].short])) + entT, 7);
+    else if (!opts.noIntro) say((game.hunt ? tr('Охота за ПВО: уничтожьте {0} из {1} комплексов с РЛС (цели города - по желанию).', [game.hunt.need, game.hunt.total]) : game.tgtN ? tr('Цели ({0} - по силе подвески): {1}. ПВО: {2}, ранг {3}', [game.tgtN, game.targets.map((o) => o.name).join(', '), setup.side === 'east' ? tr('советская') : tr('западная'), ERAS[setup.era - 1].short])
+      : tr('Цели: {0}. ПВО: {1}, ранг {2}', [game.targets.map((o) => o.name).join(', '), setup.side === 'east' ? tr('советская') : tr('западная'), ERAS[setup.era - 1].short])) + entT, 7);
   }
   // подвеска: тяжёлое - ближе к фюзеляжу (обучение перезаряжает этой же функцией)
   function rearm() {
@@ -1414,11 +1414,11 @@ export function createAir(C) {
       const s1 = C.op.s1 || { score: 0, kills: 0, alive: false, hunt: null }, bonus = s1.alive && !craft.dead ? 300 : 0, total = s1.score + game.score + bonus;
       C.showEnd({ title: tr('Операция завершена'), reason: why, win: game.done ? true : craft.dead ? false : null, again: tr('Новая операция'),
         stats: [[s1.hunt ? `${Math.min(s1.hunt.n, s1.hunt.need)}/${s1.hunt.need}` : '-', tr('РЛС (вылет 1)')], [`${dead}/${game.targets.length}`, tr('целей (вылет 2)')], [s1.kills + game.kills, tr('комплексов ПВО')], [total, tr('очков')]],
-        note: tr('Очки: {0} + {1}{2}. {3}, эпоха {4}.', [s1.score, game.score, bonus ? tr(' + {0} за два возвращения', [bonus]) : '', real ? tr('Реализм') : tr('Аркада'), ERAS[C.setup.era - 1].short]) });
+        note: tr('Очки: {0} + {1}{2}. {3}, ранг {4}.', [s1.score, game.score, bonus ? tr(' + {0} за два возвращения', [bonus]) : '', real ? tr('Реализм') : tr('Аркада'), ERAS[C.setup.era - 1].short]) });
       C.op = null; C.menu.record('air', total); setTimeout(claim, 950); return;
     }
     C.showEnd({ title: craft.dead ? tr('Самолёт потерян') : tr('Вылет завершён'), reason: why, win: craft.dead ? false : game.done ? true : null,
-      stats: [game.hunt ? [`${Math.min(game.hunt.n, game.hunt.need)}/${game.hunt.need}`, tr('РЛС уничтожено')] : [`${dead}/${game.targets.length}`, tr('целей уничтожено')], [game.kills, tr('комплексов ПВО')], [game.score, tr('очков')], [real ? tr('Реализм') : tr('Аркада'), tr('эпоха {0}', [ERAS[C.setup.era - 1].short])]],
+      stats: [game.hunt ? [`${Math.min(game.hunt.n, game.hunt.need)}/${game.hunt.need}`, tr('РЛС уничтожено')] : [`${dead}/${game.targets.length}`, tr('целей уничтожено')], [game.kills, tr('комплексов ПВО')], [game.score, tr('очков')], [real ? tr('Реализм') : tr('Аркада'), tr('ранг {0}', [ERAS[C.setup.era - 1].short])]],
       note: game.done ? tr('Задание выполнено.') : '' });
     C.menu.record('air', game.score); setTimeout(claim, 950); // итоги появляются через 0,9 с
   }

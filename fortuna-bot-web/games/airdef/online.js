@@ -54,7 +54,7 @@ export function createOnline(C, ctrls) {
         : tr('Авиация против ПВО города, три волны. Ждём минимум 2 на 2, затем ещё 15 с, вдруг подтянутся другие. Если людей долго нет, добавим ботов.{0}', [N.search ? tr(' Сейчас ищут: аркада {0}, реализм {1}.', [srch.arcade, srch.real]) : ''])}</p>
       <div class="cat-h">${tr('Своя комната')} <span class="dim">${tr('· без рейтинга')}</span></div>
       <div class="prow"><span>${tr('Формат')}</span>${seg('size', ui.size, O.AD_SIZES.map((n) => [n, `${n}×${n}`]))}</div>
-      ${mw ? '' : `<div class="prow"><span>${tr('Эпоха')}</span>${seg('era', ui.era, ERAS.filter((e) => LOADOUTS[e.id]).map((e) => [e.id, e.short || e.name]))}</div>`}
+      ${mw ? '' : `<div class="prow"><span>${tr('Ранг')}</span>${seg('era', ui.era, ERAS.filter((e) => LOADOUTS[e.id]).map((e) => [e.id, e.short || e.name]))}</div>`}
       ${mw ? '' : `<div class="prow"><span>${tr('Авиация')}</span>${seg('side', ui.sideAir, SIDES)}</div>`}
       <div class="prow"><span>${tr('Пустые места')}</span>${seg('fill', ui.fill ? 1 : 0, [[1, tr('Боты')], [0, tr('Без ботов')]])}</div>
       <button class="btn alt" data-oa="create">${tr('Создать комнату')}</button>
@@ -69,9 +69,9 @@ export function createOnline(C, ctrls) {
       (me && me.team !== t ? `<button class="mini" data-oa="team" data-t="${t}">${tr('Перейти сюда')}</button>` : '') + (host ? ` <button class="mini" data-bot="${t}">${tr('+ бот')}</button>` : '') + '</div>';
     el.innerHTML = `<div class="cat-h">${tr('Комната <b class="adcode">{0}</b>', [r.code])} <button class="mini" data-oa="invite">${tr('Пригласить')}</button> <button class="mini" data-oa="leave">${tr('Выйти')}</button></div>
       <p class="hint">${r.kind === 'multi' ? tr('Мульти-волна · два раунда со сменой сторон · {0} · {1}×{2}{3}', [MODES[r.mode].name, r.size, r.size, r.fill ? tr(' · пустые места - боты') : '']) /* без эпохи: уровень ботов скрытый */
-        : tr('{0}{1}{2} · {3}×{4} · эпоха {5}{6}{7}', [r.map ? (r.map === 'winter' ? tr('Северный рубеж') : tr('Речной узел')) + ' · ' : '', '', MODES[r.mode].name, r.size, r.size, ERAS[r.era - 1].short || r.era, tr(' · авиация - {0}', [r.sideAir === 'east' ? tr('восток') : tr('запад')]), r.fill ? tr(' · пустые места - боты') : ''])}</p>
-      ${afterBattle ? `<p class="hint">${tr('<b>Бой окончен, вы снова в комнате.</b> Хост может сменить игру, режим, формат, эпоху и сторону; затем все нажимают «Готов».')}</p>` : ''}
-      ${host ? `<div class="prow"><span>${tr('Игра')}</span>${seg('rkind', r.kind === 'multi' ? 'multi' : 'air', [['air', tr('Вылет и оборона')], ['multi', tr('Мульти-волна')]])}</div><div class="prow"><span>${tr('Формат')}</span>${seg('rsize', r.size, O.AD_SIZES.map((n) => [n, `${n}×${n}`]))}</div>${r.kind === 'multi' ? '' : `<div class="prow"><span>${tr('Эпоха')}</span>${seg('rera', r.era, ERAS.filter((e) => LOADOUTS[e.id]).map((e) => [e.id, e.short || e.name]))}</div>`}
+        : tr('{0}{1}{2} · {3}×{4} · ранг {5}{6}{7}', [r.map ? (r.map === 'winter' ? tr('Северный рубеж') : tr('Речной узел')) + ' · ' : '', '', MODES[r.mode].name, r.size, r.size, ERAS[r.era - 1].short || r.era, tr(' · авиация - {0}', [r.sideAir === 'east' ? tr('восток') : tr('запад')]), r.fill ? tr(' · пустые места - боты') : ''])}</p>
+      ${afterBattle ? `<p class="hint">${tr('<b>Бой окончен, вы снова в комнате.</b> Хост может сменить игру, режим, формат, ранг и сторону; затем все нажимают «Готов».')}</p>` : ''}
+      ${host ? `<div class="prow"><span>${tr('Игра')}</span>${seg('rkind', r.kind === 'multi' ? 'multi' : 'air', [['air', tr('Вылет и оборона')], ['multi', tr('Мульти-волна')]])}</div><div class="prow"><span>${tr('Формат')}</span>${seg('rsize', r.size, O.AD_SIZES.map((n) => [n, `${n}×${n}`]))}</div>${r.kind === 'multi' ? '' : `<div class="prow"><span>${tr('Ранг')}</span>${seg('rera', r.era, ERAS.filter((e) => LOADOUTS[e.id]).map((e) => [e.id, e.short || e.name]))}</div>`}
         ${r.kind === 'multi' ? '' : `<div class="prow"><span>${tr('Авиация')}</span>${seg('rside', r.sideAir, SIDES.slice(1))}</div>`}<div class="prow"><span>${tr('Режим')}</span>${seg('rmode', r.mode, O.AD_MODES.map((k) => [k, MODES[k].name]))}</div>` : ''}
       <div class="adteams">${TT.map(col).join('')}</div>
       <p class="hint">${tr('Бой начнётся, когда все нажмут «Готов».')}</p>`;

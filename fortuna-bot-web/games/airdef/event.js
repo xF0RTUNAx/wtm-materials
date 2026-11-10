@@ -132,7 +132,7 @@ export function createEvent(C) {
           <p>${tr('<b>Угроза{0}.</b> Налёт идёт самолётами; со 2-й волны к ним присоединяется вертолёт, с 4-й - пара. Они подходят низко, по оврагам, и прячутся за холмами.', [hp ? ': ' + trIf(PLANES[hp]) : ''])}</p>
           <p class="lng">${tr('Ниже ~30 м за рельефом РЛС вертолёт не видит, поэтому берегите ближние комплексы: пушки, ЗРК ближнего действия, ПЗРК. Поражение - если потеряно 75 % ценности военных объектов. Волн: {0}.', [C.WAVES])}</p></div>
         <div class="row"><span class="cap">${tr('Ваша ПВО')}</span>${seg('dside', S.dside, [['east', tr('Советская')], ['west', tr('Западная')]])}</div>
-        <div class="row"><span class="cap">${tr('Эпоха')}</span>${seg('dera', S.dera, ERAS.map((e) => [e.id, e.short]))}</div>
+        <div class="row"><span class="cap">${tr('Ранг')}</span>${seg('dera', S.dera, ERAS.map((e) => [e.id, e.short]))}</div>
         <button class="go" data-go="def">${tr('К расстановке')}</button></div>`;
   }
   function draw() {
