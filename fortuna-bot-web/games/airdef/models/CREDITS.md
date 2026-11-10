@@ -36,7 +36,6 @@
 - "Mig25" (https://sketchfab.com/3d-models/mig25-afe67617c5294dce9056106a22f640ff) by manilov.ap — CC-BY-4.0 — `e_mig25.glb`
 - "Su7b" (https://sketchfab.com/3d-models/su7b-faaf874e2c344f889a66451c4b93fa6b) by manilov.ap — CC-BY-4.0 — `e_su7b.glb`
 - "Tu16" (https://sketchfab.com/3d-models/tu16-9c4ee54ca28e44d7a4604be112acab9f) by manilov.ap — CC-BY-4.0 — `e_tu16.glb`
-- "F100" (https://sketchfab.com/3d-models/f100-a9ea47d5af0f4833a50f76350bd99417) by manilov.ap — CC-BY-4.0 — `e_f100.glb`
 - "F5" (https://sketchfab.com/3d-models/f5-8089d66a8a8748b2a4b049b3c06f6a02) by manilov.ap — CC-BY-4.0 — `e_f5.glb`
 - "Jaguar" (https://sketchfab.com/3d-models/jaguar-b09a0ee965bb424aaf14ebd06b698f96) by manilov.ap — CC-BY-4.0 — `e_jaguar.glb`
 - "Buccaneer" (https://sketchfab.com/3d-models/buccaneer-db82ad0e1f5644ccaee1b25b77566dc7) by manilov.ap — CC-BY-4.0 — `e_buccaneer.glb`
@@ -59,7 +58,6 @@
 - "Su-25" (https://sketchfab.com/3d-models/su-25-88b71eb848cf4418a95dff497c07cefc) by mamont nikita — CC-BY-4.0 — `e_su25.glb`
 - "Su34" (https://sketchfab.com/3d-models/su34-1c94f436be51453fa598e9eab50eb0a7) by manilov.ap — CC-BY-4.0 — `e_su34.glb`
 - "Su17" (https://sketchfab.com/3d-models/su17-a5dfc3d488c8441c8468a75ffad1ab75) by manilov.ap — CC-BY-4.0 — `e_su17.glb`
-- "McDonnell Douglas F-4 Phantom II" (https://sketchfab.com/3d-models/mcdonnell-douglas-f-4-phantom-ii-1ea38a66a59048529d27b24a570c5e07) by andertan — CC-BY-4.0 — `e_f4.glb`
 - "ELTA 8222 ECM POD 1/48" (https://www.thingiverse.com/thing:5360259) by Original_linny — CC-BY-4.0 — `w_ecm.glb`
 - "Sizzler SS-N-27 Kalibr 3M-54" (https://sketchfab.com/3d-models/sizzler-ss-n-27-kalibr-3m-54-63fc0ac8032c42e3bfd3e548192d5a9c) by mmickel — CC-BY-4.0 — `w_kalibr.glb`
 - "AGM-86" (https://sketchfab.com/3d-models/agm-86-de64a3d9282249e39760a5fee425e7ae) by mahmadsaleem11111 — CC-BY-4.0 — `w_agm86.glb`

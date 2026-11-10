@@ -16,6 +16,10 @@ import { cachedFetch } from './offline.js?v=20261109a';
 import { paintMat, paintOn } from './paint.js?v=20261109a';
 import { ktxOn, ktxParse, ktxFree, ktxIndexUrl, ktxUrlOf } from './ktx.js?v=20261109a';
 const V = (x, y, z, py = 0) => Object.assign(new THREE.Vector3(x, y, z), { py });
+// порядок развески по точкам (самое тяжёлое - первым): восемь точек и больше - прежний [3, 4, 2, 5, 1, 6, 0, 7]; меньше восьми (МиГ-23, МиГ-27,
+// F-100D - по три на сторону) - парами от оси к законцовкам, иначе пары рвались и груз висел несимметрично (или точки не находилось вовсе)
+const ST_ORDER8 = [3, 4, 2, 5, 1, 6, 0, 7];
+export const stOrder = (n, heli = false) => { if (heli || !(n > 0) || n >= 8) return ST_ORDER8; const o = []; if (n % 2) o.push(n >> 1); for (let a = (n >> 1) - 1, b = (n + 1) >> 1; a >= 0; a--, b++) o.push(a, b); return o; };
 const mirror = (L) => [...L, ...L.slice().reverse().map((p) => V(-p.x, p.y, p.z, p.py))]; // L3 L2 L1 Ф1 → … Ф2 R1 R2 R3
 const META = {
   // Sukhoi Su-30МКИ - andertan (CC BY 4.0; с 2026-10-24, прежняя - Immersive3D): восток, ударные загрузки; у автора чистый планер - пилоны дорисованы (py), подвески - по низу крыла и мотогондол
@@ -42,7 +46,7 @@ const META = {
     nozzles: [V(-0.76, -1.1, 10.12), V(0.76, -1.1, 10.12)], nr: 0.3, pod: null }, // F-111F («Пэйв Тэк» во внутреннем отсеке)
   e_mig23: { side: 'east', cls: 'strike', lazy: true, stations: mirror([V(-1.44, -0.6, 0.34), V(-0.45, -1.43, -0.6), V(-0.45, -1.28, 2.2)]),
     nozzles: [V(0, -0.66, 7.57)], nr: 0.35, pod: null }, // МиГ-23БН
-  e_mig27: { side: 'east', cls: 'strike', lazy: true, stations: mirror([V(-1.53, -0.61, 0.62), V(-0.45, -1.4, -0.6), V(-0.45, -1.46, 2.2)]),
+  e_mig27: { side: 'east', cls: 'strike', lazy: true, stations: mirror([V(-0.45, -1.4, -0.6), V(-0.45, -1.46, 2.2), V(-1.53, -0.61, 0.62)]), // порядок: перед и зад под фюзеляжем, потом крыло - самое тяжёлое (Х-29Т) идёт под крыло (stOrder)
     nozzles: [V(0, -0.65, 7.43)], nr: 0.33, pod: null }, // МиГ-27К («Кайра» встроена)
   e_tu22m2: { side: 'east', cls: 'bomber', lazy: true, stations: mirror([V(-6.34, -3.89, 5.06), V(-1.27, -2.71, -3.2), V(-1.27, -2.71, -0.5), V(-1.27, -2.71, 2.2)]),
     nozzles: [V(-0.96, -2.67, 18.75), V(0.96, -2.67, 18.75)], nr: 0.72, pod: null }, // Ту-22М2 (сопла по срезу стволов: были выше на 1,4 м, радиус 0,4 → 0,72)
@@ -59,8 +63,8 @@ const META = {
     nozzles: [V(0, -0.92, 7.11)], nr: 0.42, pod: null }, // Су-7Б
   e_tu16: { side: 'east', cls: 'bomber', lazy: true, stations: mirror([V(-7.16, -3.55, 0.2, 0.35), V(-0.9, -3.9, -3.0, 0.3), V(-0.9, -3.9, -0.5, 0.3), V(-0.9, -3.9, 2.0, 0.3)]),
     nozzles: [V(-1.86, -2.72, 3.1), V(1.86, -2.72, 3.1)], nr: 0.45, pod: null, dry: true }, // Ту-16
-  e_f100: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-3.58, -2.02, 1.75, 0.3), V(-2.66, -2.04, 1.1, 0.3), V(-1.85, -2.05, 0.6, 0.3), V(-0.45, -2.25, 0.8, 0.2)]),
-    nozzles: [V(-0.18, -1.19, 6.44)], nr: 0.38, pod: null }, // F-100D
+  e_f100: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-3.85, -1.842, 3.067), V(-2.7, -1.902, 2.007), V(-1.4, -1.941, 0.617)]),
+    nozzles: [V(0, -1.216, 7.217)], nr: 0.385, pod: null, clearGlass: true, ...(paintOn ? { gearModel: 'e_f100_gear' } : {}) }, // F-100D: своя модель (Свои/F-100D, 2026-11-10); три пилона на сторону - внешний, средний, внутренний; под фюзеляжем тормозной щиток
   e_f5: { side: 'west', cls: 'strike', stations: mirror([V(-2.6, -1.57, 2.25, 0.3), V(-1.6, -1.55, 1.6, 0.3), V(-0.35, -1.55, -0.6, 0.22), V(-0.35, -1.6, 1.4, 0.22)]),
     nozzles: [V(-0.27, -0.95, 7.2), V(0.27, -0.95, 7.2)], nr: 0.22, pod: null }, // F-5E
   e_f117: { side: 'west', cls: 'strike', lazy: true, internal: true, stations: mirror([V(-0.78, -0.644, -0.6), V(-0.44, -0.644, 1.05), V(-0.44, -0.644, -2.25), V(-0.44, -0.644, -0.6)]), // последняя точка - основная, под замками балки
@@ -133,8 +137,8 @@ const META = {
     nozzles: [V(-0.78, -1.09, 11.1), V(0.78, -1.09, 11.1)], nr: 0.37, pod: null }, // МиГ-31БМ
   e_tu22m3: { side: 'east', cls: 'heavy', lazy: true, stations: mirror([V(-12, -5.05, 8.2, 0.35), V(-9.5, -4.91, 7.3, 0.35), V(-6.8, -4.38, 6.2), V(-1.9, -5.1, 7.3)]), // по низу консолей крыла (стреловидность 30°; пилонов у автора нет: два внешних дорисованы, py 0,35) и боку фюзеляжа
     nozzles: [V(-1.41, -3.44, 18.9), V(1.41, -3.44, 18.9)], nr: 0.9, pod: null }, // Ту-22М3 - только в налётах ИИ; сопла по срезу лепестков (z 18,85; кольцо R ≈ 1,1, проём R ≈ 0,9)
-  e_f4: { side: 'west', cls: 'fighter', lazy: true, stations: mirror([V(-3.7, -1.78, 1.69), V(-2.29, -2.46, -0.5), V(-1.26, -1.46, -0.6), V(-1.26, -1.46, 2.4)]),
-    nozzles: [V(-0.72, -0.99, 5.6), V(0.72, -0.99, 5.6)], nr: 0.42, pod: V(0, -1.55, 1.0) }, // F-4 Phantom II - andertan («Пэйв Тэк» под фюзеляжем); срез сопел z 5,6 (был 3,45 - факел начинался внутри трубы) Phantom II - andertan («Пэйв Тэк» под фюзеляжем)
+  e_f4: { side: 'west', cls: 'fighter', lazy: true, stations: mirror([V(-0.74, -1.589, -1.525), V(-0.62, -1.649, 2.475), V(-3.37, -1.614, 1.415), V(-2.06, -1.705, -0.505)]),
+    nozzles: [V(-0.55, -1.183, 5.075), V(0.55, -1.183, 5.075)], nr: 0.445, pod: V(0, -1.635, 0.025), clearGlass: true, ...(paintOn ? { gearModel: 'e_f4_gear' } : {}) }, // F-4 Phantom II: своя модель (Свои/F-4 Phantom II, 2026-11-10); точки - передняя и задняя ниши, внешний и внутренний пилоны
   e_gripen: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-4.18, -1.06, 3.77), V(-2.92, -1.4, 3.03), V(-1.95, -1.41, 1.77), V(-0.45, -1.62, 0.2, 0.1)]),
     nozzles: [V(0, -0.94, 7.3)], nr: 0.24, pod: V(0.75, -1.5, -1.6) }, // JAS 39 Gripen (LITENING на подфюзеляжной точке)
   e_f22: { side: 'west', cls: 'strike', lazy: true, internal: true, stations: mirror([V(-1.28, -1.916, -0.706), V(-0.56, -1.451, 0.694), V(-0.56, -1.451, -1.706), V(-0.56, -1.451, -0.506)]), // тяжёлое идёт на последнюю точку: средний держатель, длинная бомба входит в отсек только на нём
@@ -340,6 +344,7 @@ const GLB_V = Object.fromEntries(['w_gbu10', 'w_ecm', 'gepard', 'gepard_lo', 'ro
   ['zsu234', 'zsu234_lo', 'zu23', 'buk', 'phalanx', 'w_fab100', 'w_ofab250', 'w_fab250', 'w_fab1000', 'w_gbu24', 'w_gbu57', 'w_umpk', 'e_yak38', 'e_il28', 'e_tu22', 'e_hunter', 'e_su27', 'e_su35', 'e_etendard', 'e_mirage_f1', 'e_f18c'].map((n) => [n, '20261022k'])).concat([['e_tu95', '20261022l'], ['w_agm65b', '20261022l'], ['w_decoy_e', '20261022l']].concat(['h_mi24', 'h_mi28', 'h_ka52', 'h_ah64', 'h_ah1', 'h_uh1', 'w_shturm', 'w_b8', 'w_hellfire', 'aam_stinger'].map((n) => [n, '20261022m'])).concat([['w_shturm', '20261022n']])).concat(['h_ah64', 'h_mi28'].map((n) => [n, '20261022p'])).concat([['h_uh1', '20261022r']]).concat(['w_lau61', 'obj_mill', 'pr_hay', 'pr_well', 'pr_pumpkin', 'pr_grave1', 'pr_grave2', 'pr_grave3', 'pr_grave4', 'pr_fence', 'pr_fpost', 'pr_deadtree', 'pr_oldtree', 'c_vaz'].map((n) => [n, '20261022o'])).concat(['e_vulcan', 'e_draken', 'e_viggen', 'w_bomb1000'].map((n) => [n, '20261023b'])).concat(['h_ka50', 'h_mi8', 'h_uh60', 'h_rah66'].map((n) => [n, '20261023c'])).concat([['w_nar_hydra', '20261024a'], ['w_nar_s8', '20261024a'], ['e_draken', '20261023d'], ['w_bomb1000', '20261023d'], ['h_ka50', '20261023d']]).concat(['e_su33', 'e_m4', 'e_mig19', 'e_mig17', 'e_t4', 'e_mig29k'].map((n) => [n, '20261023e']))); // 20261023e - шестая партия: Су-33, М-4, МиГ-19, МиГ-17, Т-4 (2026-10-21) // 20261023c - четыре вертолёта manilov.ap (2026-10-21) // 20261023b - Vulcan, Draken, Viggen, бомба 1000 lb (2026-10-21) // l - 2026-10-20: Ту-95 без нарисованных дисков, Maverick и Harpy без сильного упрощения // l - Ту-95 без нарисованных дисков винтов (2026-10-20) // j - четвёртая партия, новая «Шилка», УМПК без сжатия // i - ЗРК без упрощения, камуфляж шейдером, третья партия самолётов (2026-10-19); c - замены моделей 2026-10-19; остальные пересобраны 2026-10-18 (затенение в стыках) - общая версия ниже
 // версии файлов собственных моделей (Blender, tools/airdef-models/own): по строке на ключ; поднимает tools/airdef-models/integrate-own.js при каждом встраивании
 const GLB_V_OWN = {
+  e_f4: '20261110a', e_f4_gear: '20261110a', e_f100: '20261110a', e_f100_gear: '20261110a', // свои F-4 Phantom II и F-100D
   e_rafale: '20261109b', e_rafale_gear: '20261109b', // свой Rafale
   e_hunter: '20261109a', e_hunter_gear: '20261109a', e_mirage_f1: '20261109a', e_mirage_f1_gear: '20261109a', // свои Hunter FGA.9 и Mirage F1
   w_shturm: '20261108i', w_ataka: '20261108i', w_fly_shturm: '20261108i', w_fly_ataka: '20261108i',
@@ -531,6 +536,7 @@ if (paintOn) META.e_f35_gear = { lazy: true, matte: true, paint: true, stations:
 if (paintOn) META.f18_gear = { lazy: true, matte: true, paint: true, stations: [] };
 if (paintOn) META.f16_gear = { lazy: true, matte: true, paint: true, stations: [] };
 if (paintOn) META.e_rafale_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего Rafale для ангара
+if (paintOn) { META.e_f4_gear = { lazy: true, matte: true, paint: true, stations: [] }; META.e_f100_gear = { lazy: true, matte: true, paint: true, stations: [] }; } // стойки своих F-4 и F-100D для ангара
 if (paintOn) { META.e_hunter_gear = { lazy: true, matte: true, paint: true, stations: [] }; META.e_mirage_f1_gear = { lazy: true, matte: true, paint: true, stations: [] }; } // стойки своих Hunter и Mirage F1 для ангара
 if (paintOn) { META.e_f18c_gear = { lazy: true, matte: true, paint: true, stations: [] }; META.e_typhoon_gear = { lazy: true, matte: true, paint: true, stations: [] }; META.e_mirage_gear = { lazy: true, matte: true, paint: true, stations: [] }; META.e_etendard_gear = { lazy: true, matte: true, paint: true, stations: [] }; META.e_viggen_gear = { lazy: true, matte: true, paint: true, stations: [] }; }
 if (paintOn) { META.e_f22_gear = { lazy: true, matte: true, paint: true, stations: [] }; META.e_f117_gear = { lazy: true, matte: true, paint: true, stations: [] }; } // стойки F-15E для ангара (проба, ?paint=1): оси как у самолёта, низ колёс - пол

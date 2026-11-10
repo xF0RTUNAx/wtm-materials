@@ -330,15 +330,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "F100",
-  "author": "manilov.ap",
-  "url": "https://sketchfab.com/3d-models/f100-a9ea47d5af0f4833a50f76350bd99417",
-  "license": "CC-BY-4.0",
-  "files": [
-   "e_f100"
-  ]
- },
- {
   "title": "F5",
   "author": "manilov.ap",
   "url": "https://sketchfab.com/3d-models/f5-8089d66a8a8748b2a4b049b3c06f6a02",
@@ -534,15 +525,6 @@ export const CREDITS = [
   "license": "CC-BY-4.0",
   "files": [
    "e_su17"
-  ]
- },
- {
-  "title": "McDonnell Douglas F-4 Phantom II",
-  "author": "andertan",
-  "url": "https://sketchfab.com/3d-models/mcdonnell-douglas-f-4-phantom-ii-1ea38a66a59048529d27b24a570c5e07",
-  "license": "CC-BY-4.0",
-  "files": [
-   "e_f4"
   ]
  },
  {

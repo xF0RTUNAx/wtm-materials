@@ -160,7 +160,8 @@ const CONFIG = {
   e_mig25: { src: `${DL}/mig25.glb`, scale: 0.80415, fwd: [-0.7934, 0.6088], rulesIn: 'game', tex: () => 512, centerX: true, groups: strip(-0.47, 1.25, 1.8, 2.05, 6.5, (c, d) => c.size[0] > 1.5 || (d < 1.6 && c.ctr[2] > 4.5)) /* ракеты Р-40 под крылом; стабилизатор и кили — оставить */ },
   e_su7b: { src: `${DL}/su7b.glb`, scale: 0.87774, fwd: [0.8361, 0.5486], rulesIn: 'game', tex: () => 512, centerX: true, groups: strip(-0.38, 1.2, 1.2, 1.42) /* баки под фюзеляжем и крылом */ },
   e_tu16: { src: `${DL}/tu16.glb`, scale: 0.94283, fwd: [-0.9304, -0.3665], rulesIn: 'game', tex: () => 512, centerX: true, groups: LS },
-  e_f100: { src: `${DL}/f100.glb`, scale: 0.98446, fwd: [-0.5332, 0.8460], rulesIn: 'game', tex: () => 512, centerX: true, groups: strip(-0.75, -1.1, 0.9, -0.5, 6.5, (c) => c.size[0] > 2) /* четыре бака (консоль крыла — оставить) */ },
+  e_f100: { src: new URL('./own/f100.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 2048, nTex: () => 2048, pickMesh: /./, own: true, centerX: true }, // F-100D: своя модель (Blender, own/f100-build, 2026-11-10)
+  e_f100_gear: { src: new URL('./own/f100_gear.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 2048, nTex: () => 2048, pickMesh: /./, own: true, centerX: true }, // стойки F-100D для ангара: две метки по 1 мм не удалять
   e_f5: { src: `${DL}/8089d66a8a8748b2a4b049b3c06f6a02.glb`, scale: 0.43199, fwd: [-0.8547, 0.5191], rulesIn: 'game', tex: () => 512, centerX: true, groups: strip(-1.1, 1.2, 1.0, 1.25) /* подфюзеляжный бак */ },
   e_f117: { src: new URL('./own/f117.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 2048, nTex: () => 2048, pickMesh: /./, own: true, centerX: true, groups: (c) => { const m = /(^|\/)(bay_[lr])(\/|\||$)/.exec(c.path); return m ? m[2] : 'body'; } }, // F-117A: своя модель (own/f117-build); створки - свои части (bay.js)
   e_f117_gear: { src: new URL('./own/f117_gear.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 2048, nTex: () => 2048, pickMesh: /./, own: true, centerX: true }, // стойки F-117A для ангара: метки центра не удалять
@@ -236,12 +237,8 @@ const CONFIG = {
     groups: (c) => ([13, 15, 16].includes(c.mat) /* стойки, колёса, тяги шасси */ || (c.ctr[1] < -0.35 && Math.max(...c.size) < 2.2) ? null : LS(c)) },
   e_su17: { src: `${DL}/su17.glb`, scale: 1, fwd: [-0.6933, 0.7207], rulesIn: 'game', tex: () => 512, centerX: true, // лежит повёрнутой в плоскости XZ, ось — x −0,4
     groups: (c) => { const dx = Math.abs(c.ctr[0] + 0.4), [, y, z] = c.ctr; return (y < 1.45 && dx > 1.6 && dx < 2.9 && z > 0.2 && z < 2.0) || (y < 1.15 && dx < 0.45 && z > -5.6 && z < -4.0) ? null : LS(c); } }, // шасси и створки
-  e_f4: { src: `${DL}/mcdonnell_douglas_f-4_phantom_ii.glb`, scale: 0.93, nose: '+x', rulesIn: 'game', tex: () => 512, // «полная подвеска» в одном меше — снимаем: баки, бомбы на МБД, «Спарроу»; без выхлопа
-    groups: (c) => { const [x, y] = c.ctr, ax = Math.abs(x), s = c.size; if (c.mat === 14) return null;
-      if (y < -0.18 && ax > 1.75 && !(s[0] < 0.12 && s[1] > 0.4)) return null; // под крылом: всё, кроме самих пилонов
-      if (y < -0.55 && ax < 0.3 && s[0] > 0.6) return null; // подфюзеляжный бак
-      if (y < -0.1 && ax < 1.75 && s[0] < 0.25 && s[1] < 0.25 && s[2] > 2) return null; // «Спарроу» в нишах
-      return LS(c); } },
+  e_f4: { src: new URL('./own/f4.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 2048, nTex: () => 2048, pickMesh: /./, own: true, centerX: true }, // F-4 Phantom II: своя модель (Blender, own/f4-build, 2026-11-10)
+  e_f4_gear: { src: new URL('./own/f4_gear.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 2048, nTex: () => 2048, pickMesh: /./, own: true, centerX: true }, // стойки F-4 для ангара: две метки по 1 мм не удалять
   // ── «Мульти-волна» (2026-10-13): крылатые ракеты, дроны, носители, пусковые оперативно-тактических ракет
   w_tomahawk: { src: new URL('./own/tlam.glb', import.meta.url).pathname, scale: 1, nose: '-z', axisX: 0, axisZ: 0, centerY: 0 /* начало как в файле: оси из паспорта */, tex: () => 1024, nTex: () => 512, pickMesh: /./, own: true, groups: (c) => { const m = /(^|\/)(wing\d|fin\d|intake)(\/|$)/.exec(c.path); return m ? m[2] : 'body'; } }, // BGM-109 Tomahawk: своя модель (Blender, own/tlam.glb); крыло, рули и заборник - свои части (integrate-own стирает groups - вернуть)
   // Х-101 — HappyBattleSheep, Thingiverse (CC BY): STL в мм, Z вверх; stl2glb.js → Downloads/stl-glb/kh101.glb

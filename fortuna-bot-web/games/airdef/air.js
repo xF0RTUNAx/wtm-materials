@@ -6,7 +6,7 @@ import { makeBay } from './bay.js?v=20261109a';
 import { tr } from './i18n.js?v=20261109a';
 import { CITY, ZONE_NAME, mulberry32, riverX, objAimXZ, objDist } from './city.js?v=20261109a';
 import { strikerGeo, attachFlames } from './units-render.js?v=20261109a';
-import { planeModel, classOf, weaponMesh, pylonMesh, seatStores, podModel, weaponHasModel, planeMeta, spinProps, wantWeapon, hiKnown } from './models.js?v=20261109a';
+import { planeModel, classOf, weaponMesh, pylonMesh, seatStores, podModel, weaponHasModel, planeMeta, spinProps, wantWeapon, hiKnown, stOrder } from './models.js?v=20261109a';
 import { ico, drawIco } from './icons.js?v=20261109a';
 import { applyLayout } from './layout.js?v=20261109a';
 import { clamp, makeCraft, pilotStep, fwdOf, D2R, angleBetween } from '../drone/sim/core.js?v=20261109a';
@@ -92,7 +92,7 @@ export function createAir(C) {
     if (seatExtra) { ship.remove(seatExtra); seatExtra = null; }
     const seatL = [];
     for (const l of loadout) for (const st of l.st) {
-      const m = pylonMesh(l.key, AG[l.key], C.weaponGeo, C.mats.wMat, !!craft.heli); const p = stations[st], W0 = AG[l.key].vis; m.position.set(p.x, p.y - (W0.hang ?? W0.r) - 0.05, p.z); // hang - у ракет с гондолой под корпусом
+      const m = pylonMesh(l.key, AG[l.key], C.weaponGeo, C.mats.wMat, !!craft.heli); const p = stations[st], W0 = AG[l.key].vis; if (!p) continue; /* пока грузится своя модель, стоит подходящая из загруженных - у неё точек может быть меньше (F-100D, МиГ-23: шесть) */ m.position.set(p.x, p.y - (W0.hang ?? W0.r) - 0.05, p.z); // hang - у ракет с гондолой под корпусом
       m.userData.st = st; m.visible = !shipInternal; ship.add(m); pylonMeshes.push(m); seatL.push({ m, st, key: l.key, W: AG[l.key] }); // во внутренних отсеках - не видно
     }
     if (hasPod && podPos) { const m = podModel() || new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 2.4, 10).rotateX(Math.PI / 2), new THREE.MeshPhongMaterial({ color: 0x5a636c })); m.position.copy(podPos); ship.add(m); pylonMeshes.push(m); seatL.push({ m, pod: true }); } // LITENING или цилиндр
@@ -1300,7 +1300,7 @@ export function createAir(C) {
     craft.ir = craft.heli ? craft.irBase * 0.55 : craft.irBase; // вертолёт: турбовальные двигатели с экранами выхлопа - тепловым ГСН труднее
     game.used = [(L.heli || craft.heli ? 'heli:' : 'air:') + L.plane, ...L.items.map(([k]) => 'wpn:' + k)]; // прокачка: на чём летали (в «Реализме» - должно быть куплено)
     hasPod = !!L.pod; for (const [k] of L.items) wantWeapon(k); // модели подвески (оружие «Мульти-волны» и новое - грузятся по запросу)
-    const order = [3, 4, 2, 5, 1, 6, 0, 7]; let oi = 0;
+    const pmL = !craft.heli && L.plane ? planeMeta(L.plane) : null, order = stOrder(pmL && pmL.stations ? pmL.stations.length : 8); let oi = 0; // у самолёта с шестью точками порядок свой (models.js stOrder)
     // запас на борт (ошибки, промахи): «Аркада» - ещё 2 полных комплекта (пополняются сами), «Реализм» - 1 пополнение на точке вылета;
     // обучение (opts.reload) - без ограничений
     const sets = opts.reload ? Infinity : (C.MODE().rearms ?? 1); homeLeft = sets;
@@ -1308,7 +1308,7 @@ export function createAir(C) {
     const hOrd = { rack: [0, 6, 1, 7, 2, 8, 3, 9], pod: stations.length > 10 ? [4, 5, 10, 11] : [4, 5] }, hi = { rack: 0, pod: 0 }; // Ми-8МТВ - 4 блока НАР
     for (const [key, n] of L.items.slice().sort((a, b) => AG[b[0]].mass - AG[a[0]].mass)) {
       const st = [], h = AG[key].kind === 'rocket' ? 'pod' : 'rack';
-      for (let i = 0; i < n; i++) { if (craft.heli) { if (hi[h] < hOrd[h].length) st.push(hOrd[h][hi[h]++]); } else if (oi < 8) st.push(order[oi++]); }
+      for (let i = 0; i < n; i++) { if (craft.heli) { if (hi[h] < hOrd[h].length) st.push(hOrd[h][hi[h]++]); } else if (oi < order.length) st.push(order[oi++]); }
       loadout.push({ key, n: st.length, n0: st.length, st, st0: st.slice(), rt: 0, res: st.length * sets });
     }
     sel = 0;

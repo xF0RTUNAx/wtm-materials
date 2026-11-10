@@ -216,7 +216,7 @@ export const DEFENSE = {
 export const PLANES = { h_mi24: 'Ми-24В', h_mi28: 'Ми-28Н', h_ka52: 'Ка-52', h_ka50: 'Ка-50', h_mi8: 'Ми-8МТВ', h_uh60: 'UH-60 DAP', h_rah66: 'RAH-66', h_ah64: 'AH-64D', h_ah1: 'AH-1W', h_uh1: 'UH-1H', /* вертолёты */ su30: 'Су-30', mig29: 'МиГ-29', f18: 'F/A-18E', f16: 'F-16D', e_su24: 'Су-24М', e_su25: 'Су-25', e_su34: 'Су-34', e_su17: 'Су-17М4',
   e_su57: 'Су-57', e_mig31: 'МиГ-31БМ', e_tu22m3: 'Ту-22М3', e_f4: 'F-4 Phantom II', e_gripen: 'JAS 39 Gripen', e_f35: 'F-35A', e_f22: 'F-22A Raptor',
   e_tornado: 'Tornado IDS', e_f111: 'F-111F', e_mig23: 'МиГ-23БН', e_mig27: 'МиГ-27К', e_tu22m2: 'Ту-22М2', e_a10: 'A-10A', e_f15e: 'F-15E',
-  e_mig21n: 'МиГ-21бис', e_mig25: 'МиГ-25БМ', e_su7b: 'Су-7БМК', e_tu16: 'Ту-16', e_f100: 'F-100F', e_f5: 'F-5E', e_f117: 'F-117A', e_jaguar: 'Jaguar GR.1',
+  e_mig21n: 'МиГ-21бис', e_mig25: 'МиГ-25БМ', e_su7b: 'Су-7БМК', e_tu16: 'Ту-16', e_f100: 'F-100D', e_f5: 'F-5E', e_f117: 'F-117A', e_jaguar: 'Jaguar GR.1',
   e_buccaneer: 'Buccaneer S.2B', e_harrier: 'Harrier GR.3', e_mirage: 'Mirage 2000D', e_rafale: 'Rafale', e_b2: 'B-2A',
   e_yak38: 'Як-38М', e_il28: 'Ил-28', e_tu22: 'Ту-22', e_tu95: 'Ту-95МС', e_su27: 'Су-27СМ', e_su35: 'Су-35С', e_hunter: 'Hunter FGA.9', e_etendard: 'Super Étendard',
   e_mirage_f1: 'Mirage F1', e_f18c: 'F/A-18C', e_tu160: 'Ту-160', e_b52: 'B-52H', e_b1b: 'B-1B', e_typhoon: 'Typhoon',
@@ -262,7 +262,7 @@ export const LOADOUTS = {
     // четвёртая партия (2026-10-19)
     { side: 'east', plane: 'e_il28', name: 'Ил-28: ФАБ-250 ×8 (в отсеке)', items: [['fab250', 8]] },
     { side: 'east', plane: 'e_tu22', name: 'Ту-22: ФАБ-1000 ×4 (в отсеке)', items: [['fab1000', 4]] },
-    { side: 'west', plane: 'e_f100', name: 'F-100F «Дикая ласка»: Shrike ×2 + Mk 82 ×4', items: [['agm45', 2], ['mk82', 4]] },
+    { side: 'west', plane: 'e_f100', name: 'F-100D: Shrike ×2 + Mk 82 ×4', items: [['agm45', 2], ['mk82', 4]] },
     { side: 'west', plane: 'e_f5', name: 'F-5E: Mk 82 ×4', items: [['mk82', 4]] },
     // ветки 2026-10-20: Buccaneer и Jaguar - с ранга I (их лазерные подвески - в эпохе II)
     { side: 'west', plane: 'e_buccaneer', name: 'Buccaneer S.2B: Mk 82 ×6', items: [['mk82', 6]] },

@@ -5,7 +5,7 @@
 // Подвеска расставлена как в бою (air.js: order, buildPylons). Подъёмник: base, ram (шток, длина 1 м, scale.y = ход), head (седло). ?oldbg=1 - прежний фон.
 import { AG } from './arsenal.js?v=20261109a';
 import { setPaintHall, paintOn } from './paint.js?v=20261109a';
-import { planeModel, planeMeta, classOf, wantModel, wantWeapon, weaponPending, weaponFailed, pylonMesh, seatStores, podModel, anyModel, modelLoaded, modelFailed, releaseModel, wantCamo, camoKnown, hiKnown } from './models.js?v=20261109a';
+import { planeModel, planeMeta, classOf, wantModel, wantWeapon, weaponPending, weaponFailed, pylonMesh, seatStores, podModel, anyModel, modelLoaded, modelFailed, releaseModel, wantCamo, camoKnown, hiKnown, stOrder } from './models.js?v=20261109a';
 
 const VIEWS = { // ПАСПОРТ.json сборщика
   // near, far - не из паспорта: буфер со сглаживанием держит 16 бит глубины, при near 0,3 на 31 м различал только 5 см, и близкие поверхности мерцали лесенкой (Mark, телефон)
@@ -13,7 +13,7 @@ const VIEWS = { // ПАСПОРТ.json сборщика
   heavy: { fov: 46, cam: [0, 2.4, 61], look: [0, 3.4, 0], r: 22, near: 20, far: 130 },
 };
 const FULL_W = 16, FULL_H = 9, AZ0 = +new URLSearchParams(location.search).get('hgaz') || 2.86, BIG = 25; // BIG - длина или размах, с которых нужен большой зал; AZ0 - один ракурс для всех: нос к камере и чуть влево (Mark 2026-11-04: самолёты не вращаются), справа панель
-const ST_ORDER = [3, 4, 2, 5, 1, 6, 0, 7], JACK_TOP = 1.7, JACK_HEAD = 0.125, JACK_MAX = 2.5; // ПАСПОРТ.json, подъёмник версии 2
+const JACK_TOP = 1.7, JACK_HEAD = 0.125, JACK_MAX = 2.5; // ПАСПОРТ.json, подъёмник версии 2
 const MODEL_WAIT = 12000, PICK_WAIT = 180, KEEP_LOOKED = 3; // модель всё не приходит - показать, что есть; быстрое листание ленты не качает каждый самолёт; на телефоне в памяти - последние просмотренные
 const BLOB_GEO = () => new THREE.PlaneGeometry(2.6, 2.6).rotateX(-Math.PI / 2);
 
@@ -146,10 +146,10 @@ export function createHangar(C, renderer) {
     const obj = pm.obj; holder.add(obj); obj.position.set(0, 0, 0); pivot.updateMatrixWorld(true);
     const box0 = new THREE.Box3().setFromObject(obj), sz = box0.getSize(new THREE.Vector3());
     // подвеска - как в бою
-    let oi = 0; const parts = obj.children.slice(), hung = [], ms = [], seatL = [];
+    let oi = 0; const parts = obj.children.slice(), hung = [], ms = [], seatL = [], ord = stOrder(pm.stations ? pm.stations.length : 8, !!pm.heli);
     for (const [key, n] of L.items.slice().sort((a, b) => AG[b[0]].mass - AG[a[0]].mass)) {
-      for (let i = 0; i < n && oi < 8; i++) {
-        const st = ST_ORDER[oi++], p = pm.stations[st]; if (!p) continue;
+      for (let i = 0; i < n && oi < ord.length; i++) {
+        const st = ord[oi++], p = pm.stations[st]; if (!p) continue;
         const W0 = AG[key].vis || {}, m = pylonMesh(key, AG[key], C.weaponGeo, C.mats.wMat); m.position.set(p.x, p.y - (W0.hang ?? W0.r ?? 0.2) - 0.05, p.z); m.visible = !pm.internal; obj.add(m); if (pm.internal) continue; hung.push(m); ms.push([key, m]); seatL.push({ m, st, key, W: AG[key] }); // во внутренних отсеках не видно, как в бою
       }
     }

@@ -29,7 +29,7 @@ import { POD, RAIL, podLift } from './sim/combined.js?v=20261109a';
 import { unitModel, weaponGeo, samMissileMesh, mountWpnFlame, narMesh, flameOf, wpnNozzle, strikerGeo, createFx, attachFlames } from './units-render.js?v=20261109a';
 import { slotCount, LNCH, lnchToWorld, cylPose, mslView } from './launchers.js?v=20261109a';
 import { makeBay, bayHold } from './bay.js?v=20261109a';
-import { spinProps as spinRotors, spinSails, modelStats, loadModels, FLY, planeModel, heliModel, classOfRole, weaponMesh, pylonMesh, seatStores, unitModelGlb, unitMissileGlb, samMissileLo, samNose, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, wantUnitNear, bldModel, wantBuildings, wantModel, wantWeapon, weaponPending, anyModel, setWings, glideWings, spinVanes, planeMeta } from './models.js?v=20261109a';
+import { spinProps as spinRotors, spinSails, modelStats, loadModels, FLY, planeModel, heliModel, classOfRole, weaponMesh, pylonMesh, seatStores, unitModelGlb, unitMissileGlb, samMissileLo, samNose, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, wantUnitNear, bldModel, wantBuildings, wantModel, wantWeapon, weaponPending, anyModel, setWings, glideWings, spinVanes, planeMeta , stOrder } from './models.js?v=20261109a';
 import { planeDamageVis, updateDebris, clearDebris } from './plane-damage.js?v=20261109a';
 import { createSound } from './sound.js?v=20261109a';
 import { ico, iconize } from './icons.js?v=20261109a';
@@ -708,11 +708,12 @@ const simFx = {
   trackBroken(u, a) { if (C.hooks.trackBroken) C.hooks.trackBroken(u, a); },
 };
 // подвеска ИИ-самолёта с готовой моделью: тяжёлое - ближе к фюзеляжу (как у игрока); k - номер изделия этого типа
-const ST_ORDER = [3, 4, 2, 5, 1, 6, 0, 7], LOD_D = 2500; // дальше LOD_D - простая модель самолёта
+const LOD_D = 2500; // дальше LOD_D - простая модель самолёта
 function hangLoad(g, stations, load, plane, inBay = false) {
-  const out = [], seatL = []; let oi = 0;
-  for (const l of [...load].sort((x, y) => AG[y.key].mass - AG[x.key].mass)) for (let k = 0; k < l.n && oi < 8; k++) {
-    const st = ST_ORDER[oi++], W = AG[l.key], p = stations[st], m = pylonMesh(l.key, W, weaponGeo, wMat); if (weaponPending(l.key)) wantWeapon(l.key); // пришла - самолёты пересоберутся
+  const out = [], seatL = [], pmH = plane ? planeMeta(plane) : null, ord = stOrder(stations.length, !!(pmH && pmH.heli)); let oi = 0; // порядок развески - как у игрока (models.js stOrder)
+  for (const l of [...load].sort((x, y) => AG[y.key].mass - AG[x.key].mass)) for (let k = 0; k < l.n && oi < ord.length; k++) {
+    const st = ord[oi++], W = AG[l.key], p = stations[st]; if (!p) continue;
+    const m = pylonMesh(l.key, W, weaponGeo, wMat); if (weaponPending(l.key)) wantWeapon(l.key); // пришла - самолёты пересоберутся
     m.position.set(W.kind === 'tbm' ? 0 : p.x, p.y - (W.vis.hang ?? W.vis.r) - 0.05, p.z); g.add(m); out.push({ m, l, k }); if (W.kind !== 'tbm') seatL.push({ m, st, key: l.key, W }); // «Кинжал» - под фюзеляжем по оси
   }
   if (inBay) return out; // в отсеке - на точке, без балок и надставок
