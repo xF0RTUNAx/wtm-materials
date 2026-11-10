@@ -55,7 +55,7 @@ export default {
   "Подвеска": "Loadout",
   " · контейнер": " · pod",
   "{0} - открыть в «Исследованиях»": "{0} (open in Research)",
-  "В «Реализме» эпохи {0} нет подвески за эту сторону. Купите самолёт и оружие в «Исследованиях» или играйте в «Аркаде».": "No era {0} loadout for this side in Realistic mode. Buy an aircraft and weapons in Research, or play Arcade.",
+  "В «Реализме» ранга {0} нет подвески за эту сторону. Купите самолёт и оружие в «Исследованиях» или играйте в «Аркаде».": "No rank {0} loadout for this side in Realistic mode. Buy an aircraft and weapons in Research, or play Arcade.",
   "Вылеты": "Sorties",
   "Один вылет": "Single sortie",
   "Операция: 2 вылета": "Operation: 2 sorties",
@@ -1194,4 +1194,7 @@ export default {
   "Награда уже получена": "Reward already claimed",
   "Сначала заберите все задания": "Claim all the tasks first",
   "Загружаем город": "Loading the city",
+  "Ранг": "Rank",
+  "Топливо": "Fuel",
+  "в отсеках": "in bays",
 };

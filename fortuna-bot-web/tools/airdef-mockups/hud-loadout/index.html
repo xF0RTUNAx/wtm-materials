@@ -1,0 +1,213 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Панель подвесок и боевой блок: варианты</title>
+<!-- Макеты (Mark 2026-11-10): блок выбора подвески в ангаре (без описаний, «Ранг» вместо «Эпохи», миниатюры) и левый верхний блок в бою,
+     надпись задания белым. Фоны - настоящие кадры игры 844×390 (телефон Mark) без этих блоков: bg_hangar.jpg, bg_battle.jpg.
+     Открывать с сервера: http://localhost:8937/fortuna-bot-web/tools/airdef-mockups/hud-loadout/index.html   ?f=pA - один кадр без подписей. -->
+<style>
+@font-face { font-family: 'Oswald'; font-weight: 300 700; src: url(../../../games/airdef/fonts/oswald-cyrillic.woff2) format('woff2'); unicode-range: U+0400-045F, U+2116; }
+@font-face { font-family: 'Oswald'; font-weight: 300 700; src: url(../../../games/airdef/fonts/oswald-latin.woff2) format('woff2'); unicode-range: U+0000-00FF, U+2000-206F, U+2191, U+2193; }
+@font-face { font-family: 'Golos Text'; font-weight: 400 800; src: url(../../../games/airdef/fonts/golos-text-cyrillic.woff2) format('woff2'); unicode-range: U+0400-045F; }
+@font-face { font-family: 'Golos Text'; font-weight: 400 800; src: url(../../../games/airdef/fonts/golos-text-latin.woff2) format('woff2'); unicode-range: U+0000-00FF, U+2000-206F; }
+:root { --pn: rgba(14,17,15,.84); --ln: rgba(84,96,70,.75); --gold: #e8b04a; --gold2: #f3c96f; --ink: #ece8dc; --dim: #c2c7b2; --mute: #8d9580; --sead: #e79486; --strike: #e3ae62; }
+* { box-sizing: border-box; } html, body { margin: 0; background: #0d100c; color: var(--ink); font: 14px 'Golos Text', sans-serif; }
+h1 { font: 500 22px 'Oswald'; margin: 18px 20px 4px; } h2 { font: 500 17px 'Oswald'; margin: 22px 20px 2px; color: var(--gold2); } p.d { margin: 0 20px 8px; max-width: 1240px; color: var(--dim); line-height: 1.45; font-size: 13.5px; }
+.rowf { display: flex; gap: 12px; padding: 0 20px; align-items: flex-start; } .cap { font-size: 11.5px; color: var(--mute); margin: 3px 0 0; }
+body.one h1, body.one h2, body.one p.d, body.one .cap { display: none; } body.one .rowf { padding: 0; }
+.ph { position: relative; flex: none; width: 844px; height: 390px; overflow: hidden; background: #111 left top / 844px 390px no-repeat; }
+.ph.hg { background-image: url(bg_hangar.jpg); } .ph.bt { background-image: url(bg_battle.jpg); }
+.ph.cr { width: 330px; background-position: right top; } .ph.bt.cr { width: 380px; height: 190px; background-position: left top; }
+.ic { width: 1em; height: 1em; fill: currentColor; vertical-align: -.12em; flex: none; }
+.chev { display: inline-block; width: 5px; height: 5px; border-right: 1.5px solid var(--gold); border-bottom: 1.5px solid var(--gold); transform: translateY(-2px) rotate(45deg); margin-left: 6px; }
+
+/* ───────── А · «Слоты» ───────── */
+.pA { position: absolute; right: 61px; top: 38px; width: 236px; display: flex; flex-direction: column; gap: 4px; }
+.pA .set { display: flex; align-items: center; height: 26px; padding: 0 7px 0 8px; background: var(--pn); border: 1px solid var(--ln); }
+.rk { display: flex; align-items: center; gap: 2px; } .rk span { font: 500 9.5px 'Oswald'; letter-spacing: .12em; color: var(--mute); margin-right: 4px; }
+.rk b { width: 21px; height: 18px; display: grid; place-items: center; font: 500 11.5px 'Oswald'; color: var(--dim); border: 1px solid #333d2c; background: #12160f; }
+.rk b.on { background: var(--gold); color: #1c1708; border-color: var(--gold); }
+.pA .cond { margin-left: auto; font: 500 9.5px 'Golos Text'; color: var(--dim); white-space: nowrap; } .pA .cond .chev { margin-left: 4px; }
+.pA .lo { position: relative; background: var(--pn); border: 1px solid var(--ln); padding: 4px 7px 5px 9px; }
+.pA .lo::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--rc); opacity: .85; }
+.pA .lo.sead { --rc: #c4574a; } .pA .lo.strike { --rc: #c98a35; }
+.pA .lo.on { border-color: var(--gold); background: rgba(36,33,19,.92); }
+.pA .hd { display: flex; align-items: center; height: 14px; font: 500 9.5px 'Oswald'; letter-spacing: .15em; text-transform: uppercase; color: var(--dim); }
+.pA .lo.sead .hd { color: var(--sead); } .pA .lo.strike .hd { color: var(--strike); }
+.pA .ck { margin-left: auto; width: 13px; height: 13px; display: grid; place-items: center; background: var(--gold); color: #1c1708; font-size: 9px; }
+.pA .lk { margin-left: auto; font: 500 9.5px 'Golos Text'; letter-spacing: 0; text-transform: none; color: var(--gold2); }
+.pA .sl { display: flex; gap: 4px; margin-top: 3px; }
+.pA .t { position: relative; width: 70px; } .pA .t .im { height: 34px; background: #0a0d09; border: 1px solid #2a3324; display: grid; place-items: center; color: #9aa38a; font-size: 17px; }
+.pA .t img { width: 66px; height: 30px; object-fit: cover; } .pA .t u { position: absolute; right: 4px; top: 19px; font: 600 12px 'Oswald'; color: var(--gold2); text-decoration: none; text-shadow: 0 1px 2px #000, 0 0 3px #000; }
+.pA .t em { display: block; margin-top: 2px; font: 500 10.5px/1.1 'Oswald'; font-style: normal; color: var(--ink); white-space: nowrap; }
+.pA .lo.lock .sl { opacity: .45; filter: saturate(.3); }
+
+/* ───────── Б · «Вкладки» ───────── */
+.pB { position: absolute; right: 61px; bottom: 82px; width: 222px; }
+.pB .bar { display: flex; align-items: stretch; height: 24px; margin-bottom: 5px; background: var(--pn); border: 1px solid var(--ln); font: 500 10px 'Golos Text'; color: var(--dim); }
+.pB .stp { display: flex; align-items: center; border-right: 1px solid var(--ln); } .pB .stp i { width: 20px; text-align: center; font: 500 13px 'Oswald'; color: var(--gold); font-style: normal; }
+.pB .stp b { font: 500 11.5px 'Oswald'; letter-spacing: .1em; color: var(--ink); white-space: nowrap; } .pB .stp b s { text-decoration: none; color: var(--mute); font-size: 9.5px; letter-spacing: .16em; margin-right: 5px; }
+.pB .cond { flex: 1; display: flex; align-items: center; justify-content: flex-end; padding: 0 8px; white-space: nowrap; }
+.pB .tabs { display: flex; gap: 3px; padding-right: 0; }
+.pB .tabs button { flex: 1; height: 22px; padding: 0 4px; font: 500 10px 'Oswald'; letter-spacing: .12em; text-transform: uppercase; color: var(--mute); background: rgba(14,17,15,.7); border: 1px solid var(--ln); border-bottom: 0; white-space: nowrap; }
+.pB .tabs button .ic { font-size: 10px; margin-right: 4px; } .pB .tabs button.on { color: #2a1d08; background: var(--gold); border-color: var(--gold); }
+.pB .tabs button.lock { color: #6f7765; }
+.pB .body { background: var(--pn); border: 1px solid var(--ln); border-top: 2px solid var(--gold); padding: 2px 9px 3px; }
+.pB .w { display: flex; align-items: center; gap: 8px; height: 37px; } .pB .w + .w { border-top: 1px dashed #37402f; }
+.pB .w img { width: 86px; height: 32px; object-fit: cover; flex: none; } .pB .w b { flex: 1; font: 500 14px 'Oswald'; color: var(--ink); white-space: nowrap; }
+.pB .w u { font: 500 19px 'Oswald'; color: var(--gold2); text-decoration: none; } .pB .w u s { text-decoration: none; font-size: 12px; color: var(--mute); margin-right: 1px; }
+.pB .w.pod { height: 22px; font: 400 10.5px 'Golos Text'; color: var(--dim); } .pB .w.pod .ic { font-size: 12px; color: #9aa38a; margin: 0 2px 0 4px; }
+
+/* ───────── В · «Таблички» ───────── */
+.pC { position: absolute; right: 61px; top: 38px; width: 236px; display: flex; flex-direction: column; gap: 5px; }
+.pC .set { display: flex; align-items: center; gap: 8px; height: 26px; }
+.pC .tagw { width: 74px; height: 24px; display: grid; place-items: center; background: url(../../../games/airdef/ui/quests/btn_take.webp) center / 100% 100% no-repeat; font: 600 11.5px 'Oswald'; letter-spacing: .14em; color: #2a1d08; text-shadow: 0 1px 0 rgba(255,236,190,.5); }
+.pC .cond { flex: 1; height: 24px; display: flex; align-items: center; justify-content: space-between; padding: 0 9px; background: var(--pn); border: 1px solid var(--ln); font: 500 10px 'Golos Text'; color: var(--dim); white-space: nowrap; }
+.pC .lo { position: relative; padding: 0 5px 2px; border: 9px solid transparent; border-image: url(../../../games/airdef/ui/quests/plate.webp) 30 30 30 30 fill / 9px / 2px stretch; filter: brightness(.74) saturate(.8); }
+.pC .lo.on { filter: none; } .pC .lo.lock { filter: brightness(.55) saturate(.4); }
+.pC .hd { display: flex; align-items: center; height: 15px; margin-top: -3px; font: 500 9.5px 'Oswald'; letter-spacing: .17em; text-transform: uppercase; color: #cfd2bd; text-shadow: 0 1px 1px rgba(0,0,0,.6); }
+.pC .lo.on .hd span { padding: 1px 9px 1px; margin-left: -4px; background: url(../../../games/airdef/ui/quests/btn_take.webp) center / 100% 100% no-repeat; color: #2a1d08; text-shadow: 0 1px 0 rgba(255,236,190,.5); font-weight: 600; }
+.pC .pin { position: absolute; right: -9px; top: -13px; width: 26px; height: 26px; background: url(../../../games/airdef/ui/quests/pin_got.webp) center / contain no-repeat; }
+.pC .sl { display: flex; gap: 5px; margin-top: 3px; }
+.pC .t { flex: 1 1 0; min-width: 0; max-width: 100px; } .pC .t .im { height: 30px; display: grid; place-items: center; background: rgba(10,12,8,.72); box-shadow: inset 0 1px 3px rgba(0,0,0,.8), 0 1px 0 rgba(255,255,255,.08); color: #9aa38a; font-size: 16px; }
+.pC .t img { width: 100%; height: 28px; object-fit: cover; } .pC .t em { display: flex; justify-content: space-between; margin-top: 2px; font: 500 10.5px/1.15 'Oswald'; font-style: normal; letter-spacing: .04em; color: #f0ecdf; text-shadow: 0 1px 1px rgba(0,0,0,.7); white-space: nowrap; }
+.pC .t em u { text-decoration: none; color: var(--gold2); font-weight: 600; }
+
+/* ───────── Г · «Схема» ───────── */
+.pD { position: absolute; right: 61px; top: 38px; width: 236px; display: flex; flex-direction: column; gap: 4px; }
+.pD .set { background: var(--pn); border: 1px solid var(--ln); padding: 4px; display: grid; grid-template-columns: 1fr 1fr; gap: 3px; }
+.pD .rk2 { grid-column: 1 / 3; display: flex; gap: 2px; } .pD .rk2 b { flex: 1 1 0; } .pD .rk2 b.on { flex: 1.8 1 0; }
+.pD .rk2 b, .pD .tg b { height: 18px; display: grid; place-items: center; font: 500 10.5px 'Oswald'; letter-spacing: .08em; color: var(--mute); border: 1px solid #2f372b; background: #12160f; white-space: nowrap; }
+.pD .rk2 b.on, .pD .tg b.on { background: #2b2a18; color: var(--gold2); border-color: var(--gold); }
+.pD .tg { display: grid; grid-template-columns: 1fr 1fr; gap: 0; } .pD .tg b { font: 500 9.5px 'Golos Text'; letter-spacing: 0; } .pD .tg b + b { border-left: 0; }
+.pD .lo { position: relative; background: var(--pn); border: 1px solid var(--ln); padding: 3px 7px 5px; }
+.pD .lo.on { border-color: var(--gold); background: rgba(36,33,19,.92); } .pD .lo.lock { opacity: .55; }
+.pD .hd { display: flex; align-items: center; height: 13px; font: 500 9.5px 'Oswald'; letter-spacing: .15em; text-transform: uppercase; }
+.pD .lo.sead .hd { color: var(--sead); } .pD .lo.strike .hd { color: var(--strike); } .pD .hd i { margin-left: auto; font: 500 9.5px 'Golos Text'; font-style: normal; letter-spacing: 0; text-transform: none; color: var(--gold2); }
+.pD svg.sch { display: block; width: 100%; height: 40px; margin: 1px 0 2px; }
+.pD .lg { display: flex; flex-wrap: wrap; gap: 3px 10px; } .pD .lg span { display: flex; align-items: center; gap: 4px; font: 500 11px 'Oswald'; color: var(--ink); white-space: nowrap; }
+.pD .lg i { width: 7px; height: 7px; border-radius: 50%; flex: none; } .pD .lg img { width: 44px; height: 18px; object-fit: cover; } .pD .lg u { text-decoration: none; color: var(--gold2); font-weight: 600; } .pD .lg .ic { font-size: 12px; color: #9aa38a; }
+
+/* ═════════ БОЙ: левый верхний блок ═════════ */
+.hud { position: absolute; left: 47px; top: 10px; color: #fff; }
+.hud img { object-fit: cover; }
+/* 1 · «Приборы»: без рамки */
+.hA { padding: 3px 30px 5px 9px; margin-left: -9px; background: linear-gradient(90deg, rgba(5,8,6,.55), rgba(5,8,6,.36) 62%, rgba(5,8,6,0)); text-shadow: 0 1px 2px rgba(0,0,0,.85); min-width: 214px; }
+.hA .r1 { display: flex; align-items: baseline; gap: 11px; white-space: nowrap; }
+.hA .v b { font: 500 21px/1 'Oswald'; } .hA .v i { margin-left: 3px; font: 500 8px 'Oswald'; letter-spacing: .12em; font-style: normal; color: #cdd4c2; }
+.fu { display: inline-flex; align-items: center; gap: 4px; font: 500 11px 'Oswald'; } .fu .ic { font-size: 10px; color: #cdd4c2; } .fu .bar { width: 30px; height: 3px; background: rgba(255,255,255,.25); } .fu .bar u { display: block; height: 100%; background: #e9e6dc; } .fu.low, .fu.low .ic { color: #ff8f7a; } .fu.low .bar u { background: #ff6b55; }
+.ab { font: 600 8.5px 'Oswald'; letter-spacing: .12em; color: #ffa24d; }
+.hA .wp { display: flex; gap: 12px; margin-top: 4px; } .hA .w { display: inline-flex; align-items: center; gap: 4px; padding-bottom: 2px; border-bottom: 2px solid transparent; opacity: .62; white-space: nowrap; }
+.hA .w.on { opacity: 1; border-bottom-color: var(--gold); } .hA .w img { width: 36px; height: 15px; } .hA .w b { font: 500 11.5px 'Oswald'; } .hA .w u { font: 600 12.5px 'Oswald'; text-decoration: none; color: var(--gold2); } .hA .w i, .rs { font: 500 9px 'Oswald'; font-style: normal; color: #b9c0ad; }
+.hA .st { margin-top: 3px; font: 600 10.5px 'Golos Text'; } .hA .pd { margin-top: 2px; font: 500 10px 'Golos Text'; display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+.lk { color: #8be9a8; font-weight: 700; } .tv { margin-left: 4px; padding: 0 5px; border: 1px solid rgba(255,255,255,.55); font: 600 9px 'Oswald'; letter-spacing: .08em; } .tv.on { background: #e9e6dc; color: #14170f; text-shadow: none; border-color: #e9e6dc; }
+.ct { margin-top: 3px; display: flex; gap: 11px; font: 500 10px 'Golos Text'; color: #e4e1d4; white-space: nowrap; } .ct .ic { font-size: 10.5px; margin-right: 3px; color: #cdd4c2; } .ct .hl { color: #ffb066; font-weight: 700; } .fly { color: #a9d2ff; }
+/* 2 · «Табло»: плита с ячейками */
+.hB { width: 206px; background: rgba(14,17,15,.74); border: 1px solid rgba(96,108,82,.8); text-shadow: none; }
+.hB .g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; } .hB .c { padding: 1px 7px 2px; } .hB .c + .c { border-left: 1px solid rgba(96,108,82,.5); }
+.hB .c s { display: block; text-decoration: none; font: 500 7px 'Oswald'; letter-spacing: .18em; color: var(--mute); } .hB .c b { font: 500 16px/1 'Oswald'; } .hB .c b small { font: 500 8px 'Oswald'; letter-spacing: .08em; color: #b9c0ad; margin-left: 2px; }
+.hB .c.low b { color: #ff8f7a; } .hB .c .ab { margin-left: 4px; vertical-align: 4px; }
+.hB .ws { display: flex; border-top: 1px solid rgba(96,108,82,.5); } .hB .w { flex: 1 1 0; display: flex; align-items: center; gap: 5px; padding: 3px 6px; border-top: 2px solid transparent; opacity: .6; white-space: nowrap; min-width: 0; }
+.hB .w + .w { border-left: 1px solid rgba(96,108,82,.5); } .hB .w.on { opacity: 1; border-top-color: var(--gold); background: rgba(232,176,74,.1); }
+.hB .w img { width: 38px; height: 16px; flex: none; } .hB .w b { font: 500 11px 'Oswald'; } .hB .w u { margin-left: auto; font: 600 13px 'Oswald'; color: var(--gold2); text-decoration: none; }
+.hB .st { border-top: 1px solid rgba(96,108,82,.5); padding: 3px 7px; font: 600 10.5px 'Golos Text'; } .hB .pd { border-top: 1px solid rgba(96,108,82,.5); padding: 3px 7px; font: 500 10px 'Golos Text'; display: flex; align-items: center; gap: 5px; white-space: nowrap; } .hB .pd .tv { margin-left: auto; }
+.hB .ct { margin: 0; border-top: 1px solid rgba(96,108,82,.5); padding: 2px 7px 3px; color: #d5d8c8; flex-wrap: wrap; gap: 0 11px; } .hB .st { padding: 2px 7px; }
+/* «Табло»: читаемость (Mark 2026-11-10: подписи скорость/высота/топливо плохо читаются) */
+.hB.b1, .hB.b2, .hB.b3 { background: rgba(9,12,9,.88); border-color: rgba(120,132,104,.9); }
+.hB.b1 .c s { font-size: 8px; letter-spacing: .13em; color: #dedac8; } .hB.b1 .c b, .hB.b2 .c b, .hB.b3 .c b { font-size: 17px; color: #fff; }
+.hB.b2 .c s { font-size: 8px; letter-spacing: .13em; color: var(--gold2); }
+.hB.b3 .c { padding: 3px 7px 4px; white-space: nowrap; } .hB.b3 .c b small { font-size: 9px; letter-spacing: .06em; color: #dedac8; margin-left: 3px; } .hB.b3 .c .ic { font-size: 12px; color: #dedac8; margin-right: 4px; vertical-align: -1px; }
+.hB.b1 .c.low b, .hB.b2 .c.low b, .hB.b3 .c.low b, .hB.b3 .c.low .ic { color: #ff8f7a; }
+.cmp { display: flex; flex-wrap: wrap; gap: 12px; padding: 0 20px; } .cmp .ph.bt.cr { width: 290px; height: 150px; } .cmp b.t { display: block; font: 500 14px 'Oswald'; color: var(--ink); margin: 0 0 4px; }
+/* 3 · «Лента»: строка и плитки оружия */
+.hC { text-shadow: 0 1px 2px rgba(0,0,0,.85); }
+.hC .rb { display: inline-flex; align-items: center; height: 21px; background: rgba(14,17,15,.72); border: 1px solid rgba(96,108,82,.8); white-space: nowrap; text-shadow: none; }
+.hC .rb > span { padding: 0 7px; font: 500 12.5px 'Oswald'; display: inline-flex; align-items: center; gap: 3px; height: 100%; } .hC .rb > span + span { border-left: 1px solid rgba(96,108,82,.5); }
+.hC .rb small { font: 500 8px 'Oswald'; letter-spacing: .1em; color: #b9c0ad; } .hC .rb .ic { font-size: 10.5px; color: #b9c0ad; } .hC .rb .low, .hC .rb .low .ic { color: #ff8f7a; } .hC .rb .hl { color: #ffb066; }
+.hC .ws { display: flex; gap: 4px; margin-top: 4px; } .hC .w { position: relative; width: 84px; height: 31px; background: rgba(10,13,9,.78); border: 1px solid rgba(96,108,82,.7); opacity: .72; text-shadow: none; }
+.hC .w.on { opacity: 1; border-color: var(--gold); background: rgba(30,27,14,.84); } .hC .w img { position: absolute; left: 2px; top: 1px; width: 48px; height: 17px; }
+.hC .w b { position: absolute; left: 4px; bottom: 1px; font: 500 9px 'Oswald'; color: #e4e1d4; white-space: nowrap; } .hC .w u { position: absolute; right: 4px; bottom: 0; font: 600 12px 'Oswald'; color: var(--gold2); text-decoration: none; } .hC .w .rs { position: absolute; right: 4px; top: 2px; } .hC .w .rl { position: absolute; left: 50px; bottom: 2px; font: 500 9px 'Oswald'; color: #b9c0ad; }
+.hC .w.tvw { width: auto; padding: 0 7px; display: flex; align-items: center; gap: 6px; opacity: 1; font: 500 9.5px 'Golos Text'; white-space: nowrap; } .hC .w.tvw b { position: static; font: 700 10px 'Golos Text'; color: #8be9a8; }
+.hC .st { margin-top: 3px; font: 600 10.5px 'Golos Text'; white-space: nowrap; }
+/* надпись задания */
+.msg { position: absolute; left: 50%; top: 31%; transform: translateX(-50%); width: max-content; max-width: 430px; text-align: center; font: 600 14px/1.35 'Golos Text'; }
+.msg.m1 { color: #fff; text-shadow: 0 0 5px #000, 0 1px 2px rgba(0,0,0,.9); }
+.msg.m2 { color: #fff; padding: 5px 44px 7px; max-width: 520px; background: linear-gradient(90deg, rgba(8,10,8,0), rgba(8,10,8,.6) 14%, rgba(8,10,8,.6) 86%, rgba(8,10,8,0)); text-shadow: 0 1px 2px rgba(0,0,0,.8); }
+.msg.m2 s { display: block; text-decoration: none; font: 500 10px 'Oswald'; letter-spacing: .22em; color: var(--gold2); margin-bottom: 1px; }
+.msg.m3 { color: #fff; font: 500 15px/1.3 'Oswald'; letter-spacing: .03em; text-shadow: 0 0 6px #000, 0 1px 2px #000; } .msg.m3 small { display: block; margin-top: 2px; font: 500 11.5px 'Golos Text'; letter-spacing: 0; color: #e9e6dc; }
+</style></head><body>
+<div id="app"></div>
+<script type="module">
+const G = '../../../games/airdef/', V = '?v=20261109a';
+const { AG, LOADOUTS, ROLE_NAME, loadoutRole } = await import(G + 'arsenal.js' + V), { ico } = await import(G + 'icons.js' + V);
+const TH = (k) => `${G}thumbs/wpn_${k}.webp`, Q = new URLSearchParams(location.search), ONE = Q.get('f');
+const los = (era, plane) => LOADOUTS[era].filter((L) => L.plane === plane);
+// состояние 1: F-4, ранг I (две подвески); состояние 2: ранг II (три вида оружия и контейнер) + закрытая подвеска ранга III
+const S1 = { rank: 1, list: los(1, 'e_f4').map((L, i) => ({ L, on: i === 0 })) };
+const S2 = { rank: 2, list: [{ L: los(2, 'e_f4')[0], on: true }, { L: los(3, 'e_f4')[0], lock: 'нужен HARM' }] };
+const ROM = ['I', 'II', 'III', 'IV'], role = (L) => loadoutRole(L), rn = (L) => ROLE_NAME[role(L)];
+const rk = (r) => `<div class="rk"><span>РАНГ</span>${ROM.map((x, i) => `<b class="${i + 1 === r ? 'on' : ''}">${x}</b>`).join('')}</div>`;
+
+// ── А · слоты
+const pA = (S) => `<div class="pA"><div class="set">${rk(S.rank)}<span class="cond">Аркада · ПВО сов.<i class="chev"></i></span></div>${S.list.map(({ L, on, lock }) =>
+  `<div class="lo ${role(L)} ${on ? 'on' : ''} ${lock ? 'lock' : ''}"><div class="hd"><span>${rn(L)}</span>${on ? `<span class="ck">${ico('ok')}</span>` : lock ? `<span class="lk">${ico('lock')} ${lock}</span>` : ''}</div>
+   <div class="sl">${L.items.map(([k, n]) => `<div class="t"><div class="im"><img src="${TH(k)}"></div><u>×${n}</u><em>${AG[k].short}</em></div>`).join('')}${L.pod ? `<div class="t"><div class="im">${ico('target')}</div><em>контейнер</em></div>` : ''}</div></div>`).join('')}</div>`;
+// ── Б · вкладки
+const pB = (S) => { const cur = S.list.find((x) => x.on).L;
+  return `<div class="pB"><div class="bar"><span class="stp"><i>‹</i><b><s>РАНГ</s>${ROM[S.rank - 1]}</b><i>›</i></span><span class="cond">Аркада · ПВО сов.<i class="chev"></i></span></div>
+  <div class="tabs">${S.list.map(({ L, on, lock }) => `<button class="${on ? 'on' : ''} ${lock ? 'lock' : ''}">${lock ? ico('lock') : ico(role(L) === 'sead' ? 'radar' : 'target')}${rn(L)}</button>`).join('')}</div>
+  <div class="body">${cur.items.map(([k, n]) => `<div class="w"><img src="${TH(k)}"><b>${AG[k].short}</b><u><s>×</s>${n}</u></div>`).join('')}${cur.pod ? `<div class="w pod">${ico('target')} прицельный контейнер</div>` : ''}</div></div>`; };
+// ── В · таблички
+const pC = (S) => `<div class="pC"><div class="set"><span class="tagw">РАНГ ${ROM[S.rank - 1]}</span><span class="cond">Аркада · ПВО советская<i class="chev"></i></span></div>${S.list.map(({ L, on, lock }) =>
+  `<div class="lo ${on ? 'on' : ''} ${lock ? 'lock' : ''}">${on ? '<i class="pin"></i>' : ''}<div class="hd"><span>${rn(L)}</span>${lock ? `<span style="margin-left:auto;letter-spacing:0;text-transform:none;font:500 9.5px 'Golos Text'">${ico('lock')} ${lock}</span>` : ''}</div>
+   <div class="sl">${L.items.map(([k, n]) => `<div class="t"><div class="im"><img src="${TH(k)}"></div><em>${AG[k].short}<u>×${n}</u></em></div>`).join('')}${L.pod ? `<div class="t" style="flex:0 0 50px"><div class="im">${ico('target')}</div><em>контейнер</em></div>` : ''}</div></div>`).join('')}</div>`;
+// ── Г · схема: вид спереди, точки подвески от законцовки к оси
+const COL = ['#f3c96f', '#ece8dc', '#8fc0e6'];
+const scheme = (L) => { const cx = 118, slots = [58, 37, 22, 10], wy = (d) => d < 66 ? 18.6 + d / 100 : 19.2 - (d - 66) * .25; let s = 0, pips = '';
+  L.items.forEach(([k, n], wi) => { const c = COL[wi], msl = !['bomb', 'lgb', 'gps', 'tvb'].includes(AG[k].kind);
+    if (n === 1) { pips += `<rect x="${cx - 3.5}" y="31" width="7" height="6" fill="${c}"/>`; return; }
+    for (let p = 0; p < n / 2; p++) { const d = slots[Math.min(s++, 3)]; for (const sg of [-1, 1]) { const x = cx + sg * d, y0 = d < 25 ? 27 : wy(d) + 2, y = y0 + 6.5;
+      pips += `<line x1="${x}" y1="${y0}" x2="${x}" y2="${y - 3}" stroke="#8d9580" stroke-width="1.2"/>` + (msl ? `<path d="M${x - 4.6} ${y - 4.6}l9.2 9.2M${x + 4.6} ${y - 4.6}l-9.2 9.2" stroke="${c}" stroke-width="1.1"/>` : '') + `<circle cx="${x}" cy="${y}" r="${msl ? 2.6 : 3.6}" fill="${c}"/>`; } } });
+  if (L.pod) pips += `<rect x="${cx - 3}" y="30.5" width="6" height="6" fill="none" stroke="#b9c0ad" stroke-width="1.3"/>`;
+  return `<svg class="sch" viewBox="0 0 236 40"><path d="M${cx - 9} 14 ${cx - 46} 24.5 ${cx - 46} 25.6 ${cx - 9} 17zM${cx + 9} 14 ${cx + 46} 24.5 ${cx + 46} 25.6 ${cx + 9} 17z" fill="#3a4231"/><path d="M${cx - 13} 15.5 ${cx - 66} 17.2 ${cx - 100} 9.4 ${cx - 100} 10.6 ${cx - 66} 19.2 ${cx - 13} 20zM${cx + 13} 15.5 ${cx + 66} 17.2 ${cx + 100} 9.4 ${cx + 100} 10.6 ${cx + 66} 19.2 ${cx + 13} 20z" fill="#66715a"/><path d="M${cx - 1.2} 0h2.4l1.3 9h-5z" fill="#66715a"/><rect x="${cx - 17}" y="11" width="34" height="14.5" rx="4.5" fill="#2f3728" stroke="#75806a" stroke-width=".9"/><ellipse cx="${cx}" cy="17.2" rx="8.6" ry="10.2" fill="#3d4634" stroke="#75806a" stroke-width=".9"/><ellipse cx="${cx}" cy="10.2" rx="4" ry="3" fill="#86a3b0" opacity=".85"/>${pips}</svg>`; };
+const pD = (S) => `<div class="pD"><div class="set"><div class="rk2">${ROM.map((x, i) => `<b class="${i + 1 === S.rank ? 'on' : ''}">${i + 1 === S.rank ? 'РАНГ ' : ''}${x}</b>`).join('')}</div><div class="tg"><b class="on">Аркада</b><b>Реализм</b></div><div class="tg"><b class="on">ПВО сов.</b><b>ПВО зап.</b></div></div>${S.list.map(({ L, on, lock }) =>
+  `<div class="lo ${role(L)} ${on ? 'on' : ''} ${lock ? 'lock' : ''}"><div class="hd"><span>${rn(L)}</span>${lock ? `<i>${ico('lock')} ${lock}</i>` : ''}</div>${scheme(L)}
+   <div class="lg">${L.items.map(([k, n], i) => `<span><i style="background:${COL[i]}"></i><img src="${TH(k)}">${AG[k].short} <u>×${n}</u></span>`).join('')}${L.pod ? `<span>${ico('target')} контейнер</span>` : ''}</div></div>`).join('')}</div>`;
+
+// ── бой
+const B1 = { v: 869, h: 1798, fuel: 99, w: [{ k: 'mk82', n: 2, res: 4, on: 1 }, { k: 'agm45', n: 4, res: 8 }], st: 'падение через 18 с', fl: 200, task: ['radar', 'РЛС 0/3'] };
+const B2 = { v: 1124, h: 2350, fuel: 18, ab: 1, w: [{ k: 'gbu10', n: 3, res: 4, on: 1, rt: 12 }], st: 'падение через 9 с', fly: 1, pod: { nm: 'Узел связи', d: '8.8' }, fl: 140, task: ['target', 'цели 1/3'], hull: 'Повреждён · двигатель' };
+const fuel = (B) => `<span class="fu ${B.fuel < 20 ? 'low' : ''}">${ico('fuel')}<span class="bar"><u style="width:${B.fuel}%"></u></span>${B.fuel}</span>`;
+const podL = (B) => B.pod ? `<div class="pd">${ico('target')} ${B.pod.nm} ${B.pod.d} км <span class="lk">захват</span><span class="tv on">ТВ</span></div>` : '';
+const cnt = (B) => `<div class="ct"><span>${ico('flares')}${B.fl}</span><span>${ico(B.task[0])}${B.task[1]}</span>${B.hull ? `<span class="hl">${B.hull}</span>` : ''}</div>`;
+const stT = (B) => `${B.st}${B.fly ? ` <span class="fly">· в полёте ${B.fly}</span>` : ''}`;
+const hA = (B) => `<div class="hud hA"><div class="r1"><span class="v"><b>${B.v}</b><i>КМ/Ч</i></span><span class="v"><b>${B.h}</b><i>М</i></span>${fuel(B)}${B.ab ? '<span class="ab">ФОРСАЖ</span>' : ''}</div>
+  <div class="wp">${B.w.map((w) => `<span class="w ${w.on ? 'on' : ''}"><img src="${TH(w.k)}"><b>${AG[w.k].short}</b><u>${w.n}</u><i>+${w.res}${w.rt ? ` ${ico('rotCw')}${w.rt}` : ''}</i></span>`).join('')}</div>
+  <div class="st">${stT(B)}</div>${podL(B)}${cnt(B)}</div>`;
+const hB = (B, m = '') => `<div class="hud hB ${m}"><div class="g3">${m === 'b3' ? `<div class="c"><b>${B.v}<small>КМ/Ч</small></b>${B.ab ? '<span class="ab">Ф</span>' : ''}</div><div class="c"><b>${B.h}<small>М</small></b></div><div class="c ${B.fuel < 20 ? 'low' : ''}"><b>${ico('fuel')}${B.fuel}<small>%</small></b></div>` : `<div class="c"><s>СКОРОСТЬ</s><b>${B.v}</b>${B.ab ? '<span class="ab">Ф</span>' : ''}</div><div class="c"><s>ВЫСОТА</s><b>${B.h}</b></div><div class="c ${B.fuel < 20 ? 'low' : ''}"><s>ТОПЛИВО</s><b>${B.fuel}<small>%</small></b></div>`}</div>
+  <div class="ws">${B.w.map((w) => `<span class="w ${w.on ? 'on' : ''}"><img src="${TH(w.k)}"><b>${AG[w.k].short}</b>${w.rt ? `<span class="rs">${ico('rotCw')}${w.rt}</span>` : ''}<u>${w.n}<span class="rs"> +${w.res}</span></u></span>`).join('')}</div>
+  <div class="st">${stT(B)}</div>${podL(B)}${cnt(B)}</div>`;
+const hC = (B) => `<div class="hud hC"><div class="rb"><span>${B.v}<small>КМ/Ч</small></span><span>${B.h}<small>М</small></span><span class="${B.fuel < 20 ? 'low' : ''}">${ico('fuel')}${B.fuel}%</span>${B.ab ? '<span class="ab" style="font-size:9px">ФОРСАЖ</span>' : ''}<span>${ico('flares')}${B.fl}</span><span>${ico(B.task[0])}${B.task[1].replace(/^\D+/, '')}</span></div>
+  <div class="ws">${B.w.map((w) => `<span class="w ${w.on ? 'on' : ''}"><img src="${TH(w.k)}"><b>${AG[w.k].short}</b><span class="rs">${w.rt ? `${ico('rotCw')}${w.rt} ` : ''}+${w.res}</span><u>${w.n}</u></span>`).join('')}${B.pod ? `<span class="w tvw on"><span>${ico('target')} ${B.pod.nm} ${B.pod.d} · <b>захват</b></span><span class="tv on" style="margin:0">ТВ</span></span>` : ''}</div>
+  <div class="st">${stT(B)}${B.hull ? ` <span class="hl" style="color:#ffb066">· ${B.hull}</span>` : ''}</div></div>`;
+const T1 = 'Охота за ПВО: уничтожьте 3 из 5 комплексов с РЛС (цели города - по желанию). · Заход с северо-запада, на средней высоте';
+const MSG = { m1: `<div class="msg m1">${T1}</div>`, m2: `<div class="msg m2"><s>ОХОТА ЗА ПВО</s>Уничтожьте 3 из 5 комплексов с РЛС, цели города - по желанию. Заход с северо-запада, на средней высоте</div>`,
+  m3: `<div class="msg m3">ОХОТА ЗА ПВО · 3 ИЗ 5 КОМПЛЕКСОВ С РЛС<small>Цели города - по желанию. Заход с северо-запада, на средней высоте</small></div>` };
+
+const F = [
+  ['h1', 'Панель подвесок в ангаре'],
+  ['pA', 'А · «Слоты»', 'Ранг переключается сразу, четырьмя клетками. Подвеска - ряд слотов с миниатюрой и количеством, роль - цветная кромка и подпись. Панель по высоте содержимого, ангар открыт.', pA, 'hg'],
+  ['pB', 'Б · «Вкладки»', 'Роли - вкладки, видна одна подвеска, зато миниатюры крупные и количество читается издалека. Блок стоит над кнопкой «Взлёт».', pB, 'hg'],
+  ['pC', 'В · «Таблички»', 'Те же материалы, что у заданий и кнопки «Взлёт»: клёпаная пластина, деревянная бирка, выбранная подвеска приколота кнопкой.', pC, 'hg'],
+  ['pD', 'Г · «Схема»', 'Самолёт спереди и точки подвески: видно, что и куда повешено. Все условия вылета открыты без выпадающего списка.', pD, 'hg'],
+  ['h1', 'Бой: левый верхний блок и надпись задания'],
+  ['hA', '1 · «Приборы»', 'Без рамки: крупные цифры скорости и высоты, топливо полоской, оружие с миниатюрами, выбранное подчёркнуто. Надпись задания - белая с тенью.', hA, 'bt', 'm1'],
+  ['hB', '2 · «Табло»', 'Плита в стиле меню: ячейки с подписями, выбранное оружие отмечено сверху. Надпись задания - белая на тёмной полосе с заголовком.', hB, 'bt', 'm2'],
+  ['hC', '3 · «Лента»', 'Одна строка приборов и плитки оружия как слоты в ангаре. Самый низкий блок. Надпись задания - заголовок и строка пояснения.', hC, 'bt', 'm3'],
+];
+const app = document.getElementById('app'); if (ONE) document.body.classList.add('one');
+const SEC = Q.get('s'); let sec = '';
+app.innerHTML = F.filter((f) => { if (f[0] === 'h1') sec = f[1][0] === 'П' ? 'p' : 'h'; return (!ONE || f[0] === ONE.replace(/2$/, '')) && (!SEC || sec === SEC); }).map(([id, t, d, fn, bg, m]) => id === 'h1' ? `<h1>${t}</h1>` : `<h2>${t}</h2><p class="d">${d}</p><div class="rowf">
+  ${!ONE || !/2$/.test(ONE) ? `<div><div class="ph ${bg}" id="f_${id}">${fn(bg === 'hg' ? S1 : B1)}${m ? MSG[m] : ''}</div><p class="cap">${bg === 'hg' ? 'F-4, ранг I: две подвески' : 'начало вылета'}</p></div>` : ''}
+  ${!ONE || /2$/.test(ONE) ? `<div><div class="ph ${bg} cr" id="f_${id}2">${fn(bg === 'hg' ? S2 : B2)}</div><p class="cap">${bg === 'hg' ? 'ранг II: три вида оружия с контейнером и закрытая подвеска' : 'контейнер, перезарядка, мало топлива, повреждение'}</p></div>` : ''}</div>`).join('');
+if (!ONE && (!SEC || SEC === 't')) app.insertAdjacentHTML('beforeend', `<h1>«Табло»: читаемость приборов</h1><p class="d">Было: мелкие серо-оливковые подписи на полупрозрачной плите, на светлом небе плита сереет и подписи теряются. Три способа это убрать. Во всех плита темнее и плотнее, цифры чисто белые и чуть крупнее.</p><div class="cmp">${
+  [['', 'Было'], ['b1', 'а · светлые подписи'], ['b2', 'б · золотые подписи'], ['b3', 'в · без слов, с единицами']].map(([m, t]) => `<div><b class="t">${t}</b><div class="ph bt cr" id="f_t${m || '0'}">${hB(B1, m)}</div><div class="ph bt cr" style="margin-top:6px" id="f_t${m || '0'}2">${hB(B2, m)}</div></div>`).join('')}</div><p class="d" style="margin-top:8px">Сверху начало вылета, снизу тяжёлый случай: контейнер, перезарядка, мало топлива, повреждение.</p>`);
+await document.fonts.ready; await Promise.all([...document.images].map((i) => i.decode().catch(() => {}))); window.__ready = true;
+</script></body></html>

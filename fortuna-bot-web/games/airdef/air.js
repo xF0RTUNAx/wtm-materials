@@ -965,25 +965,45 @@ export function createAir(C) {
     for (const e of mws) { const b = brg(e.m.pos), x = c - Math.sin(b) * (c - 9), y = c - Math.cos(b) * (c - 9); rx2.fillStyle = '#ff2d2d'; rx2.beginPath(); rx2.arc(x, y, S2 * 0.045, 0, 7); rx2.fill(); }
     rx2.fillStyle = '#9fffb8'; rx2.beginPath(); rx2.moveTo(c, c - 8); rx2.lineTo(c + 6, c + 7); rx2.lineTo(c - 6, c + 7); rx2.closePath(); rx2.fill();
   }
-  // компактная панель слева вверху (5 строк): полёт и топливо; оружие в одну строку (тап по названию - выбор); прицел;
-  // цель контейнера и «ТВ»; ловушки, цели задания, корпус (если повреждён). Газ - на кнопке «ГАЗ», очки - в итогах
+  // панель слева вверху - «Табло» (Mark 2026-11-10): приборы ячейками; оружие с миниатюрами (тап по нему - выбор); строка прицела;
+  // цель контейнера и «ТВ»; ловушки, цели задания, корпус (если повреждён). Газ - на кнопке «ГАЗ», очки - в итогах.
+  // Каждая часть - свой блок и переписывается, только когда изменилась: миниатюры оружия не пересоздаются каждый такт
+  const hudEl = {}; $('wpn').textContent = '';
+  function hudPart(k, html, cls = '') {
+    let e = hudEl[k]; if (!e) { e = hudEl[k] = document.createElement('div'); $('wpn').appendChild(e); }
+    if (e._c !== cls) { e._c = cls; e.className = k + cls; }
+    if (e._h !== html) { e._h = html; e.innerHTML = html; e.style.display = html ? '' : 'none'; }
+  }
+  const noDot = (t) => t.replace(/^\s*·\s*/, ''); // строки счётчиков переведены с разделителем « · » в начале - здесь он не нужен
   function hudText(rw, mw) {
     const g = city.groundH(craft.pos.x, craft.pos.z), inAir = C.S.wpns.filter((w) => w.owner === craft).length;
     let tgl = '';
     if (hasPod) {
       const t = pod.tgt, d = t ? (craft.pos.distanceTo(tgtPos(t, TP)) / 1000).toFixed(1) : '';
       const st = !t ? tr('<span class="dim">нет целей</span>') : pod.lock ? tr('<b class="lk">Захват</b>{0}', [pod.laser ? ' <b class="ls"><i class="sd"></i></b>' : '']) : pod.why ? `<span class="warnc">${pod.why}</span>` : tr('<span class="lk2">захват…</span>');
-      tgl = `<div class="tgl"><span class="tn">◎ ${t ? `${pod.lockName} ${d}` : ''} ${st}</span><span class="tvb ${pod.show ? 'on' : ''}">${tr('ТВ')}</span></div>`;
+      tgl = `<span class="tn">${ico('target', 'ii')}${t ? `<span class="nm">${pod.lockName}</span><span>${d}</span>` : ''}<span>${st}</span></span><span class="tvb ${pod.show ? 'on' : ''}">${tr('ТВ')}</span>`;
     }
     const dead = game.targets.filter((o) => o.dead).length, fuel = Math.round((craft.fuel ?? 1) * 100);
     // задача выполнена - постоянное короткое напоминание вместо «цели N/N» (Mark 2026-10-27: плашка гаснет через 5 с, а игрок забывает, что
     // вылет кончается за границей района): сколько до неё по прямой; вертолёт уходит сам по отсчёту - ему не нужно
     const doneTxt = game.done && !craft.heli && !game.net && !game.opts.noEnd
       ? tr(' · <b class="okd">задача выполнена</b> <span class="dim">- выход за границу района, {0} км</span>', [(Math.max(0, CITY.HALF - 300 - Math.max(Math.abs(craft.pos.x), Math.abs(craft.pos.z))) / 1000).toFixed(1)]) : '';
-    $('wpn').innerHTML = `<div class="fl"><b>${Math.round(craft.speed * 3.6)}</b> ${tr('км/ч')} <b>${Math.round(craft.pos.y - g)}</b> ${tr('м')} <span class="${craft.fuel < 0.2 ? 'warnc' : 'dim'}">${ico('fuel', 'ii')}${fuel}%</span>${craft.ab ? ` <b class="ab">${tr('Ф')}</b>` : ''}</div>` +
-      `<div class="wl">${loadout.map((l, i) => `<span class="r ${i === sel ? 'sel' : ''}" data-w="${i}">${AG[l.key].short}${AG[l.key].kind === 'ecm' ? ' <i class="sd"></i>' : ' ×' + (AG[l.key].kind === 'rocket' ? rocketsOf(l) : l.n)}${AG[l.key].kind !== 'ecm' && Number.isFinite(l.res) && !game.net ? ` <span class="dim">+${AG[l.key].kind === 'rocket' ? l.res * AG[l.key].load : l.res}</span>` : ''}${l.rt > 0 ? ` <span class="dim">${ico('rotCw', 'ii')}${Math.ceil(l.rt)}</span>` : ''}</span>`).join('')}</div>` +
-      `<div class="st">${msgT > 0 ? msgText : larText}${inAir ? tr(' <span class="fly">· в полёте {0}</span>', [inAir]) : ''}</div>` + tgl +
-      `<div class="cm">${tr('ловушки')} ${cmInfo().flare ? Math.max(craft.cmFlare, craft.cmChaff) : craft.cmChaff + ` <span class="dim">${tr('(диполи)')}</span>`}${doneTxt || (game.hunt ? tr(' · РЛС {0}/{1}', [game.hunt.n, game.hunt.need]) : game.targets.length ? tr(' · цели {0}/{1}', [dead, game.targets.length]) : '')}${craft.hp < 100 ? (() => { const [, nm, col] = hullState(craft.hp), br = dmgBrief(craft); return `<br><b style="color:${col}">${nm}</b>${br ? ` <span class="dim">· ${br}</span>` : ''}`; })() : ''}${C.auto ? ` · <b style="color:#86efac">${tr('Авто')}</b>` : ''}${hasPod && pod.laserMan !== null ? tr(' · лазер {0}', [pod.laserMan ? tr('вкл') : tr('выкл')]) : ''}${homeT > 0 ? tr(' · <b style="color:#86efac">пополнение {0} с</b>', [Math.ceil(12 - homeT)]) : ''}</div>`;
+    hudPart('g3', `<div class="c"><s>${tr('Скорость')}</s><b>${Math.round(craft.speed * 3.6)}</b>${craft.ab ? `<span class="ab">${tr('Ф')}</span>` : ''}</div><div class="c"><s>${tr('Высота')}</s><b>${Math.round(craft.pos.y - g)}</b></div><div class="c${craft.fuel < 0.2 ? ' low' : ''}"><s>${tr('Топливо')}</s><b>${fuel}<small>%</small></b></div>`);
+    hudPart('ws', loadout.map((l, i) => { const W = AG[l.key], ecm = W.kind === 'ecm', rk = W.kind === 'rocket';
+      return `<span class="w${i === sel ? ' sel' : ''}${!ecm && !(l.n > 0) ? ' out' : ''}" data-w="${i}"><img src="airdef/thumbs/wpn_${l.key}.webp?v=20261109a" alt="" onerror="this.remove()"><b>${W.short}</b>${l.rt > 0 ? `<span class="rs">${ico('rotCw', 'ii')}${Math.ceil(l.rt)}</span>` : ''}<u>${ecm ? '<i class="sd"></i>' : rk ? rocketsOf(l) : l.n}${!ecm && Number.isFinite(l.res) && !game.net ? `<span class="rs"> +${rk ? l.res * W.load : l.res}</span>` : ''}</u></span>`; }).join(''),
+      // два коротких названия - в строку; длинные названия или больше двух видов оружия - ячейки в два этажа (миниатюра и число, ниже название), по три в ряд
+      (loadout.length > 2 || loadout.some((l) => AG[l.key].short.length > 6) ? ' tall' : '') + (loadout.length === 3 || loadout.length > 4 ? ' c3' : ''));
+    hudPart('st', `${msgT > 0 ? msgText : larText}${inAir ? tr(' <span class="fly">· в полёте {0}</span>', [inAir]) : ''}` || '&nbsp;');
+    hudPart('tgl', tgl);
+    const cm = cmInfo(), cnt = [`<span>${ico('flares', 'ii')}${cm.flare ? Math.max(craft.cmFlare, craft.cmChaff) : craft.cmChaff + ` <span class="dim">${tr('(диполи)')}</span>`}</span>`];
+    if (doneTxt) cnt.push(`<span class="full">${noDot(doneTxt)}</span>`);
+    else if (game.hunt) cnt.push(`<span>${ico('radar', 'ii')}${noDot(tr(' · РЛС {0}/{1}', [game.hunt.n, game.hunt.need]))}</span>`);
+    else if (game.targets.length) cnt.push(`<span>${ico('target', 'ii')}${noDot(tr(' · цели {0}/{1}', [dead, game.targets.length]))}</span>`);
+    if (C.auto) cnt.push(`<b style="color:#86efac">${tr('Авто')}</b>`);
+    if (hasPod && pod.laserMan !== null) cnt.push(`<span>${noDot(tr(' · лазер {0}', [pod.laserMan ? tr('вкл') : tr('выкл')]))}</span>`);
+    if (homeT > 0) cnt.push(`<span>${noDot(tr(' · <b style="color:#86efac">пополнение {0} с</b>', [Math.ceil(12 - homeT)]))}</span>`);
+    if (craft.hp < 100) { const [, nm, col] = hullState(craft.hp), br = dmgBrief(craft); cnt.push(`<span class="full"><b style="color:${col}">${nm}</b>${br ? ` <span class="dim">· ${br}</span>` : ''}</span>`); }
+    hudPart('cm', cnt.join(''));
     const lk = rw.find((e) => e.state === 'launch'), trk = rw.find((e) => e.state === 'track'), wn = $('warn');
     if (bino.on && binoThreat(mw)) binoOff(tr('Пуск ракеты по вам - бинокль выключен')); else binoHud();
     if (mw.length || lk) { wn.textContent = tr('ПУСК РАКЕТЫ{0}', [lk ? ' - ' + (lk.u.S.rwr || lk.u.S.short) : '']); wn.style.display = 'block'; }

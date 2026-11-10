@@ -260,15 +260,23 @@
   #mission .tg i > u { display: block; height: 100%; background: #fbbf24; }
   #mission .tg.dead { opacity: .55; text-decoration: line-through; }
   #mission .sc { font-weight: 800; color: #fde68a; margin-top: 2px; }
-  #wpn { position: absolute; left: max(12px, var(--sa-l)); top: var(--top); width: min(44vw, 270px); font-size: 12px; line-height: 1.45;
-    pointer-events: auto; cursor: pointer; background: rgba(0,20,10,.35); border: 1px solid rgba(140,255,170,.25); border-radius: 8px; padding: 5px 7px; color: #d6ffe0; }
-  #wpn .r { display: flex; justify-content: space-between; gap: 6px; opacity: .55; }
-  #wpn .r.sel { opacity: 1; color: #fff; font-weight: 700; } #wpn .r.sel::before, #wpn .wl .r.sel::before { content: ""; display: inline-block; width: .75em; height: .75em; margin-right: .3em; vertical-align: -.05em; background: currentColor; -webkit-mask: var(--m-tri) center / contain no-repeat; mask: var(--m-tri) center / contain no-repeat; }
-  #wpn .st { margin-top: 3px; font-weight: 700; color: #fde68a; min-height: 16px; }
-  #wpn .cm { color: #fdba74; margin-top: 2px; } #wpn .fly { color: #93c5fd; }
+  /* панель слева вверху - «Табло» (Mark 2026-11-10): приборы ячейками, оружие с миниатюрами, строка прицела, контейнер, счётчики; тёмная плита, светлые подписи */
+  #wpn { position: absolute; left: max(12px, var(--sa-l)); top: var(--top); width: 280px; font-size: 12.5px; line-height: 1.35; pointer-events: auto; cursor: pointer;
+    background: rgba(9,12,9,.88); border: 1px solid rgba(120,132,104,.9); color: #fff; text-shadow: none; }
+  #wpn > div + div { border-top: 1px solid rgba(96,108,82,.5); } #wpn .g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; } #wpn .c { padding: 2px 9px 3px; white-space: nowrap; } #wpn .c + .c { border-left: 1px solid rgba(96,108,82,.5); }
+  #wpn .c s { display: block; text-decoration: none; font: 500 10px 'Oswald', sans-serif; letter-spacing: .13em; text-transform: uppercase; color: #dedac8; } #wpn .c b { font: 500 21px/1.05 'Oswald', sans-serif; color: #fff; } #wpn .c b small { font: 500 10.5px 'Oswald', sans-serif; color: #b9c0ad; margin-left: 2px; }
+  #wpn .c.low b { color: #ff8f7a; } #wpn .ab { margin-left: 5px; font: 600 11px 'Oswald', sans-serif; color: #ffa24d; vertical-align: 5px; }
+  #wpn .ws { display: grid; grid-template-columns: 1fr 1fr; } #wpn .w { display: flex; align-items: center; gap: 6px; min-width: 0; padding: 4px 8px; opacity: .6; white-space: nowrap; } #wpn .w:only-child { grid-column: 1 / -1; }
+  #wpn .w:nth-child(even) { border-left: 1px solid rgba(96,108,82,.5); } #wpn .w:nth-child(n+3) { border-top: 1px solid rgba(96,108,82,.5); } #wpn .w.out { opacity: .35; }
+  #wpn .w.sel { opacity: 1; background: rgba(232,176,74,.1); box-shadow: inset 0 2px 0 #e8b04a; } #wpn .w img { flex: none; width: 40px; height: 18px; object-fit: cover; } #wpn .w b { font: 500 14px 'Oswald', sans-serif; overflow: hidden; text-overflow: ellipsis; }
+  #wpn .w u { margin-left: auto; text-decoration: none; font: 600 16.5px 'Oswald', sans-serif; color: #f3c96f; } #wpn .rs { font: 500 11px 'Oswald', sans-serif; color: #b9c0ad; } #wpn .rs .ii { margin-right: 1px; }
+  #wpn .ws.c3 { grid-template-columns: 1fr 1fr 1fr; } #wpn .ws.c3 .w:nth-child(even) { border-left: 0; } #wpn .ws.c3 .w:nth-child(3) { border-top: 0; } #wpn .ws.c3 .w:not(:nth-child(3n+1)) { border-left: 1px solid rgba(96,108,82,.5); } #wpn .ws.c3 .w:nth-child(n+4) { border-top: 1px solid rgba(96,108,82,.5); }
+  #wpn .ws.tall .w { flex-wrap: wrap; gap: 0 5px; padding-bottom: 3px; } #wpn .ws.tall .w img { flex: 1 1 0; min-width: 0; width: auto; max-width: 70px; } #wpn .ws.tall .w b { order: 3; flex: 0 0 100%; font-size: 12px; line-height: 1.25; color: #e4e1d4; }
+  #wpn .st { padding: 3px 9px; font-weight: 600; min-height: 1.35em; box-sizing: content-box; }
+  #wpn .cm { display: flex; flex-wrap: wrap; gap: 0 13px; padding: 3px 9px 4px; color: #d5d8c8; } #wpn .cm .ii { margin-right: 4px; color: #cdd4c2; } #wpn .cm .full { flex-basis: 100%; } #wpn .fly { color: #a9d2ff; }
   /* одна панель: полёт, оружие, прицел, цель контейнера, ловушки, цели задания (полёт и цели - бывшие #osd и #mission) */
   #osd, #mission { display: none; }
-  #wpn .fl { font-size: 12px; white-space: nowrap; } #wpn .fl b { font-size: 16px; color: #fff; } #wpn .dim { font-size: inherit; } #wpn .okd { color: #86efac; }
+  #wpn .dim { font-size: inherit; } #wpn .okd { color: #86efac; }
   /* «Бинокль» вылета (air.js): строка сверху по центру, окно «ТВ» и прицельные метки самолёта на время вида - спрятаны; кнопка - только у самолёта и если включена в настройках */
   #binoBar { position: fixed; top: calc(var(--top) + 2px); left: 50%; transform: translateX(-50%); z-index: 14; display: none; pointer-events: none; padding: 5px 12px; background: rgba(16,20,15,.82);
     border: 1px solid #3a4334; color: #e9e6dc; font: 500 12.5px 'Golos Text', -apple-system, sans-serif; white-space: nowrap; max-width: calc(100vw - 420px); overflow: hidden; text-overflow: ellipsis; }
@@ -276,18 +284,18 @@
   body.coarse #binoBar { top: auto; bottom: calc(max(8px, var(--sa-b)) + 6px); max-width: calc(100vw - 2 * max(12px, var(--sa-l)) - 420px); } /* телефон: вверху по центру - круг СПО */
   body:not(.flying) #binoBar, body.heli #tBino, body.nobino #tBino { display: none !important; }
   body.binoOn #podBox { display: none !important; } body.binoOn #tBino { background: rgba(232,176,74,.85); color: #17190f; }
-  #wpn .ab { color: #fb923c; }
-  /* оружие - одной строкой: выбранное ярче; тап по названию - выбор */
-  #wpn .wl { display: flex; flex-wrap: wrap; gap: 1px 9px; } #wpn .wl .r { display: inline; opacity: .55; padding: 1px 0; } #wpn .wl .r.sel { opacity: 1; color: #fff; font-weight: 800; }
-  #wpn .tgl .tn { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
-  #wpn .tgl { display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-top: 3px; color: #e2e8f0; }
-  #wpn .tgl .lk { color: #fde047; } #wpn .tgl .ls { color: #fb7185; } #wpn .tgl .lk2 { color: #fde68a; opacity: .8; }
-  #wpn .tvb { flex: none; font-weight: 800; font-size: 10.5px; padding: 3px 7px; border-radius: 6px; border: 1px solid rgba(160,255,190,.6); color: #bbf7d0; }
-  #wpn .tvb.on { background: rgba(34,140,70,.55); color: #fff; }
-  #wpn .ms { margin-top: 3px; display: flex; flex-wrap: wrap; gap: 2px 8px; font-size: .92em; }
-  #wpn .ms .tg { display: inline-flex; align-items: center; gap: 4px; } #wpn .ms .tg.dead { opacity: .5; text-decoration: line-through; }
-  #wpn .ms .tg i { display: inline-block; width: 28px; height: 4px; background: rgba(255,255,255,.2); border-radius: 2px; overflow: hidden; } #wpn .ms .tg i > u { display: block; height: 100%; background: #fbbf24; }
-  #wpn .sc { font-weight: 800; color: #fde68a; margin-top: 2px; }
+
+
+
+  #wpn .tgl .tn { flex: 1; display: flex; align-items: center; gap: 5px; min-width: 0; white-space: nowrap; } #wpn .tgl .tn > * { flex: none; } #wpn .tgl .tn .nm { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  #wpn .tgl { display: flex; align-items: center; gap: 6px; padding: 4px 9px; color: #e9e6dc; }
+  #wpn .tgl .lk { color: #8be9a8; } #wpn .tgl .ls { color: #fb7185; } #wpn .tgl .lk2 { color: #e9e6dc; opacity: .8; }
+  #wpn .tvb { flex: none; padding: 1px 7px; border: 1px solid rgba(255,255,255,.55); font: 600 11.5px 'Oswald', sans-serif; letter-spacing: .08em; color: #fff; }
+  #wpn .tvb.on { background: #e9e6dc; color: #14170f; border-color: #e9e6dc; }
+
+
+
+
   #tThr.ab { background: rgba(160,70,10,.65); border-color: #fb923c; }
   body.coarse #tCam { display: none; } body.coarse.spect #tCam { display: flex; }
   #rwr { position: absolute; right: max(14px, var(--sa-r)); bottom: 14px; width: 150px; height: 150px; }
@@ -349,8 +357,8 @@
   #tAuto.on, #opAuto.on { background: rgba(34,140,70,.6); border-color: #86efac; }
   body.coarse #rwr { width: 88px; height: 88px; right: auto; left: calc(50% - 44px); bottom: auto; top: max(4px, var(--sa-t)); } /* СПО - у самого верха, между кнопками Telegram */
   body.coarse #warn { top: calc(max(4px, var(--sa-t)) + 94px); font-size: 14px; }
-  body.coarse #wpn { font-size: 10px; line-height: 1.3; width: min(30vw, 196px); padding: 3px 6px; background: rgba(0,20,10,.24); border-color: rgba(140,255,170,.16); }
-  body.coarse #wpn .fl { font-size: 10.5px; } body.coarse #wpn .fl b { font-size: 13px; } body.coarse #wpn .tvb { padding: 2px 6px; font-size: 10px; }
+  body.coarse #wpn { width: 212px; font-size: 10.5px; line-height: 1.3; } body.coarse #wpn .c { padding: 1px 7px 2px; } body.coarse #wpn .c s { font-size: 8px; } body.coarse #wpn .c b { font-size: 17px; line-height: 1; } body.coarse #wpn .c b small { font-size: 8px; } body.coarse #wpn .ab { font-size: 8.5px; margin-left: 4px; vertical-align: 4px; }
+  body.coarse #wpn .w { gap: 4px; padding: 3px 5px; } body.coarse #wpn .w img { width: 30px; height: 14px; } body.coarse #wpn .ws.tall .w { gap: 0 4px; padding-bottom: 2px; } body.coarse #wpn .ws.tall .w img { width: auto; height: 15px; max-width: 56px; } body.coarse #wpn .ws.tall .w b { font-size: 9.5px; } body.coarse #wpn .w b { font-size: 11px; } body.coarse #wpn .w u { font-size: 13px; } body.coarse #wpn .rs { font-size: 9px; } body.coarse #wpn .st { padding: 2px 7px; } body.coarse #wpn .tgl { padding: 3px 7px; } body.coarse #wpn .tvb { padding: 0 5px; font-size: 9px; } body.coarse #wpn .cm { padding: 2px 7px 3px; gap: 0 11px; }
   body.coarse #osd { font-size: 11px; } body.coarse #osd b { font-size: 15px; }
   body.coarse #mission { font-size: 10.5px; }
 
@@ -554,7 +562,7 @@
   @media (max-height: 350px) { body.hgOn #mbtns { gap: 4px; } body.hgOn:has(#mbtns.open) .mlogo, body.hgOn:has(#mbtns.open) .accBox, body.hgOn:has(#mbtns.open) .pgBar { opacity: 0; pointer-events: none; } } /* Safari с панелями: разделы едва входят по высоте */
   @media (max-height: 300px) { body.hgOn #mbtns > button:not(#mbFold) small, body.hgOn #shopBtn .thumb { display: none; } }
   body.hgOn .mpanel { top: calc(58px + var(--sa-t) + var(--tg-t)); bottom: calc(102px + var(--sa-b)); right: calc(14px + var(--sa-r)); width: min(320px, 36vw); background: rgba(14,17,15,.8); border-color: rgba(84,96,70,.7); }
-  body.hgOn.hgAir .mphead { padding: 0; height: 0; } body.hgOn.hgAir .mphead > :not(#mpClose) { display: none; } body.hgOn.hgAir #mpClose { left: -31px; right: auto; top: -1px; width: 30px; height: 30px; background: rgba(14,17,15,.8); border: 1px solid rgba(84,96,70,.7); border-right: 0; }
+  body.hgOn.hgAir .mphead { padding: 0; height: 0; } body.hgOn.hgAir .mphead > :not(#mpClose) { display: none; } body.hgOn.hgAir #mpClose { left: -38px; right: auto; top: 0; width: 31px; height: 31px; background: rgba(14,17,15,.84); border: 1px solid rgba(84,96,70,.75); }
   body.hgOn .msheet { left: calc(14px + var(--sa-l)); top: calc(58px + var(--sa-t) + var(--tg-t)); }
   body.hgOn #assetLoad { bottom: calc(100px + var(--sa-b)); }
   body.hgOn #menu #startBtn { position: absolute; z-index: 3; right: calc(14px + var(--sa-r)); bottom: calc(10px + var(--sa-b)); width: 190px; height: 82px; margin: 0; padding: 0 22px; border: 0; background: url(airdef/ui/quests/btn_take.webp) center / 100% 100% no-repeat; font: 600 26px/1.05 'Oswald', sans-serif; letter-spacing: .1em; text-transform: uppercase; color: #2a1d08; text-shadow: 0 1px 0 rgba(255,236,190,.55); box-shadow: none; }
@@ -562,15 +570,30 @@
   body.hgOn.hgAir #hgStrip { position: absolute; z-index: 2; display: flex; gap: 6px; left: calc(80px + var(--sa-l)); right: calc(214px + var(--sa-r)); bottom: calc(10px + var(--sa-b)); overflow-x: auto; scrollbar-width: none; touch-action: pan-x; } #hgStrip::-webkit-scrollbar { display: none; }
   .hgc { position: relative; flex: 0 0 148px; height: 82px; padding: 0; color: #ece8dc; text-align: left; background: rgba(14,17,15,.84); border: 1px solid #333d2c; overflow: hidden; cursor: pointer; } .hgc img { position: absolute; right: -6px; bottom: -2px; width: 118px; height: 66px; object-fit: contain; } .hgc b { position: absolute; left: 7px; top: 4px; font: 500 14px 'Oswald', sans-serif; text-shadow: 0 1px 2px #000; z-index: 1; white-space: nowrap; } .hgc b .ic { width: .95em; height: .95em; vertical-align: -.1em; color: #f3c96f; }
   .hgc.on { border-color: #e8b04a; background: rgba(40,36,20,.92); box-shadow: inset 0 -3px 0 #e8b04a; } .hgc.lock img { filter: saturate(.4) brightness(.62); } .hgc:not(.on):hover { border-color: #5c6a4f; }
-  .hgSum { display: block; width: 100%; margin: 0 0 6px; padding: 6px 24px 6px 9px; text-align: left; background: rgba(255,255,255,.05); border: 1px solid #3a4532; color: #d9dccb; font: 500 12px 'Golos Text', sans-serif; cursor: pointer; position: relative; } .hgSum::after { content: ''; position: absolute; right: 9px; top: 50%; width: 7px; height: 7px; border-right: 2px solid #e8b04a; border-bottom: 2px solid #e8b04a; transform: translateY(-70%) rotate(45deg); } .hgSum.open::after { transform: translateY(-30%) rotate(-135deg); }
-  .hgSet { margin: 0 0 6px; padding: 0 2px 6px; border-bottom: 1px solid #2c3526; } .cat-h.hgh { margin: 8px 0 5px; font: 500 12.5px 'Oswald', sans-serif; letter-spacing: .12em; text-transform: uppercase; color: #c2c7b2; }
-  .opt.hgl { display: block; padding: 6px 8px; cursor: pointer; margin-bottom: 5px; } .hgr { display: flex; flex-direction: column; gap: 3px; } .hgw { display: flex; align-items: center; gap: 7px; min-width: 0; } .hgw img { flex: none; width: 58px; height: 32px; object-fit: contain; } .hgw .wn { display: flex; flex-direction: column; min-width: 0; } .hgw b { font: 500 14px/1.15 'Oswald', sans-serif; color: #ece8dc; } .hgw i { font: 400 11.5px/1.2 'Golos Text', sans-serif; font-style: normal; color: #c2c7b2; } .hgl.on .hgr:not(.inb) .hgw { cursor: pointer; } .hgl.on .hgw.fo { box-shadow: inset 2px 0 0 #e8b04a; padding-left: 4px; }
-  .hgm { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 6px; margin-top: 4px; font-size: 11px; color: #a7ae98; } .hgl .need .ic { width: 1em; height: 1em; vertical-align: -.12em; }
+  /* панель подвесок - «Таблички» (Mark 2026-11-10): ранг на деревянной бирке, подвеска - клёпаная пластина с миниатюрами, выбранная приколота кнопкой; без подложки на всю высоту */
+  @media (min-aspect-ratio: 1/1) { body.hgOn.hgAir .mpanel { background: none; border-color: transparent; bottom: auto; max-height: calc(100% - 160px - var(--sa-t) - var(--tg-t) - var(--sa-b)); } body.hgOn.hgAir #menu #tab-play { padding: 0 0 2px; scrollbar-width: none; } body.hgOn.hgAir #menu #tab-play::-webkit-scrollbar { display: none; } }
+  .hgTop { display: flex; align-items: center; gap: 8px; width: 100%; margin: 0 0 7px; padding: 0; background: none; border: 0; cursor: pointer; text-align: left; }
+  .hgRank { flex: none; display: grid; place-items: center; min-width: 96px; height: 31px; padding: 0 14px; background: url(airdef/ui/quests/btn_take.webp) center / 100% 100% no-repeat; font: 600 15px 'Oswald', sans-serif; letter-spacing: .14em; text-transform: uppercase; color: #2a1d08; text-shadow: 0 1px 0 rgba(255,236,190,.5); white-space: nowrap; }
+  .hgSum { flex: 1; min-width: 0; height: 31px; line-height: 29px; padding: 0 26px 0 11px; position: relative; background: rgba(14,17,15,.84); border: 1px solid rgba(84,96,70,.75); color: #c2c7b2; font-family: 'Golos Text', sans-serif; font-weight: 500; font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .hgSum::after { content: ''; position: absolute; right: 10px; top: 50%; width: 6px; height: 6px; border-right: 2px solid #e8b04a; border-bottom: 2px solid #e8b04a; transform: translateY(-70%) rotate(45deg); } .hgTop.open .hgSum::after { transform: translateY(-30%) rotate(-135deg); }
+  .hgSet { margin: 0 0 7px; padding: 2px 9px 8px; background: rgba(14,17,15,.9); border: 1px solid rgba(84,96,70,.75); }
+  #menu .opt.hgl { position: relative; display: block; margin: 0 0 6px; padding: 0 7px 3px; background: none; border: 12px solid transparent; border-image: url(airdef/ui/quests/plate.webp) 30 30 30 30 fill / 12px / 2px stretch; filter: brightness(.74) saturate(.8); cursor: pointer; } #menu .opt.hgl.on { filter: none; } #menu .opt.hgl.lock { filter: brightness(.55) saturate(.4); }
+  .hgh2 { display: flex; align-items: center; gap: 8px; height: 20px; margin-top: -4px; font: 500 12px 'Oswald', sans-serif; letter-spacing: .17em; text-transform: uppercase; color: #cfd2bd; text-shadow: 0 1px 1px rgba(0,0,0,.6); white-space: nowrap; } .hgh2 b { font-weight: 500; }
+  .hgl.on .hgh2 b { padding: 1px 11px; margin-left: -5px; background: url(airdef/ui/quests/btn_take.webp) center / 100% 100% no-repeat; color: #2a1d08; text-shadow: 0 1px 0 rgba(255,236,190,.5); font-weight: 600; }
+  .hgh2 i { margin-left: auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; font: 500 11.5px 'Golos Text', sans-serif; font-style: normal; letter-spacing: 0; text-transform: none; color: #d9dccb; } .hgh2 i.need { color: #f3c96f; } .hgl.on .hgh2 i { margin-right: 20px; } .hgh2 .ic { width: 1em; height: 1em; vertical-align: -.12em; }
+  .hgl .pin { position: absolute; right: -10px; top: -11px; width: 32px; height: 32px; background: url(airdef/ui/quests/pin_got.webp) center / contain no-repeat; pointer-events: none; }
+  .hgr { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; } .hgt { flex: 1 1 84px; min-width: 0; max-width: 132px; } .hgt.pod { flex: 0 0 66px; }
+  .hgt .im { display: grid; place-items: center; height: 39px; background: rgba(10,12,8,.72); box-shadow: inset 0 1px 3px rgba(0,0,0,.8), 0 1px 0 rgba(255,255,255,.08); color: #9aa38a; } .hgt .im .ic { width: 21px; height: 21px; } .hgt img { display: block; width: 100%; height: 36px; object-fit: cover; }
+  .hgt em { display: flex; justify-content: space-between; gap: 4px; margin-top: 3px; overflow: hidden; font: 500 13.5px/1.15 'Oswald', sans-serif; font-style: normal; letter-spacing: .04em; color: #f0ecdf; text-shadow: 0 1px 1px rgba(0,0,0,.7); white-space: nowrap; } .hgt em u { text-decoration: none; color: #f3c96f; font-weight: 600; }
+  .hgl.on .hgr:not(.inb) .hgt { cursor: pointer; } .hgl.on .hgt.fo .im { box-shadow: inset 0 0 0 1px #e8b04a, inset 0 1px 3px rgba(0,0,0,.8); }
+
   @media (max-height: 500px) {
     body.hgOn .mrail { padding-top: calc(4px + var(--sa-t) + var(--tg-t)); padding-bottom: 8px; gap: 6px; } body.hgOn .mlg { height: 24px; } body.hgOn .accBox button { padding: 2px 5px; font-size: 12px; max-width: 110px; }
     body.hgOn .pgBar { font-size: 11px; gap: 5px; padding: 2px 3px; }
     body.hgOn #menu .mtabs { top: calc(36px + var(--sa-t) + var(--tg-t)); gap: 4px; } body.hgOn #mtFold { width: 32px; height: 28px; } body.hgOn #mtFold .ic { width: 18px; height: 18px; } body.hgOn #menu .mtabs button:not(#mtFold) { height: 28px; font-size: 12px; padding: 0 8px; } body.hgOn #menu .modeSel button { padding: 4px 8px; font-size: 12.5px; } body.hgOn #menu .modeSel button.on { padding: 5px 13px; }
-    body.hgOn.menuing #mute { width: 32px; height: 28px; top: calc(68px + var(--sa-t) + var(--tg-t)); } body.hgOn.menuing #mute .ic { width: 18px; height: 18px; } body.hgOn .mpanel { top: calc(38px + var(--sa-t) + var(--tg-t)); bottom: calc(60px + var(--sa-b)); width: min(240px, 32vw); } body.hgOn .mpanel .hint { font-size: 10.5px; line-height: 1.3; } .hgw img { width: 38px; height: 21px; } .hgw b { font-size: 11.5px; } .hgw i { font-size: 9.5px; } .hgw { gap: 5px; } .opt.hgl { padding: 3px 5px; margin-bottom: 3px; } .hgSum { padding: 3px 20px 3px 6px; font-size: 10px; margin-bottom: 3px; } .cat-h.hgh { margin: 3px 0 2px; font-size: 10px; } .hgm { font-size: 9.5px; margin-top: 1px; }
+    body.hgOn.menuing #mute { width: 32px; height: 28px; top: calc(68px + var(--sa-t) + var(--tg-t)); } body.hgOn.menuing #mute .ic { width: 18px; height: 18px; } body.hgOn .mpanel { top: calc(38px + var(--sa-t) + var(--tg-t)); bottom: calc(60px + var(--sa-b)); width: min(240px, 32vw); } body.hgOn .mpanel .hint { font-size: 10.5px; line-height: 1.3; } body.hgOn.hgAir .mpanel { max-height: calc(100% - 98px - var(--sa-t) - var(--tg-t) - var(--sa-b)); } body.hgOn.hgAir #mpClose { left: -30px; width: 24px; height: 24px; padding: 4px; }
+    .hgTop { margin-bottom: 5px; } .hgRank { min-width: 74px; height: 24px; padding: 0 10px; font-size: 11.5px; } .hgSum { height: 24px; line-height: 22px; padding: 0 20px 0 9px; font-size: 10px; } .hgSum::after { right: 8px; width: 5px; height: 5px; border-width: 1.5px; } .hgSet { padding: 0 6px 5px; margin-bottom: 5px; }
+    #menu .opt.hgl { margin-bottom: 5px; padding: 0 5px 2px; border-width: 9px; border-image: url(airdef/ui/quests/plate.webp) 30 30 30 30 fill / 9px / 2px stretch; } .hgh2 { height: 15px; margin-top: -3px; font-size: 9.5px; } .hgh2 i { font-size: 9.5px; } .hgl.on .hgh2 b { padding: 1px 9px; margin-left: -4px; } .hgl.on .hgh2 i { margin-right: 16px; } .hgl .pin { right: -8px; top: -9px; width: 26px; height: 26px; }
+    .hgr { gap: 5px; margin-top: 3px; } .hgt { flex-basis: 62px; max-width: 100px; } .hgt.pod { flex-basis: 50px; } .hgt .im { height: 30px; } .hgt .im .ic { width: 16px; height: 16px; } .hgt img { height: 28px; } .hgt em { font-size: 10.5px; margin-top: 2px; }
     body.hgOn #menu #startBtn { width: 116px; height: 50px; font-size: 16px; padding: 0 12px; bottom: calc(5px + var(--sa-b)); } body.hgOn #menu #startBtn.long { font-size: 11.5px; }
     body.hgOn.hgAir #hgStrip { left: calc(74px + var(--sa-l)); right: calc(138px + var(--sa-r)); bottom: calc(5px + var(--sa-b)); gap: 4px; } .hgc { flex-basis: 92px; height: 50px; } .hgc img { width: 74px; height: 42px; } .hgc b { font-size: 11px; left: 4px; top: 1px; }
     body.hgOn #mbtns { bottom: calc(5px + var(--sa-b)); } body.hgOn #assetLoad { bottom: calc(58px + var(--sa-b)); }
@@ -703,11 +726,11 @@
   #exit, #mute, #pause, #plBtn { border-radius: 0; background: var(--th-bg2); border: 1px solid var(--th-line); color: var(--th-tx); }
   #lsnBtn { border-radius: 0; }
   /* HUD самолёта: панель слева, задание, окно ТВ, карта */
-  #wpn, #osd { background: var(--th-bg2); border: 1px solid rgba(58,67,52,.8); border-radius: 0 !important; color: var(--th-tx); }
-  #wpn .r.sel { color: #f3c96f; } #wpn .tvb, #wpn .tgl { border-radius: 0; }
+  #osd { background: var(--th-bg2); border: 1px solid rgba(58,67,52,.8); border-radius: 0 !important; color: var(--th-tx); }
+
   #podBox { border-radius: 0; border-color: rgba(232,176,74,.55); }
   #map { border-radius: 0; border: 1px solid var(--th-line); }
-  #msg { color: #f3c96f; font-weight: 600; } #warn { font-family: 'Oswald', sans-serif; font-weight: 400; letter-spacing: .08em; }
+  #msg { color: #fff; font-weight: 600; padding: 5px 46px 7px; background: linear-gradient(90deg, rgba(8,10,8,0), rgba(8,10,8,.6) 14%, rgba(8,10,8,.6) 86%, rgba(8,10,8,0)); text-shadow: 0 1px 2px rgba(0,0,0,.8); } /* надписи боя белым на тёмной полосе (Mark 2026-11-10), было жёлтым */ #warn { font-family: 'Oswald', sans-serif; font-weight: 400; letter-spacing: .08em; }
   #ask { border-radius: 0; background: var(--th-bg); border-color: rgba(232,176,74,.6); } #ask button { border-radius: 0; background: var(--th-ac); color: #17190f; font-family: 'Oswald', sans-serif; font-weight: 400; }
   #hint { border-radius: 0 !important; }
   /* сенсорные кнопки */

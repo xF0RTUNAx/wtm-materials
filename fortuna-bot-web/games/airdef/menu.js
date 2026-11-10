@@ -51,9 +51,9 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
   const tags = (k, t) => `<span class="tag ${k}">${t}</span>`;
   const realLock = () => setup.diff === 'real' && C.progress && C.progress.ready(); // прокачка ограничивает только «Реализм»
   // ангар (hangar.js): какой самолёт смотрим в ленте; настройки вылета свёрнуты в одну строку над подвеской
-  let hgPlane = null, hgSet = false, hgGuide = null;
-  const KIND_FULL = { bomb: 'свободнопадающая бомба', lgb: 'бомба с лазерным наведением', gps: 'спутниковая бомба', tvb: 'бомба с телевизионным наведением', agm: 'ракета по наземным целям', arm: 'ракета по радарам', cruise: 'крылатая ракета', rocket: 'неуправляемые ракеты', decoy: 'ложная цель', ecm: 'станция помех', missile: 'ракета', pod: 'контейнер', tbm: 'оперативно-тактическая ракета' };
-  const wpnRows = (L) => L.items.map(([k, n]) => `<span class="hgw${C.hangar && C.hangar.focused() === k ? ' fo' : ''}" data-fw="${k}"><img src="airdef/thumbs/wpn_${k}.webp?v=20261109a" alt="" onerror="this.style.visibility='hidden'"><span class="wn"><b>${trIf(AG[k].short)} ×${n}</b><i>${trIf(KIND_FULL[AG[k].kind] || '')}</i></span></span>`).join('');
+  let hgPlane = null, hgSet = false;
+  // таблички подвесок (Mark 2026-11-10, вариант «Таблички»): миниатюра, название и количество; описаний оружия здесь нет - они в «Арсенале»
+  const wpnTiles = (L) => L.items.map(([k, n]) => `<span class="hgt${C.hangar && C.hangar.focused() === k ? ' fo' : ''}" data-fw="${k}"><span class="im"><img src="airdef/thumbs/wpn_${k}.webp?v=20261109a" alt="" onerror="this.style.visibility='hidden'"></span><em>${trIf(AG[k].short)}<u>×${n}</u></em></span>`).join('') + (L.pod ? `<span class="hgt pod"><span class="im">${ico('target')}</span><em>${tr('контейнер')}</em></span>` : '');
 
   function renderModeSel() {
     $('modeSel').innerHTML = GAMES.map((g) => `<button data-g="${g.k}" class="${setup.game === g.k ? 'on' : ''}"><b>${g.name}</b><span>${g.desc}</span></button>`).join('');
@@ -106,7 +106,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
     if (g === 'multi') { el.innerHTML = renderMulti(); return; }
     if (g === 'photo') { el.innerHTML = renderPhoto(); return; }
     let h = `<div class="prow"><span>${tr('Режим')}</span>${seg('diff', setup.diff, Object.entries(MODES).map(([k, m]) => [k, trIf(m.name)]))}</div><p class="hint">${trIf(MODES[setup.diff].desc)}</p>
-      <div class="prow"><span>${tr('Эпоха')}</span>${seg('era', setup.era, ERAS.filter((e) => LOADOUTS[e.id]).map((e) => [e.id, trIf(e.name)]))}</div>
+      <div class="prow"><span>${tr('Ранг')}</span>${seg('era', setup.era, ERAS.filter((e) => LOADOUTS[e.id]).map((e) => [e.id, e.short]))}</div>
       <div class="prow"><span>${g === 'defense' ? tr('Ваша ПВО') : tr('ПВО города')}</span>${seg('side', setup.side, [['east', tr('Советская')], ['west', tr('Западная')]])}</div>`;
     if (g === 'air') {
       const hg = C.hangar && C.hangar.has();
@@ -120,14 +120,14 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
       const loBtn = ([L, i], attr, on) => { const miss = can([L]) ? [] : C.progress.loadoutMissing(L);
         return `<button class="opt ${on && !miss.length ? 'on' : ''} ${miss.length ? 'lock' : ''}" ${miss.length ? `data-need="${miss[0].id}"` : `${attr}="${i}"`}><div class="nm"><b>${miss.length ? ico('lock') + ' ' : ''}${trIf(PLANES[L.plane])} · ${trIf(L.name)}</b><span class="role ${loadoutRole(L)}">${trIf(ROLE_NAME[loadoutRole(L)])}</span><span>${L.items.map(([k, n]) => `${trIf(AG[k].short)} ×${n}`).join(' · ')}${L.pod ? tr(' · контейнер') : ''}</span>${loadoutRole(L) !== 'sead' ? `<span class="tgn">${tr('целей: {0} - по силе подвески', [loadoutTargets(L)])}</span>` : ''}${miss.length ? `<span class="need">${tr('{0} - открыть в «Исследованиях»', [C.progress.needText(miss)])}</span>` : ''}</div>${L.items.map(([k]) => tags(AG[k].kind, trIf(AG_KIND[AG[k].kind]).split(',')[0].split(' ')[0])).filter((v, j, a) => a.indexOf(v) === j).join(' ')}</button>`; };
       C.realBlock = !open.length; C.realNeed = null;
-      const noneHint = !open.length ? `<p class="hint need">${tr('В «Реализме» эпохи {0} нет подвески за эту сторону. Купите самолёт и оружие в «Исследованиях» или играйте в «Аркаде».', [ERAS[setup.era - 1].short])}</p>` : '';
+      const noneHint = !open.length ? `<p class="hint need">${tr('В «Реализме» ранга {0} нет подвески за эту сторону. Купите самолёт и оружие в «Исследованиях» или играйте в «Аркаде».', [ERAS[setup.era - 1].short])}</p>` : '';
       if (!hg) h += noneHint;
       // «Операция»: два вылета - сначала охота за ПВО, потом удар (у стороны нет охотничьей подвески - только одиночный вылет)
       const sead = mine.filter(([L]) => loadoutRole(L) === 'sead'), strike = mine.filter(([L]) => loadoutRole(L) !== 'sead');
       const seadOk = sead.filter(can), strikeOk = strike.filter(can);
       const canOp = seadOk.length > 0 && strikeOk.length > 0; if (!canOp) setup.op = false;
       const opRow = canOp ? `<div class="prow"><span>${tr('Вылеты')}</span>${seg('op', setup.op ? 'op' : 'one', [['one', tr('Один вылет')], ['op', tr('Операция: 2 вылета')]])}</div>` : '';
-      if (hg) h = `<button class="hgSum${hgSet ? ' open' : ''}" data-hgset="1">${trIf(MODES[setup.diff].name)} · ${trIf(ERAS[setup.era - 1].short || ERAS[setup.era - 1].name)} · ${tr('ПВО: {0}', [setup.side === 'east' ? tr('советская') : tr('западная')])}${setup.op ? ' · ' + tr('2 вылета') : ''}</button>${hgSet ? `<div class="hgSet">${segs}${setRow}${opRow}</div>` : ''}${noneHint}<div class="cat-h hgh">${tr('Подвеска')}</div>`;
+      if (hg) h = `<button class="hgTop${hgSet ? ' open' : ''}" data-hgset="1"><b class="hgRank">${tr('Ранг')} ${ERAS[setup.era - 1].short}</b><span class="hgSum">${trIf(MODES[setup.diff].name)} · ${tr('ПВО: {0}', [setup.side === 'east' ? tr('советская') : tr('западная')])}${setup.op ? ' · ' + tr('2 вылета') : ''}</span></button>${hgSet ? `<div class="hgSet">${segs}${setRow}${opRow}</div>` : ''}${noneHint}`;
       else h += opRow;
       if (setup.op) {
         if (!seadOk.some(([, i]) => i === setup.lo1)) setup.lo1 = seadOk[0][1];
@@ -141,14 +141,14 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
         if (!planes.includes(hgPlane)) hgPlane = planes.includes(loPlane) ? loPlane : planes[0];
         const own = mine.filter(([L]) => L.plane === hgPlane), ownOpen = own.filter(can);
         if (ownOpen.length && !ownOpen.some(([, i]) => i === setup.lo)) setup.lo = ownOpen[0][1];
-        if (!ownOpen.length) { C.realBlock = true; C.realNeed = C.progress.loadoutMissing(own[0][0])[0].id; hgGuide = own[0][0]; } else hgGuide = null; // описание внизу - про то, что на экране
+        if (!ownOpen.length) { C.realBlock = true; C.realNeed = C.progress.loadoutMissing(own[0][0])[0].id; }
         h += own.map(([L, i]) => { const miss = can([L, i]) ? [] : C.progress.loadoutMissing(L), onn = i === setup.lo && !miss.length;
-          return `<div class="opt hgl ${onn ? 'on' : ''} ${miss.length ? 'lock' : ''}" role="button" tabindex="0" ${miss.length ? `data-need="${miss[0].id}"` : `data-lo="${i}"`}><span class="hgr${planeMeta(L.plane) && planeMeta(L.plane).internal ? ' inb' : ''}">${wpnRows(L)}${planeMeta(L.plane) && planeMeta(L.plane).internal ? `<span class="hgw"><span class="wn"><i>${tr('во внутренних отсеках - снаружи не видно')}</i></span></span>` : ''}${L.pod ? `<span class="hgw"><span class="wn"><i>${tr('прицельный контейнер')}</i></span></span>` : ''}</span><span class="hgm"><span class="role ${loadoutRole(L)}">${trIf(ROLE_NAME[loadoutRole(L)])}</span></span>${miss.length ? `<span class="need">${miss.length ? ico('lock') + ' ' : ''}${tr('{0} - открыть в «Исследованиях»', [C.progress.needText(miss)])}</span>` : ''}</div>`; }).join('');
+          return `<div class="opt hgl ${onn ? 'on' : ''} ${miss.length ? 'lock' : ''}" role="button" tabindex="0" ${miss.length ? `data-need="${miss[0].id}"` : `data-lo="${i}"`}>${onn ? '<i class="pin"></i>' : ''}<span class="hgh2"><b>${trIf(ROLE_NAME[loadoutRole(L)])}</b>${miss.length ? `<i class="need">${ico('lock')} ${C.progress.needText(miss)}</i>` : planeMeta(L.plane) && planeMeta(L.plane).internal ? `<i>${tr('в отсеках')}</i>` : ''}</span><span class="hgr${planeMeta(L.plane) && planeMeta(L.plane).internal ? ' inb' : ''}">${wpnTiles(L)}</span></div>`; }).join('');
         $('hgStrip').innerHTML = planes.map((p) => { const lk = !mine.some((x) => x[0].plane === p && can(x)); return `<button class="hgc${p === hgPlane ? ' on' : ''}${lk ? ' lock' : ''}" data-hgp="${p}"><b>${lk ? ico('lock') + ' ' : ''}${trIf(PLANES[p])}</b><img src="airdef/thumbs/air_${p}.webp?v=20261109a" alt="" loading="lazy"></button>`; }).join('');
         const sel = $('hgStrip').querySelector && $('hgStrip').querySelector('.hgc.on'); if (sel && sel.scrollIntoView) sel.scrollIntoView({ block: 'nearest', inline: 'nearest' });
       } else h += mine.map((x) => loBtn(x, 'data-lo', x[1] === setup.lo)).join('') + `<p class="hint">${tr('«Охота за ПВО» - уничтожить комплексы с РЛС, «штурмовка» - цели города.')}</p>`;
-      const L = (!setup.op && hgGuide) || LOADOUTS[setup.era][setup.op ? setup.lo1 : setup.lo];
-      h += `<p class="hint guide">${L.items.map(([k]) => `<b>${trIf(AG[k].short)}</b> - ${trIf(AG[k].guide)}`).join('<br>')}</p>`;
+      if (!hg) { const L = LOADOUTS[setup.era][setup.op ? setup.lo1 : setup.lo]; // в ангаре описаний оружия нет (Mark 2026-11-10)
+        h += `<p class="hint guide">${L.items.map(([k]) => `<b>${trIf(AG[k].short)}</b> - ${trIf(AG[k].guide)}`).join('<br>')}</p>`; }
     } else {
       // последняя волна - «Мульти-волна» (если у атакующей стороны в эпохе есть чем ударить)
       const attS = setup.side === 'east' ? 'west' : 'east';
@@ -167,7 +167,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
   function renderPhoto() {
     const ps = setup.pside || 'air', att = setup.side === 'east' ? 'west' : 'east';
     let h = `<div class="prow"><span>${tr('Снимаем')}</span>${seg('pside', ps, [['air', tr('Самолёт')], ['def', tr('ПВО')], ['multi', tr('Мульти-волна')]])}</div>
-      <div class="prow"><span>${tr('Эпоха')}</span>${seg('era', setup.era, ERAS.filter((e) => LOADOUTS[e.id]).map((e) => [e.id, trIf(e.name)]))}</div>
+      <div class="prow"><span>${tr('Ранг')}</span>${seg('era', setup.era, ERAS.filter((e) => LOADOUTS[e.id]).map((e) => [e.id, e.short]))}</div>
       <div class="prow"><span>${ps === 'def' ? tr('Сторона ПВО') : tr('ПВО города')}</span>${seg('side', setup.side, [['east', tr('Советская')], ['west', tr('Западная')]])}</div>
       <div class="prow"><span>${tr('Карта')}</span>${seg('pmap', C.MAP, [['winter', tr('Северный рубеж')], ['city', tr('Речной узел')]])}</div>
       <div class="prow"><span>${tr('Погода')}</span>${seg('pwx', C.MAP === 'winter' ? (WINTER_KEYS.includes(C.weatherKey) ? C.weatherKey : 'random') : (WEATHER_KEYS.includes(C.weatherKey) ? C.weatherKey : 'random'),
