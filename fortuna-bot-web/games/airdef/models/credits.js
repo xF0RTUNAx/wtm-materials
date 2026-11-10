@@ -366,15 +366,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "B2",
-  "author": "manilov.ap",
-  "url": "https://sketchfab.com/3d-models/b2-a9be2ca923aa44809194613209810d06",
-  "license": "CC-BY-4.0",
-  "files": [
-   "e_b2"
-  ]
- },
- {
   "title": "Yak-38",
   "author": "manilov.ap",
   "url": "https://sketchfab.com/3d-models/yak-38-7cf4151540e748b49015700e9ac3499a",
@@ -643,16 +634,6 @@ export const CREDITS = [
   "license": "CC-BY-4.0",
   "files": [
    "l_scud"
-  ]
- },
- {
-  "title": "M142 HIMARS | FREE MODEL | ANIMATION",
-  "author": "Denis.Cherkasov1",
-  "url": "https://sketchfab.com/3d-models/m142-himars-free-model-animation-53c53a112c674d29a2afdbddbe3cecb5",
-  "license": "CC-BY-4.0",
-  "files": [
-   "l_himars",
-   "w_atacms"
   ]
  },
  {

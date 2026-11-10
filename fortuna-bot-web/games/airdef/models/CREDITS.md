@@ -40,7 +40,6 @@
 - "Jaguar" (https://sketchfab.com/3d-models/jaguar-b09a0ee965bb424aaf14ebd06b698f96) by manilov.ap — CC-BY-4.0 — `e_jaguar.glb`
 - "Buccaneer" (https://sketchfab.com/3d-models/buccaneer-db82ad0e1f5644ccaee1b25b77566dc7) by manilov.ap — CC-BY-4.0 — `e_buccaneer.glb`
 - "Harrier" (https://sketchfab.com/3d-models/harrier-9ccfd6758680413bb19d656db4f46185) by manilov.ap — CC-BY-4.0 — `e_harrier.glb`
-- "B2" (https://sketchfab.com/3d-models/b2-a9be2ca923aa44809194613209810d06) by manilov.ap — CC-BY-4.0 — `e_b2.glb`
 - "Yak-38" (https://sketchfab.com/3d-models/yak-38-7cf4151540e748b49015700e9ac3499a) by manilov.ap — CC-BY-4.0 — `e_yak38.glb`
 - "Il28" (https://sketchfab.com/3d-models/il28-20bb9aa23d4b48978be1d0ee5e1890ca) by manilov.ap — CC-BY-4.0 — `e_il28.glb`
 - "Tu22" (https://sketchfab.com/3d-models/tu22-189799dc11b149a9a9d404904c97173d) by manilov.ap — CC-BY-4.0 — `e_tu22.glb`
@@ -71,7 +70,6 @@
 - "AGM-154 JSOW missile" (https://sketchfab.com/3d-models/agm-154-jsow-missile-03148c5054e54a1c99980aff68952c0f) by RickSlash — CC-BY-4.0 — `w_jsow.glb`
 - "ISKANDER" (https://sketchfab.com/3d-models/iskander-244b511ee2ca4f3794d118b872ee229c) by dofash_76 — CC-BY-4.0 — `w_tbmdec.glb`, `l_iskander.glb`
 - "Scud ( Ballistic missile )" (https://sketchfab.com/3d-models/scud-ballistic-missile-30cf91617bad4a4bb07d0856ccd55ff0) by AlexDang — CC-BY-4.0 — `l_scud.glb`
-- "M142 HIMARS | FREE MODEL | ANIMATION" (https://sketchfab.com/3d-models/m142-himars-free-model-animation-53c53a112c674d29a2afdbddbe3cecb5) by Denis.Cherkasov1 — CC-BY-4.0 — `l_himars.glb`, `w_atacms.glb`
 - "Modular Road Bridge" (https://sketchfab.com/3d-models/modular-road-bridge-f14e768fde1d4d4d9ef8886ca55cfc03) by VectorMan — CC-BY-4.0 — `br_seg.glb`
 - "McClintic Marshall Products Co., Tender B" (https://sketchfab.com/3d-models/mcclintic-marshall-products-co-tender-b-34ccaa9abec244d999004055ffcd02c3) by statelibrarynsw — CC-BY-4.0 — `br_truss.glb`
 - "High Voltage Transmission Line Tower (tileable)" (https://sketchfab.com/3d-models/high-voltage-transmission-line-tower-tileable-cbeec33de6d64374b6d22de2749c1313) by mednios — CC-BY-4.0 — `m_pylon.glb`

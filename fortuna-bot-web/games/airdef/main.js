@@ -806,6 +806,7 @@ function syncEv() {
     parts.forEach((c, i) => { c.visible = i >= L.fired && i < (L.n0 ?? parts.length); }); // n0 - сколько ракет заряжено (у последней пусковой при нечётном числе - одна: вторая не стоит весь бой)
     const PO = POD[L.key];
     if (PO) { // пакет HIMARS / стрела M752: поворот вокруг оси у кормы (своя «петля», один раз), подъём - по L.podEl; у M752 до стрелы - трап
+      if (PO.turn) { himarsPose(g, L, PO); continue; } // своя модель HIMARS: платформа, цилиндры, контейнер и крышки
       if (!g.userData.podPivot) {
         // части группы (pod, rampA…; у каждой - свои материалы) - в «петлю» на оси h (оси модели); вложенная петля (par) стоит относительно своей (base)
         const hingeOf = (re, h, par = g, base = [0, 0, 0]) => { const ps = g.children.filter((c) => re.test(c.name)); if (!ps.length) return null; const pv = new THREE.Group(); pv.position.set(h[0] - base[0], h[1] - base[1], h[2] - base[2]); par.add(pv); for (const c of ps) { c.position.x -= h[0]; c.position.y -= h[1]; c.position.z -= h[2]; pv.add(c); } return pv; };
@@ -824,6 +825,39 @@ function syncEv() {
     }
   }
 }
+// M142 HIMARS, своя модель (Mark 2026-11-10: «интегрировать в игру анимации и другие ракеты хаймарса»). Части модели (prepare.js): body - машина, turn - поворотная
+// платформа с корпусами цилиндров turnCl / turnCr, pod - качающаяся клетка со штоками podRl / podRr, контейнеры podA (ATACMS, одна труба) и podG (шесть труб - PrSM),
+// крышки труб podLA, podLG0…5. Только вид, симуляция не меняется: пуск идёт по курсу L.yaw со среза POD.muzzle, поэтому по курсу L.yaw стоит поднятая клетка, а сама
+// машина припаркована под углом к нему (у каждой пусковой свой) - в походном положении клетка лежит вдоль машины, при подъёме платформа доворачивает её на цель
+function himarsPose(g, L, PO) {
+  let h = g.userData.him;
+  if (!h) {
+    const T = PO.turn, H = PO.hinge, nm = (c) => c.name.replace(/[|_].*$/, ''), named = (re) => g.children.filter((c) => re.test(nm(c))); // имя части - до «|материал» (или «_материал» после загрузчика)
+    const into = (ps, piv, o) => { for (const c of ps) { c.position.x -= o[0]; c.position.y -= o[1]; c.position.z -= o[2]; piv.add(c); } return piv; };
+    const at = (v, o) => { const q = new THREE.Group(); q.position.set(v[0] - o[0], v[1] - o[1], v[2] - o[2]); return q; };
+    const body = at(T, [0, 0, 0]), turn = at(T, [0, 0, 0]), pod = at(H, T), cyl = [];
+    for (const [sd, sx] of [['l', -1], ['r', 1]]) { // цилиндр подъёма: корпус на платформе, шток на клетке - каждый смотрит на опору другого
+      const B = [PO.cylB[0] * sx, PO.cylB[1], PO.cylB[2]], R = [PO.cylR[0] * sx, PO.cylR[1], PO.cylR[2]];
+      const cb = into(named(new RegExp('^turnC' + sd + '$')), at(B, T), B), rb = into(named(new RegExp('^podR' + sd + '$')), at(R, H), R); turn.add(cb); pod.add(rb);
+      cyl.push({ cb, rb, B: new THREE.Vector3(...B), R: new THREE.Vector3(...R) });
+    }
+    const lids = {}; for (const c of named(/^podL/)) (lids[nm(c).slice(4)] = lids[nm(c).slice(4)] || []).push(c);
+    const podA = named(/^podA$/), podG = named(/^podG$/);
+    into(named(/^pod/), pod, H); into(named(/^turn/), turn, T); into(g.children.slice(), body, T); g.add(body, turn); turn.add(pod);
+    const fr = (L.id * 0.618034) % 1; // у каждой пусковой свой угол стоянки: 26…54° влево или вправо от направления пуска
+    h = g.userData.him = { body, turn, pod, cyl, lids, podA, podG, phi: (L.id % 2 ? 1 : -1) * (0.45 + 0.5 * fr), H: new THREE.Vector3(...H) };
+    h.body.rotation.y = h.phi;
+  }
+  const el = L.podEl || 0, a = (PO.el - PO.rest) * el, k = Math.min(1, Math.max(0, (el - 0.12) / 0.5)), sm = k * k * (3 - 2 * k);
+  h.pod.rotation.x = a; h.turn.rotation.y = h.phi * (1 - sm); // доворот на цель - после первых 7° подъёма (клетка уже выше кабины), заканчивается к 37°
+  for (const c of h.cyl) {
+    HV1.copy(c.R).sub(h.H).applyAxisAngle(HX, a).add(h.H).sub(c.B).normalize(); HV2.copy(c.R).sub(c.B).normalize(); c.cb.quaternion.setFromUnitVectors(HV2, HV1); // корпус: с опоры на проушину поднятой клетки
+    HV1.copy(c.B).sub(h.H).applyAxisAngle(HX, -a).add(h.H).sub(c.R).normalize(); HV2.copy(c.B).sub(c.R).normalize(); c.rb.quaternion.setFromUnitVectors(HV2, HV1); // шток: с проушины на опору (в осях клетки)
+  }
+  const atk = L.wkey === 'atacms'; for (const c of h.podA) c.visible = atk; for (const c of h.podG) c.visible = !atk; // ATACMS - одна большая труба, остальные ракеты (PrSM) - контейнер на шесть труб
+  for (const id in h.lids) { const v = id === 'A' ? atk && L.fired < 1 : !atk && L.fired <= +id.slice(1); for (const c of h.lids[id]) c.visible = v; } // крышка трубы пропадает с пуском из неё
+}
+const HV1 = new THREE.Vector3(), HV2 = new THREE.Vector3(), HX = new THREE.Vector3(1, 0, 0);
 // рули 9М83 (части fin0…3 модели ракеты): в контейнере сложены - повёрнуты на −90° вокруг оси ракеты у своего шарнира (корень руля у корпуса,
 // ПАСПОРТ 9М83), раскрываются за ej.fins с после выхода хвоста из устья (ej.tube)
 function finsFold(g) {

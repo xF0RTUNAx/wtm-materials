@@ -1,0 +1,337 @@
+{
+ "key": "l_himars",
+ "weapon": "",
+ "name": "M142 HIMARS",
+ "name_en": "M142 HIMARS",
+ "rev": 1,
+ "files": {
+  "glb": "l_himars.glb",
+  "blend": "l_himars.blend",
+  "build": [
+   "build.py",
+   "parts_llm.py",
+   "himkit.py",
+   "_paint.py",
+   "make_decals.py",
+   "bake2.py",
+   "deliver.py",
+   "pack.py"
+  ]
+ },
+ "tex": 1024,
+ "nTex": 512,
+ "ormTex": 512,
+ "missile": {
+  "key": "w_atacms",
+  "folder": "Свои/ATACMS"
+ },
+ "parts": {
+  "body_*": "неподвижное: body_cab (кабина), body_frame (рама, бампер, щитки крыльев), body_equip (ящики, баки, выхлоп, фонари, жгут), body_base (основание пусковой); det_* - мелочь каждого объекта (дети, двигаются с ним)",
+  "turn": {
+   "what": "поворотная платформа (дети: pod, cyl_body_l/r)",
+   "origin_gltf": [
+    0.0,
+    1.213,
+    1.213
+   ],
+   "axis_gltf": [
+    0,
+    1,
+    0
+   ],
+   "sign": "+ против часовой сверху",
+   "limits_deg": {
+    "el_0": "весь круг (360°)",
+    "el_5_и_выше": [
+     -130,
+     130
+    ]
+   },
+   "rest_deg": 0
+  },
+  "pod": {
+   "what": "качающаяся клетка (дети: boom, pod_atacms, pod_gmlrs, cyl_rod_l/r)",
+   "origin_gltf": [
+    0.0,
+    1.377,
+    3.347
+   ],
+   "axis_gltf": [
+    1,
+    0,
+    0
+   ],
+   "sign": "+ поднимает дульный торец",
+   "limits_deg": [
+    0,
+    60
+   ],
+   "rest_deg": 0,
+   "combat_deg": 50,
+   "note": "ход цилиндров даёт около 60°; столкновений нет до 75°"
+  },
+  "boom": {
+   "what": "рама-стрела перезарядки (ребёнок pod)",
+   "move": "сдвиг вдоль своей +Y (glTF −Z) по клетке",
+   "limits_m": [
+    0,
+    1.16
+   ],
+   "rest_m": 0,
+   "note": "выдвигать только при подъёме пакета от 30°: при 0° упирается в кабину и антенны"
+  },
+  "cyl_body_l / cyl_body_r": {
+   "what": "корпуса цилиндров подъёма (дети turn), начало - на нижней опоре",
+   "aim": "+Y объекта (glTF −Z) - на начало cyl_rod того же борта"
+  },
+  "cyl_rod_l / cyl_rod_r": {
+   "what": "штоки (дети pod), начало - на верхней проушине",
+   "aim": "+Y объекта (glTF −Z) - на начало cyl_body того же борта"
+  },
+  "pod_atacms / pod_gmlrs": "контейнеры (дети pod, начало на оси петли); игра показывает один: ATACMS - одна труба, GMLRS - шесть",
+  "lid_f<труба> / lid_r<труба>": "крышки передние (песочные) и задние, начало - в центре торца трубы; при пуске прятать",
+  "muzzle_<труба>": "пустышки: центр дульного среза трубы (A - ATACMS; G0…G5 - GMLRS)",
+  "wheel_<1|2|3><l|r>": {
+   "what": "колёса; 1 - передние (дети steer_l/r)",
+   "spin_axis_gltf": [
+    1,
+    0,
+    0
+   ],
+   "origin": "центр колеса"
+  },
+  "steer_l / steer_r": {
+   "what": "пустышки поворота передних колёс (шкворень)",
+   "axis_gltf": [
+    0,
+    1,
+    0
+   ],
+   "limits_deg": [
+    -30,
+    30
+   ],
+   "note": "по расчёту зазоров (щиток крыла и бампер не задевает)"
+  },
+  "hatch": {
+   "what": "люк на крыше кабины, начало на петле у переднего края",
+   "axis_gltf": [
+    1,
+    0,
+    0
+   ],
+   "limits_deg": [
+    -100,
+    0
+   ],
+   "sign": "минус открывает вперёд-вверх"
+  },
+  "ant_l / ant_r": "антенны (неподвижные)"
+ },
+ "anim": {
+  "turn": {
+   "node": "turn",
+   "axis": "y",
+   "min": null,
+   "max": null,
+   "raised_limit_deg": 130
+  },
+  "elevate": {
+   "node": "pod",
+   "axis": "x",
+   "min": 0,
+   "max": 60,
+   "rate_deg_s": 4,
+   "cylinders": {
+    "body": [
+     "cyl_body_l",
+     "cyl_body_r"
+    ],
+    "rod": [
+     "cyl_rod_l",
+     "cyl_rod_r"
+    ]
+   }
+  },
+  "boom": {
+   "node": "boom",
+   "axis": "-z",
+   "max_m": 1.16,
+   "only_above_el_deg": 30
+  },
+  "lids": {
+   "A": {
+    "front": "lid_fA",
+    "rear": "lid_rA",
+    "container": "pod_atacms",
+    "muzzle": "muzzle_A",
+    "tube_radius_m": 0.479
+   },
+   "G0": {
+    "front": "lid_fG0",
+    "rear": "lid_rG0",
+    "container": "pod_gmlrs",
+    "muzzle": "muzzle_G0",
+    "tube_radius_m": 0.17
+   },
+   "G1": {
+    "front": "lid_fG1",
+    "rear": "lid_rG1",
+    "container": "pod_gmlrs",
+    "muzzle": "muzzle_G1",
+    "tube_radius_m": 0.17
+   },
+   "G2": {
+    "front": "lid_fG2",
+    "rear": "lid_rG2",
+    "container": "pod_gmlrs",
+    "muzzle": "muzzle_G2",
+    "tube_radius_m": 0.17
+   },
+   "G3": {
+    "front": "lid_fG3",
+    "rear": "lid_rG3",
+    "container": "pod_gmlrs",
+    "muzzle": "muzzle_G3",
+    "tube_radius_m": 0.17
+   },
+   "G4": {
+    "front": "lid_fG4",
+    "rear": "lid_rG4",
+    "container": "pod_gmlrs",
+    "muzzle": "muzzle_G4",
+    "tube_radius_m": 0.17
+   },
+   "G5": {
+    "front": "lid_fG5",
+    "rear": "lid_rG5",
+    "container": "pod_gmlrs",
+    "muzzle": "muzzle_G5",
+    "tube_radius_m": 0.17
+   }
+  },
+  "wheels": {
+   "spin": [
+    "wheel_1l",
+    "wheel_1r",
+    "wheel_2l",
+    "wheel_2r",
+    "wheel_3l",
+    "wheel_3r"
+   ],
+   "steer": [
+    "steer_l",
+    "steer_r"
+   ]
+  },
+  "hatch": {
+   "node": "hatch",
+   "axis": "x",
+   "open_deg": -100
+  }
+ },
+ "lids": {
+  "A": {
+   "front": "lid_fA",
+   "rear": "lid_rA",
+   "container": "pod_atacms",
+   "muzzle": "muzzle_A",
+   "tube_radius_m": 0.479
+  },
+  "G0": {
+   "front": "lid_fG0",
+   "rear": "lid_rG0",
+   "container": "pod_gmlrs",
+   "muzzle": "muzzle_G0",
+   "tube_radius_m": 0.17
+  },
+  "G1": {
+   "front": "lid_fG1",
+   "rear": "lid_rG1",
+   "container": "pod_gmlrs",
+   "muzzle": "muzzle_G1",
+   "tube_radius_m": 0.17
+  },
+  "G2": {
+   "front": "lid_fG2",
+   "rear": "lid_rG2",
+   "container": "pod_gmlrs",
+   "muzzle": "muzzle_G2",
+   "tube_radius_m": 0.17
+  },
+  "G3": {
+   "front": "lid_fG3",
+   "rear": "lid_rG3",
+   "container": "pod_gmlrs",
+   "muzzle": "muzzle_G3",
+   "tube_radius_m": 0.17
+  },
+  "G4": {
+   "front": "lid_fG4",
+   "rear": "lid_rG4",
+   "container": "pod_gmlrs",
+   "muzzle": "muzzle_G4",
+   "tube_radius_m": 0.17
+  },
+  "G5": {
+   "front": "lid_fG5",
+   "rear": "lid_rG5",
+   "container": "pod_gmlrs",
+   "muzzle": "muzzle_G5",
+   "tube_radius_m": 0.17
+  }
+ },
+ "muzzles": {
+  "A": [
+   0.0,
+   1.921,
+   -0.921
+  ],
+  "G0": [
+   -0.388,
+   1.717,
+   -0.921
+  ],
+  "G1": [
+   0.0,
+   1.717,
+   -0.921
+  ],
+  "G2": [
+   0.388,
+   1.717,
+   -0.921
+  ],
+  "G3": [
+   -0.388,
+   2.105,
+   -0.921
+  ],
+  "G4": [
+   0.0,
+   2.105,
+   -0.921
+  ],
+  "G5": [
+   0.388,
+   2.105,
+   -0.921
+  ]
+ },
+ "combat_pose": {
+  "turn_deg": 0,
+  "pod_deg": 50,
+  "boom_m": 0,
+  "container": "pod_atacms или pod_gmlrs",
+  "hatch_deg": 0
+ },
+ "swap_notes": [
+  "prepare.js: заменить рецепт l_himars на этот glb (l_himars.glb, текстуры внутри: цвет 1024, ORM 512, нормали 512); группы: pod - узел pod со всеми детьми, турель - turn, остальное корпус; det_* не объединять с чужими узлами (это мелочь своих родителей); узлы turn, pod, boom, cyl_*, lid_*, muzzle_*, steer_*, wheel_*, hatch не сливать.",
+  "prepare.js: рецепт w_atacms - на Свои/ATACMS (atacms.glb), рули fin1…fin4 - отдельные узлы (wings deploy).",
+  "sim/combined.js: новый POD.l_himars = {\"hinge\": [0.0, 1.377, 3.347], \"muzzle\": [0.0, 1.921, -0.921], \"rest\": 0.0, \"el\": 1.047, \"rate\": 0.0667} (glTF-координаты; прежний hinge [0.12,1.3,3.75] относился к чужой модели).",
+  "Титры: убрать Denis.Cherkasov1 «M142 HIMARS» (чужая модель заменена своей).",
+  "Дописать в игре: поворот turn вокруг Y (пределы в parts.turn: при подъёме ≥ 5° только ±130°), подъём pod с наведением цилиндров (как у Patriot: +Y корпуса на шток и обратно), стрелу boom (только при подъёме ≥ 30°), выбор контейнера (показать pod_atacms или pod_gmlrs), крышки труб (прятать lid_f/lid_r при пуске своей трубы), вращение колёс и поворот steer_*; шестиствольный контейнер - под будущие ракеты GMLRS/PrSM (дульные срезы muzzle_G0…G5).",
+  "ORM (R затенение, G шероховатость, B металл) - одна картинка 512 на атлас; можно включать только в ангаре, если в бою дорого."
+ ],
+ "notes": "Оси: Blender - метры, нос +Y, вверх +Z, земля 0; glTF - Y вверх, нос −Z. Масштаб постоянный 0,97 от сборки (колесо Ø 1,17 м). Контейнеры: pod_atacms - одна труба (ракета ATACMS 4,23 м со сложенными рулями входит), pod_gmlrs - шесть труб."
+}

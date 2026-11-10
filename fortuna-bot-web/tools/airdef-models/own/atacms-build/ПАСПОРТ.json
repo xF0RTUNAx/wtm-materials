@@ -1,0 +1,154 @@
+{
+ "key": "w_atacms",
+ "weapon": "atacms",
+ "name": "ATACMS",
+ "name_en": "MGM-140 ATACMS",
+ "rev": 1,
+ "files": {
+  "glb": "atacms.glb",
+  "blend": "atacms.blend",
+  "build": [
+   "build.py",
+   "atakit.py",
+   "_paint.py",
+   "make_decals.py",
+   "bake2.py",
+   "deliver.py"
+  ]
+ },
+ "tex": 1024,
+ "nTex": 512,
+ "ormTex": 512,
+ "wings": "deploy",
+ "parts": {
+  "body": "корпус, головная часть, кабельный короб, сопло",
+  "fins": {
+   "fin1": {
+    "origin_gltf": [
+     0.2281,
+     0.2281,
+     -0.0
+    ],
+    "fold_axis_gltf": [
+     0,
+     0,
+     -1
+    ],
+    "folded_deg": 90.0,
+    "open_deg": 0,
+    "radial_gltf": [
+     0.7071,
+     0.7071,
+     -0.0
+    ],
+    "steer_axis_gltf": [
+     0.7071,
+     0.7071,
+     -0.0
+    ],
+    "steer_limit_deg": [
+     -20,
+     20
+    ],
+    "roll_position_deg": 45.0
+   },
+   "fin2": {
+    "origin_gltf": [
+     0.2281,
+     -0.2281,
+     -0.0
+    ],
+    "fold_axis_gltf": [
+     0,
+     0,
+     -1
+    ],
+    "folded_deg": 90.0,
+    "open_deg": 0,
+    "radial_gltf": [
+     0.7071,
+     -0.7071,
+     -0.0
+    ],
+    "steer_axis_gltf": [
+     0.7071,
+     -0.7071,
+     -0.0
+    ],
+    "steer_limit_deg": [
+     -20,
+     20
+    ],
+    "roll_position_deg": -45.0
+   },
+   "fin3": {
+    "origin_gltf": [
+     -0.2281,
+     -0.2281,
+     -0.0
+    ],
+    "fold_axis_gltf": [
+     0,
+     0,
+     -1
+    ],
+    "folded_deg": 90.0,
+    "open_deg": 0,
+    "radial_gltf": [
+     -0.7071,
+     -0.7071,
+     -0.0
+    ],
+    "steer_axis_gltf": [
+     -0.7071,
+     -0.7071,
+     -0.0
+    ],
+    "steer_limit_deg": [
+     -20,
+     20
+    ],
+    "roll_position_deg": -135.0
+   },
+   "fin4": {
+    "origin_gltf": [
+     -0.2281,
+     0.2281,
+     -0.0
+    ],
+    "fold_axis_gltf": [
+     0,
+     0,
+     -1
+    ],
+    "folded_deg": 90.0,
+    "open_deg": 0,
+    "radial_gltf": [
+     -0.7071,
+     0.7071,
+     -0.0
+    ],
+    "steer_axis_gltf": [
+     -0.7071,
+     0.7071,
+     -0.0
+    ],
+    "steer_limit_deg": [
+     -20,
+     20
+    ],
+    "roll_position_deg": 135.0
+   }
+  },
+  "note": "fin1…fin4 - узлы рулей, начало на оси складывания у корня; в файле сложены (поворот +90° вокруг оси ракеты, glTF −Z), раскрытие - в 0°; руль поворачивается вокруг своей радиальной оси (steer_axis) ±20°"
+ },
+ "nozzle": {
+  "exit_center_gltf": [
+   0.0,
+   0.0,
+   1.9872
+  ],
+  "exit_radius_m": 0.153
+ },
+ "notes": "Оси: glTF Y вверх, нос −Z; начало - середина длины на оси. Длина 4,22 м, Ø 0,62 м (как прежняя w_atacms). Окраска фото 01: песочный корпус, чёрная головная часть, свои трафареты. Со сложенными рулями r 0,449 - входит в трубу pod_atacms HIMARS (внутренний r 0,46)."
+}

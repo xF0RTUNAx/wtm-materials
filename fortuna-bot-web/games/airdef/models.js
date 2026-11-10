@@ -80,8 +80,9 @@ const META = {
     nozzles: [V(0, -1.08, 7.31)], nr: 0.5, pod: V(0, -1.92, 0.45), clearGlass: true, ...(paintOn ? { gearModel: 'e_mirage_gear' } : {}) }, // Mirage 2000D: своя модель, тяжёлое на внутренних пилонах крыла
   e_rafale: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-0.52, -2.154, 3.065), V(-3.8, -1.867, 3.315), V(-2.95, -1.821, 2.94), V(-2.1, -1.805, 2.325)]),
     nozzles: [V(-0.635, -1.134, 6.575), V(0.635, -1.134, 6.575)], nr: 0.39, pod: V(0.98, -2.134, -0.885), clearGlass: true, ...(paintOn ? { gearModel: 'e_rafale_gear' } : {}) }, // Rafale C: своя модель (Свои/Rafale, 2026-11-09): балка под бортом, внешний, средний, внутренний пилон (тяжёлое - на внутренний), «Дамокл» под заборником
-  e_b2: { side: 'west', cls: 'bomber', lazy: true, internal: true, stations: mirror([V(-3, -1.0, -1.5), V(-3, -1.0, 0.5), V(-2, -1.0, -1.5), V(-2, -1.0, 0.5)]),
-    nozzles: [], nr: 0.1, pod: null }, // B-2A (бомбы - во внутренних отсеках)
+  e_b2: { side: 'west', cls: 'bomber', lazy: true, internal: true, stations: mirror([V(-1.3, 0.577, -3.775), V(-1.3, 0.577, -0.575), V(-1.3, 0.577, -2.975), V(-1.3, 0.577, -2.175)]), // последняя точка - середина отсека: по одной GBU-57 на сторону
+    nozzles: [], nr: 0.3, pod: null, dry: true, clearGlass: true, ...(paintOn ? { gearModel: 'e_b2_gear' } : {}), // B-2A: своя модель (Свои/B-2A, 2026-11-10); выхлоп в жёлобах сверху - факела нет
+    bay: { doors: { bay_l_i: [[-0.186, -1.607, -2.175], [0, 0, 1], 95], bay_l_o: [[-2.414, -1.233, -2.175], [0, 0, -1], 95], bay_r_i: [[0.186, -1.607, -2.175], [0, 0, -1], 95], bay_r_o: [[2.414, -1.233, -2.175], [0, 0, 1], 95] }, sides: { L: ['bay_l_i', 'bay_l_o'], R: ['bay_r_i', 'bay_r_o'] } } },
   // ── 2026-10-19, четвёртая партия: manilov.ap (Як-38, Ил-28, Ту-22, Ту-95, Hunter), andertan (Су-27, Су-35), helijah (Super Étendard),
   // Civorsky (Mirage F1), Rhine_Lab_Muelsyse (F/A-18C, EA-18G); бомбардировщики с отсеком - internal, точки - в отсеке
   e_yak38: { side: 'east', cls: 'strike', lazy: true, stations: mirror([V(-2.45, -1.42, 2.0, 0.3), V(-1.95, -1.4, 1.25), V(-0.45, -1.85, 0.3, 0.15), V(-0.45, -1.85, 2.3, 0.15)]),
@@ -156,7 +157,7 @@ const META = {
   w_kalibr: { weapon: 'kalibr', lazy: true, stations: [] }, // «Калибр» - mmickel
   w_agm86: { weapon: 'agm86', lazy: true, stations: [] }, // AGM-86 ALCM - mahmadsaleem11111
   w_storm: { weapon: 'storm', lazy: true, wings: 'fold', stations: [] }, // Storm Shadow - Viktor_ (CC BY 4.0), декали в текстуре стёрты (Свои/Storm Shadow); 5,1 м; у модели крылья раскрыты - на подвеске складываются вдоль корпуса, раскрываются после сброса
-  w_atacms: { weapon: 'atacms', lazy: true, stations: [] }, // ракета M142 HIMARS - Denis.Cherkasov1
+  w_atacms: { weapon: 'atacms', lazy: true, matte: true, wings: 'deploy', hinge: { fin1: [0.2281, 0.2281, 0, 0, 0, -1, -90], fin2: [0.2281, -0.2281, 0, 0, 0, -1, -90], fin3: [-0.2281, -0.2281, 0, 0, 0, -1, -90], fin4: [-0.2281, 0.2281, 0, 0, 0, -1, -90] }, stations: [] }, // MGM-140 ATACMS - своя модель (Свои/ATACMS, 2026-11-10): в файле рули сложены (как в трубе), после пуска раскрываются
   w_prsm: { weapon: 'prsm', lazy: true, stations: [] }, // PrSM - собственная модель (tools/airdef-models/own/prsm)
   w_lance: { weapon: 'lance', lazy: true, stations: [] }, // MGM-52 Lance в полёте - собственная модель (tools/airdef-models/own/msl_lance)
   w_arrw: { weapon: 'arrw', lazy: true, stations: [] }, // AGM-183A ARRW - собственная модель (tools/airdef-models/own/arrw)
@@ -203,7 +204,7 @@ const META = {
   l_iskander: { ev: true, lazy: true, matte: true, stations: [] }, // 9П78 «Искандер» - dofash_76 (две ракеты стоят вертикально - tbm, tbm2)
   l_tochka: { ev: true, lazy: true, matte: true, stations: [] }, // 9П129 «Точка-У» - своя (сборщик, Свои/Точка-У), боевое положение: ракета 9М79 вертикально (tbm)
   l_scud: { ev: true, lazy: true, matte: true, stations: [] }, // Р-17 на МАЗ-543 - AlexDang (tbm)
-  l_himars: { ev: true, lazy: true, matte: true, stations: [] }, // M142 HIMARS - Denis.Cherkasov1
+  l_himars: { ev: true, lazy: true, matte: true, stations: [] }, // M142 HIMARS - своя модель (Свои/HIMARS, 2026-11-10): платформа, клетка, цилиндры, контейнеры и крышки - свои части (main.js himarsPose)
   l_lance: { ev: true, lazy: true, matte: true, stations: [] }, // M752 (Lance) - своя пусковая на гусеничном ходу (сборщик, tools/airdef-models/own); ракета поднимается стрелой (tbm)
   // оружие, взятое с моделей самолётов: на пилоне и в полёте вместо процедурного
   w_gbu12: { weapon: 'gbu12', stations: [] }, // GBU-12 Paveway II - собственная модель (tools/airdef-models/own/gbu12)
@@ -344,6 +345,8 @@ const GLB_V = Object.fromEntries(['w_gbu10', 'w_ecm', 'gepard', 'gepard_lo', 'ro
   ['zsu234', 'zsu234_lo', 'zu23', 'buk', 'phalanx', 'w_fab100', 'w_ofab250', 'w_fab250', 'w_fab1000', 'w_gbu24', 'w_gbu57', 'w_umpk', 'e_yak38', 'e_il28', 'e_tu22', 'e_hunter', 'e_su27', 'e_su35', 'e_etendard', 'e_mirage_f1', 'e_f18c'].map((n) => [n, '20261022k'])).concat([['e_tu95', '20261022l'], ['w_agm65b', '20261022l'], ['w_decoy_e', '20261022l']].concat(['h_mi24', 'h_mi28', 'h_ka52', 'h_ah64', 'h_ah1', 'h_uh1', 'w_shturm', 'w_b8', 'w_hellfire', 'aam_stinger'].map((n) => [n, '20261022m'])).concat([['w_shturm', '20261022n']])).concat(['h_ah64', 'h_mi28'].map((n) => [n, '20261022p'])).concat([['h_uh1', '20261022r']]).concat(['w_lau61', 'obj_mill', 'pr_hay', 'pr_well', 'pr_pumpkin', 'pr_grave1', 'pr_grave2', 'pr_grave3', 'pr_grave4', 'pr_fence', 'pr_fpost', 'pr_deadtree', 'pr_oldtree', 'c_vaz'].map((n) => [n, '20261022o'])).concat(['e_vulcan', 'e_draken', 'e_viggen', 'w_bomb1000'].map((n) => [n, '20261023b'])).concat(['h_ka50', 'h_mi8', 'h_uh60', 'h_rah66'].map((n) => [n, '20261023c'])).concat([['w_nar_hydra', '20261024a'], ['w_nar_s8', '20261024a'], ['e_draken', '20261023d'], ['w_bomb1000', '20261023d'], ['h_ka50', '20261023d']]).concat(['e_su33', 'e_m4', 'e_mig19', 'e_mig17', 'e_t4', 'e_mig29k'].map((n) => [n, '20261023e']))); // 20261023e - шестая партия: Су-33, М-4, МиГ-19, МиГ-17, Т-4 (2026-10-21) // 20261023c - четыре вертолёта manilov.ap (2026-10-21) // 20261023b - Vulcan, Draken, Viggen, бомба 1000 lb (2026-10-21) // l - 2026-10-20: Ту-95 без нарисованных дисков, Maverick и Harpy без сильного упрощения // l - Ту-95 без нарисованных дисков винтов (2026-10-20) // j - четвёртая партия, новая «Шилка», УМПК без сжатия // i - ЗРК без упрощения, камуфляж шейдером, третья партия самолётов (2026-10-19); c - замены моделей 2026-10-19; остальные пересобраны 2026-10-18 (затенение в стыках) - общая версия ниже
 // версии файлов собственных моделей (Blender, tools/airdef-models/own): по строке на ключ; поднимает tools/airdef-models/integrate-own.js при каждом встраивании
 const GLB_V_OWN = {
+  e_b2: '20261110b', e_b2_gear: '20261110b', // свой B-2A
+  l_himars: '20261110b', w_atacms: '20261110b', // свои M142 HIMARS и ATACMS
   e_f4: '20261110a', e_f4_gear: '20261110a', e_f100: '20261110a', e_f100_gear: '20261110a', // свои F-4 Phantom II и F-100D
   e_rafale: '20261109b', e_rafale_gear: '20261109b', // свой Rafale
   e_hunter: '20261109a', e_hunter_gear: '20261109a', e_mirage_f1: '20261109a', e_mirage_f1_gear: '20261109a', // свои Hunter FGA.9 и Mirage F1
@@ -536,6 +539,7 @@ if (paintOn) META.e_f35_gear = { lazy: true, matte: true, paint: true, stations:
 if (paintOn) META.f18_gear = { lazy: true, matte: true, paint: true, stations: [] };
 if (paintOn) META.f16_gear = { lazy: true, matte: true, paint: true, stations: [] };
 if (paintOn) META.e_rafale_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего Rafale для ангара
+if (paintOn) META.e_b2_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего B-2A для ангара
 if (paintOn) { META.e_f4_gear = { lazy: true, matte: true, paint: true, stations: [] }; META.e_f100_gear = { lazy: true, matte: true, paint: true, stations: [] }; } // стойки своих F-4 и F-100D для ангара
 if (paintOn) { META.e_hunter_gear = { lazy: true, matte: true, paint: true, stations: [] }; META.e_mirage_f1_gear = { lazy: true, matte: true, paint: true, stations: [] }; } // стойки своих Hunter и Mirage F1 для ангара
 if (paintOn) { META.e_f18c_gear = { lazy: true, matte: true, paint: true, stations: [] }; META.e_typhoon_gear = { lazy: true, matte: true, paint: true, stations: [] }; META.e_mirage_gear = { lazy: true, matte: true, paint: true, stations: [] }; META.e_etendard_gear = { lazy: true, matte: true, paint: true, stations: [] }; META.e_viggen_gear = { lazy: true, matte: true, paint: true, stations: [] }; }
