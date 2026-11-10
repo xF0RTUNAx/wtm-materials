@@ -8,8 +8,8 @@
      ?wtf=0 — прежний факел (раскадровка). -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script type="module">
-import { createPlumes, makeFlame, flameTick, MOTOR, setTrailPuffs, setPuffCam, setIgnition, PUFF_MIN } from '../../games/airdef/plume.js?v=20261109a';
-import { makePuffs } from '../../games/airdef/puffs.js?v=20261109a';
+import { createPlumes, makeFlame, flameTick, MOTOR, setTrailPuffs, setPuffCam, setIgnition, PUFF_MIN } from '../../games/airdef/plume.js?v=20261111a';
+import { makePuffs } from '../../games/airdef/puffs.js?v=20261111a';
 const Q = new URLSearchParams(location.search), T = +(Q.get('t') || 8), dusk = Q.get('sky') === 'dusk', ALT = +(Q.get('alt') || 0);
 const r = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true }); r.setPixelRatio(1); r.setSize(innerWidth, innerHeight);
 r.outputEncoding = THREE.sRGBEncoding; r.toneMapping = THREE.ACESFilmicToneMapping; document.body.appendChild(r.domElement);
@@ -22,8 +22,8 @@ const PL = createPlumes(sc, {}); if (Q.get('ribbon') === '0') PL.mesh.visible = 
 let PT = null;
 if (Q.get('wts') !== '0') {
   // ?sheet=try — пробный лист клубов следа (trail-try/, trail.py до запекания набело); иначе — лист игры (trail, нет — puff)
-  const TRY = Q.get('sheet') === 'try', J = await (await fetch(TRY ? 'trail-try/trail.json' : '../../games/airdef/fx/explode.json?v=20261109a')).json();
-  const key = TRY ? 'trail' : J.trail ? 'trail' : 'puff', j = J[key], u = (e) => TRY ? `trail-try/ex_trail.${e}?t=${Date.now()}` : `../../games/airdef/fx/ex_${key}.${e}?v=20261109a`;
+  const TRY = Q.get('sheet') === 'try', J = await (await fetch(TRY ? 'trail-try/trail.json' : '../../games/airdef/fx/explode.json?v=20261111a')).json();
+  const key = TRY ? 'trail' : J.trail ? 'trail' : 'puff', j = J[key], u = (e) => TRY ? `trail-try/ex_trail.${e}?t=${Date.now()}` : `../../games/airdef/fx/ex_${key}.${e}?v=20261111a`;
   PT = makePuffs(sc, 4000, { url: u('webp'), cols: j.cols, rows: j.rows, frames: j.frames, variants: j.variants, times: j.times, fadeIn: 0.05, sqrtGrow: true, k: key === 'trail' ? (TRY ? 1.3 : 1.7) : 2 }); // клуб следа заполняет клетку — множитель меньше
   PT.mat.uniforms.scale.value = innerHeight / (2 * Math.tan(25 * Math.PI / 180)); setTrailPuffs(PT); setPuffCam(Q.get('cam') === 'chase' ? null : cam); // погоня: камера рядом с ракетой весь полёт — шаг клубов как вблизи
   for (let i = 0; i < 100 && !PT.ready; i++) await new Promise((ok) => setTimeout(ok, 100));

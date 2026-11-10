@@ -135,7 +135,7 @@ body.one h1, body.one h2, body.one p.d, body.one .cap { display: none; } body.on
 </style></head><body>
 <div id="app"></div>
 <script type="module">
-const G = '../../../games/airdef/', V = '?v=20261109a';
+const G = '../../../games/airdef/', V = '?v=20261111a';
 const { AG, LOADOUTS, ROLE_NAME, loadoutRole } = await import(G + 'arsenal.js' + V), { ico } = await import(G + 'icons.js' + V);
 const TH = (k) => `${G}thumbs/wpn_${k}.webp`, Q = new URLSearchParams(location.search), ONE = Q.get('f');
 const los = (era, plane) => LOADOUTS[era].filter((L) => L.plane === plane);

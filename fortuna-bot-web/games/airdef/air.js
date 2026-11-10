@@ -2,24 +2,24 @@
 // лазер), прицел точки падения, СПО и датчик пуска, метки целей, итоги. start(opts) - опции для обучения:
 // { items, pod, targets: [ключи], defense(S, rnd), invuln, spawn: {x,y,z,yaw}, noEnd, onTick(dt) }.
 /* global THREE */
-import { makeBay } from './bay.js?v=20261109a';
-import { tr } from './i18n.js?v=20261109a';
-import { CITY, ZONE_NAME, mulberry32, riverX, objAimXZ, objDist } from './city.js?v=20261109a';
-import { strikerGeo, attachFlames } from './units-render.js?v=20261109a';
-import { planeModel, classOf, weaponMesh, pylonMesh, seatStores, podModel, weaponHasModel, planeMeta, spinProps, wantWeapon, hiKnown, stOrder, stationsFor } from './models.js?v=20261109a';
-import { ico, drawIco } from './icons.js?v=20261109a';
-import { applyLayout } from './layout.js?v=20261109a';
-import { clamp, makeCraft, pilotStep, fwdOf, D2R, angleBetween } from '../drone/sim/core.js?v=20261109a';
-import { DRONE } from '../drone/sim/modes.js?v=20261109a';
-import { AG, SAM, ERAS, LOADOUTS, HELI_LOADOUTS, loadoutsOf, loadoutRole, loadoutTargets } from './arsenal.js?v=20261109a';
-import { predictBomb, predictRocket } from './sim/strike.js?v=20261109a';
-import { flightModel, loadOf } from './sim/flight.js?v=20261109a';
-import { heliModel, heliStep, heliInit, heliLand, touchVerdict, tmaxAcc, isHeli } from './sim/heli.js?v=20261109a';
-import { cmOf, cmKey } from './sim/cm.js?v=20261109a';
-import { initDamage, hitZones, dmgUnpack, burnRate, hullState, dmgBrief } from './sim/damage.js?v=20261109a';
-import { planeDamageVis } from './plane-damage.js?v=20261109a';
-import { placeDefense, pickTargets, entrySpawn } from './mission.js?v=20261109a';
-import { ZONE, newZone, zoneStep } from './sim/online.js?v=20261109a';
+import { makeBay } from './bay.js?v=20261111a';
+import { tr } from './i18n.js?v=20261111a';
+import { CITY, ZONE_NAME, mulberry32, riverX, objAimXZ, objDist } from './city.js?v=20261111a';
+import { strikerGeo, attachFlames } from './units-render.js?v=20261111a';
+import { planeModel, classOf, weaponMesh, pylonMesh, seatStores, podModel, weaponHasModel, planeMeta, spinProps, wantWeapon, hiKnown, stOrder, stationsFor } from './models.js?v=20261111a';
+import { ico, drawIco } from './icons.js?v=20261111a';
+import { applyLayout } from './layout.js?v=20261111a';
+import { clamp, makeCraft, pilotStep, fwdOf, D2R, angleBetween } from '../drone/sim/core.js?v=20261111a';
+import { DRONE } from '../drone/sim/modes.js?v=20261111a';
+import { AG, SAM, ERAS, LOADOUTS, HELI_LOADOUTS, loadoutsOf, loadoutRole, loadoutTargets } from './arsenal.js?v=20261111a';
+import { predictBomb, predictRocket } from './sim/strike.js?v=20261111a';
+import { flightModel, loadOf } from './sim/flight.js?v=20261111a';
+import { heliModel, heliStep, heliInit, heliLand, touchVerdict, tmaxAcc, isHeli } from './sim/heli.js?v=20261111a';
+import { cmOf, cmKey } from './sim/cm.js?v=20261111a';
+import { initDamage, hitZones, dmgUnpack, burnRate, hullState, dmgBrief } from './sim/damage.js?v=20261111a';
+import { planeDamageVis } from './plane-damage.js?v=20261111a';
+import { placeDefense, pickTargets, entrySpawn } from './mission.js?v=20261111a';
+import { ZONE, newZone, zoneStep } from './sim/online.js?v=20261111a';
 
 export function createAir(C) {
   const { $, city, scene, camera, renderer, snd, IS_TOUCH, P, W } = C;
@@ -92,7 +92,7 @@ export function createAir(C) {
     if (seatExtra) { ship.remove(seatExtra); seatExtra = null; }
     const seatL = [];
     for (const l of loadout) for (const st of l.st) {
-      const m = pylonMesh(l.key, AG[l.key], C.weaponGeo, C.mats.wMat, !!craft.heli); const p = stations[st], W0 = AG[l.key].vis; if (!p) continue; /* пока грузится своя модель, стоит подходящая из загруженных - у неё точек может быть меньше (F-100D, МиГ-23: шесть) */ m.position.set(p.x, p.y - (W0.hang ?? W0.r) - 0.05, p.z); // hang - у ракет с гондолой под корпусом
+      const p = stations[st], W0 = AG[l.key].vis; if (!p) continue; const m = pylonMesh(l.key, AG[l.key], C.weaponGeo, C.mats.wMat, !!craft.heli); /* пока грузится своя модель, стоит подходящая из загруженных - у неё точек может быть меньше (F-100D, МиГ-23: шесть) */ m.position.set(p.x, p.y - (W0.hang ?? W0.r) - 0.05, p.z); // hang - у ракет с гондолой под корпусом
       m.userData.st = st; m.visible = !shipInternal; ship.add(m); pylonMeshes.push(m); seatL.push({ m, st, key: l.key, W: AG[l.key] }); // во внутренних отсеках - не видно
     }
     if (hasPod && podPos) { const m = podModel() || new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 2.4, 10).rotateX(Math.PI / 2), new THREE.MeshPhongMaterial({ color: 0x5a636c })); m.position.copy(podPos); ship.add(m); pylonMeshes.push(m); seatL.push({ m, pod: true }); } // LITENING или цилиндр
@@ -990,7 +990,7 @@ export function createAir(C) {
       ? tr(' · <b class="okd">задача выполнена</b> <span class="dim">- выход за границу района, {0} км</span>', [(Math.max(0, CITY.HALF - 300 - Math.max(Math.abs(craft.pos.x), Math.abs(craft.pos.z))) / 1000).toFixed(1)]) : '';
     hudPart('g3', `<div class="c"><s>${tr('Скорость')}</s><b>${Math.round(craft.speed * 3.6)}</b>${craft.ab ? `<span class="ab">${tr('Ф')}</span>` : ''}</div><div class="c"><s>${tr('Высота')}</s><b>${Math.round(craft.pos.y - g)}</b></div><div class="c${craft.fuel < 0.2 ? ' low' : ''}"><s>${tr('Топливо')}</s><b>${fuel}<small>%</small></b></div>`);
     hudPart('ws', loadout.map((l, i) => { const W = AG[l.key], ecm = W.kind === 'ecm', rk = W.kind === 'rocket';
-      return `<span class="w${i === sel ? ' sel' : ''}${!ecm && !(l.n > 0) ? ' out' : ''}" data-w="${i}"><img src="airdef/thumbs/wpn_${l.key}.webp?v=20261109a" alt="" onerror="this.remove()"><b>${W.short}</b>${l.rt > 0 ? `<span class="rs">${ico('rotCw', 'ii')}${Math.ceil(l.rt)}</span>` : ''}<u>${ecm ? '<i class="sd"></i>' : rk ? rocketsOf(l) : l.n}${!ecm && Number.isFinite(l.res) && !game.net ? `<span class="rs"> +${rk ? l.res * W.load : l.res}</span>` : ''}</u></span>`; }).join(''),
+      return `<span class="w${i === sel ? ' sel' : ''}${!ecm && !(l.n > 0) ? ' out' : ''}" data-w="${i}"><img src="airdef/thumbs/wpn_${l.key}.webp?v=20261111a" alt="" onerror="this.remove()"><b>${W.short}</b>${l.rt > 0 ? `<span class="rs">${ico('rotCw', 'ii')}${Math.ceil(l.rt)}</span>` : ''}<u>${ecm ? '<i class="sd"></i>' : rk ? rocketsOf(l) : l.n}${!ecm && Number.isFinite(l.res) && !game.net ? `<span class="rs"> +${rk ? l.res * W.load : l.res}</span>` : ''}</u></span>`; }).join(''),
       // два коротких названия - в строку; длинные названия или больше двух видов оружия - ячейки в два этажа (миниатюра и число, ниже название), по три в ряд
       (loadout.length > 2 || loadout.some((l) => AG[l.key].short.length > 6) ? ' tall' : '') + (loadout.length === 3 || loadout.length > 4 ? ' c3' : ''));
     hudPart('st', `${msgT > 0 ? msgText : larText}${inAir ? tr(' <span class="fly">· в полёте {0}</span>', [inAir]) : ''}` || '&nbsp;');

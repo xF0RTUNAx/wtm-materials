@@ -6,15 +6,15 @@
 // tools/airdef-models/planes-view.html?ortho=1; dry - двигатель без форсажа: только слабое свечение; нет сопел - пламени не видно: B-2, F-117) и место
 // контейнера. Авторы и лицензии - MODEL_CREDITS (показываются в «Настройках»).
 /* global THREE */
-import { SEATS } from './seats-data.js?v=20261109a';
-import { pylonTris, geoOf, seatOne } from './seat.js?v=20261109a';
-import { tr } from './i18n.js?v=20261109a';
-import { CREDITS } from './models/credits.js?v=20261109a';
-import { HI_PLANES } from './models/hi-list.js?v=20261109a';
-import { mergeLocal } from './merge.js?v=20261109a';
-import { cachedFetch } from './offline.js?v=20261109a';
-import { paintMat, paintOn } from './paint.js?v=20261109a';
-import { ktxOn, ktxParse, ktxFree, ktxIndexUrl, ktxUrlOf } from './ktx.js?v=20261109a';
+import { SEATS } from './seats-data.js?v=20261111a';
+import { pylonTris, geoOf, seatOne } from './seat.js?v=20261111a';
+import { tr } from './i18n.js?v=20261111a';
+import { CREDITS } from './models/credits.js?v=20261111a';
+import { HI_PLANES } from './models/hi-list.js?v=20261111a';
+import { mergeLocal } from './merge.js?v=20261111a';
+import { cachedFetch } from './offline.js?v=20261111a';
+import { paintMat, paintOn } from './paint.js?v=20261111a';
+import { ktxOn, ktxParse, ktxFree, ktxIndexUrl, ktxUrlOf } from './ktx.js?v=20261111a';
 const V = (x, y, z, py = 0) => Object.assign(new THREE.Vector3(x, y, z), { py });
 // порядок развески по точкам (самое тяжёлое - первым): восемь точек и больше - прежний [3, 4, 2, 5, 1, 6, 0, 7]; меньше восьми (МиГ-23, МиГ-27,
 // F-100D - по три на сторону) - парами от оси к законцовкам, иначе пары рвались и груз висел несимметрично (или точки не находилось вовсе)

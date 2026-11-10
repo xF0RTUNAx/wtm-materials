@@ -2,7 +2,7 @@
 // собрал в прототипах v3 - https://claude.ai/artifact/GYSERtUd6bB2gHdcyPhCZD, коллекция layouts; случайно на каждый поиск), справа -
 // кольцо с временем поиска (цифры Oswald), под ним - сколько ищут и когда старт, внизу - «Отменить». Ников нет: соперник до боя не виден.
 // Картинки - модели игры (tools/airdef-models/poses.html → ui/mm/<юнит>_<ракурс>.webp). Звук: пинг один раз в начале поиска, щелчок «Отменить».
-import { tr } from './i18n.js?v=20261109a';
+import { tr } from './i18n.js?v=20261111a';
 
 // раскладка: dim - затемнение фона; s - [картинка, x, y - центр в % экрана 932 × 430, w - ширина %, яркость, дымка, покачивание, ('f' - зеркально)]
 const LAYOUTS = [
@@ -62,7 +62,7 @@ export function createMM(C, onCancel) {
   let on = false, t0 = 0, anims = [], pingT = 0, tick = 0, hideT = 0;
   $('.cx').onclick = () => { snd.cancelClick ? snd.cancelClick() : snd.click(); onCancel(); };
   // картинки - заранее и раскодированные: следующая раскладка выбирается сразу и грузится в простое меню (иначе техника «выскакивает» поздно)
-  const url = (f) => `airdef/ui/mm/${f}.webp?v=20261109a`, pre = {}; // ?v= - версия модулей (поднимается при деплое)
+  const url = (f) => `airdef/ui/mm/${f}.webp?v=20261111a`, pre = {}; // ?v= - версия модулей (поднимается при деплое)
   const load = (f) => pre[f] || (pre[f] = new Promise((ok) => { if (typeof Image !== 'function') { ok(); return; } const im = new Image(); im.decoding = 'async'; im.src = url(f); (im.decode ? im.decode() : Promise.resolve()).then(ok, ok); }));
   let last = -1; const pick = () => { let i = Math.floor(Math.random() * LAYOUTS.length); if (LAYOUTS.length > 1 && i === last) i = (i + 1) % LAYOUTS.length; return i; };
   let nextI = pick(); const warm = () => LAYOUTS[nextI].s.forEach(([f]) => load(f));
