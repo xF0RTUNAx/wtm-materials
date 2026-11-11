@@ -4,7 +4,8 @@ import os, json
 from PIL import Image, ImageDraw, ImageFont
 H = os.path.dirname(os.path.abspath(__file__))
 ST = '/System/Library/Fonts/Supplemental/Stencil.ttf'; AB = '/System/Library/Fonts/Supplemental/Arial Bold.ttf'
-ROWS = [('1-3 FA', ST), ('A-12', ST), ('DANGER  ROCKET EXHAUST', AB), ('STAY CLEAR 300 FT', AB), ('JP-8', ST), ('CAUTION', AB), ('USA 2C 4521', ST), ('NO STEP', AB)]
+ROWS = [('1-3 FA', ST), ('A-12', ST), ('DANGER  ROCKET EXHAUST', AB), ('STAY CLEAR 300 FT', AB), ('JP-8', ST), ('CAUTION', AB), ('USA 2C 4521', ST), ('NO STEP', AB),
+        ('45 PSI', AB), ('LIFT', ST), ('HYD FLUID', AB), ('TIE DOWN', ST)]   # rev 2 (пункт 5)
 im = Image.new('RGBA', (1024, 128 * len(ROWS)), (0, 0, 0, 0)); widths = []
 for row, (txt, fp) in enumerate(ROWS):
     f = ImageFont.truetype(fp if os.path.exists(fp) else AB, 220); t = Image.new('L', (4000, 320), 0); ImageDraw.Draw(t).text((20, 20), txt, font=f, fill=255)

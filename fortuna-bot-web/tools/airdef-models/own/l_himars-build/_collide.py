@@ -18,7 +18,7 @@ def tree(objs):
 
 def visible(o): return not o.hide_render
 movers = lambda: [o for o in COL.objects if o.type == 'MESH' and visible(o) and (o.name in ('turn', 'pod', 'boom') or o.name.startswith(('pod_', 'lid_', 'cyl_')))]
-statics = [o for o in COL.objects if o.type == 'MESH' and (o.name.startswith(('body_', 'wheel_', 'ant_')) or o.name == 'hatch')]
+statics = [o for o in COL.objects if o.type == 'MESH' and (o.name.startswith(('body_', 'wheel_', 'ant_', 'sk_')) or o.name == 'hatch')]
 pod_only = lambda: [o for o in movers() if o.name != 'turn' and not o.name.startswith('cyl_body')]
 
 

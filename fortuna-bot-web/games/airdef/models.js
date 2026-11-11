@@ -6,15 +6,15 @@
 // tools/airdef-models/planes-view.html?ortho=1; dry - двигатель без форсажа: только слабое свечение; нет сопел - пламени не видно: B-2, F-117) и место
 // контейнера. Авторы и лицензии - MODEL_CREDITS (показываются в «Настройках»).
 /* global THREE */
-import { SEATS } from './seats-data.js?v=20261111a';
-import { pylonTris, geoOf, seatOne } from './seat.js?v=20261111a';
-import { tr } from './i18n.js?v=20261111a';
-import { CREDITS } from './models/credits.js?v=20261111a';
-import { HI_PLANES } from './models/hi-list.js?v=20261111a';
-import { mergeLocal } from './merge.js?v=20261111a';
-import { cachedFetch } from './offline.js?v=20261111a';
-import { paintMat, paintOn } from './paint.js?v=20261111a';
-import { ktxOn, ktxParse, ktxFree, ktxIndexUrl, ktxUrlOf } from './ktx.js?v=20261111a';
+import { SEATS } from './seats-data.js?v=20261111b';
+import { pylonTris, geoOf, seatOne } from './seat.js?v=20261111b';
+import { tr } from './i18n.js?v=20261111b';
+import { CREDITS } from './models/credits.js?v=20261111b';
+import { HI_PLANES } from './models/hi-list.js?v=20261111b';
+import { mergeLocal } from './merge.js?v=20261111b';
+import { cachedFetch } from './offline.js?v=20261111b';
+import { paintMat, paintOn } from './paint.js?v=20261111b';
+import { ktxOn, ktxParse, ktxFree, ktxIndexUrl, ktxUrlOf } from './ktx.js?v=20261111b';
 const V = (x, y, z, py = 0) => Object.assign(new THREE.Vector3(x, y, z), { py });
 // порядок развески по точкам (самое тяжёлое - первым): восемь точек и больше - прежний [3, 4, 2, 5, 1, 6, 0, 7]; меньше восьми (МиГ-23, МиГ-27,
 // F-100D - по три на сторону) - парами от оси к законцовкам, иначе пары рвались и груз висел несимметрично (или точки не находилось вовсе)
@@ -349,7 +349,7 @@ const GLB_V = Object.fromEntries(['w_gbu10', 'w_ecm', 'gepard', 'gepard_lo', 'ro
 const GLB_V_OWN = {
   e_b2: '20261110b', e_b2_gear: '20261110b', // свой B-2A
   e_vulcan: '20261110c', e_vulcan_gear: '20261110c', // свой Vulcan B.2
-  l_himars: '20261110b', w_atacms: '20261110b', // свои M142 HIMARS и ATACMS
+  l_himars: '20261111b', w_atacms: '20261110b', // свои M142 HIMARS и ATACMS
   e_f4: '20261110a', e_f4_gear: '20261110a', e_f100: '20261110a', e_f100_gear: '20261110a', // свои F-4 Phantom II и F-100D
   e_rafale: '20261109b', e_rafale_gear: '20261109b', // свой Rafale
   e_hunter: '20261109a', e_hunter_gear: '20261109a', e_mirage_f1: '20261109a', e_mirage_f1_gear: '20261109a', // свои Hunter FGA.9 и Mirage F1

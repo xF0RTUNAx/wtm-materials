@@ -297,7 +297,7 @@ const CONFIG = {
   l_himars: { src: new URL('./own/l_himars.glb', import.meta.url).pathname, scale: 1, nose: '-z', rulesIn: 'game', unit: true, own: true, tex: () => 1024, nTex: () => 512, pickMesh: /./,
     groups: (c) => { const p = c.path, E = '(\\/|\\||$)', m = (re) => new RegExp('(^|\\/)' + re + E).exec(p); let q;
       if ((q = m('lid_[fr](A|G\\d)'))) return 'podL' + q[2]; if (m('pod_atacms')) return 'podA'; if (m('pod_gmlrs')) return 'podG';
-      if ((q = m('cyl_rod_([lr])'))) return 'podR' + q[2]; if ((q = m('cyl_body_([lr])'))) return 'turnC' + q[2]; if (m('pod')) return 'pod'; if (m('turn')) return 'turn'; return 'body'; } },
+      if ((q = m('cyl_rod_([lr])'))) return 'podR' + q[2]; if ((q = m('cyl_body_([lr])'))) return 'turnC' + q[2]; if (m('pod')) return Math.abs(c.ctr[1] - 1.92) < 0.03 && Math.abs(c.ctr[2] + 0.91) < 0.03 && c.size[1] < 0.2 && c.size[2] < 0.2 ? 'podG' /* средняя перекладина дульной рамы (с торцевыми накладками; координаты исходника): стоит между рядами шести труб, а трубу ATACMS пересекает - показывается только с шестиствольным контейнером (Mark 2026-11-11) */ : 'pod'; if (m('turn')) return 'turn'; return 'body'; } },
   // ATACMS - своя модель (Свои/ATACMS, 2026-11-10): начало как в файле (середина длины на оси), рули fin1…fin4 - свои части: в трубе сложены, после пуска раскрываются (models.js META.w_atacms.hinge)
   w_atacms: { src: new URL('./own/atacms.glb', import.meta.url).pathname, scale: 1, nose: '-z', axisX: 0, axisZ: 0, centerY: 0, tex: () => 1024, nTex: () => 512, pickMesh: /./, own: true, groups: (c) => { const m = /(^|\/)(fin\d)(\/|\||$)/.exec(c.path); return m ? m[2] : 'body'; } },
   // ── карта «Летки»: ЛЭП, ветряк, порт, маяк, поезда; танкеры (2026-10-11)

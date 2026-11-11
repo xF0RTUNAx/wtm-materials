@@ -6,9 +6,9 @@
 // ГСМ на торфоразработках. Наша площадка - на юго-востоке (вылет и пополнение вертолётов).
 // Детерминированный генератор с интерфейсом buildCity / buildWinter (симуляция и сервер): сетка высот 50 м, groundH -
 // билинейно; вода - одна отметка (уровень болота AUTUMN.WY), waterAt - где она. Оси как в city.js: −Z - север.
-import { tr } from './i18n.js?v=20261111a';
-import { CITY, ZONE, KIND, SITES, mulberry32, clamp, smooth, mp, mbox, siteParts, mapRuntime, OBJ_HP } from './city.js?v=20261111a';
-import { perlin, fbm, ridged, heap } from './map-winter.js?v=20261111a';
+import { tr } from './i18n.js?v=20261111b';
+import { CITY, ZONE, KIND, SITES, mulberry32, clamp, smooth, mp, mbox, siteParts, mapRuntime, OBJ_HP } from './city.js?v=20261111b';
+import { perlin, fbm, ridged, heap } from './map-winter.js?v=20261111b';
 
 const H = CITY.HALF, RES = 50, N = Math.round(2 * H / RES) + 1;
 export const AUTUMN = {

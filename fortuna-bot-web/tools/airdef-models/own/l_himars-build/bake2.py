@@ -83,9 +83,10 @@ GROUPS = {'F': ['body_frame', 'ant_l', 'ant_r'],
           'B': ['pod', 'boom', 'pod_gmlrs', 'cyl_rod_l', 'cyl_rod_r'] + [n for n in MESHES if n.startswith(('lid_fG', 'lid_rG'))],
           'T': ['pod_atacms', 'lid_fA', 'lid_rA'],
           'W': ['wheel_2l'],
-          'D': sorted(DETS)}
+          'D': sorted(d for d in DETS if not d.startswith('det_sk_')),
+          'S': sorted(n for n in MESHES if n.startswith(('sk_', 'det_sk_')))}                      # rev 2: оснастка только для Sketchfab - свой атлас
 GROUPS['A'] = [n for n in MESHES if n not in WHEELS and not any(n in v for v in GROUPS.values())]
-SIZES = {'A': SIZE, 'F': SIZE, 'B': SIZE, 'T': SIZE // 2, 'W': SIZE // 2, 'D': SIZE}
+SIZES = {'A': SIZE, 'F': SIZE, 'B': SIZE, 'T': SIZE // 2, 'W': SIZE // 2, 'D': SIZE, 'S': SIZE // 2}
 HIDE = {'B': ['pod_atacms', 'det_pod_atacms', 'lid_fA', 'lid_rA'], 'T': ['pod_gmlrs', 'det_pod_gmlrs'] + [n for n in MESHES if n.startswith(('lid_fG', 'lid_rG'))]}
 log('группы:', {k: len(v) for k, v in GROUPS.items()})
 
@@ -187,7 +188,9 @@ def orm(tag, ao_p, r_p, m_p, size):
 
 
 RES = {}
-for tag in ('A', 'F', 'B', 'T', 'W', 'D'):
+TAGS = [t for t in os.environ.get('HIM_TAGS', '').split(',') if t]               # параллельно: каждый процесс печёт свои атласы, потом общий проход с HIM_REUSE=1
+for tag in ('A', 'F', 'B', 'T', 'W', 'D', 'S'):
+    if TAGS and tag not in TAGS: continue
     for o in MESHES.values(): o.hide_render = False
     for n in HIDE.get(tag, []):
         if n in MESHES: MESHES[n].hide_render = True
@@ -200,6 +203,8 @@ for tag in ('A', 'F', 'B', 'T', 'W', 'D'):
     a = bake(objs, mats, new_img(f'him_{tag}_ao', size // 2, True), 'ao')
     n_ = bake(objs, mats, new_img(f'him_{tag}_normal', size, True), 'normal')
     RES[tag] = (c, orm(tag, a, r, m, size // 2), n_)
+if TAGS:
+    log('bake2.py: атласы готовы', TAGS); import sys as _s; _s.exit(0)
 for o in MESHES.values(): o.hide_render = False
 src_uv = MESHES['wheel_2l'].data.uv_layers.active                                                   # колёса: одна развёртка на все шесть
 for n in WHEELS:
@@ -237,6 +242,7 @@ def tex_mat(name, color, ormp, normal):
 
 
 FINAL = {tag: tex_mat(f'HIM_{tag}', *RES[tag]) for tag in RES}
+KEEP_GLASS_IN_ATLAS = True
 GLASS = bpy.data.materials.new('HIM_glassF'); GLASS.use_nodes = True
 gb = next(n for n in GLASS.node_tree.nodes if n.type == 'BSDF_PRINCIPLED'); gb.inputs['Base Color'].default_value = (0.02, 0.024, 0.024, 1); gb.inputs['Roughness'].default_value = 0.05
 gb.inputs['Metallic'].default_value = 0.3; GLASS.diffuse_color = (0.02, 0.024, 0.024, 1)
@@ -247,7 +253,7 @@ for tag, names in GROUPS.items():
         glass = [p.index for p in me.polygons if p.material_index in gi]
         me.materials.clear(); me.materials.append(FINAL[tag]); me.materials.append(GLASS)
         for p in me.polygons: p.material_index = 0
-        for i in glass: me.polygons[i].material_index = 1
+        for i in glass: me.polygons[i].material_index = 0 if KEEP_GLASS_IN_ATLAS else 1   # rev 2: стёкла из атласа - пыль и дуги дворников доходят до игры
 for m in list(bpy.data.materials):
     if m.users == 0: bpy.data.materials.remove(m)
 log('bake2.py: готово', {k: [os.path.basename(p) for p in v] for k, v in RES.items()})

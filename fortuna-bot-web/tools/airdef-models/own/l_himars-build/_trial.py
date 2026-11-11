@@ -23,7 +23,10 @@ gmat = bpy.data.materials.new('V_ground'); gmat.use_nodes = True; gb = next(n fo
 cam = bpy.data.objects.new('V_cam', bpy.data.cameras.new('V_cam')); COL.objects.link(cam); cam.data.lens = 45; sc.camera = cam
 OUT = os.path.join(HD, 'пробный_окраска'); os.makedirs(OUT, exist_ok=True)
 SHOTS_ALL = [('общий', -50, 12, 17, (0, -0.3, 1.6), 0), ('борт', -90, 4, 15, (0, -0.4, 1.6), 0), ('перед', -24, 6, 7.5, (0, 3.2, 1.4), 0), ('кабина', -40, 16, 5.5, (0, 2.6, 2.0), 0),
-             ('боевое', -135, 14, 17, (0, -1.0, 2.6), 45), ('корма', 160, 12, 10, (0, -3.6, 1.8), 0)]
+             ('боевое', -135, 14, 17, (0, -1.0, 2.6), 45), ('корма', 160, 12, 10, (0, -3.6, 1.8), 0),
+             ('колесо', -80, 10, 3.4, (-1.0, 2.4, 0.95), 0), ('выхлоп', 130, 15, 3.2, (1.0, 1.7, 2.3), 0), ('дверь', 75, 8, 3.4, (1.1, 2.8, 1.6), 0),
+             ('цилиндр', -70, 6, 4.2, (-0.6, -1.3, 1.7), 40), ('шина', -90, 2, 2.0, (-0.97, -1.02, 0.6), 0), ('лобовое', 8, 6, 3.0, (0, 3.5, 2.30), 0),
+             ('настил', -60, 35, 3.0, (-0.95, 2.6, 1.25), 0)]
 SHOTS = [s for s in SHOTS_ALL if not os.environ.get('HIM_SHOTS') or s[0] in os.environ['HIM_SHOTS'].split(',')]
 vars_ = list(VARIANTS) if os.environ.get('HIM_VARS', 'all') == 'all' else os.environ['HIM_VARS'].split(',')
 for vn in vars_:

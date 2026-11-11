@@ -24,6 +24,7 @@ def img_copy(path, size, fmt):
 def swap_images(tex, ntex):
     back = []
     for tag in RES:
+        if tag == 'S': continue                                                   # оснастка Sketchfab в игру не идёт
         m = bpy.data.materials[f'HIM_{tag}']
         for n in [n for n in m.node_tree.nodes if n.type == 'TEX_IMAGE']:
             p = bpy.path.abspath(n.image.filepath); col = '_color' in p
@@ -38,7 +39,7 @@ def restore(back):
 
 
 def export(path):
-    keep = [o for o in COL.objects if o.type == 'MESH' or (o.type == 'EMPTY' and o.name.startswith(('muzzle_', 'steer_')))]
+    keep = [o for o in COL.objects if (o.type == 'MESH' and not o.name.startswith(('sk_', 'det_sk_'))) or (o.type == 'EMPTY' and o.name.startswith(('muzzle_', 'steer_')))]   # rev 2: sk_* - только Sketchfab
     for o in bpy.context.view_layer.objects: o.select_set(False)
     for o in keep: o.select_set(True)
     bpy.context.view_layer.objects.active = keep[0]
@@ -115,8 +116,12 @@ swap = [
     'стрелу boom (только при подъёме ≥ 30°), выбор контейнера (показать pod_atacms или pod_gmlrs), крышки труб (прятать lid_f/lid_r при пуске своей трубы), '
     'вращение колёс и поворот steer_*; шестиствольный контейнер - под будущие ракеты GMLRS/PrSM (дульные срезы muzzle_G0…G5).',
     'ORM (R затенение, G шероховатость, B металл) - одна картинка 512 на атлас; можно включать только в ангаре, если в бою дорого.',
+    'Ревизия 2 (2026-11-11): имена и иерархия узлов, оси turn/pod, точки цилиндров и дульные точки НЕ менялись; POD.l_himars прежний; пределы прежние. '
+    'Поменялись: форма клетки (вертикальные борта, перёд срезан ровными панелями), кабина (задний вырез, дверь, мостик), низ (двигатель, коробка, подкрылки), '
+    'новая неподвижная оснастка body_kit (трос на бампере, огнетушитель); набор det_* другой - брать все как есть. Стёкла теперь в атласе (пыль, дуги дворников). '
+    'Объекты sk_* в игровом файле отсутствуют (только Sketchfab).',
 ]
-P = dict(key=BASE, weapon='', name='M142 HIMARS', name_en='M142 HIMARS', rev=1,
+P = dict(key=BASE, weapon='', name='M142 HIMARS', name_en='M142 HIMARS', rev=2,
          files=dict(glb=BASE + '.glb', blend=BASE + '.blend', build=['build.py', 'parts_llm.py', 'himkit.py', '_paint.py', 'make_decals.py', 'bake2.py', 'deliver.py', 'pack.py']),
          tex=GAME_TEX, nTex=GAME_NTEX, ormTex=GAME_NTEX, missile=dict(key='w_atacms', folder='Свои/ATACMS'),
          parts=parts, anim=anim, lids=lid_map, muzzles=muz, combat_pose=dict(turn_deg=0, pod_deg=50, boom_m=0, container='pod_atacms или pod_gmlrs', hatch_deg=0),
@@ -126,20 +131,22 @@ P = dict(key=BASE, weapon='', name='M142 HIMARS', name_en='M142 HIMARS', rev=1,
 json.dump(P, open(os.path.join(DST, 'ПАСПОРТ.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
 mn = Vector((1e9,) * 3); mx_ = Vector((-1e9,) * 3)
 for o in COL.objects:
-    if o.type != 'MESH' or o.name.startswith('ant_'): continue
+    if o.type != 'MESH' or o.name.startswith(('ant_', 'sk_', 'det_sk_')): continue
     for v in o.data.vertices:
         p = o.matrix_world @ v.co
         for i in range(3): mn[i] = min(mn[i], p[i]); mx_[i] = max(mx_[i], p[i])
-R = dict(name_en='M142 HIMARS', rev=1, previews=PREV,
+R = dict(name_en='M142 HIMARS', rev=2, previews=PREV,
          model=dict(length_m=round(mx_.y - mn.y, 3), width_m=round(mx_.x - mn.x, 3), height_m=round(mx_.z - mn.z, 3), tris=tri_g, glb_mb=round(size_g / 1e6, 2)),
          paint=dict(variant=VAR, how='процедурная окраска с фотомасками CC0 (ambientCG: SurfaceImperfections003/013, Scratches003/005, Leaking012A/017B), трафареты свои вымышленные'),
-         textures=dict(atlases={'A': 'кабина, оборудование, основание, платформа, люк, корпуса цилиндров', 'F': 'рама, бампер, щитки, антенны', 'B': 'клетка, стрела, контейнер GMLRS, штоки',
-                                'T': 'контейнер ATACMS', 'W': 'колесо (одна развёртка на шесть)', 'D': 'мелочь det_*'}, full=SIZE, game='цвет 1024 JPEG, ORM 512, нормали 512',
-                       normal='с детальной копии (фаски 6 мм) + рельеф краски'),
+         textures=dict(atlases={'A': 'кабина, оборудование, основание, платформа, люк, корпуса цилиндров', 'F': 'рама, бампер, низ под кабиной, антенны', 'B': 'клетка, стрела, контейнер GMLRS, штоки',
+                                'T': 'контейнер ATACMS', 'W': 'колесо (одна развёртка на шесть)', 'D': 'мелочь det_*', 'S': 'оснастка sk_* (только Sketchfab)'}, full=SIZE, game='цвет 1024 JPEG, ORM 512, нормали 512',
+                       normal='с детальной копии (фаски 6 мм) + рельеф краски, сварные швы, рифлёный настил, надписи на шинах, литьё ступиц'),
          checks=dict(collisions='подъём 0…75° без касаний; поворот при 0° - весь круг; при подъёме от 5° - ±130° (дальше задний торец клетки задевает ящики за кабиной); стрела при 0° задевает кабину и антенны, при 60° - чисто (_collide.py, _показ/_collide_6.txt)',
                      atacms_in_tube='ракета 4,23 м со сложенными рулями (r 0,449) входит в трубу (внутренний r 0,46), зазор ≈ 1 см (ATACMS/_fit.py)'),
          sketchfab=dict(title='M142 HIMARS with ATACMS and GMLRS pods', glb=BASE + '_sketchfab.glb',
                         tags=['himars', 'm142', 'atacms', 'gmlrs', 'mlrs', 'launcher', 'military', 'vehicle', 'animated', 'game-ready', 'pbr', 'blender']),
-         notes='Ревизия 1 (2026-11-10): форма по фото Mark 01–17 (виды сбоку 16 и 17 - главные по длине), правки Mark: кабина шестиугольником, ниша решёток, прямоугольные окна, подбородок 45° и щитки крыльев, пусковая в габарите рамы. Окраска олива.')
+         notes='Ревизия 2 (2026-11-11): клетка с вертикальными бортами и срезанным ровными панелями передом, вогнутый задний вырез кабины с порожком и коробом, дверь со швом, мостик, '
+               'низ под кабиной, ровные антенны, дворники; окраска: грунт и металл в сколах по выпуклым кромкам, места трения, дождевые потёки, брызги от колёс, масло, копоть, ржавчина, '
+               'партии краски, новые трафареты; оснастка: трос, огнетушитель (игра) + сеть, рюкзаки, вещмешок, ящик, цепь (Sketchfab). Ревизия 1 (2026-11-10): форма по фото Mark 01–17 (виды сбоку 16 и 17 - главные по длине), правки Mark: кабина шестиугольником, ниша решёток, прямоугольные окна, подбородок 45° и щитки крыльев, пусковая в габарите рамы. Окраска олива.')
 json.dump(R, open(os.path.join(DST, 'ОТЧЁТ.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
 log('deliver.py: готово', BASE + '.glb', PREV)

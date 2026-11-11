@@ -7,11 +7,12 @@
      Сохраняет tools/airdef-headless/thumbs-bake.js → games/airdef/thumbs/<ветка>_<ключ>.webp -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script type="module">
-import { loadModels, planeModel, unitModelGlb, unitMissileGlb, launcherGlb, wantUnit, wantModel, anyModel, weaponMesh, wantWeapon, weaponPending, setWings } from '../../games/airdef/models.js?v=20261111a';
-import { unitModel, weaponGeo } from '../../games/airdef/units-render.js?v=20261111a';
-import { AG, SAM } from '../../games/airdef/arsenal.js?v=20261111a';
-import { cylPose } from '../../games/airdef/launchers.js?v=20261111a';
-import { TREE, NODE } from '../../games/airdef/progress.js?v=20261111a';
+import { loadModels, planeModel, unitModelGlb, unitMissileGlb, launcherGlb, wantUnit, wantModel, anyModel, weaponMesh, wantWeapon, weaponPending, setWings } from '../../games/airdef/models.js?v=20261111b';
+import { unitModel, weaponGeo } from '../../games/airdef/units-render.js?v=20261111b';
+import { AG, SAM } from '../../games/airdef/arsenal.js?v=20261111b';
+import { cylPose } from '../../games/airdef/launchers.js?v=20261111b';
+import { TREE, NODE } from '../../games/airdef/progress.js?v=20261111b';
+import { POD } from '../../games/airdef/sim/combined.js?v=20261111b';
 const Q = new URLSearchParams(location.search), IDS = Q.get('ids') ? Q.get('ids').split(',') : TREE.map((n) => n.id);
 const W = 480, H = 270, r = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true }); r.setPixelRatio(2); r.setSize(W, H); // 960×540 — досье показывает крупно r.outputEncoding = THREE.sRGBEncoding; r.setClearColor(0, 0);
 const unitMat = new THREE.MeshPhongMaterial({ vertexColors: true, specular: 0x222222, shininess: 18 }), wMat = new THREE.MeshPhongMaterial({ vertexColors: true, specular: 0x444444, shininess: 40 });
@@ -58,11 +59,30 @@ async function unitObj(key) {
   }
   return g;
 }
+// HIMARS с ракетой (Mark 2026-11-11: «миниатюра хаймарса вместе с атакамсом»): клетка поднята, контейнер на одну трубу, крышка сброшена, ракета выходит из трубы.
+// Поза - как в бою (main.js himarsPose), машина стоит прямо
+async function himarsObj(wk) {
+  wantModel('l_himars'); const g = await wait(() => anyModel('l_himars')); if (!g) return null;
+  const PO = POD.l_himars, H = new THREE.Vector3(...PO.hinge), el = PO.el, nm = (c) => c.name.replace(/[|_].*$/, ''), X = new THREE.Vector3(1, 0, 0);
+  const pod = new THREE.Group(); pod.position.copy(H); pod.rotation.x = el;
+  for (const sx of [-1, 1]) { const sd = sx < 0 ? 'l' : 'r', B = new THREE.Vector3(PO.cylB[0] * sx, PO.cylB[1], PO.cylB[2]), R = new THREE.Vector3(PO.cylR[0] * sx, PO.cylR[1], PO.cylR[2]);
+    const cb = new THREE.Group(), rb = new THREE.Group(); cb.position.copy(B); rb.position.copy(R).sub(H); g.add(cb); pod.add(rb);
+    for (const c of g.children.slice()) { const n = nm(c); if (n === 'turnC' + sd) { c.position.sub(B); cb.add(c); } else if (n === 'podR' + sd) { c.position.sub(R); rb.add(c); } }
+    cb.quaternion.setFromUnitVectors(R.clone().sub(B).normalize(), R.clone().sub(H).applyAxisAngle(X, el).add(H).sub(B).normalize());
+    rb.quaternion.setFromUnitVectors(B.clone().sub(R).normalize(), B.clone().sub(H).applyAxisAngle(X, -el).add(H).sub(R).normalize()); }
+  for (const c of g.children.slice()) { const n = nm(c); if (/^podG$|^podL/.test(n)) c.visible = false; else if (/^pod/.test(n)) { c.position.sub(H); pod.add(c); } }
+  g.add(pod);
+  wantWeapon(wk); await wait(() => !weaponPending(wk), 60); const w = weaponMesh(wk, AG[wk], weaponGeo, wMat); setWings(w, 0);
+  const M = new THREE.Vector3(...PO.muzzle).sub(H).applyAxisAngle(X, el).add(H), dir = new THREE.Vector3(0, Math.sin(el), -Math.cos(el)), out = +(Q.get('mout') || 0.9);
+  w.position.copy(M).addScaledVector(dir, out); w.lookAt(w.position.clone().addScaledVector(dir, Q.has('mflip') ? 1 : -1)); g.add(w); // нос ракеты - вверх по оси трубы
+  const t = new THREE.Group(); g.rotation.y = +(Q.get('hyaw') || 2.2); t.add(g); return t; // кабиной к камере
+}
 async function objOf(n) {
   if (n.branch === 'air') { wantModel(n.key); await wait(() => anyModel(n.key)); const pm = planeModel(n.side, 'strike', n.key); return pm && pm.obj; }
   if (n.branch === 'heli') { wantModel(n.key); return wait(() => anyModel(n.key)); } // вертолёт — лопасти неподвижные (spinProps не вызываем: без призраков и диска)
   if (n.branch === 'pvo') return unitObj(n.key);
   const k = n.item || n.key;
+  if (k === 'atacms') { const o = await himarsObj(k); if (o) return o; }
   if (BALL[k]) { wantModel(BALL[k]); const o = await wait(() => anyModel(BALL[k])); if (o) return o; }
   if (ICON[k]) { wantModel(ICON[k]); const o = await wait(() => anyModel(ICON[k])); if (o) return o; }
   wantWeapon(k); await wait(() => !weaponPending(k), 60); const w = weaponMesh(k, AG[k], weaponGeo, wMat); setWings(w, 1); if (w.userData.flip) w.rotateZ(Math.PI); // планирующие — с раскрытыми крыльями; УМПК висит крыльями вниз, а летит вверх (glideWings) — на значке крыльями вверх
@@ -79,7 +99,7 @@ const sc = new THREE.Scene();
 // два света: прежний (все миниатюры) и естественный — NATURAL (Mark 2026-11-02: «новые миниатюры только для… петриот и с-400»): солнце со стороны
 // камеры (она справа сзади), нейтральное, мягкое небо и тёмная земля, без тёплой подсветки снизу; кадр приглушён на 20 % (ACES насыщает тёмные
 // и уводит коричневый в рыжий, а Blender у сборщиков, наоборот, приглушает). ?light=2 — естественный всем (проба); exp / hemi / sun / sat — подбор
-const NATURAL = new Set(['pvo:patriot', 'pvo:s400', 'pvo:strela10', 'pvo:avenger', 'pvo:rapier']), ALLNAT = Q.get('light') === '2';
+const NATURAL = new Set(['pvo:patriot', 'pvo:s400', 'pvo:strela10', 'pvo:avenger', 'pvo:rapier', 'strike:atacms']), ALLNAT = Q.get('light') === '2';
 function desat(src, s) {
   const c = document.createElement('canvas'); c.width = src.width; c.height = src.height; const x = c.getContext('2d'); x.drawImage(src, 0, 0);
   const d = x.getImageData(0, 0, c.width, c.height), a = d.data;
