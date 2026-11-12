@@ -36,7 +36,6 @@
 - "Mig25" (https://sketchfab.com/3d-models/mig25-afe67617c5294dce9056106a22f640ff) by manilov.ap — CC-BY-4.0 — `e_mig25.glb`
 - "Su7b" (https://sketchfab.com/3d-models/su7b-faaf874e2c344f889a66451c4b93fa6b) by manilov.ap — CC-BY-4.0 — `e_su7b.glb`
 - "Tu16" (https://sketchfab.com/3d-models/tu16-9c4ee54ca28e44d7a4604be112acab9f) by manilov.ap — CC-BY-4.0 — `e_tu16.glb`
-- "F5" (https://sketchfab.com/3d-models/f5-8089d66a8a8748b2a4b049b3c06f6a02) by manilov.ap — CC-BY-4.0 — `e_f5.glb`
 - "Jaguar" (https://sketchfab.com/3d-models/jaguar-b09a0ee965bb424aaf14ebd06b698f96) by manilov.ap — CC-BY-4.0 — `e_jaguar.glb`
 - "Buccaneer" (https://sketchfab.com/3d-models/buccaneer-db82ad0e1f5644ccaee1b25b77566dc7) by manilov.ap — CC-BY-4.0 — `e_buccaneer.glb`
 - "Harrier" (https://sketchfab.com/3d-models/harrier-9ccfd6758680413bb19d656db4f46185) by manilov.ap — CC-BY-4.0 — `e_harrier.glb`

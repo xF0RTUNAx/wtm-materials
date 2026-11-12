@@ -65,8 +65,8 @@ const META = {
     nozzles: [V(-1.86, -2.72, 3.1), V(1.86, -2.72, 3.1)], nr: 0.45, pod: null, dry: true }, // Ту-16
   e_f100: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-3.85, -1.842, 3.067), V(-2.7, -1.902, 2.007), V(-1.4, -1.941, 0.617)]),
     nozzles: [V(0, -1.216, 7.217)], nr: 0.385, pod: null, clearGlass: true, ...(paintOn ? { gearModel: 'e_f100_gear' } : {}) }, // F-100D: своя модель (Свои/F-100D, 2026-11-10); три пилона на сторону - внешний, средний, внутренний; под фюзеляжем тормозной щиток
-  e_f5: { side: 'west', cls: 'strike', stations: mirror([V(-2.6, -1.57, 2.25, 0.3), V(-1.6, -1.55, 1.6, 0.3), V(-0.35, -1.55, -0.6, 0.22), V(-0.35, -1.6, 1.4, 0.22)]),
-    nozzles: [V(-0.27, -0.95, 7.2), V(0.27, -0.95, 7.2)], nr: 0.22, pod: null }, // F-5E
+  e_f5: { side: 'west', cls: 'strike', stations: mirror([V(-3.66, -1.25, 2.298, 0.1), V(-2.96, -1.47, 2.313), V(-2.28, -1.48, 2.123)]),
+    nozzles: [V(-0.29, -0.885, 7.248), V(0.29, -0.885, 7.248)], nr: 0.27, pod: null, clearGlass: true, ...(paintOn ? { gearModel: 'e_f5_gear' } : {}) }, // F-5E Tiger II: своя модель (Свои/F-5E Tiger II, 2026-11-12); законцовка, наружный, внутренний пилоны. Без lazy: единственная западная модель, что грузится сразу (запасная для planeModel до прихода выбранной, ui-test «готовая модель west»)
   e_f117: { side: 'west', cls: 'strike', lazy: true, internal: true, stations: mirror([V(-0.78, -0.644, -0.6), V(-0.44, -0.644, 1.05), V(-0.44, -0.644, -2.25), V(-0.44, -0.644, -0.6)]), // последняя точка - основная, под замками балки
     nozzles: [], nr: 0.12, pod: null, clearGlass: true, ...(paintOn ? { gearModel: 'e_f117_gear' } : {}), // F-117A: своя модель, пламени нет (щели скрывают сопла)
     bay: { doors: { bay_l: [[-0.9, -1.195, -0.6], [0, 0, -1], 95], bay_r: [[0.9, -1.195, -0.6], [0, 0, 1], 95] }, sides: { L: ['bay_l'], R: ['bay_r'] } } },
@@ -363,6 +363,7 @@ const GLB_V_OWN = {
   e_b52: '20261112a', e_b52_gear: '20261112a', // свой B-52H
   e_gripen: '20261112a', e_gripen_gear: '20261112a', // свой Gripen C
   e_draken: '20261112a', e_draken_gear: '20261112a', // свой Saab 35 Draken
+  e_f5: '20261112a', e_f5_gear: '20261112a', // свой F-5E Tiger II
   l_himars: '20261111b', w_atacms: '20261110b', // свои M142 HIMARS и ATACMS
   e_f4: '20261110a', e_f4_gear: '20261110a', e_f100: '20261110a', e_f100_gear: '20261110a', // свои F-4 Phantom II и F-100D
   e_rafale: '20261109b', e_rafale_gear: '20261109b', // свой Rafale
@@ -561,6 +562,7 @@ if (paintOn) META.e_b1b_gear = { lazy: true, matte: true, paint: true, stations:
 if (paintOn) META.e_b52_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего B-52H для ангара
 if (paintOn) META.e_gripen_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего Gripen для ангара
 if (paintOn) META.e_draken_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего Draken для ангара
+if (paintOn) META.e_f5_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего F-5E для ангара
 if (paintOn) META.e_b2_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего B-2A для ангара
 if (paintOn) { META.e_f4_gear = { lazy: true, matte: true, paint: true, stations: [] }; META.e_f100_gear = { lazy: true, matte: true, paint: true, stations: [] }; } // стойки своих F-4 и F-100D для ангара
 if (paintOn) { META.e_hunter_gear = { lazy: true, matte: true, paint: true, stations: [] }; META.e_mirage_f1_gear = { lazy: true, matte: true, paint: true, stations: [] }; } // стойки своих Hunter и Mirage F1 для ангара

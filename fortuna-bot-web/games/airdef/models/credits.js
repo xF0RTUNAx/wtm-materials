@@ -331,15 +331,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "F5",
-  "author": "manilov.ap",
-  "url": "https://sketchfab.com/3d-models/f5-8089d66a8a8748b2a4b049b3c06f6a02",
-  "license": "CC-BY-4.0",
-  "files": [
-   "e_f5"
-  ]
- },
- {
   "title": "Jaguar",
   "author": "manilov.ap",
   "url": "https://sketchfab.com/3d-models/jaguar-b09a0ee965bb424aaf14ebd06b698f96",
