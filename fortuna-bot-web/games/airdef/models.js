@@ -42,8 +42,9 @@ const META = {
   // ── 2026-10-19: manilov.ap (Tornado, F-111, МиГ-23, МиГ-27, Ту-22М2), Spark_Customs (F-15E); A-10 с 2026-10-22 - AIRMAN Magazine ──
   e_tornado: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-5.41, -1.68, 1.59), V(-2.95, -1.88, 0.52), V(-0.75, -2.27, -1.2), V(-0.75, -2.33, 2.4)]),
     nozzles: [V(-0.59, -1.19, 6.34), V(0.59, -1.19, 6.34)], nr: 0.25, pod: V(0, -2.35, 0.5) }, // Tornado IDS
-  e_f111: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-4.42, -1.43, 2.07), V(-3.03, -1.35, 1.62), V(-0.6, -1.99, -0.5), V(-0.6, -1.99, 1.5)]),
-    nozzles: [V(-0.76, -1.1, 10.12), V(0.76, -1.1, 10.12)], nr: 0.3, pod: null }, // F-111F («Пэйв Тэк» во внутреннем отсеке)
+  e_f111: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-5.141, -0.774, 3.19), V(-4.541, -0.774, 3.19), V(-3.756, -0.797, 2.694), V(-3.156, -0.797, 2.694)]), // F-111F: своя модель (Свои/F-111F, 2026-11-12); по два замка на каждом поворотном пилоне, крыло на 26°
+    nozzles: [V(-0.8, -1.225, 10.43), V(0.8, -1.225, 10.43)], nr: 0.44, pod: null, racks: true, clearGlass: true, ...(paintOn ? { gearModel: 'e_f111_gear' } : {}), // «Пэйв Тэк» - в люльке модели; racks - свои держатели (seats-gen)
+    pivots: { brake: [[0, -1.78, 0.5], [1, 0, 0]] }, ground: { brake: 35 } }, // тормозной щиток = передняя створка основной ниши: в ангаре со стойками открыт на 35°
   e_mig23: { side: 'east', cls: 'strike', lazy: true, stations: mirror([V(-1.44, -0.6, 0.34), V(-0.45, -1.43, -0.6), V(-0.45, -1.28, 2.2)]),
     nozzles: [V(0, -0.66, 7.57)], nr: 0.35, pod: null }, // МиГ-23БН
   e_mig27: { side: 'east', cls: 'strike', lazy: true, stations: mirror([V(-0.45, -1.4, -0.6), V(-0.45, -1.46, 2.2), V(-1.53, -0.61, 0.62)]), // порядок: перед и зад под фюзеляжем, потом крыло - самое тяжёлое (Х-29Т) идёт под крыло (stOrder)
@@ -364,6 +365,7 @@ const GLB_V_OWN = {
   e_gripen: '20261112a', e_gripen_gear: '20261112a', // свой Gripen C
   e_draken: '20261112a', e_draken_gear: '20261112a', // свой Saab 35 Draken
   e_f5: '20261112a', e_f5_gear: '20261112a', // свой F-5E Tiger II
+  e_f111: '20261112b', e_f111_gear: '20261112b', // свой F-111F Aardvark
   l_himars: '20261111b', w_atacms: '20261110b', // свои M142 HIMARS и ATACMS
   e_f4: '20261110a', e_f4_gear: '20261110a', e_f100: '20261110a', e_f100_gear: '20261110a', // свои F-4 Phantom II и F-100D
   e_rafale: '20261109b', e_rafale_gear: '20261109b', // свой Rafale
@@ -523,7 +525,6 @@ const GLB_V_OWN = {
 };
 GLB_V.hg_jack = '20261104b'; // подъёмник, ревизия 2: матовый, с износом
 GLB_V.w_pod = '20261104b'; // серый корпус контейнера, без комьев от упрощения
-GLB_V.e_f111 = '20261104a'; // без чёрных наклеек
 GLB_V.e_tu160 = '20261104a'; // текстура 1024 вместо 512 (надписи в ангаре)
 GLB_V.e_f35 = GLB_V.e_f35_lo = GLB_V.e_f35_gear = '20261106a'; // своя модель и стойки
 GLB_V.f18 = GLB_V.f18_gear = '20261106b'; // своя модель и стойки, ревизия 2: без планки через кабину
@@ -553,6 +554,7 @@ Object.assign(GLB_V, { hawk: '20261024m', w_gbu24: '20261024m' }); // Hawk: ра
 Object.assign(GLB_V, GLB_V_OWN);
 META.hg_jack = { lazy: true, matte: true, stations: [] }; // подъёмник ангара (hangar.js): части base, ram, head
 if (paintOn) META.e_f15e_gear = { lazy: true, matte: true, paint: true, stations: [] };
+if (paintOn) META.e_f111_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего F-111F для ангара
 if (paintOn) META.e_f35_gear = { lazy: true, matte: true, paint: true, stations: [] };
 if (paintOn) META.f18_gear = { lazy: true, matte: true, paint: true, stations: [] };
 if (paintOn) META.f16_gear = { lazy: true, matte: true, paint: true, stations: [] };

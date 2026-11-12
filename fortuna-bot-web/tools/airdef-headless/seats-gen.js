@@ -52,6 +52,7 @@ try {
       };
       const one = (q) => {
         if (q.py > 0) { const ys = [-0.3, 0, 0.3].map((k) => under(q.x, q.z + k, q.y + 0.005)).filter((v) => v != null), t = Math.min(q.y + 1.6, ys.length ? Math.max(...ys) : q.y + q.py); return [1, f(q.x), f(q.y), f(q.z), clearOf(under, q.x, q.z, q.y - 0.02), f(t)]; }
+        if (meta.racks) { const h = under(q.x, q.z, q.y - 0.55); if (h != null && Math.abs(h - q.y) <= 0.06) return [2, f(q.x), f(h), f(q.z), clearOf(under, q.x, q.z, h - 0.02)]; } // свои держатели модели (F-111F: балка с двумя замками шире 0,42 м) - точка сборщика у низа держателя, пилон не дорисовывать
         const a = author(q.x, q.y, q.z); if (a.x != null) { used.push([a.x, a.z]); return [2, f(a.x), f(a.y), f(a.z), clearOf(under, a.x, a.z, a.y - 0.02)]; }
         const here = a.none ? null : under(q.x, q.z, q.y - 0.55); if (here == null) return [0];
         const y = here - Math.max(0.2, Math.min(MAX, here - q.y)); return [1, f(q.x), f(y), f(q.z), clearOf(under, q.x, q.z, y - 0.02), f(here)];

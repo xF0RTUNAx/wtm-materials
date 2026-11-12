@@ -255,7 +255,7 @@ export const CREDITS = [
   "url": "https://sketchfab.com/3d-models/f111-00e9e6b9dbc34dc1ae691529688ab000",
   "license": "CC-BY-4.0",
   "files": [
-   "e_f111"
+   "ui/mm/air_e_f111_h3.webp"
   ]
  },
  {

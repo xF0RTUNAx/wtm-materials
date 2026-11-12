@@ -4,7 +4,7 @@
 // Без имён - все самолёты, кроме SKIP: 11 самолётов andertan, пока в их текстурах чужие картинки (см. AIRDEF_STATE.md, «Лицензии»): больше копии таких картинок не выкладываем.
 import { LOADOUTS } from '../../games/airdef/arsenal.js';
 const ROOT = new URL('../../', import.meta.url).pathname, MODELS = ROOT + 'games/airdef/models/', TMP = await Deno.makeTempDir();
-const SKIP = new Set(['e_b1b', 'e_b52', 'e_gripen', 'e_draken', 'e_f5', 'e_f15e', 'e_f117', 'e_su27', 'su30', 'e_su33', 'e_su35', 'e_su57', 'f16', 'e_f22', 'e_f35', 'f18', 'e_f18c', 'e_mirage', 'e_etendard', 'e_viggen', 'e_f4', 'e_typhoon', 'e_hunter', 'e_mirage_f1', 'e_rafale', 'e_f100', 'e_b2', 'e_vulcan']);
+const SKIP = new Set(['e_f111', 'e_b1b', 'e_b52', 'e_gripen', 'e_draken', 'e_f5', 'e_f15e', 'e_f117', 'e_su27', 'su30', 'e_su33', 'e_su35', 'e_su57', 'f16', 'e_f22', 'e_f35', 'f18', 'e_f18c', 'e_mirage', 'e_etendard', 'e_viggen', 'e_f4', 'e_typhoon', 'e_hunter', 'e_mirage_f1', 'e_rafale', 'e_f100', 'e_b2', 'e_vulcan']);
 const args = Deno.args.filter((a) => !a.startsWith('--')), JOBS = +(Deno.args.find((a) => a.startsWith('--jobs=')) || '--jobs=4').split('=')[1];
 const planes = args.length ? args : [...new Set(Object.values(LOADOUTS).flat().filter((L) => !L.heli && L.plane).map((L) => L.plane))].filter((k) => !SKIP.has(k));
 const run = async (cmd, env) => { const o = await new Deno.Command(Deno.execPath(), { args: ['run', '-A', ...cmd], env: { ...Deno.env.toObject(), ...env }, stdout: 'piped', stderr: 'piped' }).output(); return { ok: o.success, text: new TextDecoder().decode(o.stdout) + new TextDecoder().decode(o.stderr) }; };
