@@ -403,15 +403,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "J35",
-  "author": "manilov.ap",
-  "url": "https://sketchfab.com/3d-models/j35-3d6ddbf606dc4047a15d37f4d5ac56ca",
-  "license": "CC-BY-4.0",
-  "files": [
-   "e_draken"
-  ]
- },
- {
   "title": "Sukhoi Su-33 Сухой Су-33",
   "author": "andertan",
   "url": "https://sketchfab.com/3d-models/sukhoi-su-33-33-d80603a8a13b49bda90f19d80cac61d4",

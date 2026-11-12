@@ -142,8 +142,8 @@ const CM = {
     dir: [[0, -0.99, 0.11]] }, // Hunter
   e_f100: { flare: false, salvo: 2, at: [[0, -1.764, 5.657]],
     dir: [[0, -0.99, 0.11]] }, // F-100D
-  e_draken: { flare: false, salvo: 2, at: [[0, -1.6, 5.15]],
-    dir: [[0, -0.99, 0.11]] }, // Draken
+  e_draken: { flare: false, salvo: 2, at: [[0, -1.09, 6.225]],
+    dir: [[0, -0.99, 0.11]] }, // Draken: своя модель - под хвостом (паспорт flares_game)
   e_vulcan: { flare: false, salvo: 2, at: [[0, -2.575, 13.64]],
     dir: [[0, -0.99, 0.11]] }, // Vulcan
 };

@@ -104,8 +104,8 @@ const META = {
     ext: { keys: ['agm45'], stations: mirror([V(-9.91, -2.98, 4.34), V(-9.29, -2.98, 4.34)]) }, // подвеска только из Shrike - снаружи, на сдвоенных балках пилонов под крылом (stationsFor)
     nozzles: [V(-3.08, -2.045, 12.54), V(-1.78, -2.045, 12.54), V(3.08, -2.045, 12.54), V(1.78, -2.045, 12.54)], nr: 0.521, pod: null, dry: true, clearGlass: true, ...(paintOn ? { gearModel: 'e_vulcan_gear' } : {}), // Vulcan B.2: своя модель (Свои/Vulcan B.2, 2026-11-10)
     bay: { doors: { bay_l: [[-0.975, -2.854, 2.69], [0, -0.0429, -0.9991], 95], bay_r: [[0.975, -2.854, 2.69], [0, 0.0429, 0.9991], 95] }, sides: { L: ['bay_l'], R: ['bay_r'] } } },
-  e_draken: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-3.4, -1.36, 4.0, 0.3), V(-2.6, -1.38, 3.3, 0.3), V(-1.6, -1.5, 1.8, 0.3), V(-0.5, -1.47, 0.0, 0.15)]),
-    nozzles: [V(0, -0.56, 7.67)], nr: 0.35, pod: null }, // Saab 35 Draken (J35F)
+  e_draken: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-3.5, -0.89, 4.875), V(-2.85, -0.92, 4.175), V(-2.2, -0.952, 3.675), V(-0.3, -1.221, 3.925)]),
+    nozzles: [V(0, -0.54, 7.725)], nr: 0.37, pod: null, clearGlass: true, ...(paintOn ? { gearModel: 'e_draken_gear' } : {}) }, // Saab 35 Draken (J 35F): своя модель (Свои/Saab 35 Draken, 2026-11-12), натуральный металл
   e_viggen: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-0.6, -1.975, 4.73), V(-4.15, -1.815, 4.53), V(-2.96, -1.875, 3.73), V(-0.9, -1.795, -0.57)]), // тяжёлое идёт на последнюю точку, под заборник
     nozzles: [V(0, -1.075, 7.46)], nr: 0.6, pod: null, clearGlass: true, ...(paintOn ? { gearModel: 'e_viggen_gear' } : {}) }, // Saab Viggen: своя модель, серебристый металл
   // ── 2026-10-21, шестая партия (Восток): Су-33 (andertan), М-4, МиГ-17 и Т-4 (manilov.ap), МиГ-19 (Tom Zimmermann); подвески - по виду снизу / сбоку (planes-view.html?heli=1 - красные точки), сопла - по срезу ?ortho=1 ──
@@ -362,6 +362,7 @@ const GLB_V_OWN = {
   e_b1b: '20261112a', e_b1b_gear: '20261112a', // свой B-1B
   e_b52: '20261112a', e_b52_gear: '20261112a', // свой B-52H
   e_gripen: '20261112a', e_gripen_gear: '20261112a', // свой Gripen C
+  e_draken: '20261112a', e_draken_gear: '20261112a', // свой Saab 35 Draken
   l_himars: '20261111b', w_atacms: '20261110b', // свои M142 HIMARS и ATACMS
   e_f4: '20261110a', e_f4_gear: '20261110a', e_f100: '20261110a', e_f100_gear: '20261110a', // свои F-4 Phantom II и F-100D
   e_rafale: '20261109b', e_rafale_gear: '20261109b', // свой Rafale
@@ -559,6 +560,7 @@ if (paintOn) META.e_vulcan_gear = { lazy: true, matte: true, paint: true, statio
 if (paintOn) META.e_b1b_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего B-1B для ангара
 if (paintOn) META.e_b52_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего B-52H для ангара
 if (paintOn) META.e_gripen_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего Gripen для ангара
+if (paintOn) META.e_draken_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего Draken для ангара
 if (paintOn) META.e_b2_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего B-2A для ангара
 if (paintOn) { META.e_f4_gear = { lazy: true, matte: true, paint: true, stations: [] }; META.e_f100_gear = { lazy: true, matte: true, paint: true, stations: [] }; } // стойки своих F-4 и F-100D для ангара
 if (paintOn) { META.e_hunter_gear = { lazy: true, matte: true, paint: true, stations: [] }; META.e_mirage_f1_gear = { lazy: true, matte: true, paint: true, stations: [] }; } // стойки своих Hunter и Mirage F1 для ангара
