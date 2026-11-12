@@ -39,11 +39,6 @@ const NO_TAG = 'drawbox=x=iw*0.325:y=ih*0.41:w=iw*0.375:h=ih*0.09:color=0x141414
 const CAMO_BASE = { nato: [0.095, 0.118, 0.056], soviet: [0.092, 0.125, 0.046], uk: [0.088, 0.11, 0.055], fr: [0.2, 0.23, 0.27] }; // линейные (как в models.js CAMO)
 const F35_GEAR = (c) => { const ax = Math.abs(c.ctr[0]), y = c.ctr[1], z = c.ctr[2];
   return (ax > 1.6 && ax < 2.8 && z > 4.4 && z < 6.2 && y < 3.3 && Math.max(...c.size) < 2.5) || (ax < 0.6 && z > -2.5 && z < -0.5 && y < 2.4); };
-  (Math.abs(c.ctr[0]) > 5.4 && c.ctr[1] < -0.3 && c.size[2] > 0.8) /* пластина-адаптер «Мейверика» на внешних пилонах */ ||
-  (Math.abs(Math.abs(c.ctr[0]) - 3.62) < 0.1 && c.ctr[1] < -0.55 && c.size[2] > 0.5) /* рельсы под пилонами 3,6 м */ ||
-  (Math.abs(c.ctr[0]) > 5 && c.ctr[0] !== 0 && c.mat !== 1 && Math.max(...c.size) < 0.5 && c.ctr[1] < -0.15 && ((c.ctr[2] > -2.2 && c.ctr[2] < -1.8) || (c.ctr[2] > 0.2 && c.ctr[2] < 0.45) || (Math.abs(Math.abs(c.ctr[0]) - 5.1) < 0.1 && c.ctr[2] > 0.6 && c.ctr[1] < -0.3))) /* остатки «Мейверика» на внешних пилонах */ ||
-  (Math.abs(c.ctr[0]) > 3 && c.mat <= 1 && Math.max(...c.size) < 0.12 && c.ctr[1] < -0.5) /* крошки под пилонами */ ||
-  (c.mat === 1 && c.ctr[2] > -6 && c.ctr[2] < -5.2 && Math.abs(c.ctr[0]) > 0.5 && c.ctr[1] - c.size[1] / 2 < -0.75); // передняя стойка шасси (выпущена у автора)
 const CONFIG = {
   su30: { src: `${DL}/sukhoi_su-30_flanker_c.glb`, scale: 21.94 / 14.94, nose: '+x', rulesIn: 'game', tex: () => 1024, centerX: true,
     groups: (c) => (c.mat === 16 ? null : LS(c)) }, // Су-30МКИ — andertan (CC BY 4.0; прежняя модель Immersive3D): у автора чистый планер, без шасси и подвесок (пилоны рисует игра: station py); «Plumes» — диски выхлопа в соплах — долой (пламя рисует игра)
