@@ -5,7 +5,7 @@
 // Подвеска расставлена как в бою (air.js: order, buildPylons). Подъёмник: base, ram (шток, длина 1 м, scale.y = ход), head (седло). ?oldbg=1 - прежний фон.
 import { AG } from './arsenal.js?v=20261111b';
 import { setPaintHall, paintOn } from './paint.js?v=20261111b';
-import { planeModel, planeMeta, classOf, wantModel, wantWeapon, weaponPending, weaponFailed, pylonMesh, seatStores, podModel, anyModel, modelLoaded, modelFailed, releaseModel, wantCamo, camoKnown, hiKnown, stOrder } from './models.js?v=20261111b';
+import { planeModel, planeMeta, classOf, wantModel, wantWeapon, weaponPending, weaponFailed, pylonMesh, seatStores, podModel, anyModel, modelLoaded, modelFailed, releaseModel, wantCamo, camoKnown, hiKnown, stOrder, setPose } from './models.js?v=20261111b';
 
 const VIEWS = { // ПАСПОРТ.json сборщика
   // near, far - не из паспорта: буфер со сглаживанием держит 16 бит глубины, при near 0,3 на 31 м различал только 5 см, и близкие поверхности мерцали лесенкой (Mark, телефон)
@@ -158,6 +158,7 @@ export function createHangar(C, renderer) {
     hangStores(obj, pm.name, hung, seatL);
     for (const [key, m] of ms) { let g = groups.find((x) => x.key === key); if (!g) groups.push(g = { key, pos: [] }); g.pos.push(m.position.clone()); }
     const gK = gearOf(pm.name), gear = gK && modelLoaded(gK) ? anyModel(gK) : null; if (gear) { gear.position.set(0, 0, 0); obj.add(gear); } // стойки в тех же осях, что самолёт; не пришли - обычные подъёмники
+    setPose(obj, pm.name, 'sweep', 1); if (gear) setPose(obj, pm.name, 'ground', 1); // на стоянке: крыло B-1B вперёд, крылья B-52H опущены на опоры (только со стойками)
     pivot.updateMatrixWorld(true);
     const box = new THREE.Box3().setFromObject(obj), gearY = gear ? new THREE.Box3().setFromObject(gear).min.y : null;
     const size = Math.max(sz.x, sz.z), heavy = size > BIG;

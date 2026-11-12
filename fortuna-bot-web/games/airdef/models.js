@@ -142,8 +142,8 @@ const META = {
     nozzles: [V(-1.41, -3.44, 18.9), V(1.41, -3.44, 18.9)], nr: 0.9, pod: null }, // Ту-22М3 - только в налётах ИИ; сопла по срезу лепестков (z 18,85; кольцо R ≈ 1,1, проём R ≈ 0,9)
   e_f4: { side: 'west', cls: 'fighter', lazy: true, stations: mirror([V(-0.74, -1.589, -1.525), V(-0.62, -1.649, 2.475), V(-3.37, -1.614, 1.415), V(-2.06, -1.705, -0.505)]),
     nozzles: [V(-0.55, -1.183, 5.075), V(0.55, -1.183, 5.075)], nr: 0.445, pod: V(0, -1.635, 0.025), clearGlass: true, ...(paintOn ? { gearModel: 'e_f4_gear' } : {}) }, // F-4 Phantom II: своя модель (Свои/F-4 Phantom II, 2026-11-10); точки - передняя и задняя ниши, внешний и внутренний пилоны
-  e_gripen: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-4.18, -1.06, 3.77), V(-2.92, -1.4, 3.03), V(-1.95, -1.41, 1.77), V(-0.45, -1.62, 0.2, 0.1)]),
-    nozzles: [V(0, -0.94, 7.3)], nr: 0.24, pod: V(0.75, -1.5, -1.6) }, // JAS 39 Gripen (LITENING на подфюзеляжной точке)
+  e_gripen: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-4.205, -1.206, 4.075, 0.1), V(-2.92, -1.544, 3.475), V(-1.95, -1.544, 2.325), V(-0.45, -1.944, 1.625, 0.1)]),
+    nozzles: [V(0, -0.904, 7.715)], nr: 0.355, pod: V(0.8, -1.844, -1.675), clearGlass: true, ...(paintOn ? { gearModel: 'e_gripen_gear' } : {}) }, // JAS 39 Gripen C: своя модель (Свои/JAS 39 Gripen, 2026-11-12); LITENING под правым заборником
   e_f22: { side: 'west', cls: 'strike', lazy: true, internal: true, stations: mirror([V(-1.28, -1.916, -0.706), V(-0.56, -1.451, 0.694), V(-0.56, -1.451, -1.706), V(-0.56, -1.451, -0.506)]), // тяжёлое идёт на последнюю точку: средний держатель, длинная бомба входит в отсек только на нём
     nozzles: [V(-0.72, -0.986, 7.904), V(0.72, -0.986, 7.904)], nr: 0.2, pod: null, clearGlass: true, ...(paintOn ? { gearModel: 'e_f22_gear' } : {}),
     bay: { doors: { bay_cf_l: [[-1.116, -2.0342, -1.483], [0, 0.0001, -1], 95], bay_ca_l: [[-1.116, -2.0341, 0.471], [0, 0, -1], 95], bay_cf_r: [[1.116, -2.0342, -1.483], [0, 0.0001, -1], -95], bay_ca_r: [[1.116, -2.0341, 0.471], [0, 0, -1], -95], bay_s_l: [[-1.794, -1.3775, -0.706], [0, 0.0425, -0.9991], 105], arm_s_l: [[-1.28, -1.4761, -0.706], [0, 0, -1], 58], bay_s_r: [[1.794, -1.3775, -0.706], [0, 0.0425, -0.9991], -105], arm_s_r: [[1.28, -1.4761, -0.706], [0, 0, -1], -58] },
@@ -189,8 +189,18 @@ const META = {
   w_hellfire: { weapon: 'hellfire', lazy: true, stations: [] }, // AGM-114 Hellfire — собственная модель (tools/airdef-models/own/agm114)
   aam_stinger: { weapon: 'aam_stinger', lazy: true, stations: [] }, // ракета FIM-92 Stinger «воздух-воздух» для вертолётов - GoldbergR
   e_tu160: { side: 'east', cls: 'carrier', only: true, lazy: true, internal: true, stations: mirror([V(-0.7, -3.8, -4.0), V(-0.7, -3.8, -1.5), V(-0.7, -3.8, 1.0), V(-0.7, -3.8, 3.5)]), nozzles: [V(-5.75, -4.31, 11.1), V(-3.97, -4.31, 11.1), V(3.97, -4.31, 11.1), V(5.75, -4.31, 11.1)], nr: 0.9 }, // Ту-160 - KOG_THORNS (с 2026-10-19 и в «Авиации»: точки - в отсеках); носитель «Мульти-волны»
-  e_b1b: { side: 'west', cls: 'carrier', only: true, lazy: true, internal: true, stations: mirror([V(-0.6, -2.5, -5.0), V(-0.6, -2.5, -2.5), V(-0.6, -2.5, 0.0), V(-0.6, -2.5, 2.5)]), nozzles: [V(-4.55, -3.4, 5.86), V(-2.95, -3.4, 5.86), V(2.95, -3.4, 5.86), V(4.55, -3.4, 5.86)], nr: 0.55 }, // B-1B - manilov.ap «B1» (CC BY 4.0; с 2026-10-24, прежняя - Muhamad Mirza Arrafi); крыло сложено назад (стреловидность ≈ 58°), станции - по оси отсека, на 0,4 м выше низа фюзеляжа (y −3,1); сопла - по срезу гондол (z 5,86, пары x ±2,95 / ±4,55); носитель «Мульти-волны»
-  e_b52: { side: 'west', cls: 'carrier', only: true, lazy: true, internal: true, stations: mirror([V(-0.6, -5.2, -3.0), V(-0.6, -5.2, -1.0), V(-0.6, -5.2, 1.0), V(-0.6, -5.2, 3.0)]), nozzles: [], nr: 0.4 }, // B-52H - bohmerang; носитель «Мульти-волны» (без форсажа - пламени нет)
+  e_b1b: { side: 'west', cls: 'carrier', only: true, lazy: true, internal: true, stations: mirror([V(-0.92, -1.81, 6.09), V(-0.42, -1.81, 6.09), V(-0.45, -1.81, -8.91), V(-0.45, -1.81, -3.99)]), // B-1B: своя модель (Свои/B-1B Lancer, 2026-11-12); три отсека: 3 - средний (GBU-31), 2 - передний, 1 и 0 - задний (Mk 82)
+    nozzles: [V(3.13, -3.67, 10.89), V(4.37, -3.67, 10.89), V(-3.13, -3.67, 10.89), V(-4.37, -3.67, 10.89)], nr: 0.498, pod: null, clearGlass: true, ...(paintOn ? { gearModel: 'e_b1b_gear' } : {}),
+    bay: { doors: { bay1_r: [[1.196, -3.248, -8.91], [0, -0.0713, 0.9975], 90], bay1_l: [[-1.196, -3.248, -8.91], [0, 0.0712, -0.9975], 90], bay2_r: [[1.196, -3.374, -3.99], [0, -0.0018, 1], 90], bay2_l: [[-1.196, -3.373, -3.99], [0, 0.0018, -1], 90],
+      bay3_r: [[1.196, -3.198, 6.09], [0, 0.0411, 0.9992], 90], bay3_l: [[-1.196, -3.198, 6.09], [0, -0.0411, -0.9992], 90] }, sides: { L: ['bay1_l', 'bay2_l', 'bay3_l'], R: ['bay1_r', 'bay2_r', 'bay3_r'] } },
+    // крыло изменяемой стреловидности: в файле сложено (67,5°), sweep - поворот консолей вперёд до 15° (setPose: ангар - вперёд, в полёте - по скорости)
+    pivots: { wing_r: [[3.9, -2.61, -1.76], [0, 1, 0]], wing_l: [[-3.9, -2.61, -1.76], [0, 1, 0]] }, sweep: { wing_r: 52.5, wing_l: -52.5 } },
+  e_b52: { side: 'west', cls: 'carrier', only: true, lazy: true, internal: true, stations: mirror([V(-0.92, -3.885, 0.46), V(-0.92, -3.885, -4.14), V(-0.33, -3.885, -0.24), V(-0.33, -3.885, -4.84)]), // B-52H: своя модель (Свои/B-52H, 2026-11-12); JDAM ×8 в отсеке
+    ext: { keys: ['agm86', 'jassm', 'arrw'], stations: mirror([V(-6.1, -2.923, -9.203), V(-5.1, -2.923, -9.203)]) }, // крылатые и ARRW - на балках пилонов под крылом (stationsFor)
+    nozzles: [V(-11.7, -2.604, -3.491), V(-10.3, -2.604, -3.491), V(-19.7, -2.233, 2.899), V(-18.3, -2.233, 2.899), V(10.3, -2.604, -3.491), V(11.7, -2.604, -3.491), V(18.3, -2.233, 2.899), V(19.7, -2.233, 2.899)], nr: 0.36, pod: null, dry: true, clearGlass: true, ...(paintOn ? { gearModel: 'e_b52_gear' } : {}),
+    bay: { doors: { bay_l: [[-1.56, -4.748, -2.29], [0, 0, -1], 95], bay_r: [[1.56, -4.748, -2.29], [0, 0, 1], 95] }, sides: { L: ['bay_l'], R: ['bay_r'] } },
+    // крылья целиком на шарнирах у борта: на стоянке (ангар, стойки показаны) опускаются на опоры под концами - ground
+    pivots: { wing_r: [[2.0, -1.345, -7.422], [0, 0, 1]], wing_l: [[-2.0, -1.345, -7.422], [0, 0, -1]] }, ground: { wing_r: -8.5, wing_l: -8.5 } },
   e_typhoon: { side: 'west', cls: 'carrier', only: true, lazy: true, stations: mirror([V(-0.7, -1.834, 2.42), V(-4.35, -1.654, 3.42), V(-3.35, -1.734, 2.77), V(-2.35, -1.814, 1.82)]), nozzles: [V(-0.475, -1.294, 7.3), V(0.475, -1.294, 7.3)], nr: 0.355, pod: V(0, -1.894, 1.47), clearGlass: true, ...(paintOn ? { gearModel: 'e_typhoon_gear' } : {}) }, // Eurofighter Typhoon: своя модель, носитель Storm Shadow: тяжёлое идёт на последнюю точку, это внутренний пилон
   w_nar_hydra: { lazy: true, stations: [], matte: true }, // НАР Hydra 70 в полёте - собственная модель (Blender, tools/airdef-models/own)
   w_nar_s8: { lazy: true, stations: [], matte: true }, // НАР С-8КОМ в полёте - собственная модель (Blender, tools/airdef-models/own)
@@ -349,6 +359,9 @@ const GLB_V = Object.fromEntries(['w_gbu10', 'w_ecm', 'gepard', 'gepard_lo', 'ro
 const GLB_V_OWN = {
   e_b2: '20261110b', e_b2_gear: '20261110b', // свой B-2A
   e_vulcan: '20261110c', e_vulcan_gear: '20261110c', // свой Vulcan B.2
+  e_b1b: '20261112a', e_b1b_gear: '20261112a', // свой B-1B
+  e_b52: '20261112a', e_b52_gear: '20261112a', // свой B-52H
+  e_gripen: '20261112a', e_gripen_gear: '20261112a', // свой Gripen C
   l_himars: '20261111b', w_atacms: '20261110b', // свои M142 HIMARS и ATACMS
   e_f4: '20261110a', e_f4_gear: '20261110a', e_f100: '20261110a', e_f100_gear: '20261110a', // свои F-4 Phantom II и F-100D
   e_rafale: '20261109b', e_rafale_gear: '20261109b', // свой Rafale
@@ -543,6 +556,9 @@ if (paintOn) META.f18_gear = { lazy: true, matte: true, paint: true, stations: [
 if (paintOn) META.f16_gear = { lazy: true, matte: true, paint: true, stations: [] };
 if (paintOn) META.e_rafale_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего Rafale для ангара
 if (paintOn) META.e_vulcan_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего Vulcan для ангара
+if (paintOn) META.e_b1b_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего B-1B для ангара
+if (paintOn) META.e_b52_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего B-52H для ангара
+if (paintOn) META.e_gripen_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего Gripen для ангара
 if (paintOn) META.e_b2_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего B-2A для ангара
 if (paintOn) { META.e_f4_gear = { lazy: true, matte: true, paint: true, stations: [] }; META.e_f100_gear = { lazy: true, matte: true, paint: true, stations: [] }; } // стойки своих F-4 и F-100D для ангара
 if (paintOn) { META.e_hunter_gear = { lazy: true, matte: true, paint: true, stations: [] }; META.e_mirage_f1_gear = { lazy: true, matte: true, paint: true, stations: [] }; } // стойки своих Hunter и Mirage F1 для ангара
@@ -773,6 +789,8 @@ async function load(name, base) {
     const mesh = new THREE.Mesh(g, mat); mesh.name = m.name; mesh.userData.glass = glass; const pt = partOf(m.name || ''); pt.add(mesh); if (m.hub) pt.userData.hub = m.hub;
   }
   // створки отсеков (bay.js): начало части - на шарнире; userData.fx - зоны повреждений их не режут
+  // части самолёта на шарнирах (pivots: крыло B-1B, B-52H): начало - на оси, поворот - setPose
+  if (MM.pivots && MM.cls) for (const [n, d] of Object.entries(MM.pivots)) { const pt = parts[n]; if (!pt) continue; for (const q of pt.children) { q.geometry.translate(-d[0][0], -d[0][1], -d[0][2]); q.geometry.computeBoundingSphere(); } pt.position.set(...d[0]); pt.userData.piv = 1; } // зоны повреждений режут и крыло: куски остаются в части (plane-damage moving)
   if (MM.bay) for (const [n, d] of Object.entries(MM.bay.doors)) { const pt = parts[n]; if (!pt) continue; for (const q of pt.children) { q.geometry.translate(-d[0][0], -d[0][1], -d[0][2]); q.geometry.computeBoundingSphere(); q.userData.fx = true; } pt.position.set(...d[0]); }
   // винты (части prop*, Ту-95): ось - вдоль самолёта через центр ступицы; соосные ряды (чётный / нечётный номер) - в разные
   // стороны; крутит игра (spinProps). В userData - только число (клон модели копирует userData через JSON)
@@ -958,7 +976,7 @@ function start(name) {
   const tf = FAIL_T.get(name); if (tf !== undefined && performance.now() - tf < FAIL_WAIT) return;
   LOADING.add(name); LSTAT.req++;
   FAILED.delete(name);
-  load(name, BASE).then((g) => { LOADED[name] = g; LSTAT.done++; FAIL_T.delete(name); if (READY) READY(name); }).catch((e) => { LSTAT.done++; FAILED.add(name); FAIL_T.set(name, performance.now()); LOADING.delete(name); console.warn('модель не загрузилась:', e.message); });
+  load(name, BASE).then((g) => { LOADED[name] = g; LSTAT.done++; FAIL_T.delete(name); if (READY) READY(name); }).catch((e) => { LSTAT.done++; FAILED.add(name); FAIL_T.set(name, performance.now()); LOADING.delete(name); console.warn('модель не загрузилась:', name, e.message); });
 }
 const glbVer = (name) => GLB_V[name] || '20261022b';
 // окраска для съёмки кадров меню и ролика (?test=1&camo=e_f15e:inferno,e_mig31:dragon): модель сборщика с новой развёрткой и картинкой окраски
@@ -1158,6 +1176,13 @@ export function spinProps(obj, dt, thr = 1) {
 } // сопла, пилоны - для зон повреждений (plane-zones.js) и проверок
 // точки подвески под конкретный набор оружия: у самолёта с отсеком часть подвесок висит снаружи (Vulcan B.2: Shrike на пилонах под крылом, META.ext) -
 // тогда свой список точек и подвеска видна; keys - ключи оружия подвески
+// положение частей на шарнирах: pose - имя набора углов в META (sweep - крыло B-1B вперёд, ground - крылья B-52H на опорах), k - доля 0…1 (0 - как в файле)
+const PQ = new THREE.Vector3();
+export function setPose(obj, name, pose, k) {
+  const m = META[name], A = m && m[pose]; if (!A || !m.pivots) return false;
+  for (const [n, deg] of Object.entries(A)) { const pt = obj.getObjectByName(n), h = m.pivots[n]; if (pt && h) pt.quaternion.setFromAxisAngle(PQ.set(...h[1]).normalize(), deg * k * Math.PI / 180); }
+  return true;
+}
 export const stationsFor = (name, keys) => { const m = META[name] || {}, e = m.ext; return e && keys && keys.length && keys.every((k) => e.keys.includes(k)) ? { stations: e.stations, internal: false } : { stations: m.stations || [], internal: !!m.internal }; };
 export function planeModel(side, cls = 'strike', name = null, skin = null, keys = null) {
   if (skin && name && META[name] && wantCamo(name, skin)) { const m = META[name]; return { obj: LOADED[`${name}@${skin}`].clone(), pods4: !!m.pods4, nozzles: m.nozzles, nr: m.nr, dry: !!m.dry, pod: m.pod, name, skin, cls: m.cls, ...stationsFor(name, keys) }; } // надета окраска и модель пришла

@@ -61,7 +61,7 @@ function dmgMaterial(src, U, toRoot, zid) {
 const MERGED = new Map(), MM4 = new THREE.Matrix4();
 function mergeZones(root, parts, key) {
   root.updateMatrixWorld(true); const inv = new THREE.Matrix4().copy(root.matrixWorld).invert();
-  const moving = (o) => { for (let p = o.parent; p && p !== root; p = p.parent) if (p.userData.spin || p.userData.wa || p.userData.fx || p.userData.wings) return true; return false; };
+  const moving = (o) => { for (let p = o.parent; p && p !== root; p = p.parent) if (p.userData.spin || p.userData.wa || p.userData.fx || p.userData.wings || p.userData.piv) return true; return false; };
   for (const z of Object.keys(parts)) {
     const by = new Map(), keep = [];
     for (const q of parts[z]) {

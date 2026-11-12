@@ -20,7 +20,7 @@
 - "Wooden Military Crate" (https://polyhaven.com/a/wooden_military_crate) by Prabhjinder Singh — CC0 — `crew_e.glb`, `crew_w.glb` (ящик расчёта ПЗРК, перекрашен)
 - "Generic passenger car pack" (https://sketchfab.com/3d-models/generic-passenger-car-pack-20f9af9b8a404d5cb022ac6fe87f21f5) by Comrade1280 — CC-BY-4.0 — `c_compact.glb`, `c_coupe.glb`, `c_hatch.glb`, `c_van.glb`, `c_offroad.glb`, `c_pickup.glb`, `c_sedan.glb`, `c_sport.glb`, `c_suv.glb`, `c_wagon.glb`, `c_compact_lo.glb`, `c_coupe_lo.glb`, `c_hatch_lo.glb`, `c_van_lo.glb`, `c_offroad_lo.glb`, `c_pickup_lo.glb`, `c_sedan_lo.glb`, `c_sport_lo.glb`, `c_suv_lo.glb`, `c_wagon_lo.glb`
 - "Low Poly Car" (https://sketchfab.com/3d-models/low-poly-car-54c466359f8b459dbccea0168ea01c85) by Roma — CC-BY-4.0 — `c_police.glb`, `c_police_lo.glb`
-- "Saab JAS-39С Gripen fighter jet" (https://sketchfab.com/3d-models/saab-jas-39-gripen-fighter-jet-54b84f308145465187658b074baf3cb7) by Lanko Mykhailo — CC-BY-4.0 — `e_gripen.glb`, `e_gripen_lo.glb`
+- "Saab JAS-39С Gripen fighter jet" (https://sketchfab.com/3d-models/saab-jas-39-gripen-fighter-jet-54b84f308145465187658b074baf3cb7) by Lanko Mykhailo — CC-BY-4.0 — `e_gripen_lo.glb` (дальняя модель, не используется), кадры меню `shots/gripen-gbu12-snow.webp` и `ui/mm/air_e_gripen_climb.webp` (сняты с прежней модели, до пересъёмки)
 - "MiG-21 Chibi" (https://sketchfab.com/3d-models/mig-21-chibi-8a46e5b9d03d41a6b7611c1b5d6aacb6) by Oleh — CC-BY-4.0 — `e_mig21.glb`, `e_mig21_lo.glb`
 - "Миг - 31" (https://sketchfab.com/3d-models/31-b168fbca1f6c4ad0ad4e45b7a22f52bc) by mamont nikita — CC-BY-4.0 — `e_mig31.glb`, `e_mig31_lo.glb`
 - "Sukhoi Su-57 "Felon"" (https://sketchfab.com/3d-models/sukhoi-su-57-felon-09d546b4355c4fa6882ca46e05069bee) by andertan — CC-BY-4.0 — `e_su57.glb`, `e_su57_lo.glb`
@@ -63,8 +63,6 @@
 - "Shahed 136" (https://sketchfab.com/3d-models/shahed-136-bc8754128c9d48c48baadeff1db8f0c7) by faintastic — CC-BY-4.0 — `d_shahed.glb`
 - "UAV" (https://sketchfab.com/3d-models/uav-b301159b693549e5beb747e291f159b5) by Artem Goyko — CC-BY-4.0 — `d_uav.glb`
 - "Tupolev TU-160" (https://sketchfab.com/3d-models/tupolev-tu-160-d3af9e67f8024dcc9b23a3e91d492e40) by KOG_THORNS — CC-BY-4.0 — `e_tu160.glb`
-- "B1" (https://sketchfab.com/3d-models/b1-59371234237e496da0f67cfcdc3acb20) by manilov.ap — CC-BY-4.0 — `e_b1b.glb`
-- "Boeing B-52 Stratofortress" (https://sketchfab.com/3d-models/boeing-b-52-stratofortress-38b0c64bd552431394efa8625d7f5144) by bohmerang — CC-BY-4.0 — `e_b52.glb`
 - "UGM-84 Harpoon (FREE)" (https://sketchfab.com/3d-models/ugm-84-harpoon-free-d62d60fac04f4d6b86e24ad06a1f99c6) by FeriseCAT — CC-BY-4.0 — `w_slam.glb`
 - "AGM-154 JSOW missile" (https://sketchfab.com/3d-models/agm-154-jsow-missile-03148c5054e54a1c99980aff68952c0f) by RickSlash — CC-BY-4.0 — `w_jsow.glb`
 - "ISKANDER" (https://sketchfab.com/3d-models/iskander-244b511ee2ca4f3794d118b872ee229c) by dofash_76 — CC-BY-4.0 — `w_tbmdec.glb`, `l_iskander.glb`
@@ -145,3 +143,5 @@
 - "Windmill" (https://sketchfab.com/3d-models/windmill-0730705327e045bd8cb98a888bd0f954) by Yury Misiyuk — CC-BY-4.0 — `obj_mill.glb`
 - "VAZ-2104 FREE" (https://sketchfab.com/3d-models/vaz-2104-free-ba563a31b4754a66a5f0e7f893145922) by sMoKi — CC-BY-4.0 — `c_vaz.glb`
 - "Dassault Rafale (из неё - часть носа корпуса; остальная модель своя)" (https://sketchfab.com/3d-models/dassault-rafale-fce1a5076caf4710917c14624b4d7d22) by CloudHub — CC-BY-4.0 — `e_rafale.glb`
+- "B1" (https://sketchfab.com/3d-models/b1-59371234237e496da0f67cfcdc3acb20) by manilov.ap — CC-BY-4.0 — кадр меню `shots/b1b-front-sunset.webp` (снят с прежней модели B-1B, до пересъёмки)
+- "Boeing B-52 Stratofortress" (https://sketchfab.com/3d-models/boeing-b-52-stratofortress-38b0c64bd552431394efa8625d7f5144) by bohmerang — CC-BY-4.0 — кадры меню `shots/b52-*.webp` и `ui/mm/air_e_b52_top.webp` (сняты с прежней модели B-52H, до пересъёмки)

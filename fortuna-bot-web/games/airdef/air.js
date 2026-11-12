@@ -6,7 +6,7 @@ import { makeBay } from './bay.js?v=20261111b';
 import { tr } from './i18n.js?v=20261111b';
 import { CITY, ZONE_NAME, mulberry32, riverX, objAimXZ, objDist } from './city.js?v=20261111b';
 import { strikerGeo, attachFlames } from './units-render.js?v=20261111b';
-import { planeModel, classOf, weaponMesh, pylonMesh, seatStores, podModel, weaponHasModel, planeMeta, spinProps, wantWeapon, hiKnown, stOrder, stationsFor } from './models.js?v=20261111b';
+import { planeModel, classOf, weaponMesh, pylonMesh, seatStores, podModel, weaponHasModel, planeMeta, spinProps, wantWeapon, hiKnown, stOrder, stationsFor, setPose } from './models.js?v=20261111b';
 import { ico, drawIco } from './icons.js?v=20261111b';
 import { applyLayout } from './layout.js?v=20261111b';
 import { clamp, makeCraft, pilotStep, fwdOf, D2R, angleBetween } from '../drone/sim/core.js?v=20261111b';
@@ -38,6 +38,7 @@ export function createAir(C) {
   // самолёт игрока: многоцелевой ударный самолёт стороны атакующих (как в превью меню), подвеска - на его пилонах
   const ship = new THREE.Group(); ship.rotation.order = 'YXZ';
   const shipMat = new THREE.MeshPhongMaterial({ vertexColors: true, specular: 0x666666, shininess: 55 });
+  let sweepK = -1; // стреловидность своего B-1B: 0 - сложено (как в файле), 1 - вперёд; −1 - новый вылет: сразу по скорости
   let shipModel = null, shipSide = null, shipCls = null, shipName = null, shipSkin = null, shipReal = false, shipInternal = false, flames = null, stations = [], podPos = new THREE.Vector3(0, -1.6, -3.5);
   // cls - ударный (бомбы) или ракетный: Су-30 / F/A-18 или МиГ-29 / F-16
   function buildShip(side, cls = 'strike', name = null) {
@@ -50,7 +51,7 @@ export function createAir(C) {
     const exact = !!pm && (!name || pm.name === name) && (pm.skin || null) === skin;
     if (shipSide === side && shipCls === cls && shipName === name && shipSkin === skin && (craft.heli || !pm || !shipModel || pm.stations === stations) /* другой набор точек у того же самолёта (Vulcan: отсек или пилоны) - пересобрать */ && (shipReal || !pm || (!exact && shipModel && shipModel.userData.pm === pm.name + (pm.skin ? '@' + pm.skin : '')))) return;
     if (shipModel) ship.remove(shipModel);
-    shipSide = side; shipCls = cls; shipName = name; shipSkin = skin; shipReal = exact; shipInternal = !!(pm && pm.internal);
+    sweepK = -1; shipSide = side; shipCls = cls; shipName = name; shipSkin = skin; shipReal = exact; shipInternal = !!(pm && pm.internal);
     if (pm) {
       shipModel = pm.obj; shipModel.userData.pm = pm.name + (pm.skin ? '@' + pm.skin : ''); stations = craft.heli ? heliStations(pm.stations, pm.pods4) : pm.stations; podPos = craft.heli ? null : pm.pod; // pod: null - встроенная прицельная система (у вертолёта - всегда)
       shipModel.traverse((o) => { if (o.isMesh && !o.userData.glass) o.castShadow = !!P.shadows; });
@@ -1740,6 +1741,7 @@ export function createAir(C) {
     if (rwa.on && (craft.dead || game.over)) rwrAckReset();
     flames.update(craft.thr, craft.ab);
     if (shipModel) spinProps(shipModel, dt, craft.thr); // винты (Ту-95; у вертолёта thr - шаг несущего)
+    if (shipModel && shipModel.userData.pm) { const want = craft.speed < 130 ? 1 : craft.speed > 190 ? 0 : (190 - craft.speed) / 60; const k0 = sweepK; sweepK = sweepK < 0 ? want : sweepK + Math.sign(want - sweepK) * Math.min(Math.abs(want - sweepK), dt / 6); if (sweepK !== k0 || shipModel.userData.sweepK !== sweepK) { setPose(shipModel, shipModel.userData.pm.split('@')[0], 'sweep', sweepK); shipModel.userData.sweepK = sweepK; } } // крыло изменяемой стреловидности (B-1B): медленно - вперёд, быстро - сложено; полный ход за 6 с
     if (game.opts.photo && !game.opts.phud) return; // «Съёмка»: без прицелов и панелей - свой интерфейс (photo.js); phud - запись ролика с интерфейсом боя (shot.hud)
     if (game.over && craft.dead) return;
     const sp = !!(game.net && craft.dead); if (sp !== document.body.classList.contains('spect')) document.body.classList.toggle('spect', sp); // «КАМ.» - следующий союзник

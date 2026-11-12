@@ -186,8 +186,9 @@ export const CREDITS = [
   "url": "https://sketchfab.com/3d-models/saab-jas-39-gripen-fighter-jet-54b84f308145465187658b074baf3cb7",
   "license": "CC-BY-4.0",
   "files": [
-   "e_gripen",
-   "e_gripen_lo"
+   "e_gripen_lo",
+   "shots/gripen-gbu12-snow.webp",
+   "ui/mm/air_e_gripen_climb.webp"
   ]
  },
  {
@@ -570,24 +571,6 @@ export const CREDITS = [
   "license": "CC-BY-4.0",
   "files": [
    "e_tu160"
-  ]
- },
- {
-  "title": "B1",
-  "author": "manilov.ap",
-  "url": "https://sketchfab.com/3d-models/b1-59371234237e496da0f67cfcdc3acb20",
-  "license": "CC-BY-4.0",
-  "files": [
-   "e_b1b"
-  ]
- },
- {
-  "title": "Boeing B-52 Stratofortress",
-  "author": "bohmerang",
-  "url": "https://sketchfab.com/3d-models/boeing-b-52-stratofortress-38b0c64bd552431394efa8625d7f5144",
-  "license": "CC-BY-4.0",
-  "files": [
-   "e_b52"
   ]
  },
  {
@@ -1324,6 +1307,27 @@ export const CREDITS = [
   "license": "CC-BY-4.0",
   "files": [
    "e_rafale"
+  ]
+ },
+ {
+  "title": "B1",
+  "author": "manilov.ap",
+  "url": "https://sketchfab.com/3d-models/b1-59371234237e496da0f67cfcdc3acb20",
+  "license": "CC-BY-4.0",
+  "files": [
+   "shots/b1b-front-sunset.webp"
+  ]
+ },
+ {
+  "title": "Boeing B-52 Stratofortress",
+  "author": "bohmerang",
+  "url": "https://sketchfab.com/3d-models/boeing-b-52-stratofortress-38b0c64bd552431394efa8625d7f5144",
+  "license": "CC-BY-4.0",
+  "files": [
+   "shots/b52-side-morning.webp",
+   "shots/b52-below.webp",
+   "shots/b52-jassm-clear.webp",
+   "ui/mm/air_e_b52_top.webp"
   ]
  }
 ];
