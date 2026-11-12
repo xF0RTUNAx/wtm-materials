@@ -31,8 +31,6 @@
 - "Mig23" (https://sketchfab.com/3d-models/mig23-cfd1f4a833434061b9f25f718fe0667a) by manilov.ap — CC-BY-4.0 — `e_mig23.glb`
 - "Mig27" (https://sketchfab.com/3d-models/mig27-a9d22acdb582444a91c2adc8b123d674) by manilov.ap — CC-BY-4.0 — `e_mig27.glb`
 - "TU26" (https://sketchfab.com/3d-models/tu26-52e40c8b03224f1bbba836965520a362) by manilov.ap — CC-BY-4.0 — `e_tu22m2.glb`
-- "A-10 Thunderbolt II" (https://sketchfab.com/3d-models/a-10-thunderbolt-ii-9521ff6ba5d448958ea45a89e94ab23d) by AIRMAN Magazine — CC-BY-4.0 — `e_a10.glb`
-- "Mig21" (https://sketchfab.com/3d-models/mig21-4e2b33b33fcb43948c78783867e3b166) by manilov.ap — CC-BY-4.0 — `e_mig21n.glb`
 - "Mig25" (https://sketchfab.com/3d-models/mig25-afe67617c5294dce9056106a22f640ff) by manilov.ap — CC-BY-4.0 — `e_mig25.glb`
 - "Su7b" (https://sketchfab.com/3d-models/su7b-faaf874e2c344f889a66451c4b93fa6b) by manilov.ap — CC-BY-4.0 — `e_su7b.glb`
 - "Tu16" (https://sketchfab.com/3d-models/tu16-9c4ee54ca28e44d7a4604be112acab9f) by manilov.ap — CC-BY-4.0 — `e_tu16.glb`

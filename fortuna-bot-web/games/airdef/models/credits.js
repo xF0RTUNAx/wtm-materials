@@ -286,24 +286,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "A-10 Thunderbolt II",
-  "author": "AIRMAN Magazine",
-  "url": "https://sketchfab.com/3d-models/a-10-thunderbolt-ii-9521ff6ba5d448958ea45a89e94ab23d",
-  "license": "CC-BY-4.0",
-  "files": [
-   "e_a10"
-  ]
- },
- {
-  "title": "Mig21",
-  "author": "manilov.ap",
-  "url": "https://sketchfab.com/3d-models/mig21-4e2b33b33fcb43948c78783867e3b166",
-  "license": "CC-BY-4.0",
-  "files": [
-   "e_mig21n"
-  ]
- },
- {
   "title": "Mig25",
   "author": "manilov.ap",
   "url": "https://sketchfab.com/3d-models/mig25-afe67617c5294dce9056106a22f640ff",

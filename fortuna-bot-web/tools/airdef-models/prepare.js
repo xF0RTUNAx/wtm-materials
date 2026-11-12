@@ -39,7 +39,6 @@ const NO_TAG = 'drawbox=x=iw*0.325:y=ih*0.41:w=iw*0.375:h=ih*0.09:color=0x141414
 const CAMO_BASE = { nato: [0.095, 0.118, 0.056], soviet: [0.092, 0.125, 0.046], uk: [0.088, 0.11, 0.055], fr: [0.2, 0.23, 0.27] }; // линейные (как в models.js CAMO)
 const F35_GEAR = (c) => { const ax = Math.abs(c.ctr[0]), y = c.ctr[1], z = c.ctr[2];
   return (ax > 1.6 && ax < 2.8 && z > 4.4 && z < 6.2 && y < 3.3 && Math.max(...c.size) < 2.5) || (ax < 0.6 && z > -2.5 && z < -0.5 && y < 2.4); };
-const A10_STORE = (c) => (c.mat === 16 && c.ctr[2] > -7.5) /* подвеска автора: бомбы, ракеты, контейнеры (дуло пушки впереди z < −7,5 — оставить) */ ||
   (Math.abs(c.ctr[0]) > 5.4 && c.ctr[1] < -0.3 && c.size[2] > 0.8) /* пластина-адаптер «Мейверика» на внешних пилонах */ ||
   (Math.abs(Math.abs(c.ctr[0]) - 3.62) < 0.1 && c.ctr[1] < -0.55 && c.size[2] > 0.5) /* рельсы под пилонами 3,6 м */ ||
   (Math.abs(c.ctr[0]) > 5 && c.ctr[0] !== 0 && c.mat !== 1 && Math.max(...c.size) < 0.5 && c.ctr[1] < -0.15 && ((c.ctr[2] > -2.2 && c.ctr[2] < -1.8) || (c.ctr[2] > 0.2 && c.ctr[2] < 0.45) || (Math.abs(Math.abs(c.ctr[0]) - 5.1) < 0.1 && c.ctr[2] > 0.6 && c.ctr[1] < -0.3))) /* остатки «Мейверика» на внешних пилонах */ ||
@@ -152,12 +151,14 @@ const CONFIG = {
     groups: (c) => { const dx = Math.abs(c.ctr[0] + 0.47); // ось — x −0,47
       return (c.max[1] < -2.3 && Math.max(...c.size) < 3) || (c.ctr[1] < -1.95 && c.ctr[2] > -11 && c.ctr[2] < -6.5 && dx < 1) /* носовая стойка и створки */ ||
         (c.ctr[1] < -1.6 && dx > 0.9 && dx < 6.2 && c.ctr[2] > 1 && c.ctr[2] < 9 && Math.max(...c.size) < 4) /* основные стойки и открытые створки */ ? null : 'body'; } },
-  e_a10: { src: `${DL}/a-10_thunderbolt_ii.glb`, scale: 1.22, nose: '-z', rulesIn: 'game', tex: () => 1024, centerX: true, crease: 35, groups: (c) => (A10_STORE(c) ? (Deno.env.get('MARK') ? 'mark' : null) : 'body') }, // A-10 — AIRMAN Magazine (Alfredo Tirado), заготовка
+  e_a10: { src: new URL('./own/a10.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 2048, nTex: () => 2048, pickMesh: /./, own: true, centerX: true, groups: (c) => { const m = /(^|\/)(stow_m_[lr]|gun)(\/|\||$)/.exec(c.path); return m ? m[2] : 'body'; } }, // A-10A: своя модель (Blender, own/a10-build, 2026-11-12); колёса в обтекателях stow_m_* - свои части (в ангаре со стойками скрыты, META.gearHide), блок стволов gun - своя часть
+  e_a10_gear: { src: new URL('./own/a10_gear.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 2048, nTex: () => 2048, pickMesh: /./, own: true, centerX: true }, // стойки своего A-10A для ангара (метки по 1 мм - тот же центр)
   e_f15e: { src: new URL('./own/f15e.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 2048, nTex: () => 2048, pickMesh: /./, own: true, centerX: true }, // F-15E: своя модель (Blender, own/f15e-build), первый свой самолёт; карта блеска: R затенение, G шероховатость, B металл
   e_f15e_gear: { src: new URL('./own/f15e_gear.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 2048, nTex: () => 2048, pickMesh: /./, own: true, centerX: true }, // стойки F-15E для ангара: две метки по 1 мм дают тот же центр, что у самолёта, не удалять
   // ── третья партия 2026-10-19 (manilov.ap, CC BY): fwd — по оси симметрии (sym.js; у F-117 и B-2 нет киля-подсказки — нос проверен по виду сбоку); без упрощения;
   // шасси и подвески автора — долой (strip): x оси, низ фюзеляжа и крыла — по LS=1 --groups и видам --views ──
-  e_mig21n: { src: `${DL}/mig21.glb`, scale: 0.99190, fwd: [-0.8359, 0.5488], rulesIn: 'game', tex: () => 512, centerX: true, groups: strip(-0.26, 1.48, 1.0, 1.3, 2.0, (c, d) => d < 0.3 && c.size[2] > 3) /* подфюзеляжный киль — оставить */ },
+  e_mig21n: { src: new URL('./own/mig21.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 2048, nTex: () => 2048, pickMesh: /./, own: true, centerX: true }, // МиГ-21бис: своя модель (Blender, own/mig21-build, 2026-11-12); трёхцветный камуфляж, бака под фюзеляжем нет (Mark); оранжевая и серебристая окраски - в Свои/МиГ-21бис/окраски для магазина
+  e_mig21n_gear: { src: new URL('./own/mig21_gear.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 2048, nTex: () => 2048, pickMesh: /./, own: true, centerX: true }, // стойки своего МиГ-21бис для ангара (метки по 1 мм - тот же центр)
   e_mig25: { src: `${DL}/mig25.glb`, scale: 0.80415, fwd: [-0.7934, 0.6088], rulesIn: 'game', tex: () => 512, centerX: true, groups: strip(-0.47, 1.25, 1.8, 2.05, 6.5, (c, d) => c.size[0] > 1.5 || (d < 1.6 && c.ctr[2] > 4.5)) /* ракеты Р-40 под крылом; стабилизатор и кили — оставить */ },
   e_su7b: { src: `${DL}/su7b.glb`, scale: 0.87774, fwd: [0.8361, 0.5486], rulesIn: 'game', tex: () => 512, centerX: true, groups: strip(-0.38, 1.2, 1.2, 1.42) /* баки под фюзеляжем и крылом */ },
   e_tu16: { src: `${DL}/tu16.glb`, scale: 0.94283, fwd: [-0.9304, -0.3665], rulesIn: 'game', tex: () => 512, centerX: true, groups: LS },

@@ -158,7 +158,7 @@ export function createHangar(C, renderer) {
     hangStores(obj, pm.name, hung, seatL);
     for (const [key, m] of ms) { let g = groups.find((x) => x.key === key); if (!g) groups.push(g = { key, pos: [] }); g.pos.push(m.position.clone()); }
     const gK = gearOf(pm.name), gear = gK && modelLoaded(gK) ? anyModel(gK) : null; if (gear) { gear.position.set(0, 0, 0); obj.add(gear); } // стойки в тех же осях, что самолёт; не пришли - обычные подъёмники
-    setPose(obj, pm.name, 'sweep', 1); if (gear) setPose(obj, pm.name, 'ground', 1); // на стоянке: крыло B-1B вперёд, крылья B-52H опущены на опоры (только со стойками)
+    setPose(obj, pm.name, 'sweep', 1); if (gear) setPose(obj, pm.name, 'ground', 1); for (const n of (planeMeta(pm.name) || {}).gearHide || []) { const o = obj.getObjectByName(n); if (o) o.visible = !gear; } // A-10A: колёса в обтекателях убраны, когда стоят стойки // на стоянке: крыло B-1B вперёд, крылья B-52H опущены на опоры (только со стойками)
     pivot.updateMatrixWorld(true);
     const box = new THREE.Box3().setFromObject(obj), gearY = gear ? new THREE.Box3().setFromObject(gear).min.y : null;
     const size = Math.max(sz.x, sz.z), heavy = size > BIG;

@@ -39,7 +39,7 @@ const META = {
   // pod: null - прицельная система встроенная (контейнер не вешается); internal - оружие во внутренних отсеках (не видно до пуска)
   e_su24: { side: 'east', cls: 'strike', lazy: true, stations: mirror([V(-4.8, -1.13, 3.4, 0.3), V(-2.08, -1.39, 1.87), V(-0.5, -2.1, 3.0), V(-0.4, -2.12, -0.4)]),
     nozzles: [V(-0.6, -1.29, 9.86), V(0.6, -1.29, 9.86)], nr: 0.32, pod: null }, // Су-24М - manilov.ap («Кайра» встроена; пилоны консолей дорисованы)
-  // ── 2026-10-19: manilov.ap (Tornado, F-111, МиГ-23, МиГ-27, Ту-22М2), Spark_Customs (F-15E); A-10 с 2026-10-22 - AIRMAN Magazine ──
+  // ── 2026-10-19: manilov.ap (Tornado, F-111, МиГ-23, МиГ-27, Ту-22М2), Spark_Customs (F-15E); A-10 - своя модель с 2026-11-12 ──
   e_tornado: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-5.41, -1.68, 1.59), V(-2.95, -1.88, 0.52), V(-0.75, -2.27, -1.2), V(-0.75, -2.33, 2.4)]),
     nozzles: [V(-0.59, -1.19, 6.34), V(0.59, -1.19, 6.34)], nr: 0.25, pod: V(0, -2.35, 0.5) }, // Tornado IDS
   e_f111: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-5.141, -0.774, 3.19), V(-4.541, -0.774, 3.19), V(-3.756, -0.797, 2.694), V(-3.156, -0.797, 2.694)]), // F-111F: своя модель (Свои/F-111F, 2026-11-12); по два замка на каждом поворотном пилоне, крыло на 26°
@@ -51,13 +51,13 @@ const META = {
     nozzles: [V(0, -0.65, 7.43)], nr: 0.33, pod: null }, // МиГ-27К («Кайра» встроена)
   e_tu22m2: { side: 'east', cls: 'bomber', lazy: true, stations: mirror([V(-6.34, -3.89, 5.06), V(-1.27, -2.71, -3.2), V(-1.27, -2.71, -0.5), V(-1.27, -2.71, 2.2)]),
     nozzles: [V(-0.96, -2.67, 18.75), V(0.96, -2.67, 18.75)], nr: 0.72, pod: null }, // Ту-22М2 (сопла по срезу стволов: были выше на 1,4 м, радиус 0,4 → 0,72)
-  e_a10: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-5.74, -1.01, -0.34), V(-4.7, -1.06, -0.11), V(-3.62, -1.19, -0.2), V(-1.53, -1.27, -0.2)]), // по низу пилонов модели AIRMAN Magazine (подвеска автора убрана; пилоны на 5,74 / 4,70 / 3,62 / 1,53 м от оси)
-    nozzles: [V(-1.45, 0.31, 5.0), V(1.45, 0.31, 5.0)], nr: 0.33, pod: V(-0.6, -1.62, -0.27), dry: true }, // A-10A (сопла по срезу гондол: кольцо R 0,43, горячая часть R ≈ 0,33; контейнер - на подфюзеляжном пилоне x −0,6)
+  e_a10: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-5.98, -0.937, -0.315), V(-4.8, -1.093, -0.195), V(-3.62, -1.248, -0.2), V(-1.8, -1.378, -0.09)]), // A-10A: своя модель (Свои/A-10A, 2026-11-12); 4 пилона на крыло; сопла - горячий внутренний контур (CORE_R 0,27, на 0,24 м за вентиляторным кольцом)
+    nozzles: [V(-1.45, 0.324, 4.98), V(1.45, 0.324, 4.98)], nr: 0.3, pod: V(0.84, -1.396, -5.89), dry: true, racks: true, clearGlass: true, ...(paintOn ? { gearModel: 'e_a10_gear' } : {}), gearHide: ['stow_m_r', 'stow_m_l'] }, // контейнер - справа под кабиной (место Pave Penny); колёса в обтекателях скрываются, когда показаны стойки
   e_f15e: { side: 'west', cls: 'fighter', lazy: true, stations: mirror([V(-1.78, -2.359, -0.315), V(-1.8, -2.38, 3.485), V(-1.8, -2.398, 1.585), V(-3.55, -1.844, 3.535)]),
     nozzles: [V(-0.69, -1.364, 8.635), V(0.69, -1.364, 8.635)], nr: 0.48, pod: V(1.2, -2.247, -0.815), clearGlass: true, ...(paintOn ? { gearModel: 'e_f15e_gear' } : {}) }, // F-15E: своя модель, 1 пилон крыла + 3 на конформном баке, LANTIRN под правым воздухозаборником
-  // ── 2026-10-19, третья партия manilov.ap: точки подвески - по низу крыла (лучи по треугольникам) и пилонам автора ──
-  e_mig21n: { side: 'east', cls: 'strike', lazy: true, stations: mirror([V(-2.76, -1.14, 2.1, 0.3), V(-1.95, -1.08, 0.7), V(-0.45, -1.3, 2.2, 0.2), V(-0.3, -1.3, 0.2, 0.2)]),
-    nozzles: [V(0, -0.6, 6.03)], nr: 0.4, pod: null }, // МиГ-21бис
+  // ── 2026-10-19, третья партия manilov.ap (МиГ-21бис - своя модель с 2026-11-12): точки подвески - по низу крыла (лучи по треугольникам) и пилонам автора ──
+  e_mig21n: { side: 'east', cls: 'strike', lazy: true, stations: mirror([V(-2.78, -1.349, 2.125), V(-1.9, -1.346, 1.275)]), // МиГ-21бис: своя модель (Свои/МиГ-21бис, 2026-11-12); два пилона на крыло, подфюзеляжный узел без бака
+    nozzles: [V(0, -0.633, 6.65)], nr: 0.47, pod: null, clearGlass: true, ...(paintOn ? { gearModel: 'e_mig21n_gear' } : {}) },
   e_mig25: { side: 'east', cls: 'fighter', lazy: true, stations: mirror([V(-3.98, -0.95, 4.4, 0.15), V(-2.9, -0.95, 3.6, 0.15), V(-0.6, -2.0, 0.2, 0.15), V(-0.6, -2.0, 2.4, 0.15)]),
     nozzles: [V(-0.67, -1.11, 8.34), V(0.67, -1.11, 8.34)], nr: 0.5, pod: null }, // МиГ-25БМ
   e_su7b: { side: 'east', cls: 'strike', lazy: true, stations: mirror([V(-2.55, -1.6, 2.4, 0.3), V(-1.89, -1.58, 1.3, 0.3), V(-0.45, -1.62, -0.6, 0.22), V(-0.45, -1.65, 1.6, 0.22)]),
@@ -366,6 +366,8 @@ const GLB_V_OWN = {
   e_draken: '20261112a', e_draken_gear: '20261112a', // свой Saab 35 Draken
   e_f5: '20261112a', e_f5_gear: '20261112a', // свой F-5E Tiger II
   e_f111: '20261112b', e_f111_gear: '20261112b', // свой F-111F Aardvark
+  e_mig21n: '20261112c', e_mig21n_gear: '20261112c', // свой МиГ-21бис
+  e_a10: '20261112c', e_a10_gear: '20261112c', // свой A-10A (стоянка pk_e_a10 - ниже, в списке стоянок)
   l_himars: '20261111b', w_atacms: '20261110b', // свои M142 HIMARS и ATACMS
   e_f4: '20261110a', e_f4_gear: '20261110a', e_f100: '20261110a', e_f100_gear: '20261110a', // свои F-4 Phantom II и F-100D
   e_rafale: '20261109b', e_rafale_gear: '20261109b', // свой Rafale
@@ -450,7 +452,7 @@ const GLB_V_OWN = {
   pk_f16: '20261106b',
   pk_f18: '20261106b',
   pk_e_f15e: '20261105a',
-  pk_e_a10: '20261029b',
+  pk_e_a10: '20261112c', // своя модель A-10A
   pk_e_su34: '20261029b',
   pk_e_mig31: '20261029b',
   pk_h_mi24: '20261029b',
@@ -537,8 +539,8 @@ GLB_V.e_f15e = '20261105a'; GLB_V.e_f15e_gear = '20261105a'; // своя мод�
 // «Оса-М» ЗИФ-122 (KoreanNavy) и «Бук-М3» (Valera121) вместо моделей Jeyhun1985 (2026-10-22): новые файлы
 Object.assign(GLB_V, Object.fromEntries(['osa', 'osa_lo'].map((n) => [n, '20261024e'])));
 Object.assign(GLB_V, Object.fromEntries(['bukm3', 'bukm3_lo', 'msl_bukm3'].map((n) => [n, '20261024f'])));
-// F-35A (andertan), A-10 (AIRMAN Magazine) и Ту-22М3 (Real Slim Shady) вместо моделей shangus930 / Immersive3D / Jeyhun1985 (2026-10-22): новые файлы
-Object.assign(GLB_V, Object.fromEntries(['e_a10', 'e_tu22m3', 'e_tu22m3_lo'].map((n) => [n, '20261024h'])));
+// F-35A (andertan), A-10 (AIRMAN Magazine; своя модель с 2026-11-12) и Ту-22М3 (Real Slim Shady) вместо моделей shangus930 / Immersive3D / Jeyhun1985 (2026-10-22): новые файлы
+Object.assign(GLB_V, Object.fromEntries(['e_tu22m3', 'e_tu22m3_lo'].map((n) => [n, '20261024h'])));
 // трубы ПЗРК перекрашены, в настоящий размер, Stinger развёрнут; расчёты ПЗРК вместо процедурных солдат (2026-10-27)
 Object.assign(GLB_V, Object.fromEntries(['mp_verba', 'mp_stinger', 'crew_e', 'crew_w'].map((n) => [n, '20261027c'])));
 Object.assign(GLB_V, Object.fromEntries(['h_log', 'h_khata', 'h_mobile'].map((n) => [n, '20261027b']))); // маленькие дома заново: упрощение без дыр в крыше и тёмных фасадов (prepare.js simpKeep, lockBorder; 2026-10-27)
@@ -555,6 +557,8 @@ Object.assign(GLB_V, GLB_V_OWN);
 META.hg_jack = { lazy: true, matte: true, stations: [] }; // подъёмник ангара (hangar.js): части base, ram, head
 if (paintOn) META.e_f15e_gear = { lazy: true, matte: true, paint: true, stations: [] };
 if (paintOn) META.e_f111_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего F-111F для ангара
+if (paintOn) META.e_mig21n_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего МиГ-21бис для ангара
+if (paintOn) META.e_a10_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего A-10A для ангара
 if (paintOn) META.e_f35_gear = { lazy: true, matte: true, paint: true, stations: [] };
 if (paintOn) META.f18_gear = { lazy: true, matte: true, paint: true, stations: [] };
 if (paintOn) META.f16_gear = { lazy: true, matte: true, paint: true, stations: [] };
