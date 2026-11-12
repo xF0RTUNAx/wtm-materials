@@ -1,9 +1,9 @@
 // Экран «Задания»: ежедневные и еженедельные, маршрут недели с МиГ-31 (пул, награды и правила - quests-data.js; счёт и начисление - сервер, airdef-progress, progress-net.js).
 // Материалы - пререндер: ui/quests/ (штабной стол, карта, булавки, МиГ-31, корешки досье, ленты-закладки, плашки, латунная кнопка, печать, лампы), t_* - плитки наград.
 // Тестовый режим (?pgtest=1) - кнопка «ДЕМО»: продвинуть задания, следующий день и неделя, состояние в памяти.
-import { DAILY, WEEKLY, ROUTE, ROUTE_MAX, PTS_DAILY, PTS_WEEKLY, CRATE, CASE, mskDay } from './quests-data.js?v=20261111b';
-import { QI } from './quest-icons.js?v=20261111b';
-import { tr, LANG } from './i18n.js?v=20261111b';
+import { DAILY, WEEKLY, ROUTE, ROUTE_MAX, PTS_DAILY, PTS_WEEKLY, CRATE, CASE, mskDay } from './quests-data.js?v=20261112a';
+import { QI } from './quest-icons.js?v=20261112a';
+import { tr, LANG } from './i18n.js?v=20261112a';
 
 const UI = 'airdef/ui/quests/', LOC = LANG === 'en' ? 'en-US' : 'ru-RU';
 const TILE = { silver: UI + 't_silver.webp', xp: UI + 't_xp.webp', gem: UI + 't_gems.webp', star: UI + 't_star.webp', crate: UI + 't_crate.webp', case: UI + 't_case.webp' };
