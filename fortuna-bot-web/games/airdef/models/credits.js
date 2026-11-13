@@ -232,21 +232,30 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "Su24",
-  "author": "manilov.ap",
-  "url": "https://sketchfab.com/3d-models/su24-3439ae4000df438894a44127ebda538c",
-  "license": "CC-BY-4.0",
-  "files": [
-   "e_su24"
-  ]
- },
- {
   "title": "Tornado",
   "author": "manilov.ap",
   "url": "https://sketchfab.com/3d-models/tornado-9fd925dabddc4c1998b7c3df5ac47bf8",
   "license": "CC-BY-4.0",
   "files": [
    "e_tornado"
+  ]
+ },
+ {
+  "title": "Tu22",
+  "author": "manilov.ap",
+  "url": "https://sketchfab.com/3d-models/tu22-189799dc11b149a9a9d404904c97173d",
+  "license": "CC-BY-4.0",
+  "files": [
+   "ui/mm/air_e_tu22_head.webp"
+  ]
+ },
+ {
+  "title": "Su24",
+  "author": "manilov.ap",
+  "url": "https://sketchfab.com/3d-models/su24-3439ae4000df438894a44127ebda538c",
+  "license": "CC-BY-4.0",
+  "files": [
+   "shots/su24-kh58-overcast.webp"
   ]
  },
  {
@@ -328,15 +337,6 @@ export const CREDITS = [
   "license": "CC-BY-4.0",
   "files": [
    "e_yak38"
-  ]
- },
- {
-  "title": "Tu22",
-  "author": "manilov.ap",
-  "url": "https://sketchfab.com/3d-models/tu22-189799dc11b149a9a9d404904c97173d",
-  "license": "CC-BY-4.0",
-  "files": [
-   "e_tu22"
   ]
  },
  {
