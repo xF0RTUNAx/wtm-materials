@@ -133,8 +133,8 @@ const META = {
   // F/A-18C - теперь своя модель, ниже история: manilov.ap «F18» (CC BY 4.0; с 2026-10-24, прежняя - Rhine_Lab_Muelsyse; AN/AAS-38 у воздухозаборника); у автора пилонов под крылом нет - дорисованы (py 0,36), станция 3 - по низу ракетных рельсов фюзеляжа (x 1,07, низ −1,72), сопла - по срезу колец (z 8,03, R 0,46)
   e_f18c: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-3.75, -1.35, 1.785), V(-1.08, -1.82, 3.215), V(-3.25, -1.35, 1.785), V(-2.25, -1.4, 1.485)]),
     nozzles: [V(-0.49, -0.9, 8.535), V(0.49, -0.9, 8.535)], nr: 0.385, pod: V(0.72, -1.85, 0.415), clearGlass: true, ...(paintOn ? { gearModel: 'e_f18c_gear' } : {}) }, // F/A-18C: своя модель, 2 держателя на внешнем пилоне + внутренний + под воздухозаборником, контейнер на правом борту
-  e_su25: { side: 'east', cls: 'strike', lazy: true, stations: mirror([V(-4.34, -1.23, 0.70), V(-3.56, -1.18, 0.45), V(-2.77, -1.14, 0.21), V(-1.97, -1.12, -0.16)]),
-    nozzles: [V(-0.78, -1.5, 3.55), V(0.78, -1.5, 3.55)], nr: 0.3, pod: null, dry: true }, // Су-25 - mamont nikita (CC BY 4.0; с 2026-10-24, прежняя - Immersive3D; «Шквал» у Су-25Т встроен); станции - по низу пилонов автора (x 4,34 / 3,56 / 2,77 / 1,97; пятый, x 5,07 - не используется), сопла - по срезу чаш двигателей (z 3,55, R ≈ 0,3, ниже сечения гондолы)
+  e_su25: { side: 'east', cls: 'strike', lazy: true, stations: mirror([V(-4.36, -1.234, 1.166), V(-3.6, -1.194, 1.028), V(-2.8, -1.154, 0.807), V(-2.02, -1.115, 0.582)]), // Су-25: своя модель (Свои/Су-25, 2026-11-13); низ пилонов p4..p1 от внешнего (пятый p5 под Р-60 - только в модели)
+    nozzles: [V(-0.89, -1.175, 4.01), V(0.89, -1.175, 4.01)], nr: 0.27, pod: V(0, -2.113, 0.475), dry: true, racks: true, clearGlass: true, ...(paintOn ? { gearModel: 'e_su25_gear' } : {}) }, // контейнер - на подфюзеляжном пилоне pylon_c; пилоны узкие - racks
   e_su34: { side: 'east', cls: 'strike', lazy: true, stations: mirror([V(-6.01, -1.56, 5.59), V(-4.7, -1.6, 4.57), V(-3.4, -1.56, 4.0), V(-1.2, -2.66, 3.0, 0.2)]),
     nozzles: [V(-1.235, -1.67, 9.95), V(1.235, -1.67, 9.95)], nr: 0.44, pod: null }, // Су-34 - manilov.ap («Платан» встроен); под крылом пилоны модели, под гондолой (дно −2,46) пилон дорисован
   e_su17: { side: 'east', cls: 'strike', lazy: true, stations: mirror([V(-0.42, -1.888, 2.275), V(-0.42, -1.888, -0.725), V(-2.05, -2.015, 1.525), V(-1.12, -2.011, 0.125)]), // Су-17М4: своя модель (Свои/Су-17М4, 2026-11-13), серая; порядок: подфюзеляжные задний и передний, внешний и внутренний крыльевые - Х-58 на внутренние, Х-25МЛ на внешние (сборщик: _loads.py, касаний нет)
@@ -377,6 +377,7 @@ const GLB_V_OWN = {
   e_a10: '20261112c', e_a10_gear: '20261112c', // свой A-10A (стоянка pk_e_a10 - ниже, в списке стоянок)
   e_su17: '20261113a', e_su17_gear: '20261113a', e_mig23: '20261113a', e_mig23_gear: '20261113a', e_il28: '20261113a', e_il28_gear: '20261113a', // свои Су-17М4, МиГ-23БН, Ил-28
   e_mig27: '20261113d', e_mig27_gear: '20261113d', // свой МиГ-27К
+  e_su25: '20261113e', e_su25_gear: '20261113e', // свой Су-25
   e_su7b: '20261113b', e_su7b_gear: '20261113b', // свой Су-7БМК
   e_tu22: '20261113c', e_tu22_gear: '20261113c', e_su24: '20261113c', e_su24_gear: '20261113c', // свои Ту-22 и Су-24М
   l_himars: '20261111b', w_atacms: '20261110b', // свои M142 HIMARS и ATACMS
@@ -459,7 +460,7 @@ const GLB_V_OWN = {
   pk_su30: '20261029b', // лёгкие копии на стоянках объектов-сцен (prepare.js pk_*, ~4 тыс. треугольников)
   pk_mig29: '20261029b',
   pk_e_su24: '20261113c', // своя модель Су-24М
-  pk_e_su25: '20261029b',
+  pk_e_su25: '20261113e',
   pk_f16: '20261106b',
   pk_f18: '20261106b',
   pk_e_f15e: '20261105a',
@@ -560,7 +561,7 @@ GLB_V.h_ka52 = '20261024i'; // Ка-52 maddex88 (CC BY 4.0), переделан 
 Object.assign(GLB_V, Object.fromEntries(['tunguska', 'tunguska_lo', 'pantsir', 'pantsir_lo', 'msl_9m311'].map((n) => [n, '20261024j'])));
 GLB_V.w_storm = '20261024k'; // Storm Shadow: консоли крыла - свои части (сложены на подвеске)
 Object.assign(GLB_V, { su30: '20261024p' }); // Су-30МКИ и F-16E/F - andertan (CC BY 4.0) вместо Immersive3D и Muhamad Mirza Arrafi (сомнительные права: F-16 помечен на Sketchfab как сгенерированный нейросетью, у Immersive3D - рипы Unreal) (2026-10-24)
-Object.assign(GLB_V, { e_b1b: '20261024q', e_su25: '20261024q' }); // B-1B - manilov.ap, Су-25 - mamont nikita (все CC BY 4.0) вместо моделей Muhamad Mirza Arrafi, Rhine_Lab_Muelsyse и Immersive3D (сомнительные права) (2026-10-24)
+Object.assign(GLB_V, { e_b1b: '20261024q' }); // прежний B-1B - manilov.ap, теперь свой (GLB_V_OWN перекрывает) (Су-25 - своя модель с 2026-11-13, GLB_V_OWN; прежде mamont nikita) (все CC BY 4.0) вместо моделей Muhamad Mirza Arrafi, Rhine_Lab_Muelsyse и Immersive3D (сомнительные права) (2026-10-24)
 Object.assign(GLB_V, { l_iskander: '20261024s', w_tbmdec: '20261024r' }); // «Искандер» и ложная цель («Кинжал» - своя модель с 2026-10-25, GLB_V_OWN) - dofash_76 «ISKANDER» (CC BY 4.0) вместо 42manako (перезалив модели из 3D Warehouse - лицензия недействительна) (2026-10-24)
 GLB_V.e_su34 = '20261024l'; // Су-34 manilov.ap (CC BY 4.0) вместо 42manako, без шасси (2026-10-22)
 Object.assign(GLB_V, { hawk: '20261024m', w_gbu24: '20261024m' }); // Hawk: ракета без деталей пусковой (absorb 0); GBU-24 - AnirudhRao, своя окраска
@@ -575,6 +576,7 @@ if (paintOn) META.e_su7b_gear = { lazy: true, matte: true, paint: true, stations
 if (paintOn) META.e_tu22_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего Ту-22 для ангара
 if (paintOn) META.e_su24_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего Су-24М для ангара
 if (paintOn) META.e_mig23_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего МиГ-23БН для ангара
+if (paintOn) META.e_su25_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего Су-25 для ангара
 if (paintOn) META.e_mig27_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего МиГ-27К для ангара
 if (paintOn) META.e_il28_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего Ил-28 для ангара
 if (paintOn) META.e_f35_gear = { lazy: true, matte: true, paint: true, stations: [] };

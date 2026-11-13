@@ -427,7 +427,8 @@ export const CREDITS = [
   "url": "https://sketchfab.com/3d-models/su-25-88b71eb848cf4418a95dff497c07cefc",
   "license": "CC-BY-4.0",
   "files": [
-   "e_su25"
+   "shots/su25-fog.webp",
+   "shots/su25-kh29.webp"
   ]
  },
  {

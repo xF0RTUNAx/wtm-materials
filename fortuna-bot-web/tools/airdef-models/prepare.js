@@ -226,9 +226,8 @@ const CONFIG = {
   e_f18c_gear: { src: new URL('./own/f18c_gear.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 2048, nTex: () => 2048, pickMesh: /./, own: true, centerX: true }, // стойки F/A-18C для ангара: две метки по 1 мм дают тот же центр, что у самолёта, не удалять
   e_su24_old: { src: `${DL}/russian_su-24.glb`, scale: 0.0543, nose: '-z', rulesIn: 'game', tex: () => 512, // (42manako — не использовать: из мода BF2)
     groups: (c) => (c.ctr[1] < -0.4 && Math.abs(c.ctr[0]) < 2.2 && Math.max(...c.size) < 1.9 && !(c.size[2] > 1.5 && c.size[1] < 0.3) && ((c.ctr[2] > 1.6 && c.ctr[2] < 4.7) || (c.ctr[2] > -5.7 && c.ctr[2] < -3.2)) ? null : LS(c)) }, // шасси и створки (пилоны под фюзеляжем — оставить)
-  e_su25: { src: `${DL}/su25_mamontnikita.glb`, scale: 15.53 / 319.34, nose: '+z', rulesIn: 'game', tex: () => 512, centerX: true,
-    // Су-25 — mamont nikita (CC BY 4.0; прежняя модель Immersive3D): шасси выпущено у автора — стойки, колёса и створки (всё ниже y 1,15 в осях правил, по треугольникам: части между собой не разделены) долой; пилоны (5 на крыло) и подвесные контейнеры на законцовках — оставлены, подвески у автора нет
-    perTri: true, groups: (c) => (c.ctr[1] < 1.15 ? null : 'body') },
+  e_su25: { src: new URL('./own/su25.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 2048, nTex: () => 2048, pickMesh: /./, own: true, centerX: true }, // Су-25: своя модель (Свои/Су-25, 2026-11-13; пиксель без флагов и кокард - Mark), без шасси - стойки отдельным файлом
+  e_su25_gear: { src: new URL('./own/su25_gear.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 2048, nTex: () => 2048, pickMesh: /./, own: true, centerX: true }, // стойки и открытые створки своего Су-25 для ангара
   // Су-34 — manilov.ap (CC BY 4.0, 2026-10-24; прежняя модель 42manako — «Not my original model»): оси самолёта совпадают с осями файла (нос +z), без упрощения (57 тыс.);
   // длина 23,34 м по оси (с штангой ПВД). Без шасси (по материалам стоек и колёс; створки и мелочь ниже оси — мельче 2,2 м; гондолы двигателей — крупные, остаются); рельсы под крылом — оставлены как пилоны
   e_su34: { src: `${DL}/su34_manilov.glb`, scale: 23.34 / 24.02, nose: '+z', rulesIn: 'game', tex: () => 512, centerX: true,

@@ -46,7 +46,7 @@
 - "T4" (https://sketchfab.com/3d-models/t4-1b9171a6210b427fb2493af3947b1c26) by manilov.ap — CC-BY-4.0 — `e_t4.glb`
 - "Sukhoi Su-27 "Flanker"" (https://sketchfab.com/3d-models/sukhoi-su-27-flanker-2541c1dbc6c1499cb7b38b5bf1314750) by andertan — CC-BY-4.0 — `e_su27.glb`
 - "Sukhoi Su-35 Flanker-E (Сухой Су-35)" (https://sketchfab.com/3d-models/sukhoi-su-35-flanker-e-35-c98cf9b3b3e04017a04732798a31888a) by andertan — CC-BY-4.0 — `e_su35.glb`
-- "Su-25" (https://sketchfab.com/3d-models/su-25-88b71eb848cf4418a95dff497c07cefc) by mamont nikita — CC-BY-4.0 — `e_su25.glb`
+- "Su-25" (https://sketchfab.com/3d-models/su-25-88b71eb848cf4418a95dff497c07cefc) by mamont nikita — CC-BY-4.0 — фоны меню `shots/su25-fog.webp` и `shots/su25-kh29.webp` (сняты с прежней модели Су-25, до пересъёмки)
 - "Su34" (https://sketchfab.com/3d-models/su34-1c94f436be51453fa598e9eab50eb0a7) by manilov.ap — CC-BY-4.0 — `e_su34.glb`
 - "Su17" (https://sketchfab.com/3d-models/su17-a5dfc3d488c8441c8468a75ffad1ab75) by manilov.ap — CC-BY-4.0 — кадр меню `ui/mm/air_e_su17_belly.webp` (снят с прежней модели Су-17М4, до пересъёмки)
 - "ELTA 8222 ECM POD 1/48" (https://www.thingiverse.com/thing:5360259) by Original_linny — CC-BY-4.0 — `w_ecm.glb`
