@@ -348,7 +348,7 @@ export const PLANE_META = Object.fromEntries(Object.entries(META).filter(([, m])
 // текстуры города (tex/*.jpg) - ambientCG: Grass004, PavingStones151, Concrete042A, RoofingTiles006, Facade002/017/018A;
 // Poly Haven (tex/p_*.jpg): asphalt_02, road_damaged_2, gravel, rocky_terrain_03, brown_mud_03
 const TEX_CREDIT = { title: tr('Текстуры земли, дорог, крыш и фасадов'), author: 'ambientCG', url: 'https://ambientcg.com', license: 'CC0', files: ['tex/*.jpg'] };
-const PH_CREDIT = { title: tr('Текстуры асфальта, щебня, скал и пашни; панорамы неба'), author: 'Poly Haven', url: 'https://polyhaven.com', license: 'CC0', files: ['tex/p_*.jpg', 'sky/*.jpg'] };
+const PH_CREDIT = { title: tr('Текстуры асфальта, щебня, скал и пашни; панорамы неба'), author: 'Poly Haven', url: 'https://polyhaven.com', license: 'CC0', files: ['tex/p_*.jpg', 'sky/*.jpg', 'ui/hangar/*.jpg'] };
 // взрывы (fx/*.png): огненный шар с дымом - ohyhei; вспышка с кольцом - Explosion FX Free (heyheythere; его пламя пожаров убрано 2026-10-28 - свой ex_burn)
 const FX_CREDITS = [
   { title: tr('Иконки управления'), author: 'Delapouite, Lorc, Skoll (game-icons.net)', url: 'https://game-icons.net', license: 'CC BY 3.0', licenseUrl: 'https://creativecommons.org/licenses/by/3.0/', files: ['icons.js'] },

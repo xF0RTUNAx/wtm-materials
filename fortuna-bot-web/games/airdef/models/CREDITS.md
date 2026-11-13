@@ -94,6 +94,7 @@
 - "Large Industrial Storage Tanks" (https://sketchfab.com/3d-models/large-industrial-storage-tanks-bd3ac97071104b64bc388a155b64f79e) by Duane's Mind — CC-BY-4.0 — `obj_tanks.glb`
 - "Rusty airbase fuel tank" (https://sketchfab.com/3d-models/rusty-airbase-fuel-tank-5ac257aee23e47e0a0f91a4e07a40692) by LuddePudde — CC-BY-4.0 — `obj_rtank.glb`
 - "j type hanger" (https://sketchfab.com/3d-models/j-type-hanger-d86713d61b4941378a6ad21569e0cbac) by ElectricLeo — CC-BY-4.0 — `obj_jhangar.glb`
+- "Kloofendal 48d Partly Cloudy (Pure Sky)" (https://polyhaven.com/a/kloofendal_48d_partly_cloudy_puresky) by Greg Zaal, Jarod Guest — CC0 — `ui/hangar/fighter.jpg`, `heavy.jpg` (+ `_s`): небо за воротами фона ангара
 - "Factory Low-Poly" (https://sketchfab.com/3d-models/factory-low-poly-7d3bc4d7ce6d48d9986a664d48f3cca1) by KIFIR — CC-BY-4.0 — `obj_factory.glb`
 - "Soviet Panelki — Voxel Style Apartment Buildings" (https://sketchfab.com/3d-models/soviet-panelki-voxel-style-apartment-buildings-632517fa9977439895f8953f2e541ee5) by My Name Is This — CC-BY-4.0 — `bld_p5.glb`
 - "Soviet panel house built in the 1970s" (https://sketchfab.com/3d-models/soviet-panel-house-built-in-the-1970s-94996e8cf4a8452d91ec1e206b5b4137) by Unka II — CC-BY-4.0 — `bld_p9.glb`
