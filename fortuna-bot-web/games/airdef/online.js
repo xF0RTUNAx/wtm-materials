@@ -16,6 +16,7 @@ import { activeAcc, siteAcc, siteNoProgress } from './account.js?v=20261112a';
 import { avaSrc } from './avatar.js?v=20261112a';
 import { boardOl, boardMw } from './endscr.js?v=20261112a';
 import { createMM } from './mm.js?v=20261112a';
+import { podBuiltIn } from './models.js?v=20261112a';
 
 const pnm = (p) => esc(p.bot ? trIf(p.name) : p.name); // позывные ботов приходят с сервера по-русски
 const ROLES = [['air', tr('Авиация')], ['pvo', tr('ПВО')], ['any', tr('Любая')]];
@@ -166,7 +167,7 @@ export function createOnline(C, ctrls) {
       ${allies.length ? `<div class="cat-h">${tr('Союзники')}</div>${allies.map((p) => { const L = p.choice !== null ? LOADOUTS[B.era][p.choice] : null; return `<div class="adp"><b>${pnm(p)}</b> - ${L ? `${PLANES[L.plane]} <span class="role ${loadoutRole(L)}">${O.approachOf(L)}</span>` : tr('выбирает…')}${p.ready ? ` <span class="okc">${ico('ok', 'ii')}</span>` : ''}</div>`; }).join('')}` : ''}
       <div class="cat-h">${tr('Связки')}</div>` + list.map(([L, i]) => {
       const cost = O.loadoutCostFor(L, r.lead), back = me.choice !== null ? O.loadoutCostFor(LOADOUTS[B.era][me.choice], r.lead) : 0, deny = O.roleDeny(L, others, nAir), miss = r.mode === 'real' && C.progress && C.progress.ready() ? C.progress.loadoutMissing(L) : [], no = cost > me.budget + back || !!deny || miss.length > 0; // «Реализм»: только купленное
-      return `<button class="opt ${me.choice === i ? 'on' : ''} ${no ? 'no' : ''}" data-bi="${i}"><div class="nm"><b>${PLANES[L.plane]} · ${L.name}</b><span class="role ${loadoutRole(L)}">${O.approachOf(L)}</span><span>${L.items.map(([k, n]) => `${AG[k].short} ×${n}`).join(' · ')}${L.pod ? tr(' · контейнер') : ''}${deny ? ` ${tr('· <b class="warnc">лимит охотников</b>')}` : ''}${miss.length ? ` · <b class="warnc">${C.progress.needText(miss)}</b>` : ''}</span></div><span class="pr">${cost}</span></button>`;
+      return `<button class="opt ${me.choice === i ? 'on' : ''} ${no ? 'no' : ''}" data-bi="${i}"><div class="nm"><b>${PLANES[L.plane]} · ${L.name}</b><span class="role ${loadoutRole(L)}">${O.approachOf(L)}</span><span>${L.items.map(([k, n]) => `${AG[k].short} ×${n}`).join(' · ')}${L.pod ? (podBuiltIn(L.plane) ? tr(' · прицел') : tr(' · контейнер')) : ''}${deny ? ` ${tr('· <b class="warnc">лимит охотников</b>')}` : ''}${miss.length ? ` · <b class="warnc">${C.progress.needText(miss)}</b>` : ''}</span></div><span class="pr">${cost}</span></button>`;
     }).join('') + `<button class="btn ${me.ready ? 'alt' : ''}" data-oa="pready">${me.ready ? tr('Готов (снять)') : tr('Готов')}</button>`;
   }
   planEl.onclick = (e) => {

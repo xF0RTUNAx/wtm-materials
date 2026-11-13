@@ -29,7 +29,7 @@
 - "Tu22" (https://sketchfab.com/3d-models/tu22-189799dc11b149a9a9d404904c97173d) by manilov.ap — CC-BY-4.0 — кадр меню `ui/mm/air_e_tu22_head.webp` (снят с прежней модели Ту-22, до пересъёмки)
 - "Su24" (https://sketchfab.com/3d-models/su24-3439ae4000df438894a44127ebda538c) by manilov.ap — CC-BY-4.0 — фон меню `shots/su24-kh58-overcast.webp` (снят с прежней модели Су-24М, до пересъёмки)
 - "F111" (https://sketchfab.com/3d-models/f111-00e9e6b9dbc34dc1ae691529688ab000) by manilov.ap — CC-BY-4.0 — кадр меню `ui/mm/air_e_f111_h3.webp` (снят с прежней модели F-111F, до пересъёмки)
-- "Mig27" (https://sketchfab.com/3d-models/mig27-a9d22acdb582444a91c2adc8b123d674) by manilov.ap — CC-BY-4.0 — `e_mig27.glb`
+- "Mig27" (https://sketchfab.com/3d-models/mig27-a9d22acdb582444a91c2adc8b123d674) by manilov.ap — CC-BY-4.0 — кадр меню `ui/mm/air_e_mig27_h1.webp` и фон меню `shots/mig27-kh29t-sunset.webp` (сняты с прежней модели МиГ-27К, до пересъёмки)
 - "TU26" (https://sketchfab.com/3d-models/tu26-52e40c8b03224f1bbba836965520a362) by manilov.ap — CC-BY-4.0 — `e_tu22m2.glb`
 - "Mig25" (https://sketchfab.com/3d-models/mig25-afe67617c5294dce9056106a22f640ff) by manilov.ap — CC-BY-4.0 — `e_mig25.glb`
 - "Tu16" (https://sketchfab.com/3d-models/tu16-9c4ee54ca28e44d7a4604be112acab9f) by manilov.ap — CC-BY-4.0 — `e_tu16.glb`

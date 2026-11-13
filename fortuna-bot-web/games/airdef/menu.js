@@ -8,7 +8,7 @@ import { MODES } from './sim/strike.js?v=20261112a';
 import { WEATHERS } from '../drone/world.js?v=20261112a';
 import { WINTER_KEYS } from './winter-render.js?v=20261112a';
 import { LESSONS } from './training.js?v=20261112a';
-import { MODEL_CREDITS, modelUrls, planeMeta, stationsFor } from './models.js?v=20261112a';
+import { MODEL_CREDITS, modelUrls, planeMeta, stationsFor, podBuiltIn } from './models.js?v=20261112a';
 import { storageInfo, prefetchAll, prefetchSize, offlineOk } from './offline.js?v=20261112a';
 import { openLayoutEditor } from './layout.js?v=20261112a';
 import { orientGate } from '../orient-warn.js?v=20261011a';
@@ -53,7 +53,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
   // ангар (hangar.js): какой самолёт смотрим в ленте; настройки вылета свёрнуты в одну строку над подвеской
   let hgPlane = null, hgSet = false;
   // таблички подвесок (Mark 2026-11-10, вариант «Таблички»): миниатюра, название и количество; описаний оружия здесь нет - они в «Арсенале»
-  const wpnTiles = (L) => L.items.map(([k, n]) => `<span class="hgt${C.hangar && C.hangar.focused() === k ? ' fo' : ''}" data-fw="${k}"><span class="im"><img src="airdef/thumbs/wpn_${k}.webp?v=20261112a" alt="" onerror="this.style.visibility='hidden'"></span><em>${trIf(AG[k].short)}<u>×${n}</u></em></span>`).join('') + (L.pod ? `<span class="hgt pod"><span class="im">${ico('target')}</span><em>${tr('контейнер')}</em></span>` : '');
+  const wpnTiles = (L) => L.items.map(([k, n]) => `<span class="hgt${C.hangar && C.hangar.focused() === k ? ' fo' : ''}" data-fw="${k}"><span class="im"><img src="airdef/thumbs/wpn_${k}.webp?v=20261112a" alt="" onerror="this.style.visibility='hidden'"></span><em>${trIf(AG[k].short)}<u>×${n}</u></em></span>`).join('') + (L.pod ? `<span class="hgt pod"><span class="im">${ico('target')}</span><em>${podBuiltIn(L.plane) ? tr('прицел') : tr('контейнер')}</em></span>` : ''); // встроенный прицел («Кайра», «Платан», EOTS) - модель без контейнера (pod: null)
 
   function renderModeSel() {
     $('modeSel').innerHTML = GAMES.map((g) => `<button data-g="${g.k}" class="${setup.game === g.k ? 'on' : ''}"><b>${g.name}</b><span>${g.desc}</span></button>`).join('');
@@ -118,7 +118,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
       const can = ([L]) => !realLock() || C.progress.loadoutOk(L), open = mine.filter(can);
       if (!open.some(([, i]) => i === setup.lo)) setup.lo = (open[0] || mine[0])[1];
       const loBtn = ([L, i], attr, on) => { const miss = can([L]) ? [] : C.progress.loadoutMissing(L);
-        return `<button class="opt ${on && !miss.length ? 'on' : ''} ${miss.length ? 'lock' : ''}" ${miss.length ? `data-need="${miss[0].id}"` : `${attr}="${i}"`}><div class="nm"><b>${miss.length ? ico('lock') + ' ' : ''}${trIf(PLANES[L.plane])} · ${trIf(L.name)}</b><span class="role ${loadoutRole(L)}">${trIf(ROLE_NAME[loadoutRole(L)])}</span><span>${L.items.map(([k, n]) => `${trIf(AG[k].short)} ×${n}`).join(' · ')}${L.pod ? tr(' · контейнер') : ''}</span>${loadoutRole(L) !== 'sead' ? `<span class="tgn">${tr('целей: {0} - по силе подвески', [loadoutTargets(L)])}</span>` : ''}${miss.length ? `<span class="need">${tr('{0} - открыть в «Исследованиях»', [C.progress.needText(miss)])}</span>` : ''}</div>${L.items.map(([k]) => tags(AG[k].kind, trIf(AG_KIND[AG[k].kind]).split(',')[0].split(' ')[0])).filter((v, j, a) => a.indexOf(v) === j).join(' ')}</button>`; };
+        return `<button class="opt ${on && !miss.length ? 'on' : ''} ${miss.length ? 'lock' : ''}" ${miss.length ? `data-need="${miss[0].id}"` : `${attr}="${i}"`}><div class="nm"><b>${miss.length ? ico('lock') + ' ' : ''}${trIf(PLANES[L.plane])} · ${trIf(L.name)}</b><span class="role ${loadoutRole(L)}">${trIf(ROLE_NAME[loadoutRole(L)])}</span><span>${L.items.map(([k, n]) => `${trIf(AG[k].short)} ×${n}`).join(' · ')}${L.pod ? (podBuiltIn(L.plane) ? tr(' · прицел') : tr(' · контейнер')) : ''}</span>${loadoutRole(L) !== 'sead' ? `<span class="tgn">${tr('целей: {0} - по силе подвески', [loadoutTargets(L)])}</span>` : ''}${miss.length ? `<span class="need">${tr('{0} - открыть в «Исследованиях»', [C.progress.needText(miss)])}</span>` : ''}</div>${L.items.map(([k]) => tags(AG[k].kind, trIf(AG_KIND[AG[k].kind]).split(',')[0].split(' ')[0])).filter((v, j, a) => a.indexOf(v) === j).join(' ')}</button>`; };
       C.realBlock = !open.length; C.realNeed = null;
       const noneHint = !open.length ? `<p class="hint need">${tr('В «Реализме» ранга {0} нет подвески за эту сторону. Купите самолёт и оружие в «Исследованиях» или играйте в «Аркаде».', [ERAS[setup.era - 1].short])}</p>` : '';
       if (!hg) h += noneHint;
@@ -177,7 +177,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
       const mine = loadoutsOf(setup.era, att).filter(([L, i]) => !L.heli && (!retiredHidden(C.progress && C.progress.P, L.plane) || (!(C.progress && C.progress.P) && i === setup.lo))); // вертолёты - в событии «Туманная топь»; пока прогресс не пришёл, выбранный снятый самолёт не сбрасываем
       if (!mine.some(([, i]) => i === setup.lo)) setup.lo = mine[0][1];
       h += `<div class="prow"><span>${tr('Высота')}</span>${seg('palt', setup.palt || 'mid', [['low', tr('250 м')], ['mid', tr('1,5 км')], ['high', tr('4 км')]])}</div><div class="cat-h">${tr('Самолёт и подвеска')}</div>` +
-        mine.map(([L, i]) => `<button class="opt ${i === setup.lo ? 'on' : ''}" data-lo="${i}"><div class="nm"><b>${trIf(PLANES[L.plane])} · ${trIf(L.name)}</b><span>${L.items.map(([k, n]) => `${trIf(AG[k].short)} ×${n}`).join(' · ')}${L.pod ? tr(' · контейнер') : ''}</span></div></button>`).join('') +
+        mine.map(([L, i]) => `<button class="opt ${i === setup.lo ? 'on' : ''}" data-lo="${i}"><div class="nm"><b>${trIf(PLANES[L.plane])} · ${trIf(L.name)}</b><span>${L.items.map(([k, n]) => `${trIf(AG[k].short)} ×${n}`).join(' · ')}${L.pod ? (podBuiltIn(L.plane) ? tr(' · прицел') : tr(' · контейнер')) : ''}</span></div></button>`).join('') +
         '<p class="hint">' + tr('Самолёт сам летит от цели к цели, сбрасывает, пускает и ставит ловушки. Урона нет, подвеска пополняется. Камеру можно привязать к любому оружию на пилоне: сход с подвески и полёт до разрыва. На 250 м контейнер не берёт цели, лазерные и ТВ не пускаются.') + '</p>';
     } else if (ps === 'def') {
       const list = Object.entries(SAM).filter(([, s]) => s.side === setup.side && s.era <= setup.era && s.type !== 'jammer'); // глушилки GPS не пускают - в съёмке снимать нечего (Mark 2026-10-27)

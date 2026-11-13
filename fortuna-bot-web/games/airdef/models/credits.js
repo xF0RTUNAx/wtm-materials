@@ -273,7 +273,8 @@ export const CREDITS = [
   "url": "https://sketchfab.com/3d-models/mig27-a9d22acdb582444a91c2adc8b123d674",
   "license": "CC-BY-4.0",
   "files": [
-   "e_mig27"
+   "ui/mm/air_e_mig27_h1.webp",
+   "shots/mig27-kh29t-sunset.webp"
   ]
  },
  {
