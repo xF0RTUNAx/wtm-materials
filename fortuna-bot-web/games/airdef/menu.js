@@ -59,7 +59,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
     $('modeSel').innerHTML = GAMES.map((g) => `<button data-g="${g.k}" class="${setup.game === g.k ? 'on' : ''}"><b>${g.name}</b><span>${g.desc}</span></button>`).join('');
     const G = GAMES.find((g) => g.k === setup.game) || GAMES[0]; // «папка задания»: режим и что в нём делать
     $('mpKind').textContent = G.name; $('mpTitle').textContent = G.desc[0].toUpperCase() + G.desc.slice(1);
-    $('startBtn').textContent = setup.game === 'online' ? C.online.primaryText() : setup.game === 'training' ? tr('Начать урок') : setup.game === 'photo' ? tr('Снимать') : setup.game === 'defense' || (setup.game === 'multi' && setup.mrole !== 'atk') ? tr('К расстановке') : setup.game === 'multi' ? tr('К плану волны') : tr('Взлёт');
+    $('startBtn').textContent = setup.game === 'online' ? C.online.primaryText() : setup.game === 'training' ? tr('Начать урок') : setup.game === 'photo' ? tr('Снимать') : setup.game === 'defense' || (setup.game === 'multi' && setup.mrole !== 'atk') ? tr('К расстановке') : setup.game === 'multi' ? tr('К плану волны') : tr('В бой'); // Mark 2026-11-13: «текст взлет - переделал под В бой»
   }
   // пройденные уроки по id; записи прежнего обучения («air0»… - по номеру) переносятся на те же уроки нового учебника
   const OLD = { air: ['ctl', 'bomb', 'lgb', 'agm', 'arm', 'evade'], def: ['d_plan', 'd_op', 'd_gun', 'd_ir', 'd_arm', 'd_short'] };
