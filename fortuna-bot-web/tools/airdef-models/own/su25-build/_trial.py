@@ -37,7 +37,7 @@ if not os.environ.get('S25_NOSHOTS'):
     cr.elements[0].color = GND; cr.elements[1].color = HOR; e3 = cr.elements.new(0.95); e3.color = ZEN; nw.links.new(rp.outputs[0], bg.inputs['Color']); bg.inputs['Strength'].default_value = 0.62 if SK == 'day' else 0.55
     sd = bpy.data.lights.get('v_sun') or bpy.data.lights.new('v_sun', 'SUN'); so = bpy.data.objects.get('v_sun') or bpy.data.objects.new('v_sun', sd)
     if so.name not in sc.collection.objects: sc.collection.objects.link(so)
-    sd.energy = 2.3 if SK == 'day' else 1.8; sd.angle = math.radians(2); sd.color = (1, 0.97, 0.92) if SK == 'day' else (1, 0.66, 0.40); so.rotation_euler = (math.radians(50), math.radians(8), math.radians(-38)) if SK == 'day' else (math.radians(82), 0, math.radians(-60))
+    sd.energy = (2.3 if SK == 'day' else 1.8) * (0.0 if os.environ.get('S25_NOSUN') else 1.0); sd.angle = math.radians(2); sd.color = (1, 0.97, 0.92) if SK == 'day' else (1, 0.66, 0.40); so.rotation_euler = (math.radians(50), math.radians(8), math.radians(-38)) if SK == 'day' else (math.radians(82), 0, math.radians(-60))
     try: sc.view_settings.view_transform = 'Standard'
     except Exception: pass
     cd = bpy.data.cameras.get('v_cam') or bpy.data.cameras.new('v_cam'); cam = bpy.data.objects.get('v_cam') or bpy.data.objects.new('v_cam', cd)
@@ -63,6 +63,8 @@ if not os.environ.get('S25_NOSHOTS'):
     shot('т_хвост.jpg', (0.0, Y(13.2), 1.3), (0.65, -0.62, 0.38), 6.5)
     shot('т_крыло.jpg', (3.5, Y(8.8), 0.7), (0.25, -0.45, 0.86), 7.5)
     shot('т_низ.jpg', (1.0, Y(8.5), -0.5), (0.30, 0.25, -0.92), 8.5)
+    shot('т_копоть.jpg', (0.7, Y(12.8), 0.35), (0.55, -0.70, -0.35), 5.2)
+    shot('т_копоть2.jpg', (0.7, Y(12.6), 0.5), (0.85, -0.45, 0.20), 4.8)
     shot('т_шасси.jpg', (1.25, Y(9.0), -1.0), (0.55, 0.83, 0.06), 3.6)
 # файл для игры: шасси нет, створки закрыты
 GEAR = [o for o in sc.objects if o.type == 'MESH' and o.name.startswith('gear')]

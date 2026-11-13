@@ -278,7 +278,7 @@ col = mix(col, (0.09, 0.085, 0.08), gun_ * 0.80); rough += gun_ * 0.20
 # копоть у сопел: две трубы, у основания мягко
 NXC, NZC = 0.89, 0.35
 rn = np.minimum(np.hypot(x - NXC, z - NZC), np.hypot(x + NXC, z - NZC))
-soot = smooth(10.9, 11.6, a) * (0.45 + 0.55 * smooth(0.28, 0.72, fbm(0.7, 2.6, 2.6, 4, 31.0))) * ((cls == 0) | (cls == 3) | (cls == 4)) * (rn < 0.80) * (mat == 0)
+soot = smooth(10.9, 11.6, a) * (0.45 + 0.55 * smooth(0.28, 0.72, fbm(0.7, 2.6, 2.6, 4, 31.0))) * ((cls == 0) | (cls == 3) | (cls == 4)) * smooth(0.85, 0.45, rn) * (mat == 0)
 col = mix(col, (0.11, 0.105, 0.10), soot * 0.55); rough += soot * 0.26
 hair = smooth(0.0085, 0.002, seamd); col *= (1 - 0.22 * hair * skin_m)[..., None]; rough += hair * 0.04 * skin_m
 halo = smooth(0.07, 0.0, seamd) * smooth(0.30, 0.66, stre) * skin_m; col *= (1 - 0.04 * halo)[..., None]
@@ -385,8 +385,76 @@ lowd = smooth(-0.1, -0.7, nz) * pm_ * smooth(0.40, 0.68, fbm(1.6, 4.0, 4.0, 3, 2
 dxg2 = x + 0.235; gun2 = smooth(2.0, 2.3, a) * smooth(6.2, 3.2, a) * np.exp(-(dxg2 / (0.08 + 0.09 * np.clip(a - 2.2, 0, None))) ** 2) * (z < 0.1) * pm_ * (0.5 + 0.5 * smooth(0.3, 0.7, fbm(1.0, 14.0, 14.0, 3, 291.0)))
 col = mix(col, (0.08, 0.075, 0.07), gun2 * 0.55); rough += gun2 * 0.15
 tail_s = smooth(11.4, 12.4, a) * smooth(15.5, 12.8, a) * pm_ * (np.abs(x) < 0.5) * (0.4 + 0.6 * smooth(0.3, 0.7, fbm(0.9, 6.0, 6.0, 3, 293.0)))
-col = mix(col, (0.12, 0.115, 0.11), tail_s * 0.30); rough += tail_s * 0.10
+pass                                                                                # (ровный слой на балке убран: давал «овал», Mark)
 log('реализм: подкраски, потёки, утечки, сколы, грязь')
+# ── износ 2 (Mark: «до сих пор идеально»): под пикселем старая советская окраска (зелёный/коричневый верх, голубой низ), хлопья облезшей краски,
+#    протёртости по краям листов, заменённые неокрашенные листы, винты до металла, эрозия кромок, губа заборника до металла, больше копоти ──
+vO = (fbm(0.42, 0.42, 0.42, 3, 5.0) - 0.22) / 0.56; wO = smooth(0.49, 0.51, vO)[..., None]
+OLD_T = C(84, 106, 72) * (1 - wO) + C(96, 78, 72) * wO; OLD = OLD_T * (1 - U_low[..., None]) + C(150, 190, 214) * U_low[..., None]
+OLD = OLD * (0.80 + 0.12 * mott[..., None]); OLD = OLD * 0.62 + OLD.mean(-1, keepdims=True) * 0.38 + 0.02     # старая краска тусклая, выгоревшая, серее
+expo = (0.5 + 0.5 * sun + 0.6 * walk2 + 0.4 * smooth(0.985, 0.9, bev)) * pm_
+# хлопья: участки 3-20 см, гуще на верху, кромках, у швов
+fl_n = fbm(3.4, 3.4, 3.4, 4, 401.0); fl_r = smooth(0.50, 0.80, fbm(0.7, 0.7, 0.7, 3, 403.0))
+flake = smooth(0.72, 0.745, fl_n + 0.06 * smooth(0.03, 0.0, seamd) + 0.05 * expo - 0.12 * (1 - fl_r))     # меньше (Mark: «перебор по износу») * pm_ * (1 - np.isin(cls, (2, 4, 5, 6)) * 0.6)
+fl_core = smooth(0.78, 0.82, fl_n + 0.06 * smooth(0.03, 0.0, seamd))                           # в глубине хлопьев - металл
+fl_edge = flake * (1 - smooth(0.735, 0.755, fl_n))                                                 # тонкий светлый край скола
+col = mix(col, OLD, flake * 0.92); col = mix(col, col * 1.18 + 0.03, fl_edge * 0.5); rough += flake * 0.06
+coreM = fl_core * flake; col = mix(col, BARE * (0.9 + 0.15 * fine[..., None]), coreM); metal = np.maximum(metal, coreM * 0.9); rough = rough * (1 - coreM) + coreM * 0.34
+# протёртости по краям листов: полоса 1-3 см вдоль швов, рваная
+rub = smooth(0.028, 0.004, seamd) * smooth(0.58, 0.74, fbm(6.0, 6.0, 6.0, 3, 409.0)) * pm_ * (0.4 + 0.8 * expo)
+col = mix(col, OLD, np.clip(rub, 0, 1) * 0.40); rough -= rub * 0.03
+# эрозия передних кромок крыла, стабилизатора, киля, пилонов: полосами до металла
+LEe = smooth(0.10, 0.0, sL) * (sL > -0.03) * (wing | (cls == 5))
+fin_le = (cls == 1) & (a < 13.2 + (z - 1.2) * 0.62) & (a > 11.2 + (z - 1.2) * 0.62)            # передняя треть киля
+stab_le = (cls == 3) & (a < 12.55 + (ax - 0.1) * 0.52)
+ero = np.clip(LEe + 0.8 * fin_le * smooth(0.985, 0.92, bev) + 0.8 * stab_le * smooth(0.985, 0.92, bev), 0, 1) * smooth(0.45, 0.62, fbm(3.0, 40.0, 40.0, 3, 413.0))
+col = mix(col, OLD, ero * 0.35); col = mix(col, BARE, ero * smooth(0.68, 0.88, fbm(8.0, 30.0, 30.0, 2, 415.0)) * 0.8); metal = np.maximum(metal, ero * 0.6); rough -= ero * 0.12
+# губа заборника и кромка сопел: до металла, затёрто
+lip = (a > 5.90) & (a < 6.08) & (ax > 0.55) & (ax < 1.45) & (mat == 0) & smooth(0.40, 0.65, fbm(10.0, 10.0, 10.0, 3, 417.0)).astype(bool)
+col[lip] = mix(col, BARE * 0.95, np.ones((S, S), np.float32))[lip] * 0.6 + col[lip] * 0.4; metal[lip] = 0.75; rough[lip] = 0.36
+# винты: часть головок стёрта до металла, часть ржавая
+fsel = smooth(0.4, 0.8, fast) * pm_; frnd = vnoise(a * 37.0, x * 37.0 + z * 29.0, z * 41.0)
+fm_ = fsel * (frnd > 0.80); fr_ = fsel * (frnd < 0.06)
+col = mix(col, BARE * 0.9, fm_); metal = np.maximum(metal, fm_ * 0.9); rough = rough * (1 - fm_) + fm_ * 0.35
+col = mix(col, (0.30, 0.18, 0.10), fr_ * 0.8); rough += fr_ * 0.2
+# заменённые листы: один в зелёно-сером грунте, один голый алюминий, один в старой краске (поставлен с другого самолёта)
+REPL = [((9.65, 10.55, 0.04, 0.44), 'top', 'prim'), ((3.95, 4.55, -0.25, 0.15), 'r', 'alu'), ((7.45, 8.25, 0.05, 0.45), 'l', 'old'), ((10.8, 11.4, 0.6, 0.95), 'l', 'prim')]
+for (a0_, a1_, q0_, q1_), sd_, kind in REPL:
+    vm_ = topv2 if sd_ == 'top' else ((nx > 0.45) if sd_ == 'r' else (nx < -0.45)); Q_ = ax if sd_ == 'top' else z
+    m_ = vm_ & pm_ & (a > a0_) & (a < a1_) & (Q_ > q0_) & (Q_ < q1_)
+    if kind == 'prim': col[m_] = (np.array((0.50, 0.53, 0.47), np.float32) * (0.92 + 0.12 * fine[m_])[..., None]); rough[m_] = 0.78; metal[m_] = 0.0
+    elif kind == 'alu': col[m_] = BARE * (0.88 + 0.14 * fine[m_])[..., None] * (0.95 + 0.06 * mott[m_])[..., None]; rough[m_] = 0.30 + 0.08 * fine[m_]; metal[m_] = 1.0
+    else: col[m_] = OLD[m_] * 0.95; rough[m_] = 0.72
+# больше копоти: выхлоп на хвостовой балке и стабилизаторе, пушка
+tail_s2 = smooth(11.3, 12.0, a) * smooth(15.6, 13.0, a) * pm_ * (0.5 + 0.5 * smooth(0.3, 0.7, fbm(1.2, 8.0, 8.0, 3, 421.0))) * np.exp(-((ax - 0.89) / 0.55) ** 2)
+pass                                                                                # (то же)
+col = mix(col, (0.07, 0.065, 0.06), gun2 * 0.30)
+# кромки рулей и закрылков: светлые затёртости по задней кромке
+te_w = np.isin(cls, (2, 4)) * smooth(0.985, 0.90, bev) * smooth(0.55, 0.70, fbm(12.0, 12.0, 12.0, 2, 427.0)); col = mix(col, OLD, te_w * 0.4)
+# гарь за соплами (Mark): два шлейфа от среза сопел назад по хвостовой балке, стабилизатору снизу и торцу гондолы; к соплу плотнее, полосами по потоку
+NZA = 11.62
+SI13 = _ld('SurfaceImperfections013/SurfaceImperfections013_2K-JPG_Opacity.jpg')
+for sx_ in (1, -1):
+    u_ = a - NZA; xc_ = sx_ * (0.89 - 0.32 * smooth(0.0, 2.2, u_)); zc_ = 0.35 + 0.10 * smooth(0.0, 2.0, u_); rr_ = 0.30 + 0.26 * np.clip(u_, 0, 3.5)
+    lat = np.arctan2(z - zc_, (x - xc_) * sx_)                       # угол вокруг оси шлейфа: полосы по потоку
+    dpl = np.hypot((x - xc_) / rr_, (z - zc_) / (rr_ * 0.9))
+    env = smooth(-0.15, 0.20, u_) * smooth(3.6, 0.3, u_) * smooth(1.8, 0.2, dpl + 0.45 * (fbm(1.1, 3.5, 3.5, 3, 437.0 + sx_) - 0.5))   # рваный край
+    # много узких полос: шум высокой частоты поперёк потока, низкой - вдоль; ширина и плотность у каждой своя
+    bands_ = 0.0
+    for k_, (fl, fa, w_) in enumerate(((22.0, 0.35, 0.45), (48.0, 0.6, 0.30), (9.0, 0.25, 0.35))):
+        b_ = fbm(fa, fl, fl, 3, 441.0 + 13 * k_ + sx_); bands_ = bands_ + w_ * smooth(0.40 + 0.04 * k_, 0.75, b_)
+    blot = smooth(0.25, 0.75, cc0(SI13, 1.1)) * 0.5 + smooth(0.45, 0.80, fbm(3.0, 3.0, 3.0, 3, 449.0 + sx_)) * 0.5      # пятна и затёртости
+    wipe = smooth(0.62, 0.78, fbm(1.8, 6.0, 6.0, 3, 453.0 + sx_))                                                        # местами стёрто тряпкой
+    pl = env * np.clip(0.15 + bands_ * 0.9, 0, 1) * (0.55 + 0.45 * blot) * (1 - 0.65 * wipe)
+    pl += env * smooth(0.02, 0.0, seamd) * 0.5 + env * smooth(0.2, 0.7, riv) * 0.35                                        # сажа в швах и у заклёпок
+    pl *= (1.0 - 0.65 * smooth(0.0, 3.2, u_)) * ((cls == 0) | (cls == 3) | (cls == 4) | (cls == 2) | (cls == 13)) * (mat == 0)
+    sc_ = np.array((0.085, 0.075, 0.065), np.float32) * (0.85 + 0.3 * fine[..., None])
+    col = mix(col, sc_, np.clip(pl * 0.80, 0, 0.78)); rough += pl * 0.20; metal *= (1 - np.clip(pl, 0, 1) * 0.8)
+ring_ = smooth(11.15, 11.55, a) * smooth(11.80, 11.62, a) * (np.minimum(np.hypot(x - 0.89, z - 0.35), np.hypot(x + 0.89, z - 0.35)) < 0.55) * (mat == 0) * (cls == 0)
+col = mix(col, (0.06, 0.055, 0.05), ring_ * 0.75); rough += ring_ * 0.2                      # торцы гондол вокруг сопел - в саже
+bare = np.maximum(bare, np.maximum(coreM, ero * 0.5))
+log('износ 2: старая краска, хлопья, протёртости, заменённые листы, винты')
+
 log('краска')
 from PIL import ImageDraw, ImageFont
 FNT = '/System/Library/Fonts/Supplemental/Arial Narrow Bold.ttf'
