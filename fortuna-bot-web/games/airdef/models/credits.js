@@ -286,15 +286,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "Su7b",
-  "author": "manilov.ap",
-  "url": "https://sketchfab.com/3d-models/su7b-faaf874e2c344f889a66451c4b93fa6b",
-  "license": "CC-BY-4.0",
-  "files": [
-   "e_su7b"
-  ]
- },
- {
   "title": "Tu16",
   "author": "manilov.ap",
   "url": "https://sketchfab.com/3d-models/tu16-9c4ee54ca28e44d7a4604be112acab9f",

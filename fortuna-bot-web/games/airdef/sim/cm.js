@@ -130,7 +130,7 @@ const CM = {
     dir: [[0, -0.99, 0.11]] }, // МиГ-19С
   e_mig21n: { flare: false, salvo: 2, at: [[0, -1.8, 4.85]],
     dir: [[0, -0.99, 0.11]] }, // МиГ-21бис
-  e_su7b: { flare: false, salvo: 2, at: [[0, -1.6, 5.9]],
+  e_su7b: { flare: false, salvo: 2, at: [[0, -1.85, 5.9]],
     dir: [[0, -0.99, 0.11]] }, // Су-7БМК
   e_il28: { flare: false, salvo: 2, at: [[0, -2.3, 5.75]],
     dir: [[0, -0.99, 0.11]] }, // Ил-28

@@ -60,8 +60,8 @@ const META = {
     nozzles: [V(0, -0.633, 6.65)], nr: 0.47, pod: null, clearGlass: true, ...(paintOn ? { gearModel: 'e_mig21n_gear' } : {}) },
   e_mig25: { side: 'east', cls: 'fighter', lazy: true, stations: mirror([V(-3.98, -0.95, 4.4, 0.15), V(-2.9, -0.95, 3.6, 0.15), V(-0.6, -2.0, 0.2, 0.15), V(-0.6, -2.0, 2.4, 0.15)]),
     nozzles: [V(-0.67, -1.11, 8.34), V(0.67, -1.11, 8.34)], nr: 0.5, pod: null }, // МиГ-25БМ
-  e_su7b: { side: 'east', cls: 'strike', lazy: true, stations: mirror([V(-2.55, -1.6, 2.4, 0.3), V(-1.89, -1.58, 1.3, 0.3), V(-0.45, -1.62, -0.6, 0.22), V(-0.45, -1.65, 1.6, 0.22)]),
-    nozzles: [V(0, -0.92, 7.11)], nr: 0.42, pod: null }, // Су-7Б
+  e_su7b: { side: 'east', cls: 'strike', lazy: true, stations: mirror([V(-3.4, -1.953, 2.725), V(-2.6, -1.977, 1.425), V(-0.4, -1.887, -1.725)]), // Су-7БМК: своя модель (Свои/Су-7БМК, 2026-11-13), оливковая, баков нет (Mark); 6 точек: внешний и внутренний крыльевые, подфюзеляжный - тяжёлое под фюзеляж (stOrder)
+    nozzles: [V(0, -1.113, 7.045)], nr: 0.575, pod: V(0, -1.908, 1.075), racks: true, clearGlass: true, ...(paintOn ? { gearModel: 'e_su7b_gear' } : {}) }, // контейнер по оси между основными стойками; пилоны узкие (10 см)
   e_tu16: { side: 'east', cls: 'bomber', lazy: true, stations: mirror([V(-7.16, -3.55, 0.2, 0.35), V(-0.9, -3.9, -3.0, 0.3), V(-0.9, -3.9, -0.5, 0.3), V(-0.9, -3.9, 2.0, 0.3)]),
     nozzles: [V(-1.86, -2.72, 3.1), V(1.86, -2.72, 3.1)], nr: 0.45, pod: null, dry: true }, // Ту-16
   e_f100: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-3.85, -1.842, 3.067), V(-2.7, -1.902, 2.007), V(-1.4, -1.941, 0.617)]),
@@ -358,7 +358,7 @@ const LOADED = {};
 // версия файла модели (сброс кэша) - у пересобранных моделей своя, остальные не перекачиваются
 // порядок точек своих самолётов на стойках: тяжёлое идёт на последнюю в mirror(), поэтому там точка с запасом до пола (Mark 2026-11-06: JASSM лежали на земле в ангаре)
 const GLB_V = Object.fromEntries(['w_gbu10', 'w_ecm', 'gepard', 'gepard_lo', 'roland', 'rapier', 'rapier_lo', 'tunguska', 'tunguska_lo', 'strela1', 'zsu234', 'zsu234_lo', 'strela10', 'm163', 'm163_lo', 'chaparral', 'chaparral_lo', 'avenger', 'avenger_lo', 'w_gbu39', 'l_scud', 'pantsir', 'pantsir_lo', 'w_umpk', 'w_decoy_e', 'w_kh101', 'w_jsow', 'w_fab500', 'e_tornado', 'e_f111', 'e_mig27', 'e_tu22m2', 'e_a10', 'e_f15e', 'e_su24', 'm163', 'zsu234', 'strela10', 'avenger', 'chaparral', 'w_kh59m', 'w_kh25ml', 'w_kh58', 'w_gbu31', 'w_jassm', 'w_agm65b', 't_kc10'].map((n) => [n, '20261022c']).concat(
-  ['roland', 'strela10', 'zsu234', 'zsu234_lo', 'strela1', 'tunguska', 'tunguska_lo', 'gepard', 'gepard_lo', 'chaparral', 'chaparral_lo', 'm163', 'm163_lo', 'rapier', 'rapier_lo', 'avenger', 'avenger_lo', 'w_gbu39', 'pantsir', 'pantsir_lo', 'w_gbu10', 'w_ecm', 'e_mig21n', 'e_mig25', 'e_su7b', 'e_tu16', 'e_f100', 'e_f5', 'e_f117', 'e_jaguar', 'e_buccaneer', 'e_harrier', 'e_mirage', 'e_rafale', 'e_b2'].map((n) => [n, '20261022i'])).concat(
+  ['roland', 'strela10', 'zsu234', 'zsu234_lo', 'strela1', 'tunguska', 'tunguska_lo', 'gepard', 'gepard_lo', 'chaparral', 'chaparral_lo', 'm163', 'm163_lo', 'rapier', 'rapier_lo', 'avenger', 'avenger_lo', 'w_gbu39', 'pantsir', 'pantsir_lo', 'w_gbu10', 'w_ecm', 'e_mig21n', 'e_mig25', 'e_tu16', 'e_f100', 'e_f5', 'e_f117', 'e_jaguar', 'e_buccaneer', 'e_harrier', 'e_mirage', 'e_rafale', 'e_b2'].map((n) => [n, '20261022i'])).concat(
   ['zsu234', 'zsu234_lo', 'zu23', 'buk', 'phalanx', 'w_fab100', 'w_ofab250', 'w_fab250', 'w_fab1000', 'w_gbu24', 'w_gbu57', 'w_umpk', 'e_yak38', 'e_tu22', 'e_hunter', 'e_su27', 'e_su35', 'e_etendard', 'e_mirage_f1', 'e_f18c'].map((n) => [n, '20261022k'])).concat([['e_tu95', '20261022l'], ['w_agm65b', '20261022l'], ['w_decoy_e', '20261022l']].concat(['h_mi24', 'h_mi28', 'h_ka52', 'h_ah64', 'h_ah1', 'h_uh1', 'w_shturm', 'w_b8', 'w_hellfire', 'aam_stinger'].map((n) => [n, '20261022m'])).concat([['w_shturm', '20261022n']])).concat(['h_ah64', 'h_mi28'].map((n) => [n, '20261022p'])).concat([['h_uh1', '20261022r']]).concat(['w_lau61', 'obj_mill', 'pr_hay', 'pr_well', 'pr_pumpkin', 'pr_grave1', 'pr_grave2', 'pr_grave3', 'pr_grave4', 'pr_fence', 'pr_fpost', 'pr_deadtree', 'pr_oldtree', 'c_vaz'].map((n) => [n, '20261022o'])).concat(['e_vulcan', 'e_draken', 'e_viggen', 'w_bomb1000'].map((n) => [n, '20261023b'])).concat(['h_ka50', 'h_mi8', 'h_uh60', 'h_rah66'].map((n) => [n, '20261023c'])).concat([['w_nar_hydra', '20261024a'], ['w_nar_s8', '20261024a'], ['e_draken', '20261023d'], ['w_bomb1000', '20261023d'], ['h_ka50', '20261023d']]).concat(['e_su33', 'e_m4', 'e_mig19', 'e_mig17', 'e_t4', 'e_mig29k'].map((n) => [n, '20261023e']))); // 20261023e - шестая партия: Су-33, М-4, МиГ-19, МиГ-17, Т-4 (2026-10-21) // 20261023c - четыре вертолёта manilov.ap (2026-10-21) // 20261023b - Vulcan, Draken, Viggen, бомба 1000 lb (2026-10-21) // l - 2026-10-20: Ту-95 без нарисованных дисков, Maverick и Harpy без сильного упрощения // l - Ту-95 без нарисованных дисков винтов (2026-10-20) // j - четвёртая партия, новая «Шилка», УМПК без сжатия // i - ЗРК без упрощения, камуфляж шейдером, третья партия самолётов (2026-10-19); c - замены моделей 2026-10-19; остальные пересобраны 2026-10-18 (затенение в стыках) - общая версия ниже
 // версии файлов собственных моделей (Blender, tools/airdef-models/own): по строке на ключ; поднимает tools/airdef-models/integrate-own.js при каждом встраивании
 const GLB_V_OWN = {
@@ -373,6 +373,7 @@ const GLB_V_OWN = {
   e_mig21n: '20261112c', e_mig21n_gear: '20261112c', // свой МиГ-21бис
   e_a10: '20261112c', e_a10_gear: '20261112c', // свой A-10A (стоянка pk_e_a10 - ниже, в списке стоянок)
   e_su17: '20261113a', e_su17_gear: '20261113a', e_mig23: '20261113a', e_mig23_gear: '20261113a', e_il28: '20261113a', e_il28_gear: '20261113a', // свои Су-17М4, МиГ-23БН, Ил-28
+  e_su7b: '20261113b', e_su7b_gear: '20261113b', // свой Су-7БМК
   l_himars: '20261111b', w_atacms: '20261110b', // свои M142 HIMARS и ATACMS
   e_f4: '20261110a', e_f4_gear: '20261110a', e_f100: '20261110a', e_f100_gear: '20261110a', // свои F-4 Phantom II и F-100D
   e_rafale: '20261109b', e_rafale_gear: '20261109b', // свой Rafale
@@ -565,6 +566,7 @@ if (paintOn) META.e_f111_gear = { lazy: true, matte: true, paint: true, stations
 if (paintOn) META.e_mig21n_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего МиГ-21бис для ангара
 if (paintOn) META.e_a10_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего A-10A для ангара
 if (paintOn) META.e_su17_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего Су-17М4 для ангара
+if (paintOn) META.e_su7b_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего Су-7БМК для ангара
 if (paintOn) META.e_mig23_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего МиГ-23БН для ангара
 if (paintOn) META.e_il28_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего Ил-28 для ангара
 if (paintOn) META.e_f35_gear = { lazy: true, matte: true, paint: true, stations: [] };
