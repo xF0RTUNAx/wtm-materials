@@ -28,7 +28,6 @@
 - "Su24" (https://sketchfab.com/3d-models/su24-3439ae4000df438894a44127ebda538c) by manilov.ap — CC-BY-4.0 — `e_su24.glb`
 - "Tornado" (https://sketchfab.com/3d-models/tornado-9fd925dabddc4c1998b7c3df5ac47bf8) by manilov.ap — CC-BY-4.0 — `e_tornado.glb`
 - "F111" (https://sketchfab.com/3d-models/f111-00e9e6b9dbc34dc1ae691529688ab000) by manilov.ap — CC-BY-4.0 — кадр меню `ui/mm/air_e_f111_h3.webp` (снят с прежней модели F-111F, до пересъёмки)
-- "Mig23" (https://sketchfab.com/3d-models/mig23-cfd1f4a833434061b9f25f718fe0667a) by manilov.ap — CC-BY-4.0 — `e_mig23.glb`
 - "Mig27" (https://sketchfab.com/3d-models/mig27-a9d22acdb582444a91c2adc8b123d674) by manilov.ap — CC-BY-4.0 — `e_mig27.glb`
 - "TU26" (https://sketchfab.com/3d-models/tu26-52e40c8b03224f1bbba836965520a362) by manilov.ap — CC-BY-4.0 — `e_tu22m2.glb`
 - "Mig25" (https://sketchfab.com/3d-models/mig25-afe67617c5294dce9056106a22f640ff) by manilov.ap — CC-BY-4.0 — `e_mig25.glb`
@@ -38,7 +37,6 @@
 - "Buccaneer" (https://sketchfab.com/3d-models/buccaneer-db82ad0e1f5644ccaee1b25b77566dc7) by manilov.ap — CC-BY-4.0 — `e_buccaneer.glb`
 - "Harrier" (https://sketchfab.com/3d-models/harrier-9ccfd6758680413bb19d656db4f46185) by manilov.ap — CC-BY-4.0 — `e_harrier.glb`
 - "Yak-38" (https://sketchfab.com/3d-models/yak-38-7cf4151540e748b49015700e9ac3499a) by manilov.ap — CC-BY-4.0 — `e_yak38.glb`
-- "Il28" (https://sketchfab.com/3d-models/il28-20bb9aa23d4b48978be1d0ee5e1890ca) by manilov.ap — CC-BY-4.0 — `e_il28.glb`
 - "Tu22" (https://sketchfab.com/3d-models/tu22-189799dc11b149a9a9d404904c97173d) by manilov.ap — CC-BY-4.0 — `e_tu22.glb`
 - "Tu95" (https://sketchfab.com/3d-models/tu95-1eac97ec49ed4f1da8b7deb1e1b2cc7a) by manilov.ap — CC-BY-4.0 — `e_tu95.glb`
 - "Sukhoi Su-33 Сухой Су-33" (https://sketchfab.com/3d-models/sukhoi-su-33-33-d80603a8a13b49bda90f19d80cac61d4) by andertan — CC-BY-4.0 — `e_su33.glb`
@@ -51,7 +49,7 @@
 - "Sukhoi Su-35 Flanker-E (Сухой Су-35)" (https://sketchfab.com/3d-models/sukhoi-su-35-flanker-e-35-c98cf9b3b3e04017a04732798a31888a) by andertan — CC-BY-4.0 — `e_su35.glb`
 - "Su-25" (https://sketchfab.com/3d-models/su-25-88b71eb848cf4418a95dff497c07cefc) by mamont nikita — CC-BY-4.0 — `e_su25.glb`
 - "Su34" (https://sketchfab.com/3d-models/su34-1c94f436be51453fa598e9eab50eb0a7) by manilov.ap — CC-BY-4.0 — `e_su34.glb`
-- "Su17" (https://sketchfab.com/3d-models/su17-a5dfc3d488c8441c8468a75ffad1ab75) by manilov.ap — CC-BY-4.0 — `e_su17.glb`
+- "Su17" (https://sketchfab.com/3d-models/su17-a5dfc3d488c8441c8468a75ffad1ab75) by manilov.ap — CC-BY-4.0 — кадр меню `ui/mm/air_e_su17_belly.webp` (снят с прежней модели Су-17М4, до пересъёмки)
 - "ELTA 8222 ECM POD 1/48" (https://www.thingiverse.com/thing:5360259) by Original_linny — CC-BY-4.0 — `w_ecm.glb`
 - "Sizzler SS-N-27 Kalibr 3M-54" (https://sketchfab.com/3d-models/sizzler-ss-n-27-kalibr-3m-54-63fc0ac8032c42e3bfd3e548192d5a9c) by mmickel — CC-BY-4.0 — `w_kalibr.glb`
 - "AGM-86" (https://sketchfab.com/3d-models/agm-86-de64a3d9282249e39760a5fee425e7ae) by mahmadsaleem11111 — CC-BY-4.0 — `w_agm86.glb`

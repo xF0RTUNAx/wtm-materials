@@ -66,8 +66,9 @@ try {
         map.set(q, r); return map;
       }, new Map());
       const sOut = pm.stations.map((q) => s.get(q));
-      let pod = null; if (pm.pod) { const a = author(pm.pod.x, pm.pod.y, pm.pod.z); if (a.x != null) pod = [2, f(a.x), f(a.y), f(a.z), 99]; else { const here = a.none ? null : under(pm.pod.x, pm.pod.z, pm.pod.y - 0.55); pod = here == null ? [0] : [3, f(pm.pod.x), f(here), f(pm.pod.z), 99]; } }
+      let pod = null; if (pm.pod) { const a = author(pm.pod.x, pm.pod.y, pm.pod.z); if (a.x != null) pod = [2, f(a.x), f(a.y), f(meta.racks ? pm.pod.z : a.z), 99]; /* racks: z точки сборщика (МиГ-23БН: антенна за пилоном растягивала его на 0,6 м назад) */ else { const here = a.none ? null : under(pm.pod.x, pm.pod.z, pm.pod.y - 0.55); pod = here == null ? [0] : [3, f(pm.pod.x), f(here), f(pm.pod.z), 99]; } }
       out.p[name] = { v: M.glbVerOf(name), s: sOut, pod };
+      if (meta.ext && meta.ext.seatZ && !meta.internal) { used.length = 0; out.p[name].x = meta.ext.stations.map((q) => { const r = one(q); if (r[0] === 2) r[3] = f(q.z); return r; }); } // свой набор точек загрузки ext (Су-17М4: Х-28 впереди середины пилона) - z точки сборщика, без центровки по пилону
     }
     return out;
   }, VER, [...only]);

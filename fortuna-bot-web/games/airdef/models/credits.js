@@ -259,15 +259,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "Mig23",
-  "author": "manilov.ap",
-  "url": "https://sketchfab.com/3d-models/mig23-cfd1f4a833434061b9f25f718fe0667a",
-  "license": "CC-BY-4.0",
-  "files": [
-   "e_mig23"
-  ]
- },
- {
   "title": "Mig27",
   "author": "manilov.ap",
   "url": "https://sketchfab.com/3d-models/mig27-a9d22acdb582444a91c2adc8b123d674",
@@ -346,15 +337,6 @@ export const CREDITS = [
   "license": "CC-BY-4.0",
   "files": [
    "e_yak38"
-  ]
- },
- {
-  "title": "Il28",
-  "author": "manilov.ap",
-  "url": "https://sketchfab.com/3d-models/il28-20bb9aa23d4b48978be1d0ee5e1890ca",
-  "license": "CC-BY-4.0",
-  "files": [
-   "e_il28"
   ]
  },
  {
@@ -471,7 +453,7 @@ export const CREDITS = [
   "url": "https://sketchfab.com/3d-models/su17-a5dfc3d488c8441c8468a75ffad1ab75",
   "license": "CC-BY-4.0",
   "files": [
-   "e_su17"
+   "ui/mm/air_e_su17_belly.webp"
   ]
  },
  {
