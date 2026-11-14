@@ -31,12 +31,11 @@
 - "F111" (https://sketchfab.com/3d-models/f111-00e9e6b9dbc34dc1ae691529688ab000) by manilov.ap — CC-BY-4.0 — кадр меню `ui/mm/air_e_f111_h3.webp` (снят с прежней модели F-111F, до пересъёмки)
 - "Mig27" (https://sketchfab.com/3d-models/mig27-a9d22acdb582444a91c2adc8b123d674) by manilov.ap — CC-BY-4.0 — кадр меню `ui/mm/air_e_mig27_h1.webp` и фон меню `shots/mig27-kh29t-sunset.webp` (сняты с прежней модели МиГ-27К, до пересъёмки)
 - "TU26" (https://sketchfab.com/3d-models/tu26-52e40c8b03224f1bbba836965520a362) by manilov.ap — CC-BY-4.0 — `e_tu22m2.glb`
-- "Mig25" (https://sketchfab.com/3d-models/mig25-afe67617c5294dce9056106a22f640ff) by manilov.ap — CC-BY-4.0 — `e_mig25.glb`
+- "Mig25" (https://sketchfab.com/3d-models/mig25-afe67617c5294dce9056106a22f640ff) by manilov.ap — CC-BY-4.0 — кадр меню `ui/mm/air_e_mig25_dive.webp` (снят с прежней модели МиГ-25БМ, до пересъёмки)
 - "Tu16" (https://sketchfab.com/3d-models/tu16-9c4ee54ca28e44d7a4604be112acab9f) by manilov.ap — CC-BY-4.0 — `e_tu16.glb`
 - "Jaguar" (https://sketchfab.com/3d-models/jaguar-b09a0ee965bb424aaf14ebd06b698f96) by manilov.ap — CC-BY-4.0 — `e_jaguar.glb`
 - "Buccaneer" (https://sketchfab.com/3d-models/buccaneer-db82ad0e1f5644ccaee1b25b77566dc7) by manilov.ap — CC-BY-4.0 — `e_buccaneer.glb`
 - "Harrier" (https://sketchfab.com/3d-models/harrier-9ccfd6758680413bb19d656db4f46185) by manilov.ap — CC-BY-4.0 — `e_harrier.glb`
-- "Yak-38" (https://sketchfab.com/3d-models/yak-38-7cf4151540e748b49015700e9ac3499a) by manilov.ap — CC-BY-4.0 — `e_yak38.glb`
 - "Tu95" (https://sketchfab.com/3d-models/tu95-1eac97ec49ed4f1da8b7deb1e1b2cc7a) by manilov.ap — CC-BY-4.0 — `e_tu95.glb`
 - "Sukhoi Su-33 Сухой Су-33" (https://sketchfab.com/3d-models/sukhoi-su-33-33-d80603a8a13b49bda90f19d80cac61d4) by andertan — CC-BY-4.0 — `e_su33.glb`
 - "M4" (https://sketchfab.com/3d-models/m4-65059c25184c48c5b6a1b9ac27d34db6) by manilov.ap — CC-BY-4.0 — `e_m4.glb`

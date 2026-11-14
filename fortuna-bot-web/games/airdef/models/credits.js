@@ -292,7 +292,7 @@ export const CREDITS = [
   "url": "https://sketchfab.com/3d-models/mig25-afe67617c5294dce9056106a22f640ff",
   "license": "CC-BY-4.0",
   "files": [
-   "e_mig25"
+   "ui/mm/air_e_mig25_dive.webp"
   ]
  },
  {
@@ -329,15 +329,6 @@ export const CREDITS = [
   "license": "CC-BY-4.0",
   "files": [
    "e_harrier"
-  ]
- },
- {
-  "title": "Yak-38",
-  "author": "manilov.ap",
-  "url": "https://sketchfab.com/3d-models/yak-38-7cf4151540e748b49015700e9ac3499a",
-  "license": "CC-BY-4.0",
-  "files": [
-   "e_yak38"
   ]
  },
  {

@@ -1,0 +1,278 @@
+{
+ "name_en": "Yakovlev Yak-38M",
+ "rev": 1,
+ "previews": [
+  "превью_1_общий.png",
+  "превью_2_сбоку.png",
+  "превью_3_сверху.png",
+  "превью_4_заборник.png",
+  "превью_5_кабина.png",
+  "превью_6_сопло.png",
+  "превью_7_сзади.png",
+  "превью_8_снизу.png"
+ ],
+ "model": {
+  "length_m": 17.66,
+  "span_m": 6.77,
+  "height_m": 3.82,
+  "tris": 107682,
+  "materials": {
+   "YK_skin": [
+    0.56,
+    0.58,
+    0.6
+   ],
+   "YK_metal": [
+    0.4,
+    0.38,
+    0.35
+   ],
+   "YK_dark": [
+    0.03,
+    0.03,
+    0.03
+   ],
+   "YK_glass": [
+    0.62,
+    0.66,
+    0.66
+   ],
+   "YK_tyre": [
+    0.03,
+    0.03,
+    0.03
+   ],
+   "YK_cock": [
+    0.11,
+    0.115,
+    0.12
+   ],
+   "YK_strap": [
+    0.42,
+    0.36,
+    0.26
+   ],
+   "YK_screen": [
+    0.012,
+    0.035,
+    0.028
+   ],
+   "YK_belt": [
+    0.28,
+    0.26,
+    0.2
+   ],
+   "YK_handle": [
+    0.62,
+    0.5,
+    0.05
+   ],
+   "YK_seam": [
+    0.1,
+    0.11,
+    0.12
+   ],
+   "YK_duct": [
+    0.4,
+    0.38,
+    0.32
+   ]
+  }
+ },
+ "checks": {
+  "ход": {
+   "rudder": {
+    "касаний": 0,
+    "глубина_мм": {}
+   },
+   "stab_r": {
+    "касаний": 0,
+    "глубина_мм": {}
+   },
+   "stab_l": {
+    "касаний": 0,
+    "глубина_мм": {}
+   },
+   "wing_o_r": {
+    "касаний": 0,
+    "глубина_мм": {}
+   },
+   "ail_r": {
+    "касаний": 0,
+    "глубина_мм": {}
+   },
+   "nozzle_r": {
+    "касаний": 0,
+    "глубина_мм": {}
+   },
+   "flap_r": {
+    "касаний": 0,
+    "глубина_мм": {}
+   },
+   "wing_o_l": {
+    "касаний": 0,
+    "глубина_мм": {}
+   },
+   "ail_l": {
+    "касаний": 0,
+    "глубина_мм": {}
+   },
+   "nozzle_l": {
+    "касаний": 0,
+    "глубина_мм": {}
+   },
+   "flap_l": {
+    "касаний": 0,
+    "глубина_мм": {}
+   },
+   "canopy": {
+    "касаний": 0,
+    "глубина_мм": {}
+   },
+   "lift_door": {
+    "касаний": 0,
+    "глубина_мм": {}
+   },
+   "lift_bot_r": {
+    "касаний": 0,
+    "глубина_мм": {}
+   },
+   "lift_bot_l": {
+    "касаний": 0,
+    "глубина_мм": {}
+   }
+  },
+  "стыки": {
+   "плохо": {
+    "stab_r": [
+     "сверху",
+     "снизу"
+    ],
+    "nozzle_r": [
+     "снизу"
+    ],
+    "nozzle_l": [
+     "снизу"
+    ],
+    "screen_frame": [
+     "сверху",
+     "справа"
+    ]
+   },
+   "итог": "20 деталей; щели только расчётные: зазор 12 мм у корня цельноповоротного стабилизатора (сверху сквозь него видна земля), зазор вращения поворотных сопел, стекло козырька"
+  },
+  "ход_разбор": "Касаний нет: элероны ±20°, закрылки 0-30°, руль ±20°, стабилизатор -20…+12°, складывание консолей 0-100°, поворотные сопла 0-90°, фонарь 0-95°, верхняя створка подъёмных двигателей 0-72°, нижние створки 0-50° (70 задевали низ заборника).",
+  "бомбы": {
+   "точки": [
+    [
+     9.539,
+     1.33,
+     1.583
+    ],
+    [
+     9.539,
+     -1.33,
+     1.583
+    ],
+    [
+     9.884,
+     1.91,
+     1.477
+    ],
+    [
+     9.884,
+     -1.91,
+     1.477
+    ]
+   ],
+   "касания": {},
+   "бомба_с_бомбой": 0,
+   "падение": {}
+  },
+  "бомбы_итог": "ОФАБ-250 ×4 (своя модель) на четырёх пилонах: не задевают пилоны, крыло, стойки и сопла в положениях 0 и 90° (_bomb.py)",
+  "оснастка_sk": {
+   "sk_ladder": [
+    "YK_skin"
+   ],
+   "sk_ladder_treads": [],
+   "sk_chock_n_f": [],
+   "sk_chock_n_b": [],
+   "sk_chock_n_rope": [],
+   "sk_chock_m_r_f": [],
+   "sk_chock_m_r_b": [],
+   "sk_chock_m_r_rope": [],
+   "sk_chock_m_l_f": [],
+   "sk_chock_m_l_b": [],
+   "sk_chock_m_l_rope": [],
+   "sk_cover_in_r": [
+    "YK_skin"
+   ],
+   "sk_cover_out_r": [],
+   "sk_cover_in_l": [
+    "YK_skin"
+   ],
+   "sk_cover_out_l": [],
+   "sk_cover_probe": [
+    "det_pitot"
+   ],
+   "sk_flag_gear_m_r": [
+    "gear_w_r"
+   ],
+   "sk_flag_cover_r": [
+    "YK_skin"
+   ],
+   "sk_flag_noz_r": [],
+   "sk_flag_gear_m_l": [
+    "gear_w_l"
+   ],
+   "sk_flag_cover_l": [
+    "YK_skin"
+   ],
+   "sk_flag_noz_l": [],
+   "sk_flag_gear_n": [],
+   "sk_flag_probe": []
+  },
+  "game": "стенд игры: ангар и бой днём без ошибок модели (_проба/dark/стенд); на телефоне не проверено",
+  "silhouette_iou": {}
+ },
+ "sketchfab": {
+  "title": "Yakovlev Yak-38M Forger - Game-Ready",
+  "lead": "Yak-38M carrier VTOL attack aircraft in weathered dark grey naval paint. Moving parts on their own pivots: swivelling lift-cruise nozzles, lift-engine doors, canopy, folding outer wings, ailerons, flaps, rudder, all-moving stabilizer. D-shaped intakes, cockpit, gear. PBR wear: chips to primer and metal, touch-ups, salt, soot, fictional stencils. Extras: ladder, chocks, covers, RBF streamers.",
+  "parts": [
+   "airframe",
+   "swivel nozzles",
+   "lift-engine doors",
+   "canopy",
+   "folding wings",
+   "control surfaces",
+   "stabilizer",
+   "intakes",
+   "cockpit",
+   "gear",
+   "pylons",
+   "ladder",
+   "chocks",
+   "covers",
+   "streamers"
+  ],
+  "tags": [
+   "yak38",
+   "yakovlev",
+   "forger",
+   "vtol",
+   "navy",
+   "aircraft",
+   "military",
+   "soviet",
+   "coldwar",
+   "game-ready",
+   "pbr",
+   "blender"
+  ],
+  "dimensions": "length 17.66 m, span 6.77 m, height 3.82 m on gear",
+  "textures": "4096 px colour, normal and metallic-roughness maps",
+  "based": "Built from scratch in Blender from reference images.",
+  "glb": "yak38_sketchfab.glb"
+ },
+ "notes": "Ревизия 1 (2026-11-14). Свои меши по чертежам 01, 09 и фото 02-08 Mark; пиксели фото не использованы. Mark: заборники «D» (прямая стенка у фюзеляжа, наружу полукругом до 1,10 м), высота 0,94…2,12 м, за губой выпуклое плечо к борту без ложбины; крыло на 1,90 м с зализами корня; хвост прежний, корень стабилизатора по обводу хвоста с зазором 12 мм. Окраска в игре - тёмно-серая (05), сине-зелёная (04) - в окраски/blue; флагов нет. Звёзды по правилу 17: на киле в центре без руля, на консоли в центре без элерона. Номер 47 и трафареты придуманы."
+}
