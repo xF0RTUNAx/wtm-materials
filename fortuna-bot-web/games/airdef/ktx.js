@@ -2,7 +2,7 @@
 // (vendor/basis, three r128) переводит в формат устройства: ASTC (iPhone, Mac), BC7/BC3 (ПК), ETC2 (Android).
 // Нет поддержки, ?ktx=0 или ошибка загрузки - вызывающий берёт прежний JPEG/WebP.
 /* global THREE */
-import { KTX2Loader } from './vendor/basis/KTX2Loader.js?v=20261112a';
+import { KTX2Loader } from './vendor/basis/KTX2Loader.js?v=20261114a';
 const V = '20261022c';
 // своя версия у перепечённых текстур (остальные игрокам заново не качать): импосторы деревьев - свои деревья, 2026-11-08
 const VN = Object.fromEntries(['tr_city_a', 'tr_city_n', 'tr_city_a_lo', 'tr_city_n_lo', 'tr_winter_a', 'tr_winter_n', 'tr_winter_a_lo', 'tr_winter_n_lo'].map((n) => [n, '20261108h']));

@@ -3,20 +3,20 @@
 // переход в бой (лётчик - air.js, ПВО - defense.js в режиме онлайна), итоги волн и боя, журнал сбитий (6 с) и
 // «Мне нужна помощь!» союзникам (метка в кадре и на карте). Связь и зеркало боя - net.js.
 /* global THREE, CONFIG */
-import { tr, trIf, LANG } from './i18n.js?v=20261112a';
-import { trFmt } from './i18n-fmt.js?v=20261112a';
-import { createNet } from './net.js?v=20261112a';
-import * as O from './sim/online.js?v=20261112a';
-import * as MW from './sim/online-multi.js?v=20261112a';
-import { AG, SAM, CARRIERS, LOADOUTS, PLANES, ERAS, loadoutRole } from './arsenal.js?v=20261112a';
-import { retiredHidden } from './progress.js?v=20261112a';
-import { MODES } from './sim/strike.js?v=20261112a';
-import { ICON, ico } from './icons.js?v=20261112a';
-import { activeAcc, siteAcc, siteNoProgress } from './account.js?v=20261112a';
-import { avaSrc } from './avatar.js?v=20261112a';
-import { boardOl, boardMw } from './endscr.js?v=20261112a';
-import { createMM } from './mm.js?v=20261112a';
-import { podBuiltIn } from './models.js?v=20261112a';
+import { tr, trIf, LANG } from './i18n.js?v=20261114a';
+import { trFmt } from './i18n-fmt.js?v=20261114a';
+import { createNet } from './net.js?v=20261114a';
+import * as O from './sim/online.js?v=20261114a';
+import * as MW from './sim/online-multi.js?v=20261114a';
+import { AG, SAM, CARRIERS, LOADOUTS, PLANES, ERAS, loadoutRole } from './arsenal.js?v=20261114a';
+import { retiredHidden } from './progress.js?v=20261114a';
+import { MODES } from './sim/strike.js?v=20261114a';
+import { ICON, ico } from './icons.js?v=20261114a';
+import { activeAcc, siteAcc, siteNoProgress } from './account.js?v=20261114a';
+import { avaSrc } from './avatar.js?v=20261114a';
+import { boardOl, boardMw } from './endscr.js?v=20261114a';
+import { createMM } from './mm.js?v=20261114a';
+import { podBuiltIn } from './models.js?v=20261114a';
 
 const pnm = (p) => esc(p.bot ? trIf(p.name) : p.name); // позывные ботов приходят с сервера по-русски
 const ROLES = [['air', tr('Авиация')], ['pvo', tr('ПВО')], ['any', tr('Любая')]];
