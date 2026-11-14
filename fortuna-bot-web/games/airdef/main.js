@@ -260,6 +260,14 @@ if (P.post || perf.aa !== 'off' || perf.up !== 'off') {
 } else renderer.setPixelRatio(basePR * perf.scale);
 renderer.toneMapping = sceneTM;
 const snd = createSound();
+// настройки управления из хранилища: ступени газа - кратные 10 %, не меньше двух; режимы - только допустимые значения
+function normSens(s) {
+  const st = Array.isArray(s.thrSteps) ? [...new Set(s.thrSteps.map(Number).filter((v) => Number.isFinite(v) && v >= 0 && v <= 100).map((v) => Math.round(v / 10) * 10))].sort((a, b) => a - b) : [];
+  s.thrSteps = st.length >= 2 ? st : [40, 60, 80, 100];
+  s.padRoll = s.padRoll === 'tap' ? 'tap' : 'hold'; s.padPitch = s.padPitch === 'tap' ? 'tap' : 'hold'; s.thrMode = s.thrMode === 'slider' ? 'slider' : 'btn';
+  delete s.padK; // «сила крестовины» убрана: крестовина даёт полное отклонение
+  return s;
+}
 
 // ═════════════ Общий контекст режимов ═════════════
 // NIGHT - темнота для правил боя (ТВ-головки не видят, контейнер в ИК, оптика ЗРК хуже): только у ночи. Ночь убрана (Mark 2026-10-18), а у заката
@@ -272,8 +280,9 @@ const C = {
   hooks: {}, // события боя для текущего режима
   MODE: () => (C.net && C.net.battle ? MODES[C.net.battle.mode] : MODES[setup.diff]), // онлайн - режим комнаты
   // чувствительность: ручка (тангаж/крен), ведение контейнера, поворот обзора оператора
-  // invert - вверх нос вниз (как в авиасимуляторах); pad - крестовина тангажа и крена, padK - её сила; aim - наведение камерой (сенсорные), иначе ручка
-  sens: Object.assign({ stick: 1, look: 1, invert: false, pad: true, padK: 0.5, aim: true }, (() => { try { return JSON.parse(ls.get('fortuna_airdef_sens') || '{}'); } catch (_) { return {}; } })()),
+  // invert - вверх нос вниз (как в авиасимуляторах); pad - крестовина тангажа и крена (полное отклонение), padRoll / padPitch - её режим по осям: 'hold' (по удержанию) или 'tap' (по нажатию);
+  // stick - скорость камеры пальцем; aim - наведение камерой (сенсорные), иначе ручка; thrSteps - ступени газа в % (форсаж - всегда последний), thrMode - газ в бою: 'btn' кнопка ступенями или 'slider' ползунок
+  sens: normSens(Object.assign({ stick: 1, look: 1, invert: false, pad: true, padRoll: 'hold', padPitch: 'hold', thrSteps: [40, 60, 80, 100], thrMode: 'btn', aim: true }, (() => { try { return JSON.parse(ls.get('fortuna_airdef_sens') || '{}'); } catch (_) { return {}; } })())),
   saveSens: () => ls.set('fortuna_airdef_sens', JSON.stringify(C.sens)),
   // «АВТО» - помощь в бою (вылет и оператор ЗРК)
   auto: ls.get('fortuna_airdef_auto') === '1',
@@ -1084,6 +1093,7 @@ setPuffCam(camera); // клубы следов ракет: вдали от ка�
 C.doors.gate = () => C.assetsDone === true; // после перезагрузки под карту створки расходятся, когда модели и текстуры пришли (не дольше 8 с)
 C.crash = createCrashRep(C); // прошлый бой оборвался без выхода (вылет вкладки) - после меню предложим отправить отчёт
 document.body.classList.toggle('nopad', !C.sens.pad); // крестовина выключена в настройках
+document.body.classList.toggle('thrSlider', !!C.IS_TOUCH && C.sens.thrMode === 'slider'); // газ в бою ползунком вместо кнопки (сенсорные)
 document.body.classList.toggle('nobino', C.sens.bino === false); // «Бинокль» вылета выключен в настройках
 
 // ═════════════ Режимы: вход, пауза, итоги ═════════════
@@ -1165,7 +1175,7 @@ $('againBtn').onclick = () => orientGate(() => C.doors.run(() => { C.ended = fal
 $('closeBtn').onclick = () => C.doors.run(() => { C.ended = false; C.toMenu(); });
 $('exit').onclick = () => C.doors.run(() => C.toMenu());
 // кнопки-иконки (games/airdef/icons.js): прежняя надпись - во всплывающей подсказке и для экранного диктора
-const ICO = { tBino: ['bino', tr('Бинокль: цель и своё оружие (B)')], tFlare: ['flares', tr('Ловушки')], tMap: ['map', tr('Карта')], tLock: ['target', tr('Цель')], tAuto: ['auto', tr('Авто - помощник')], tLook: ['camera', tr('Обзор - свободная камера')], tCam: ['camera', tr('Камера: следующий союзник')],
+const ICO = { tMore: ['list', tr('Ещё: обзор, карта, бинокль, авто')], tBino: ['bino', tr('Бинокль: цель и своё оружие (B)')], tFlare: ['flares', tr('Ловушки')], tMap: ['map', tr('Карта')], tLock: ['target', tr('Цель')], tAuto: ['auto', tr('Авто - помощник')], tLook: ['camera', tr('Обзор - свободная камера')], tCam: ['camera', tr('Камера: следующий союзник')],
   tHelp: ['help', tr('Нужна помощь')], tPop: ['popUp', tr('Подскок')], opMap: ['map', tr('Карта')], opAuto: ['auto', tr('Авто - расчёт сам')], opCam: ['camera', tr('Камера')], opBino: ['bino', tr('Бинокль')], opRadar: ['radar', tr('РЛС: включить / выключить')],
   pause: ['pause', tr('Пауза')], plBtn: ['players', tr('Игроки')], lsnBtn: ['lesson', tr('Урок: задание и подсказки')], askBtn: ['lesson', tr('Объяснение')], wMap: ['map', tr('Карта')],
   exit: ['close', tr('Выйти')], lsnX: ['close', tr('Свернуть')], msClose: ['close', tr('Закрыть')], lessonX: ['close', tr('Закрыть')] };

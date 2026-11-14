@@ -9,7 +9,7 @@ if (LANG !== 'ru' && typeof document !== 'undefined' && document.head) {
 }
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 export const LAYOUT_SETS = {
-  air: { name: tr('Вылет'), btns: { tFire: tr('Пуск'), tThr: tr('Газ / форсаж'), tFlare: tr('Ловушки'), tLock: tr('Цель'), tMap: tr('Карта'), tAuto: tr('Авто'), tLook: tr('Обзор'), tBino: tr('Бинокль'), tPop: tr('Подскок'), tPad: tr('Крестовина') } },
+  air: { name: tr('Вылет'), btns: { tFire: tr('Пуск'), tThr: tr('Газ / форсаж'), tThrS: tr('Ползунок газа'), tFlare: tr('Ловушки'), tLock: tr('Цель'), tMore: tr('Ещё'), tPop: tr('Подскок'), tPad: tr('Крестовина') } },
   op: { name: tr('Оператор ЗРК'), btns: { opFire: tr('Пуск'), opRadar: tr('РЛС'), opMethod: tr('Метод'), opCam: tr('Кам.'), opAuto: tr('Авто'), opMap: tr('Карта') } },
 };
 const ALL = Object.assign({}, LAYOUT_SETS.air.btns, LAYOUT_SETS.op.btns);
@@ -49,11 +49,11 @@ function select(id) {
   if (!led) return; led.sel = id;
   for (const k of Object.keys(ALL)) $(k).classList.toggle('ledOn', k === id);
   const c = entry(id);
-  $('ledSel').textContent = ALL[id]; $('ledS').value = c.s || 1; $('ledO').value = c.o || 1; $('ledCtl').classList.add('on');
+  $('ledSel').textContent = ALL[id]; $('ledS').value = c.s || 1; $('ledO').value = c.o || 1; $('ledCtl').classList.add('on'); $('ledReset1').style.display = '';
   led.bar.classList.toggle('low', c.y < 0.45); // панель - с другой стороны экрана от выбранной кнопки
 }
 function showSet(set) {
-  led.set = set; led.sel = null; $('ledCtl').classList.remove('on');
+  led.set = set; led.sel = null; $('ledCtl').classList.remove('on'); $('ledReset1').style.display = 'none';
   for (const k of Object.keys(ALL)) $(k).classList.remove('ledOn');
   document.body.classList.toggle('ledAir', set === 'air'); document.body.classList.toggle('ledOp', set === 'op');
   for (const b of led.bar.querySelectorAll('[data-set]')) b.classList.toggle('on', b.dataset.set === set);
@@ -65,9 +65,8 @@ export function openLayoutEditor(onClose) {
       <span class="ledHelp">${tr('Перетащите кнопку пальцем, нажмите - размер и прозрачность.')}</span></div>
     <div id="ledCtl"><b id="ledSel"></b>
       <label>${tr('Размер')} <input type="range" id="ledS" min="0.6" max="1.8" step="0.05"></label>
-      <label>${tr('Прозрачность')} <input type="range" id="ledO" min="0.2" max="1" step="0.05"></label>
-      <button class="btn alt sm" id="ledReset1">${tr('Вернуть кнопку')}</button></div>
-    <div class="ledBtns"><button class="btn alt sm" id="ledResetAll">${tr('Всё по умолчанию')}</button><button class="btn sm" id="ledDone">${tr('Готово')}</button></div>`;
+      <label>${tr('Прозрачность')} <input type="range" id="ledO" min="0.2" max="1" step="0.05"></label></div>
+    <div class="ledBtns"><button class="btn alt sm" id="ledReset1" style="display:none">${tr('Вернуть кнопку')}</button><button class="btn alt sm" id="ledResetAll">${tr('Всё по умолчанию')}</button><button class="btn sm" id="ledDone">${tr('Готово')}</button></div>`;
   document.body.appendChild(bar); document.body.classList.add('layoutEdit');
   led = { bar, set: 'air', sel: null, drag: null, onClose }; showSet('air'); applyLayout();
   bar.addEventListener('input', (e) => {

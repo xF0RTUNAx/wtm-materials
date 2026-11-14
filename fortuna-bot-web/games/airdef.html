@@ -355,6 +355,28 @@
   #tPad .pu { grid-area: 1 / 2; } #tPad .pl { grid-area: 2 / 1; } #tPad .pr { grid-area: 2 / 3; } #tPad .pd { grid-area: 3 / 2; } #tPad i.on { background: rgba(255,120,60,.55); }
   body.nopad:not(.layoutEdit) #tPad { display: none; } body.heli.nopad #tPad { display: grid; } /* вертолёт: ▲▼ - высота, ◀▶ - шаг вбок («Аркада»; в «Реализме» ⟲⟳ - педали) - нужна всегда */ body.short #tPad { bottom: 10px; grid-template: repeat(3, 42px) / repeat(3, 42px); } /* низкий экран: под панелью оружия */
   #tAuto.on, #opAuto.on { background: rgba(34,140,70,.6); border-color: #86efac; }
+  /* «Ещё» (#tMore, значок «⋯»): редкие кнопки «Обзор», «Карта», «Бинокль», «Авто» - в ряду справа вверху под рядом «полный экран / звук / пауза»; ряд открывает #tMore (air.js moreShow),
+     по нажатию на кнопку ряда или через 4 с закрывается. Ряд - фиксированный (в редакторе кнопок не двигается и не виден). #tMore.mk - «Авто» включён: золотой уголок */
+  #tMoreRow { display: none; position: fixed; z-index: 12; top: calc(var(--top) + 42px); right: max(10px, var(--sa-r)); padding: 6px; gap: 6px; flex-direction: row; background: rgba(13,17,12,.86); border: 1px solid #3a4334; }
+  body.coarse.flying.moreOpen #tMoreRow { display: flex; } body.layoutEdit #tMoreRow { display: none !important; }
+  #tMoreRow .tb { position: relative; flex: none; }
+  #tMore.mk::after { content: ''; position: absolute; right: 3px; top: 3px; width: 0; height: 0; border-left: 11px solid transparent; border-top: 11px solid #e8b04a; pointer-events: none; }
+  /* газ: ряд квадратиков ступеней внизу кнопки (по положению на шкале 0…100 и место «Ф» справа) и ползунок вместо кнопки (Настройки → «Газ») */
+  #tThr { padding-bottom: 9px; }
+  #tThr .pips { position: absolute; left: 6px; right: 6px; bottom: 3px; height: 5px; pointer-events: none; }
+  #tThr .pips i { position: absolute; top: 0; width: 4px; height: 5px; margin-left: -2px; background: rgba(233,230,220,.4); } #tThr .pips i.on { background: #e9e6dc; }
+  #tThr .pips i.ab { background: rgba(232,176,74,.45); } #tThr .pips i.ab.on { background: #e8b04a; }
+  body.short #tThr { padding-bottom: 8px; } body.short #tThr .pips { bottom: 2px; }
+  #tThrS { display: none; width: 32px; height: 196px; padding: 0; touch-action: none; border-radius: 0; background: rgba(16,20,15,.55); }
+  body.thrSlider:not(.heli) #tThrS, body.layoutEdit.thrSlider #tThrS { display: block; } body.thrSlider:not(.heli) #tThr, body.layoutEdit.thrSlider #tThr { display: none; }
+  #tThrS i { position: absolute; display: block; font-style: normal; pointer-events: none; }
+  #tThrS .fill { left: 0; right: 0; bottom: 0; height: 0; background: rgba(233,230,220,.18); }
+  #tThrS .abz { left: 0; right: 0; top: 0; background: repeating-linear-gradient(-45deg, rgba(232,176,74,.55) 0 5px, rgba(232,176,74,.2) 5px 10px); border-bottom: 2px solid #e8b04a; }
+  #tThrS .abz b { position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); text-align: center; font: 700 10px 'Golos Text', sans-serif; color: #17190f; }
+  #tThrS .dt { left: 0; width: 7px; height: 1px; background: rgba(233,230,220,.85); } #tThrS .dt.r { left: auto; right: 0; }
+  #tThrS .dl { right: calc(100% + 4px); transform: translateY(50%); font: 700 9.5px/1 'Golos Text', sans-serif; color: #e9e6dc; text-shadow: 0 1px 2px #000; white-space: nowrap; }
+  #tThrS .th { left: -5px; right: -5px; height: 22px; transform: translateY(50%); display: grid; place-items: center; background: #e9e6dc; color: #141912; font: 700 11px 'Golos Text', sans-serif; box-shadow: 0 1px 4px rgba(0,0,0,.5); }
+  #tThrS .th.ab { background: #e8b04a; }
   body.coarse #rwr { width: 88px; height: 88px; right: auto; left: calc(50% - 44px); bottom: auto; top: max(4px, var(--sa-t)); } /* СПО - у самого верха, между кнопками Telegram */
   body.coarse #warn { top: calc(max(4px, var(--sa-t)) + 94px); font-size: 14px; }
   body.coarse #wpn { width: 212px; font-size: 10.5px; line-height: 1.3; } body.coarse #wpn .c { padding: 1px 7px 2px; } body.coarse #wpn .c s { font-size: 8px; } body.coarse #wpn .c b { font-size: 17px; line-height: 1; } body.coarse #wpn .c b small { font-size: 8px; } body.coarse #wpn .ab { font-size: 8.5px; margin-left: 4px; vertical-align: 4px; }
@@ -459,7 +481,7 @@
   #photoZone { position: fixed; inset: 0; z-index: 9; display: none; touch-action: none; }
   #photoUi { display: none; }
   body.photo #photoZone, body.photo #photoUi { display: block; }
-  body.photo #hud, body.photo #touch, body.photo #warn, body.photo #msg, body.photo #hint, body.photo #podBox, body.photo #map, body.photo #ask { display: none !important; }
+  body.photo #hud, body.photo #touch, body.photo #tMoreRow, body.photo #warn, body.photo #msg, body.photo #hint, body.photo #podBox, body.photo #map, body.photo #ask { display: none !important; }
   body.photo.clean #photoUi, body.photo.clean #pause, body.photo.clean #mute, body.photo.clean #exit, body.photo.clean #perf { display: none !important; }
   body.photo.phud #hud { display: block !important; } /* запись ролика с интерфейсом боя (photo.js shot.hud) */
   .phRow { position: fixed; z-index: 14; left: max(10px, var(--sa-l)); right: calc(max(10px, var(--sa-r)) + 52px); display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
@@ -649,6 +671,13 @@
   #menu #tab-set .sub::after { content: ''; flex: 1; height: 1px; background: #2f372b; }
   #menu #tab-set label.chk { margin: 0; padding: 9px 2px; border-bottom: 1px solid #222a1e; }
   #menu #tab-set .sub + label.chk, #menu #tab-set .sub + .btn + label.chk { border-top: 1px solid #222a1e; }
+  #menu #tab-set .prow.sr { margin: 0; padding: 7px 2px; border-bottom: 1px solid #222a1e; }
+  /* «Газ» - сетка ступеней: нажатие включает и выключает; «Ф» (форсаж) всегда включена */
+  #menu .thrg { display: grid; grid-template-columns: repeat(12, 1fr); gap: 3px; margin: 6px 0 4px; }
+  #menu .thrg button { border: 1px solid #4a5443; border-radius: 0; background: transparent; color: #e9e6dc; font: 700 11.5px 'Golos Text', -apple-system, sans-serif; padding: 9px 0; cursor: pointer; }
+  #menu .thrg button.on { background: #e9e6dc; color: #141912; border-color: #e9e6dc; }
+  #menu .thrg button.ab { background: #e8b04a; color: #17190f; border-color: #e8b04a; cursor: default; opacity: 1; }
+  #menu #tab-set .thrc { margin-top: 2px; }
   #menu #tab-set .sub + .btn { margin: 6px 0 8px; }
   #menu .hint { color: #c9cebd; }
   #menu details.ref { border-radius: 0; background: #151a12; }
@@ -709,16 +738,22 @@
   body.layoutEdit #stickZone::after { content: 'зона ручки - палец в любом месте слева'; position: absolute; left: 50%; top: 58%; transform: translateX(-50%);
     font-size: 12px; color: rgba(255,255,255,.45); white-space: nowrap; }
   #ledBar { position: fixed; z-index: 57; top: calc(max(8px, var(--sa-t)) + var(--tg-t, 0px)); left: 50%; transform: translateX(-50%); width: min(560px, calc(100vw - 24px));
-    background: rgba(15,23,42,.94); border: 1px solid rgba(255,255,255,.14); border-radius: 12px; padding: 8px 10px; font-size: 12px; color: #e2e8f0; }
+    background: rgba(13,17,12,.96); border: 1px solid #3a4334; border-radius: 0; padding: 9px 10px; font-size: 12px; color: #e9e6dc; }
   #ledBar.low { top: auto; bottom: max(8px, var(--sa-b)); } #ledBar.drag { opacity: .25; pointer-events: none; }
-  #ledBar .ledTop { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
-  #ledBar .ledHelp { line-height: 1.35; opacity: .85; flex: 1; min-width: 160px; }
-  #ledBar .seg { display: inline-flex; border: 1px solid rgba(255,255,255,.2); border-radius: 9px; overflow: hidden; }
-  #ledBar .seg button { border: 0; background: transparent; color: #e2e8f0; font: 700 12px 'Golos Text', -apple-system, sans-serif; padding: 6px 10px; cursor: pointer; }
-  #ledBar .seg button.on { background: #fb923c; color: #fff; }
-  #ledCtl { display: none; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; } #ledCtl.on { display: flex; }
-  #ledCtl b { color: #fb923c; min-width: 58px; } #ledCtl label { display: flex; align-items: center; gap: 4px; } #ledCtl input { width: 92px; }
-  #ledBar .ledBtns { display: flex; gap: 8px; justify-content: flex-end; }
+  #ledBar .ledTop { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 7px; }
+  #ledBar .ledHelp { line-height: 1.35; color: #a9b19c; flex: 1; min-width: 160px; font-size: 11.5px; }
+  /* переключатель и ползунки - как в «Настройках» (#menu .seg, label.chk input[type=range]): без скруглений, дорожка 2 px, светлый бегунок */
+  #ledBar .seg { display: inline-flex; flex-wrap: nowrap; gap: 4px; padding: 0; background: none; border: 0; border-radius: 0; overflow: visible; }
+  #ledBar .seg button { border: 1px solid #4a5443; border-radius: 0; background: transparent; color: #e9e6dc; font: 700 12px 'Golos Text', -apple-system, sans-serif; padding: 5px 9px; cursor: pointer; }
+  #ledBar .seg button.on { background: #e9e6dc; color: #141912; border-color: #e9e6dc; }
+  #ledCtl { display: none; align-items: center; gap: 9px; flex-wrap: wrap; margin-bottom: 7px; } #ledCtl.on { display: flex; }
+  #ledCtl b { color: var(--th-ac); font: 600 12.5px 'Golos Text', -apple-system, sans-serif; min-width: 58px; } #ledCtl label { display: flex; align-items: center; gap: 6px; flex: 1; color: #e9e6dc; }
+  #ledCtl input[type=range] { -webkit-appearance: none; appearance: none; flex: 1; min-width: 70px; height: 22px; margin: 0; background: none; cursor: pointer; }
+  #ledCtl input[type=range]::-webkit-slider-runnable-track { height: 2px; background: #4a5443; border: 0; }
+  #ledCtl input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 11px; height: 18px; margin-top: -8px; background: #e9e6dc; border: 0; border-radius: 0; }
+  #ledCtl input[type=range]::-moz-range-track { height: 2px; background: #4a5443; border: 0; } #ledCtl input[type=range]::-moz-range-progress { height: 2px; background: #e9e6dc; }
+  #ledCtl input[type=range]::-moz-range-thumb { width: 11px; height: 18px; background: #e9e6dc; border: 0; border-radius: 0; }
+  #ledBar .ledBtns { display: flex; gap: 8px; justify-content: flex-end; } #ledBar #ledReset1 { margin-right: auto; }
   #ledBar .btn { width: auto; display: inline-block; padding: 7px 12px; font-size: 12.5px; margin: 0; }
 
   /* ═════ Игра в стиле главного меню (2026-10-14): плоско, без скруглений, тёмно-оливковые панели, янтарный акцент, Russo One /
@@ -873,16 +908,15 @@
   <div class="tb big" id="tFire">Пуск</div>
   <div class="tb" id="tLock">Цель</div>
   <div class="tb" id="tFlare">Ловушки</div>
-  <div class="tb" id="tMap">Карта</div>
+  <div class="tb" id="tMore">Ещё</div>
   <div class="tb" id="tCam">Кам.</div>
-  <div class="tb" id="tAuto">Авто</div>
-  <div class="tb" id="tLook">Обзор</div>
-  <div class="tb" id="tBino">Бинокль</div>
   <div class="tb" id="tHelp">Помощь</div>
   <div class="tb" id="tPop">Подскок</div>
   <div class="tb" id="tThr">Газ 80%</div>
+  <div class="tb" id="tThrS"></div>
   <div class="tb pad" id="tPad"><i class="pu"></i><i class="pl"></i><i class="pr"></i><i class="pd"></i></div>
 </div>
+<div id="tMoreRow"><div class="tb" id="tAuto">Авто</div><div class="tb" id="tBino">Бинокль</div><div class="tb" id="tMap">Карта</div><div class="tb" id="tLook">Обзор</div></div>
 
 <button id="exit" aria-label="Выйти"></button>
 <button id="pause" aria-label="Пауза">II</button>

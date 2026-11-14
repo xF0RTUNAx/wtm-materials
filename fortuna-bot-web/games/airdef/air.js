@@ -204,9 +204,9 @@ export function createAir(C) {
     const pb = rr.length ? { width: 1, left: Math.min(...rr.map((r) => r.left)), top: Math.min(...rr.map((r) => r.top)) } : { width: 0, top: 6 };
     const y = IS_TOUCH ? Math.max(6, pb.top) : VH - h - 180;
     let x = VW - w - 14; pod.ackTop = null;
-    if (IS_TOUCH) { // не ниже верха кнопок справа («КАРТА», «АВТО», у вертолёта - «ПОДСКОК», «ОБЗОР»; свою раскладку слева не считаем)
+    if (IS_TOUCH) { // не ниже верха кнопок справа («ЕЩЁ», у вертолёта - «ПОДСКОК», онлайн - «ПОМОЩЬ»; свою раскладку слева не считаем)
       let lim = VH, xl = pb.width ? pb.left : VW - 50;
-      for (const id of ['tMap', 'tAuto', 'tHelp', 'tPop', 'tLook']) { const r = $(id).getBoundingClientRect ? $(id).getBoundingClientRect() : null; if (r && r.height && r.left > VW / 2) { lim = Math.min(lim, r.top); xl = Math.min(xl, r.left); } }
+      for (const id of ['tMore', 'tHelp', 'tPop']) { const r = $(id).getBoundingClientRect ? $(id).getBoundingClientRect() : null; if (r && r.height && r.left > VW / 2) { lim = Math.min(lim, r.top); xl = Math.min(xl, r.left); } }
       const wl = Math.min(Math.min(VH * 0.32, 150) / 0.75, xl - 8 - (VW / 2 + 40)); // левее столбцов кнопок, но правее прицела
       if (lim - y - 6 >= 90 || wl < 120) { h = Math.max(90, Math.min(h, lim - y - 6)); w = h / 0.75; x = pb.width ? pb.left - w - 8 : VW - w - 58; }
       else { // над кнопками места нет (Telegram во весь экран: ряд паузы опущен под его кнопки)
@@ -635,10 +635,32 @@ export function createAir(C) {
   // ═════════════ Управление ═════════════
   const keys = new Set();
   let camMode = 0, abWas = false, fuelWarn = 0, thrI = 2;
-  // газ ступенями, после 100 % - форсаж (одна кнопка «ГАЗ» на всех устройствах; на ПК - W/S по ступеням)
-  const THR_STEPS = [0.4, 0.6, 0.8, 1, 1], AB_I = 4;
-  function setThr(i) { thrI = clamp(i, 0, AB_I); craft.thr = THR_STEPS[thrI]; snd.click(); }
-  function thrStep() { if (craft.heli && craft.hm && craft.hm.arcade) { heliSpd(hSpdI() + 1 >= H_SPD.length ? 1 : hSpdI() + 1); return; } setThr(thrI === AB_I ? 0 : thrI + 1); }
+  // газ: ступени выбирает игрок (Настройки → «Газ», C.sens.thrSteps, %), форсаж - всегда последний и только у самолёта с форсажем.
+  // Кнопка «Газ» листает ступени по кругу; на ПК W/S - по тем же ступеням, Shift - форсаж. Ползунок (сенсорные, thrMode 'slider'): газ по 1 %,
+  // thrFree - значение между ступенями (null - стоим ровно на ступени thrI)
+  const hasAB = () => !(craft.fm && !(craft.fm.s.ab > 0));
+  let THR_STEPS = [0.4, 0.6, 0.8, 1], AB_I = -1, thrSrc = null, thrAbSrc = null, thrFree = null, slSid = null; // slSid - палец на ползунке газа
+  const thrRegN = () => (AB_I >= 0 ? AB_I : THR_STEPS.length); // сколько обычных ступеней (без форсажа)
+  const thrNear = (v) => { let b = 0; for (let i = 1; i < thrRegN(); i++) if (Math.abs(THR_STEPS[i] - v) < Math.abs(THR_STEPS[b] - v)) b = i; return b; };
+  function thrBuild(keep) { // собрать ступени из настройки; keep - сохранить текущий газ (самолёт сменил форсаж / игрок поменял набор), иначе - ближайшая к 80 %
+    const src = C.sens.thrSteps, ab = hasAB(), reg = (Array.isArray(src) && src.length >= 2 ? src : [40, 60, 80, 100]).map((v) => clamp(+v / 100, 0, 1)).sort((a, b) => a - b);
+    const wasAB = keep && AB_I >= 0 && thrI === AB_I, was = keep ? thrFree ?? THR_STEPS[thrI] : 0.8;
+    THR_STEPS = ab ? [...reg, 1] : reg; AB_I = ab ? reg.length : -1; thrSrc = src; thrAbSrc = ab; thrFree = null;
+    if (wasAB) thrI = ab ? AB_I : reg.length - 1; else { thrI = thrNear(was); if (keep && thrSliderOn() && Math.abs(THR_STEPS[thrI] - was) > 1e-3) thrFree = was; }
+    slBuild();
+  }
+  const thrSliderOn = () => IS_TOUCH && C.sens.thrMode === 'slider' && !craft.heli;
+  const thrVal = () => thrFree ?? THR_STEPS[thrI];
+  function setThr(i) { thrFree = null; thrI = clamp(i, 0, THR_STEPS.length - 1); craft.thr = THR_STEPS[thrI]; snd.click(); slDraw(); }
+  function thrStep() { if (craft.heli && craft.hm && craft.hm.arcade) { heliSpd(hSpdI() + 1 >= H_SPD.length ? 1 : hSpdI() + 1); return; } setThr(thrI === THR_STEPS.length - 1 ? 0 : thrI + 1); }
+  function thrKey(d) { // W / S: соседняя выбранная ступень; с ползунка между ступенями - ближайшая в эту сторону
+    if (thrFree === null) { setThr(thrI + d); return; }
+    const v = thrFree; let j = -1;
+    if (d > 0) j = THR_STEPS.findIndex((x) => x > v + 1e-6); else for (let i = THR_STEPS.length - 1; i >= 0; i--) if (THR_STEPS[i] < v - 1e-6) { j = i; break; }
+    setThr(j < 0 ? (d > 0 ? THR_STEPS.length - 1 : 0) : j);
+  }
+  function thrSync() { if (thrSrc !== C.sens.thrSteps || thrAbSrc !== hasAB()) thrBuild(true); } // набор изменили или самолёт с другим форсажем
+  function thrReset() { slSid = null; thrBuild(false); craft.thr = THR_STEPS[thrI]; slDraw(); } // новый вылет: ступень, ближайшая к 80 %
   // вертолёт («Аркада»): заданная скорость - доля наибольшей (назад, висение, ¼ … полная); кнопка «газ» листает по кругу
   const H_SPD = [-0.2, 0, 0.25, 0.5, 0.75, 1]; let hSpd = 0.25;
   const hSpdI = () => H_SPD.reduce((b, v, i) => (Math.abs(v - hSpd) < Math.abs(H_SPD[b] - hSpd) ? i : b), 0);
@@ -653,9 +675,9 @@ export function createAir(C) {
       case 'KeyB': if (game.net && craft.dead) { spec.i++; spec.init = false; } else if (C.sens.bino !== false) binoTap(); break; // онлайн, сбит - следующий союзник; иначе - бинокль
       case 'KeyR': podNext(); break;
       case 'KeyG': podView(); break;
-      case 'KeyW': if (!craft.heli) setThr(thrI + 1); break; // вертолёт: W/S держать - разгон и торможение, как ручка на телефоне (heliFly)
-      case 'KeyS': if (!craft.heli) setThr(thrI - 1); break;
-      case 'ShiftLeft': case 'ShiftRight': if (!craft.heli) setThr(thrI === AB_I ? 3 : AB_I); break;
+      case 'KeyW': if (!craft.heli) thrKey(1); break; // вертолёт: W/S держать - разгон и торможение, как ручка на телефоне (heliFly)
+      case 'KeyS': if (!craft.heli) thrKey(-1); break;
+      case 'ShiftLeft': case 'ShiftRight': if (!craft.heli) setThr(AB_I < 0 ? THR_STEPS.length - 1 : thrI === AB_I ? AB_I - 1 : AB_I); break; // форсаж вкл / выкл (без форсажа - верхняя ступень)
       case 'KeyZ': pod.zi = (pod.zi + 1) % ZOOMS.length; snd.click(); break;
       case 'KeyO': pod.laserMan = pod.laserMan === null ? !pod.laser : pod.laserMan ? false : null; say(tr('Лазер: {0}', [pod.laserMan === null ? tr('авто') : pod.laserMan ? tr('вкл') : tr('выкл')]), 1.2); break;
       case 'KeyH': if (game.net && !craft.dead && C.askHelp) C.askHelp([craft.pos.x, craft.pos.z]); break;
@@ -730,28 +752,96 @@ export function createAir(C) {
     AO[2] = (1 - big) * clamp(-lx * 9, -1, 1);
     return AO;
   }
-  // крестовина: ▲▼ - тангаж (у вертолёта - высота), ◀▶ - крен (педали). Кнопки - с фиксацией (Mark 2026-10-20: в вебе
-  // держать палец неудобно): тап - включена и держится, ещё тап (или противоположная) - выключена; по осям независимо,
-  // тап в середину - всё выключить. Новый вылет - всё выключено (padReset)
+  // крестовина: ▲▼ - тангаж (у вертолёта - высота), ◀▶ - крен (педали). Самолёт: каждая ось - в своём режиме (Настройки → «Самолёт»):
+  // «по удержанию» (C.sens.padRoll / padPitch = 'hold') - полное отклонение, пока палец на кнопке; «по нажатию» ('tap') - с фиксацией: нажали - рули
+  // отклонены и остаются, ещё раз ту же кнопку - отпущены, противоположную - переключилось на неё (Mark 2026-11-14). Скорость самого поворота задаёт
+  // самолёт (flight.js: крен, перегрузка). Вертолёт: все кнопки с фиксацией (Mark 2026-10-20). Тап в середину - всё выключить; новый вылет - всё выключено (padReset)
   const pad = { x: 0, y: 0, id: null };
+  const padHold = { x: null, y: null }, padLat = { x: 0, y: 0 }; // палец на оси { id, d }; фиксация (вертолёт и ось «по нажатию»): -1 / 0 / 1
   const padArms = (() => { const el = $('tPad'); return { el, u: el.querySelector('.pu'), d: el.querySelector('.pd'), l: el.querySelector('.pl'), r: el.querySelector('.pr') }; })();
   const padShow = () => { const A = padArms; A.r.classList.toggle('on', pad.x > 0); A.l.classList.toggle('on', pad.x < 0); A.u.classList.toggle('on', pad.y > 0); A.d.classList.toggle('on', pad.y < 0); };
-  function padReset() { pad.x = pad.y = 0; padShow(); }
+  const padTap = (ax) => (ax === 'x' ? C.sens.padRoll : C.sens.padPitch) === 'tap';
+  function padTick() { // итог по осям на этот кадр (вызывается из planeFly / heliFly)
+    let ch = false;
+    for (const ax of ['x', 'y']) {
+      const h = padHold[ax]; let v;
+      if (craft.heli || padTap(ax)) v = padLat[ax]; // фиксация: вертолёт и ось «по нажатию»
+      else { padLat[ax] = 0; v = h ? h.d : 0; } // «по удержанию»: отклонение, пока палец на кнопке (фиксацию прежнего режима сбрасываем)
+      if (pad[ax] !== v) { pad[ax] = v; ch = true; }
+    }
+    if (ch) padShow();
+  }
+  function padReset() { pad.x = pad.y = 0; padLat.x = padLat.y = 0; padHold.x = padHold.y = null; padShow(); }
   padArms.el.addEventListener('pointerdown', (e) => {
     e.preventDefault(); e.stopPropagation();
     const b = padArms.el.getBoundingClientRect(), dx = (e.clientX - b.left) / b.width - 0.5, dy = (e.clientY - b.top) / b.height - 0.5;
-    if (Math.abs(dx) < 0.17 && Math.abs(dy) < 0.17) padReset();
-    else if (Math.abs(dx) > Math.abs(dy)) { const v = dx > 0 ? 1 : -1; pad.x = pad.x === v ? 0 : v; }
-    else { const v = dy < 0 ? 1 : -1; pad.y = pad.y === v ? 0 : v; }
-    padShow(); if (snd.click) snd.click();
+    if (Math.abs(dx) < 0.17 && Math.abs(dy) < 0.17) { padReset(); if (snd.click) snd.click(); return; } // тап в середину - всё выключить
+    const ax = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y', d = ax === 'x' ? (dx > 0 ? 1 : -1) : (dy < 0 ? 1 : -1);
+    if (craft.heli || padTap(ax)) padLat[ax] = padLat[ax] === d ? 0 : d; // фиксация: та же кнопка - выкл, противоположная - переключение
+    else {
+      padHold[ax] = { id: e.pointerId, d };
+      try { padArms.el.setPointerCapture(e.pointerId); } catch (_) { /* палец уже ушёл */ }
+    }
+    padTick(); if (snd.click) snd.click();
   });
+  const padUp = (e) => { for (const ax of ['x', 'y']) if (padHold[ax] && padHold[ax].id === e.pointerId) padHold[ax] = null; padTick(); };
+  padArms.el.addEventListener('pointerup', padUp); padArms.el.addEventListener('pointercancel', padUp); padArms.el.addEventListener('lostpointercapture', padUp);
   const mine = () => C.ctrl === api || (C.ctrl && C.ctrl.inner === api); // в обучении управляет урок, а самолёт - внутри него
   const tap = (id, fn) => $(id).addEventListener('pointerdown', (e) => { e.preventDefault(); if (mine()) fn(); });
   tap('tFire', fire); tap('tLock', podNext); tap('tThr', thrStep);
+  // ползунок газа (сенсорные, Настройки → «Газ» → «ползунок»): вертикальная полоса вместо кнопки, газ по 1 %. Засечки и подписи - на выбранных
+  // ступенях; отпустили в пределах 4 % от засечки - встаёт на неё. Сверху зона форсажа «Ф» (только у самолёта с форсажем): дотянули до конца и отпустили - форсаж
+  const SL_AB = 0.14, SL_SNAP = 0.04, slEl = $('tThrS');
+  function slBuild() { // засечки: по одной на каждую выбранную ступень; зона форсажа - если он есть
+    if (!slEl) return;
+    const ab = AB_I >= 0, Y = (v) => v * (ab ? 1 - SL_AB : 1) * 100;
+    slEl.innerHTML = `<i class="fill"></i>${ab ? `<i class="abz" style="height:${SL_AB * 100}%"><b>${tr('Ф')}</b></i>` : ''}`
+      + THR_STEPS.slice(0, thrRegN()).map((v) => `<i class="dt" style="bottom:${Y(v)}%"></i><i class="dt r" style="bottom:${Y(v)}%"></i><i class="dl" style="bottom:${Y(v)}%">${Math.round(v * 100)}</i>`).join('') + '<i class="th"></i>';
+    slEl._k = null; slEl._th = slEl.querySelector('.th'); slEl._fill = slEl.querySelector('.fill');
+  }
+  function slDraw() { // ручка и заливка по текущему газу
+    if (!slEl || !slEl._th) return;
+    const ab = AB_I >= 0 && thrI === AB_I && thrFree === null, v = thrVal(), k = `${ab}|${v}|${THR_STEPS.length}`; if (slEl._k === k) return; slEl._k = k;
+    const y = ab ? 1 - SL_AB / 2 : v * (AB_I >= 0 ? 1 - SL_AB : 1);
+    slEl._th.style.bottom = (y * 100).toFixed(2) + '%'; slEl._th.textContent = ab ? tr('Ф') : Math.round(v * 100); slEl._th.classList.toggle('ab', ab);
+    slEl._fill.style.height = (Math.min(y, 1 - (AB_I >= 0 ? SL_AB : 0)) * 100).toFixed(2) + '%';
+  }
+  if (slEl) {
+    const slAt = (e) => {
+      const b = slEl.getBoundingClientRect(), k = 1 - (e.clientY - b.top) / b.height;
+      if (AB_I >= 0 && k > 1 - SL_AB * 0.45) { if (thrI !== AB_I || thrFree !== null) { thrI = AB_I; thrFree = null; snd.click(); } }
+      else { const v = Math.round(clamp(k / (AB_I >= 0 ? 1 - SL_AB : 1), 0, 1) * 100) / 100; thrFree = v; thrI = thrNear(v); }
+      if (craft.fuel > 0) craft.thr = thrVal(); slDraw();
+    };
+    slEl.addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); if (!mine() || slSid !== null) return; slSid = e.pointerId; slEl.setPointerCapture(e.pointerId); slAt(e); });
+    slEl.addEventListener('pointermove', (e) => { if (e.pointerId === slSid) slAt(e); });
+    const slEnd = (e) => {
+      if (e.pointerId !== slSid) return; slSid = null;
+      if (thrFree !== null && Math.abs(THR_STEPS[thrI] - thrFree) <= SL_SNAP + 1e-6) { thrFree = null; if (craft.fuel > 0) craft.thr = THR_STEPS[thrI]; snd.click(); slDraw(); } // у засечки - на ступень
+    };
+    slEl.addEventListener('pointerup', slEnd); slEl.addEventListener('pointercancel', slEnd); slEl.addEventListener('lostpointercapture', slEnd); // захват потерян (вкладка, системный жест) - ползунок не залипает
+  }
+  thrBuild(false); slDraw(); // ступени по настройке - сразу (ползунок виден и в редакторе кнопок до первого вылета)
   { const b = $('tFlare'); b.addEventListener('pointerdown', (e) => { e.preventDefault(); if (mine()) cmPress('btn'); }); for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) b.addEventListener(ev, () => cmRelease('btn')); } // зажата - ловушки очередью
   tap('tHelp', () => { if (game.net && !craft.dead && C.askHelp) C.askHelp([craft.pos.x, craft.pos.z]); });
-  tap('tLook', () => freeLook(!free.on)); tap('tBino', binoTap);
-  tap('tPop', popToggle); tap('tMap', () => toggleMap()); tap('tAuto', () => C.setAuto(!C.auto)); tap('tCam', () => { if (game.net && craft.dead) { spec.i++; spec.init = false; } else nextCam(); });
+  // «Ещё» (#tMore): «Обзор», «Карта», «Бинокль», «Авто» спрятаны в ряд справа вверху под рядом паузы (Mark 2026-11-14); нажатие на кнопку ряда - её действие и ряд закрывается,
+  // повторное на «Ещё» - закрыть, сам закрывается через 4 с, новый вылет - закрыт. В ряду - только доступные кнопки (бинокль - не у вертолёта и не выключенный в настройках)
+  const moreB = $('tMore'), moreRow = $('tMoreRow'); let moreOn = false, moreTm = 0;
+  const rareIds = () => ['tAuto', ...(!craft.heli && C.sens.bino !== false ? ['tBino'] : []), 'tMap', 'tLook'];
+  function moreShow(on) {
+    clearTimeout(moreTm); on = !!on && rareIds().length > 0;
+    if (on) { // ряд прижат вправо под верхним рядом; на низком экране он налезал бы на «Ещё» - тогда сдвигается левее неё
+      moreRow.style.right = ''; document.body.classList.add('moreOpen');
+      const r = moreRow.getBoundingClientRect(), m = moreB.getBoundingClientRect();
+      if (m.width && r.right > m.left && r.left < m.right && r.bottom > m.top - 4 && r.top < m.bottom) moreRow.style.right = `${Math.max(0, innerWidth - m.left + 6)}px`;
+      moreTm = setTimeout(() => moreShow(false), 4000);
+    } else document.body.classList.remove('moreOpen');
+    if (on === moreOn) return; moreOn = on; moreB.classList.toggle('on', on); moreB.innerHTML = ico(on ? 'close' : 'list');
+  }
+  tap('tMore', () => moreShow(!moreOn));
+  const tapR = (id, fn) => tap(id, () => { fn(); moreShow(false); }); // кнопка ряда: действие, потом ряд закрывается
+  tapR('tLook', () => freeLook(!free.on)); tapR('tBino', binoTap);
+  tap('tPop', popToggle); tapR('tMap', () => toggleMap()); tapR('tAuto', () => C.setAuto(!C.auto)); tap('tCam', () => { if (game.net && craft.dead) { spec.i++; spec.init = false; } else nextCam(); });
   // панель: тап по строке оружия - выбрать его, «ЦЕЛЬ …» - следующая цель, «ТВ» - окно контейнера
   $('wpn').addEventListener('pointerdown', (e) => {
     e.stopPropagation(); if (!mine()) return;
@@ -763,7 +853,7 @@ export function createAir(C) {
   // места по умолчанию: справа два столбца у края; «КАМ.» на сенсорных - только в онлайне, пока смотрите за союзником.
   // Низкий экран (телефон ~850×360 с кнопками Telegram, Mark 2026-10-23): верх столбцов налезал на «паузу» и «звук» - места по умолчанию
   // сжимаются: отступы и размер кнопок ×k (k = место под верхним рядом / высота столбца, не меньше 0,6); свои места игрока не трогаем
-  const COL_H = 268; // самый высокий столбец - «ОБЗОР»: 216 от низа + 52 высоты кнопки
+  const COL_H = 248; // самый высокий столбец - «ПОДСКОК» / «ПОМОЩЬ»: 196 от низа + 52 высоты кнопки
   let topProbe = null; // скрытый пробный элемент с теми же top и высотой, что у «паузы» / «звука» / «Игроков» (видны не всегда)
   function touchK() {
     try {
@@ -776,7 +866,7 @@ export function createAir(C) {
     if (!IS_TOUCH) return;
     const k = touchK(), px = (v) => Math.round(v * k);
     const R = (id, right, bottom) => { const e = $(id); e.dataset.r = `calc(${px(right)}px + var(--sa-r))`; e.dataset.b = px(bottom) + 'px'; e.dataset.k = k < 1 ? String(k) : ''; };
-    R('tFire', 12, 16); R('tFlare', 12, 96); R('tMap', 12, 156); R('tLook', 12, 216); R('tBino', 172, 76); /* «Бинокль» - над «КАМ.» */ R('tThr', 102, 16); R('tLock', 102, 76); R('tAuto', 102, 136); R('tHelp', 102, 196); R('tPop', 102, 196); // «ПОДСКОК» - только у вертолёта, «ПОМОЩЬ» - только в онлайне (вертолётов в онлайне нет)
+    R('tFire', 12, 16); R('tFlare', 12, 96); R('tMore', 12, 156); /* «Ещё» - вместо «Карты»; «Обзор», «Карта», «Бинокль», «Авто» - в ряду под ней (moreShow) */ R('tThr', 102, 16); R('tThrS', 252, 16); /* ползунок газа: левее правого столбца */ R('tLock', 102, 76); R('tHelp', 102, 196); R('tPop', 102, 196); // «ПОДСКОК» - только у вертолёта, «ПОМОЩЬ» - только в онлайне (вертолётов в онлайне нет)
     const cam = $('tCam'); cam.style.right = `calc(${px(172)}px + var(--sa-r))`; cam.style.bottom = px(16) + 'px'; cam.style.transform = k < 1 ? `scale(${k})` : ''; cam.style.transformOrigin = 'right bottom';
     applyLayout(); // свои места кнопок игрока (Настройки → «Расположение кнопок»)
   }
@@ -1270,7 +1360,7 @@ export function createAir(C) {
     if (ent) C.ls.set(ek, String(ent.i));
     const sp = opts.spawn || ent || (craft.heli ? { x: hx, y: city.groundH(hx, hz) + 120, z: hz, yaw: 0 } : { x: riverX(z0) + 1500, y: opts.photo && C.MAP === 'city' ? 1800 : 3200, z: z0, yaw: 0 });
     home.set(sp.x, city.groundH(sp.x, sp.z), sp.z); homeT = 0;
-    craft.pos.set(sp.x, sp.y, sp.z); craft.yaw = sp.yaw; craft.pitch = 0; craft.roll = 0; craft.speed = craft.heli ? 25 : startV(240); thrI = 2; craft.thr = THR_STEPS[thrI]; craft.ab = false; craft.fuel = 1; fuelWarn = 0;
+    craft.pos.set(sp.x, sp.y, sp.z); craft.yaw = sp.yaw; craft.pitch = 0; craft.roll = 0; craft.speed = craft.heli ? 25 : startV(240); thrReset(); moreShow(false); craft.ab = false; craft.fuel = 1; fuelWarn = 0;
     craft.q = null; craft.wp = craft.wr = craft.wz = 0; craft.hp = 100; fwdOf(craft, craft.vel).multiplyScalar(craft.speed); aimSync(); aim.id = null;
     { const ha = craft.heli && craft.hm.arcade; if (padArms.l) { padArms.l.innerHTML = ico(ha ? 'sideL' : 'rollL'); padArms.r.innerHTML = ico(ha ? 'sideR' : 'rollR'); } } // крестовина: вертолёт («Аркада») - шаг вбок, самолёт - крен
     if (craft.heli) { craft.landed = false; craft.col = null; heliInit(craft); craft.col = 9.81 / tmaxAcc(craft.hm, craft.pos.y, 25); hSpd = 0.25; } // управление при взлёте не подсказываем (Mark 2026-11-02: длинные подсказки в бою мешают) - оно в «?» на паузе
@@ -1353,7 +1443,7 @@ export function createAir(C) {
     for (const l of loadout) { const s = m.load.find((q) => q.key === l.key); if (s && s.rs !== undefined) l.rs = s.rs; } // начатый блок НАР (ИИ-двойник давал залпы) - как у сервера
     craft.cmFlare = m.cm.flare; craft.cmChaff = m.cm.chaff;
     const [x, y, z, yaw] = m.s;
-    craft.dead = false; craft.pos.set(x, y, z); craft.yaw = yaw; craft.pitch = 0; craft.roll = 0; craft.speed = m.back ? (m.v || 240) : startV(m.v || 240); thrI = 2; craft.thr = THR_STEPS[thrI]; craft.ab = false; craft.fuel = 1; fuelWarn = 0; zoneReset();
+    craft.dead = false; craft.pos.set(x, y, z); craft.yaw = yaw; craft.pitch = 0; craft.roll = 0; craft.speed = m.back ? (m.v || 240) : startV(m.v || 240); thrReset(); moreShow(false); craft.ab = false; craft.fuel = 1; fuelWarn = 0; zoneReset();
     craft.q = null; craft.wp = craft.wr = craft.wz = 0; craft.hp = m.hp ?? 100; fwdOf(craft, craft.vel).multiplyScalar(craft.speed); aimSync(); aim.id = null;
     podSet(null); pod.show = hasPod && !IS_TOUCH; pod.laserMan = null; pod.pickT = 0; pod.dir.set(0, -0.45, -1).normalize();
     ship.visible = true; camMode = 0; camInit = false; game.over = false;
@@ -1380,7 +1470,7 @@ export function createAir(C) {
     spec.why = tr('Волна окончена - самолёт вернулся на базу'); spec.t = 0; spec.init = false;
   }
   function stop() {
-    game.net = null; free.on = false; free.id = null; $("tLook").classList.remove("on"); zn.Z = null; zoneG.visible = false;
+    game.net = null; free.on = false; free.id = null; $("tLook").classList.remove("on"); moreShow(false); zn.Z = null; zoneG.visible = false;
     ship.visible = false; $('hud').style.display = 'none'; $('podBox').style.display = 'none'; document.body.classList.remove('flying');
     mapOn = false; mapC.style.display = 'none'; $('warn').style.display = 'none'; keys.clear(); laserSpot = null; document.body.classList.remove('spect');
   }
@@ -1604,13 +1694,19 @@ export function createAir(C) {
     const keysOf = (...k) => k.some((c) => keys.has(c));
     let rx = 0, ry = 0;
     if (keysOf('KeyA', 'ArrowLeft')) rx -= 1; if (keysOf('KeyD', 'ArrowRight')) rx += 1;
-    // вверх - нос вверх (инверсия «как в авиасимуляторах» - в настройках); крестовина - тангаж и крен кнопками, слабее ручки
+    // вверх - нос вверх (инверсия «как в авиасимуляторах» - в настройках); крестовина - тангаж и крен кнопками, полное отклонение (скорость задаёт самолёт)
     const inv = C.sens.invert ? -1 : 1;
     if (keys.has('ArrowUp')) ry += inv; if (keys.has('ArrowDown')) ry -= inv;
-    if (pad.x || pad.y) { rx += pad.x * C.sens.padK; ry += pad.y * C.sens.padK * inv; }
-    if (craft.fuel > 0) craft.thr = THR_STEPS[thrI];
-    const tt = craft.fuel <= 0 ? tr('двиг.') + ico('close', 'ii') : thrI === AB_I ? (craft.fm && !(craft.fm.s.ab > 0) ? tr('макс.') : tr('форсаж')) : `${Math.round(craft.thr * 100)}%`, tb = $('tThr');
-    if (tb._t !== tt) { tb._t = tt; tb.innerHTML = `${ico('throttle')}<small>${tt}</small>`; tb.title = tr('Газ'); tb.classList.toggle('ab', thrI === AB_I); } // спидометр и газ
+    padTick(); if (pad.x || pad.y) { rx += pad.x; ry += pad.y * inv; }
+    thrSync(); if (craft.fuel > 0) craft.thr = thrVal();
+    const tt = craft.fuel <= 0 ? tr('двиг.') + ico('close', 'ii') : thrI === AB_I ? tr('форсаж') : `${Math.round(craft.thr * 100)}%`, tb = $('tThr'), tk = tt + '|' + thrI + '|' + THR_STEPS.join();
+    if (tb._t !== tk) { // кнопка газа: значок, подпись и ряд квадратиков по ступеням (закрашены те, что не выше текущей; форсаж - золотой)
+      tb._t = tk; const pos = (v) => (v * 82).toFixed(1) /* 0…100 % - на 0…82 % ширины, форсаж - отдельно у правого края */, live = craft.fuel > 0;
+      tb.innerHTML = `${ico('throttle')}<small>${tt}</small><span class="pips">${THR_STEPS.map((v, i) => `<i class="${i === AB_I ? 'ab' : ''}${live && (i === AB_I ? thrI === AB_I : v <= craft.thr + 1e-6) ? ' on' : ''}" style="left:${i === AB_I ? 100 : pos(v)}%"></i>`).join('')}</span>`;
+      tb.title = tr('Газ'); tb.classList.toggle('ab', thrI === AB_I);
+    } // спидометр и газ
+    if (thrSliderOn()) slDraw();
+    if (moreB._mk !== C.auto) { moreB._mk = C.auto; moreB.classList.toggle('mk', C.auto); } // «Авто» включён - золотой уголок на «Ещё» (кнопка «Авто» спрятана в ряду)
     if (stick.id !== null) { rx += stick.x; ry -= stick.y * inv; }
     let rz = 0;
     if (bino.on && (rx || ry || stick.id !== null || aim.id != null || free.on)) binoOff(); // взялся за управление - обычный вид, самолёт твой
@@ -1637,9 +1733,8 @@ export function createAir(C) {
       DP.normalize(); aim.yaw = Math.atan2(-DP.x, -DP.z); aim.pitch = clamp(Math.asin(DP.y), near > craft.pos.y - 40 ? -0.05 : -0.35, near > craft.pos.y ? 0.75 : 0.35); // гора близко - круче вверх и не снижаться
       const o = aimSteer(); rx = o[0]; ry = o[1]; rz = o[2];
     } else if (aimOn()) { if (rx || ry) aimSync(); else { const o = aimSteer(); rx = o[0]; ry = o[1]; rz = o[2]; } } // крестовина нажата - взгляд за носом
-    craft.ab = thrI === AB_I && craft.fuel > 0 && !(craft.fm && !(craft.fm.s.ab > 0))&& !craft.noAB; // без форсажа (Су-25) - верхняя ступень = 100 %
+    craft.ab = AB_I >= 0 && thrI === AB_I && craft.fuel > 0 && !craft.noAB; // без форсажа (Су-25) ступени Ф нет (AB_I = -1)
     systems(dt);
-    if (!aimOn()) { rx *= C.sens.stick; ry *= C.sens.stick; }
     pilotStep(craft, rx, ry, dt, craft.pos.y > CITY.CEIL ? 0.3 : 0, 0.8, rz);
     const top = Math.max(city.topAt(craft.pos.x, craft.pos.z), CITY.WATER_Y);
     if (craft.pos.y < top + 1.5) {
@@ -1660,7 +1755,7 @@ export function createAir(C) {
   // вперёд/назад плавно меняют её, кнопка «газ» листает ступени, A/D и ручка вбок - поворот (на скорости - вираж с креном), ↑/↓ и кнопки - высота,
   // ←/→ и кнопки вбок - шаг в сторону. «Реализм» - как раньше: ручка - наклон диска, педали, шаг винта
   function heliFly(dt) {
-    const k = (...c) => (c.some((q) => keys.has(q)) ? 1 : 0), st = stick.id !== null, arc = craft.hm.arcade;
+    padTick(); const k = (...c) => (c.some((q) => keys.has(q)) ? 1 : 0), st = stick.id !== null, arc = craft.hm.arcade;
     const vh = Math.hypot(craft.vel.x, craft.vel.z), fast = clamp((vh - 15) / 20, 0, 1);
     HU.col = clamp(k('ArrowUp', 'ShiftLeft', 'ShiftRight') - k('ArrowDown', 'ControlLeft', 'ControlRight') + pad.y, -1, 1);
     if (arc) {
@@ -1792,8 +1887,8 @@ export function createAir(C) {
     resize() { layoutTouch(); layoutPod(); },
     pop, podState: () => ({ tgt: pod.tgt && tgtName(pod.tgt), why: pod.why, lock: !!pod.lock, lockD: pod.lock ? Math.round(craft.pos.distanceTo(pod.lock)) : -1 }), // подскок и прицел - для стендов
     // вертолёт - своё управление (2026-10-22: в паузе были клавиши самолёта: тангаж, форсаж)
-    pauseHelp: () => (craft.heli ? heliHelp() : IS_TOUCH ? tr('{0} «Газ» - ступени, после 100 % - форсаж. «Ловушки» - ЛТЦ и диполи разом (зажмите - очередью). Панель слева: тап по оружию - выбор, по строке цели - следующая цель, «ТВ» - окно контейнера (тап по окну - увеличение). Контейнер захватывает цель сам: 1-18 км, высота от 400 м, цель не закрыта домами.', [aimOn() ? tr('Ведите пальцем по экрану - камера поворачивается, самолёт летит туда, куда она смотрит (белый кружок). Крестовина - точные крен и тангаж.') : tr('Левая половина экрана - ручка.')])
-      : tr('Стрелки - тангаж и крен · A/D - крен · W/S - газ ступенями (после 100 % - форсаж) · Shift - форсаж вкл/выкл · Пробел/F - сброс · Q - оружие · V - камера · N - камера за оружием · L - обзор (камера мышью, самолёт держит курс)<br>Контейнер захватывает цель сам (1-18 км, высота от 400 м, цель не закрыта домами) · R - следующая цель · G - окно контейнера · Z - увеличение · O - лазер<br>X - ловушки (ЛТЦ и диполи; зажать - очередью) · M - карта · Esc - пауза')),
+    pauseHelp: () => (craft.heli ? heliHelp() : IS_TOUCH ? tr('{0} «Газ» - ступени или ползунок (их выбирают в настройках), форсаж - последняя ступень. «Ловушки» - ЛТЦ и диполи разом (зажмите - очередью). Под «⋯» справа вверху - «Обзор», «Карта», «Бинокль», «Авто». Панель слева: тап по оружию - выбор, по строке цели - следующая цель, «ТВ» - окно контейнера (тап по окну - увеличение). Контейнер захватывает цель сам: 1-18 км, высота от 400 м, цель не закрыта домами.', [aimOn() ? tr('Ведите пальцем по экрану - камера поворачивается, самолёт летит туда, куда она смотрит (белый кружок). Крестовина - точные крен и тангаж.') : tr('Левая половина экрана - ручка.')])
+      : tr('Стрелки - тангаж и крен · A/D - крен · W/S - газ по выбранным ступеням (форсаж - последняя) · Shift - форсаж вкл/выкл · Пробел/F - сброс · Q - оружие · V - камера · N - камера за оружием · L - обзор (камера мышью, самолёт держит курс)<br>Контейнер захватывает цель сам (1-18 км, высота от 400 м, цель не закрыта домами) · R - следующая цель · G - окно контейнера · Z - увеличение · O - лазер<br>X - ловушки (ЛТЦ и диполи; зажать - очередью) · M - карта · Esc - пауза')),
   };
   return api;
 }

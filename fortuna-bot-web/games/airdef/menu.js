@@ -338,6 +338,13 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
     const r = await prefetchAll(modelUrls(), (d, n, b, tot) => { pf.k = tot ? b / tot : d / n; pf.txt = tr('Скачано {0} из {1} МБ (файлов {2} из {3})', [Math.round(b / 1048576), Math.round(tot / 1048576), d, n]); pfShow(); }, pf.stop);
     pf.run = false; pf.done = true; pf.txt = pf.stop.stop ? tr('Остановлено. Скачанное сохранено, остальное догрузится по ходу игры.') : r.fail ? tr('Готово. Не скачалось файлов: {0}, они догрузятся по ходу игры.', [r.fail]) : tr('Готово: всё на устройстве, в бою ничего не догружается.'); pfShow(); offInfo();
   }
+  // «Газ»: сетка ступеней 0…100 (нажатие - вкл / выкл, не меньше двух) + «Ф» (форсаж, всегда последний) и строка «как пойдёт газ по кнопке»
+  const THR_ALL = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
+  function thrBox() {
+    const on = C.sens.thrSteps, cyc = [...on.map((v) => v + '%'), tr('Ф'), on[0] + '%'].join(' → ');
+    return `<div class="thrg">${THR_ALL.map((v) => `<button data-thr="${v}" class="${on.includes(v) ? 'on' : ''}">${v}</button>`).join('')}<button class="ab" disabled title="${tr('Форсаж - всегда последняя ступень')}">${tr('Ф')}</button></div>
+      <p class="hint thrc">${tr('Кнопка «Газ»: {0}', [cyc])}</p>`;
+  }
   function renderSet() {
     setTimeout(offInfo, 0); setTimeout(pfSize, 0); // «На устройстве»: занято, доступно ли хранилище; объём «Скачать всё»
     $('tab-set').innerHTML = `<div class="cat-h">${tr('Язык · Language')}</div><div class="seg" data-seg="lang">${LANGS.map(([k, l]) => `<button data-v="${k}" class="${k === LANG ? 'on' : ''}">${l}</button>`).join('')}</div>
@@ -363,12 +370,22 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
       <label class="chk"><input type="checkbox" id="sBino" ${C.sens.bino !== false ? 'checked' : ''}> ${tr('кнопка «Бинокль» в вылете (B): вид на цель и на своё оружие, самолёт держит курс')}</label>
       <label class="chk"><input type="checkbox" id="sBinoThr" ${C.sens.binoThreat ? 'checked' : ''}${C.sens.bino === false ? ' disabled' : ''}> ${tr('бинокль работает и при пуске ракеты по вам')}</label>
       <div class="sub">${tr('Самолёт')}</div>
-      <label class="chk">${tr('ручка (тангаж и крен)')} <input type="range" id="sStick" min="0.4" max="1.8" step="0.05" value="${C.sens.stick}"> <b id="vStick">×${C.sens.stick.toFixed(2)}</b></label>
+      <label class="chk">${C.IS_TOUCH ? tr('скорость камеры пальцем') : tr('скорость обзора мышью')} <input type="range" id="sStick" min="0.4" max="1.8" step="0.05" value="${C.sens.stick}"> <b id="vStick">×${C.sens.stick.toFixed(2)}</b></label>
       <label class="chk"><input type="checkbox" id="sInv" ${C.sens.invert ? 'checked' : ''}> ${tr('инверсия тангажа: вверх - нос вниз (как в авиасимуляторах)')}</label>
       ${C.IS_TOUCH ? `<label class="chk"><input type="checkbox" id="sAim" ${C.sens.aim !== false ? 'checked' : ''}> ${tr('наведение камерой: самолёт летит туда, куда смотрит камера (выкл - ручка в левой половине экрана)')}</label>` : ''}
       ${C.IS_TOUCH ? `<label class="chk"><input type="checkbox" id="sPadOn" ${C.sens.pad ? 'checked' : ''}> ${tr('крестовина: тангаж и крен кнопками (точные манёвры)')}</label>
-      <label class="chk">${tr('сила крестовины')} <input type="range" id="sPadK" min="0.15" max="1" step="0.05" value="${C.sens.padK}"> <b id="vPadK">${Math.round(C.sens.padK * 100)}%</b></label>` : ''}
+      <div id="padRows"${C.sens.pad ? '' : ' style="display:none"'}>
+        <div class="prow sr"><span>${tr('крен ↺ ↻')}</span>${seg('padRoll', C.sens.padRoll, [['hold', tr('по удержанию')], ['tap', tr('по нажатию')]])}</div>
+        <div class="prow sr"><span>${tr('тангаж ▲ ▼')}</span>${seg('padPitch', C.sens.padPitch, [['hold', tr('по удержанию')], ['tap', tr('по нажатию')]])}</div>
+        <p class="hint">${tr('По удержанию: рули отклонены, пока палец на кнопке. По нажатию: нажали - рули отклонены и остаются, нажали ту же кнопку ещё раз - отпущены, противоположную - переключились; тап в середину крестовины - всё выключить.')}</p>
+        <p class="hint">${tr('Скорость крена и тангажа зависит от самолёта: масса, скорость, высота, повреждения. Тяжёлый бомбардировщик поворачивает медленнее истребителя.')}</p>
+      </div>` : ''}
       <label class="chk"><input type="checkbox" id="sCmBurst" ${C.sens.cmBurst ? 'checked' : ''}> ${tr('ловушки по нажатию: серия из 3 залпов (выкл - один залп). Удержание кнопки или X / C - очередью')}</label>
+      <div class="sub">${tr('Газ')}</div>
+      <div class="prow sr"><span>${tr('ступени газа в бою')}</span><span class="hint" style="margin:0">${tr('нажмите, чтобы включить или выключить')}</span></div>
+      <div id="thrBox">${thrBox()}</div>
+      ${C.IS_TOUCH ? `<div class="prow sr"><span>${tr('газ в бою')}</span>${seg('thrMode', C.sens.thrMode, [['btn', tr('кнопка ступенями')], ['slider', tr('ползунок')]])}</div>` : ''}
+      <p class="hint">${tr('Форсаж всегда последний, если он есть у самолёта. На ПК W / S - по этим же ступеням, Shift - форсаж.')}</p>
       <div class="sub">${tr('Оператор ЗРК')}</div>
       <label class="chk">${tr('поворот обзора оператора ЗРК')} <input type="range" id="sLook" min="0.3" max="2.5" step="0.05" value="${C.sens.look}"> <b id="vLook">×${C.sens.look.toFixed(2)}</b></label>
       <div class="sub">${tr('Помощь в бою')}</div>
@@ -417,6 +434,16 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
     const fc = e.target.closest('[data-seg="fpsCap"] [data-v]'); if (fc) { C.setFpsCap(fc.dataset.v); renderSet(); return; } // предел кадров - сразу, без перезапуска
     const sp = e.target.closest('[data-seg="sharp"] [data-v]'); if (sp) { if (sp.dataset.v !== C.SHARP) { ls.set('fortuna_airdef_sharp', sp.dataset.v); location.reload(); } return; } // чёткость - перезапуск
     const lg = e.target.closest('[data-seg="lang"] [data-v]'); if (lg) { if (lg.dataset.v !== LANG) { setLang(lg.dataset.v); const u = new URL(location.href); u.searchParams.delete('lang'); location.href = u.href; } return; } // язык - перезагрузка (Mark 2026-10-21)
+    const th = e.target.closest('[data-thr]'); if (th) { // ступень газа вкл / выкл (минимум две); набор - новым массивом, air.js увидит смену
+      const v = +th.dataset.thr, on = C.sens.thrSteps;
+      if (on.includes(v)) { if (on.length <= 2) return; C.sens.thrSteps = on.filter((x) => x !== v); } else C.sens.thrSteps = [...on, v].sort((a, b) => a - b);
+      snd.click(); C.saveSens(); $('thrBox').innerHTML = thrBox(); return;
+    }
+    const sg = e.target.closest('[data-seg="padRoll"] [data-v], [data-seg="padPitch"] [data-v], [data-seg="thrMode"] [data-v]'); if (sg) {
+      const id = sg.parentNode.dataset.seg, v = sg.dataset.v; snd.click();
+      if (id === 'thrMode') { C.sens.thrMode = v === 'slider' ? 'slider' : 'btn'; document.body.classList.toggle('thrSlider', C.IS_TOUCH && C.sens.thrMode === 'slider'); } else C.sens[id] = v === 'tap' ? 'tap' : 'hold';
+      C.saveSens(); renderSet(); return;
+    }
     if (e.target.id === 'sApplyGfx') { location.reload(); return; }
     if (e.target.id === 'sPrefetch') { prefetch(); return; }
     if (g) { ls.set('fortuna_airdef_gfx', g.dataset.gfx); const u = new URL(location.href); u.searchParams.delete('gfx'); location.href = u.href; }
@@ -436,8 +463,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
     if (e.target.id === 'sAim') { C.sens.aim = e.target.checked; C.saveSens(); }
     if (e.target.id === 'sCmBurst') { C.sens.cmBurst = e.target.checked; C.saveSens(); }
     if (e.target.id === 'sKeys') { C.sens.keys = e.target.checked; C.saveSens(); }
-    if (e.target.id === 'sPadOn') { C.sens.pad = e.target.checked; C.saveSens(); document.body.classList.toggle('nopad', !C.sens.pad); }
-    if (e.target.id === 'sPadK') { C.sens.padK = +e.target.value; $('vPadK').textContent = Math.round(C.sens.padK * 100) + '%'; C.saveSens(); }
+    if (e.target.id === 'sPadOn') { C.sens.pad = e.target.checked; C.saveSens(); document.body.classList.toggle('nopad', !C.sens.pad); const pr = $('padRows'); if (pr) pr.style.display = C.sens.pad ? '' : 'none'; }
     if (e.target.id === 'sFs') C.shell.setFs(e.target.checked);
     if (e.target.id === 'sFsHint') C.shell.setFsHint(e.target.checked); // Mark 2026-10-27: кнопку / плашку полного экрана можно убрать
     if (e.target.id === 'sMute') { snd.unlock(); snd.setMuted(!e.target.checked); C.muteIco(); }

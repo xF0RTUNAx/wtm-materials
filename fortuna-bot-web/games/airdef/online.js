@@ -394,8 +394,8 @@ export function createOnline(C, ctrls) {
     // помощь союзнику: на карте - знак у места (рисуют air.js / defense.js); не на карте - подсвечена кнопка карты и знак рядом
     // (на ПК кнопки нет - знак и подсказка вверху по центру)
     const air = C.ctrl === ctrls.air, onMap = air ? ctrls.air.mapOn : C.ctrl === ctrls.defense ? ctrls.defense.st.view === 'map' : true, glow = helps.length > 0 && !onMap;
-    const mb = $(air ? 'tMap' : 'opMap'), r = mb.getBoundingClientRect ? mb.getBoundingClientRect() : null;
-    for (const id of ['tMap', 'opMap']) { const on = glow && id === mb.id; if ($(id).classList.contains('helpGlow') !== on) $(id).classList.toggle('helpGlow', on); }
+    const mb = $(air ? 'tMore' : 'opMap'), r = mb.getBoundingClientRect ? mb.getBoundingClientRect() : null; // у самолёта «Карта» спрятана под «Ещё» (ряд открывается по нему)
+    for (const id of ['tMore', 'tMap', 'opMap']) { const on = glow && (id === mb.id || (air && id === 'tMap')); if ($(id).classList.contains('helpGlow') !== on) $(id).classList.toggle('helpGlow', on); }
     if (glow) {
       const h = helps[helps.length - 1];
       if (r && r.width) C.drawWarn(hx, r.left - 16, r.top + r.height / 2, 10);

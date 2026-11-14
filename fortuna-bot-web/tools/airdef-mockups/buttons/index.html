@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Кнопки боя: макеты</title>
+<link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=Oswald:wght@500;600&display=swap" rel="stylesheet">
+<style>
+/* Макеты Mark 2026-11-14: «слишком много кнопок на экране» - редкие кнопки прячутся в общую и раскрываются по нажатию.
+   Кадры 844×390, фон bg_battle.jpg (bg_shots.js: бой без правых кнопок, «Пуск» и крестовина на месте). ?f=<id> - один кадр. */
+:root { --th-ac: #e8b04a; --th-tx: #e9e6dc; --th-dim: #a9b19c; --th-line: #3a4334; --page: #0b0e0a; --card: #141912; }
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--page); color: var(--th-tx); font: 15px/1.45 'Golos Text', -apple-system, sans-serif; }
+body { padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); padding-block: 14px 40px; }
+h1 { font: 600 24px/1.15 'Oswald', sans-serif; letter-spacing: .03em; margin: 4px 0; }
+.lead { color: var(--th-dim); max-width: 78ch; margin: 0 0 14px; } .lead b { color: var(--th-tx); }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 560px), 1fr)); gap: 18px; }
+.card { background: var(--card); border: 1px solid #252c21; padding: 12px; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.card h3 { margin: 0; font: 600 17px 'Oswald', sans-serif; letter-spacing: .03em; } .card h3 i { font-style: normal; color: var(--th-ac); margin-right: 6px; }
+.card p { margin: 0; color: var(--th-dim); font-size: 13.5px; } .card p b { color: var(--th-tx); }
+.cap { font: 600 12px 'Golos Text', sans-serif; color: var(--th-dim); margin-top: 2px; }
+.ph { position: relative; width: 100%; aspect-ratio: 844 / 390; overflow: hidden; background: #000; }
+.fr { position: absolute; left: 0; top: 0; width: 844px; height: 390px; transform-origin: 0 0; background: url('bg_battle.jpg') center / cover; }
+.solo h1, .solo .lead { display: none; } .solo .grid { display: block; }
+.tb { position: absolute; width: 62px; height: 52px; background: rgba(16,20,15,.5); border: 1px solid rgba(233,230,220,.26); color: var(--th-tx); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; font: 600 9.5px 'Golos Text', sans-serif; cursor: pointer; user-select: none; -webkit-user-select: none; transition: transform .16s, opacity .16s; }
+.tb svg { width: 21px; height: 21px; fill: currentColor; } .tb small { font: 600 9px 'Golos Text', sans-serif; opacity: .9; }
+.tb.sq { width: 36px; height: 36px; } .tb.sq svg { width: 18px; height: 18px; }
+.tb.on { border-color: var(--th-ac); color: var(--th-ac); background: rgba(232,176,74,.18); }
+.tb.new { box-shadow: 0 0 0 2px rgba(232,176,74,.85); }
+.tb .cor { position: absolute; right: 3px; bottom: 3px; width: 0; height: 0; border-left: 7px solid transparent; border-bottom: 7px solid var(--th-tx); opacity: .8; }
+.pips { display: flex; gap: 2px; margin-top: 1px; } .pips i { width: 4px; height: 4px; border: 1px solid rgba(233,230,220,.6); } .pips i.on { background: var(--th-tx); } .pips i.ab { border-color: var(--th-ac); }
+.tray { position: absolute; background: rgba(13,17,12,.82); border: 1px solid var(--th-line); }
+.lbl { position: absolute; font: 700 10px 'Golos Text', sans-serif; color: #fff; text-shadow: 0 1px 2px #000, 0 0 4px #000; white-space: nowrap; pointer-events: none; }
+.ring { position: absolute; border: 2px dashed var(--th-ac); border-radius: 50%; pointer-events: none; }
+.tag { position: absolute; left: 8px; top: 8px; background: rgba(0,0,0,.62); color: #fff; font: 600 11px 'Golos Text', sans-serif; padding: 3px 8px; z-index: 5; }
+.hand { position: absolute; width: 26px; height: 26px; border-radius: 50%; background: rgba(255,255,255,.35); border: 2px solid #fff; pointer-events: none; z-index: 6; }
+.count { display: inline-block; background: #1c2318; border: 1px solid var(--th-line); padding: 1px 7px; font: 700 12px 'Golos Text', sans-serif; color: var(--th-tx); margin-left: 6px; }
+</style></head>
+<body>
+<h1>Кнопки в бою: как убрать лишнее</h1>
+<p class="lead">Сейчас справа 8 кнопок и «Пуск». <b>Всегда на виду</b> остаются те, что жмут постоянно: «Пуск», «Газ», «Цель», «Ловушки». Редкие - <b>«Обзор», «Карта», «Бинокль», «Авто»</b> - прячутся и появляются только по нажатию. В каждом варианте два кадра: как обычно и раскрыто. На кадрах можно нажимать.</p>
+<div class="grid">
+  <div class="card"><h3><i>1</i>Ряд из кнопки «⋯»</h3><p>Одна кнопка «⋯» на месте «Карты». Нажал - влево выезжает ряд из четырёх редких кнопок; выбрал - ряд прячется (или сам через 3 с). <span class="count">5 кнопок + «Пуск»</span></p>
+    <div class="ph"><div class="fr" id="v1a"></div></div><div class="cap">обычно</div><div class="ph"><div class="fr" id="v1b"></div></div><div class="cap">после нажатия «⋯»</div></div>
+  <div class="card"><h3><i>2</i>Шторка сверху</h3><p>Кнопка «≡» в верхнем ряду, рядом с полным экраном, звуком и паузой. Открывает полосу редких кнопок под ним - небо почти пустое, пальцы правой руки им не мешают. <span class="count">4 кнопки + «Пуск»</span></p>
+    <div class="ph"><div class="fr" id="v2a"></div></div><div class="cap">обычно</div><div class="ph"><div class="fr" id="v2b"></div></div><div class="cap">после нажатия «≡»</div></div>
+  <div class="card"><h3><i>3</i>Группы, как инструменты</h3><p>Кнопка «Вид» помнит, что жали последним (уголок - есть ещё): <b>нажатие</b> - это действие, <b>удержание или смахнуть влево</b> - рядом «Обзор», «Бинокль», «Карта». «Авто» отдельно. <span class="count">6 кнопок + «Пуск»</span></p>
+    <div class="ph"><div class="fr" id="v3a"></div></div><div class="cap">обычно</div><div class="ph"><div class="fr" id="v3b"></div></div><div class="cap">удержание «Вида»</div></div>
+  <div class="card"><h3><i>4</i>Только нужное</h3><p><b>Карта</b> - нажатием на круг радара. <b>«Обзор» и «Авто»</b> - маленькими в верхнем ряду. <b>«Бинокль»</b> появляется рядом с «Целью», только когда есть цель или своё оружие в полёте. Ничего раскрывать не надо. <span class="count">4 кнопки + «Пуск»</span></p>
+    <div class="ph"><div class="fr" id="v4a"></div></div><div class="cap">обычно</div><div class="ph"><div class="fr" id="v4b"></div></div><div class="cap">цель захвачена - появился «Бинокль»</div></div>
+</div>
+<script>
+const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
+let IC = {};
+const ico = (n) => { const v = IC[n] || ''; return `<svg viewBox="0 0 512 512">${v[0] === '<' ? v : `<path d="${v}"/>`}</svg>`; };
+function fit() { for (const f of $$('.fr')) f.style.transform = `scale(${f.parentElement.clientWidth / 844})`; }
+addEventListener('resize', fit);
+const pips = () => `<span class="pips">${[1, 1, 1, 1, 0, 0].map((o, i) => `<i class="${o ? 'on' : ''} ${i === 5 ? 'ab' : ''}"></i>`).join('')}</span>`;
+const B = (x, y, ic, cap, cls = '', extra = '') => `<div class="tb ${cls}" style="left:${x}px;top:${y}px" data-ic="${ic}">${ico(ic)}${cap ? `<small>${cap}</small>` : ''}${extra}</div>`;
+const SQ = (x, y, ic, cls = '') => `<div class="tb sq ${cls}" style="left:${x}px;top:${y}px">${ico(ic)}</div>`;
+// всегда на виду: «Газ», «Цель», «Ловушки» (места игры: 633,322 / 633,262 / 723,242); «Пуск» - на фоне
+const CORE = () => B(633, 322, 'throttle', '80%', '', pips()) + B(633, 262, 'target', 'Цель') + B(723, 242, 'flares', 'Ловушки');
+const RARE = [['camera', 'Обзор'], ['map', 'Карта'], ['bino', 'Бинокль'], ['auto', 'Авто']];
+function v1(id, open) {
+  const fr = $('#' + id);
+  const row = open ? `<div class="tray" style="left:443px;top:176px;width:276px;height:64px"></div>` + RARE.map(([ic, c], i) => B(653 - i * 70, 182, ic, c, 'new')).join('') : '';
+  fr.innerHTML = CORE() + row + B(723, 182, open ? 'close' : 'list', open ? 'Закрыть' : 'Ещё', open ? 'on' : '');
+  fr.onclick = (e) => { if (e.target.closest('.tb[data-ic="list"], .tb[data-ic="close"]') || (open && e.target.closest('.tb.new'))) v1(id, !open); };
+}
+function v2(id, open) {
+  const fr = $('#' + id);
+  const row = open ? `<div class="tray" style="left:513px;top:52px;width:278px;height:64px"></div>` + RARE.map(([ic, c], i) => B(723 - i * 68, 58, ic, c, 'new')).join('') : '';
+  fr.innerHTML = CORE() + row + SQ(629, 10, open ? 'close' : 'list', open ? 'on' : '');
+  fr.onclick = (e) => { if (e.target.closest('.tb.sq') || (open && e.target.closest('.tb.new'))) v2(id, !open); };
+}
+function v3(id, open) {
+  const fr = $('#' + id);
+  const row = open ? `<div class="tray" style="left:513px;top:176px;width:206px;height:64px"></div>` + [['bino', 'Бинокль'], ['map', 'Карта'], ['camera', 'Обзор']].map(([ic, c], i) => B(653 - i * 70, 182, ic, c, i === 2 ? 'new on' : 'new')).join('') +
+    `<div class="lbl" style="left:520px;top:154px">смахните на нужную и отпустите</div><div class="hand" style="left:${600}px;top:196px"></div>` : '';
+  fr.innerHTML = CORE() + B(723, 182, 'camera', 'Вид', open ? 'on' : '', '<i class="cor"></i>') + B(723, 122, 'auto', 'Авто') + row;
+  fr.onclick = (e) => { if (e.target.closest('.tb[data-ic="camera"]') || (open && e.target.closest('.tb.new'))) v3(id, !open); };
+}
+function v4(id, tgt) {
+  const fr = $('#' + id);
+  fr.innerHTML = CORE() + SQ(541, 10, 'camera') + SQ(585, 10, 'auto') +
+    `<div class="ring" style="left:375px;top:2px;width:94px;height:94px"></div><div class="lbl" style="left:378px;top:99px">нажмите - карта</div>` +
+    (tgt ? B(563, 262, 'bino', 'Бинокль', 'new') : '');
+  fr.onclick = () => v4(id, !tgt);
+}
+fetch('icons.json').then((r) => r.json()).then((j) => {
+  IC = j; v1('v1a', false); v1('v1b', true); v2('v2a', false); v2('v2b', true); v3('v3a', false); v3('v3b', true); v4('v4a', false); v4('v4b', true);
+  const f = new URLSearchParams(location.search).get('f');
+  if (f) { document.body.classList.add('solo'); for (const c of $$('.card')) c.style.display = c.querySelector('#' + f) ? '' : 'none'; for (const p of $$('.ph')) if (!p.querySelector('#' + f)) p.style.display = 'none'; for (const c of $$('.cap')) c.style.display = 'none'; }
+  fit();
+});
+</script>
+</body></html>
