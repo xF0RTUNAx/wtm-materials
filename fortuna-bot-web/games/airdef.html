@@ -563,7 +563,7 @@
   @media (max-height: 300px) { body.hgOn #mbtns > button:not(#mbFold) small, body.hgOn #shopBtn .thumb { display: none; } }
   body.hgOn .mpanel { top: calc(58px + var(--sa-t) + var(--tg-t)); bottom: calc(102px + var(--sa-b)); right: calc(14px + var(--sa-r)); width: min(320px, 36vw); background: rgba(14,17,15,.8); border-color: rgba(84,96,70,.7); }
   body.hgOn.hgAir .mphead { padding: 0; height: 0; } body.hgOn.hgAir .mphead > :not(#mpClose) { display: none; } body.hgOn.hgAir #mpClose { left: -38px; right: auto; top: 0; width: 31px; height: 31px; background: rgba(14,17,15,.84); border: 1px solid rgba(84,96,70,.75); }
-  body.hgOn .msheet { left: calc(14px + var(--sa-l)); top: calc(58px + var(--sa-t) + var(--tg-t)); }
+  body.hgOn .msheet { left: calc(14px + var(--sa-l)); top: calc(36px + var(--sa-t) + var(--tg-t)); bottom: max(6px, calc(var(--sa-b) - 12px)); } /* выше - почти до кнопок «Вылет», «Оборона»… и чуть ниже (Mark 2026-11-14) */
   body.hgOn #assetLoad { bottom: calc(100px + var(--sa-b)); }
   body.hgOn #menu #startBtn { position: absolute; z-index: 3; right: calc(14px + var(--sa-r)); bottom: calc(10px + var(--sa-b)); width: 190px; height: 82px; margin: 0; padding: 0 22px; border: 0; background: url(airdef/ui/quests/btn_take.webp) center / 100% 100% no-repeat; font: 600 26px/1.05 'Oswald', sans-serif; letter-spacing: .1em; text-transform: uppercase; color: #2a1d08; text-shadow: 0 1px 0 rgba(255,236,190,.55); box-shadow: none; }
   body.hgOn #menu #startBtn:hover { filter: brightness(1.08); background: url(airdef/ui/quests/btn_take.webp) center / 100% 100% no-repeat; } body.hgOn #menu #startBtn.long { font-size: 18px; letter-spacing: .04em; }

@@ -278,15 +278,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "TU26",
-  "author": "manilov.ap",
-  "url": "https://sketchfab.com/3d-models/tu26-52e40c8b03224f1bbba836965520a362",
-  "license": "CC-BY-4.0",
-  "files": [
-   "e_tu22m2"
-  ]
- },
- {
   "title": "Mig25",
   "author": "manilov.ap",
   "url": "https://sketchfab.com/3d-models/mig25-afe67617c5294dce9056106a22f640ff",
@@ -383,15 +374,6 @@ export const CREDITS = [
   "license": "CC-BY-4.0",
   "files": [
    "e_mig29k"
-  ]
- },
- {
-  "title": "T4",
-  "author": "manilov.ap",
-  "url": "https://sketchfab.com/3d-models/t4-1b9171a6210b427fb2493af3947b1c26",
-  "license": "CC-BY-4.0",
-  "files": [
-   "e_t4"
   ]
  },
  {

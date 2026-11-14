@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Управление: макеты</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=Oswald:wght@500;600&display=swap" rel="stylesheet">
+<style>
+/* Макеты Mark 2026-11-14: крестовина (удержание / нажатие), ступени газа, газ в бою, редактор кнопок.
+   Кадры 844×390 - как телефон боком; фоны - кадры игры (bg_shots.js, ../hud-loadout/bg_hangar.jpg). ?s=1..4 - раздел, ?f=<id> - один кадр. */
+:root { --th-bg: rgba(16,20,15,.9); --th-bg2: rgba(16,20,15,.58); --th-line: #3a4334; --th-ac: #e8b04a; --th-tx: #e9e6dc; --th-dim: #a9b19c;
+  --page: #0b0e0a; --card: #141912; --ink: #e9e6dc; --dim: #a9b19c; --ac: #e8b04a; }
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--page); color: var(--ink); font: 15px/1.45 'Golos Text', -apple-system, 'Segoe UI', sans-serif; }
+body { padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); padding-block: 14px 40px; }
+h1 { font: 600 24px/1.15 'Oswald', sans-serif; letter-spacing: .03em; margin: 4px 0 4px; }
+.lead { color: var(--dim); max-width: 70ch; margin: 0 0 12px; }
+nav { display: flex; flex-wrap: wrap; gap: 4px; margin: 10px 0 16px; position: sticky; top: 0; z-index: 5; background: var(--page); padding: 6px 0; }
+nav button { border: 1px solid var(--th-line); background: #151a12; color: var(--ink); font: 600 14px 'Golos Text', sans-serif; padding: 8px 12px; cursor: pointer; border-radius: 0; }
+nav button.on { background: var(--ink); color: #141912; border-color: var(--ink); }
+section { display: none; } section.on { display: block; }
+.sh { font: 600 19px 'Oswald', sans-serif; letter-spacing: .03em; margin: 6px 0 4px; }
+.note { color: var(--dim); max-width: 78ch; margin: 0 0 12px; }
+.note b { color: var(--ink); }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 520px), 1fr)); gap: 18px; }
+.card { background: var(--card); border: 1px solid #252c21; padding: 12px; min-width: 0; }
+.card h3 { margin: 0 0 2px; font: 600 17px 'Oswald', sans-serif; letter-spacing: .03em; } .card h3 i { font-style: normal; color: var(--ac); margin-right: 6px; }
+.card p { margin: 0 0 10px; color: var(--dim); font-size: 13.5px; }
+.ph { position: relative; width: 100%; aspect-ratio: 844 / 390; overflow: hidden; background: #000; }
+.ph > .fr { position: absolute; left: 0; top: 0; width: 844px; height: 390px; transform-origin: 0 0; background-size: cover; background-position: center; font-family: 'Golos Text', sans-serif; color: var(--th-tx); }
+.solo .grid { display: block; } .solo nav, .solo h1, .solo .lead, .solo .sh, .solo .note { display: none; }
+
+/* ── игровые элементы ── */
+.sheet { position: absolute; left: 61px; top: 36px; width: 735px; height: 345px; background: rgba(13,17,12,.97); border: 1px solid var(--th-line); overflow: hidden; }
+.sheet .hd { display: flex; align-items: center; justify-content: space-between; height: 54px; padding: 0 14px; border-bottom: 1px solid var(--th-line); }
+.sheet .hd b { font: 500 17px 'Oswald', sans-serif; letter-spacing: .03em; } .sheet .hd span { width: 33px; height: 33px; border: 1px solid var(--th-line); display: grid; place-items: center; font-size: 15px; }
+.sheet .bd { padding: 0 14px 10px; height: 290px; overflow: hidden; }
+.sub { display: flex; align-items: center; gap: 10px; color: var(--th-dim); font: 700 10.5px 'Golos Text', sans-serif; letter-spacing: .12em; text-transform: uppercase; margin: 6px 0 2px; }
+.sub::after { content: ''; flex: 1; height: 1px; background: var(--th-line); }
+.row { display: flex; align-items: center; gap: 10px; min-height: 34px; border-bottom: 1px solid #262d22; font-size: 12.5px; padding: 3px 1px; }
+.row .lb { flex: 0 0 auto; } .row .sp { flex: 1; }
+.row small { color: var(--th-dim); font-size: 11px; }
+.hint { color: var(--th-dim); font-size: 11px; line-height: 1.35; margin: 4px 1px 4px; }
+.cb { width: 17px; height: 17px; border: 1px solid #4a5443; display: inline-grid; place-items: center; flex: 0 0 auto; background: #10140e; }
+.cb.on { background: var(--th-tx); } .cb.on::after { content: ''; width: 8px; height: 4px; border-left: 2px solid #141912; border-bottom: 2px solid #141912; transform: rotate(-45deg) translate(1px,-1px); }
+.seg { display: inline-flex; gap: 4px; } .seg button { border-radius: 0; border: 1px solid #4a5443; background: transparent; color: var(--th-tx); font: 600 11.5px 'Golos Text', sans-serif; padding: 5px 9px; cursor: pointer; }
+.seg button.on { background: var(--th-tx); color: #141912; border-color: var(--th-tx); }
+.val { font-weight: 700; min-width: 40px; text-align: right; }
+input[type=range].g { -webkit-appearance: none; appearance: none; height: 22px; margin: 0; background: none; cursor: pointer; flex: 1; min-width: 60px; }
+input[type=range].g::-webkit-slider-runnable-track { height: 2px; background: #4a5443; }
+input[type=range].g::-webkit-slider-thumb { -webkit-appearance: none; width: 11px; height: 18px; margin-top: -8px; background: var(--th-tx); border: 0; border-radius: 0; }
+input[type=range].g::-moz-range-track { height: 2px; background: #4a5443; } input[type=range].g::-moz-range-progress { height: 2px; background: var(--th-tx); }
+input[type=range].g::-moz-range-thumb { width: 11px; height: 18px; background: var(--th-tx); border: 0; border-radius: 0; }
+/* золотой ползунок с заполнением (вариант Б редактора) */
+input[type=range].gold { --p: 50%; -webkit-appearance: none; appearance: none; height: 24px; margin: 0; cursor: pointer; flex: 1; min-width: 60px;
+  background: linear-gradient(var(--th-ac), var(--th-ac)) 0 50% / var(--p) 4px no-repeat, linear-gradient(#3a4334, #3a4334) 0 50% / 100% 4px no-repeat; }
+input[type=range].gold::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 22px; background: var(--th-ac); border: 2px solid #17190f; border-radius: 0; }
+input[type=range].gold::-moz-range-thumb { width: 12px; height: 20px; background: var(--th-ac); border: 2px solid #17190f; border-radius: 0; }
+.btn { border-radius: 0; border: 0; background: var(--th-ac); color: #17190f; font: 500 13px 'Oswald', sans-serif; letter-spacing: .05em; padding: 7px 13px; cursor: pointer; }
+.btn.alt { background: #1c2318; color: var(--th-tx); border: 1px solid var(--th-line); font: 600 12px 'Golos Text', sans-serif; letter-spacing: 0; }
+.tb { position: absolute; width: 62px; height: 52px; background: rgba(16,20,15,.5); border: 1px solid rgba(233,230,220,.26); color: var(--th-tx); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font: 600 10px 'Golos Text', sans-serif; user-select: none; -webkit-user-select: none; touch-action: none; cursor: pointer; }
+.tb svg { width: 22px; height: 22px; fill: currentColor; } .tb.ab { border-color: var(--th-ac); color: var(--th-ac); }
+.mark { position: absolute; left: 8px; top: 8px; background: rgba(0,0,0,.6); color: #fff; font: 600 11px 'Golos Text', sans-serif; padding: 3px 7px; z-index: 9; }
+
+/* ── 1: настройки крестовины ── */
+.tester { display: grid; grid-template-columns: minmax(0, 260px) 1fr; gap: 16px; align-items: center; }
+@media (max-width: 640px) { .tester { grid-template-columns: 1fr; } }
+.adi { width: 100%; max-width: 260px; aspect-ratio: 1; border-radius: 50%; overflow: hidden; position: relative; border: 3px solid #2b3326; background: #000; }
+.adi .w { position: absolute; left: -50%; top: -50%; width: 200%; height: 200%; }
+.adi .sky { position: absolute; inset: 0 0 50% 0; background: linear-gradient(#2f5f8f, #6aa0c8); } .adi .gnd { position: absolute; inset: 50% 0 0 0; background: linear-gradient(#7a5a34, #4a3620); }
+.adi .hz { position: absolute; left: 0; right: 0; top: 50%; height: 2px; background: #fff; }
+.adi .pl { position: absolute; left: 50%; top: 50%; width: 46%; height: 2px; background: var(--th-ac); transform: translate(-50%,-50%); }
+.adi .pl::after { content: ''; position: absolute; left: 50%; top: -5px; width: 10px; height: 10px; border-radius: 50%; background: var(--th-ac); transform: translateX(-50%); }
+.adi .tick { position: absolute; left: 50%; width: 30px; height: 1px; background: rgba(255,255,255,.75); transform: translateX(-50%); }
+.tctl { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.pad { position: relative; width: 150px; height: 150px; }
+.pad .tb { width: 48px; height: 46px; font-size: 18px; } .pad .tb.on { background: rgba(232,176,74,.35); border-color: var(--th-ac); }
+.readout { font: 600 13px 'Golos Text', sans-serif; color: var(--th-dim); } .readout b { color: var(--th-tx); }
+
+/* ── 2: ступени газа ── */
+.cells { display: grid; grid-template-columns: repeat(12, 1fr); gap: 3px; margin: 6px 0 4px; }
+.cells button { border-radius: 0; border: 1px solid #4a5443; background: transparent; color: var(--th-tx); font: 700 12px 'Golos Text', sans-serif; height: 32px; cursor: pointer; padding: 0; }
+.cells button.on { background: var(--th-tx); color: #141912; border-color: var(--th-tx); }
+.cells button.lock { border-color: var(--th-ac); background: rgba(232,176,74,.18); color: var(--th-ac); cursor: default; }
+.cyc { font-size: 11.5px; color: var(--th-dim); margin: 3px 0 6px; } .cyc b { color: var(--th-tx); font-weight: 700; }
+.ruler { position: relative; height: 62px; margin: 8px 10px 4px; touch-action: none; cursor: pointer; }
+.ruler .ln { position: absolute; left: 0; right: 0; top: 34px; height: 2px; background: #4a5443; }
+.ruler .t { position: absolute; top: 28px; width: 1px; height: 14px; background: #6b7560; transform: translateX(-50%); }
+.ruler .n { position: absolute; top: 46px; transform: translateX(-50%); font: 600 10.5px 'Golos Text', sans-serif; color: var(--th-dim); }
+.ruler .peg { position: absolute; top: 6px; width: 14px; height: 22px; background: var(--th-tx); transform: translateX(-50%); }
+.ruler .peg.ab { background: var(--th-ac); }
+.ruler .abz { position: absolute; top: 33px; height: 4px; background: var(--th-ac); }
+.opt { display: flex; align-items: center; gap: 9px; border: 1px solid #2f372b; background: rgba(233,230,220,.03); padding: 6px 9px; margin: 4px 0; cursor: pointer; font-size: 12px; }
+.opt.on { border-color: var(--th-ac); background: rgba(232,176,74,.1); }
+.opt .rd { width: 13px; height: 13px; border: 1px solid #6b7560; flex: 0 0 auto; } .opt.on .rd { background: var(--th-ac); border-color: var(--th-ac); }
+.opt .st { color: var(--th-dim); margin-left: auto; font-weight: 600; letter-spacing: .02em; }
+.chips { display: flex; flex-wrap: wrap; gap: 3px; margin: 2px 0 2px 22px; } .chips button { border-radius: 0; border: 1px solid #4a5443; background: transparent; color: var(--th-tx); font: 700 10.5px 'Golos Text', sans-serif; padding: 3px 6px; cursor: pointer; }
+.chips button.on { background: var(--th-tx); color: #141912; }
+
+/* ── 3: газ в бою ── */
+.pips { position: absolute; display: flex; gap: 3px; justify-content: center; }
+.pips i { width: 7px; height: 7px; border: 1px solid rgba(233,230,220,.6); background: rgba(16,20,15,.5); } .pips i.on { background: var(--th-tx); } .pips i.ab { border-color: var(--th-ac); } .pips i.ab.on { background: var(--th-ac); }
+.rail { position: absolute; touch-action: none; cursor: pointer; }
+.rail .trk { position: absolute; inset: 0; background: rgba(16,20,15,.55); border: 1px solid rgba(233,230,220,.3); }
+.rail .fill { position: absolute; left: 0; right: 0; bottom: 0; background: rgba(233,230,220,.18); }
+.rail .abz { position: absolute; left: 0; right: 0; top: 0; background: repeating-linear-gradient(-45deg, rgba(232,176,74,.55) 0 5px, rgba(232,176,74,.2) 5px 10px); border-bottom: 2px solid var(--th-ac); }
+.rail .abz span { position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); text-align: center; font: 700 10px 'Golos Text', sans-serif; color: #17190f; }
+.rail .th { position: absolute; left: -5px; right: -5px; height: 22px; background: var(--th-tx); color: #141912; font: 700 11px 'Golos Text', sans-serif; display: grid; place-items: center; transform: translateY(50%); box-shadow: 0 1px 4px rgba(0,0,0,.5); }
+.rail .th.ab { background: var(--th-ac); }
+.rail .dt { position: absolute; left: 0; width: 7px; height: 1px; background: rgba(233,230,220,.85); } .rail .dt.r { left: auto; right: 0; }
+.rail .dl { position: absolute; right: calc(100% + 4px); font: 700 9.5px 'Golos Text', sans-serif; color: var(--th-tx); text-shadow: 0 1px 2px #000; transform: translateY(-50%); white-space: nowrap; }
+.lever .trk { background: rgba(10,12,9,.7); border: 1px solid rgba(233,230,220,.35); }
+.lever .slot { position: absolute; left: 50%; top: 6px; bottom: 6px; width: 6px; transform: translateX(-50%); background: #050605; border: 1px solid #2c3428; }
+.lever .gate { position: absolute; left: 50%; width: 22px; height: 6px; transform: translate(-50%,-50%); background: #050605; border: 1px solid var(--th-ac); }
+.lever .hdl { position: absolute; left: -9px; right: -9px; height: 24px; transform: translateY(50%); background: linear-gradient(#3b4434, #222820); border: 1px solid #6b7560; border-top: 3px solid var(--th-tx); display: grid; place-items: center; font: 700 10px 'Golos Text', sans-serif; color: var(--th-tx); }
+.lever .hdl.ab { border-top-color: var(--th-ac); color: var(--th-ac); }
+.lever .lb { position: absolute; left: calc(100% + 5px); transform: translateY(-50%); font: 700 9.5px 'Golos Text', sans-serif; color: var(--th-tx); text-shadow: 0 1px 2px #000; white-space: nowrap; }
+.sbtn { position: absolute; width: 30px; height: 26px; background: rgba(16,20,15,.6); border: 1px solid rgba(233,230,220,.3); color: var(--th-tx); display: grid; place-items: center; font-size: 12px; cursor: pointer; user-select: none; touch-action: none; }
+.ro { position: absolute; font: 700 12px 'Golos Text', sans-serif; color: var(--th-tx); text-shadow: 0 1px 3px #000; }
+
+/* ── 4: редактор кнопок ── */
+.led { position: absolute; z-index: 3; color: var(--th-tx); font-size: 12px; }
+.ledA { left: 142px; top: 8px; width: 560px; background: rgba(13,17,12,.96); border: 1px solid var(--th-line); padding: 9px 10px; }
+.ledA .top { display: flex; align-items: center; gap: 10px; margin-bottom: 7px; } .ledA .help { color: var(--th-dim); line-height: 1.35; flex: 1; font-size: 11.5px; }
+.ledA .ctl { display: flex; align-items: center; gap: 9px; margin-bottom: 7px; } .ledA .ctl b { color: var(--th-ac); font: 600 12.5px 'Golos Text', sans-serif; }
+.ledA .ctl label { display: flex; align-items: center; gap: 6px; flex: 1; color: var(--th-tx); } .ledA .bt { display: flex; gap: 8px; justify-content: flex-end; }
+.ledB { left: 142px; top: 8px; width: 560px; background: rgba(13,17,12,.96); border: 1px solid var(--th-line); }
+.ledB .tabs { display: flex; border-bottom: 1px solid var(--th-line); } .ledB .tabs button { flex: 0 0 auto; border: 0; background: none; color: var(--th-dim); font: 500 14px 'Oswald', sans-serif; letter-spacing: .04em; padding: 8px 14px 6px; border-bottom: 3px solid transparent; cursor: pointer; }
+.ledB .tabs button.on { color: var(--th-tx); border-bottom-color: var(--th-ac); } .ledB .tabs .help { margin-left: auto; align-self: center; padding-right: 10px; color: var(--th-dim); font-size: 11px; }
+.ledB .in { padding: 8px 10px 9px; } .ledB .nm { font: 500 15px 'Oswald', sans-serif; letter-spacing: .04em; color: var(--th-ac); margin-bottom: 4px; }
+.ledB .sl { display: grid; grid-template-columns: 92px 1fr 48px; align-items: center; gap: 8px; } .ledB .sl span { color: var(--th-dim); } .ledB .sl b { text-align: right; }
+.ledB .bt { display: flex; gap: 8px; margin-top: 7px; } .ledB .bt .btn.alt:first-child { margin-right: auto; }
+.ledC { left: 47px; right: 47px; top: 0; height: 44px; background: rgba(13,17,12,.96); border-bottom: 1px solid var(--th-line); display: flex; align-items: center; gap: 8px; padding: 0 8px; }
+.ledC .nm { color: var(--th-ac); font-weight: 700; white-space: nowrap; } .ledC .vr { width: 1px; height: 24px; background: var(--th-line); }
+.ledC .st { display: flex; align-items: center; gap: 3px; color: var(--th-dim); white-space: nowrap; } .ledC .st button { width: 24px; height: 24px; border: 1px solid #4a5443; background: #10140e; color: var(--th-tx); font: 700 13px 'Golos Text', sans-serif; cursor: pointer; padding: 0; }
+.ledC .st b { color: var(--th-tx); min-width: 34px; text-align: center; } .ledC .sp { flex: 1; } .ledC .seg button { padding: 5px 8px; }
+.ledC .btn, .ledC .btn.alt { padding: 6px 9px; white-space: nowrap; } .ledC .seg button { white-space: nowrap; padding: 5px 7px; } .ledC { gap: 6px; }
+.selbox { position: absolute; border: 2px solid var(--th-ac); pointer-events: none; z-index: 2; }
+</style></head>
+<body>
+<h1>Управление самолётом: варианты</h1>
+<p class="lead">Mark 2026-11-14. Всё на кадрах игры 844×390 (телефон боком). Ползунки, кнопки и газ - живые: можно нажимать и тянуть. Выбери по одному варианту в каждом разделе.</p>
+<nav id="nav"><button data-s="1">1 · Крестовина</button><button data-s="2">2 · Ступени газа</button><button data-s="3">3 · Газ в бою</button><button data-s="4">4 · Редактор кнопок</button></nav>
+
+<section data-s="1">
+  <div class="sh">Крестовина: удержание или нажатие</div>
+  <p class="note">Ползунки «ручка (тангаж и крен)» и «сила крестовины» убираем: скорость крена и тангажа задаёт сам самолёт (масса, скорость, высота, повреждения) - лётная модель это уже считает. Крестовина и ручка всегда дают полное отклонение рулей, а что из него выйдет - решает самолёт: <b>МиГ-21бис крутится до 180°/с, Ту-22 - 40°/с, B-52H - 25°/с</b>. Ползунок «ручка» остаётся только как <b>скорость камеры пальцем</b> - сейчас он и так в основном двигает камеру.</p>
+  <div class="grid">
+    <div class="card"><h3><i>А</i>Один переключатель</h3><p>Одна строка на всю крестовину: по удержанию или по нажатию.</p><div class="ph"><div class="fr" id="f1a"></div></div></div>
+    <div class="card"><h3><i>Б</i>Отдельно крен и тангаж</h3><p>Например, крен - по нажатию (точно доворачивать), тангаж - по удержанию.</p><div class="ph"><div class="fr" id="f1b"></div></div></div>
+    <div class="card"><h3><i>В</i>Три режима</h3><p>Ещё режим «фиксация»: нажал - рули отклонены, нажал снова - отпустил (палец свободен для других кнопок).</p><div class="ph"><div class="fr" id="f1c"></div></div></div>
+  </div>
+  <div class="sh" style="margin-top:18px">Проверка: авиагоризонт</div>
+  <p class="note">Попробуй режимы на разных самолётах. «Нажатие» - 0,25 с полного отклонения: у МиГ-21бис это ~45° крена, у Ту-22 ~10°. Чем тяжелее самолёт, тем мельче доворот - как в жизни.</p>
+  <div class="card tester">
+    <div class="adi" id="adi"><div class="w" id="adiW"><div class="sky"></div><div class="gnd"></div><div class="hz"></div></div><div class="pl"></div></div>
+    <div class="tctl">
+      <div class="seg" id="tPlane"></div>
+      <div class="seg" id="tMode"><button data-v="hold" class="on">по удержанию</button><button data-v="tap">по нажатию</button><button data-v="latch">фиксация</button></div>
+      <div class="pad" id="tPad"></div>
+      <div class="readout" id="tRo"></div>
+      <div><button class="btn alt" id="tLvl">Выровнять</button></div>
+    </div>
+  </div>
+</section>
+
+<section data-s="2">
+  <div class="sh">Ступени газа в настройках</div>
+  <p class="note">Ступени 0, 10, 20 … 100 - игрок сам отмечает, какие нужны в бою. <b>Форсаж всегда в конце</b>, если он есть у самолёта (у Су-25, A-10A и других без форсажа его просто нет). Нужно хотя бы две ступени. Строка «в бою» - кнопка ступенями, ползунок (раздел 3) или оба сразу.</p>
+  <div class="grid">
+    <div class="card"><h3><i>А</i>Сетка</h3><p>Одиннадцать клеток, нажатие - вкл / выкл. Под ней - как пойдёт газ по кнопке.</p><div class="ph"><div class="fr" id="f2a"></div></div></div>
+    <div class="card"><h3><i>Б</i>Линейка</h3><p>Шкала как на приборе; нажатие на деление ставит или снимает ступень. Сверху - готовые наборы.</p><div class="ph"><div class="fr" id="f2b"></div></div></div>
+    <div class="card"><h3><i>В</i>Наборы</h3><p>Три готовых набора и «свои» - тогда открывается строка ступеней.</p><div class="ph"><div class="fr" id="f2c"></div></div></div>
+  </div>
+</section>
+
+<section data-s="3">
+  <div class="sh">Газ в бою</div>
+  <p class="note">Ступени берутся из настроек (здесь для примера 0 · 10 · 40 · 60 · 80 · 90 · 100 · Ф). На ползунке газ меняется по 1 %. Форсаж отделён «порогом»: чтобы его включить, надо дотянуть ползунок до конца. Кнопку и ползунок можно двигать в редакторе кнопок.</p>
+  <div class="grid">
+    <div class="card"><h3><i>1</i>Кнопка с точками</h3><p>Как сейчас, но с точками ступеней. Нажатие - ступень выше (после форсажа - на первую), смахнуть вниз по кнопке - ступень ниже.</p><div class="ph"><div class="fr" id="f3a"></div></div></div>
+    <div class="card"><h3><i>2</i>Ползунок</h3><p>Вертикальная полоса вместо кнопки: тянешь пальцем, газ по 1 %. Сверху - зона форсажа.</p><div class="ph"><div class="fr" id="f3b"></div></div></div>
+    <div class="card"><h3><i>3</i>Ползунок с засечками + кнопка</h3><p>Отпустил рядом с засечкой - встаёт на ступень; между засечками - любое значение. Кнопка «Газ» остаётся и листает ступени.</p><div class="ph"><div class="fr" id="f3c"></div></div></div>
+    <div class="card"><h3><i>4</i>Рычаг (РУД)</h3><p>Ручка в прорези, как рычаг газа в кабине: МГ внизу, «МАКС», вырез и форсаж.</p><div class="ph"><div class="fr" id="f3d"></div></div></div>
+  </div>
+</section>
+
+<section data-s="4">
+  <div class="sh">Редактор кнопок</div>
+  <p class="note">Сейчас у редактора старые голубые ползунки и скруглённый переключатель «Вылет / Оператор ЗРК» с квадратной заливкой. Ниже - три варианта в оформлении игры; выбрана «Крестовина», ползунки живые.</p>
+  <div class="grid">
+    <div class="card"><h3><i>0</i>Сейчас</h3><p>Для сравнения - кадр игры.</p><div class="ph"><div class="fr" id="f4z"></div></div></div>
+    <div class="card"><h3><i>А</i>Как в настройках</h3><p>Та же панель; прямоугольный переключатель и ползунки - как в «Настройках».</p><div class="ph"><div class="fr" id="f4a"></div></div></div>
+    <div class="card"><h3><i>Б</i>Вкладки</h3><p>«Вылет» и «Оператор ЗРК» - вкладками с золотой чертой; ползунки золотые с числом.</p><div class="ph"><div class="fr" id="f4b"></div></div></div>
+    <div class="card"><h3><i>В</i>Узкая полоса</h3><p>Всё в одну строку сверху, размер и прозрачность - кнопками − / +. Почти не закрывает кнопки.</p><div class="ph"><div class="fr" id="f4c"></div></div></div>
+  </div>
+</section>
+
+<script>
+const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const Q = new URLSearchParams(location.search);
+let THR = '';
+const thrSvg = () => `<svg viewBox="0 0 512 512"><path d="${THR}"/></svg>`;
+// масштаб кадров
+function fit() { for (const f of $$('.fr')) { const w = f.parentElement.clientWidth; f.style.transform = `scale(${w / 844})`; } }
+addEventListener('resize', fit);
+// разделы
+function show(s) { for (const e of $$('section')) e.classList.toggle('on', e.dataset.s === s); for (const b of $$('#nav button')) b.classList.toggle('on', b.dataset.s === s); fit(); try { history.replaceState(null, '', '?s=' + s); } catch (_) {} }
+$('#nav').onclick = (e) => { const b = e.target.closest('button'); if (b) show(b.dataset.s); };
+const segH = (vals, on) => `<span class="seg">${vals.map(([k, t]) => `<button data-v="${k}" class="${k === on ? 'on' : ''}">${t}</button>`).join('')}</span>`;
+document.addEventListener('click', (e) => { const b = e.target.closest('.seg button'); if (!b || b.closest('#nav')) return; for (const x of b.parentElement.children) x.classList.toggle('on', x === b); b.parentElement.dispatchEvent(new CustomEvent('pick', { detail: b.dataset.v, bubbles: true })); });
+const sheet = (body) => `<div class="sheet"><div class="hd"><b>Настройки</b><span>✕</span></div><div class="bd">${body}</div></div>`;
+const HG = "url('../hud-loadout/bg_hangar.jpg')";
+
+// ═════ 1 ═════
+const common = `<div class="row"><span class="cb"></span><span>инверсия тангажа: вверх - нос вниз (как в авиасимуляторах)</span></div>
+  <div class="row"><span class="cb on"></span><span>наведение камерой: самолёт летит туда, куда смотрит камера</span></div>
+  <div class="row"><span class="lb">скорость камеры пальцем</span><input type="range" class="g" min="0.4" max="1.8" step="0.05" value="1"><span class="val">×1.00</span></div>`;
+const physHint = `<p class="hint">Скорость крена и тангажа - от самолёта: масса, скорость, высота, повреждения. Тяжёлый бомбардировщик поворачивает медленнее истребителя.</p>`;
+$('#f1a').style.backgroundImage = HG;
+$('#f1a').innerHTML = sheet(`<div class="sub">Самолёт</div>
+  <div class="row"><span class="cb on"></span><span>крестовина ▲▼ ↺↻ (точные манёвры)</span></div>
+  <div class="row"><span class="lb">кнопки крестовины</span><span class="sp"></span>${segH([['hold', 'по удержанию'], ['tap', 'по нажатию']], 'hold')}</div>
+  ${physHint}${common}`);
+$('#f1b').style.backgroundImage = HG;
+$('#f1b').innerHTML = sheet(`<div class="sub">Самолёт</div>
+  <div class="row"><span class="cb on"></span><span>крестовина ▲▼ ↺↻ (точные манёвры)</span></div>
+  <div class="row"><span class="lb">крен ↺ ↻</span><span class="sp"></span>${segH([['hold', 'по удержанию'], ['tap', 'по нажатию']], 'tap')}</div>
+  <div class="row"><span class="lb">тангаж ▲ ▼</span><span class="sp"></span>${segH([['hold', 'по удержанию'], ['tap', 'по нажатию']], 'hold')}</div>
+  ${physHint}${common}`);
+const modeTxt = { hold: 'Рули отклонены, пока палец на кнопке. Отпустил - самолёт держит крен.', tap: 'Каждое нажатие - короткий доворот (0,25 с полного отклонения). Удержание - как обычно.', latch: 'Нажал - рули отклонены, нажал ещё раз - отпустил. Можно жать «Пуск», пока самолёт крутится.' };
+$('#f1c').style.backgroundImage = HG;
+$('#f1c').innerHTML = sheet(`<div class="sub">Самолёт</div>
+  <div class="row"><span class="cb on"></span><span>крестовина ▲▼ ↺↻ (точные манёвры)</span></div>
+  <div class="row"><span class="lb">кнопки крестовины</span><span class="sp"></span>${segH([['hold', 'удержание'], ['tap', 'нажатие'], ['latch', 'фиксация']], 'hold')}</div>
+  <p class="hint" id="f1cH" style="color:var(--th-tx)">${modeTxt.hold}</p>${physHint}${common}`);
+$('#f1c').addEventListener('pick', (e) => { $('#f1cH').textContent = modeTxt[e.detail]; });
+for (const f of ['#f1a', '#f1b', '#f1c']) $(f).addEventListener('input', (e) => { if (e.target.type === 'range') e.target.nextElementSibling.textContent = '×' + (+e.target.value).toFixed(2); });
+
+// авиагоризонт
+const PLANES = [['e_mig21n', 'МиГ-21бис', 180, 22], ['e_su25', 'Су-25', 120, 16], ['e_tu22', 'Ту-22', 40, 7], ['e_b52', 'B-52H', 25, 5]];
+const T = { roll: 0, pitch: 0, p: PLANES[0], mode: 'hold', dx: 0, dy: 0, want: { x: 0, y: 0 }, held: {}, latch: {}, pulse: {} };
+$('#tPlane').innerHTML = PLANES.map((p, i) => `<button data-v="${i}" class="${i ? '' : 'on'}">${p[1]}</button>`).join('');
+$('#tPlane').addEventListener('pick', (e) => { T.p = PLANES[+e.detail]; });
+$('#tMode').addEventListener('pick', (e) => { T.mode = e.detail; T.latch = {}; for (const b of $$('#tPad .tb')) b.classList.remove('on'); });
+$('#tPad').innerHTML = [['u', '▲', 51, 0], ['l', '↺', 0, 52], ['r', '↻', 102, 52], ['d', '▼', 51, 104]].map(([k, t, x, y]) => `<div class="tb" data-k="${k}" style="left:${x}px;top:${y}px">${t}</div>`).join('');
+for (let a = -30; a <= 30; a += 10) if (a) { const d = document.createElement('div'); d.className = 'tick'; d.style.top = `calc(50% + ${-a * 1.6}%)`; d.style.width = (a % 20 ? 18 : 34) + 'px'; $('#adiW').appendChild(d); }
+$('#tPad').addEventListener('pointerdown', (e) => { const b = e.target.closest('.tb'); if (!b) return; e.preventDefault(); const k = b.dataset.k;
+  if (T.mode === 'latch') { T.latch[k] = !T.latch[k]; b.classList.toggle('on', T.latch[k]); return; }
+  T.held[k] = performance.now(); b.classList.add('on'); if (T.mode === 'tap') T.pulse[k] = 0.25; });
+const upPad = (e) => { const b = e.target.closest && e.target.closest('#tPad .tb'); for (const k of Object.keys(T.held)) { if (T.mode !== 'latch') { const el = $(`#tPad .tb[data-k="${k}"]`); el && el.classList.remove('on'); } } T.held = {}; };
+addEventListener('pointerup', upPad); addEventListener('pointercancel', upPad);
+$('#tLvl').onclick = () => { T.roll = 0; T.pitch = 0; };
+let lt = performance.now();
+function tick(t) {
+  const dt = Math.min(0.05, (t - lt) / 1000); lt = t;
+  const on = (k) => T.mode === 'latch' ? !!T.latch[k] : T.mode === 'tap' ? (T.pulse[k] > 0 || (T.held[k] && t - T.held[k] > 350)) : !!T.held[k];
+  for (const k of Object.keys(T.pulse)) T.pulse[k] -= dt;
+  const wx = (on('r') ? 1 : 0) - (on('l') ? 1 : 0), wy = (on('u') ? 1 : 0) - (on('d') ? 1 : 0);
+  T.dx += clamp(wx - T.dx, -dt / 0.12, dt / 0.12); T.dy += clamp(wy - T.dy, -dt / 0.12, dt / 0.12); // привод рулей ~0,12 с
+  T.roll += T.dx * T.p[2] * dt; T.pitch = clamp(T.pitch + T.dy * T.p[3] * dt, -35, 35);
+  T.roll = ((T.roll + 540) % 360) - 180;
+  $('#adiW').style.transform = `rotate(${-T.roll}deg) translateY(${T.pitch * 0.8}%)`;
+  $('#tRo').innerHTML = `крен <b>${Math.round(T.roll)}°</b> · тангаж <b>${Math.round(T.pitch)}°</b> · ${T.p[1]}: крен до <b>${T.p[2]}°/с</b>`;
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+
+// ═════ 2 ═════
+const STEPS = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
+const S2 = { a: new Set([0, 10, 40, 60, 80, 90, 100]), b: new Set([40, 60, 80, 100]), c: new Set([0, 10, 40, 60, 80, 90, 100]) };
+const cycTxt = (set) => { const l = [...set].sort((a, b) => a - b).map((v) => v + '%'); return `Кнопка «Газ»: <b>${[...l, 'Ф', l[0]].join(' → ')}</b>` };
+const tailRows = (mode) => `<div class="row"><span class="lb">газ в бою</span><span class="sp"></span>${segH([['btn', 'кнопка ступенями'], ['sl', 'ползунок'], ['both', 'оба']], mode)}</div>
+  <p class="hint">Форсаж всегда последний, если он есть у самолёта. На ПК W / S - по этим же ступеням, Shift - форсаж.</p>`;
+function draw2a() {
+  $('#f2a .cells').innerHTML = STEPS.map((v) => `<button data-v="${v}" class="${S2.a.has(v) ? 'on' : ''}">${v}</button>`).join('') + '<button class="lock" title="есть у самолёта">Ф</button>';
+  $('#f2a .cyc').innerHTML = cycTxt(S2.a);
+}
+$('#f2a').style.backgroundImage = HG;
+$('#f2a').innerHTML = sheet(`<div class="sub">Газ</div><div class="row" style="border:0"><span class="lb">ступени газа в бою</span><span class="sp"></span><small>нажмите, чтобы включить или выключить</small></div>
+  <div class="cells"></div><div class="cyc"></div>${tailRows('btn')}`);
+$('#f2a').addEventListener('click', (e) => { const b = e.target.closest('.cells button[data-v]'); if (!b) return; const v = +b.dataset.v; if (S2.a.has(v)) { if (S2.a.size > 2) S2.a.delete(v); } else S2.a.add(v); draw2a(); });
+draw2a();
+// Б: линейка
+const PRE = { std: [40, 60, 80, 100], ten: STEPS, own: null };
+function draw2b() {
+  const r = $('#f2b .ruler'); const X = (v) => `${v / 110 * 100}%`;
+  r.innerHTML = '<div class="ln"></div>' + STEPS.map((v) => `<div class="t" style="left:${X(v)}"></div><div class="n" style="left:${X(v)}">${v}</div>`).join('') +
+    `<div class="abz" style="left:${X(100)};right:0"></div><div class="n" style="left:${X(110)};color:var(--th-ac)">Ф</div>` +
+    [...S2.b].map((v) => `<div class="peg" style="left:${X(v)}"></div>`).join('') + `<div class="peg ab" style="left:${X(110)}"></div>`;
+  $('#f2b .cyc').innerHTML = cycTxt(S2.b);
+}
+$('#f2b').style.backgroundImage = HG;
+$('#f2b').innerHTML = sheet(`<div class="sub">Газ</div><div class="row"><span class="lb">ступени газа</span><span class="sp"></span>${segH([['std', 'обычные'], ['ten', 'каждые 10'], ['own', 'свои']], 'std')}</div>
+  <div class="ruler"></div><div class="cyc"></div>${tailRows('both')}`);
+$('#f2b .ruler').addEventListener('pointerdown', (e) => { const r = e.currentTarget.getBoundingClientRect(); const v = Math.round((e.clientX - r.left) / r.width * 110 / 10) * 10; if (v > 100) return;
+  if (S2.b.has(v)) { if (S2.b.size > 2) S2.b.delete(v); } else S2.b.add(v); draw2b(); for (const b of $$('#f2b .seg button')) b.classList.toggle('on', b.dataset.v === 'own'); });
+$('#f2b').addEventListener('pick', (e) => { const p = PRE[e.detail]; if (p) { S2.b = new Set(p); draw2b(); } });
+draw2b();
+// В: наборы
+const SETS = [['std', 'Обычный', [40, 60, 80, 100]], ['fine', 'Мелкий шаг', STEPS], ['low', 'Малая высота', [0, 30, 60, 80, 90, 100]], ['own', 'Свои', null]];
+let s2c = 'low';
+function draw2c() {
+  $('#f2c .sets').innerHTML = SETS.map(([k, n, l]) => `<div class="opt ${k === s2c ? 'on' : ''}" data-k="${k}"><span class="rd"></span><b>${n}</b><span class="st">${(l || [...S2.c].sort((a, b) => a - b)).join(' · ')} · Ф</span></div>` +
+    (k === 'own' && s2c === 'own' ? `<div class="chips">${STEPS.map((v) => `<button data-v="${v}" class="${S2.c.has(v) ? 'on' : ''}">${v}</button>`).join('')}</div>` : '')).join('');
+}
+$('#f2c').style.backgroundImage = HG;
+$('#f2c').innerHTML = sheet(`<div class="sub">Газ: ступени в бою</div><div class="sets"></div>${tailRows('btn')}`);
+$('#f2c').addEventListener('click', (e) => { const c = e.target.closest('.chips button'); if (c) { const v = +c.dataset.v; if (S2.c.has(v)) { if (S2.c.size > 2) S2.c.delete(v); } else S2.c.add(v); draw2c(); return; } const o = e.target.closest('.opt'); if (o) { s2c = o.dataset.k; draw2c(); } });
+draw2c();
+
+// ═════ 3 ═════
+const BS = [0, 10, 40, 60, 80, 90, 100];
+const BT = "url('bg_battle.jpg')";
+function thrBtn(fr, st) { // кнопка газа на её месте (633,322)
+  const b = document.createElement('div'); b.className = 'tb'; b.style.cssText = 'left:633px;top:322px';
+  const draw = () => { const ab = st.v > 100; b.classList.toggle('ab', ab); b.innerHTML = `${thrSvg()}<small>${ab ? 'форсаж' : Math.round(st.v) + '%'}</small>`; };
+  let y0 = null, moved = false;
+  b.addEventListener('pointerdown', (e) => { e.preventDefault(); y0 = e.clientY; moved = false; b.setPointerCapture(e.pointerId); });
+  b.addEventListener('pointermove', (e) => { if (y0 !== null && e.clientY - y0 > 14 && !moved) { moved = true; st.down(); } });
+  b.addEventListener('pointerup', () => { if (y0 !== null && !moved) st.up(); y0 = null; });
+  fr.appendChild(b); st.subs.push(draw); return b;
+}
+function mkState() {
+  const st = { v: 80, subs: [], set(v) { st.v = v; st.subs.forEach((f) => f()); } };
+  const lst = () => [...BS, 110];
+  st.up = () => { const l = lst(); const i = l.findIndex((x) => x > st.v + 0.5); st.set(i < 0 ? l[0] : l[i]); };
+  st.down = () => { const l = lst(); const i = [...l].reverse().find((x) => x < st.v - 0.5); st.set(i === undefined ? l[0] : i); };
+  return st;
+}
+// 1: кнопка с точками
+{ const fr = $('#f3a'); fr.style.backgroundImage = BT; const st = mkState(); thrBtn(fr, st);
+  const p = document.createElement('div'); p.className = 'pips'; p.style.cssText = 'left:629px;top:376px;width:70px'; fr.appendChild(p);
+  st.subs.push(() => { p.innerHTML = [...BS, 110].map((x) => `<i class="${x <= st.v + 0.5 ? 'on' : ''} ${x > 100 ? 'ab' : ''}"></i>`).join(''); }); st.set(80); }
+// общий вертикальный ползунок
+function rail(fr, o) { // o: x, y, w, h, st, ticks, snap, lever
+  const r = document.createElement('div'); r.className = 'rail' + (o.lever ? ' lever' : ''); r.style.cssText = `left:${o.x}px;top:${o.y}px;width:${o.w}px;height:${o.h}px`;
+  const AB = o.lever ? 0.22 : 0.14, Yv = (v) => v > 100 ? 1 - AB / 2 : (v / 100) * (1 - AB); // доля высоты снизу
+  r.innerHTML = `<div class="trk"></div>${o.lever ? '<div class="slot"></div><div class="gate" style="top:' + (AB * 100) + '%"></div>' : '<div class="fill"></div><div class="abz" style="height:' + AB * 100 + '%"><span>Ф</span></div>'}<div class="${o.lever ? 'hdl' : 'th'}"></div>`;
+  if (o.ticks) for (const v of BS) r.insertAdjacentHTML('beforeend', `<div class="dt" style="bottom:${Yv(v) * 100}%"></div><div class="dt r" style="bottom:${Yv(v) * 100}%"></div>${o.labels ? `<div class="dl" style="bottom:${Yv(v) * 100 - 2}%;transform:translateY(50%)">${v}</div>` : ''}`);
+  if (o.lever) for (const [v, t] of [[0, 'МГ'], [50, '50'], [100, 'МАКС'], [110, 'ФОРС.']]) r.insertAdjacentHTML('beforeend', `<div class="lb" style="bottom:${Yv(v) * 100}%;transform:translateY(50%)">${t}</div>`);
+  fr.appendChild(r);
+  const th = r.querySelector('.th, .hdl'), fill = r.querySelector('.fill');
+  o.st.subs.push(() => { const v = o.st.v, y = Yv(v); th.style.bottom = y * 100 + '%'; th.classList.toggle('ab', v > 100); th.textContent = v > 100 ? 'Ф' : Math.round(v); if (fill) fill.style.height = Math.min(y, 1 - AB) * 100 + '%'; });
+  let drag = null;
+  const at = (e) => { const b = r.getBoundingClientRect(); const k = 1 - (e.clientY - b.top) / b.height; if (k > 1 - AB * 0.45) return 110; return clamp(k / (1 - AB), 0, 1) * 100; };
+  r.addEventListener('pointerdown', (e) => { e.preventDefault(); drag = e.pointerId; r.setPointerCapture(e.pointerId); o.st.set(at(e)); });
+  r.addEventListener('pointermove', (e) => { if (drag !== e.pointerId) return; o.st.set(at(e)); });
+  r.addEventListener('pointerup', () => { drag = null; if (o.snap && o.st.v <= 100) { const n = BS.reduce((a, b) => Math.abs(b - o.st.v) < Math.abs(a - o.st.v) ? b : a); if (Math.abs(n - o.st.v) <= 4) o.st.set(n); } });
+  return r;
+}
+{ const fr = $('#f3b'); fr.style.backgroundImage = BT; const st = mkState(); rail(fr, { x: 510, y: 176, w: 34, h: 196, st }); st.set(80); }
+{ const fr = $('#f3c'); fr.style.backgroundImage = BT; const st = mkState(); thrBtn(fr, st); rail(fr, { x: 512, y: 176, w: 32, h: 196, st, ticks: true, snap: true, labels: true }); st.set(80); }
+{ const fr = $('#f3d'); fr.style.backgroundImage = BT; const st = mkState(); rail(fr, { x: 500, y: 172, w: 30, h: 200, st, lever: true }); st.set(80);
+  const ro = document.createElement('div'); ro.className = 'ro'; ro.style.cssText = 'left:634px;top:338px;font-size:15px'; fr.appendChild(ro);
+  st.subs.push(() => { ro.textContent = st.v > 100 ? 'форсаж' : 'газ ' + Math.round(st.v) + '%'; ro.style.color = st.v > 100 ? 'var(--th-ac)' : ''; }); st.set(80); }
+
+// ═════ 4 ═════
+$('#f4z').style.backgroundImage = "url('editor_now.png')";
+const ED = "url('bg_editor.jpg')";
+// рамка выбранной крестовины (кнопки ▲▼↺↻ на кадре: x 47-179, y 248-380)
+const sel = '<div class="selbox" style="left:44px;top:245px;width:138px;height:138px"></div>';
+$('#f4a').style.backgroundImage = ED;
+$('#f4a').innerHTML = sel + `<div class="led ledA"><div class="top">${segH([['air', 'Вылет'], ['op', 'Оператор ЗРК']], 'air')}<span class="help">Перетащите кнопку пальцем, нажмите - размер и прозрачность.</span></div>
+  <div class="ctl"><b>Крестовина</b><label>Размер <input type="range" class="g" min="0.6" max="1.8" step="0.05" value="1.1"></label><label>Прозрачность <input type="range" class="g" min="0.2" max="1" step="0.05" value="1"></label></div>
+  <div class="bt"><button class="btn alt">Вернуть кнопку</button><span style="flex:1"></span><button class="btn alt">Всё по умолчанию</button><button class="btn">ГОТОВО</button></div></div>`;
+const goldP = (i) => { i.style.setProperty('--p', ((i.value - i.min) / (i.max - i.min) * 100) + '%'); };
+$('#f4b').style.backgroundImage = ED;
+$('#f4b').innerHTML = sel + `<div class="led ledB"><div class="tabs"><button class="on">ВЫЛЕТ</button><button>ОПЕРАТОР ЗРК</button><span class="help">тащите кнопку · нажмите - размер</span></div>
+  <div class="in"><div class="nm">КРЕСТОВИНА</div>
+  <div class="sl"><span>Размер</span><input type="range" class="gold" min="0.6" max="1.8" step="0.05" value="1.1" data-f="x"><b>×1.10</b></div>
+  <div class="sl"><span>Прозрачность</span><input type="range" class="gold" min="0.2" max="1" step="0.05" value="1" data-f="p"><b>100%</b></div>
+  <div class="bt"><button class="btn alt">Вернуть кнопку</button><button class="btn alt">Всё по умолчанию</button><button class="btn">ГОТОВО</button></div></div></div>`;
+$('#f4b .tabs').onclick = (e) => { const b = e.target.closest('button'); if (b) for (const x of $$('#f4b .tabs button')) x.classList.toggle('on', x === b); };
+for (const i of $$('#f4b input')) goldP(i);
+$('#f4b').addEventListener('input', (e) => { const i = e.target; goldP(i); i.nextElementSibling.textContent = i.dataset.f === 'x' ? '×' + (+i.value).toFixed(2) : Math.round(i.value * 100) + '%'; });
+$('#f4c').style.backgroundImage = ED;
+const C4 = { s: 1.1, o: 1 };
+$('#f4c').innerHTML = sel + `<div class="led ledC">${segH([['air', 'Вылет'], ['op', 'Оператор ЗРК']], 'air')}<span class="vr"></span><span class="nm">Крестовина</span>
+  <span class="st">размер <button data-a="s-">−</button><b id="c4s"></b><button data-a="s+">+</button></span>
+  <span class="st">прозр. <button data-a="o-">−</button><b id="c4o"></b><button data-a="o+">+</button></span>
+  <button class="btn alt" title="Вернуть кнопку">↺</button><span class="sp"></span><button class="btn alt">По умолчанию</button><button class="btn">ГОТОВО</button></div>
+  <div class="mark" style="top:52px;left:auto;right:55px">тащите кнопку · нажмите - размер</div>`;
+const c4 = () => { $('#c4s').textContent = '×' + C4.s.toFixed(1); $('#c4o').textContent = Math.round(C4.o * 100) + '%'; };
+$('#f4c').addEventListener('click', (e) => { const b = e.target.closest('[data-a]'); if (!b) return; const a = b.dataset.a; if (a[0] === 's') C4.s = clamp(+(C4.s + (a[1] === '+' ? 0.1 : -0.1)).toFixed(1), 0.6, 1.8); else C4.o = clamp(+(C4.o + (a[1] === '+' ? 0.1 : -0.1)).toFixed(1), 0.2, 1); c4(); });
+c4();
+for (const f of ['#f4a']) $(f).addEventListener('input', () => {});
+
+// один кадр (для снимков)
+const fOnly = Q.get('f');
+fetch('thr_icon.txt').then((r) => r.text()).then((t) => { THR = t.trim(); for (const f of ['#f3a', '#f3c']) { const st = $(f + ' .tb'); if (st) st.innerHTML = thrSvg() + st.innerHTML.replace(/^<svg.*?<\/svg>/, ''); } }).catch(() => {});
+if (fOnly) { document.body.classList.add('solo'); const f = $('#' + fOnly); const sec = f.closest('section'); show(sec.dataset.s); for (const c of $$('.card', sec)) c.style.display = c.contains(f) ? '' : 'none'; }
+else show(Q.get('s') || '1');
+fit();
+</script>
+</body></html>

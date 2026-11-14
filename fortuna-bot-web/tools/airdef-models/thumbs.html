@@ -7,7 +7,7 @@
      Сохраняет tools/airdef-headless/thumbs-bake.js → games/airdef/thumbs/<ветка>_<ключ>.webp -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script type="module">
-import { loadModels, planeModel, unitModelGlb, unitMissileGlb, launcherGlb, wantUnit, wantModel, anyModel, weaponMesh, wantWeapon, weaponPending, setWings } from '../../games/airdef/models.js?v=20261114a';
+import { loadModels, planeModel, unitModelGlb, unitMissileGlb, launcherGlb, wantUnit, wantModel, anyModel, weaponMesh, wantWeapon, weaponPending, setWings, setPose } from '../../games/airdef/models.js?v=20261114a';
 import { unitModel, weaponGeo } from '../../games/airdef/units-render.js?v=20261114a';
 import { AG, SAM } from '../../games/airdef/arsenal.js?v=20261114a';
 import { cylPose } from '../../games/airdef/launchers.js?v=20261114a';
@@ -78,7 +78,7 @@ async function himarsObj(wk) {
   const t = new THREE.Group(); g.rotation.y = +(Q.get('hyaw') || 2.2); t.add(g); return t; // кабиной к камере
 }
 async function objOf(n) {
-  if (n.branch === 'air') { wantModel(n.key); await wait(() => anyModel(n.key)); const pm = planeModel(n.side, 'strike', n.key); return pm && pm.obj; }
+  if (n.branch === 'air') { wantModel(n.key); await wait(() => anyModel(n.key)); const pm = planeModel(n.side, 'strike', n.key); if (pm && n.key === 'e_t4') setPose(pm.obj, 'e_t4', 'ground', 1); return pm && pm.obj; } // Т-4: нос с кабиной опущен, как на стоянке в ангаре
   if (n.branch === 'heli') { wantModel(n.key); return wait(() => anyModel(n.key)); } // вертолёт — лопасти неподвижные (spinProps не вызываем: без призраков и диска)
   if (n.branch === 'pvo') return unitObj(n.key);
   const k = n.item || n.key;
