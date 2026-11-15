@@ -909,7 +909,7 @@ export const BLD = [null, ['bld_p5', 16.24, 16.5, 53.0], ['bld_p9', 24.1, 25.4, 
   // 23…29: свои цеха и склады промзоны (Свои/Цеха и склады, 2026-11-08) - размер по стенам (рампы, свесы, трубы выходят за коробку нарочно), конёк вдоль Z;
   // 30 - контейнерная площадка порта (не модель: раскладка контейнеров в nearHouses, yardSets)
   ['wh_annex', 30, 14, 45], ['wh_arch', 30, 13, 40], ['wh_lantern', 36, 17.2, 54], ['wh_panel', 24, 7.8, 72], ['wh_ramp', 24, 9, 96], ['wh_saw', 40, 12.2, 40], ['wh_shed', 30, 12, 60], null];
-const WH = [23, 24, 25, 26, 27, 28, 29], YARD = 30;
+const WH = [23, 24, 25, 26, 27, 28, 29], YARD = 30, YARD_FAR = +((typeof location !== 'undefined' && /[?&]yardfar=(\d+)/.exec(location.search)) || [0, 1200])[1]; // ?yardfar=0 - без упрощённых контейнеров (сразу штабели брусками, проверка); YARD_FAR - до скольких метров контейнеры площадок порта рисуются упрощёнными копиями
 // цех v в коробке L × S: [копий вдоль, копий поперёк, растяжение вдоль, поперёк]
 const whGrid = (v, L, S) => { const [, mx, , mz] = BLD[v], nl = Math.max(1, Math.round(L / mz)), nw = Math.max(1, Math.round(S / mx)); return [nl, nw, L / nl / mz, S / nw / mx]; };
 // деревья вблизи (номер в uMdl - 14…17) и их высота при масштабе 1; фонарь
@@ -998,25 +998,71 @@ function yardSets(G, B, ids, R) {
   const put = (name, col, x, y, z, ry) => { const key = col == null ? name : name + ':' + col; let L = per.get(key); if (!L) per.set(key, L = { name, col, xz: [], m: [] }); m4.compose(p.set(x, y, z), q.setFromAxisAngle(Y, ry), one); L.m.push(...m4.elements); L.xz.push(cx, cz); };
   const pick = (T, r) => { let x = r(); for (const t of T) { if (x < t[3]) return t; x -= t[3]; } return T[0]; };
   const PITCH = 2.75, BLK = 5, LANE = 9, SL = 12.8;
+  const YL = []; // для дальних ступеней (yardLayer): по площадке - штабели [x, z, низ, высота, поворот, цвет верхнего] и блоки рядов [x, z, низ, высота, поворот, ширина, r, g, b]
   for (const i of ids) {
     const r = mulberry32(i * 7349 + 101), longX = B.w[i] >= B.d[i], L = Math.max(B.w[i], B.d[i]), S = Math.min(B.w[i], B.d[i]); cx = B.x[i]; cz = B.z[i];
     const at = (u, v) => (longX ? [B.x[i] + u, B.z[i] + v] : [B.x[i] + v, B.z[i] + u]); // u - вдоль длинной стороны, v - поперёк
     const ry = longX ? Math.PI / 2 : 0, ns = Math.floor((L - 6) / SL); if (ns < 1) continue;
     const nb = Math.max(1, Math.floor((S - 6 + LANE) / (BLK * PITCH + LANE))), W = nb * BLK * PITCH + (nb - 1) * LANE, u0 = -ns * SL / 2;
-    const rows = []; for (let b = 0; b < nb; b++) for (let k = 0; k < BLK; k++) { const v = -W / 2 + b * (BLK * PITCH + LANE) + (k + 0.5) * PITCH; if (Math.abs(v) <= S / 2 - 2) rows.push(v); }
-    for (const v of rows) for (let sl = 0; sl < ns; sl++) {
+    const rows = [], rowB = []; for (let b = 0; b < nb; b++) for (let k = 0; k < BLK; k++) { const v = -W / 2 + b * (BLK * PITCH + LANE) + (k + 0.5) * PITCH; if (Math.abs(v) <= S / 2 - 2) { rows.push(v); rowB.push(b); } }
+    const yl = { x: cx, z: cz, rad: Math.hypot(L, S) / 2 + 8, st: [], bl: [] }, blk = new Map(); YL.push(yl);
+    rows.forEach((v, ri) => { for (let sl = 0; sl < ns; sl++) {
       if (r() < 0.12) continue;
-      const x0 = r(), lv = x0 < 0.2 ? 1 : x0 < 0.55 ? 2 : 3, u = u0 + (sl + 0.5) * SL, [gx, gz] = at(u, v); let y = GH(gx, gz); // не выше 3 ярусов: коробка столкновений 7,8 м (city.js)
+      const x0 = r(), lv = x0 < 0.2 ? 1 : x0 < 0.55 ? 2 : 3, u = u0 + (sl + 0.5) * SL, [gx, gz] = at(u, v); let y = GH(gx, gz); const y0 = y; let top = 0; // не выше 3 ярусов: коробка столкновений 7,8 м (city.js)
       for (let l = 0; l < lv; l++) {
-        if (r() < 0.72) { const t = pick(YT40, r), [x, z] = at(u, v); put(t[0], t[2][Math.floor(r() * t[2].length)], x, y, z, ry + (r() < 0.5 ? Math.PI : 0)); y += t[1]; }
-        else { const t = pick(YT20, r); for (const du of [-3.2, 3.2]) { const [x, z] = at(u + du, v); put(t[0], t[2][Math.floor(r() * t[2].length)], x, y, z, ry + (r() < 0.5 ? Math.PI : 0)); } y += t[1]; }
+        if (r() < 0.72) { const t = pick(YT40, r), [x, z] = at(u, v); top = t[2][Math.floor(r() * t[2].length)]; put(t[0], top, x, y, z, ry + (r() < 0.5 ? Math.PI : 0)); y += t[1]; }
+        else { const t = pick(YT20, r); for (const du of [-3.2, 3.2]) { const [x, z] = at(u + du, v); top = t[2][Math.floor(r() * t[2].length)]; put(t[0], top, x, y, z, ry + (r() < 0.5 ? Math.PI : 0)); } y += t[1]; }
       }
-    }
+      yl.st.push(gx, gz, y0, y - y0, ry, top);
+      const bk = rowB[ri] * 1000 + sl; let q = blk.get(bk); if (!q) blk.set(bk, q = { u, b: rowB[ri], vs: [], h: 0, y0: 1e9, c: [0, 0, 0], n: 0 });
+      q.vs.push(v); q.h += y - y0; q.y0 = Math.min(q.y0, y0); const pc = YARD_PAL[top]; q.c[0] += pc.r; q.c[1] += pc.g; q.c[2] += pc.b; q.n++;
+    } });
+    for (const q of blk.values()) { const v0 = Math.min(...q.vs) - PITCH / 2, v1 = Math.max(...q.vs) + PITCH / 2, [x, z] = at(q.u, (v0 + v1) / 2); yl.bl.push(x, z, q.y0, q.h / q.n, ry, v1 - v0, q.c[0] / q.n, q.c[1] / q.n, q.c[2] / q.n); }
     // козловой кран над блоком (пролёт 24,8 м - поперёк рядов, по X модели) и ричстакер в проезде у торца
     for (let b = 0; b < nb; b++) { const v = -W / 2 + b * (BLK * PITCH + LANE) + BLK * PITCH / 2; if (ns < 3 || Math.abs(v) + 13.8 > S / 2 || r() >= 0.8) continue; const u = u0 + (1 + Math.floor(r() * (ns - 2))) * SL, [x, z] = at(u, v); put('c_rtg', null, x, GH(x, z), z, longX ? -Math.PI / 2 : 0); } // пролёт 24,8 м: ноги в проездах по 9 м, не в соседних рядах
     if (L - ns * SL > 26 && r() < 0.6) { const sd = r() < 0.5 ? -1 : 1, [x, z] = at(sd * (ns * SL / 2 + 7), rows[Math.floor(r() * rows.length)] || 0); put('c_reach', null, x, GH(x, z), z, ry + (sd < 0 ? 0 : Math.PI)); } // вдоль ряда, захватом к штабелю, 7 м от торца
   }
   for (const [key, L] of per) G.addNear('y_' + key, YARD, L.name, R, Float32Array.from(L.xz), Float32Array.from(L.m), { col: L.col });
+  return YL;
+}
+// цвета контейнеров вдали (столбцы атласа, линейные): синий, красный, зелёный, серый, бежевый, белый, рыжий, бордовый
+const YARD_PAL = ['#2f5d8e', '#a3352c', '#3d7448', '#83898e', '#bfa983', '#d6d7d3', '#c06a2e', '#6c2c2c'].map(lin);
+// дальние ступени площадок порта (Mark 2026-11-15: «чтобы всегда были видны контейнеры, однако чем дальше - тем более упрощенная их версия»):
+// вблизи - модели контейнеров, дальше (YARD_FAR) - те же контейнеры упрощённой сеткой, дальше (YARD_ST) - штабель одним бруском цвета верхнего,
+// ещё дальше - блок рядов одним бруском (средняя высота и цвет). Коробка площадки (шейдер) не рисуется совсем
+const YARD_ST = 2200;
+// деревья: между моделью вблизи и снимками леса вдали была упрощённая сетка (farIndex) - у елей от неё оставался «столб с ветками внизу»
+// (Mark 2026-11-15). Теперь от края моделей сразу снимки (TREE_IMP); ?treemid=1 - как было (проверка)
+const TREE_MID = typeof location !== 'undefined' && /[?&]treemid=1/.test(location.search);
+function yardLayer(scene, YL, sh) {
+  const g0 = new THREE.BoxGeometry(1, 1, 1); g0.translate(0, 0.5, 0); const ix = g0.index.array, keep = []; for (let i = 0; i < ix.length; i += 6) if (i !== 18) for (let k = 0; k < 6; k++) keep.push(ix[i + k]); g0.setIndex(keep); // без дна (грань −Y)
+  const mat = new THREE.MeshLambertMaterial({ color: 0xffffff });
+  let nS = 0, nB = 0; for (const y of YL) { nS += y.st.length / 6; nB += y.bl.length / 9; }
+  const mk = (n) => { const m = new THREE.InstancedMesh(g0, mat, Math.max(1, n)); m.count = 0; m.visible = false; m.frustumCulled = false; m.castShadow = false; m.receiveShadow = !!sh.receive; m.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(Math.max(1, n) * 3), 3); scene.add(m); return m; };
+  const mS = mk(nS), mB = mk(nB), m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), Y = new THREE.Vector3(0, 1, 0), p = new THREE.Vector3(), s = new THREE.Vector3();
+  let lx = 1e9, lz = 1e9, lr = -1; const inN = new Uint8Array(YL.length), inN0 = new Uint8Array(YL.length);
+  const fill = (pc, near) => {
+      let cs = 0, cb = 0; const aS = mS.instanceMatrix.array, aB = mB.instanceMatrix.array, kS = mS.instanceColor.array, kB = mB.instanceColor.array;
+      for (const y of YL) {
+        const d = Math.hypot(y.x - pc.x, y.z - pc.z); if (d < near) continue;
+        if (d < YARD_ST) for (let j = 0; j < y.st.length; j += 6) { const c = YARD_PAL[y.st[j + 5]]; m4.compose(p.set(y.st[j], y.st[j + 2], y.st[j + 1]), q.setFromAxisAngle(Y, y.st[j + 4]), s.set(2.44, y.st[j + 3], 12.4)); m4.toArray(aS, cs * 16); kS[cs * 3] = c.r; kS[cs * 3 + 1] = c.g; kS[cs * 3 + 2] = c.b; cs++; }
+        else for (let j = 0; j < y.bl.length; j += 9) { m4.compose(p.set(y.bl[j], y.bl[j + 2], y.bl[j + 1]), q.setFromAxisAngle(Y, y.bl[j + 4]), s.set(y.bl[j + 5], y.bl[j + 3], 12.4)); m4.toArray(aB, cb * 16); kB[cb * 3] = y.bl[j + 6]; kB[cb * 3 + 1] = y.bl[j + 7]; kB[cb * 3 + 2] = y.bl[j + 8]; cb++; }
+      }
+      for (const [m, c] of [[mS, cs], [mB, cb]]) { m.count = c; m.visible = c > 0; if (c) { m.instanceMatrix.updateRange.count = c * 16; m.instanceMatrix.needsUpdate = true; m.instanceColor.needsUpdate = true; } }
+  };
+  return {
+    meshes: [mS, mB],
+    // pc - камера, near - до какого радиуса площадку рисуют модели контейнеров (0 - ещё не пришли). Пересчёт - после 30 м пути или как только
+    // хоть одна площадка перешла через радиус моделей (иначе на границе она пропадала бы или рисовалась дважды до следующего пересчёта)
+    tick(pc, near) {
+      let ch = near !== lr || Math.abs(pc.x - lx) >= 30 || Math.abs(pc.z - lz) >= 30;
+      for (let i = 0; i < YL.length; i++) { inN[i] = Math.hypot(YL[i].x - pc.x, YL[i].z - pc.z) < near ? 1 : 0; if (inN[i] !== inN0[i]) ch = true; }
+      if (!ch) return; inN0.set(inN); lx = pc.x; lz = pc.z; lr = near; fill(pc, near);
+    },
+    // окно ТВ: на время его кадра - от точки, куда смотрит контейнер (там свои модели в радиусе R); restore - снова от камеры
+    pod(at, R) { fill(at, R); },
+    restore() { if (lr >= 0) fill({ x: lx, z: lz }, lr); },
+  };
 }
 function nearHouses(G, scene, B, near, P, sh) {
   const R = P.bldNear || 0, sets = new Map(), mtx = new THREE.Matrix4(), q = new THREE.Quaternion(), Y = new THREE.Vector3(0, 1, 0), p = new THREE.Vector3(), s = new THREE.Vector3();
@@ -1061,7 +1107,7 @@ function nearHouses(G, scene, B, near, P, sh) {
   }
   // контейнерные площадки порта (вид YARD): ряды штабелей вдоль длинной стороны коробки, проезды, козловой кран и ричстакер;
   // радиус - как у частных домов (контейнеров много)
-  if (near[YARD] && near[YARD].length) yardSets(G, B, near[YARD], P.full ? R : R * 0.6);
+  if (near[YARD] && near[YARD].length) { const YL = yardSets(G, B, near[YARD], P.full ? R : R * 0.6); G.yardL = yardLayer(scene, YL, sh); }
   // модель пришла: по мешу на материал, общая матрица инстансов; коробки этого вида вблизи прячутся
   // радиус моделей вблизи по роли (Mark 2026-11-08: «если играется самолет - то можно в самом минимальном разрешении это выдавать - в первую
   // очередь то что на земле будет важно при игре на пво»): k = 1 - ПВО и меню, меньше - самолёт; коробки и импосторы прячутся в том же радиусе
@@ -1103,14 +1149,14 @@ function nearHouses(G, scene, B, near, P, sh) {
         S.R1 = Math.max(120, S.R * 0.45); lx = 1e9;
       }).catch(() => { /* без упрощения - модель целиком */ });
       // вдали (до P.bldFar) - сильно упрощённая та же модель вместо коробки; дальше - коробки в цвет модели (там здания - точки)
-      const RF = S.slot === YARD ? 0 : S.slot >= 14 && S.slot <= 17 ? (P.treeFar || 0) : (P.bldFar || 0); // площадки порта вдали - коробки в цвет контейнеров (их тысячи)
+      const yard = S.slot === YARD, RF = yard ? Math.min(P.bldFar || 0, YARD_FAR) : S.slot >= 14 && S.slot <= 17 ? (TREE_MID ? P.treeFar || 0 : 0) : (P.bldFar || 0); // площадки порта: дальше ближнего радиуса - те же контейнеры коробочками (упрощённая сетка, свой цвет), за YARD_FAR - штабели и блоки брусками (yardLayer); коробка площадки не рисуется (Mark 2026-11-15: прямоугольник вместо контейнеров сменялся резко)
       const big = tri >= 8000 && !(S.slot >= 14 && S.slot <= 17); // сталинки, высотки, «пластины» - мягче
-      const tree = S.slot >= 14 && S.slot <= 17, imp = RF > S.R && S.slot && !tree ? makeImpostor(group, G.renderer, (() => { const b = new THREE.Box3().setFromObject(group), z = b.getSize(new THREE.Vector3()); return Math.max(z.x, z.z) > 60 ? 512 : big || S.R >= R ? 256 : 128; })()) : null; // дома - импостор (снимки модели), деревья - упрощённая сетка
+      const tree = S.slot >= 14 && S.slot <= 17, imp = RF > S.R && S.slot && !tree && !yard ? makeImpostor(group, G.renderer, (() => { const b = new THREE.Box3().setFromObject(group), z = b.getSize(new THREE.Vector3()); return Math.max(z.x, z.z) > 60 ? 512 : big || S.R >= R ? 256 : 128; })()) : null; // дома - импостор (снимки модели), деревья - упрощённая сетка
       if (imp) {
         S.imFar = new THREE.InstancedBufferAttribute(new Float32Array(S.n * 16), 16); S.imFar.setUsage(THREE.DynamicDrawUsage);
         const m = new THREE.InstancedMesh(imp.geo, imp.mat, S.n); m.instanceMatrix = S.imFar; m.count = 0; m.visible = false; m.frustumCulled = false; m.receiveShadow = !!sh.receive;
         Object.assign(m.userData, { set: key, far: true }); scene.add(m); S.far = [m]; S.Rf = RF; ENV.uMdl.value[S.slot] = RF; lx = 1e9;
-      } else if (RF > S.R && S.slot && tree) Promise.all(S.meshes.map((m) => farIndex(m.geometry, 0.08, 8).then((ix) => { const g = new THREE.BufferGeometry(); for (const a in m.geometry.attributes) g.setAttribute(a, m.geometry.attributes[a]); g.setIndex(ix || m.geometry.index); g.boundingSphere = m.geometry.boundingSphere; return g; }))).then((gs) => {
+      } else if (RF > S.R && S.slot && (tree || yard)) Promise.all(S.meshes.map((m) => farIndex(m.geometry, yard ? 0.04 : 0.08, yard ? 4 : 8).then((ix) => { const g = new THREE.BufferGeometry(); for (const a in m.geometry.attributes) g.setAttribute(a, m.geometry.attributes[a]); g.setIndex(ix || m.geometry.index); g.boundingSphere = m.geometry.boundingSphere; return g; }))).then((gs) => {
         S.imFar = new THREE.InstancedBufferAttribute(new Float32Array(S.n * 16), 16); S.imFar.setUsage(THREE.DynamicDrawUsage);
         S.far = S.meshes.map((h, i) => {
           const m = new THREE.InstancedMesh(gs[i], h.material, S.n); m.instanceMatrix = S.imFar; m.count = 0; m.visible = false; m.frustumCulled = false;
@@ -1156,6 +1202,10 @@ function nearHouses(G, scene, B, near, P, sh) {
       if (al) { if (cl || S.cl0) { S.imLo.updateRange.count = Math.max(cl, 1) * 16; S.imLo.needsUpdate = true; } S.cl0 = cl; for (const m of S.lo) { m.count = cl; m.visible = cl > 0; } }
       if (af) { if (cf || S.cf0) { S.imFar.updateRange.count = Math.max(cf, 1) * 16; S.imFar.needsUpdate = true; } S.cf0 = cf; for (const m of S.far) { m.count = cf; m.visible = cf > 0; } }
     }
+    if (G.yardL) { // площадки порта: коробку не рисуем - дальние ступени контейнеров (yardLayer) от края моделей
+      let nr = 1e9; for (const S of sets.values()) if (S.slot === YARD && S.name !== 'c_rtg' && S.name !== 'c_reach' && S.meshes.length) nr = Math.min(nr, S.far ? S.Rf : S.R); // только пришедшие виды: не пришёл один - остальные всё равно моделями
+      ENV.uMdl.value[YARD] = 1e7; G.yardL.tick(p, nr < 1e9 ? nr : 0);
+    }
   };
   // окно ТВ: модели вблизи точки at (радиус R) в поле зрения cam - во втором буфере инстансов; коробки там прячет шейдер
   // (uHide = at). Возвращает, как вернуть основной кадр. Основной набор не трогается - нагрузки на остальной кадр нет
@@ -1181,10 +1231,12 @@ function nearHouses(G, scene, B, near, P, sh) {
       for (const m of S.meshes) { keep.push(m, m.count, m.visible); m.instanceMatrix = S.imPod; m.count = c; m.visible = c > 0; }
       if (S.lo) for (const m of S.lo) { keep.push(m, m.count, m.visible); m.visible = false; }
       if (S.far) for (const m of S.far) { keep.push(m, m.count, m.visible); m.visible = false; }
-      if (S.slot) U[S.slot] = R;
+      if (S.slot && !(S.slot === YARD && G.yardL)) U[S.slot] = R; // коробку площадки порта не рисуем и в окне ТВ: дальше R - бруски yardLayer от точки взгляда
     }
+    if (G.yardL) G.yardL.pod(at, R);
     const h0 = ENV.uHide.value.clone(); ENV.uHide.value.copy(at);
     return () => {
+      if (G.yardL) G.yardL.restore();
       for (let i = 0; i < keep.length; i += 3) { const m = keep[i], S = sets.get(m.userData.set); m.instanceMatrix = m.userData.far ? S.imFar : m.userData.lo ? S.imLo : S.im; m.count = keep[i + 1]; m.visible = keep[i + 2]; }
       for (let i = 0; i < 32; i++) U[i] = mdl0[i];
       ENV.uHide.value.copy(h0);

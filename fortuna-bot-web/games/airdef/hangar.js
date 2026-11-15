@@ -146,11 +146,11 @@ export function createHangar(C, renderer) {
     const obj = pm.obj; holder.add(obj); obj.position.set(0, 0, 0); pivot.updateMatrixWorld(true);
     const box0 = new THREE.Box3().setFromObject(obj), sz = box0.getSize(new THREE.Vector3());
     // подвеска - как в бою
-    let oi = 0; const parts = obj.children.slice(), hung = [], ms = [], seatL = [], ord = stOrder(pm.stations ? pm.stations.length : 8, !!pm.heli);
+    let oi = 0; const parts = obj.children.slice(), hung = [], ms = [], seatL = [], ord = stOrder(pm.stations ? pm.stations.length : 8, !!pm.heli), outSt = new Set((pm.internal && (planeMeta(pm.name) || {}).out) || []); // out - точки вне отсека (Ту-22М3: МБД)
     for (const [key, n] of L.items.slice().sort((a, b) => AG[b[0]].mass - AG[a[0]].mass)) {
       for (let i = 0; i < n && oi < ord.length; i++) {
         const st = ord[oi++], p = pm.stations[st]; if (!p) continue;
-        const W0 = AG[key].vis || {}, m = pylonMesh(key, AG[key], C.weaponGeo, C.mats.wMat); m.position.set(p.x, p.y - (W0.hang ?? W0.r ?? 0.2) - 0.05, p.z); m.visible = !pm.internal; obj.add(m); if (pm.internal) continue; hung.push(m); ms.push([key, m]); seatL.push({ m, st, key, W: AG[key] }); // во внутренних отсеках не видно, как в бою
+        const W0 = AG[key].vis || {}, m = pylonMesh(key, AG[key], C.weaponGeo, C.mats.wMat); m.position.set(p.x, p.y - (W0.hang ?? W0.r ?? 0.2) - 0.05, p.z); const inB = pm.internal && !outSt.has(st); m.visible = !inB; obj.add(m); if (inB) continue; hung.push(m); ms.push([key, m]); seatL.push({ m, st, key, W: AG[key] }); // во внутренних отсеках не видно, как в бою
       }
     }
     if (L.pod && pm.pod) { const m = podModel() || new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 2.4, 10).rotateX(Math.PI / 2), new THREE.MeshPhongMaterial({ color: 0x5a636c })); m.position.copy(pm.pod); obj.add(m); hung.push(m); seatL.push({ m, pod: true }); } // как в бою: контейнер ещё не пришёл - простая фигура

@@ -141,8 +141,9 @@ const META = {
     nozzles: [V(-0.49, -0.9, 8.535), V(0.49, -0.9, 8.535)], nr: 0.385, pod: V(0.72, -1.85, 0.415), clearGlass: true, ...(paintOn ? { gearModel: 'e_f18c_gear' } : {}) }, // F/A-18C: своя модель, 2 держателя на внешнем пилоне + внутренний + под воздухозаборником, контейнер на правом борту
   e_su25: { side: 'east', cls: 'strike', lazy: true, stations: mirror([V(-4.36, -1.234, 1.166), V(-3.6, -1.194, 1.028), V(-2.8, -1.154, 0.807), V(-2.02, -1.115, 0.582)]), // Су-25: своя модель (Свои/Су-25, 2026-11-13); низ пилонов p4..p1 от внешнего (пятый p5 под Р-60 - только в модели)
     nozzles: [V(-0.89, -1.175, 4.01), V(0.89, -1.175, 4.01)], nr: 0.27, pod: V(0, -2.113, 0.475), dry: true, racks: true, clearGlass: true, ...(paintOn ? { gearModel: 'e_su25_gear' } : {}) }, // контейнер - на подфюзеляжном пилоне pylon_c; пилоны узкие - racks
-  e_su34: { side: 'east', cls: 'strike', lazy: true, stations: mirror([V(-6.01, -1.56, 5.59), V(-4.7, -1.6, 4.57), V(-3.4, -1.56, 4.0), V(-1.2, -2.66, 3.0, 0.2)]),
-    nozzles: [V(-1.235, -1.67, 9.95), V(1.235, -1.67, 9.95)], nr: 0.44, pod: null }, // Су-34 - manilov.ap («Платан» встроен); под крылом пилоны модели, под гондолой (дно −2,46) пилон дорисован
+  e_su34: { side: 'east', cls: 'strike', lazy: true, stations: mirror([V(-5.85, -1.052, 4.625), V(-1.3, -2.545, 1.35), V(-3.35, -1.16, 2.85), V(-4.6, -1.166, 3.65)]), // Су-34: своя модель (Свои/Су-34, 2026-11-15); порядок [внешний, под гондолой, внутренний и средний подкрыльевые] - КАБ-500С ×3 + Х-31П ×2 + «Сорбция»
+    ext: { keys: ['umpk', 'kh59m', 'kh31p', 'ecm_e', 'decoy_e'], need: ['kh59m'], stations: mirror([V(-5.85, -1.052, 4.625), V(-4.6, -1.166, 3.65), V(-3.35, -1.16, 2.85), V(-1.3, -2.545, 1.35)]), seatZ: true }, // «УМПК ×2 + Х-59М + Х-31П ×2 + помехи + ложная цель»: Х-59М - под левой гондолой, УМПК - под правой гондолой и на левом внутреннем подкрыльевом (stationsFor; сборщик проверил _stores.py; seatZ - у набора свой порядок точек, seats-gen пишет для него отдельную посадку «x»)
+    nozzles: [V(-1.31, -1.357, 9.52), V(1.31, -1.357, 9.52)], nr: 0.472, pod: V(0, -1.697, 0.8), clearGlass: true, ...(paintOn ? { gearModel: 'e_su34_gear' } : {}) }, // прицельный контейнер - на переднем пилоне между гондолами; стоек в файле самолёта нет (gearHide не нужен)
   e_su17: { side: 'east', cls: 'strike', lazy: true, stations: mirror([V(-0.42, -1.888, 2.275), V(-0.42, -1.888, -0.725), V(-2.05, -2.015, 1.525), V(-1.12, -2.011, 0.125)]), // Су-17М4: своя модель (Свои/Су-17М4, 2026-11-13), серая; порядок: подфюзеляжные задний и передний, внешний и внутренний крыльевые - Х-58 на внутренние, Х-25МЛ на внешние (сборщик: _loads.py, касаний нет)
     ext: { keys: ['kh28', 'fab500'], need: ['kh28'], stations: mirror([V(-0.42, -1.888, 2.275), V(-0.42, -1.888, -0.725), V(-2.05, -2.015, 1.525), V(-1.12, -2.011, -0.875)]), seatZ: true }, // Х-28 (размах 1,93 м) - на внутренних крыльевых на 1 м впереди середины пилона, иначе крылья ракеты в основной стойке; ФАБ-500 - внешние крыльевые и передние подфюзеляжные (stationsFor; seatZ - seats-gen держит z точки)
     nozzles: [V(0, -1.105, 8.525)], nr: 0.48, pod: V(0, -1.886, -2.475), racks: true, clearGlass: true, ...(paintOn ? { gearModel: 'e_su17_gear' } : {}), // контейнер на 0,5 м позади прежней точки: там он задевал носовую стойку
@@ -152,8 +153,12 @@ const META = {
     nozzles: [V(-1.37, -0.66, 8.25), V(1.37, -0.66, 8.25)], nr: 0.23, pod: null }, // Су-57
   e_mig31: { side: 'east', cls: 'fighter', lazy: true, stations: mirror([V(-5.6, -0.95, 5.4, 0.3), V(-4.62, -1.24, 4.4), V(-1.55, -1.55, 7.5), V(-1.19, -1.92, -1.5)]),
     nozzles: [V(-0.78, -1.09, 11.1), V(0.78, -1.09, 11.1)], nr: 0.37, pod: null }, // МиГ-31БМ
-  e_tu22m3: { side: 'east', cls: 'heavy', lazy: true, stations: mirror([V(-12, -5.05, 8.2, 0.35), V(-9.5, -4.91, 7.3, 0.35), V(-6.8, -4.38, 6.2), V(-1.9, -5.1, 7.3)]), // по низу консолей крыла (стреловидность 30°; пилонов у автора нет: два внешних дорисованы, py 0,35) и боку фюзеляжа
-    nozzles: [V(-1.41, -3.44, 18.9), V(1.41, -3.44, 18.9)], nr: 0.9, pod: null }, // Ту-22М3 - только в налётах ИИ; сопла по срезу лепестков (z 18,85; кольцо R ≈ 1,1, проём R ≈ 0,9)
+  e_tu22m3: { side: 'east', cls: 'heavy', lazy: true, internal: true, stations: mirror([V(-1.975, -4.16, -1.63), V(-0.4, -3.492, 1.17), V(-0.4, -3.492, 5.27)]), // Ту-22М3: своя модель (Свои/Ту-22М3, 2026-11-15); ФАБ-1000 ×6 = 4 в отсеке (два ряда по две, низ замков) + 2 на МБД под заборниками; порядок: МБД первым - при mirror они точки 0 и 5 и сбрасываются первыми
+    out: [0, 5], // точки вне отсека (МБД под заборниками): видны всегда, пуск без створок - читают air.js / main.js / hangar.js
+    nozzles: [V(-0.79, -2.482, 19.7), V(0.79, -2.482, 19.7)], nr: 0.76, pod: null, clearGlass: true, ...(paintOn ? { gearModel: 'e_tu22m3_gear' } : {}), gearHide: ['door_n_r', 'door_n_l', 'door_m_r', 'door_m_l'], // со стойками закрытые створки ниш прячутся
+    bay: { doors: { bay_l: [[-0.796, -4.195, 2.82], [0, 0, -1], 85], bay_r: [[0.796, -4.195, 2.82], [0, 0, 1], 85] }, sides: { L: ['bay_l'], R: ['bay_r'] } },
+    // консоли в файле сложены (65°), sweep - вперёд до 20° (setPose: ангар - вперёд, в полёте - по скорости), как у Ту-22М2; механизация - дети своей консоли
+    pivots: { wing_r: [[5.6, -2.882, 5.17], [0, 1, 0]], wing_l: [[-5.6, -2.882, 5.17], [0, 1, 0]] }, sweep: { wing_r: 45, wing_l: -45 } }, // Ту-22М3 в налётах ИИ и в ангаре; сопла по срезу (nr 0,76)
   e_f4: { side: 'west', cls: 'fighter', lazy: true, stations: mirror([V(-0.74, -1.589, -1.525), V(-0.62, -1.649, 2.475), V(-3.37, -1.614, 1.415), V(-2.06, -1.705, -0.505)]),
     nozzles: [V(-0.55, -1.183, 5.075), V(0.55, -1.183, 5.075)], nr: 0.445, pod: V(0, -1.635, 0.025), clearGlass: true, ...(paintOn ? { gearModel: 'e_f4_gear' } : {}) }, // F-4 Phantom II: своя модель (Свои/F-4 Phantom II, 2026-11-10); точки - передняя и задняя ниши, внешний и внутренний пилоны
   e_gripen: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-4.205, -1.206, 4.075, 0.1), V(-2.92, -1.544, 3.475), V(-1.95, -1.544, 2.325), V(-0.45, -1.944, 1.625, 0.1)]),
@@ -385,6 +390,7 @@ const GLB_V_OWN = {
   e_mig27: '20261113d', e_mig27_gear: '20261113d', // свой МиГ-27К
   e_mig25: '20261114a', e_mig25_gear: '20261114a', // свой МиГ-25БМ
   e_tu22m2: '20261114b', e_tu22m2_gear: '20261114b', e_t4: '20261114b', e_t4_gear: '20261114b', // свои Ту-22М2 и Т-4 «Сотка»
+  e_su34: '20261115a', e_su34_gear: '20261115a', e_tu22m3: '20261115a', e_tu22m3_gear: '20261115a', e_tu22m3_lo: '20261115a', // свои Су-34 и Ту-22М3 (дальняя копия e_tu22m3_lo - «Летка»)
   e_yak38: '20261114a', e_yak38_gear: '20261114a', // свой Як-38М
   e_su25: '20261114a', e_su25_gear: '20261114a', // свой Су-25 (2026-11-14: финал - корень крыла, износ, копоть)
   e_su7b: '20261113b', e_su7b_gear: '20261113b', // свой Су-7БМК
@@ -474,7 +480,7 @@ const GLB_V_OWN = {
   pk_f18: '20261106b',
   pk_e_f15e: '20261105a',
   pk_e_a10: '20261112c', // своя модель A-10A
-  pk_e_su34: '20261029b',
+  pk_e_su34: '20261115a', // своя модель Су-34
   pk_e_mig31: '20261029b',
   pk_h_mi24: '20261029b',
   pk_h_ah64: '20261029b',
@@ -560,8 +566,6 @@ GLB_V.e_f15e = '20261105a'; GLB_V.e_f15e_gear = '20261105a'; // своя мод�
 // «Оса-М» ЗИФ-122 (KoreanNavy) и «Бук-М3» (Valera121) вместо моделей Jeyhun1985 (2026-10-22): новые файлы
 Object.assign(GLB_V, Object.fromEntries(['osa', 'osa_lo'].map((n) => [n, '20261024e'])));
 Object.assign(GLB_V, Object.fromEntries(['bukm3', 'bukm3_lo', 'msl_bukm3'].map((n) => [n, '20261024f'])));
-// F-35A (andertan), A-10 (AIRMAN Magazine; своя модель с 2026-11-12) и Ту-22М3 (Real Slim Shady) вместо моделей shangus930 / Immersive3D / Jeyhun1985 (2026-10-22): новые файлы
-Object.assign(GLB_V, Object.fromEntries(['e_tu22m3', 'e_tu22m3_lo'].map((n) => [n, '20261024h'])));
 // трубы ПЗРК перекрашены, в настоящий размер, Stinger развёрнут; расчёты ПЗРК вместо процедурных солдат (2026-10-27)
 Object.assign(GLB_V, Object.fromEntries(['mp_verba', 'mp_stinger', 'crew_e', 'crew_w'].map((n) => [n, '20261027c'])));
 Object.assign(GLB_V, Object.fromEntries(['h_log', 'h_khata', 'h_mobile'].map((n) => [n, '20261027b']))); // маленькие дома заново: упрощение без дыр в крыше и тёмных фасадов (prepare.js simpKeep, lockBorder; 2026-10-27)
@@ -572,7 +576,6 @@ GLB_V.w_storm = '20261024k'; // Storm Shadow: консоли крыла - сво
 Object.assign(GLB_V, { su30: '20261024p' }); // Су-30МКИ и F-16E/F - andertan (CC BY 4.0) вместо Immersive3D и Muhamad Mirza Arrafi (сомнительные права: F-16 помечен на Sketchfab как сгенерированный нейросетью, у Immersive3D - рипы Unreal) (2026-10-24)
 Object.assign(GLB_V, { e_b1b: '20261024q' }); // прежний B-1B - manilov.ap, теперь свой (GLB_V_OWN перекрывает) (Су-25 - своя модель с 2026-11-13, GLB_V_OWN; прежде mamont nikita) (все CC BY 4.0) вместо моделей Muhamad Mirza Arrafi, Rhine_Lab_Muelsyse и Immersive3D (сомнительные права) (2026-10-24)
 Object.assign(GLB_V, { l_iskander: '20261024s', w_tbmdec: '20261024r' }); // «Искандер» и ложная цель («Кинжал» - своя модель с 2026-10-25, GLB_V_OWN) - dofash_76 «ISKANDER» (CC BY 4.0) вместо 42manako (перезалив модели из 3D Warehouse - лицензия недействительна) (2026-10-24)
-GLB_V.e_su34 = '20261024l'; // Су-34 manilov.ap (CC BY 4.0) вместо 42manako, без шасси (2026-10-22)
 Object.assign(GLB_V, { hawk: '20261024m', w_gbu24: '20261024m' }); // Hawk: ракета без деталей пусковой (absorb 0); GBU-24 - AnirudhRao, своя окраска
 Object.assign(GLB_V, GLB_V_OWN);
 META.hg_jack = { lazy: true, matte: true, stations: [] }; // подъёмник ангара (hangar.js): части base, ram, head
@@ -591,6 +594,8 @@ if (paintOn) META.e_mig25_gear = { lazy: true, matte: true, paint: true, station
 if (paintOn) META.e_yak38_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего Як-38М для ангара
 if (paintOn) META.e_tu22m2_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего Ту-22М2 для ангара
 if (paintOn) META.e_t4_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своей Т-4 для ангара
+if (paintOn) META.e_su34_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего Су-34 для ангара
+if (paintOn) META.e_tu22m3_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего Ту-22М3 для ангара
 if (paintOn) META.e_il28_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего Ил-28 для ангара
 if (paintOn) META.e_f35_gear = { lazy: true, matte: true, paint: true, stations: [] };
 if (paintOn) META.f18_gear = { lazy: true, matte: true, paint: true, stations: [] };
@@ -1029,7 +1034,7 @@ const CAMO_R = (() => { try { const q = new URLSearchParams(location.search); re
 // Модель сборщика с новой развёрткой и картинкой окраски (tools/airdef-shots/camo-glb.js --game → models/camo/<самолёт>.<окраска>.glb, JPEG) грузится,
 // только когда окраска надета и самолёт в бою; оси, масштаб и центр - как у обычной модели, описание (подвески, сопла, зоны) - её же (mOf).
 // В LOADED - под ключом '<самолёт>@<окраска>'; пока не пришла - обычная модель, потом самолёт пересобирается (modelsReady)
-const CAMO_V = { 'e_f15e@inferno': '20261105a', 'e_mig31@dragon': '20261028a', 'e_typhoon@harlequin': '20261106b' };
+const CAMO_V = { 'e_f15e@inferno': '20261105a', 'e_mig31@dragon': '20261028a', 'e_typhoon@harlequin': '20261106b', 'e_su34@cosmos': '20261115a' };
 // Максимальные текстуры (настройка «Текстуры», Mark 2026-11-04): та же модель с картинками исходного размера, models/camo/<самолёт>.hi.glb (tools/airdef-models/hi-textures.js), тот же механизм, что у окраски
 for (const n of HI_PLANES) CAMO_V[`${n}@hi`] = '20261104a';
 export const hiKnown = (name) => !!CAMO_V[`${name}@hi`];

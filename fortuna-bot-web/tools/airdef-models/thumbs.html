@@ -75,7 +75,7 @@ async function himarsObj(wk) {
   wantWeapon(wk); await wait(() => !weaponPending(wk), 60); const w = weaponMesh(wk, AG[wk], weaponGeo, wMat); setWings(w, 0);
   const M = new THREE.Vector3(...PO.muzzle).sub(H).applyAxisAngle(X, el).add(H), dir = new THREE.Vector3(0, Math.sin(el), -Math.cos(el)), out = +(Q.get('mout') || 0.9);
   w.position.copy(M).addScaledVector(dir, out); w.lookAt(w.position.clone().addScaledVector(dir, Q.has('mflip') ? 1 : -1)); g.add(w); // нос ракеты - вверх по оси трубы
-  const t = new THREE.Group(); g.rotation.y = +(Q.get('hyaw') || 2.2); t.add(g); return t; // кабиной к камере
+  const t = new THREE.Group(); g.rotation.y = +(Q.get('hyaw') || -0.94); t.add(g); return t; // боком, кабиной вправо - как пусковые остальных ударов (Mark 2026-11-15; было 2.2 - кабиной влево)
 }
 async function objOf(n) {
   if (n.branch === 'air') { wantModel(n.key); await wait(() => anyModel(n.key)); const pm = planeModel(n.side, 'strike', n.key); if (pm && n.key === 'e_t4') setPose(pm.obj, 'e_t4', 'ground', 1); return pm && pm.obj; } // Т-4: нос с кабиной опущен, как на стоянке в ангаре

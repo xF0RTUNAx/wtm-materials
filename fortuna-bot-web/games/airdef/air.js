@@ -39,7 +39,7 @@ export function createAir(C) {
   const ship = new THREE.Group(); ship.rotation.order = 'YXZ';
   const shipMat = new THREE.MeshPhongMaterial({ vertexColors: true, specular: 0x666666, shininess: 55 });
   let sweepK = -1; // стреловидность своего B-1B: 0 - сложено (как в файле), 1 - вперёд; −1 - новый вылет: сразу по скорости
-  let shipModel = null, shipSide = null, shipCls = null, shipName = null, shipSkin = null, shipReal = false, shipInternal = false, flames = null, stations = [], podPos = new THREE.Vector3(0, -1.6, -3.5);
+  let shipModel = null, shipSide = null, shipCls = null, shipName = null, shipSkin = null, shipReal = false, shipInternal = false, shipOut = new Set(), flames = null, stations = [], podPos = new THREE.Vector3(0, -1.6, -3.5);
   // cls - ударный (бомбы) или ракетный: Су-30 / F/A-18 или МиГ-29 / F-16
   function buildShip(side, cls = 'strike', name = null) {
     // готовая модель (models.js), если загрузилась, иначе - процедурная; окраска из магазина - надетая на этот самолёт (аккаунт игры, shop-ui.js),
@@ -51,7 +51,7 @@ export function createAir(C) {
     const exact = !!pm && (!name || pm.name === name) && (pm.skin || null) === skin;
     if (shipSide === side && shipCls === cls && shipName === name && shipSkin === skin && (craft.heli || !pm || !shipModel || pm.stations === stations) /* другой набор точек у того же самолёта (Vulcan: отсек или пилоны) - пересобрать */ && (shipReal || !pm || (!exact && shipModel && shipModel.userData.pm === pm.name + (pm.skin ? '@' + pm.skin : '')))) return;
     if (shipModel) ship.remove(shipModel);
-    sweepK = -1; shipSide = side; shipCls = cls; shipName = name; shipSkin = skin; shipReal = exact; shipInternal = !!(pm && pm.internal);
+    sweepK = -1; shipSide = side; shipCls = cls; shipName = name; shipSkin = skin; shipReal = exact; shipInternal = !!(pm && pm.internal); shipOut = new Set((shipInternal && (planeMeta(pm.name) || {}).out) || []); // out - точки вне отсека (Ту-22М3: МБД): видны, пуск без створок
     if (pm) {
       shipModel = pm.obj; shipModel.userData.pm = pm.name + (pm.skin ? '@' + pm.skin : ''); stations = craft.heli ? heliStations(pm.stations, pm.pods4) : pm.stations; podPos = craft.heli ? null : pm.pod; // pod: null - встроенная прицельная система (у вертолёта - всегда)
       shipModel.traverse((o) => { if (o.isMesh && !o.userData.glass) o.castShadow = !!P.shadows; });
@@ -94,7 +94,7 @@ export function createAir(C) {
     const seatL = [];
     for (const l of loadout) for (const st of l.st) {
       const p = stations[st], W0 = AG[l.key].vis; if (!p) continue; const m = pylonMesh(l.key, AG[l.key], C.weaponGeo, C.mats.wMat, !!craft.heli); /* пока грузится своя модель, стоит подходящая из загруженных - у неё точек может быть меньше (F-100D, МиГ-23: шесть) */ m.position.set(p.x, p.y - (W0.hang ?? W0.r) - 0.05, p.z); // hang - у ракет с гондолой под корпусом
-      m.userData.st = st; m.visible = !shipInternal; ship.add(m); pylonMeshes.push(m); seatL.push({ m, st, key: l.key, W: AG[l.key] }); // во внутренних отсеках - не видно
+      m.userData.st = st; m.visible = !shipInternal || shipOut.has(st); ship.add(m); pylonMeshes.push(m); seatL.push({ m, st, key: l.key, W: AG[l.key] }); // во внутренних отсеках - не видно
     }
     if (hasPod && podPos) { const m = podModel() || new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 2.4, 10).rotateX(Math.PI / 2), new THREE.MeshPhongMaterial({ color: 0x5a636c })); m.position.copy(podPos); ship.add(m); pylonMeshes.push(m); seatL.push({ m, pod: true }); } // LITENING или цилиндр
     if (shipModel && shipModel.userData.pm && !craft.heli && !shipInternal) seatExtra = seatStores(ship, shipModel.userData.pm.replace(/@.*$/, ''), seatL); // на настоящие пилоны модели (вертолёты - по своим точкам)
@@ -510,7 +510,7 @@ export function createAir(C) {
       return;
     }
     const st = l.st.pop(); l.n--;
-    const m = pylonMeshes.find((q) => q.userData.st === st); if (m) { m.visible = false; if (shipBay) shipBay.fired(m.position); }
+    const m = pylonMeshes.find((q) => q.userData.st === st); if (m) { m.visible = false; if (shipBay && !shipOut.has(st)) shipBay.fired(m.position); }
     C.S.release(craft, l.key, opts);
     updLoad(); logFire(l.key);
     if (C.hooks.trainFire) C.hooks.trainFire(l.key);
@@ -540,7 +540,7 @@ export function createAir(C) {
         if (l.rs <= 0) { l.st.pop(); l.n--; l.rs = per; }
       } else {
         const i = o.st !== undefined ? l.st.indexOf(o.st) : -1; stn = i >= 0 ? l.st.splice(i, 1)[0] : l.st.pop(); l.n--;
-        const m = pylonMeshes.find((q) => q.userData.st === stn); if (m) { m.visible = false; if (shipBay) shipBay.fired(m.position); }
+        const m = pylonMeshes.find((q) => q.userData.st === stn); if (m) { m.visible = false; if (shipBay && !shipOut.has(stn)) shipBay.fired(m.position); }
         w = C.S.release(craft, l.key, opts);
       }
       updLoad(); logFire(l.key);
@@ -1241,7 +1241,7 @@ export function createAir(C) {
     if (game.net && craft.dead) { spectate(dt, t); return; } // за союзниками - только когда сбит (решение Mark)
     // модель самолёта - до отрисовки кадра, в ту же точку, по которой ставится камера (иначе самолёт «прыгает» на кадр)
     ship.position.copy(craft.pos); ship.rotation.set(craft.pitch, craft.yaw, craft.roll, 'YXZ');
-    if (shipBay) { shipBay.update(dt); for (const m of pylonMeshes) if (m.userData.st !== undefined) m.visible = shipBay.open(m.position.x) > 0.02 && loadout.some((l) => l.st.includes(m.userData.st)); } // в отсеке оружие видно, только пока створки открыты
+    if (shipBay) { shipBay.update(dt); for (const m of pylonMeshes) if (m.userData.st !== undefined && !shipOut.has(m.userData.st)) m.visible = shipBay.open(m.position.x) > 0.02 && loadout.some((l) => l.st.includes(m.userData.st)); } // в отсеке оружие видно, только пока створки открыты
     // дым и огонь из повреждённых зон - от модели в положении этого кадра (2026-10-25: был в systems() до шага полёта - след отставал на кадр);
     // время - шагов полёта с прошлого кадра (камера идёт и на паузе, и в замедлении - по ним дым не копится)
     if (craft.dmgVis && dmgDt > 0 && !craft.dead) craft.dmgVis.update(dmgDt, craft, C.windV || (C.windV = new THREE.Vector3(3.9, 0, 1.1)));
@@ -1530,7 +1530,7 @@ export function createAir(C) {
     const col = new THREE.Mesh(new THREE.CylinderGeometry(ZONE.R, ZONE.R, 4000, 48, 1, true), new THREE.MeshBasicMaterial({ color: 0x4ade80, transparent: true, opacity: 0.07, side: THREE.DoubleSide, depthWrite: false }));
     col.position.y = 2000; zoneG.add(col); }
   const zoneRearm = () => { // весь боекомплект по связке (из «зоны» - без расхода запаса), ловушки - полные
-    for (const l of loadout) { l.rs = undefined; for (const st of l.st0) if (!l.st.includes(st)) { l.st.push(st); l.n++; const m = pylonMeshes.find((q) => q.userData.st === st); if (m) m.visible = !shipInternal; } } // и блок НАР - полный
+    for (const l of loadout) { l.rs = undefined; for (const st of l.st0) if (!l.st.includes(st)) { l.st.push(st); l.n++; const m = pylonMeshes.find((q) => q.userData.st === st); if (m) m.visible = !shipInternal || shipOut.has(st); } } // и блок НАР - полный
     craft.cmFlare = craft.cmChaff = C.MODE().cm;
   };
   const zoneNeed = () => ({ fuel: zn.fuel > 0 && (craft.fuel ?? 1) < 0.9, ammo: zn.ammo > 0 && (loadout.some((l) => AG[l.key].kind !== 'ecm' && (l.n < l.n0 || (l.rs !== undefined && l.rs < Math.ceil(AG[l.key].load / AG[l.key].salvo)))) || cmLow(0.5) || craft.cmChaff < C.MODE().cm * 0.5) });
@@ -1600,7 +1600,7 @@ export function createAir(C) {
   function reloadOne(l) {
     const st = l.st0.find((q) => !l.st.includes(q)); if (st === undefined || !(l.res > 0)) return;
     l.st.push(st); l.n++; l.res--;
-    const m = pylonMeshes.find((q) => q.userData.st === st); if (m) m.visible = !shipInternal;
+    const m = pylonMeshes.find((q) => q.userData.st === st); if (m) m.visible = !shipInternal || shipOut.has(st);
     updLoad();
     if (!usable(loadout[sel])) sel = loadout.indexOf(l);
   }

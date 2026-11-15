@@ -719,11 +719,11 @@ const simFx = {
 // подвеска ИИ-самолёта с готовой моделью: тяжёлое - ближе к фюзеляжу (как у игрока); k - номер изделия этого типа
 const LOD_D = 2500; // дальше LOD_D - простая модель самолёта
 function hangLoad(g, stations, load, plane, inBay = false) {
-  const out = [], seatL = [], pmH = plane ? planeMeta(plane) : null, ord = stOrder(stations.length, !!(pmH && pmH.heli)); let oi = 0; // порядок развески - как у игрока (models.js stOrder)
+  const out = [], seatL = [], pmH = plane ? planeMeta(plane) : null, outSt = new Set((inBay && pmH && pmH.out) || []), ord = stOrder(stations.length, !!(pmH && pmH.heli)); let oi = 0; // порядок развески - как у игрока (models.js stOrder)
   for (const l of [...load].sort((x, y) => AG[y.key].mass - AG[x.key].mass)) for (let k = 0; k < l.n && oi < ord.length; k++) {
     const st = ord[oi++], W = AG[l.key], p = stations[st]; if (!p) continue;
     const m = pylonMesh(l.key, W, weaponGeo, wMat); if (weaponPending(l.key)) wantWeapon(l.key); // пришла - самолёты пересоберутся
-    m.position.set(W.kind === 'tbm' ? 0 : p.x, p.y - (W.vis.hang ?? W.vis.r) - 0.05, p.z); g.add(m); out.push({ m, l, k }); if (W.kind !== 'tbm') seatL.push({ m, st, key: l.key, W }); // «Кинжал» - под фюзеляжем по оси
+    m.position.set(W.kind === 'tbm' ? 0 : p.x, p.y - (W.vis.hang ?? W.vis.r) - 0.05, p.z); g.add(m); out.push({ m, l, k, out: outSt.has(st) }); if (W.kind !== 'tbm') seatL.push({ m, st, key: l.key, W }); // «Кинжал» - под фюзеляжем по оси
   }
   if (inBay) return out; // в отсеке - на точке, без балок и надставок
   const extra = seatStores(g, plane, seatL); if (extra) out.push({ m: extra, l: { n: 1 }, k: 0 }); // балки и надставки: как подвеска, только вблизи
@@ -903,7 +903,7 @@ function syncWorld(dt, t) {
     if (b.t < 2.5 && Math.random() < dt * 20) C.fx.debrisSmoke(b.g.position);
     if (b.g.position.y < city.topAt(b.g.position.x, b.g.position.z) + 0.5 || b.t > 40) { C.fx.explosion(b.g.position, 3, 'ground'); scene.remove(b.g); debris.splice(i, 1); }
   }
-  for (const g of planeMeshes.values()) { const hb = g.userData.bay; if (hb) for (const h of g.userData.hung) { const has = h.l.n > h.k; if (!has && !h.gone) { h.gone = true; hb.fired(h.m.position); } else if (has) h.gone = false; } } // пуск из отсека: до цикла оружия, чтобы оно успело взять свою точку
+  for (const g of planeMeshes.values()) { const hb = g.userData.bay; if (hb) for (const h of g.userData.hung) { const has = h.l.n > h.k; if (!has && !h.gone) { h.gone = true; if (!h.out) hb.fired(h.m.position); } else if (has) h.gone = false; } } // пуск из отсека: до цикла оружия, чтобы оно успело взять свою точку
   for (const w of S.wpns) {
     let g = wpnMeshes.get(w.id);
     if (g && g.userData.stub && (w.stubT = (w.stubT || 0) - dt) <= 0) { w.stubT = 1; const g2 = relMesh(w); if (!g2.userData.stub) { scene.remove(g); scene.add(g2); wpnMeshes.set(w.id, g2); g = g2; } } // модель пришла - подменить временную
@@ -976,7 +976,7 @@ function syncWorld(dt, t) {
     const L = g.userData.lod, near = !L || camera.position.distanceToSquared(a.pos) < LOD_D * LOD_D;
     if (L) { L.hi.visible = near; L.lo.visible = !near; }
     const hb = g.userData.bay; if (hb) hb.update(dt); // в отсеке: оружие видно только в открытом
-    if (g.userData.hung) for (const h of g.userData.hung) h.m.visible = near && h.l.n > h.k && (!hb || hb.open(h.m.position.x) > 0.02);
+    if (g.userData.hung) for (const h of g.userData.hung) h.m.visible = near && h.l.n > h.k && (!hb || h.out || hb.open(h.m.position.x) > 0.02);
   }
   // дым подбитых самолётов (ИИ и игрок): ветер - лёгкий, постоянный для боя. После того как модели встали на место этого кадра
   // (2026-10-25: раньше - до них, след выходил из прошлого положения: на 30 к/с в 6-10 м позади, в вираже - вбок)

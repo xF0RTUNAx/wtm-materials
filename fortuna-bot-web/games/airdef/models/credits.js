@@ -222,16 +222,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "TU-22M3 Backfire C 3D Model",
-  "author": "Real Slim Shady",
-  "url": "https://sketchfab.com/3d-models/tu-22m3-backfire-c-3d-model-2ef7b08564ed4d05ba5a42b77cb7f5fd",
-  "license": "CC-BY-4.0",
-  "files": [
-   "e_tu22m3",
-   "e_tu22m3_lo"
-  ]
- },
- {
   "title": "Tornado",
   "author": "manilov.ap",
   "url": "https://sketchfab.com/3d-models/tornado-9fd925dabddc4c1998b7c3df5ac47bf8",
@@ -410,7 +400,8 @@ export const CREDITS = [
   "url": "https://sketchfab.com/3d-models/su34-1c94f436be51453fa598e9eab50eb0a7",
   "license": "CC-BY-4.0",
   "files": [
-   "e_su34"
+   "shots/su34-kh59m-sunset.webp",
+   "shots/su34-umpk-clear.webp"
   ]
  },
  {
