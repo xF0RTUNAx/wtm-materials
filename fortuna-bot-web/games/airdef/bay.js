@@ -17,15 +17,41 @@ export function makeBay(obj, meta, root = obj) {
   });
   if (G.some((g) => g.doors.some((d) => !d))) return null;
   const queue = [], sideOf = (x) => G.find((g) => x >= g.x0 && x < g.x1) || G[0];
+  // барабан (META.bay.drum: Ту-95МС, МКУ на шесть Х-55): часть part крутится вокруг оси axis через точку piv; после пуска - поворот на step°,
+  // сход всегда из нижней позиции. Оружие в отсеке (меши точек) крутится вместе с барабаном (drumReg). Геометрия общая у копий модели -
+  // поворот не сдвигом геометрии, а положением части: position = piv + q·(p0 − piv)
+  const DD = B.drum, dpart = DD && obj.getObjectByName(DD.part), drum = dpart ? { part: dpart, P: new THREE.Vector3(...DD.piv), A: new THREE.Vector3(...DD.axis).normalize(),
+    step: (DD.step || 60) * Math.PI / 180, ang: 0, tgt: 0, pend: [], p0: dpart.position.clone(), q0: dpart.quaternion.clone(), ms: [], shown: null } : null;
+  const DQ = new THREE.Quaternion(), DV = new THREE.Vector3();
+  const drumApply = () => {
+    if (drum.shown === drum.ang) return; drum.shown = drum.ang; DQ.setFromAxisAngle(drum.A, drum.ang);
+    drum.part.quaternion.copy(DQ).multiply(drum.q0); drum.part.position.copy(DV.copy(drum.p0).sub(drum.P).applyQuaternion(DQ).add(drum.P));
+    for (const e of drum.ms) { e.m.position.copy(DV.copy(e.p).sub(drum.P).applyQuaternion(DQ).add(drum.P)); e.m.quaternion.copy(DQ).multiply(e.q); }
+  };
   return {
     root,
+    drum: !!drum,
+    // меш оружия на барабане: его положение сейчас (без поворота) - исходное; дальше крутится вместе с барабаном
+    drumReg(m) { if (!drum) return; drum.ms.push({ m, p: m.position.clone(), q: m.quaternion.clone() }); drum.shown = null; drumApply(); },
+    drumClear() { if (drum) drum.ms.length = 0; },
+    // какую точку пускать: из списка list (номера точек stations) - ту, что сейчас ниже всех; убирает её из списка
+    drumPick(list, stations) {
+      if (!drum || !list.length) return list.pop(); DQ.setFromAxisAngle(drum.A, drum.ang); let bi = list.length - 1, by = 1e9;
+      list.forEach((st, i) => { const p = stations[st]; if (!p) return; const y = DV.set(p.x, p.y, p.z).sub(drum.P).applyQuaternion(DQ).y; if (y < by - 1e-3) { by = y; bi = i; } });
+      return list.splice(bi, 1)[0];
+    },
     // открыта ли сторона этой точки: 0 - закрыта, 1 - открыта
     open: (x) => sideOf(x).k,
     // пуск с точки p (местные оси самолёта): открыть эту сторону и запомнить точку для летящего оружия
-    fired(p) { const s = sideOf(p.x); s.t = HOLD_OPEN; queue.push({ p: p.clone(), at: performance.now() }); while (queue.length > 8) queue.shift(); },
+    fired(p) { const s = sideOf(p.x); s.t = HOLD_OPEN; queue.push({ p: p.clone(), at: performance.now() }); while (queue.length > 8) queue.shift(); if (drum) drum.pend.push(0.85); }, // барабан - поворот, когда ракета ушла вниз
     // точка для только что появившегося оружия: самое раннее из ещё не взятых, свежее секунды (ложная цель - не оружие, её запись устаревает здесь)
     take() { const now = performance.now(); while (queue.length) { const q = queue.shift(); if (now - q.at < 1000) return q.p; } return null; },
     update(dt) {
+      if (drum) {
+        for (let i = drum.pend.length - 1; i >= 0; i--) if ((drum.pend[i] -= dt) <= 0) { drum.pend.splice(i, 1); drum.tgt += drum.step; }
+        if (drum.ang !== drum.tgt) { const v = drum.step / 0.7 * dt; drum.ang = Math.abs(drum.tgt - drum.ang) <= v ? drum.tgt : drum.ang + Math.sign(drum.tgt - drum.ang) * v; }
+        drumApply();
+      }
       for (const s of G) {
         if (s.t > 0) { s.t -= dt; s.k = Math.min(1, s.k + dt / OPEN_T); } else if (s.k > 0) s.k = Math.max(0, s.k - dt / CLOSE_T);
         if (s.k === s.shown) continue; s.shown = s.k;

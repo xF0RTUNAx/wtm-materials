@@ -33,7 +33,7 @@
 - "Jaguar" (https://sketchfab.com/3d-models/jaguar-b09a0ee965bb424aaf14ebd06b698f96) by manilov.ap — CC-BY-4.0 — `e_jaguar.glb`
 - "Buccaneer" (https://sketchfab.com/3d-models/buccaneer-db82ad0e1f5644ccaee1b25b77566dc7) by manilov.ap — CC-BY-4.0 — `e_buccaneer.glb`
 - "Harrier" (https://sketchfab.com/3d-models/harrier-9ccfd6758680413bb19d656db4f46185) by manilov.ap — CC-BY-4.0 — `e_harrier.glb`
-- "Tu95" (https://sketchfab.com/3d-models/tu95-1eac97ec49ed4f1da8b7deb1e1b2cc7a) by manilov.ap — CC-BY-4.0 — `e_tu95.glb`
+- "Tu95" (https://sketchfab.com/3d-models/tu95-1eac97ec49ed4f1da8b7deb1e1b2cc7a) by manilov.ap — CC-BY-4.0 — фон меню `shots/tu95-far.webp` и кадр меню `ui/mm/air_e_tu95_h3.webp` (сняты с прежней модели Ту-95МС, до пересъёмки)
 - "Sukhoi Su-33 Сухой Су-33" (https://sketchfab.com/3d-models/sukhoi-su-33-33-d80603a8a13b49bda90f19d80cac61d4) by andertan — CC-BY-4.0 — `e_su33.glb`
 - "M4" (https://sketchfab.com/3d-models/m4-65059c25184c48c5b6a1b9ac27d34db6) by manilov.ap — CC-BY-4.0 — `e_m4.glb`
 - "Mikoyan-Gurevich MiG-19" (https://sketchfab.com/3d-models/mikoyan-gurevich-mig-19-9204188bf7114b90904c35f64a110ed3) by Tom Zimmermann — CC-BY-4.0 — `e_mig19.glb`

@@ -963,7 +963,7 @@ function syncWorld(dt, t) {
           g.userData.dv = planeDamageVis(scene, pm.obj, pm.name, planeMeta(pm.name), () => C.fx); // зоны повреждений: отрыв частей, дым из зон
           // пламя - у каждой модели своё (вдали - у простой): иначе у длинных самолётов (Су-34) факелы висели за простой моделью
           const fh = attachFlames(pm.obj, pm.nozzles, pm.nr / 0.45, false, pm.dry, pm.name), fl = attachFlames(lo, pm.nozzles.length ? sg.nozzles : [], sg.nr / 0.45, false, pm.dry, pm.name); // вдали - так же: нет пламени у B-2 и F-117, слабое - без форсажа
-          g.userData.flames = { update(t, ab) { fh.update(t, ab); fl.update(t, ab); } }; const bay = pm.internal ? makeBay(pm.obj, planeMeta(pm.name)) : null; if (bay) { g.userData.bay = bay; a.bayVis = bay; } g.userData.hung = pm.internal && !bay ? [] : hangLoad(g, pm.stations, a.load, pm.name, !!bay); // во внутренних отсеках без створок - не видно
+          g.userData.flames = { update(t, ab) { fh.update(t, ab); fl.update(t, ab); } }; const bay = pm.internal ? makeBay(pm.obj, planeMeta(pm.name)) : null; if (bay) { g.userData.bay = bay; a.bayVis = bay; } g.userData.hung = pm.internal && !bay ? [] : hangLoad(g, pm.stations, a.load, pm.name, !!bay); if (bay && bay.drum) for (const h of g.userData.hung) if (!h.out) bay.drumReg(h.m); // барабан (Ту-95МС): ракеты крутятся с ним // во внутренних отсеках без створок - не видно
           if (a.role === 'carrier') lo.visible = false; else g.userData.lod = { hi: pm.obj, lo }; // носитель велик - модель видна и издали
         } else g.userData.flames = attachFlames(g, sg.nozzles, sg.nr / 0.45);
       }

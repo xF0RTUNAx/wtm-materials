@@ -309,7 +309,8 @@ export const CREDITS = [
   "url": "https://sketchfab.com/3d-models/tu95-1eac97ec49ed4f1da8b7deb1e1b2cc7a",
   "license": "CC-BY-4.0",
   "files": [
-   "e_tu95"
+   "shots/tu95-far.webp",
+   "ui/mm/air_e_tu95_h3.webp"
   ]
  },
  {

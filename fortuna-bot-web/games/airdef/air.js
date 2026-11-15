@@ -57,7 +57,7 @@ export function createAir(C) {
       shipModel.traverse((o) => { if (o.isMesh && !o.userData.glass) o.castShadow = !!P.shadows; });
       flames = attachFlames(shipModel, pm.nozzles, pm.nr / 0.45, true, pm.dry, pm.name);
       craft.dmgVis = planeDamageVis(scene, shipModel, pm.name, planeMeta(pm.name), () => C.fx); craft.dmgVis.sync(craft); // зоны повреждений: отрыв частей, дым
-      shipBay = pm.internal && !craft.heli ? makeBay(shipModel, planeMeta(pm.name), ship) : null; craft.bayVis = shipBay; // отсеки со створками: пуск через них (bay.js)
+      shipBay = pm.internal && !craft.heli ? makeBay(shipModel, planeMeta(pm.name), ship) : null; craft.bayVis = shipBay; drumMeshes(); // отсеки со створками: пуск через них (bay.js)
     } else {
       craft.dmgVis = null; shipBay = null; craft.bayVis = null;
       const sg = strikerGeo(side, true); stations = craft.heli ? heliStations(sg.stations) : sg.stations; podPos = craft.heli ? null : new THREE.Vector3(0, -1.6, -3.5);
@@ -98,7 +98,10 @@ export function createAir(C) {
     }
     if (hasPod && podPos) { const m = podModel() || new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 2.4, 10).rotateX(Math.PI / 2), new THREE.MeshPhongMaterial({ color: 0x5a636c })); m.position.copy(podPos); ship.add(m); pylonMeshes.push(m); seatL.push({ m, pod: true }); } // LITENING или цилиндр
     if (shipModel && shipModel.userData.pm && !craft.heli && !shipInternal) seatExtra = seatStores(ship, shipModel.userData.pm.replace(/@.*$/, ''), seatL); // на настоящие пилоны модели (вертолёты - по своим точкам)
+    drumMeshes();
   }
+  // оружие на барабане отсека (Ту-95МС) крутится вместе с ним
+  function drumMeshes() { if (!shipBay || !shipBay.drum) return; shipBay.drumClear(); for (const m of pylonMeshes) if (m.userData.st !== undefined && !shipOut.has(m.userData.st)) shipBay.drumReg(m); }
   function hurt(dmg, by, from = null) {
     if (craft.dead || game.over || game.net) return; // онлайн: урон и сбитие - от сервера (netHit / netDown)
     if (game.opts.invuln) { if (!game.opts.photo) { flashT = 0.3; snd.hit(); } return; }
@@ -509,7 +512,7 @@ export function createAir(C) {
       if (l.n <= 0) nextWeapon();
       return;
     }
-    const st = l.st.pop(); l.n--;
+    const st = shipBay && shipBay.drum ? shipBay.drumPick(l.st, stations) : l.st.pop(); l.n--; // барабан (Ту-95МС) - нижняя точка
     const m = pylonMeshes.find((q) => q.userData.st === st); if (m) { m.visible = false; if (shipBay && !shipOut.has(st)) shipBay.fired(m.position); }
     C.S.release(craft, l.key, opts);
     updLoad(); logFire(l.key);
@@ -539,7 +542,7 @@ export function createAir(C) {
         for (let i = 0; i < Wp.salvo; i++) w = C.S.release(craft, l.key, opts);
         if (l.rs <= 0) { l.st.pop(); l.n--; l.rs = per; }
       } else {
-        const i = o.st !== undefined ? l.st.indexOf(o.st) : -1; stn = i >= 0 ? l.st.splice(i, 1)[0] : l.st.pop(); l.n--;
+        const i = o.st !== undefined ? l.st.indexOf(o.st) : -1; stn = i >= 0 ? l.st.splice(i, 1)[0] : shipBay && shipBay.drum ? shipBay.drumPick(l.st, stations) : l.st.pop(); l.n--;
         const m = pylonMeshes.find((q) => q.userData.st === stn); if (m) { m.visible = false; if (shipBay && !shipOut.has(stn)) shipBay.fired(m.position); }
         w = C.S.release(craft, l.key, opts);
       }
