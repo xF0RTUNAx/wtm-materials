@@ -254,7 +254,8 @@ const META = {
   w_umpk: { weapon: 'umpk', wings: 'fold', flip: true, stations: [] }, // ФАБ-500 с УМПК - собственная модель (tools/airdef-models/own/umpk)
   w_kh29t: { weapon: 'kh29t', stations: [] }, // Х-29Т - собственная модель (tools/airdef-models/own/kh29t)
   w_kh31p: { weapon: 'kh31p', stations: [] }, // Х-31П - собственная модель (tools/airdef-models/own/kh31p)
-  w_kh59m: { weapon: ['kh59m', 'kh59mk2'], lazy: true, stations: [] }, // Х-59М — собственная модель (tools/airdef-models/own/kh59m)
+  w_kh59m: { weapon: 'kh59m', lazy: true, stations: [] }, // Х-59М — собственная модель (tools/airdef-models/own/kh59m)
+  w_kh59mk2: { weapon: 'kh59mk2', lazy: true, wings: 'deploy', wingAx: { wing: [0, 0.1855, -0.06, -90] }, stations: [] }, // Х-59МК2 — собственная модель (tools/airdef-models/own/kh59mk2)
   w_kh25ml: { weapon: 'kh25ml', stations: [] }, // Х-25МЛ — собственная модель (tools/airdef-models/own/kh25ml)
   w_kh58: { weapon: 'kh58', stations: [] }, // Х-58У - Narni_Tchereskov
   w_agm65b: { weapon: 'agm65b', stations: [] }, // AGM-65B - собственная модель (tools/airdef-models/own/agm65b)
@@ -563,6 +564,7 @@ const GLB_V_OWN = {
   w_kh59m: '20261115e',
   d_shahed: '20261115f',
   d_uav: '20261115g',
+  w_kh59mk2: '20261115h',
 };
 GLB_V.hg_jack = '20261104b'; // подъёмник, ревизия 2: матовый, с износом
 GLB_V.w_pod = '20261104b'; // серый корпус контейнера, без комьев от упрощения

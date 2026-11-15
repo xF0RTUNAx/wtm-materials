@@ -1,0 +1,23 @@
+{
+ "key": "w_kh59mk2",
+ "weapon": "kh59mk2",
+ "name": "Х-59МК2",
+ "rev": 1,
+ "files": {
+  "glb": "kh59mk2.glb",
+  "blend": "kh59mk2.blend",
+  "build": [
+   "mk2kit.py",
+   "build.py",
+   "_paint.py",
+   "make_decals.py",
+   "bake2.py",
+   "deliver.py",
+   "_collide.py",
+   "_views.py",
+   "_sheet.py",
+   "_trial.py",
+   "_trial_sheet.py"
+  ]
+ }
+}
