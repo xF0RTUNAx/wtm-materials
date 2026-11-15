@@ -37,8 +37,9 @@ function multiRun(tgt) {
   const at = new THREE.Vector3(X0, 0, Z0);
   // дрон и крылатая идут на комплекс с юга (по 3 шт.), чтобы пуски были в любом случае
   for (let i = 0; i < 3; i++) {
-    S.spawnMun('shahed', new THREE.Vector3(X0 - 400 + i * 400, 150, Z0 - 9000), at.clone(), {});
-    S.spawnMun('kh101', new THREE.Vector3(X0 - 300 + i * 300, 60, Z0 - 10000), at.clone(), {});
+    const xs = X0 - 400 + i * 400, xk = X0 - 300 + i * 300; // высоты - от земли (у города рельеф: на плато земля выше 60 м)
+    S.spawnMun('shahed', new THREE.Vector3(xs, city.groundH(xs, Z0 - 9000) + 150, Z0 - 9000), at.clone(), {});
+    S.spawnMun('kh101', new THREE.Vector3(xk, city.groundH(xk, Z0 - 10000) + 60, Z0 - 10000), at.clone(), {});
   }
   for (let t = 0; t < 120; t += 0.05) S.step(0.05);
   return launched;
@@ -89,7 +90,7 @@ check('«Панцирь» по бомбам берёт бомбу', bBomb > 0);
 check('«Панцирь» только по самолётам бомбу не берёт', bAir === 0);
 // оператор: ограничений нет - назначенный самолёт сопровождается, хотя фильтр его не включает
 {
-  seed = 7; const a = makeCraft({ speed: 200 }); a.rcs = 5; a.hp = 1e6; a.pos.set(X0 + 300, 600, Z0 + 3000); a.vel.set(0, 0, -50);
+  seed = 7; const a = makeCraft({ speed: 200 }); a.rcs = 5; a.hp = 1e6; a.pos.set(X0 + 300, 1500, Z0 + 3000); a.vel.set(0, 0, -50); // 1,5 км: проверка фильтра, а не прямой видимости (у города рельеф и высотки)
   const S = createStrike({ city, rnd, mode: () => MODES.real, aircraft: () => [a], laserSpot: () => null, night: 0, hurt() {}, fx: {} });
   const u = S.addUnit('pantsir', X0, Z0, { skill: 1 }); u.emit = true; S.setTgt(u, ['bomb']); S.setManual(u, true); S.designate(u, a);
   for (let t = 0; t < 10; t += 0.05) { a.pos.addScaledVector(a.vel, 0.05); S.step(0.05); }

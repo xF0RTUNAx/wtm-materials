@@ -252,7 +252,7 @@ const perf = { ...P.perf };
 let pipe = null, sceneTM = THREE.ACESFilmicToneMapping;
 if (P.post || perf.aa !== 'off' || perf.up !== 'off') {
   const ldr = !P.post;
-  pipe = createPipeline(renderer, { ...(P.post || {}), ...(GRADE[W_KEY] || {}), ldr, exposure: renderer.toneMappingExposure, scale: perf.scale, upscaler: perf.up, sharp: perf.sharp || 0.4, aa: perf.aa,
+  pipe = createPipeline(renderer, { ...(P.post || {}), ...(GRADE[W_KEY] || {}), ...(Q.get('look') === '1' && MAP === 'city' ? { gGain: [1.045, 1.0, 0.94], gLift: [0.004, 0.002, 0], gCon: 1.12, gSat: 1.04 } : {}) /* проба «земля и свет» города (city-render.js LOOK) */, ldr, exposure: renderer.toneMappingExposure, scale: perf.scale, upscaler: perf.up, sharp: perf.sharp || 0.4, aa: perf.aa,
     bloomQ: !!P.bloomQ, fx: !!P.halfFx, fxU: FXU, fxLayer: FX_LAYER, fxAddLayer: FX_ADD_LAYER, // fx - облака и дым в половине разрешения (слои FX_*)
     aaCas1: Q.get('pp1') !== '0' }); // FXAA и резкость CAS - одним проходом (post.js; ?pp1=0 - двумя, как раньше)
   sceneTM = ldr ? THREE.ACESFilmicToneMapping : THREE.NoToneMapping;

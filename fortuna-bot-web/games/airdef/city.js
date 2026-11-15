@@ -50,19 +50,57 @@ const FLATS = { tpp: { x: 5900, z: 1500, h: 2.4, w: 540, d: 520 }, // склад
   stad: { x: -3300, z: 2700, h: 2.75, w: 530, d: 530 }, // парк бронетехники
   gov: { x: 1205, z: 300, h: 5.7, w: 360, d: 170 }, // командный пункт - двойной квартал в Сити между проспектом x 1000 и улицами (было 5,4…5,9 м)
   tv: { x: 2700, z: -2800, h: 3.6, w: 170, d: 370 }, // узел связи - квартал городка и бывший парк к югу (улица z −2800 между ними - под объектом; было 3,3…3,9 м)
-  port: { x: 805, z: 6300, h: 2.4, w: 330, d: 800 } }; // военно-морская база - берег от уреза до проспекта x 1000 (сцена x 640…970; было 0,8…3,5 м; русло режется после - вода как была)
+  port: { x: 805, z: 6300, h: 2.4, w: 330, d: 800, rel: false } }; // rel: false - площадка на своей высоте и с рельефом (у сцены причалы и стенки - по абсолютной высоте) // военно-морская база - берег от уреза до проспекта x 1000 (сцена x 640…970; было 0,8…3,5 м; русло режется после - вода как была)
 const TPP = FLATS.tpp;
+// рельеф города (Mark 2026-11-15: «городская карта слишком плоская… каждое изменение рельефа должно быть естественным… там где перепад сильный - убирать дома»).
+// Пологие волны (≈ 2,6 и 0,9 км; в Сити ±6 м, к окраинам ±30 м), овраги за спальными районами (до 16 м), высокий восточный берег (+10 м
+// в 100-350 м от уреза); у воды (набережные, мосты, причалы) - как было; площадки объектов и аэропорт - на своём месте рельефа
+export const RELIEF = !(typeof location !== 'undefined' && /[?&]relief=0/.test(location.search) && /[?&]test=1/.test(location.search)); // ?relief=0 - только вместе с ?test=1 (в онлайне раскладка у сервера всегда с рельефом) // ?relief=0 - ровный город, как было (только сравнение в браузере: сервер всегда с рельефом)
+// отдельные холмы между районами: x, z, радиус, высота (не на объектах FLATS, не у реки и аэропорта)
+const HILLS_C = [[3800, 4600, 1300, 55], [-5200, 4200, 1200, 50], [5200, -4600, 1400, 60], [-4300, -3800, 1000, 42], [8200, 3800, 1500, 70], [-7000, 1500, 1300, 58], [1800, -6500, 1200, 48], [-2200, 7600, 1300, 52]];
+// рельеф - сеткой 50 м на ±12 км с билинейным сглаживанием (считается один раз при первом вопросе, дальше - точная формула):
+// groundH зовут миллионы раз (лучи радаров, столкновения, сетка застройки) - формула с холмами и шумом в 6,5 раза дороже
+const RG_C = 50, RG_H = 12000, RG_N = 2 * RG_H / RG_C; let RG = null;
+export function relief(x, z) {
+  if (!RELIEF) return 0;
+  const fx = (x + RG_H) / RG_C, fz = (z + RG_H) / RG_C;
+  if (!(fx >= 0 && fz >= 0 && fx < RG_N && fz < RG_N)) return reliefRaw(x, z);
+  if (!RG) { const n1 = RG_N + 1; RG = new Float32Array(n1 * n1); for (let j = 0; j < n1; j++) for (let i = 0; i < n1; i++) RG[j * n1 + i] = reliefRaw(-RG_H + i * RG_C, -RG_H + j * RG_C); }
+  const i = Math.floor(fx), j = Math.floor(fz), u = fx - i, v = fz - j, n1 = RG_N + 1, q = j * n1 + i;
+  return (RG[q] * (1 - u) + RG[q + 1] * u) * (1 - v) + (RG[q + n1] * (1 - u) + RG[q + n1 + 1] * u) * v;
+}
+function reliefRaw(x, z) {
+  const r = Math.hypot(x, z), A = 7 + 12 * smooth(2500, 5500, r) + 16 * smooth(5500, 9000, r);
+  let w = 0; for (const zb of BRIDGE_Z) w = Math.max(w, 1 - smooth(30, 170, Math.abs(z - zb))); // у проспекта моста (спуск) волны, холмы, балки гаснут
+  let h = A * ((vnoise(x / 2000 + 41.3, z / 2000 - 17.9) - 0.5) * 1.5 + (vnoise(x / 750 - 5.1, z / 750 + 8.7) - 0.5) * 0.35); // пологие волны: не круче ~8-10 %
+  for (const [hx, hz, hr, hh] of HILLS_C) { if (Math.abs(x - hx) > hr * 2.8 || Math.abs(z - hz) > hr * 2.8) continue; const a = Math.atan2(z - hz, x - hx), d = Math.hypot(x - hx, z - hz) / (hr * (0.75 + 0.5 * vnoise(Math.cos(a) * 2 + hx * 0.001, Math.sin(a) * 2 + hz * 0.001))); if (d < 2.2) h += hh * Math.exp(-d * d * 2.2); }
+  const rv = 1 - Math.abs(2 * vnoise(x / 1500 + 77.0, z / 1500 - 33.0) - 1); // гребень шума - русла оврагов
+  h -= 20 * smooth(0.72, 0.98, rv) * smooth(0.5, 0.72, vnoise(x / 3200 - 9.0, z / 3200 + 4.0)) * smooth(3500, 5000, r) * (1 - smooth(9000, 10500, r)); // балки - широкие и не везде
+  h *= 1 - 0.85 * w;
+  const dx = x - riverX(z), dr = Math.abs(dx), bank = CITY.RIVER_W / 2;
+  if (dx > 0) { // высокий правый (восточный) берег - плато 70 м, крутой склон 60-320 м от уреза, овраги врезаются в край плато
+    // спуск к мосту (w - у проспекта моста): проспект поднимается на плато ~7 %, по бокам - откосы выемки; у порта плато гаснет (база у подножия - без стены)
+    const pf = FLATS.port, dP = Math.hypot(Math.max(0, Math.abs(x - pf.x) - pf.w / 2), Math.max(0, Math.abs(z - pf.z) - pf.d / 2));
+    const up = 70 * (smooth(bank + 60, bank + 320, dr) + (smooth(bank + 40, bank + 1050, dr) - smooth(bank + 60, bank + 320, dr)) * w) * (1 - smooth(9500, 11500, r)) * smooth(2100, 3300, Math.hypot(x - CX, z - CZ)) * smooth(300, 1300, dP); // Сити и порт - в низине
+    const rv2 = 1 - Math.abs(2 * vnoise(x / 900 + 13.0, z / 1400 - 51.0) - 1), cut = smooth(0.87, 0.985, rv2) * (1 - smooth(bank + 500, bank + 1300, dr)) * (1 - w);
+    h += up * (1 - 0.55 * cut);
+  }
+  return h * smooth(bank + 40, bank + 260, dr); // у воды - как было
+}
 export function groundH(x, z) {
   const r = Math.hypot(x, z);
-  let h = 3 + 3 * Math.sin(x * 0.0011 + 0.4) * Math.cos(z * 0.0013);
+  let h = 3 + 3 * Math.sin(x * 0.0011 + 0.4) * Math.cos(z * 0.0013) + relief(x, z);
+  if (RELIEF && h < CITY.WATER_Y + 4) h = CITY.WATER_Y + 4 - 3 * (1 - Math.exp((h - CITY.WATER_Y - 4) / 3)); // дно балок и низин - не ниже воды (+1…4 м): там суша, вода только в реке
   // за городом - холмы, к краю карты - гряда
   h += smooth(10500, 12500, r) * 60 * (vnoise(x * 0.0006, z * 0.0006) - 0.3);
   h += Math.pow(smooth(12000, 16000, r), 1.3) * 700 * (0.7 + 0.3 * Math.sin(Math.atan2(z, x) * 5 + 1));
-  if (Math.abs(x - AIRPORT.x) < AIRPORT.w / 2 + 300 && Math.abs(z - AIRPORT.z) < AIRPORT.d / 2 + 300) h = 4; // ровное поле аэропорта
+  if (RELIEF) { const ax = Math.abs(x - AIRPORT.x) - AIRPORT.w / 2 - 300, az = Math.abs(z - AIRPORT.z) - AIRPORT.d / 2 - 300; if (ax < 500 && az < 500) h += (4 + relief(AIRPORT.x, AIRPORT.z) - h) * (1 - smooth(0, 500, Math.max(ax, az))); } // поле аэропорта ровное, к рельефу - плавно
+  else if (Math.abs(x - AIRPORT.x) < AIRPORT.w / 2 + 300 && Math.abs(z - AIRPORT.z) < AIRPORT.d / 2 + 300) h = 4; // ровное поле аэропорта
   // ровные площадки объектов-сцен (FLATS: плиты дорог лежат на плоскости; склад боеприпасов - было 1,8…2,8 м): +200 м от сцены, стык - 60 м
   for (const f of Object.values(FLATS)) { // +200 м - шаг самой грубой сетки земли («Низкий»): иначе соседние клетки тянут неровность внутрь сцены
     const tx = Math.abs(x - f.x) - f.w / 2 - 200, tz = Math.abs(z - f.z) - f.d / 2 - 200; // (плиты то под землёй, то висят)
-    if (tx < 60 && tz < 60) h += (f.h - h) * (1 - smooth(0, 60, Math.max(tx, tz)));
+    if (RELIEF) { if (tx < 160 && tz < 160) h += (f.h + (f.rel === false ? 0 : relief(f.x, f.z)) - h) * (1 - smooth(0, 160, Math.max(tx, tz))); } // с рельефом - стык шире
+    else if (tx < 60 && tz < 60) h += (f.h - h) * (1 - smooth(0, 60, Math.max(tx, tz)));
   }
   const dr = Math.abs(x - riverX(z));
   const bank = CITY.RIVER_W / 2;
@@ -76,12 +114,25 @@ export function groundH(x, z) {
   }
   return h + (CITY.WATER_Y - 7 - h) * (1 - smooth(bank - 25, bank + 35, dr));
 }
+// крутизна склона (рельеф): сетка 40 м на ±11 км считается один раз при первом вопросе; круче STEEP - склон без застройки (лесопарк)
+const SL_C = 40, SL_H = 11000, SL_N = Math.round(2 * SL_H / SL_C), STEEP = 0.16; let SLG = null;
+function slopeGrid() {
+  if (SLG) return SLG; const n1 = SL_N + 1, hv = new Float32Array(n1 * n1); SLG = new Float32Array(SL_N * SL_N);
+  for (let j = 0; j < n1; j++) for (let i = 0; i < n1; i++) hv[j * n1 + i] = groundH(-SL_H + i * SL_C, -SL_H + j * SL_C);
+  for (let j = 0; j < SL_N; j++) for (let i = 0; i < SL_N; i++) {
+    const a = hv[j * n1 + i], b = hv[j * n1 + i + 1], c = hv[(j + 1) * n1 + i], d = hv[(j + 1) * n1 + i + 1];
+    SLG[j * SL_N + i] = Math.hypot((b + d - a - c) / (2 * SL_C), (c + d - a - b) / (2 * SL_C));
+  }
+  return SLG;
+}
+export function slopeAt(x, z) { if (!RELIEF) return 0; const i = Math.floor((x + SL_H) / SL_C), j = Math.floor((z + SL_H) / SL_C); return i < 0 || j < 0 || i >= SL_N || j >= SL_N ? 0 : slopeGrid()[j * SL_N + i]; }
 export function inWater(x, z) { return Math.abs(x - riverX(z)) < CITY.RIVER_W / 2 - 10; }
 
 export function zoneAt(x, z) {
   if (Math.abs(x - AIRPORT.x) < AIRPORT.w / 2 && Math.abs(z - AIRPORT.z) < AIRPORT.d / 2) return ZONE.AIR;
   const dr = Math.abs(x - riverX(z));
   if (dr < CITY.RIVER_W / 2) return ZONE.WATER;
+  if (RELIEF && slopeAt(x, z) > STEEP) return ZONE.PARK; // крутой склон (обрыв берега, стенки оврагов) - лесопарк, не застройка
   const n = vnoise(x * 0.0007 + 3.1, z * 0.0007 + 7.7), d = Math.hypot(x - CX, z - CZ);
   if (d < 1900 + 500 * (n - 0.5)) return ZONE.CBD;
   if (z > 4200 && z < 9200 && dr < 900) return ZONE.PORT;
@@ -650,6 +701,8 @@ export function buildCity(seed = 1) {
     if (Math.hypot(cx, cz) > CITY.HALF - 3000) continue;
     const zn = zoneAt(cx, cz), e = edgeIn(cx, cz);
     if (zn === ZONE.WATER || zn === ZONE.AIR || zn === ZONE.PARK) continue;
+    if (RELIEF) { let lo = 1e9, hi = -1e9, st = 0; for (const fx of [0, 0.5, 1]) for (const fz of [0, 0.5, 1]) { const qx = x0 + (x1 - x0) * fx, qz = z0 + (z1 - z0) * fz, h = groundH(qx, qz); lo = Math.min(lo, h); hi = Math.max(hi, h); st = Math.max(st, slopeAt(qx, qz)); }
+      if (hi - lo > 9 || st > STEEP) continue; } // квартал на склоне (перепад больше 9 м или край обрыва) - не строим: там лес
     if (zn === ZONE.FIELD) {
       // за городом: хутора вдоль трасс и редеющая окраина у края застройки (раньше - случайные кварталы посреди поля)
       const p = Math.max(hwy(i) || hwy(i + 1) || hwy(j) || hwy(j + 1) ? 0.22 : 0, e > -700 ? 0.5 * (1 + e / 700) : 0);
@@ -727,6 +780,7 @@ export function buildCity(seed = 1) {
       if (!bridge && Math.abs(x - riverX(z)) < CITY.RIVER_W / 2 + 12) return false;
       if (Math.abs(x - AIRPORT.x) < AIRPORT.w / 2 + 40 && Math.abs(z - AIRPORT.z) < AIRPORT.d / 2 + 40) return false;
       if (Math.hypot(x, z) > CITY.HALF - 1800) return false;
+      if (RELIEF && !bridge && slopeAt(x, z) > 0.14) return false; // по круче улицы не идут (вверх - спуски к мостам)
     }
     // rx, rz - сдвиг рамки; rk - прежняя рамка дорог [x0, x1, z0, z1] от центра (порт: улицы на месте старой базы - как были, без новых)
     return !objects.some((o) => { if (o.bridge) return false; const [a, b, c, d] = o.rk || [(o.rx || 0) - o.w / 2, (o.rx || 0) + o.w / 2, (o.rz || 0) - o.d / 2, (o.rz || 0) + o.d / 2];
@@ -737,6 +791,7 @@ export function buildCity(seed = 1) {
     let t = kind(ub(i - 1, j), ub(i, j), hwy(i), i, true, i * G, (j + 0.5) * G);
     if (t && segOk(i * G, j * G, i * G, (j + 1) * G, false)) RX[q] = t;
     t = kind(ub(i, j - 1), ub(i, j), hwy(j), j, false, (i + 0.5) * G, j * G);
+    if (RELIEF && !t && BRIDGE_Z.includes(j * G) && Math.abs((i + 0.5) * G - riverX(j * G)) < 1600) t = ROAD.RURAL; // проспект моста (спуск на плато) - и без кварталов рядом
     if (t && segOk(i * G, j * G, (i + 1) * G, j * G, BRIDGE_Z.includes(j * G))) RZ[q] = t;
   }
   // сельские улицы, не связанные с городом или трассой, убираем (отдельный хутор - без асфальта посреди поля)
@@ -813,7 +868,7 @@ export function mapRuntime(seed, B, objects, gH, waterY = CITY.WATER_Y, cellMax 
     let b = 0;
     const gi = Math.floor((x - CC / 2 + CITY.GH) / CELL), gj = Math.floor((z - CC / 2 + CITY.GH) / CELL);
     if (gi >= 0 && gj >= 0 && gi + ratio <= GN && gj + ratio <= GN) for (let jj = 0; jj < ratio; jj++) for (let ii = 0; ii < ratio; ii++) b = Math.max(b, grid[(gj + jj) * GN + gi + ii]);
-    coarse[j * CN + i] = g + 8 + b; // +8 м - запас на неровность земли внутри ячейки
+    coarse[j * CN + i] = g + 12 + b; // +12 м - запас на неровность земли внутри ячейки (с рельефом +8 м местами не хватало)
   }
   const bldAt = (x, z) => {
     const i = Math.floor((x + CITY.GH) / CELL), j = Math.floor((z + CITY.GH) / CELL);
