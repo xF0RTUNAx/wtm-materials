@@ -59,15 +59,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "Kh-29 \"Kedge\"",
-  "author": "Novia556",
-  "url": "https://sketchfab.com/3d-models/kh-29-kedge-7f0372b7f79a4d3599d4e39f05a2ac4a",
-  "license": "CC-BY-4.0",
-  "files": [
-   "w_kh25ml"
-  ]
- },
- {
   "title": "KH-58/U Anti-Radiation Missile",
   "author": "Narni_Tchereskov",
   "url": "https://sketchfab.com/3d-models/kh-58u-anti-radiation-missile-765d0250b6a0434b97d6e0434032f4da",

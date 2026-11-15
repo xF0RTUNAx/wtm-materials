@@ -1,0 +1,22 @@
+{
+ "key": "w_kh25ml",
+ "weapon": "kh25ml",
+ "name": "Х-25МЛ",
+ "rev": 1,
+ "files": {
+  "glb": "kh25ml.glb",
+  "blend": "kh25ml.blend",
+  "build": [
+   "x25kit.py",
+   "build.py",
+   "_paint.py",
+   "make_decals.py",
+   "bake2.py",
+   "deliver.py",
+   "_collide.py",
+   "_limits.py",
+   "_views.py",
+   "_trial.py"
+  ]
+ }
+}

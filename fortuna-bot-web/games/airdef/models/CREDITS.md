@@ -9,7 +9,6 @@
 - "US Weapon Pack" (https://sketchfab.com/3d-models/us-weapon-pack-c0783151b0024554a97d8ed6e5082745) by Rhine_Lab_Muelsyse — CC-BY-4.0 — `aam_aim7.glb`, `aam_aim9x.glb`
 - "Russian weapon pack" (https://sketchfab.com/3d-models/russian-weapon-pack-af00b7135a184ecfb2812a0e54458a8a) by Rhine_Lab_Muelsyse — CC-BY-4.0 — `aam_r73.glb`, `aam_r77.glb`, `aam_r27.glb`, `aam_r33.glb`
 - "Kh31" (https://sketchfab.com/3d-models/kh31-b5d1f9d341984926a04f70018b389045) by lelo — CC-BY-4.0 — `w_kh59m.glb`
-- "Kh-29 "Kedge"" (https://sketchfab.com/3d-models/kh-29-kedge-7f0372b7f79a4d3599d4e39f05a2ac4a) by Novia556 — CC-BY-4.0 — `w_kh25ml.glb`
 - "KH-58/U Anti-Radiation Missile" (https://sketchfab.com/3d-models/kh-58u-anti-radiation-missile-765d0250b6a0434b97d6e0434032f4da) by Narni_Tchereskov — CC-BY-4.0 — `w_kh58.glb`
 - "300 followers - free aircraft missile set" (https://sketchfab.com/3d-models/300-followers-free-aircraft-missile-set-2e70bc2ea0824897b2ccaea378809c9e) by NETRUNNER_pl — CC-BY-4.0 — `aam_aim9.glb`, `aam_aim54.glb`
 - "RAFAEL AN/AAQ-28(V) Litening" (https://sketchfab.com/3d-models/rafael-anaaq-28v-litening-be90b1ca86bd46f4a87a86829d1e112c) by Vlad.Mojaev — CC-BY-4.0 — `w_pod.glb`

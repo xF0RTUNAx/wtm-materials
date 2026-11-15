@@ -61,7 +61,7 @@ const CONFIG = {
   w_fab500_old: { src: `${DL}/fab-500_m62.glb`, scale: 17.6, nose: '+x', tex: () => 512, target: 8000, simpErr: 0.15, minPart: 0.15, pickMesh: /./, rulesIn: 'game', perTri: true, groups: (c) => (c.min[1] > FAB_TOP ? null : 'body') }, // без УМПК: всё выше корпуса долой
   w_kh31p: { src: new URL('./own/kh31p.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 512, nTex: () => 512, pickMesh: /./, own: true }, // Х-31П: своя модель (Blender, own/kh31p.glb)
   w_kh59m: { colors: { '': [0.24, 0.25, 0.23] }, src: `${DL}/kh31.glb`, scale: 5.69 / 189.07, axes: (x, y, z) => [x, -z, y], tex: () => 256, target: 7000, pickMesh: /./ }, // Х-31 (L_elo) в размер Х-59М (5,7 м) — и для Х-59МК2 (прежняя — из War Thunder)
-  w_kh25ml: { colors: { '': [0.3, 0.31, 0.29] }, src: `${DL}/kh-29_kedge.glb`, scale: 3.7 / 3.93, nose: '+z', tex: () => 256, target: 7000, pickMesh: /./ }, // Х-29 (Novia556) в размер Х-25МЛ (прежняя Х-38 — из War Thunder)
+  w_kh25ml: { src: new URL('./own/kh25ml.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 1024, nTex: () => 512, pickMesh: /./, own: true }, // Х-25МЛ: своя модель (Blender, own/kh25ml.glb)
   w_kh58: { colors: { nosecone: [0.025, 0.028, 0.025], nozzle: [0.04, 0.04, 0.04], '^body$|fins|duct': [0.3, 0.31, 0.29], '': [0.12, 0.12, 0.12] }, src: `${DL}/kh-58u_anti-radiation_missile.glb`, scale: 1, nose: '-z', tex: () => 256, target: 9000, pick: [0, -1, -3, 1.2, 1, 3] }, // Х-58У (Narni_Tchereskov) — 4,8 м; у автора две ракеты — правая
   w_mk82: { src: new URL('./own/mk82.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 1024, nTex: () => 512, pickMesh: /./, own: true }, // Mk 82: своя модель (Blender, own/mk82.glb)
   // ── ещё оружие (2026-10-08)
