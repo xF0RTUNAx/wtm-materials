@@ -1356,7 +1356,7 @@ loadModels(assetsBase(), (name) => {
   warmSoon(); // шейдеры пришедшей модели - сразу, а не когда она впервые попадёт в кадр
   if (C.G && C.G.attachBld && bldModel(name)) C.G.attachBld(name, bldModel(name)); // дома города вблизи (и цеха - та же модель, что у целей)
   if (isObjModel(name)) { if (C.G) C.G.attachObjModel(name, () => objModel(name)); else pendingObj.push(name); return; } // постройки целей
-  if (name === 'gc' && C.G && C.G.gcAttach) C.G.gcAttach(bldModel(name)); // покров земли города (city-render groundCover)
+  if (name === 'gc' && C.G && C.G.gcAttach) C.G.gcAttach(bldModel(name)); // покров земли (city-render groundCover)
   if (bldModel(name)) return;
   if (isUnitModel(name)) { for (const g of unitMeshes.values()) scene.remove(g); unitMeshes.clear(); C.syncUnits(); return; } // комплексы - пересобрать
   for (const g of planeMeshes.values()) scene.remove(g); planeMeshes.clear();
@@ -1399,7 +1399,7 @@ setInterval(() => {
   await ldStep(tr('Деревья, вода, облака и эффекты…'), 0.55);
   for (const n of pendingObj.splice(0)) C.G.attachObjModel(n, () => objModel(n));
   if (C.G.bldNames) { for (const n of C.G.bldNames) if (bldModel(n)) C.G.attachBld(n, bldModel(n)); wantBuildings(C.G.bldNames); } // дома вблизи - только если пресет их рисует
-  if (C.G.gcAttach) { const gcAsk = () => { if ($('loading')) { setTimeout(gcAsk, 600); return; } if (bldModel('gc')) C.G.gcAttach(bldModel('gc')); else wantModel('gc'); }; gcAsk(); } // покров земли вблизи (только город и пресет с моделями вблизи) - после экрана загрузки: он только для вида, ждать его 5 МБ незачем
+  if (C.G.gcAttach) { const gcAsk = () => { if ($('loading')) { setTimeout(gcAsk, 600); return; } if (bldModel('gc')) C.G.gcAttach(bldModel('gc')); else wantModel('gc'); }; gcAsk(); } // покров земли вблизи (пресет с моделями вблизи) - после экрана загрузки: он только для вида, ждать его 5 МБ незачем
   // постройки целей - только этой карты (models.js loadModels их сразу не грузит): модели объектов (у аэродрома города - и вышка КДП, city-render),
   // цеха - ещё и склады города вблизи (bldNames - уже известны здесь); пролёт моста и огни / заправщики аэродрома - только у города
   // (attachBridgeSegs, attachAirfield ставят их у аэродрома города - на зиме и осени они стояли в поле)
