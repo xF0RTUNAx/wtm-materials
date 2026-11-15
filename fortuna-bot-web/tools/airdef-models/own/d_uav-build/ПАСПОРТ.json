@@ -1,0 +1,11 @@
+{
+ "key": "d_uav",
+ "weapon": "uav_w",
+ "name": "Дрон ударный LUCAS (запад)",
+ "rev": 1,
+ "files": {
+  "glb": "d_uav.glb",
+  "blend": "drone.blend",
+  "build": []
+ }
+}

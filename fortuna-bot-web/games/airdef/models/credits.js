@@ -50,15 +50,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "Kh31",
-  "author": "lelo",
-  "url": "https://sketchfab.com/3d-models/kh31-b5d1f9d341984926a04f70018b389045",
-  "license": "CC-BY-4.0",
-  "files": [
-   "w_kh59m"
-  ]
- },
- {
   "title": "KH-58/U Anti-Radiation Missile",
   "author": "Narni_Tchereskov",
   "url": "https://sketchfab.com/3d-models/kh-58u-anti-radiation-missile-765d0250b6a0434b97d6e0434032f4da",
@@ -439,24 +430,6 @@ export const CREDITS = [
   "license": "CC-BY-4.0",
   "files": [
    "w_storm"
-  ]
- },
- {
-  "title": "Shahed 136",
-  "author": "faintastic",
-  "url": "https://sketchfab.com/3d-models/shahed-136-bc8754128c9d48c48baadeff1db8f0c7",
-  "license": "CC-BY-4.0",
-  "files": [
-   "d_shahed"
-  ]
- },
- {
-  "title": "UAV",
-  "author": "Artem Goyko",
-  "url": "https://sketchfab.com/3d-models/uav-b301159b693549e5beb747e291f159b5",
-  "license": "CC-BY-4.0",
-  "files": [
-   "d_uav"
   ]
  },
  {

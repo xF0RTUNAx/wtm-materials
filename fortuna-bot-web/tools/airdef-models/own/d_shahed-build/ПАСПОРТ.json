@@ -1,0 +1,11 @@
+{
+ "key": "d_shahed",
+ "weapon": "shahed",
+ "name": "Дрон ударный (восток)",
+ "rev": 1,
+ "files": {
+  "glb": "d_shahed.glb",
+  "blend": "drone.blend",
+  "build": []
+ }
+}

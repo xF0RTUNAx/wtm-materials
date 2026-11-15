@@ -187,8 +187,8 @@ const META = {
   w_prsm: { weapon: 'prsm', lazy: true, stations: [] }, // PrSM - собственная модель (tools/airdef-models/own/prsm)
   w_lance: { weapon: 'lance', lazy: true, stations: [] }, // MGM-52 Lance в полёте - собственная модель (tools/airdef-models/own/msl_lance)
   w_arrw: { weapon: 'arrw', lazy: true, stations: [] }, // AGM-183A ARRW - собственная модель (tools/airdef-models/own/arrw)
-  d_shahed: { ev: true, lazy: true, stations: [] }, // «Шахед-136» - faintastic (винт - группа prop)
-  d_uav: { ev: true, lazy: true, stations: [] }, // БПЛА - Artem Goyko (винты - prop, prop2)
+  d_shahed: { ev: true, lazy: true, stations: [] }, // Дрон ударный (восток) — собственная модель (tools/airdef-models/own/d_shahed)
+  d_uav: { ev: true, lazy: true, stations: [] }, // Дрон ударный LUCAS (запад) — собственная модель (tools/airdef-models/own/d_uav)
   // ── вертолёты (2026-10-20): грузятся по запросу (heliModel / wantModel); винты - части rotor, rotor2 (соосный нижний), trotor - крутит spinProps;
   // stations - две точки на борт (внешняя, внутренняя) на консолях, оси модели (нос в −Z); nozzles пусто - пламени нет; в planeModel / PLANE_META не попадают (heli)
   h_mi24: { side: 'east', cls: 'heli', heli: true, lazy: true, stations: mirror([V(-3.22, -1.64, -1.43), V(-2.28, -1.33, -1.22)]), nozzles: [], nr: 0.3, pod: null, matte: true }, // Ми-24 - manilov.ap (на концах консолей - направляющие для ПТУР, под консолями - пилоны)
@@ -254,7 +254,7 @@ const META = {
   w_umpk: { weapon: 'umpk', wings: 'fold', flip: true, stations: [] }, // ФАБ-500 с УМПК - собственная модель (tools/airdef-models/own/umpk)
   w_kh29t: { weapon: 'kh29t', stations: [] }, // Х-29Т - собственная модель (tools/airdef-models/own/kh29t)
   w_kh31p: { weapon: 'kh31p', stations: [] }, // Х-31П - собственная модель (tools/airdef-models/own/kh31p)
-  w_kh59m: { weapon: ['kh59m', 'kh59mk2'], lazy: true, stations: [] }, // Х-31 (L_elo) в размер Х-59М - и для Х-59МК2 (Mark 2026-10-19; прежняя - из War Thunder)
+  w_kh59m: { weapon: ['kh59m', 'kh59mk2'], lazy: true, stations: [] }, // Х-59М — собственная модель (tools/airdef-models/own/kh59m)
   w_kh25ml: { weapon: 'kh25ml', stations: [] }, // Х-25МЛ — собственная модель (tools/airdef-models/own/kh25ml)
   w_kh58: { weapon: 'kh58', stations: [] }, // Х-58У - Narni_Tchereskov
   w_agm65b: { weapon: 'agm65b', stations: [] }, // AGM-65B - собственная модель (tools/airdef-models/own/agm65b)
@@ -560,6 +560,9 @@ const GLB_V_OWN = {
   w_ofab250: '20261108j',
   w_tomahawk: '20261108k',
   w_kh25ml: '20261115b',
+  w_kh59m: '20261115e',
+  d_shahed: '20261115f',
+  d_uav: '20261115g',
 };
 GLB_V.hg_jack = '20261104b'; // подъёмник, ревизия 2: матовый, с износом
 GLB_V.w_pod = '20261104b'; // серый корпус контейнера, без комьев от упрощения

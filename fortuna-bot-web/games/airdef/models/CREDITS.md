@@ -8,7 +8,6 @@
 - "Low Poly GBU-24 laser guided bomb (окраска и запекание)" (https://sketchfab.com/3d-models/low-poly-gbu-24-laser-guided-bomb-8dcd4a634e924a52ab05d4e90b3e3e82) by AnirudhRao — CC-BY-4.0 — `w_gbu24.glb`
 - "US Weapon Pack" (https://sketchfab.com/3d-models/us-weapon-pack-c0783151b0024554a97d8ed6e5082745) by Rhine_Lab_Muelsyse — CC-BY-4.0 — `aam_aim7.glb`, `aam_aim9x.glb`
 - "Russian weapon pack" (https://sketchfab.com/3d-models/russian-weapon-pack-af00b7135a184ecfb2812a0e54458a8a) by Rhine_Lab_Muelsyse — CC-BY-4.0 — `aam_r73.glb`, `aam_r77.glb`, `aam_r27.glb`, `aam_r33.glb`
-- "Kh31" (https://sketchfab.com/3d-models/kh31-b5d1f9d341984926a04f70018b389045) by lelo — CC-BY-4.0 — `w_kh59m.glb`
 - "KH-58/U Anti-Radiation Missile" (https://sketchfab.com/3d-models/kh-58u-anti-radiation-missile-765d0250b6a0434b97d6e0434032f4da) by Narni_Tchereskov — CC-BY-4.0 — `w_kh58.glb`
 - "300 followers - free aircraft missile set" (https://sketchfab.com/3d-models/300-followers-free-aircraft-missile-set-2e70bc2ea0824897b2ccaea378809c9e) by NETRUNNER_pl — CC-BY-4.0 — `aam_aim9.glb`, `aam_aim54.glb`
 - "RAFAEL AN/AAQ-28(V) Litening" (https://sketchfab.com/3d-models/rafael-anaaq-28v-litening-be90b1ca86bd46f4a87a86829d1e112c) by Vlad.Mojaev — CC-BY-4.0 — `w_pod.glb`
@@ -48,8 +47,6 @@
 - "Sizzler SS-N-27 Kalibr 3M-54" (https://sketchfab.com/3d-models/sizzler-ss-n-27-kalibr-3m-54-63fc0ac8032c42e3bfd3e548192d5a9c) by mmickel — CC-BY-4.0 — `w_kalibr.glb`
 - "AGM-86" (https://sketchfab.com/3d-models/agm-86-de64a3d9282249e39760a5fee425e7ae) by mahmadsaleem11111 — CC-BY-4.0 — `w_agm86.glb`
 - "Storm Shadow Ukraine (декали убраны)" (https://sketchfab.com/3d-models/storm-shadow-ukraine-d1ad04ce964f46dd9cbac6a64cd19b1b) by Viktor_ — CC-BY-4.0 — `w_storm.glb`
-- "Shahed 136" (https://sketchfab.com/3d-models/shahed-136-bc8754128c9d48c48baadeff1db8f0c7) by faintastic — CC-BY-4.0 — `d_shahed.glb`
-- "UAV" (https://sketchfab.com/3d-models/uav-b301159b693549e5beb747e291f159b5) by Artem Goyko — CC-BY-4.0 — `d_uav.glb`
 - "Tupolev TU-160" (https://sketchfab.com/3d-models/tupolev-tu-160-d3af9e67f8024dcc9b23a3e91d492e40) by KOG_THORNS — CC-BY-4.0 — `e_tu160.glb`
 - "UGM-84 Harpoon (FREE)" (https://sketchfab.com/3d-models/ugm-84-harpoon-free-d62d60fac04f4d6b86e24ad06a1f99c6) by FeriseCAT — CC-BY-4.0 — `w_slam.glb`
 - "AGM-154 JSOW missile" (https://sketchfab.com/3d-models/agm-154-jsow-missile-03148c5054e54a1c99980aff68952c0f) by RickSlash — CC-BY-4.0 — `w_jsow.glb`

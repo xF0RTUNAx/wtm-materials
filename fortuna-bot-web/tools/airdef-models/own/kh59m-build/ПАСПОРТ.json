@@ -1,0 +1,26 @@
+{
+ "key": "w_kh59m",
+ "weapon": "kh59m",
+ "name": "Х-59М",
+ "rev": 1,
+ "files": {
+  "glb": "kh59m.glb",
+  "blend": "kh59m.blend",
+  "build": [
+   "x59kit.py",
+   "build.py",
+   "_paint.py",
+   "make_decals.py",
+   "bake2.py",
+   "deliver.py",
+   "_collide.py",
+   "_limits.py",
+   "_fold.py",
+   "_views.py",
+   "_overlay.py",
+   "_sheet.py",
+   "_trial.py",
+   "_trial_sheet.py"
+  ]
+ }
+}
