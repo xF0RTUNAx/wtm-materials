@@ -11,7 +11,7 @@
 //    у домов (запечённое из сетки высот застройки); шум, чтобы не было плоской заливки.
 //  • Река с волнами и отражением неба, деревья в парках и вдоль улиц, облака-«пуховки» (один вызов отрисовки).
 /* global THREE */
-import { CITY, ZONE, KIND, AIRPORT, groundH, zoneAt, riverX, mulberry32, lineW, RN, RS, RURAL_HW, SITES, RELIEF, slopeAt } from './city.js?v=20261114a';
+import { CITY, ZONE, KIND, AIRPORT, groundH, zoneAt, riverX, mulberry32, lineW, RN, RS, RURAL_HW, SITES, RELIEF, slopeAt, siteKeep } from './city.js?v=20261114a';
 import { part, mergeParts, M } from '../drone/models.js?v=20261114a';
 import { WEATHERS, ATMO, skyMaterial, skyUniforms, skyPano, SKY, FXU, FX_LAYER, FX_ADD_LAYER } from '../drone/world.js?v=20261114a';
 import { setPaintSky } from './paint.js?v=20261114a';
@@ -176,44 +176,153 @@ const LAZY = { value: typeof location !== 'undefined' && /[?&]cl=0/.test(locatio
 // фактура и рельеф карт нормалей травы, проплешины мельче, вытоптанные обочины, глубже затенение у домов; свет - контрастнее (сильнее солнце,
 // слабее заполняющий, реже дымка; цвет кадра - main.js). Только город (не зима и не осень)
 const LOOK = typeof location !== 'undefined' && /[?&]look=1/.test(location.search);
-// трава пучками вблизи камеры (проба look): пучок - 9 травинок по треугольнику (цвет в вершинах: тёмный низ, светлый кончик), экземпляры - в клетках
-// 4 м в радиусе GR_R вокруг камеры, по месту: только на траве (зона, не на дороге, не в доме, не у реки); своя случайность от клетки - трава не «плывёт»
-const GR_R = 50, GR_C = 3;
-function grassTufts(scene, city, sh) {
-  const P = [], C = [], r = mulberry32(77);
-  for (let b = 0; b < 16; b++) { // травинка - треугольник дважды (обе стороны лицом, нормаль вверх: DoubleSide перевернул бы её и низ стал бы чёрным)
-    const a = r() * Math.PI * 2, o = 0.03 + r() * 0.25, x = Math.cos(a) * o, z = Math.sin(a) * o, h = 0.14 + r() * 0.3, w = 0.012 + r() * 0.014, ry = r() * Math.PI, lx = (r() - 0.5) * 0.3, lz = (r() - 0.5) * 0.3;
-    const cx = Math.cos(ry) * w, cz = Math.sin(ry) * w, t = 0.75 + r() * 0.5, dry = r() < 0.3;
-    const T = dry ? [0.15 * t, 0.135 * t, 0.06 * t] : [0.075 * t, 0.11 * t, 0.035 * t], B = [0.035, 0.045, 0.018];
-    P.push(x - cx, 0, z - cz, x + cx, 0, z + cz, x + lx, h, z + lz, x + cx, 0, z + cz, x - cx, 0, z - cz, x + lx, h, z + lz);
-    C.push(...B, ...B, ...T, ...B, ...B, ...T);
+// покров земли вблизи камеры (Свои/Покров земли, 2026-11-15; Mark: «Встраивай»): свои модели gc_* (models/gc.glb - все 65 в одном файле, атласы по разу,
+// tools/airdef-models/gc-pack.js). Каждый вид - один InstancedMesh (одна отрисовка на вид), экземпляры - в клетках GC_C м в радиусе GC_R
+// вокруг камеры; раскладка клетки считается один раз (кэш) - по месту: зона города, дорога, дом, берег, круча. Пересчёт - когда камера
+// сдвинулась на 3 м; выше GC_R над землёй (полёт) - покрова нет. Вдали мелкое редеет, на краю радиуса - растворение (дизеринг). ?gc=0 - без покрова
+const GC_ON = typeof location === 'undefined' || !/[?&]gc=0/.test(location.search), GC_C = 3;
+// виды по месту (паспорт сборщика: swap_notes и density_per_100m2): [ключ, вес]; цветы - пятнами (клетка-«пятно» одного цветка)
+const GC_SET = {
+  lawn: [['gc_gr_lawn', 40], ['gc_gr_lawn_b', 16], ['gc_gr_mixed', 18], ['gc_gr_mixed_b', 8], ['gc_gr_meadow', 8], ['gc_gr_dry', 2.5], ['gc_gr_weed', 6], ['gc_lit_grass', 1.2], ['gc_lit_soil', 0.6], ['gc_tussock', 1], ['gc_boulder_s', 0.1], ['gc_pebbles', 0.3]],
+  park: [['gc_gr_lawn', 20], ['gc_gr_mixed', 18], ['gc_gr_meadow', 16], ['gc_gr_meadow_b', 8], ['gc_gr_mixed_b', 8], ['gc_lit_moss', 5], ['gc_lit_grass', 5], ['gc_fern_bracken', 2], ['gc_fern_shield', 1.5], ['gc_nettle', 1.5], ['gc_bush_a', 0.8], ['gc_bush_b', 0.8], ['gc_bush_rasp', 0.5],
+    ['gc_stump', 0.08], ['gc_log', 0.06], ['gc_branch', 0.12], ['gc_moss', 0.15], ['gc_tussock', 3], ['gc_boulder', 0.2]],
+  meadow: [['gc_gr_meadow', 25], ['gc_gr_meadow_b', 12], ['gc_gr_mixed', 18], ['gc_gr_mixed_b', 8], ['gc_gr_dry', 12], ['gc_gr_wormwood', 0.8], ['gc_tussock', 5], ['gc_lit_grass', 2], ['gc_bush_a', 0.4], ['gc_boulder', 0.08], ['gc_boulder_s', 0.15], ['gc_boulder_l', 0.03], ['gc_boulder_f', 0.05]],
+  waste: [['gc_gr_dry', 20], ['gc_gr_weed', 14], ['gc_gr_mixed', 10], ['gc_gr_wormwood', 2.5], ['gc_burdock', 3], ['gc_nettle', 2.5], ['gc_hogweed', 0.8], ['gc_fl_thistle', 1.5], ['gc_fl_tansy', 1.5], ['gc_fl_chicory', 1.5], ['gc_rubble_conc', 1.5], ['gc_rubble_brick', 1.5], ['gc_pebbles', 2], ['gc_lit_soil', 5], ['gc_bush_b', 0.4]],
+  verge: [['gc_gr_dry', 18], ['gc_gr_weed', 12], ['gc_gr_wormwood', 2], ['gc_gr_mixed', 10], ['gc_fl_chicory', 2], ['gc_fl_tansy', 1.5], ['gc_fl_yarrow', 1.5], ['gc_burdock', 1], ['gc_lit_soil', 4], ['gc_pebbles', 2], ['gc_bush_a', 0.5], ['gc_bush_b', 0.5]],
+  yard: [['gc_gr_lawn', 40], ['gc_gr_lawn_b', 16], ['gc_gr_mixed', 18], ['gc_gr_mixed_b', 8], ['gc_gr_meadow', 6], ['gc_gr_dry', 3], ['gc_gr_weed', 4]],
+  bank: [['gc_reed', 15], ['gc_gr_sedge', 20], ['gc_horsetail', 6], ['gc_gr_mixed', 8], ['gc_tussock', 4], ['gc_lit_moss', 3]],
+  slope: [['gc_boulder', 1], ['gc_boulder_s', 2.5], ['gc_boulder_f', 0.8], ['gc_boulder_l', 0.3], ['gc_pebbles', 3], ['gc_moss', 1], ['gc_branch', 0.6], ['gc_gr_dry', 3], ['gc_gr_mixed', 3]],
+};
+// плотность у камеры, пучков на м² (дальше редеет: gcKeep); паспорт даёт соотношение видов, сплошной газон с земли - 3-5 пучков на м²; FL - доля клеток-пятен цветов
+const GC_DEN = { yard: 4, lawn: 5.5, park: 3.5, meadow: 4.5, waste: 2.5, verge: 2.5, bank: 2.5, slope: 0.4 };
+// доля оставленных на расстоянии d (м) при радиусе R: до 12 м - все, к 30 м - треть, на краю - седьмая часть (там видно только высокое)
+const gcKeep = (d, R) => d < 12 ? 1 : d < 30 ? 1 - 0.65 * (d - 12) / 18 : 0.35 - 0.2 * Math.min(1, (d - 30) / Math.max(1, R - 30));
+const GC_FL = { lawn: [0.06, ['gc_fl_dand', 'gc_fl_dand_b', 'gc_fl_daisy', 'gc_fl_daisy_b', 'gc_fl_clover']], park: [0.05, ['gc_fl_daisy', 'gc_fl_clover', 'gc_fl_bell', 'gc_fl_dand']],
+  meadow: [0.1, ['gc_fl_cornflower', 'gc_fl_daisy', 'gc_fl_mix', 'gc_fl_fireweed', 'gc_fl_lupine', 'gc_fl_tansy', 'gc_fl_yarrow', 'gc_fl_bell', 'gc_fl_chicory', 'gc_fl_clover']], verge: [0.04, ['gc_fl_chicory', 'gc_fl_tansy', 'gc_fl_yarrow']] };
+// яркость атласа в свете игры: камни и дерево сборщик тянул под пробу ?look=1 (сильное солнце) - в обычном свете они почти чёрные на светлой траве;
+// полынь (серебристая) вдали - белые столбики
+const GC_BRIGHT = { K: 1.75, D: 1.35 }, GC_KTINT = { gc_gr_wormwood: 0.72 };
+const GC_FLAT = /^gc_(lit_|pebbles|moss|branch|a_leaves|a_lingon|a_cones|w_spruce)/, GC_OBJ = /^gc_(boulder|rubble|stump|log|branch|moss|pebbles|tussock|w_boulder|a_mush|a_amanita)/;
+// шум для пятен цвета (зеленее / суше, 50-150 м): значение в узлах сетки 90 м, между ними - плавно
+const gcH = (i, j) => { let h = (i * 374761393 + j * 668265263) | 0; h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
+function gcNoise(x, z, S) { const u = x / S, v = z / S, i = Math.floor(u), j = Math.floor(v), fu = u - i, fv = v - j, a = fu * fu * (3 - 2 * fu), b = fv * fv * (3 - 2 * fv);
+  return (gcH(i, j) * (1 - a) + gcH(i + 1, j) * a) * (1 - b) + (gcH(i, j + 1) * (1 - a) + gcH(i + 1, j + 1) * a) * b; }
+// материал вида: свет как у земли (нормали карточек - вверх), ветер по высоте модели (wind из паспорта), растворение на краю радиуса,
+// просвет травы против солнца. Один программный шейдер на все виды (customProgramCacheKey) - у каждого вида свои значения
+function gcMat(m0, key, wind, card, U, atl) {
+  const m = card ? new THREE.MeshLambertMaterial({ map: m0.map, alphaTest: 0.45 }) : new THREE.MeshPhongMaterial({ map: m0.map, normalMap: m0.normalMap, normalScale: new THREE.Vector2(1, -1), specular: 0x0c0c0c, shininess: 10 });
+  m.color.multiplyScalar((GC_BRIGHT[atl] || 1) * (GC_KTINT[key] || 1));
+  const UW = { value: wind || 0 };
+  m.onBeforeCompile = (sh) => {
+    Object.assign(sh.uniforms, { uTime: ENV.uTime, uCam: ENV.uCam, uSun: ENV.uSun, uWH: UW, uGR: U.R });
+    sh.vertexShader = 'uniform float uTime, uWH, uGR; uniform vec3 uCam; varying float vGF; varying vec3 vGW;\n' + sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>
+  vec3 gp = instanceMatrix[3].xyz;
+  if (uWH > 0.0) { // ветер - в мировых осях (одинаковый у соседних пучков), сдвиг тем больше, чем выше точка пучка
+    float wk = clamp(position.y / uWH, 0.0, 1.2); wk *= wk; vec2 ph = gp.xz * 0.11;
+    float sw = sin(uTime * 1.6 + ph.x + ph.y) + 0.4 * sin(uTime * 3.1 + ph.x * 1.9 - ph.y * 1.3);
+    vec3 wd = vec3(0.8, 0.0, 0.5) * sw * 0.07 * uWH * wk; mat3 im = mat3(instanceMatrix); float s2 = max(dot(im[0], im[0]), 1e-4);
+    transformed += vec3(dot(im[0], wd), 0.0, dot(im[2], wd)) / s2;
   }
-  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(C, 3)); g.computeVertexNormals();
-  const nrm = g.attributes.normal; for (let i = 0; i < nrm.count; i++) nrm.setXYZ(i, 0, 1, 0); // свет - как у земли (травинки не темнеют боком)
-  const mat = new THREE.MeshLambertMaterial({ vertexColors: true });
-  const MAX = 9000, m = new THREE.InstancedMesh(g, mat, MAX); m.count = 0; m.frustumCulled = false; m.castShadow = false; m.receiveShadow = !!sh.receive;
-  m.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(MAX * 3), 3); scene.add(m);
-  const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), Y = new THREE.Vector3(0, 1, 0), pp = new THREE.Vector3(), ss = new THREE.Vector3(), tint = [[1, 1, 1], [1.12, 1.04, 0.8], [0.9, 1, 0.85], [1.22, 1.1, 0.78]];
-  const dens = (x, z) => { const zn = zoneAt(x, z); if (zn === ZONE.WATER || zn === ZONE.PORT || zn === ZONE.CBD) return 0; if (Math.abs(x - riverX(z)) < CITY.RIVER_W / 2 + 60) return 0;
-    if (city.onRoad(x, z, 3) || city.bldAt(x, z) > 0) return 0; return zn === ZONE.IND || zn === ZONE.AIR ? 5 : zn === ZONE.MID ? 9 : 14; };
-  let lx = 1e9, lz = 1e9;
-  return (p) => {
-    if (Math.abs(p.x - lx) < 3 && Math.abs(p.z - lz) < 3) return; lx = p.x; lz = p.z;
-    if (p.y - GH(p.x, p.z) > GR_R) { if (m.count) { m.count = 0; m.visible = false; } return; } // высоко - травы не видно
-    let n = 0; const a = m.instanceMatrix.array, k = m.instanceColor.array, i0 = Math.floor((p.x - GR_R) / GR_C), i1 = Math.floor((p.x + GR_R) / GR_C), j0 = Math.floor((p.z - GR_R) / GR_C), j1 = Math.floor((p.z + GR_R) / GR_C);
-    for (let i = i0; i <= i1 && n < MAX; i++) for (let j = j0; j <= j1 && n < MAX; j++) {
-      const cx = (i + 0.5) * GR_C, cz = (j + 0.5) * GR_C; if ((cx - p.x) ** 2 + (cz - p.z) ** 2 > GR_R * GR_R) continue;
-      const rr = mulberry32(((i * 73856093) ^ (j * 19349663)) >>> 0), d0 = dens(cx, cz); if (!d0) continue;
-      const cnt = Math.floor(d0 * (0.3 + 0.7 * rr()));
-      for (let c = 0; c < cnt && n < MAX; c++) {
-        const x = i * GR_C + rr() * GR_C, z = j * GR_C + rr() * GR_C, fade = 1 - Math.max(0, (Math.hypot(x - p.x, z - p.z) - GR_R * 0.65) / (GR_R * 0.35)), sc = (0.6 + rr() * 0.8) * fade, t = tint[Math.floor(rr() * 4)];
-        if (fade <= 0.05 || city.onRoad(x, z, 1.5)) continue;
-        m4.compose(pp.set(x, GH(x, z) - 0.02, z), q.setFromAxisAngle(Y, rr() * 6.28), ss.set(sc, sc * (0.8 + rr() * 0.5), sc)); m4.toArray(a, n * 16);
-        k[n * 3] = t[0]; k[n * 3 + 1] = t[1]; k[n * 3 + 2] = t[2]; n++;
+  vGF = 1.0 - smoothstep(uGR * 0.8, uGR, distance(gp.xz, uCam.xz));`).replace('#include <project_vertex>', '#include <project_vertex>\n  vGW = (modelMatrix * instanceMatrix * vec4(transformed, 1.0)).xyz;');
+    sh.fragmentShader = 'uniform vec3 uCam, uSun; varying float vGF; varying vec3 vGW;\n' + sh.fragmentShader.replace('#include <clipping_planes_fragment>', `#include <clipping_planes_fragment>
+  if (vGF < 1.0 && fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715)))) > vGF) discard; // край радиуса - тает`)
+      .replace('#include <dithering_fragment>', card ? `#include <dithering_fragment>
+  { float bl = pow(max(dot(normalize(vGW - uCam), uSun), 0.0), 3.0); gl_FragColor.rgb *= 1.0 + bl * vec3(0.32, 0.28, 0.1); } // против солнца - просвет` : '#include <dithering_fragment>');
+  };
+  m.customProgramCacheKey = () => 'gc' + (card ? 'c' : 'o');
+  return m;
+}
+function groundCover(scene, city, sh, P) {
+  const R = P.bldNear >= 450 ? 50 : 32, DK = P.bldNear >= 450 ? 1 : 0.6, U = { R: { value: R } }; // «Средний» (телефоны): радиус и плотность меньше
+  const kinds = new Map(), cells = new Map(), EMPTY = new Float32Array(0), CMAX = Math.ceil(4 * Math.PI * (R / GC_C) ** 2); // кэш раскладки - на ~4 окна; дальние клетки выкидываются
+  const kindOf = (k) => kinds.get(k) || kinds.set(k, { key: k, id: kinds.size, meshes: [], n: 0, cap: 64, arr: new Float32Array(64 * 16), col: new Float32Array(64 * 3) }).get(k);
+  for (const L of Object.values(GC_SET)) for (const [k] of L) kindOf(k); for (const F of Object.values(GC_FL)) for (const k of F[1]) kindOf(k);
+  const KL = [...kinds.values()];
+  const pick = (L, t) => { let s = 0; for (const e of L) s += e[1]; t *= s; for (const e of L) { t -= e[1]; if (t <= 0) return e[0]; } return L[L.length - 1][0]; };
+  // что растёт в клетке (одно место - один набор): по зоне, дороге, дому, берегу и круче
+  // участки объектов-целей (рамка o.w × o.d со сдвигом rx / rz): с травой внутри (o.lawn) - только газон, остальные - без покрова; ВПП - без
+  const OBJ = city.objects.filter((o) => !o.bridge).map((o) => { const [a, b, c, d] = [(o.rx || 0) - o.w / 2, (o.rx || 0) + o.w / 2, (o.rz || 0) - o.d / 2, (o.rz || 0) + o.d / 2]; return [o.x + a, o.x + b, o.z + c, o.z + d, !!o.lawn]; });
+  const objAt = (x, z) => { for (const q of OBJ) if (x > q[0] && x < q[1] && z > q[2] && z < q[3]) return q[4] ? 2 : 1; return 0; };
+  const onRwy = (x, z) => Math.abs(x - AIRPORT.x) < AIRPORT.rwyL / 2 + 6 && Math.abs(z - AIRPORT.z) < AIRPORT.rwyW / 2 + 6;
+  const ctxOf = (x, z) => {
+    const zn = zoneAt(x, z); if (zn === ZONE.WATER || zn === ZONE.PORT || zn === ZONE.CBD || onRwy(x, z)) return null;
+    const ob = objAt(x, z); if (ob === 1) return null; if (ob === 2) return GH(x, z) - CITY.WATER_Y < 0.05 ? null : 'yard';
+    const rd = Math.abs(x - riverX(z)) - CITY.RIVER_W / 2; if (rd < 1) return null;
+    if (city.bldAt(x, z) > 0 || city.onRoad(x, z, 2.5)) return null;
+    if (RELIEF && slopeAt(x, z) > 0.16) return 'slope';
+    const wh = GH(x, z) - CITY.WATER_Y; if (wh < 0.05) return null; // под водой (берег у реки пологий: вода дальше её русла)
+    if (wh < 1.3 && rd < 80) return 'bank';
+    if (city.onRoad(x, z, 7)) return zn === ZONE.FIELD ? 'verge' : zn === ZONE.IND || zn === ZONE.AIR ? 'waste' : 'verge';
+    return zn === ZONE.IND || zn === ZONE.AIR ? 'waste' : zn === ZONE.PARK ? 'park' : zn === ZONE.FIELD ? 'meadow' : 'lawn';
+  };
+  // раскладка клетки: [вид, x, y, z, поворот, масштаб, высота, r, g, b] - считается один раз
+  const cellOf = (i, j) => {
+    const ck = i * 65536 + j; let e = cells.get(ck); if (e) return e.a;
+    const c = [], cx = (i + 0.5) * GC_C, cz = (j + 0.5) * GC_C, ctx = ctxOf(cx, cz); cells.set(ck, e = { x: cx, z: cz, a: EMPTY }); if (!ctx) return EMPTY;
+    const rr = mulberry32(((i * 73856093) ^ (j * 19349663)) >>> 0), FL = GC_FL[ctx], flw = FL && rr() < FL[0] ? FL[1][Math.floor(rr() * FL[1].length)] : null;
+    const cnt = Math.round(GC_DEN[ctx] * GC_C * GC_C * (0.55 + 0.9 * rr()) * (flw ? 0.5 : 1)), nf = flw ? 3 + Math.floor(rr() * 6) : 0;
+    const dry = gcNoise(cx, cz, 90), grn = gcNoise(cx + 517, cz - 311, 140), rpad = zoneAt(cx, cz) === ZONE.FIELD ? 1.5 : 4.6; // в городе у улиц - тротуар до 4,5 м от проезжей части (шейдер земли)
+    for (let q = 0; q < cnt + nf; q++) {
+      const k = q < nf ? flw : pick(GC_SET[ctx], rr()), x = i * GC_C + rr() * GC_C, z = j * GC_C + rr() * GC_C;
+      if (city.onRoad(x, z, rpad) || city.bldAt(x, z) > 0 || GH(x, z) < CITY.WATER_Y + 0.05 || onRwy(x, z) || (ctx === 'yard' ? siteKeep(city, x, z, 0.5) : objAt(x, z))) continue; // сцены объектов: не в водоём, не на рельсы и площадки (SITES keep)
+      const obj = GC_OBJ.test(k), flat = GC_FLAT.test(k), sc = 0.6 + rr() * 0.8, sy = obj || flat ? 1 : 0.85 + rr() * 0.35;
+      const y = GH(x, z) + (flat && !obj ? 0.015 : obj ? -0.03 * sc : -0.01);
+      // цвет экземпляра: трава - пятнами (суше / зеленее) и чуть каждая своя; камни и дерево - только яркость
+      const v = 0.92 + rr() * 0.16; let cr = v, cg = v, cb = v;
+      if (!obj) { const d = THREE.MathUtils.smoothstep(dry, 0.45, 0.8), g = THREE.MathUtils.smoothstep(grn, 0.55, 0.85); cr *= 1 + 0.07 * d - 0.1 * g; cg *= 1 + 0.02 * d + 0.05 * g; cb *= 1 - 0.1 * d - 0.06 * g; }
+      c.push(kinds.get(k).id, x, y, z, rr() * 6.2832, sc, sy, cr, cg, cb);
+    }
+    return (e.a = c.length ? Float32Array.from(c) : EMPTY);
+  };
+  let lx = 1e9, lz = 1e9, on = false;
+  const hideAll = () => { for (const K of KL) for (const m of K.meshes) { m.count = 0; m.visible = false; } on = false; };
+  let off = false;
+  const tick = (p) => {
+    if (!KL.some((K) => K.meshes.length)) return;
+    if (off) { if (on) hideAll(); return; }
+    if (p.y - GH(p.x, p.z) > R) { if (on) hideAll(); lx = 1e9; return; } // высоко - покрова не видно
+    if (on && Math.abs(p.x - lx) < 3 && Math.abs(p.z - lz) < 3) return; lx = p.x; lz = p.z; on = true;
+    for (const K of KL) K.n = 0;
+    const i0 = Math.floor((p.x - R) / GC_C), i1 = Math.floor((p.x + R) / GC_C), j0 = Math.floor((p.z - R) / GC_C), j1 = Math.floor((p.z + R) / GC_C), R2 = (R + GC_C) ** 2;
+    for (let i = i0; i <= i1; i++) for (let j = j0; j <= j1; j++) {
+      const ccx = (i + 0.5) * GC_C - p.x, ccz = (j + 0.5) * GC_C - p.z; if (ccx * ccx + ccz * ccz > R2) continue;
+      const c = cellOf(i, j);
+      for (let o = 0; o < c.length; o += 10) {
+        const x = c[o + 1], z = c[o + 3], d = Math.hypot(x - p.x, z - p.z); if (d > R) continue;
+        const K = KL[c[o]], sc = c[o + 5], h = (K.h || 0.4) * sc, keep = (c[o + 4] * 9.13) % 1; // мелкое вдали не видно: низкая трава редеет раньше высокой
+        if (d > 18 + 60 * h || keep > DK * gcKeep(d, R)) continue;
+        if (K.n >= K.cap) { K.cap *= 2; const a = new Float32Array(K.cap * 16), cl = new Float32Array(K.cap * 3); a.set(K.arr); cl.set(K.col); K.arr = a; K.col = cl; K.grow = true; }
+        const n = K.n++, a = K.arr, ro = c[o + 4], cs = Math.cos(ro) * sc, sn = Math.sin(ro) * sc, b = n * 16;
+        a[b] = cs; a[b + 1] = 0; a[b + 2] = -sn; a[b + 3] = 0; a[b + 4] = 0; a[b + 5] = sc * c[o + 6]; a[b + 6] = 0; a[b + 7] = 0; a[b + 8] = sn; a[b + 9] = 0; a[b + 10] = cs; a[b + 11] = 0; a[b + 12] = x; a[b + 13] = c[o + 2]; a[b + 14] = z; a[b + 15] = 1;
+        K.col[n * 3] = c[o + 7]; K.col[n * 3 + 1] = c[o + 8]; K.col[n * 3 + 2] = c[o + 9];
       }
     }
-    m.count = n; m.visible = n > 0; if (n) { m.instanceMatrix.updateRange.count = n * 16; m.instanceMatrix.needsUpdate = true; m.instanceColor.needsUpdate = true; }
+    if (cells.size > CMAX) { const F = (2 * R) ** 2; for (const [k, e] of cells) if ((e.x - p.x) ** 2 + (e.z - p.z) ** 2 > F) cells.delete(k); }
+    for (const K of KL) {
+      if (!K.meshes.length) continue;
+      if (K.grow) { K.grow = false; K.im = new THREE.InstancedBufferAttribute(K.arr, 16).setUsage(THREE.DynamicDrawUsage); K.ic = new THREE.InstancedBufferAttribute(K.col, 3).setUsage(THREE.DynamicDrawUsage); for (const m of K.meshes) { m.instanceMatrix = K.im; m.instanceColor = K.ic; } }
+      else if (K.n) { K.im.updateRange.count = K.n * 16; K.im.needsUpdate = true; K.ic.updateRange.count = K.n * 3; K.ic.needsUpdate = true; }
+      for (const m of K.meshes) { m.count = K.n; m.visible = K.n > 0; }
+    }
   };
+  // радиус по роли (G.nearScale, Mark 2026-11-08: за самолёт земля - в минимальной детализации): меньше 1 - без покрова
+  tick.scale = (k) => { off = k < 1; lx = 1e9; };
+  // модель пришла (models.js, main.js loadModels): по InstancedMesh на вид и материал
+  tick.attach = (group) => {
+    if (KL.some((K) => K.meshes.length)) return;
+    for (const K of KL) {
+      const part = group.getObjectByName(K.key); if (!part) continue;
+      const box = new THREE.Box3().setFromObject(part); K.h = Math.max(0.05, box.max.y);
+      K.im = new THREE.InstancedBufferAttribute(K.arr, 16); K.im.setUsage(THREE.DynamicDrawUsage); K.ic = new THREE.InstancedBufferAttribute(K.col, 3); K.ic.setUsage(THREE.DynamicDrawUsage);
+      part.traverse((c) => {
+        if (!c.isMesh) return; const card = !!c.material.alphaTest, wind = GC_OBJ.test(K.key) || GC_FLAT.test(K.key) ? 0 : K.h;
+        const m = new THREE.InstancedMesh(c.geometry, gcMat(c.material, K.key, wind, card, U, (c.name.split('|gc_')[1] || '')), K.cap); m.instanceMatrix = K.im; m.instanceColor = K.ic; m.count = 0; m.visible = false;
+        m.frustumCulled = false; m.castShadow = false; m.receiveShadow = !!sh.receive; m.name = K.key; scene.add(m); K.meshes.push(m);
+      });
+    }
+    lx = 1e9;
+  };
+  return tick;
 }
 function groundMaterial(tex, ao, road) {
   const m = new THREE.MeshPhongMaterial({ map: tex, specular: 0x0a0a0a, shininess: 8 }); m.userData.farU = FAR_U; m.userData.AT = TEX; m.userData.lazyU = LAZY;
@@ -1169,7 +1278,8 @@ function nearHouses(G, scene, B, near, P, sh) {
   // модель пришла: по мешу на материал, общая матрица инстансов; коробки этого вида вблизи прячутся
   // радиус моделей вблизи по роли (Mark 2026-11-08: «если играется самолет - то можно в самом минимальном разрешении это выдавать - в первую
   // очередь то что на земле будет важно при игре на пво»): k = 1 - ПВО и меню, меньше - самолёт; коробки и импосторы прячутся в том же радиусе
-  G.nearScale = (k) => { for (const S of sets.values()) { if (S.R0 === undefined) S.R0 = S.R; S.R = S.R0 * k; if (S.R1 !== undefined) S.R1 = Math.max(120, S.R * 0.45); if (S.meshes.length && S.slot && !S.far) ENV.uMdl.value[S.slot] = S.R; } lx = 1e9; };
+  G.nearScale = (k) => { for (const S of sets.values()) { if (S.R0 === undefined) S.R0 = S.R; S.R = S.R0 * k; if (S.R1 !== undefined) S.R1 = Math.max(120, S.R * 0.45); if (S.meshes.length && S.slot && !S.far) ENV.uMdl.value[S.slot] = S.R; } lx = 1e9; if (G.grassT) G.grassT.scale(k); };
+  G.nearDirty = () => { lx = 1e9; }; // покров земли пришёл - пересчитать и стоящей камере
   G.attachBld = (name, group) => {
     for (const [key, S] of sets) {
       if (S.name !== name || S.meshes.length) continue;
@@ -1629,7 +1739,8 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
   const sh = { cast: P.shadows, receive: P.shadows };
 
   // земля
-  if (LOOK && !HILLS && P.shadows !== undefined) G.grassT = grassTufts(scene, city, sh); // проба: трава пучками вблизи
+  if (GC_ON && !HILLS && P.bldNear > 0) G.grassT = groundCover(scene, city, sh, P); // покров земли вблизи (свои gc_*, models/gc.glb): модель - G.gcAttach (main.js)
+  G.gcAttach = G.grassT ? (g) => { G.grassT.attach(g); if (G.nearDirty) G.nearDirty(); } : null;
   const seg = HILLS || RELIEF ? Math.min(640, Math.round(P.groundSeg * 1.6)) : P.groundSeg; // горы и холмы - сетка гуще (город с рельефом - тоже)
   const gg = new THREE.PlaneGeometry(2 * CITY.HALF, 2 * CITY.HALF, seg, seg); gg.rotateX(-Math.PI / 2);
   const pa = gg.attributes.position, uv = gg.attributes.uv;

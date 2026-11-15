@@ -278,6 +278,7 @@ const META = {
   bld_p5: { bld: true, stations: [] }, bld_p9: { bld: true, stations: [] }, bld_b12: { bld: true, stations: [] }, bld_st: { bld: true, stations: [] },
   h_brick: { bld: true, stations: [] }, h_house: { bld: true, stations: [] }, h_log: { bld: true, stations: [], matte: true /* нормали черепицы автора - вбок: блик Phong делал крышу белой (2026-10-27) */ }, h_khata: { bld: true, stations: [] }, o_block: { bld: true, stations: [] }, h_shanty: { bld: true, stations: [] }, h_mobile: { bld: true, stations: [] }, // дома города
   bld_t9: { bld: true, stations: [] }, bld_a16: { bld: true, stations: [] }, o_tall: { bld: true, stations: [] }, g_amel: { bld: true, stations: [] }, g_fortune: { bld: true, stations: [] }, // башни и корпуса
+  gc: { matte: true, bld: true, stations: [] }, // покров земли (Свои/Покров земли): 65 своих моделей травы, цветов, камней и мелочи в одном файле (tools/airdef-models/gc-pack.js); ставит city-render groundCover
   tr_oak: { matte: true, bld: true, stations: [] }, tr_lime: { matte: true, bld: true, stations: [] }, tr_pine: { matte: true, bld: true, stations: [] }, tr_bush: { matte: true, bld: true, stations: [] }, p_lamp: { matte: true, bld: true, stations: [] },
   w_fir1: { matte: true, bld: true, stations: [] }, w_fir3: { matte: true, bld: true, stations: [] }, w_pine1: { matte: true, bld: true, stations: [] }, w_pine2: { matte: true, bld: true, stations: [] }, // зимний лес вблизи // деревья и фонари вблизи
   // свои деревья, мелочь и цеха (Свои/Периферия, Свои/Цеха и склады, Mark 2026-11-08): все матовые (у Phong по умолчанию блик 0x3a3a3a - кроны «словно глянцевые»);
@@ -397,6 +398,7 @@ const GLB_V_OWN = {
   e_tu22m2: '20261114b', e_tu22m2_gear: '20261114b', e_t4: '20261114b', e_t4_gear: '20261114b', // свои Ту-22М2 и Т-4 «Сотка»
   e_su34: '20261115a', e_su34_gear: '20261115a', e_tu22m3: '20261115a', e_tu22m3_gear: '20261115a', e_tu22m3_lo: '20261115a', // свои Су-34 и Ту-22М3 (дальняя копия e_tu22m3_lo - «Летка»)
   e_tu95: '20261115c', e_tu95_gear: '20261115c', // свой Ту-95МС (ревизия 2)
+  gc: '20261115d', // покров земли (свои gc_*)
   e_yak38: '20261114a', e_yak38_gear: '20261114a', // свой Як-38М
   e_su25: '20261114a', e_su25_gear: '20261114a', // свой Су-25 (2026-11-14: финал - корень крыла, износ, копоть)
   e_su7b: '20261113b', e_su7b_gear: '20261113b', // свой Су-7БМК
