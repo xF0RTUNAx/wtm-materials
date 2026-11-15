@@ -1871,7 +1871,7 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
       tree(x, z, 6 + rnd() * 6);
     }
     if (RELIEF) { // рельеф: крутые склоны (обрыв берега, стенки оврагов) - густой лес; своя случайность, остальной город не сдвигается
-      const rs = mulberry32(city.seed * 97 + 3), want = tl.length + Math.round(P.trees * 0.55); // доля пресета: на «Низком» деревьев мало и тут let t2 = 0;
+      const rs = mulberry32(city.seed * 97 + 3), want = tl.length + Math.round(P.trees * 0.55); let t2 = 0; // доля пресета: на «Низком» деревьев мало и тут
       while (tl.length < want && t2++ < want * 40) { // куртинами: точка на склоне - и вокруг неё 4-9 деревьев
         const x = (rs() * 2 - 1) * (CITY.R + 500), z = (rs() * 2 - 1) * (CITY.R + 500), sl = slopeAt(x, z);
         if (sl < 0.15) continue; // только настоящие кручи и стенки оврагов (пологие холмы - как город)
