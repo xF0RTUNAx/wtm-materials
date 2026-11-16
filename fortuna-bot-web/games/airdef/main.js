@@ -259,7 +259,7 @@ if (P.post || perf.aa !== 'off' || perf.up !== 'off') {
   const ldr = !P.post;
   pipe = createPipeline(renderer, { ...(P.post || {}), ...(GRADE[W_KEY] || {}), ...(MAP === 'city' && LIGHT_GRADE[Q.get('light')] && (W_KEY === 'day' || W_KEY === 'morning' || W_KEY === 'evening') ? LIGHT_GRADE[Q.get('light')] : {}), ...(Q.get('look') === '1' && MAP === 'city' ? { gGain: [1.045, 1.0, 0.94], gLift: [0.004, 0.002, 0], gCon: 1.12, gSat: 1.04 } : {}) /* проба «земля и свет» города (city-render.js LOOK) */, ldr, ...(Q.get('pp') ? JSON.parse(Q.get('pp')) : {}) /* стенды: свои настройки постобработки (?pp={"bloom":0}) */, exposure: renderer.toneMappingExposure, scale: perf.scale, upscaler: perf.up, sharp: perf.sharp || 0.4, aa: perf.aa,
     bloomQ: !!P.bloomQ, fx: !!P.halfFx, fxU: FXU, fxLayer: FX_LAYER, fxAddLayer: FX_ADD_LAYER, // fx - облака и дым в половине разрешения (слои FX_*)
-    aaCas1: Q.get('pp1') !== '0' }); // FXAA и резкость CAS - одним проходом (post.js; ?pp1=0 - двумя, как раньше)
+    samples: CINEMA ? 4 : 2, aaCas1: Q.get('pp1') !== '0' }); // FXAA и резкость CAS - одним проходом (post.js; ?pp1=0 - двумя, как раньше)
   sceneTM = ldr ? THREE.ACESFilmicToneMapping : THREE.NoToneMapping;
   renderer.setPixelRatio(basePR);
 } else renderer.setPixelRatio(basePR * perf.scale);

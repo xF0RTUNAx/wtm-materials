@@ -389,7 +389,7 @@ const GLB_V = Object.fromEntries(['w_gbu10', 'w_ecm', 'gepard', 'gepard_lo', 'ro
 const GLB_V_OWN = {
   bld_ii49: '20261116a', bld_hr_a: '20261116a', bld_hr_c: '20261116a', // свои дома: модули II-49, хрущёвки
   bld_d12_b: '20261116a', bld_d12_g: '20261116a', bld_d12_t: '20261116a', // 12-этажка
-  ph_brick: '20261116a', ph_wood: '20261116a', ph_khata: '20261116a', ph_mansard: '20261116a', ph_dacha: '20261116a', ph_barrack: '20261116a', ph_yard: '20261116a', // частный сектор
+  ph_brick: '20261116b', ph_wood: '20261116b', ph_khata: '20261116b', ph_mansard: '20261116b', ph_dacha: '20261116b', ph_barrack: '20261116b', ph_yard: '20261116b', // частный сектор
   e_b2: '20261110b', e_b2_gear: '20261110b', // свой B-2A
   e_vulcan: '20261110c', e_vulcan_gear: '20261110c', // свой Vulcan B.2
   e_b1b: '20261112a', e_b1b_gear: '20261112a', // свой B-1B

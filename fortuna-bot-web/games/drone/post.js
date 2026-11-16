@@ -28,7 +28,7 @@ export function createPipeline(renderer, cfg) {
   const taaOn = cfg.aa === 'taa' && gl2; // без WebGL2 (нет текстуры глубины) — как FXAA
   const rtOpt = { type: hdr, minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, stencilBuffer: true };
   const sceneRT = msaa ? new THREE.WebGLMultisampleRenderTarget(1, 1, rtOpt) : new THREE.WebGLRenderTarget(1, 1, rtOpt);
-  if (msaa) sceneRT.samples = 4;
+  if (msaa) sceneRT.samples = cfg.samples || 4; // «Воздушное превосходство»: 2 (замер 2026-11-16: −1,3 мс на ультра, на Retina на вид как 4)
   if (ldr) sceneRT.texture.encoding = THREE.sRGBEncoding; // материалы сами переводят в sRGB
   // «Облака и дым в пониженном разрешении» (cfg.fx): глубина кадра нужна шейдерам облаков и дыма, чтобы прятаться
   // за землёй и самолётами и мягко растворяться на стыке; сами они рисуются в половине разрешения и накладываются сверху
