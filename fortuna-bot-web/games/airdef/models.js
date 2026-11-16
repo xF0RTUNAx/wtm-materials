@@ -276,7 +276,9 @@ const META = {
   w_pod: { pod: true, stations: [] }, // AN/AAQ-28 LITENING - прицельный контейнер
   // постройки военных объектов (целей) - расставляются по OBJ_DIMS из city.js
   obj_tanks: { obj: true, stations: [] }, obj_rtank: { obj: true, stations: [] }, // резервуары и ангар obj_jhangar - для «Летки» (на картах этой игры - свои сцены)
-  bld_ii49: { bld: true, kit: true, matte: true, stations: [] }, bld_hr_a: { bld: true, kit: true, matte: true, stations: [] }, bld_hr_c: { bld: true, kit: true, matte: true, stations: [] }, // + хрущёвки 1-464 и 1-447, // свои дома: панельная девятиэтажка II-49 модулями (Свои/Дома города, 2026-11-16) - city-render.js kitHouses
+  // свои дома (Свои/Дома города): модули панельной девятиэтажки II-49 и хрущёвок 1-464 / 1-447 - city-render.js kitHouses
+  bld_ii49: { bld: true, kit: true, matte: true, stations: [] }, bld_hr_a: { bld: true, kit: true, matte: true, stations: [] }, bld_hr_c: { bld: true, kit: true, matte: true, stations: [] },
+  ph_brick: { bld: true, kit: true, matte: true, stations: [] }, ph_wood: { bld: true, kit: true, matte: true, stations: [] }, ph_khata: { bld: true, kit: true, matte: true, stations: [] }, ph_mansard: { bld: true, kit: true, matte: true, stations: [] }, ph_dacha: { bld: true, kit: true, matte: true, stations: [] }, ph_barrack: { bld: true, kit: true, matte: true, stations: [] }, ph_yard: { bld: true, kit: true, matte: true, stations: [] }, // частный сектор: свои дома (5 состояний) и двор (city-render.js phHouses)
   bld_p5: { bld: true, stations: [] }, bld_p9: { bld: true, stations: [] }, bld_b12: { bld: true, stations: [] }, bld_st: { bld: true, stations: [] },
   h_brick: { bld: true, stations: [] }, h_house: { bld: true, stations: [] }, h_log: { bld: true, stations: [], matte: true /* нормали черепицы автора - вбок: блик Phong делал крышу белой (2026-10-27) */ }, h_khata: { bld: true, stations: [] }, o_block: { bld: true, stations: [] }, h_shanty: { bld: true, stations: [] }, h_mobile: { bld: true, stations: [] }, // дома города
   bld_t9: { bld: true, stations: [] }, bld_a16: { bld: true, stations: [] }, o_tall: { bld: true, stations: [] }, g_amel: { bld: true, stations: [] }, g_fortune: { bld: true, stations: [] }, // башни и корпуса
@@ -385,6 +387,7 @@ const GLB_V = Object.fromEntries(['w_gbu10', 'w_ecm', 'gepard', 'gepard_lo', 'ro
 // версии файлов собственных моделей (Blender, tools/airdef-models/own): по строке на ключ; поднимает tools/airdef-models/integrate-own.js при каждом встраивании
 const GLB_V_OWN = {
   bld_ii49: '20261116a', bld_hr_a: '20261116a', bld_hr_c: '20261116a', // свои дома: модули II-49, хрущёвки
+  ph_brick: '20261116a', ph_wood: '20261116a', ph_khata: '20261116a', ph_mansard: '20261116a', ph_dacha: '20261116a', ph_barrack: '20261116a', ph_yard: '20261116a', // частный сектор
   e_b2: '20261110b', e_b2_gear: '20261110b', // свой B-2A
   e_vulcan: '20261110c', e_vulcan_gear: '20261110c', // свой Vulcan B.2
   e_b1b: '20261112a', e_b1b_gear: '20261112a', // свой B-1B
