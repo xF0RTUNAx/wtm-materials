@@ -391,7 +391,7 @@ const GLB_V = Object.fromEntries(['w_gbu10', 'w_ecm', 'gepard', 'gepard_lo', 'ro
 const GLB_V_OWN = {
   bld_ii49: '20261116a', bld_hr_a: '20261116a', bld_hr_c: '20261116a', // свои дома: модули II-49, хрущёвки
   bld_d12_b: '20261117a', bld_d12_g: '20261117a', bld_d12_t: '20261117a', // 12-этажка (кондиционеры на стене)
-  bld_tw_b: '20261117a', bld_tw_g: '20261117a', bld_tw_t: '20261117a', // точечная башня
+  bld_tw_b: '20261117b', bld_tw_g: '20261117b', bld_tw_t: '20261117b', // точечная башня
   bld_st3: '20261117a', bld_st4: '20261117a', // сталинка
   ph_brick: '20261116b', ph_wood: '20261116b', ph_khata: '20261116b', ph_mansard: '20261116b', ph_dacha: '20261116b', ph_barrack: '20261116b', ph_yard: '20261116b', // частный сектор
   e_b2: '20261110b', e_b2_gear: '20261110b', // свой B-2A
