@@ -248,6 +248,7 @@ renderer.outputEncoding = THREE.sRGBEncoding;
 renderer.toneMappingExposure = ((P.post && P.post.exposure) || 1.1) * (W.exposure || 1);
 renderer.shadowMap.enabled = !!P.shadows; renderer.shadowMap.type = IS_TOUCH ? THREE.PCFShadowMap : THREE.PCFSoftShadowMap;
 const scene = new THREE.Scene();
+scene.autoUpdate = false; // матрицы сцены - раз за кадр (frame, перед отрисовкой): каждый renderer.render обходил ~1000 объектов заново - основной кадр, облака и дым, огонь, окно ТВ (2026-11-16: ~3200 обходов за кадр → ~1000)
 const camera = new THREE.PerspectiveCamera(62, 1, 3, 50000);
 camera.rotation.order = 'YXZ';
 const basePR = Math.min((window.devicePixelRatio || 1) * P.prMul, P.prCap);
@@ -1312,6 +1313,7 @@ function frame(now) {
     renderer.shadowMap.autoUpdate = k < 2; if (k > 1 && ++shN >= k) { shN = 0; renderer.shadowMap.needsUpdate = true; }
   }
   if (C.fx && C.fx.setView) C.fx.setView(camera.position.y); // порядок дыма и облаков - по высоте камеры (units-render)
+  if (draw3D || (ctrl && ctrl.afterRender)) scene.updateMatrixWorld(); // scene.autoUpdate = false - здесь, раз за кадр (и для окна ТВ в afterRender)
   if (draw3D && !(ctrl && ctrl.skip3D && ctrl.skip3D())) { if (pipe) pipe.render(scene, camera, t3); else renderer.render(scene, camera); }
   if (C.perfHud && renderer.info) { pf.cpu += performance.now() - t0; pf.n++; pf.calls = renderer.info.render.calls; pf.tris = renderer.info.render.triangles; }
   if (!hold && ctrl && ctrl.afterRender) ctrl.afterRender(); // окно ТВ рисуется прямо на экран: без кадра сцены под ним экран был бы чёрным (ревью)
