@@ -170,8 +170,8 @@ function touchGfx(P, custom) {
   } // телефон и планшет: экран и так плотный - меньше пикселей, меньше нагрев (iPad Air M1: «Средний» упирался в видеочип)
   return P;
 }
-// окно контейнера через кадр - по умолчанию на сенсорных (телефоны, планшеты) и на «Низком»/«Среднем»
-for (const k in PRESETS) if (PRESETS[k].podHalf === undefined) PRESETS[k].podHalf = IS_TOUCH || k === 'low' || k === 'medium';
+// окно контейнера через кадр - по умолчанию на всех пресетах
+for (const k in PRESETS) if (PRESETS[k].podHalf === undefined) PRESETS[k].podHalf = true; // окно ТВ - 30 к/с везде (Mark 2026-11-16: «давай ТВ в 30 кадров»; на ПК «Ультра» −2,5 мс); «Кастомный» - выбор «Контейнер»
 const P0 = touchGfx(gfxKey === 'custom' ? applyGfx(PRESETS.custom, GO) : applyGfx(PRESETS[gfxKey], { fullRes: GO.fullRes }), gfxKey === 'custom'); // свои настройки - только у «Кастомного»
 const P = CINEMA ? Object.assign(P0, { name: tr('Кино'), lodObj: 1e9, draw: 26000, bldNear: 5000, treeNear: 3000, bldFar: 9000, treeFar: 5000, trees: 32000, clouds: 1100, particles: 9000, props: true, shadowMap: 4096, shadowBox: 900, // дома и деревья готовыми моделями на километры (комментарий съедал конец строки с 2026-10-09 - у «Кино» не было этих настроек)
   shEvery: 1, shAuto: false, // «Кино» - без уступок: тени каждый кадр
