@@ -45,6 +45,7 @@ const KB = [], KITGS = new Map(); let OFFB = new Uint8Array(0), OFFH = new Uint8
 const KIT_SER = [
   { key: 'ii49', models: ['bld_ii49'], v: 2, SEC: 22.4, DEP: 13, FL: 2.9, minN: 1, hip: [false] }, // панельная девятиэтажка II-49 (пилот)
   { key: 'hr', models: ['bld_hr_a', 'bld_hr_c'], v: 1, SEC: 16, DEP: 12, FL: 2.7, minN: 2, hip: [false, true] }, // хрущёвки: панельная 1-464 и кирпичная 1-447 (вальма)
+  { key: 'd12', models: ['bld_d12_b', 'bld_d12_g', 'bld_d12_t'], v: 4, SEC: 22.4, DEP: 13, FL: 2.9, minN: 1, hip: [false, false, false] }, // 12-этажная пластина (лоджии; пояс синий / зелёный / терракота)
 ];
 // частный сектор - свои дома (Свои/Дома города, серия 2; ПАСПОРТ_частный): вид BLD → дом; размеры модели [вдоль фасада, вглубь, высота], м
 const PH = { 7: 'brick', 8: 'mansard', 9: 'wood', 10: 'khata', 12: 'barrack', 13: 'dacha' };
