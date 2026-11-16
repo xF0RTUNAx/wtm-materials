@@ -252,10 +252,11 @@ const camera = new THREE.PerspectiveCamera(62, 1, 3, 50000);
 camera.rotation.order = 'YXZ';
 const basePR = Math.min((window.devicePixelRatio || 1) * P.prMul, P.prCap);
 const perf = { ...P.perf };
+if (Q.get('dyn') === '0') perf.dynOff = true; // стенды: без динамического разрешения
 let pipe = null, sceneTM = THREE.ACESFilmicToneMapping;
 if (P.post || perf.aa !== 'off' || perf.up !== 'off') {
   const ldr = !P.post;
-  pipe = createPipeline(renderer, { ...(P.post || {}), ...(GRADE[W_KEY] || {}), ...(MAP === 'city' && LIGHT_GRADE[Q.get('light')] && (W_KEY === 'day' || W_KEY === 'morning' || W_KEY === 'evening') ? LIGHT_GRADE[Q.get('light')] : {}), ...(Q.get('look') === '1' && MAP === 'city' ? { gGain: [1.045, 1.0, 0.94], gLift: [0.004, 0.002, 0], gCon: 1.12, gSat: 1.04 } : {}) /* проба «земля и свет» города (city-render.js LOOK) */, ldr, exposure: renderer.toneMappingExposure, scale: perf.scale, upscaler: perf.up, sharp: perf.sharp || 0.4, aa: perf.aa,
+  pipe = createPipeline(renderer, { ...(P.post || {}), ...(GRADE[W_KEY] || {}), ...(MAP === 'city' && LIGHT_GRADE[Q.get('light')] && (W_KEY === 'day' || W_KEY === 'morning' || W_KEY === 'evening') ? LIGHT_GRADE[Q.get('light')] : {}), ...(Q.get('look') === '1' && MAP === 'city' ? { gGain: [1.045, 1.0, 0.94], gLift: [0.004, 0.002, 0], gCon: 1.12, gSat: 1.04 } : {}) /* проба «земля и свет» города (city-render.js LOOK) */, ldr, ...(Q.get('pp') ? JSON.parse(Q.get('pp')) : {}) /* стенды: свои настройки постобработки (?pp={"bloom":0}) */, exposure: renderer.toneMappingExposure, scale: perf.scale, upscaler: perf.up, sharp: perf.sharp || 0.4, aa: perf.aa,
     bloomQ: !!P.bloomQ, fx: !!P.halfFx, fxU: FXU, fxLayer: FX_LAYER, fxAddLayer: FX_ADD_LAYER, // fx - облака и дым в половине разрешения (слои FX_*)
     aaCas1: Q.get('pp1') !== '0' }); // FXAA и резкость CAS - одним проходом (post.js; ?pp1=0 - двумя, как раньше)
   sceneTM = ldr ? THREE.ACESFilmicToneMapping : THREE.NoToneMapping;
@@ -1265,7 +1266,7 @@ function frame(now) {
   const uc = gfxKey === 'custom' ? P.cap : fpsCap === 'auto' ? undefined : fpsCap; // предел игрока (0 - нет)
   const menu = !C.probeOn && (idle || C.state === 'menu' || C.paused || C.endFreeze); // меню, пауза и итог одиночного боя - 30 к/с всему (и 3D, и интерфейсу); замер ?probe=1 - без предела
   const capUI = idle ? (cc.busy && cc.busy() ? 1000 / 60 : 1000 / 8) : menu ? 1000 / 30 : uc ? 1000 / uc : 0; // ангар: пока самолёт вращается - плавно, в покое кадр не считается
-  const capMs = C.probeOn ? 0 : capUI || (IS_TOUCH && uc !== 0 ? 1000 / 60 : 0);
+  const capMs = C.probeOn ? 0 : capUI || (uc !== 0 ? 1000 / 60 : 0); // «Авто» - 60 к/с и на ПК (Mark 2026-11-16: на экране 120 Гц Mac рисовал 120 кадров - вентиляторы); «Нет» - без предела
   const cap3D = !menu && IS_TOUCH && !fly ? 1000 / 30 : 0; // предел игрока (45, 60) - не отменяет 30 для 3D вне полёта
   if (capMs) { capAcc = Math.min(capAcc + Math.max(0, rd), capMs * 2); if (capAcc < capMs - 1.5) return; capAcc = Math.max(0, capAcc - capMs); } else capAcc = 0;
   const ms = now - lastDraw; lastDraw = now;
@@ -1354,6 +1355,7 @@ function warmNow() {
 const pendingObj = [];
 registerSW(); // файлы игры - из кэша устройства (только на сайте; offline.js)
 // замер частей кадра на телефоне (?probe=1): таблица мс поверх игры через 12 с боя (probe.js)
+if (Q.get('lab') === '1') import('./lightlab.js?v=20261114a').then((m) => m.startLab(C, { renderer, scene, pipe, P, W_KEY, MAP, Q })); // стенд света (Mark 2026-11-16): ползунки света и цвета, ракурсы, сохранение
 if (Q.get('probe') === '1') { C.perfScale = perf.scale; C.probeMap = MAP; import('./probe.js?v=20261114a').then((m) => m.startProbe(C, { renderer, scene, pipe })); }
 loadModels(assetsBase(), (name) => {
   warmSoon(); // шейдеры пришедшей модели - сразу, а не когда она впервые попадёт в кадр

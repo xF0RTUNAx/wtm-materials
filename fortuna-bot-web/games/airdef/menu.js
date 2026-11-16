@@ -349,7 +349,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
     setTimeout(offInfo, 0); setTimeout(pfSize, 0); // «На устройстве»: занято, доступно ли хранилище; объём «Скачать всё»
     $('tab-set').innerHTML = `<div class="cat-h">${tr('Язык · Language')}</div><div class="seg" data-seg="lang">${LANGS.map(([k, l]) => `<button data-v="${k}" class="${k === LANG ? 'on' : ''}">${l}</button>`).join('')}</div>
       <div class="cat-h">${tr('Графика')}</div><div class="gfx-row">${Object.entries(PRESETS).map(([k, p]) => `<button class="gfx ${k === C.gfxKey ? 'on' : ''}" data-gfx="${k}"><b>${p.name}</b></button>`).join('')}</div>
-      ${C.gfxKey === 'custom' ? customPanel() : `<div class="prow"><span>${tr('Предел кадров')}</span>${seg('fpsCap', C.fpsCap, [['auto', C.IS_TOUCH ? tr('Авто (60)') : tr('Авто')], [30, '30'], [45, '45'], [60, '60'], ...(C.IS_TOUCH ? [] : [[0, tr('Нет')]])])}</div>
+      ${C.gfxKey === 'custom' ? customPanel() : `<div class="prow"><span>${tr('Предел кадров')}</span>${seg('fpsCap', C.fpsCap, [['auto', tr('Авто (60)')], [30, '30'], [45, '45'], [60, '60'], ...(C.IS_TOUCH ? [] : [[0, tr('Нет')]])])}</div>
       ${C.IS_TOUCH ? `<div class="prow"><span>${tr('Чёткость')}</span>${seg('sharp', C.SHARP, [['auto', tr('Обычная')], ['high', tr('Высокая')], ['native', tr('Как у экрана')]])}</div>
       <p class="hint">${tr('Высокая и «как у экрана»: картинка чётче, но больше нагрузка на видеочип и нагрев. Применяется после перезапуска.')}</p>` : ''}`}
       <div class="prow"><span>${tr('Текстуры самолётов')}</span>${seg('texq', C.texQ() === 'opt' ? 'opt' : 'max', [['opt', tr('Оптимизированные')], ['max', tr('Максимальные')]])}</div>

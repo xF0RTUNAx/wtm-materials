@@ -241,6 +241,7 @@ export function createPipeline(renderer, cfg) {
     setScale(s) { s = Math.round(Math.max(0.35, Math.min(1, s)) * 100) / 100; if (s !== scale) { scale = s; setSize(); } },
     setSharp(v) { cas.uniforms.sharp.value = v; rcas.uniforms.sharp.value = v; fxcas.uniforms.sharp.value = v; },
     setExposure(v) { comp.uniforms.exposure.value = v; },
+    get grade() { return comp.uniforms; }, // стенд света «Воздушного превосходства» (airdef/lightlab.js): ползунки цвета кадра - прямо в uniforms
     resetHistory() { taaReset = true; }, // TAA: следующий кадр — без истории (смена вида)
     render(scene, camera, t, sun) {
       const pm = camera.projectionMatrix.elements, p8 = pm[8], p9 = pm[9];

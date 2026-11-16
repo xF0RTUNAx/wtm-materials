@@ -410,7 +410,7 @@ function groundCover(scene, city, sh, P) {
   return tick;
 }
 function groundMaterial(tex, ao, road) {
-  const m = new THREE.MeshPhongMaterial({ map: tex, specular: 0x0a0a0a, shininess: 8 }); m.userData.farU = FAR_U; m.userData.AT = TEX; m.userData.lazyU = LAZY;
+  const m = new THREE.MeshPhongMaterial({ map: tex, specular: 0x0a0a0a, shininess: 8 }); m.userData.farU = FAR_U; m.userData.AT = TEX; m.userData.lazyU = LAZY; m.userData.GT = GT;
   m.extensions = { derivatives: true, shaderTextureLOD: true }; // явные производные выборок (TXG) - на WebGL 1
   m.onBeforeCompile = (sh) => {
     Object.assign(sh.uniforms, ENV, TEX, GT, { uFar: FAR_U, uLazy: LAZY, tAO: { value: ao }, tRoad: { value: road }, tNoise: { value: NOISE_ON ? noiseTex() : null }, uAir: { value: new THREE.Vector4(AIRPORT.x, AIRPORT.z, AIRPORT.rwyL / 2, AIRPORT.rwyW / 2) } });
