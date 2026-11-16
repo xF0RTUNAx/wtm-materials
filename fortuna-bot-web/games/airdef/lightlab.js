@@ -8,7 +8,7 @@ const SAVE_URL = 'http://127.0.0.1:8939';
 const WX = { // погоды карт: ключ, подпись
   city: [['day', 'Ясный день'], ['morning', 'Утро'], ['evening', 'Вечер'], ['sunset', 'Закат'], ['overcast', 'Пасмурно']],
   winter: [['w_clear', 'Мороз, ясно'], ['w_frost', 'Морозная дымка'], ['w_snow', 'Снегопад']],
-  autumn: [['a_eve', 'Осенний вечер'], ['a_dusk', 'Сумерки'], ['a_fog', 'Туман']],
+  autumn: [['a_eve', 'Вечер'], ['a_dusk', 'Поздний вечер'], ['a_fog', 'Туман']],
 };
 const MAPN = { city: 'Город (Речной узел)', winter: 'Зима (Северный рубеж)', autumn: 'Осень (Туманная топь)' };
 
@@ -85,7 +85,7 @@ const linHex = (c) => lin2hex(c);
 
 export function startLab(C, ctx) {
   const { renderer, scene, pipe, W_KEY, MAP, Q } = ctx;
-  const KEY = `fortuna_airdef_lab/${MAP}/${W_KEY}`;
+  const KEY = `fortuna_airdef_lab2/${MAP}/${W_KEY}`; // lab2: значения 16.11 уже в игре (city-render.js LAB) - прежние сохранения браузера не накладываются второй раз
   const wxList = WX[MAP] || WX.city, views = VIEWS[MAP] || VIEWS.city;
   let god = (() => { try { return localStorage.getItem('fortuna_airdef_lab_god') !== '0'; } catch (_) { return true; } })();
   let leaving = false;

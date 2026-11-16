@@ -15,9 +15,9 @@ import { ktxOn, ktxLoad } from './ktx.js?v=20261114a';
 export function autumnWeathers(W) {
   const D = W.day, O = W.overcast;
   return {
-    a_eve: { ...D, name: tr('Осенний вечер'), el: 9.8, az: 245, sun: 0xffc890, sunI: 0.95, sky: 0x9aa6b8, gnd: 0x6a5a48, hemiI: 0.7, zenith: 0x5a74a0, horizon: 0xe8cdb0,
+    a_eve: { ...D, name: tr('Вечер'), el: 9.8, az: 245, sun: 0xffc890, sunI: 0.95, sky: 0x9aa6b8, gnd: 0x6a5a48, hemiI: 0.7, zenith: 0x5a74a0, horizon: 0xe8cdb0,
       haze: 0xffb878, hazeK: 0.35, fog: 0xc8b8a8, fogD: 0.00007, clouds: 0.3, cloudLit: 0xffe0c0, cloudDark: 0x8a8090, hdri: { f: 'a_field', u: 0.6097, k: 1, h0: 0.02 }, autumn: 1, lowFog: 0.55 },
-    a_dusk: { ...D, name: tr('Сумерки'), el: 4, az: 250, sun: 0xff9a5a, sunI: 0.7, sky: 0x8a8aa8, gnd: 0x5a5058, hemiI: 1.05, zenith: 0x3c4670, horizon: 0xe0a080,
+    a_dusk: { ...D, name: tr('Поздний вечер'), el: 4, az: 250, sun: 0xff9a5a, sunI: 0.7, sky: 0x8a8aa8, gnd: 0x5a5058, hemiI: 1.05, zenith: 0x3c4670, horizon: 0xe0a080,
       haze: 0xff8a50, hazeK: 0.45, fog: 0x6c6474, fogD: 0.00011, clouds: 0.45, cloudLit: 0xffb890, cloudDark: 0x5a5468, hdri: { f: 'a_belf', u: 0.6047, k: 0.75, h0: 0.01 }, autumn: 1, lowFog: 0.85 },
     a_fog: { ...O, name: tr('Туман'), sun: 0xd8d0c8, sunI: 0.35, sky: 0x9c9a98, gnd: 0x5c5650, hemiI: 1.0, zenith: 0x8a8886, horizon: 0xaaa6a0,
       fog: 0xa8a49e, fogD: 0.00024, clouds: 0.6, cloudLit: 0xc8c4be, cloudDark: 0x7c7874, autumn: 1, lowFog: 1 },
@@ -128,11 +128,12 @@ export function autumnGroundMaterial(city, zt, nt, ENV, AT, W, bake) {
   const m = new THREE.MeshPhongMaterial({ color: 0xffffff, specular: 0x0c0c0a, shininess: 10 }); m.userData.AT = AT; m.userData.farU = FAR_U;
   m.extensions = { derivatives: true, shaderTextureLOD: true }; // земля вдали (ground-far.js) - на WebGL 1; на WebGL 2 и так есть
   const GU = { uFar: FAR_U, tZ: { value: zt[0] }, tZ2: { value: zt[1] }, tNm: { value: nt }, tNoise: { value: NOISE_ON ? noiseTex() : null }, uBald: { value: new THREE.Vector3(BA.x, BA.z, BA.r) } };
+  const uLowL = { value: 1 }; m.userData.uLowL = uLowL; // яркость тумана низин - по свету сцены (city-render.js updateCityScene): в темноте не светится
   m.userData.GU = GU; m.userData.groundGLSL = () => aHeadGLSL() + aGroundGLSL(H); // для запекания - те же текстуры и код
   m.onBeforeCompile = (sh) => {
-    Object.assign(sh.uniforms, AT, GU, { uCam: ENV.uCam, uLow: { value: new THREE.Vector4(fogC.r, fogC.g, fogC.b, W.lowFog ?? 0.5) } }, bake ? bake.U : {});
+    Object.assign(sh.uniforms, AT, GU, { uCam: ENV.uCam, uLow: { value: new THREE.Vector4(fogC.r, fogC.g, fogC.b, W.lowFog ?? 0.5) }, uLowL }, bake ? bake.U : {});
     sh.vertexShader = 'varying vec3 vWp;\n' + sh.vertexShader.replace('#include <project_vertex>', '#include <project_vertex>\n vWp = (modelMatrix * vec4(transformed, 1.0)).xyz;');
-    sh.fragmentShader = `varying vec3 vWp; uniform vec3 uCam; uniform vec4 uLow;
+    sh.fragmentShader = `varying vec3 vWp; uniform vec3 uCam; uniform vec4 uLow; uniform float uLowL;
       ${aHeadGLSL()}${aGroundGLSL(H)}${bake ? bake.GLSL : ''}
 ` + sh.fragmentShader.replace('#include <shadowmap_pars_fragment>', groundShadowChunk())
       .replace('#include <color_fragment>', `#include <color_fragment>
@@ -145,7 +146,7 @@ export function autumnGroundMaterial(city, zt, nt, ENV, AT, W, bake) {
   aLow = gC.a * mix(0.04, 1.0, smoothstep(300.0, 5000.0, dist));
   diffuseColor.rgb = gC.rgb;`)
       .replace('#include <fog_fragment>', `#include <fog_fragment>
-  gl_FragColor.rgb = mix(gl_FragColor.rgb, uLow.rgb, clamp(aLow * uLow.w * 0.8, 0.0, 0.85));`)
+  gl_FragColor.rgb = mix(gl_FragColor.rgb, uLow.rgb * uLowL, clamp(aLow * uLow.w * 0.8, 0.0, 0.85));`)
       .replace('#include <normal_fragment_begin>', `#include <normal_fragment_begin>
   // мелкий рельеф травы и земли: нормали текстуры в двух масштабах, вблизи сильнее
   float nw = 1.0 - smoothstep(150.0, 900.0, length(vWp - uCam));

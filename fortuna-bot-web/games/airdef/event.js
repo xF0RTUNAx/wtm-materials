@@ -17,7 +17,7 @@ export const eventLeft = () => Math.max(0, EVENT_END.getTime() - Date.now());
 export const eventOn = () => eventLeft() > 0;
 // вкладка «Оборона от вертолётов»: false - видна с пометкой «скоро» и неактивна (проверено 2026-10-20: все 6 волн доходят до конца, см. defense.js, сторожок вертолётов)
 const DEF_READY = true;
-const WX = { a_eve: tr('Вечер'), a_dusk: tr('Сумерки'), a_fog: tr('Туман') };
+const WX = { a_eve: tr('Вечер'), a_dusk: tr('Поздний вечер'), a_fog: tr('Туман') };
 
 const CSS = `
 #event { position: fixed; inset: 0; z-index: 39; display: none; background: #0e110d; color: var(--th-tx, #e9e6dc); font: 13px 'Golos Text', -apple-system, sans-serif; overflow: hidden;

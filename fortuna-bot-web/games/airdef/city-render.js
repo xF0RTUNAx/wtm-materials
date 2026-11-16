@@ -19,6 +19,14 @@ import { ktxOn, ktxLoad, ktxMeta } from './ktx.js?v=20261114a';
 import { winterWeathers, winterZoneTex, winterNormalTex, winterTextures, winterGroundMaterial, winterTrees, makeSnowfall, winterRoads } from './winter-render.js?v=20261114a';
 import { autumnWeathers, autumnZoneTex, autumnTextures, autumnGroundMaterial, autumnTrees, autumnRoads, autumnWaterMask, autumnProps } from './autumn-render.js?v=20261114a';
 Object.assign(WEATHERS, winterWeathers(WEATHERS), autumnWeathers(WEATHERS)); // зимние и осенние погоды - только в «Воздушном превосходстве»
+// свет погод по стенду Mark (?lab=1, 2026-11-16, tools/airdef-light/lab-values.json): множители силы солнца (sunI) и неба (hemiI), плотности дымки (fogD),
+// цвета. Только здесь - общие погоды «Летки» (drone/world.js) не меняются: правки - копией объекта
+{ const LAB = { day: { sunI: 1.735, hemiI: 2.7273, sun: 0xeff3e8, sky: 0xd8e8fc }, overcast: { sunI: 0.4, hemiI: 0.4727, fogD: 1.85 }, w_frost: { fogD: 1.4 },
+    w_snow: { sunI: 0, hemiI: 1.1273 }, a_fog: { sunI: 0.4143, hemiI: 0.9636 } };
+  for (const [k, o] of Object.entries(LAB)) { const W = WEATHERS[k]; if (!W) continue; const n = { ...W, lab0: { sunI: W.sunI ?? 1, hemiI: W.hemiI ?? 1 } }; // lab0 - свет до правок (опора тумана низин осени)
+    for (const f of ['sunI', 'hemiI', 'fogD']) if (o[f] !== undefined) n[f] = (W[f] ?? 1) * o[f];
+    for (const f of ['sun', 'sky', 'gnd', 'fog']) if (o[f] !== undefined) n[f] = o[f];
+    WEATHERS[k] = n; } }
 // высота земли и районы - у текущей карты (город - city.js, зима - map-winter.js); выставляет buildCityScene
 let GH = groundH, ZA = zoneAt, LAWNS = []; // LAWNS - объекты с травой на своём участке (o.lawn: склад боеприпасов)
 import { MeshoptSimplifier } from './vendor/meshopt_simplifier.module.js?v=20261114a'; // MIT, meshoptimizer 0.21
@@ -31,7 +39,7 @@ const GT_V = '20261116a'; // версия файлов атласов земли
 const TOUCH_GT = (typeof location !== 'undefined' && /[?&]touch=1/.test(location.search)) || (typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches); // телефон: атласы земли - клетка 512 (память видеокарты)
 
 const lin = (hex) => new THREE.Color(hex).convertSRGBToLinear();
-const TILE = 3000; // плитка инстансов: 3 км - на 20 % меньше вызовов отрисовки, чем 2 км, при почти тех же треугольниках
+let TILE = 3000; // (buildCityScene: на сенсорных и без теней - 6 км: вызовов вдвое меньше, «Средний» на телефоне −11…14 % кадра; на ПК с тенями 6 км не быстрее - больше экземпляров в проходе теней) плитка инстансов: 3 км - на 20 % меньше вызовов отрисовки, чем 2 км, при почти тех же треугольниках
 const ROOFX = 6, ROOF = 7; // виды только для отрисовки: надстройки на крышах и скатные крыши домов
 
 // ═════════════ Общие uniform'ы ═════════════
@@ -1886,6 +1894,7 @@ function attachBridgeSegs(G, scene, model, P) {
 export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
   GH = city.groundH; ZA = city.zoneAt; LAWNS = city.objects.filter((o) => o.lawn); const WINT = city.kind === 'winter'; ENV.uSnowK.value = WINT ? 1 : 0; // зимняя карта: своя земля и лес, без реки-воды и улиц
   const AUT = city.kind === 'autumn', HILLS = WINT || AUT; // осенняя «Туманная топь»: своя земля, лес, дороги и вода болота (без снега)
+  TILE = TOUCH_GT || !P.shadows ? 6000 : 3000; // плитки инстансов (см. TILE)
   const W = WEATHERS[weatherKey] || WEATHERS.day;
   const G = { tiles: [], W, renderer, winter: WINT }; // renderer - снимки моделей для дальних копий домов (makeImpostor)
   if (P.roofDetail) loadCityTextures(renderer ? Math.min(P.aniso || 4, renderer.capabilities.getMaxAnisotropy()) : 1, (P.zoneTex || 1024) >= 2048 || ((P.aniso || 4) >= 8 && !TOUCH_GT), HILLS); // на «Низком» - без текстур; атласы земли 4096 - «Ультра» и ПК
@@ -1948,6 +1957,10 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
   const bake = BAKE_ON && renderer ? createGroundBake(CITY.HALF, BK_HI ? { n0: 4096, s0: 2, n1: 4096 } : {}) : null; // запечённый цвет дальней земли (ground-bake.js; ?gb=0 - без него): осень, зима и город
   const ground = new THREE.Mesh(gg, AUT ? autumnGroundMaterial(city, autumnZoneTex(city, P.zoneTex || 1024), winterNormalTex(city), ENV, autumnTextures(aniso, texStats), W, bake) : WINT ? winterGroundMaterial(city, winterZoneTex(city, P.zoneTex || 1024), winterNormalTex(city), ENV, winterTextures(renderer ? Math.min(P.aniso || 4, renderer.capabilities.getMaxAnisotropy()) : 1, texStats), bake) : groundMaterial(zt, aoTexture(city), roadTexture(city), bake, () => (!P.roofDetail || (TEX.uTexOn.value === 1 && GT.uGOn.value === 1))));
   ground.receiveShadow = !!P.shadows; scene.add(ground); G.ground = ground;
+  if (AUT && G.ground && G.ground.material.userData.uLowL) { // туман низин осени: цвет дымки без освещения - в темноте («Поздний вечер», ночь) светился пятнами (Mark 2026-11-16)
+    const W0 = W.lab0 || W, L0 = Math.max(1e-3, 0.55 * (W0.hemiI ?? 1) + 0.35 * 2.0 * (W0.sunI ?? 1) * (0.35 + 0.65 * Math.min(1, sunDir.y / 0.25))); // опора - свет погоды до правок стенда (иначе тёмная погода = тёмная опора, и туман не темнел бы)
+    const LU = G.ground.material.userData.uLowL;
+    G.lowL = () => { LU.value = Math.min(1.5, (G.hemi.intensity + 0.35 * G.sun.intensity) / L0); }; }
   if (bake) { bake.init(renderer, gg, ground.material, aniso); G.bake = bake; }
   // земля - последней из непрозрачного (2026-10-25): её шейдер - самый дорогой, а под лесом, домами и техникой он теперь не считается -
   // их глубина уже в буфере (стенд: кадр за самолётом над лесом −13 % на «Высоком», −6 % на «Среднем»; картинка та же - прозрачное всё равно после)
@@ -2221,6 +2234,7 @@ const CAM1 = [null], CAM2 = [null, null];
 export function updateCityScene(G, camera, P, focus, t, extra) {
   G.sky.position.copy(camera.position); ENV.uCam.value.copy(camera.position); ENV.uHide.value.copy(camera.position); ENV.uTime.value = t || 0;
   if (G.bake) G.bake.update(camera);
+  if (G.lowL) G.lowL(); // осень: туман низин - по свету сцены
   if (G.snow) G.snow.update(camera, t || 0, G.renderer ? G.renderer.domElement.height : 720);
   if (G.near) { camera.updateMatrixWorld(); const cs = extra ? CAM2 : CAM1; cs[0] = camera; if (extra) cs[1] = extra; G.near(camera, cs); }
   const cx = camera.position.x, cz = camera.position.z, D = P.draw + TILE;

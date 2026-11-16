@@ -888,6 +888,26 @@ function finsSet(g, m) {
 }
 // синхронизация моделей с боем
 const LP = new THREE.Vector3();
+// крен крылатого оружия в повороте (Mark 2026-11-16: «топорно поворачивается вокруг своей оси, а не кренится»): крылатые ракеты, ложные цели, дроны,
+// планирующие бомбы с крыльями (паспорт модели: wings) поворачивают с креном, как самолёт: «верх» - по подъёмной силе (вес + боковое ускорение),
+// сглажено ~0,25 с, не больше ~70°. Ракеты с крестовыми рулями (Х-29, Maverick) и баллистические (ATACMS) - без крена, как были
+const BK_A = new THREE.Vector3(), BK_V = new THREE.Vector3(), BK_U = new THREE.Vector3(), BK_Y = new THREE.Vector3(0, 1, 0);
+function wingBank(g, w, dt) {
+  if (w.bk === undefined) { const W = w.W || {}; w.bk = W.kind === 'cruise' || W.kind === 'decoy' || !!W.glide; } // ПТУР, ПРР, корректируемые с крестовыми рулями - без крена
+  if (!w.bk) return;
+  const tw = w.t !== undefined ? w.t : (w.bkT0 = (w.bkT0 || 0) + dt); // время самого снаряда: ×4 и онлайн (скорость - по снимкам сервера, 15 раз в с)
+  if (!w.bkU) { w.bkU = new THREE.Vector3(0, 1, 0); w.bkV = w.vel.clone(); w.bkT = tw; }
+  const ds = tw - w.bkT;
+  if (ds > 1e-4 && !w.vel.equals(w.bkV)) { // ускорение - только когда скорость обновилась, за время с прошлого обновления
+    BK_A.subVectors(w.vel, w.bkV).divideScalar(ds); BK_A.y = 0; w.bkV.copy(w.vel); w.bkT = tw; // ускорение по горизонтали
+    BK_V.set(w.vel.x, 0, w.vel.z); const l2 = BK_V.lengthSq();
+    if (l2 > 1) BK_A.addScaledVector(BK_V, -BK_A.dot(BK_V) / l2); else BK_A.set(0, 0, 0); // только боковое (вдоль курса - разгон и торможение, не крен)
+    if (BK_A.lengthSq() > 27 * 27) BK_A.setLength(27); // tg 70° ≈ 2,75 g
+    BK_U.set(0, 9.81, 0).add(BK_A).normalize();
+    w.bkU.lerp(BK_U, Math.min(1, ds * 4)).normalize();
+  } else if (ds > 0.5) { w.bkT = tw; w.bkU.lerp(BK_Y, Math.min(1, ds * 4)).normalize(); } // скорость давно не менялась (прямо) - выровняться
+  g.up.copy(w.bkU);
+}
 function syncWorld(dt, t) {
   const S = C.S; if (!S) return;
   for (const m of S.sams) {
@@ -912,7 +932,7 @@ function syncWorld(dt, t) {
   for (const w of S.wpns) {
     let g = wpnMeshes.get(w.id);
     if (g && g.userData.stub && (w.stubT = (w.stubT || 0) - dt) <= 0) { w.stubT = 1; const g2 = relMesh(w); if (!g2.userData.stub) { scene.remove(g); scene.add(g2); wpnMeshes.set(w.id, g2); g = g2; } } // модель пришла - подменить временную
-    if (g) { g.position.copy(w.pos); if (w.vel.lengthSq() > 1e-4) g.lookAt(LP.copy(w.pos).sub(w.vel)); const inBay = bayHold(w, g, dt); if (g.userData.props) spinProps(g, dt); if (g.userData.flame) { flameOf(g, w); if (inBay) g.userData.flame.set(0); }
+    if (g) { g.position.copy(w.pos); if (w.vel.lengthSq() > 1e-4) { wingBank(g, w, dt); g.lookAt(LP.copy(w.pos).sub(w.vel)); } const inBay = bayHold(w, g, dt); if (g.userData.props) spinProps(g, dt); if (g.userData.flame) { flameOf(g, w); if (inBay) g.userData.flame.set(0); }
       if (g.userData.wings) glideWings(g, dt, w.vel.lengthSq() > 1e-4); if (g.userData.vanes) spinVanes(g, dt); } } // крылья раскрываются через 0,3 с после сброса (УМПК: сперва переворот на 180°, см. models.js); крыльчатки взрывателей (AN-M65A1) крутятся
   syncEv();
   const pxK = VH / 2 / Math.tan(camera.fov * D2R / 2); // пикселей на метр на расстоянии 1 м

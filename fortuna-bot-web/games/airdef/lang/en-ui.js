@@ -446,6 +446,7 @@ export default {
   // ── event.js ──
   "Вечер": "Evening",
   "Сумерки": "Dusk",
+  "Поздний вечер": "Late evening",
   "Туман": "Fog",
   "ещё {0} д {1} ч": "{0} d {1} h left",
   "ещё {0} ч": "{0} h left",
