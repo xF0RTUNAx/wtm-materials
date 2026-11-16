@@ -46,6 +46,7 @@ const KIT_SER = [
   { key: 'ii49', models: ['bld_ii49'], v: 2, SEC: 22.4, DEP: 13, FL: 2.9, minN: 1, hip: [false] }, // панельная девятиэтажка II-49 (пилот)
   { key: 'hr', models: ['bld_hr_a', 'bld_hr_c'], v: 1, SEC: 16, DEP: 12, FL: 2.7, minN: 2, hip: [false, true] }, // хрущёвки: панельная 1-464 и кирпичная 1-447 (вальма)
   { key: 'd12', models: ['bld_d12_b', 'bld_d12_g', 'bld_d12_t'], v: 4, SEC: 22.4, DEP: 13, FL: 2.9, minN: 1, hip: [false, false, false] }, // 12-этажная пластина (лоджии; пояс синий / зелёный / терракота)
+  { key: 'tw', models: ['bld_tw_b', 'bld_tw_g', 'bld_tw_t'], v: 18, SEC: 22.4, DEP: 22.4, FL: 2.9, minN: 1, maxN: 1, hip: [false, false, false] }, // точечная башня 17-27 этажей (серия 5а; атлас 12-этажки; пилоны синие / зелёные / терракота)
 ];
 // частный сектор - свои дома (Свои/Дома города, серия 2; ПАСПОРТ_частный): вид BLD → дом; размеры модели [вдоль фасада, вглубь, высота], м
 const PH = { 5: 'st', 7: 'brick', 8: 'mansard', 9: 'wood', 10: 'khata', 12: 'barrack', 13: 'dacha' };
@@ -1332,7 +1333,7 @@ function bldVariant(B, i) {
   const k = B.k[i], h = B.h[i], L = Math.max(B.w[i], B.d[i]), S = Math.min(B.w[i], B.d[i]);
   // башня (L / S < 1,6) - модель растягивается по коробке: годится, если по высоте она растянута не сильнее, чем по плану (×0,7…1,45)
   const tower = (...vs) => { let best = 0, bk = 0.37; for (const v of vs) { const [, mx, my, mz] = BLD[v], kp = Math.sqrt((B.w[i] * B.d[i]) / (mx * mz)), d = Math.abs(Math.log((h / my) / kp)); if (d < bk && kp < 2) { bk = d; best = v; } } return best; }; // и не крупнее ×2 (окна - не огромные)
-  if (k === KIND.PANEL) return L / S < 1.6 ? tower(18) : h < 20 ? 1 : h > 40 ? 19 : L > 100 && h < 30 ? 2 : 4;
+  if (k === KIND.PANEL) return L / S < 1.6 ? (KIT_ON ? 18 : tower(18)) : h < 20 ? 1 : h > 40 ? 19 : L > 100 && h < 30 ? 2 : 4;
   if (k === KIND.PLAIN) return S > 15 && h > 11 && h < 20 && L < 70 ? 5 : 0;
   // цеха и склады: в порту - контейнерная площадка; в промзоне - свой цех ближайших пропорций: длинная сторона делится на секции
   // (как у домов), вид - с наименьшим растяжением по самой растянутой оси (на стенде сборщика 0,75…1,35 выглядит нормально)
@@ -1563,7 +1564,7 @@ function nearHouses(G, scene, B, near, P, sh) {
     for (const ser of KIT_SER) for (const i of (near[ser.v] || [])) {
       // тип - по старшим битам номера (не совпадает с поворотом и чётностью)
       const t = ser.models.length > 1 ? (Math.imul(i, 2246822519) >>> 16) % ser.models.length : 0, M = ser.models[t], hip = !!ser.hip[t], SEC = ser.SEC, DEP = ser.DEP, FL = ser.FL;
-      const longX = B.w[i] > B.d[i], L = Math.max(B.w[i], B.d[i]), S0 = Math.min(B.w[i], B.d[i]), N = Math.max(ser.minN, Math.min(8, Math.round(L / SEC))), F = Math.max(2, Math.round((B.h[i] - 1.5) / FL));
+      const longX = B.w[i] > B.d[i], L = Math.max(B.w[i], B.d[i]), S0 = Math.min(B.w[i], B.d[i]), N = Math.max(ser.minN, Math.min(ser.maxN || 8, Math.round(L / SEC))), F = Math.max(2, Math.round((B.h[i] - 1.5) / FL));
       const flip = (Math.imul(i, 2654435761) >>> 20) & 1 ? Math.PI : 0, yaw = (longX ? 0 : Math.PI / 2) + flip;
       const hx = longX ? L / 2 : S0 / 2, hz = longX ? S0 / 2 : L / 2, x0 = B.x[i], z0 = B.z[i];
       const y0 = (RELIEF ? Math.min(GH(x0, z0), GH(x0 - hx, z0 - hz), GH(x0 + hx, z0 - hz), GH(x0 - hx, z0 + hz), GH(x0 + hx, z0 + hz)) : GH(x0, z0)) - 0.2;

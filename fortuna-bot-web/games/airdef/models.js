@@ -278,6 +278,7 @@ const META = {
   obj_tanks: { obj: true, stations: [] }, obj_rtank: { obj: true, stations: [] }, // резервуары и ангар obj_jhangar - для «Летки» (на картах этой игры - свои сцены)
   // свои дома (Свои/Дома города): модули панельной девятиэтажки II-49 и хрущёвок 1-464 / 1-447 - city-render.js kitHouses
   bld_ii49: { bld: true, kit: true, matte: true, stations: [] }, bld_hr_a: { bld: true, kit: true, matte: true, stations: [] }, bld_hr_c: { bld: true, kit: true, matte: true, stations: [] },
+  bld_tw_b: { bld: true, kit: true, matte: true, stations: [] }, bld_tw_g: { bld: true, kit: true, matte: true, stations: [] }, bld_tw_t: { bld: true, kit: true, matte: true, stations: [] }, // точечная башня (серия 5а, атлас 12-этажки)
   bld_d12_b: { bld: true, kit: true, matte: true, stations: [] }, bld_d12_g: { bld: true, kit: true, matte: true, stations: [] }, bld_d12_t: { bld: true, kit: true, matte: true, stations: [] }, // 12-этажка
   bld_st3: { bld: true, kit: true, matte: true, stations: [] }, bld_st4: { bld: true, kit: true, matte: true, stations: [] }, // сталинка (серия 4)
   ph_brick: { bld: true, kit: true, matte: true, stations: [] }, ph_wood: { bld: true, kit: true, matte: true, stations: [] }, ph_khata: { bld: true, kit: true, matte: true, stations: [] }, ph_mansard: { bld: true, kit: true, matte: true, stations: [] }, ph_dacha: { bld: true, kit: true, matte: true, stations: [] }, ph_barrack: { bld: true, kit: true, matte: true, stations: [] }, ph_yard: { bld: true, kit: true, matte: true, stations: [] }, // частный сектор: свои дома (5 состояний) и двор (city-render.js phHouses)
@@ -389,7 +390,8 @@ const GLB_V = Object.fromEntries(['w_gbu10', 'w_ecm', 'gepard', 'gepard_lo', 'ro
 // версии файлов собственных моделей (Blender, tools/airdef-models/own): по строке на ключ; поднимает tools/airdef-models/integrate-own.js при каждом встраивании
 const GLB_V_OWN = {
   bld_ii49: '20261116a', bld_hr_a: '20261116a', bld_hr_c: '20261116a', // свои дома: модули II-49, хрущёвки
-  bld_d12_b: '20261116a', bld_d12_g: '20261116a', bld_d12_t: '20261116a', // 12-этажка
+  bld_d12_b: '20261117a', bld_d12_g: '20261117a', bld_d12_t: '20261117a', // 12-этажка (кондиционеры на стене)
+  bld_tw_b: '20261117a', bld_tw_g: '20261117a', bld_tw_t: '20261117a', // точечная башня
   bld_st3: '20261117a', bld_st4: '20261117a', // сталинка
   ph_brick: '20261116b', ph_wood: '20261116b', ph_khata: '20261116b', ph_mansard: '20261116b', ph_dacha: '20261116b', ph_barrack: '20261116b', ph_yard: '20261116b', // частный сектор
   e_b2: '20261110b', e_b2_gear: '20261110b', // свой B-2A
