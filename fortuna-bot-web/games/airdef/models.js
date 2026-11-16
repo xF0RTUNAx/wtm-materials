@@ -279,6 +279,7 @@ const META = {
   // свои дома (Свои/Дома города): модули панельной девятиэтажки II-49 и хрущёвок 1-464 / 1-447 - city-render.js kitHouses
   bld_ii49: { bld: true, kit: true, matte: true, stations: [] }, bld_hr_a: { bld: true, kit: true, matte: true, stations: [] }, bld_hr_c: { bld: true, kit: true, matte: true, stations: [] },
   bld_d12_b: { bld: true, kit: true, matte: true, stations: [] }, bld_d12_g: { bld: true, kit: true, matte: true, stations: [] }, bld_d12_t: { bld: true, kit: true, matte: true, stations: [] }, // 12-этажка
+  bld_st3: { bld: true, kit: true, matte: true, stations: [] }, bld_st4: { bld: true, kit: true, matte: true, stations: [] }, // сталинка (серия 4)
   ph_brick: { bld: true, kit: true, matte: true, stations: [] }, ph_wood: { bld: true, kit: true, matte: true, stations: [] }, ph_khata: { bld: true, kit: true, matte: true, stations: [] }, ph_mansard: { bld: true, kit: true, matte: true, stations: [] }, ph_dacha: { bld: true, kit: true, matte: true, stations: [] }, ph_barrack: { bld: true, kit: true, matte: true, stations: [] }, ph_yard: { bld: true, kit: true, matte: true, stations: [] }, // частный сектор: свои дома (5 состояний) и двор (city-render.js phHouses)
   bld_p5: { bld: true, stations: [] }, bld_p9: { bld: true, stations: [] }, bld_b12: { bld: true, stations: [] }, bld_st: { bld: true, stations: [] },
   h_brick: { bld: true, stations: [] }, h_house: { bld: true, stations: [] }, h_log: { bld: true, stations: [], matte: true /* нормали черепицы автора - вбок: блик Phong делал крышу белой (2026-10-27) */ }, h_khata: { bld: true, stations: [] }, o_block: { bld: true, stations: [] }, h_shanty: { bld: true, stations: [] }, h_mobile: { bld: true, stations: [] }, // дома города
@@ -389,6 +390,7 @@ const GLB_V = Object.fromEntries(['w_gbu10', 'w_ecm', 'gepard', 'gepard_lo', 'ro
 const GLB_V_OWN = {
   bld_ii49: '20261116a', bld_hr_a: '20261116a', bld_hr_c: '20261116a', // свои дома: модули II-49, хрущёвки
   bld_d12_b: '20261116a', bld_d12_g: '20261116a', bld_d12_t: '20261116a', // 12-этажка
+  bld_st3: '20261117a', bld_st4: '20261117a', // сталинка
   ph_brick: '20261116b', ph_wood: '20261116b', ph_khata: '20261116b', ph_mansard: '20261116b', ph_dacha: '20261116b', ph_barrack: '20261116b', ph_yard: '20261116b', // частный сектор
   e_b2: '20261110b', e_b2_gear: '20261110b', // свой B-2A
   e_vulcan: '20261110c', e_vulcan_gear: '20261110c', // свой Vulcan B.2

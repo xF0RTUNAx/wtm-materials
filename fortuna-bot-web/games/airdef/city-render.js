@@ -48,15 +48,22 @@ const KIT_SER = [
   { key: 'd12', models: ['bld_d12_b', 'bld_d12_g', 'bld_d12_t'], v: 4, SEC: 22.4, DEP: 13, FL: 2.9, minN: 1, hip: [false, false, false] }, // 12-этажная пластина (лоджии; пояс синий / зелёный / терракота)
 ];
 // частный сектор - свои дома (Свои/Дома города, серия 2; ПАСПОРТ_частный): вид BLD → дом; размеры модели [вдоль фасада, вглубь, высота], м
-const PH = { 7: 'brick', 8: 'mansard', 9: 'wood', 10: 'khata', 12: 'barrack', 13: 'dacha' };
-const PH_SIZE = { brick: [11.11, 9.1, 6.9], wood: [10.18, 10.9, 6.9], khata: [11.2, 7.2, 6.0], mansard: [11.0, 11.62, 8.4], dacha: [6.8, 6.72, 5.4], barrack: [25.0, 12.05, 9.6] };
+const PH = { 5: 'st', 7: 'brick', 8: 'mansard', 9: 'wood', 10: 'khata', 12: 'barrack', 13: 'dacha' };
+// «сталинка» (серия 4, ПАСПОРТ_сталинка; вид 5 вместо bld_st): целым домом, как частные; st3 - на коробку до 44 м, st4 - длиннее; без двора,
+// пепелища нет (каменные стены стоят). Модели вида - обе: коробки вида прячутся, когда пришли обе
+const PH_MODELS = { 5: ['bld_st3', 'bld_st4'] };
+const PH_SIZE = { st3: [36, 26, 16.8], st4: [54, 26, 20.2], brick: [11.11, 9.1, 6.9], wood: [10.18, 10.9, 6.9], khata: [11.2, 7.2, 6.0], mansard: [11.0, 11.62, 8.4], dacha: [6.8, 6.72, 5.4], barrack: [25.0, 12.05, 9.6] };
 // дом в настоящем размере (не вписан в коробку участка: так он выходил до 2× больше), фасадом к ближайшей улице (улицы - по сетке CITY.GRID);
 // центр дома - в центре его коробки. ox, oz - середина фасада (начало модели), yaw - поворот (фасад модели смотрит в −Z)
 function phPlace(B, i, v) {
-  const base = PH[v]; if (!base) return null; const [L, D, H] = PH_SIZE[base];
-  const G0 = CITY.GRID, x = B.x[i], z = B.z[i], fx = ((x % G0) + G0) % G0, fz = ((z % G0) + G0) % G0, toX = Math.min(fx, G0 - fx) < Math.min(fz, G0 - fz);
-  const dir = toX ? [fx < G0 / 2 ? -1 : 1, 0] : [0, fz < G0 / 2 ? -1 : 1], yaw = toX ? (dir[0] > 0 ? -Math.PI / 2 : Math.PI / 2) : (dir[1] > 0 ? Math.PI : 0);
-  return { base, M: 'ph_' + base, L, D, H, yaw, dir, ox: x + dir[0] * D / 2, oz: z + dir[1] * D / 2, alongX: !toX };
+  let base = PH[v]; if (!base) return null;
+  if (base === 'st') base = Math.max(B.w[i], B.d[i]) > 44 ? 'st4' : 'st3';
+  const [L, D, H] = PH_SIZE[base], st = v === 5;
+  // сталинка - фасадом вдоль длинной стороны коробки (к ближней улице с той стороны); частный - к ближайшей улице
+  const G0 = CITY.GRID, x = B.x[i], z = B.z[i], fx = ((x % G0) + G0) % G0, fz = ((z % G0) + G0) % G0, toX = st ? B.w[i] < B.d[i] : Math.min(fx, G0 - fx) < Math.min(fz, G0 - fz);
+  const f0 = toX ? fx : fz, sg = Math.abs(f0 - G0 / 2) < 1 ? ((Math.imul(i, 2246822519) >>> 13) & 1 ? 1 : -1) : f0 < G0 / 2 ? -1 : 1; // посередине квартала - сторона по номеру дома
+  const dir = toX ? [sg, 0] : [0, sg], yaw = toX ? (dir[0] > 0 ? -Math.PI / 2 : Math.PI / 2) : (dir[1] > 0 ? Math.PI : 0);
+  return { base, M: (st ? 'bld_' : 'ph_') + base, L, D, H, st, yaw, dir, ox: x + dir[0] * D / 2, oz: z + dir[1] * D / 2, alongX: !toX };
 }
 const KIT_ON = typeof location === 'undefined' || !/[?&]kit=0/.test(location.search); // свои дома модулями вместо вида 2 (девятиэтажки bld_p9); ?kit=0 - прежняя модель
 const KVAR = typeof location !== 'undefined' && /[?&]kvar=1/.test(location.search); // ?kvar=1 - варианты этажей одним набором (kitVarMat): вызовов меньше, но вершин вчетверо - по замеру кадр дольше (2026-11-16), по умолчанию выкл.
@@ -1516,7 +1523,7 @@ function nearHouses(G, scene, B, near, P, sh) {
     const bs = c.geometry.boundingSphere, r0 = bs.center.length() + bs.radius;
     S.rad = new Float32Array(S.n); S.cxyz = new Float32Array(S.n * 3);
     for (let j = 0, e = S.mats; j < S.n; j++) { const o = j * 16, k = Math.max(Math.hypot(e[o], e[o + 1], e[o + 2]), Math.hypot(e[o + 8], e[o + 9], e[o + 10])); S.rad[j] = r0 * k + 45; S.cxyz[j * 3] = e[o + 12]; S.cxyz[j * 3 + 1] = e[o + 13]; S.cxyz[j * 3 + 2] = e[o + 14]; }
-    const serAll = (KIT_SER.find((q) => q.v === S.kit) || { models: [S.name] }).models.every((q) => KITGS.has(q)); // хрущёвки A и C - один вид: коробки прятать, когда пришли обе
+    const serAll = (KIT_SER.find((q) => q.v === S.kit) || { models: PH_MODELS[S.kit] || [S.name] }).models.every((q) => KITGS.has(q)); // хрущёвки A и C - один вид: коробки прятать, когда пришли обе
     if (S.kit && !G.kitOn.has(S.kit) && serAll) { // первый модуль вида пришёл - его коробки прячутся до внешнего радиуса; цвет коробок дали - по атласу серии
       const kr = S.kitR || G.kitRf; G.kitOn.set(S.kit, kr); ENV.uMdl.value[S.kit] = kr * (G.kitK || 1); const mc = modelColor(group); if (mc) ENV.uMdlCol.value[S.kit].set(mc.r, mc.g, mc.b, 1); }
     lx = 1e9;
@@ -1603,10 +1610,12 @@ function nearHouses(G, scene, B, near, P, sh) {
     PHB.length = 0;
     for (const vs of Object.keys(PH)) for (const i of (near[+vs] || [])) {
       const q = phPlace(B, i, +vs); if (!q) continue;
-      const y0 = Math.min(GH(q.ox, q.oz), GH(B.x[i], B.z[i]), GH(B.x[i] - q.dir[0] * q.D / 2, B.z[i] - q.dir[1] * q.D / 2)) - 0.1, c = [B.x[i], B.z[i]], hsh = Math.imul(i, 2654435761) >>> 8; // по нижней из точек фасад / центр / задняя стена
+      const ax = q.alongX ? q.L / 2 : 0, az = q.alongX ? 0 : q.L / 2, bx = q.dir[0] * q.D, bz = q.dir[1] * q.D; // сталинка длинная - и по четырём углам
+      const y0 = Math.min(GH(q.ox, q.oz), GH(B.x[i], B.z[i]), GH(B.x[i] - q.dir[0] * q.D / 2, B.z[i] - q.dir[1] * q.D / 2), ...(q.st ? [GH(q.ox - ax, q.oz - az), GH(q.ox + ax, q.oz + az), GH(q.ox - ax - bx, q.oz - az - bz), GH(q.ox + ax - bx, q.oz + az - bz)] : [])) - 0.1, c = [B.x[i], B.z[i]], hsh = Math.imul(i, 2654435761) >>> 8; // по нижней из точек фасад / центр / задняя стена
       mb.makeRotationY(q.yaw).premultiply(mt.makeTranslation(q.ox, y0, q.oz));
       const bi = PHB.length; PHB.push({ i, v: +vs, M: q.M, base: q.base, L: q.L, D: q.D, H: q.H, x0: B.x[i], z0: B.z[i], r: Math.hypot(q.L, q.D) / 2, mb: mb.clone(), inv: mb.clone().invert(), st: 's0', hits: 0 });
-      put(q.M, q.base + '_s0', R, +vs, c, mb, bi);
+      put(q.M, q.base + '_s0', q.st && !TOUCH_GT ? Math.max(R * 1.5, P.bldFar || 0) : R, +vs, c, mb, bi); // сталинка на ПК - до дальнего кольца панелек (своих упрощённых нет)
+      if (q.st) continue; // сталинка - без двора
       const at = (x, z) => mm.copy(mb).multiply(mt.makeTranslation(x, 0, z)), fence = (hsh >>> 11) & 1 ? 'y_fence_picket' : 'y_fence_prof';
       const len = Math.max(15, q.L + 10), n = Math.round(len / 5), gate = (hsh >>> 3) % n;
       for (let k = 0; k < n; k++) put('ph_yard', k === gate ? 'y_gate' : fence, R * 0.6, 0, c, at(-n * 2.5 + 2.5 + k * 5, -5), bi);
@@ -1663,7 +1672,7 @@ function nearHouses(G, scene, B, near, P, sh) {
       const bw = B.w[h.i] / 2, bd = B.d[h.i] / 2, dB = Math.hypot(Math.max(0, Math.abs(p.x - h.x0) - bw), Math.max(0, Math.abs(p.z - h.z0) - bd), Math.max(0, p.y - GH(p.x, p.z) - B.h[h.i])); // бой считает по коробке B - её попадание тоже прямое
       const yl = PL.y - Math.max(0, GH(p.x, p.z) - GH(h.x0, h.z0)), d = Math.min(dB, Math.hypot(Math.max(0, Math.abs(PL.x) - h.L / 2), PL.z < 0 ? -PL.z : PL.z > h.D ? PL.z - h.D : 0, Math.max(0, yl - h.H)));
       let ns = null;
-      if (d < 2.5) ns = R >= 30 ? 'sruin' : ((h.i + h.hits) % 2 ? 's2' : 's1f');
+      if (d < 2.5) ns = R >= 30 ? (h.v === 5 ? 's2' : 'sruin') : ((h.i + h.hits) % 2 ? 's2' : 's1f'); // у сталинки пепелища нет: мощное - пролом
       else if (d < R * 0.5) ns = R >= 40 && d < R * 0.2 ? 's2' : 's1g';
       if (!ns) continue;
       h.hits++; if (PSEV[ns] > PSEV[h.st]) { h.st = ns; dmgH.add(hi); OFFH[hi] = 1; any = true; }
@@ -2283,7 +2292,8 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
     if (k === KIND.HOUSE && P.houseK < 1 && ((i * 2654435761) >>> 0) / 4294967296 > P.houseK) continue; // слабые пресеты: часть частных домов не рисуем
     const raised = y0 > 0, mdl = P.bldNear ? bldVariant(B, i) : 0;
     if (mdl) near[mdl].push(i);
-    const ph = PH_ON && k === KIND.HOUSE && !raised ? phPlace(B, i, mdl) : null; // свой дом частного сектора: коробка дали - по его размеру и повороту
+    const ph = PH_ON && !raised && (k === KIND.HOUSE || mdl === 5) ? phPlace(B, i, mdl) : null; // свой дом частного сектора и сталинка: коробка дали - по его размеру и повороту
+    if (ph && ph.st) { const wx = (ph.alongX ? ph.L : ph.D) - 0.8, wz = (ph.alongX ? ph.D : ph.L) - 0.8, he = ph.H * 0.82; list.push({ x: B.x[i], z: B.z[i], y: gb - 1, sx: wx, sy: he + 1 + gy - gb, sz: wz, color: pick(k, c), kind: k + c * 0.9, mdl }); roofs.push({ x: B.x[i], z: B.z[i], y: gy + he, sx: ph.L + 0.4, sy: ph.H - he, sz: ph.D + 0.4, ry: ph.alongX ? 0 : Math.PI / 2, color: pick(ROOF, (c * 13.7) % 1), kind: ROOF, mdl }); continue; } // сталинка: стены до карниза (на 0,4 м внутри модели - без мерцания, пока она грузится) + кровля, без надстроек
     if (ph) { const wx = ph.alongX ? ph.L : ph.D, wz = ph.alongX ? ph.D : ph.L, hw = ph.H * 0.55; small.push({ x: B.x[i], z: B.z[i], y: gb - 1, sx: wx, sy: hw + 1 + gy - gb, sz: wz, color: pick(k, c), kind: k + c * 0.9, mdl }); roofs.push({ x: B.x[i], z: B.z[i], y: gy + hw, sx: ph.L + 0.4, sy: ph.H - hw, sz: ph.D + 0.4, ry: ph.alongX ? 0 : Math.PI / 2, color: pick(ROOF, (c * 13.7) % 1), kind: ROOF, mdl }); continue; }
     (k === KIND.HOUSE ? small : list).push({ x: B.x[i], z: B.z[i], y: raised ? gy + y0 : gb - 1, sx: B.w[i], sy: B.h[i] + (raised ? 0 : 1 + gy - gb), sz: B.d[i], color: pick(k, c), kind: k + c * 0.9 + (raised ? 10 : 0), mdl });
     const top = gy + y0 + B.h[i];
