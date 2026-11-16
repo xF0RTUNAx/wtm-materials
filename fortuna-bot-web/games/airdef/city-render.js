@@ -26,6 +26,9 @@ import { bakeGroup, mergeLocal } from './merge.js?v=20261114a';
 import { NOISE_ON, NOISE_GLSL, noiseTex } from './noise-tex.js?v=20261114a';
 import { FAR_U, groundShadowChunk } from './ground-far.js?v=20261114a';
 import { BAKE_ON, createGroundBake } from './ground-bake.js?v=20261114a';
+import { GTILES } from './ground-tiles.js?v=20261114a';
+const GT_V = '20261116a'; // версия файлов атласов земли (tex/gt_*, pt_*, dc_*, dn_*, mt_*)
+const TOUCH_GT = (typeof location !== 'undefined' && /[?&]touch=1/.test(location.search)) || (typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches); // телефон: атласы земли - клетка 512 (память видеокарты)
 
 const lin = (hex) => new THREE.Color(hex).convertSRGBToLinear();
 const TILE = 3000; // плитка инстансов: 3 км - на 20 % меньше вызовов отрисовки, чем 2 км, при почти тех же треугольниках
@@ -41,54 +44,82 @@ export const ENV = {
   uMdl: { value: new Array(32).fill(0) }, // радиус, в котором коробки вида дома скрыты (вместо них - модели; 0 - модели нет)
   uHide: { value: new THREE.Vector3() }, // центр этого радиуса: камера (в окне ТВ - точка, куда смотрит контейнер)
 };
-// ═════════════ Текстуры (ambientCG и Poly Haven, CC0): земля, дороги, обочины, тротуары, крыши, фасады ═════════════
+// ═════════════ Текстуры (ambientCG и Poly Haven, CC0): снимок с высоты, волны, крыши, фасады ═════════════
 // грузятся в фоне (fetch + createImageBitmap); пока не пришли все - uTexOn = 0 и шейдеры обходятся без них
-export const TEX = { uTexOn: { value: 0 }, tGN: { value: packNormals() }, uAvgGG: { value: new THREE.Vector3(1, 1, 1) }, uAvgGD: { value: new THREE.Vector3(1, 1, 1) }, uAvgGF: { value: new THREE.Vector3(1, 1, 1) }, uAvgGA: { value: new THREE.Vector3(1, 1, 1) }, uAvgFG: { value: new THREE.Vector3(1, 1, 1) }, uAvgSand: { value: new THREE.Vector3(1, 1, 1) } }; // uAvg* - средний цвет (линейный)
-const TEX_FILES = { tGG: 'g_grass', tGGn: 'g_grass_n', tGD: 'g_dry', tGDn: 'g_dry_n', tGF: 'g_field', tGA: 'g_aerial', tFG: 'g_forest', tSand: 'g_sand', tWN: 'w_normals', // + лесная подстилка, песчаный берег (Poly Haven), волны (three.js, MIT) // земля: Poly Haven (CC0), цвет 1K и нормали (обе - в tGN)
-  tAsph: 'p_asph', tGrav: 'p_grav', tConcP: 'p_conc', tIron: 'p_iron', tPave: 'paving', tConc: 'concrete', tRoof: 'roof', tOff: 'f_office', tGls: 'f_glass', tBrk: 'f_brick' };
+export const TEX = { uTexOn: { value: 0 }, uAvgGA: { value: new THREE.Vector3(1, 1, 1) } }; // uAvg* - средний цвет (линейный)
+// земля и дороги вблизи - свои атласы (GT ниже); отсюда - снимок с высоты (дальний план), волны, фасады, крыши, бетон и железо для зданий
+const TEX_FILES = { tGA: 'g_aerial', tWN: 'w_normals', // волны (three.js, MIT)
+  tIron: 'p_iron', tConc: 'concrete', tRoof: 'roof', tOff: 'f_office', tGls: 'f_glass', tBrk: 'f_brick' };
 // средний цвет картинки (линейный, как srgb() в шейдере - квадрат): уменьшенная копия 8×8
 function avgColor(img) {
   const v = new THREE.Vector3(1, 1, 1);
   try { const c = document.createElement('canvas'); c.width = c.height = 8; const x = c.getContext('2d', { willReadFrequently: true }); x.drawImage(img, 0, 0, 8, 8); const d = x.getImageData(0, 0, 8, 8).data; let r = 0, g = 0, b = 0; for (let i = 0; i < d.length; i += 4) { r += (d[i] / 255) ** 2; g += (d[i + 1] / 255) ** 2; b += (d[i + 2] / 255) ** 2; } const n = d.length / 4; v.set(r / n, g / n, b / n); } catch (_) { /* нет - 1 */ }
   return v;
 }
-// нормали травы и сухой земли - одной текстурой (у шейдера земли предел - 16 текстур): r, g - трава (x, y), b, a - сухая земля
-function packNormals() { const t = new THREE.DataTexture(new Uint8Array([128, 128, 128, 128]), 1, 1, THREE.RGBAFormat); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.needsUpdate = true; return t; }
-const NRM = {};
-function packNormalsFrom(key, bmp) {
-  NRM[key] = bmp; if (!NRM.tGGn || !NRM.tGDn) return;
-  try {
-    const W = 512, c = document.createElement('canvas'); c.width = c.height = W; const x = c.getContext('2d', { willReadFrequently: true });
-    x.drawImage(NRM.tGGn, 0, 0, W, W); const a = x.getImageData(0, 0, W, W).data; x.drawImage(NRM.tGDn, 0, 0, W, W); const b = x.getImageData(0, 0, W, W).data;
-    const d = new Uint8Array(W * W * 4); for (let i = 0; i < W * W; i++) { d[i * 4] = a[i * 4]; d[i * 4 + 1] = a[i * 4 + 1]; d[i * 4 + 2] = b[i * 4]; d[i * 4 + 3] = b[i * 4 + 1]; }
-    const t = TEX.tGN.value; t.image = { data: d, width: W, height: W }; t.minFilter = THREE.LinearMipmapLinearFilter; t.magFilter = THREE.LinearFilter; t.generateMipmaps = true; t.needsUpdate = true;
-  } catch (_) { /* без рельефа */ }
-}
 export const texStats = { req: 0, done: 0 }; // статус загрузки текстур города
-function loadCityTextures(aniso) {
-  if (TEX.tGG) return;
-  let left = Object.keys(TEX_FILES).length; texStats.req = left;
+function loadCityTextures(aniso, hi, hills) {
+  if (TEX.tGA) return;
+  let left = Object.keys(TEX_FILES).length; texStats.req += left;
+  if (!hills) loadGroundTiles(aniso, hi); // атласы земли - только городу (у осени и зимы свои материалы земли)
   const done = () => { texStats.done++; if (--left === 0) TEX.uTexOn.value = 1; };
-  // сжатые KTX2: нормали травы и сухой земли - уже одной текстурой (g_gn), средние цвета - из tex/ktx.json
+  // сжатые KTX2; средний цвет снимка с высоты - из tex/ktx.json
   const viaKtx = ktxOn();
-  if (viaKtx) { left -= 1; texStats.req = left; ktxMeta().then((m) => { for (const [u, c] of Object.entries(m.avg || {})) { const av = TEX['uAvg' + u.slice(1)]; if (av) av.value.set(c[0], c[1], c[2]); } }).catch(() => {}); }
+  if (viaKtx) { ktxMeta().then((m) => { for (const [u, c] of Object.entries(m.avg || {})) { const av = TEX['uAvg' + u.slice(1)]; if (av) av.value.set(c[0], c[1], c[2]); } }).catch(() => {}); }
   for (const [u, f] of Object.entries(TEX_FILES)) {
     const t = new THREE.Texture(); t.wrapS = t.wrapT = THREE.RepeatWrapping;
     t.anisotropy = u === 'tGA' ? 1 : Math.min(4, aniso); t.minFilter = THREE.LinearMipmapLinearFilter; TEX[u] = { value: t }; // снимок с высоты (плитка 260 м) - без анизотропии (ground-far.js); остальные - не больше 4, как у осени и зимы (2026-10-27: 8 против 4 - снимки 55-109 дБ, кадр «Высокого» −3 %, «Ультра» −7 %, низко −15 %)
     if (typeof createImageBitmap !== 'function' || typeof fetch !== 'function') continue;
-    if (viaKtx && (u === 'tGGn' || u === 'tGDn')) { if (u === 'tGGn') ktxLoad('g_gn').then((k) => { k.wrapS = k.wrapT = THREE.RepeatWrapping; TEX.tGN.value = k; done(); }).catch(() => done()); continue; }
     if (viaKtx) { ktxLoad(f).then((k) => { k.wrapS = k.wrapT = THREE.RepeatWrapping; k.anisotropy = t.anisotropy; TEX[u].value = k; done(); }).catch(() => jpg(u, f, t)); continue; }
     jpg(u, f, t);
   }
   function jpg(u, f, t) {
     fetch(new URL(`./tex/${f}.jpg?v=20261114a`, import.meta.url)).then((r) => (r.ok ? r.blob() : Promise.reject(new Error(f))))
-      .then((b) => createImageBitmap(b)).then((bmp) => { if (u === 'tGGn' || u === 'tGDn') packNormalsFrom(u, bmp); else { TEX[u].value = t; t.image = bmp; t.needsUpdate = true; } const av = TEX['uAvg' + u.slice(1)]; if (av && !viaKtx) av.value.copy(avgColor(bmp)); done(); })
+      .then((b) => createImageBitmap(b)).then((bmp) => { TEX[u].value = t; t.image = bmp; t.needsUpdate = true; const av = TEX['uAvg' + u.slice(1)]; if (av && !viaKtx) av.value.copy(avgColor(bmp)); done(); })
       .catch((e) => { texStats.done++; console.warn('текстура не загрузилась:', e.message); });
+  }
+}
+// ═════════════ Свои текстуры земли и дорог (Свои/Текстуры земли и дорог, сборщик hawk21, 2026-11-16; Mark: «сам встраиваешь все в игру») ═════════════
+// tools/airdef-tex/ground-atlas.py: атласы 4 × 4 плитки (каждая - 4 м, плиты аэродрома 6 м) с полями 1/16 клетки (мипмапы не смешивают соседей):
+// tGC / tPC - цвет земли / покрытий (альфа - высота плитки: смешивание слоёв по высоте), tGNm / tPN - нормали (B - шероховатость),
+// tDC / tDN - наклейки износа дорог (атлас 8 × 8 м), tMT - макро-пятна 256 м (тон, в альфе - выгоревшее). tDT - таблица: прямоугольники
+// наклеек (строки 0-1, 16 бит) и средние цвета плиток (строки 2-3) - в шейдере WebGL 1 нельзя брать элемент массива uniform по вычисленному номеру.
+// Пока атласы не пришли - средние цвета плиток (uGOn = 0: без выборок). «Ультра» и «Высокий» на ПК - клетка 1024 (256 пикс/м), остальные - 512.
+// наклейки дорог: 0-17 - городские улицы, 12-31 - загородные трассы (общие 12-17 - заплаты, битум, лужа), 32-36 - у бордюра (пока не кладутся)
+const GT_MEANS = [['GM', 'gt'], ['PM', 'pt']].map(([p, k]) => GTILES[k].map((t, i) => `#define ${p}${i} vec3(${t.mean.map((v) => v.toFixed(5)).join(', ')})`).join('\n')).join('\n');
+const DEC = ['люк_1', 'люк_2', 'колодец_связи', 'масло_1', 'масло_2', 'трещина_продольная_1', 'трещина_продольная_2', 'трещина_поперечная_1', 'трещина_поперечная_2',
+  'крокодил_1', 'крокодил_3', 'сетка_залитая_1', 'ямочный_старый', 'ямочный_средний', 'ямочный_свежий', 'битум_2', 'лужа_1', 'люк_3', 'крокодил_2', 'выбоина_1',
+  'выбоина_2', 'выбоина_3', 'трещина_отражённая_1', 'трещина_отражённая_2', 'колея_1', 'лужа_2', 'битум_1', 'следы_торможения', 'шины_по_песку', 'сетка_залитая_2',
+  'мокрое_пятно', 'следы_разворота', 'решётка_1', 'решётка_2', 'песок_у_бордюра_1', 'песок_у_бордюра_2', 'мусор_у_бордюра'];
+function gtData() {
+  const d = new Uint8Array(64 * 4 * 4), put = (x, y, v) => d.set(v.map((q) => Math.max(0, Math.min(255, Math.round(q)))), (y * 64 + x) * 4);
+  const hl = (u) => { const q = Math.round(Math.max(0, Math.min(1, u)) * 65535); return [q >> 8, q & 255]; };
+  DEC.forEach((n, i) => { const e = GTILES.dec.list.find((q) => q.name === n); if (!e) { console.warn('нет наклейки', n); return; } const [u, v, w, h] = e.uv; put(i, 0, [...hl(u), ...hl(v)]); put(i, 1, [...hl(w), ...hl(h)]); });
+  GTILES.gt.forEach((t, i) => put(i, 2, [...t.mean.map((c) => Math.sqrt(c) * 255), t.rough * 255]));
+  GTILES.pt.forEach((t, i) => put(i, 3, [...t.mean.map((c) => Math.sqrt(c) * 255), t.rough * 255]));
+  const t = new THREE.DataTexture(d, 64, 4, THREE.RGBAFormat); t.magFilter = t.minFilter = THREE.NearestFilter; t.generateMipmaps = false; t.flipY = false; t.needsUpdate = true;
+  return t;
+}
+export const GT = { uGOn: { value: 0 }, tDT: { value: gtData() }, tGC: { value: null }, tGNm: { value: null }, tPC: { value: null }, tPN: { value: null }, tDC: { value: null }, tDN: { value: null }, tMT: { value: null } };
+const GT_FILES = { tGC: 'gt_c', tGNm: 'gt_n', tPC: 'pt_c', tPN: 'pt_n', tDC: 'dc', tDN: 'dn', tMT: 'mt' };
+// пустышка до загрузки: макро-пятна - тон ×1 (код 128), остальное шейдер без uGOn не читает
+{ const t = new THREE.DataTexture(new Uint8Array([128, 128, 128, 0]), 1, 1, THREE.RGBAFormat); t.needsUpdate = true; for (const u of Object.keys(GT_FILES)) GT[u].value = t; }
+function loadGroundTiles(aniso, hi) {
+  let left = Object.keys(GT_FILES).length; texStats.req += left;
+  const done = () => { texStats.done++; if (--left === 0) GT.uGOn.value = 1; };
+  const viaKtx = ktxOn();
+  for (const [u, f] of Object.entries(GT_FILES)) {
+    const set = (t) => { t.wrapS = t.wrapT = u === 'tMT' ? THREE.RepeatWrapping : THREE.ClampToEdgeWrapping; t.anisotropy = Math.min(4, aniso); GT[u].value = t; done(); };
+    // без KTX2 - webp клетки 512 (альфа - данные: без домножения цвета на альфу)
+    const web = () => fetch(new URL(`./tex/${f}_lo.webp?v=${GT_V}`, import.meta.url)).then((r) => (r.ok ? r.blob() : Promise.reject(new Error(f))))
+      .then((b) => createImageBitmap(b, { premultiplyAlpha: 'none', colorSpaceConversion: 'none' })).then((bmp) => { const t = new THREE.Texture(bmp); t.minFilter = THREE.LinearMipmapLinearFilter; t.needsUpdate = true; set(t); })
+      .catch((e) => { texStats.done++; console.warn('текстура земли не загрузилась:', e.message); });
+    if (typeof createImageBitmap !== 'function' || typeof fetch !== 'function') continue;
+    if (viaKtx) ktxLoad(`${f}_${hi ? 'hi' : 'lo'}`).then(set).catch(web); else web();
   }
 }
 // яркость текстуры относительно её среднего (детализация поверх своего цвета); картинки - sRGB, без переворота
 const GLSL_TEX = `
-uniform sampler2D tAsph, tGrav, tIron, tPave, tConc, tRoof, tOff, tGls, tBrk, tGG, tGD, tGF, tGA, tGN, tFG, tSand; uniform float uTexOn; uniform vec3 uAvgGG, uAvgGD, uAvgGF, uAvgGA, uAvgFG, uAvgSand;
+uniform sampler2D tIron, tConc, tRoof, tOff, tGls, tBrk, tGA; uniform float uTexOn; uniform vec3 uAvgGA;
 float riverX(float z) { return 1300.0 * sin(z * 0.00019 + 0.6) + 450.0 * sin(z * 0.00052 + 2.1) - 300.0; } // как city.js riverX
 float dl(sampler2D t, vec2 uv, float avg) { return clamp(dot(texture2D(t, uv).rgb, vec3(0.3, 0.59, 0.11)) / avg, 0.35, 1.9); }
 vec3 srgb(vec3 c) { return c * c; }
@@ -176,6 +207,11 @@ const LAZY = { value: typeof location !== 'undefined' && /[?&]cl=0/.test(locatio
 // фактура и рельеф карт нормалей травы, проплешины мельче, вытоптанные обочины, глубже затенение у домов; свет - контрастнее (сильнее солнце,
 // слабее заполняющий, реже дымка; цвет кадра - main.js). Только город (не зима и не осень)
 const LOOK = typeof location !== 'undefined' && /[?&]look=1/.test(location.search);
+// проба света города (Mark 2026-11-16: «начни работать со светом»): ?light=1 - резкое солнце (заполняющий слабее и голубее - тени синеватые,
+// дымка реже и не белая), ?light=2 - то же мягче. Только город (не зима и не осень); цвет кадра - main.js LIGHT_GRADE
+export const LIGHT = typeof location !== 'undefined' ? +(new URLSearchParams(location.search).get('light') || 0) : 0;
+const LIGHTS = { 1: { hemi: 0.6, sun: 1.3, sky: 0xb0c8ee, gnd: 0x58624c, fog: 0xa6bcd4, fogD: 0.72 }, 2: { hemi: 0.74, sun: 1.17, sky: 0xc0d4f2, gnd: 0x626c56, fog: 0xb4c6da, fogD: 0.85 },
+  3: { hemi: 0.8, sun: 1.06, sunC: 0xffe0b8, sky: 0xb4c8e4, gnd: 0x6c6650, fog: 0xc0c6cc, fogD: 0.92 } }; // 3 - мягкий «кино»: тёплое солнце, тени заполнены небом
 // покров земли вблизи камеры (Свои/Покров земли, 2026-11-15; Mark: «Встраивай», затем «можешь внедрять для других карт»): свои модели gc_*
 // (models/gc.glb - все 65 в одном файле, атласы по разу, tools/airdef-models/gc-pack.js). Каждый вид - один InstancedMesh (одна отрисовка на вид),
 // экземпляры - в клетках GC_C м в радиусе R вокруг камеры (100 / 80 / 40 м по пресету); раскладка клетки считается один раз (кэш) - по месту:
@@ -377,34 +413,55 @@ function groundMaterial(tex, ao, road) {
   const m = new THREE.MeshPhongMaterial({ map: tex, specular: 0x0a0a0a, shininess: 8 }); m.userData.farU = FAR_U; m.userData.AT = TEX; m.userData.lazyU = LAZY;
   m.extensions = { derivatives: true, shaderTextureLOD: true }; // явные производные выборок (TXG) - на WebGL 1
   m.onBeforeCompile = (sh) => {
-    Object.assign(sh.uniforms, ENV, TEX, { uFar: FAR_U, uLazy: LAZY, tAO: { value: ao }, tRoad: { value: road }, tNoise: { value: NOISE_ON ? noiseTex() : null }, uAir: { value: new THREE.Vector4(AIRPORT.x, AIRPORT.z, AIRPORT.rwyL / 2, AIRPORT.rwyW / 2) } });
+    Object.assign(sh.uniforms, ENV, TEX, GT, { uFar: FAR_U, uLazy: LAZY, tAO: { value: ao }, tRoad: { value: road }, tNoise: { value: NOISE_ON ? noiseTex() : null }, uAir: { value: new THREE.Vector4(AIRPORT.x, AIRPORT.z, AIRPORT.rwyL / 2, AIRPORT.rwyW / 2) } });
     sh.vertexShader = 'varying vec3 vWp;\n' + sh.vertexShader.replace('#include <project_vertex>', '#include <project_vertex>\n vWp = (modelMatrix * vec4(transformed, 1.0)).xyz;');
     const G = CITY.GRID.toFixed(1), AV = CITY.AVE_EVERY.toFixed(1), HA = (CITY.AVENUE / 2).toFixed(1), HS = (CITY.STREET / 2).toFixed(1);
     const RNf = RN.toFixed(1), RSf = RS.toFixed(1), HR = RURAL_HW.toFixed(1);
     // шум земли - текстурой (noise-tex.js): vns() здесь - 13 вызовов на пиксель по 4 хэша; в остальных шейдерах города vns прежний
     sh.fragmentShader = 'varying vec3 vWp; uniform sampler2D tAO, tRoad; uniform vec4 uAir; uniform float uFar, uLazy, uGCR;\n' + GLSL_COMMON + (NOISE_ON ? NOISE_GLSL + '#define vns vnt\n' : '') + GLSL_TEX + `
-// выборки в ленивых ветках - с явными производными (cDx, cDy - до ветвлений): у соседнего пикселя в другой ветке уровень мипмапа иначе не
-// определён (ревью 2026-10-27: крапинки по межам у горизонта); с ними картинка та же, что без пропусков
+// все выборки атласов - с явными производными (cDx, cDy - до ветвлений): ветвления по весам слоёв не дают швов мипмапов
 #if __VERSION__ >= 300 || defined(GL_EXT_shader_texture_lod)
 #define TXG(t, uv, gx, gy) texture2DGradEXT(t, uv, gx, gy)
 #else
 #define TXG(t, uv, gx, gy) texture2D(t, uv)
 #endif
+uniform sampler2D tGC, tGNm, tPC, tPN, tDC, tDN, tMT, tDT; uniform float uGOn;
+${GT_MEANS} // средние цвета плиток (линейные) - константами: без выборок таблицы на каждый слой (кадр ГП −10 %)
 vec2 cDx, cDy;
-vec3 crG(sampler2D t, vec2 p, float T, vec3 avg) { return clamp(srgb(TXG(t, p / T, cDx / T, cDy / T).rgb) / max(avg, vec3(0.004)), 0.25, 2.6); }
-float dlG(sampler2D t, vec2 p, float T, float avg) { return clamp(dot(TXG(t, p / T, cDx / T, cDy / T).rgb, vec3(0.3, 0.59, 0.11)) / avg, 0.35, 1.9); }
-// яркость текстуры (плитка T м) вблизи (вес tk) - только где она нужна (need > 0; uLazy = 0 - всегда, как раньше)
-float dlN(sampler2D t, vec2 p, float T, float avg, float tk, float need) { return (tk > 0.0 || uFar == 0.0) && (need > 0.0 || uLazy < 0.5) ? mix(1.0, dlG(t, p, T, avg), tk) : 1.0; }
-// слой травы (зелёная / сухая, пашня, подстилка; s - плитки, м): выборки - только с ненулевым весом; результат как у
-// mix(mix(mix(GG, GD, dryM), GF, pf), FG, pm). Пропуск - только по плавным границам (dryM, pm, fm - поля вообще): пашня pf меняется ступенькой,
-// и у соседних пикселей в разных ветках уровень мипмапа выборки не определён (ревью 2026-10-27: полоска по межам на Mali / Adreno)
-vec3 grassL(vec2 p, vec4 s, float dryM, float pf, float pm, float fm) {
-  bool L = uLazy > 0.5; vec3 c = vec3(0.0);
-  if (!L || pm < 1.0) c = mix(!L || dryM < 1.0 ? crG(tGG, p, s.x, uAvgGG) : vec3(0.0), !L || dryM > 0.0 ? crG(tGD, p, s.y, uAvgGD) : vec3(0.0), dryM);
-  if (!L || fm > 0.0) c = mix(c, crG(tGF, p, s.z, uAvgGF), pf);
-  if (!L || pm > 0.0) c = mix(c, crG(tFG, p, s.w, uAvgFG), pm);
-  return c;
+// снимок с высоты относительно среднего (плитка T м)
+vec3 crA(vec2 p, float T) { return clamp(srgb(TXG(tGA, p / T, cDx / T, cDy / T).rgb) / max(uAvgGA, vec3(0.004)), 0.25, 2.6); }
+// таблица tDT: строка 0-1 - прямоугольник наклейки (16 бит), 2 - средний цвет плитки земли (√ линейного), 3 - покрытия
+vec4 dtx(float i, float r) { return texture2D(tDT, vec2((i + 0.5) / 64.0, (r + 0.5) / 4.0)); }
+vec2 u16(vec4 q) { return vec2(q.r * 65280.0 + q.g * 255.0, q.b * 65280.0 + q.a * 255.0) / 65535.0; }
+vec4 decRect(float i) { return vec4(u16(dtx(i, 0.0)), u16(dtx(i, 1.0))); }
+// клетка атласа: плитка - 7/8 клетки, поля по 1/16
+// след выборки - не больше половины поля клетки (1/128 атласа): соседняя плитка не просвечивает (вдали плитка уже почти погасла - nk)
+vec2 gc(vec2 g) { float l = length(g); return l > 0.0078 ? g * (0.0078 / l) : g; }
+vec2 gd(vec2 g) { float l = length(g); return l > 0.0012 ? g * (0.0012 / l) : g; }
+vec2 atUV(float s, vec2 p, float T) { return (vec2(mod(s, 4.0), floor(s * 0.25 + 0.01)) + 0.0625 + fract(p / T) * 0.875) * 0.25; }
+float hbw(float w, float ha, float hb) { return w <= 0.001 ? 0.0 : (w >= 0.999 ? 1.0 : clamp((w - 0.5) * 4.0 + (hb - ha) * 2.5 + 0.5, 0.0, 1.0)); } // смешивание по высоте плиток
+// слои земли: LR - цвет относительно среднего базы bm, LH - высота, LN - нормаль (x, y); вблизи (nk) - выборка, дальше - средний цвет плитки.
+// own = 1 - слой даёт только свою фактуру (цвет - от района: пашня, подстилка уже окрашены по-своему)
+vec3 LR; float LH; vec2 LN;
+void gSet(vec3 m, float s, vec2 p, vec2 gx, vec2 gy, float T, float nk, vec3 bm, float w, float own) {
+  if (w <= 0.0) return;
+  vec3 b = mix(bm, m, own); vec3 r = m / max(b, vec3(0.004)); float h = 0.5; vec2 n = vec2(0.5);
+  if (nk > 0.0) { float k = 0.21875 / T; vec2 uv = atUV(s, p, T); vec4 c = TXG(tGC, uv, gc(gx * k), gc(gy * k));
+    r = mix(r, srgb(c.rgb) / max(b, vec3(0.004)), nk); h = mix(0.5, c.a, nk); n = mix(n, TXG(tGNm, uv, gc(gx * k), gc(gy * k)).rg, nk); }
+  float t = hbw(w, LH, h); LR = mix(LR, r, t); LH = mix(LH, h, t); LN = mix(LN, n, t);
 }
+// покрытия: PC - цвет (линейный), PM - средний цвет слоёв, PH, PN - как у земли
+vec3 PC, PM; float PH; vec2 PN;
+void pBeg() { PC = vec3(0.0); PM = vec3(0.0); PH = 0.5; PN = vec2(0.5); }
+void pSet(vec3 m, float s, vec2 p, vec2 gx, vec2 gy, float T, float nk, float w) {
+  if (w <= 0.0) return;
+  vec3 c3 = m; float h = 0.5; vec2 n = vec2(0.5);
+  if (nk > 0.0) { float k = 0.21875 / T; vec2 uv = atUV(s, p, T); vec4 c = TXG(tPC, uv, gc(gx * k), gc(gy * k));
+    c3 = mix(m, srgb(c.rgb), nk); h = mix(0.5, c.a, nk); n = mix(n, TXG(tPN, uv, gc(gx * k), gc(gy * k)).rg, nk); }
+  float t = hbw(w, PH, h); PC = mix(PC, c3, t); PM = mix(PM, m, t); PH = mix(PH, h, t); PN = mix(PN, n, t);
+}
+// плитка земли целиком (цвет, линейный): берег, двор, склон
+vec3 gAbs(vec3 m, float s, vec2 p, vec2 gx, vec2 gy, float T, float nk) { if (nk <= 0.0) return m; float k = 0.21875 / T; return mix(m, srgb(TXG(tGC, atUV(s, p, T), gc(gx * k), gc(gy * k)).rgb), nk); }
 // вид отрезка дороги: линия i (вдоль Z) между j и j+1 - .r, линия j (вдоль X) между i и i+1 - .g
 vec2 roadSeg(float i, float j) { return texture2D(tRoad, (vec2(i, j) + ${RNf} + 0.5) / ${RSf}).rg; }
 // дорога вдоль линии сетки: o - смещение от оси, hw - полуширина, ave - проспект
@@ -412,93 +469,130 @@ void roadAt(float p, out float o, out float hw, out float ave) {
   float i = floor(p / ${G} + 0.5); o = p - i * ${G};
   ave = mod(i, ${AV}) < 0.5 ? 1.0 : 0.0; hw = ave > 0.5 ? ${HA} : ${HS};
 }
+// наклейка износа на дороге: q.x - поперёк от оси (м), q.y - вдоль; li - номер линии (у каждого участка свой набор), CL - шаг ячеек вдоль,
+// rural - загородная трасса; g* - производные (поперёк, вдоль). Результат: цвет (линейный) и покрытие, нормаль - в dN
+vec4 dN;
+vec4 decal(vec2 q, float li, float CL, float off, float hw, float rural, vec2 gx, vec2 gy, float prob) {
+  float ci = floor((q.y + off) / CL), hs = hsh(vec2(li * 1.37 + off, ci * 0.913 + 5.0));
+  if (hs > prob) return vec4(0.0);
+  float hi = hsh(vec2(ci * 3.1 + off, li * 0.71 + 11.0)), idx = rural > 0.5 ? 12.0 + floor(hi * 19.99) : floor(hi * 17.99);
+  vec4 R = decRect(idx); vec2 sz = R.zw * 8.0; // м: поперёк, вдоль
+  float cy = (ci + 0.5) * CL - off + (hsh(vec2(ci, li + 3.3)) - 0.5) * max(0.0, CL - sz.y - 0.4);
+  float cx = (hsh(vec2(li - 2.2, ci + 7.7)) - 0.5) * max(0.0, 2.0 * hw - 0.8 - sz.x);
+  vec2 l = vec2((q.x - cx) / sz.x, (q.y - cy) / sz.y) + 0.5;
+  bool fl = hsh(vec2(ci + 1.9, li)) > 0.5; if (fl) l = 1.0 - l;
+  if (l.x <= 0.0 || l.x >= 1.0 || l.y <= 0.0 || l.y >= 1.0) return vec4(0.0);
+  vec2 uv = R.xy + l * R.zw, k = R.zw / sz, dx = gd(gx * k), dy = gd(gy * k); vec4 c = TXG(tDC, uv, dx, dy); dN = TXG(tDN, uv, dx, dy); if (fl) dN.rg = 1.0 - dN.rg; // поле между наклейками ~0,0025 атласа - след не шире, иначе соседка затекает
+  return vec4(srgb(c.rgb), c.a);
+}
 ` + sh.fragmentShader.replace('#include <shadowmap_pars_fragment>', groundShadowChunk()).replace('#include <map_fragment>', `#include <map_fragment>
-  float urb = diffuseColor.a; diffuseColor.a = 1.0; cDx = dFdx(vWp.xz); cDy = dFdy(vWp.xz);
+  float urb = diffuseColor.a; diffuseColor.a = 1.0; cDx = dFdx(vWp.xz); cDy = dFdy(vWp.xz); vec3 c3x = dFdx(vWp), c3y = dFdy(vWp);
   float dist = length(vWp - uCam), px = max(0.05, dist * uPx), fine = 1.0 - smoothstep(0.4, 2.5, px);
   vec3 col = diffuseColor.rgb;
   // шум в двух масштабах: пятна покрытия, неровный тон
   float n1 = vns(vWp.xz / 23.0), n2 = vns(vWp.xz / 190.0 + 7.0);
+  // шумы слоёв - до ветвлений (шум - текстурой с мипмапами): варианты плиток, цветущий луг, выгоревшие пятна
+  float wv = smoothstep(0.35, 0.65, n1 * 0.7 + vns(vWp.xz / 7.0 + 3.1) * 0.3), n3 = vns(vWp.xz / 61.0 + 13.0), flower = smoothstep(0.62, 0.78, vns(vWp.xz / 90.0 + 4.0));
   col *= 0.86 + 0.28 * n2;
   col *= mix(1.0, 0.9 + 0.2 * n1, fine);
-  // текстуры вблизи: трава / бетон по цвету района, асфальт, плитка; дальше - их среднее (1)
-  // яркость текстур вблизи (вес tk): трава / бетон по цвету района, асфальт, плитка, щебень; дальше - их среднее (1). Выборки - там, где нужны (dlN):
-  // вдали (вес 0) - без них (ground-far.js; ?gf=0 - как раньше)
-  float tk = uTexOn > 0.5 ? 1.0 - smoothstep(0.12, 1.0, px) : 0.0;
+  // свои плитки вблизи (до ~8 пикселей на плитку 4 м - дальше их средний цвет); пока атласы не пришли - только средние (uGOn = 0)
+  float nk = uGOn * (1.0 - smoothstep(0.06, 0.3, px));
   float gm = clamp((col.g - col.b) * 14.0, 0.0, 1.0); // зелень (трава, поля) - иначе бетон и грунт
-  // ── поля за городом (альфа зоны 0): лоскуты 300-500 м - пастбище, пашня, пшеница, всходы рядами; межи - тёмные полосы
-  float fm = 1.0 - smoothstep(0.0, 0.025, urb), plough = 0.0;
+  // макро-пятна (256 и 173 м, второй слой повёрнут на 37°): тон земли, выгоревшее (альфа)
+  vec4 mt1 = texture2D(tMT, vWp.xz / 256.0), mt2 = texture2D(tMT, mat2(0.7986, 0.6018, -0.6018, 0.7986) * vWp.xz / 173.0 + 0.37);
+  vec3 tone = mix(vec3(1.0), mt1.rgb * 1.992, 0.7) * mix(vec3(1.0), mt2.rgb * 1.992, 0.5); float burnt = mt1.a * uGOn;
+  // ── поля за городом (альфа зоны 0): лоскуты 300-500 м - пастбище, пашня, пшеница, всходы рядами; межи - грунтовки
+  float fm = 1.0 - smoothstep(0.0, 0.025, urb), fh = 0.0, fh2 = 0.0, fEdge = 0.0; vec2 fq = vec2(0.0); bool fAlongX = false;
   if (fm > 0.001) {
     vec2 jit = vec2(vns(vWp.xz / 900.0 + 11.0), vns(vWp.xz / 900.0 + 23.0)) * 0.45;
     vec2 pc = vWp.xz / vec2(430.0, 340.0) + jit, pid = floor(pc), pf = fract(pc);
-    float h = hsh(pid * 1.7 + 3.1), h2 = hsh(pid * 5.3 + 1.9), along = h2 > 0.5 ? vWp.x : vWp.z;
-    vec3 crop = h < 0.3 ? vec3(0.38, 0.43, 0.25) : h < 0.55 ? vec3(0.4, 0.34, 0.26) : h < 0.78 ? vec3(0.5, 0.47, 0.33) : vec3(0.29, 0.36, 0.2); // приглушённо: пастбище, пашня, пшеница, всходы
-    plough = step(0.3, h) * step(h, 0.55);
+    fh = hsh(pid * 1.7 + 3.1); fh2 = hsh(pid * 5.3 + 1.9); float along = fh2 > 0.5 ? vWp.x : vWp.z;
+    vec3 crop = fh < 0.3 ? vec3(0.38, 0.43, 0.25) : fh < 0.55 ? vec3(0.4, 0.34, 0.26) : fh < 0.78 ? vec3(0.5, 0.47, 0.33) : vec3(0.29, 0.36, 0.2); // приглушённо: пастбище, пашня, пшеница, всходы
+    float plough = step(0.3, fh) * step(fh, 0.55);
     crop = srgb(crop) * (0.88 + 0.24 * hsh(pid * 9.1 + 0.3)) * (0.92 + 0.16 * vns(vWp.xz / 60.0));
-    float rows = (h > 0.55 || plough > 0.5) ? 1.0 - (1.0 - smoothstep(0.25, 0.9, px)) * 0.16 * (0.5 + 0.5 * sin(along * 1.2)) : 1.0; // борозды и рядки (гаснут, пока не пошла рябь)
-    vec2 ed = min(pf, 1.0 - pf) * vec2(430.0, 340.0); float edge = 1.0 - smoothstep(2.0, 6.0 + px, min(ed.x, ed.y)); // межа / полевая дорога
-    crop *= rows * (1.0 - 0.32 * edge);
+    float rows = (fh > 0.55 || plough > 0.5) ? 1.0 - (1.0 - smoothstep(0.25, 0.9, px)) * (1.0 - nk) * 0.16 * (0.5 + 0.5 * sin(along * 1.2)) : 1.0; // борозды и рядки вдали (вблизи - плитка)
+    vec2 ed = min(pf, 1.0 - pf) * vec2(430.0, 340.0); fAlongX = ed.y < ed.x; float edge = 1.0 - smoothstep(2.0, 6.0 + px, min(ed.x, ed.y)); // межа / полевая дорога
+    // полевая грунтовка по меже: плитка - колеи вдоль её оси (x = 2 м), поперёк - расстояние до межи
+    fq = fAlongX ? vec2((pf.y < 0.5 ? ed.y : -ed.y) + 2.0, vWp.x) : vec2((pf.x < 0.5 ? ed.x : -ed.x) + 2.0, vWp.z); fEdge = (1.0 - smoothstep(1.7, 2.3, abs(fq.x - 2.0))) * fm;
+    crop *= rows * (1.0 - 0.32 * edge * (1.0 - fEdge));
     col = mix(col, crop, fm * 0.7);
   }
-  // ── текстуры в трёх масштабах (с цветом): снимок с высоты (тайл 260 м) - виден всегда; трава / сухая земля (25-30 м) -
-  //    до ~8 м на точку экрана; мелкая (3-4 м) - вблизи. Рельеф карт нормалей - на средней и мелкой
+  // ── снимок с высоты (тайл 260 м) - дальний план зелени; свои плитки травы, лугов, полей - слоями по высоте плиток (газон 1-2, выгоревший газон, луг,
+  //    цветущий луг, пашня / стерня / всходы, сухая трава по макро-пятнам, подстилка в парках); средний масштаб (24 м) - крупный рисунок газона до ~6 м на точку
+  float dryM = ${LOOK ? 'smoothstep(0.5, 0.72, n2 * 0.6 + vns(vWp.xz / 55.0 + 3.0) * 0.4)' : 'smoothstep(0.55, 0.75, n2)'};
+  float pm = smoothstep(0.07, 0.11, urb) * (1.0 - smoothstep(0.16, 0.24, urb)); // парк, перелесок - лесная подстилка
   if (uTexOn > 0.5) {
-    float midK = 1.0 - smoothstep(2.0, 8.0, px), dryM = ${LOOK ? 'smoothstep(0.5, 0.72, n2 * 0.6 + vns(vWp.xz / 55.0 + 3.0) * 0.4)' : 'smoothstep(0.55, 0.75, n2)'};
-    if (gm > 0.0 || uLazy < 0.5) col *= mix(vec3(1.0), crG(tGA, vWp.xz, 260.0, uAvgGA), ${LOOK ? '0.75' : '0.4'} * gm); // снимок с высоты - на зелени
-    ${LOOK ? 'if (gm > 0.0 || uLazy < 0.5) col *= mix(vec3(1.0), crG(tGA, vWp.xz * 1.37 + 91.0, 75.0, uAvgGA), 0.45 * gm * (1.0 - smoothstep(6.0, 20.0, px))); // и мельче - пятна на средней дальности' : ''}
-    float pm = smoothstep(0.07, 0.11, urb) * (1.0 - smoothstep(0.16, 0.24, urb)); // парк, перелесок - лесная подстилка
-    { float pn = vns(vWp.xz / 45.0 + 17.0) * 0.7 + vns(vWp.xz / 11.0) * 0.3; // пятна: тёмная трава ↔ бурая подстилка под кронами
-      col = mix(col, mix(srgb(vec3(0.24, 0.31, 0.15)), uAvgFG * 0.85, smoothstep(0.35, 0.7, pn)), pm * gm * 0.75); }
-    bool mOn = midK > 0.0 || uFar == 0.0, nOn = tk > 0.0 || uFar == 0.0; // средние и мелкие текстуры - только где их вес не 0 (вдали без выборок)
-    mOn = mOn && (gm * midK > 0.0 || uLazy < 0.5); nOn = nOn && (gm * tk > 0.0 || uLazy < 0.5); // на бетоне (зелени нет) - без слоёв травы
-    vec3 mid = mOn ? grassL(vWp.xz, vec4(25.0, 31.0, 18.0, 14.0), dryM, plough * fm, pm, fm) : vec3(1.0);
-    col *= mix(vec3(1.0), mid, ${LOOK ? '0.62' : '0.45'} * gm * midK);
-    vec3 mic = nOn ? grassL(vWp.xz, vec4(3.6, 4.2, 3.0, 2.6), dryM, plough * fm, pm, fm) : vec3(1.0);
-    col *= mix(vec3(1.0), mic, ${LOOK ? '0.85' : '0.6'} * gm * tk);
-    vec4 nM = mOn ? TXG(tGN, vWp.xz / 25.0, cDx / 25.0, cDy / 25.0) : vec4(0.5), nN = nOn ? TXG(tGN, vWp.xz / 3.6, cDx / 3.6, cDy / 3.6) : vec4(0.5); float dP2 = max(dryM, plough * fm); // пашня - рельеф сухой земли
-    float rM = mix(reliefN(nM.rg, uSun), reliefN(nM.ba, uSun), dP2), rN = mix(reliefN(nN.rg, uSun), reliefN(nN.ba, uSun), dP2);
-    col *= mix(1.0, rM, ${LOOK ? '0.75' : '0.45'} * gm * midK) * mix(1.0, rN, ${LOOK ? '0.9' : '0.55'} * gm * tk);
+    if (gm > 0.0 || uLazy < 0.5) col *= mix(vec3(1.0), crA(vWp.xz, 260.0), ${LOOK ? '0.75' : '0.4'} * gm); // снимок с высоты - на зелени
+    col *= mix(1.0, dot(crA(vWp.xz * 1.37 + 91.0, 75.0), vec3(0.3, 0.59, 0.11)), 0.3 * gm * (1.0 - smoothstep(6.0, 20.0, px))); // только яркость: в снимке есть крыши и дороги - их оттенок пятнами не нужен // и мельче (75 м) - пятна на средней дальности, между плиткой вблизи и макро-пятнами
+  }
+  { float pn = vns(vWp.xz / 45.0 + 17.0) * 0.7 + vns(vWp.xz / 11.0) * 0.3; // пятна: тёмная трава ↔ бурая подстилка под кронами
+    col = mix(col, mix(srgb(vec3(0.24, 0.31, 0.15)), GM12 * 0.85, smoothstep(0.35, 0.7, pn)), pm * gm * 0.75); }
+  if (gm > 0.0) {
+    vec3 bm = mix(GM0, GM5, fm); vec2 p = vWp.xz; LR = vec3(1.0); LH = 0.5; LN = vec2(0.5);
+    // второй вариант газона и луга - повёрнут на 37° и сдвинут: периоды двух плиток не совпадают, повтор 4 м вдали не складывается в полосы
+    mat2 rot = mat2(0.7986, 0.6018, -0.6018, 0.7986); vec2 pR = rot * p + 17.3, gxR = rot * cDx, gyR = rot * cDy;
+    float ng = nk * (1.0 - smoothstep(0.1, 0.22, px)); // трава вблизи - до ~20 пикселей на плитку (дальше её мелкий рисунок - только рябь)
+    gSet(GM0, 0.0, p, cDx, cDy, 4.0, ng, bm, 1.0, 0.0);
+    gSet(GM1, 1.0, pR, gxR, gyR, 4.0, ng, bm, wv * (1.0 - fm), 0.0);
+    gSet(GM2, 2.0, p, cDx, cDy, 4.0, ng, bm, dryM * (1.0 - fm), 0.0);
+    gSet(GM5, 5.0, p, cDx, cDy, 4.0, ng, bm, fm, 0.0);
+    gSet(GM6, 6.0, pR, gxR, gyR, 4.0, ng, bm, fm * flower, 0.0);
+    if (fh >= 0.3) { float cs = fh < 0.55 ? 10.0 : fh < 0.78 ? 8.0 : 11.0; vec3 csm = fh < 0.55 ? GM10 : fh < 0.78 ? GM8 : GM11; bool rz = fh2 <= 0.5 && cs != 8.0; // борозды плитки - вдоль Y: поле «поперёк» - повернуть
+      gSet(csm, cs, rz ? p.yx : p, rz ? cDx.yx : cDx, rz ? cDy.yx : cDy, 4.0, ng, bm, fm, 1.0); }
+    gSet(GM7, 7.0, p, cDx, cDy, 4.0, ng, bm, max(dryM * fm * 0.8, smoothstep(0.6, 0.95, burnt) * 0.3 * (1.0 - pm)), 0.0);
+    gSet(GM12, 12.0, p, cDx, cDy, 4.0, ng, bm, pm, 1.0);
+    col *= mix(vec3(1.0), clamp(LR, 0.25, 2.6), gm);
+    col *= mix(1.0, reliefN(LN, uSun), 0.85 * gm * ng);
     col *= mix(1.0, 0.82, pm * gm); // под деревьями темнее
     if (uGCR > 0.0) { // за радиусом покрова (groundCover) - зерно травы в цветах её пучков: даль не становится гладкой «пустой» заливкой
-      // ветка - только по uniform (выборки шума с мипмапами - не внутри ветки, разной у соседних пикселей: ревью 2026-10-27)
-      float s1 = vns(vWp.xz * 2.1), s2 = vns(vWp.xz * 0.53 + 3.3), fk = smoothstep(uGCR * 0.4, uGCR * 0.85, dist) * (1.0 - smoothstep(0.2, 0.8, px)) * gm * (1.0 - 0.5 * pm);
-      vec3 tuft = mix(vec3(0.8, 0.88, 0.68), vec3(1.15, 1.08, 0.82), smoothstep(0.35, 0.75, s2)); // зелёные и сухие пучки
-      col *= mix(vec3(1.0), tuft * (0.8 + 0.4 * s1), 0.5 * fk);
+      float fk = smoothstep(uGCR * 0.4, uGCR * 0.85, dist) * (1.0 - smoothstep(0.2, 0.8, px)) * (1.0 - 0.5 * pm) * (1.0 - nk * 0.6);
+      vec3 tuft = mix(vec3(0.8, 0.88, 0.68), vec3(1.15, 1.08, 0.82), smoothstep(0.35, 0.75, n3)); // зелёные и сухие пучки
+      col *= mix(vec3(1.0), tuft * (0.8 + 0.4 * wv), 0.5 * fk);
     }
     ${LOOK ? 'col *= mix(vec3(1.0), vec3(1.06, 1.0, 0.84), gm * 0.6); // трава - оливковее, не «газонная»' : ''}
   }
-  ${RELIEF ? `{ // рельеф: на крутом склоне сквозь траву - грунт и глина (по наклону треугольника земли), пятнами и прожилками вниз по склону
-    vec3 nW = normalize(cross(dFdx(vWp), dFdy(vWp))); float ny = abs(nW.y);
-    float sk = smoothstep(0.985, 0.93, ny) * (0.55 + 0.45 * smoothstep(0.3, 0.7, vns(vWp.xz / 14.0 + 21.0) * 0.6 + vns(vWp.xz / 4.0) * 0.4));
-    if (sk > 0.0) { vec3 soil = mix(srgb(vec3(0.43, 0.35, 0.26)), srgb(vec3(0.52, 0.42, 0.3)), vns(vWp.xz / 30.0 + 2.0)) * dlN(tGD, vWp.xz, 4.2, sqrt(dot(uAvgGD, vec3(0.3, 0.59, 0.11))), tk, sk);
-      col = mix(col, soil, sk * 0.68 * smoothstep(0.0, 0.3, gm + (1.0 - urb))); }
+  col *= mix(vec3(1.0), tone, 0.35 + 0.65 * gm); // макро-пятна: на зелени - полностью, на бетоне и грунте - слабее
+  // полевая грунтовка по меже (колеи вдоль межи)
+  if (fEdge > 0.0) { pBeg(); pSet(PM12, 12.0, fq, fAlongX ? cDx.yx : cDx, fAlongX ? cDy.yx : cDy, 4.0, nk, 1.0); col = mix(col, PC * 0.8 * mix(1.0, reliefN(fAlongX ? vec2(1.0) - PN.yx : PN, uSun), 0.8 * nk), fEdge * 0.85); }
+  ${RELIEF ? `{ // рельеф: на склоне - суглинок, на крутом - лёсс обрыва (трёхпроекционно: на изгибах без растяжки и «ёлочки»), пятнами и прожилками вниз по склону
+    vec3 nW = normalize(cross(c3x, c3y)); float ny = abs(nW.y);
+    float sk = smoothstep(0.985, 0.93, ny) * (0.55 + 0.45 * smoothstep(0.3, 0.7, vns(vWp.xz / 14.0 + 21.0) * 0.6 + vns(vWp.xz / 4.0) * 0.4)), steep = 1.0 - smoothstep(0.8, 0.88, ny);
+    if (sk > 0.0) {
+      vec3 soil = gAbs(GM9, 9.0, vWp.xz, cDx, cDy, 4.0, nk);
+      if (steep > 0.0) { vec3 cl = GM13;
+        if (nk > 0.0) { vec3 bw = pow(abs(nW), vec3(4.0)); bw /= bw.x + bw.y + bw.z; float k = 0.21875 / 4.0;
+          vec3 t3 = srgb(TXG(tGC, atUV(13.0, vWp.zy, 4.0), gc(c3x.zy * k), gc(c3y.zy * k)).rgb) * bw.x + srgb(TXG(tGC, atUV(13.0, vWp.xz, 4.0), gc(c3x.xz * k), gc(c3y.xz * k)).rgb) * bw.y + srgb(TXG(tGC, atUV(13.0, vWp.xy, 4.0), gc(c3x.xy * k), gc(c3y.xy * k)).rgb) * bw.z;
+          cl = mix(cl, t3, nk); }
+        soil = mix(soil, cl * 0.8, steep); }
+      col = mix(col, soil * 0.72, sk * 0.75 * smoothstep(0.0, 0.3, gm + (1.0 - urb))); }
   }` : ''}
-  // ── берег реки: песок и ил за городом, в городе - серая набережная; полоса ~60 м от уреза, у воды - мокрый тёмный край
+  // ── берег реки: песок и ил за городом, в городе - набережная; полоса ~60 м от уреза, у воды - мокрый ил
   float rd = abs(vWp.x - riverX(vWp.z)) - ${(CITY.RIVER_W / 2).toFixed(1)};
-  float bank = (1.0 - smoothstep(30.0, 75.0 + 0.5 * vns(vWp.xz / 40.0) * 40.0, rd)) * step(-60.0, rd);
-  float dC = dlN(tConc, vWp.xz, 7.0, 0.364, tk, (1.0 - gm) + bank); // бетон: где нет зелени и на набережной
-  {
-    if (bank > 0.001) {
-      vec3 sand = srgb(vec3(0.6, 0.55, 0.43)) * (0.85 + 0.3 * vns(vWp.xz / 17.0)), mud = srgb(vec3(0.33, 0.29, 0.22));
-      vec3 b = mix(sand, mud, smoothstep(0.45, 0.7, vns(vWp.xz / 70.0 + 5.0)));
-      if (uTexOn > 0.5) b *= cr(tSand, vWp.xz / 45.0, uAvgSand);
-      b *= 1.0 - 0.35 * (1.0 - smoothstep(0.0, 14.0, rd)); // мокрая полоса у воды
-      b = mix(b, srgb(vec3(0.42, 0.42, 0.4)) * dC, max(smoothstep(0.22, 0.42, urb), 1.0 - smoothstep(${(CITY.R * 0.55).toFixed(1)}, ${(CITY.R * 0.75).toFixed(1)}, length(vWp.xz)))); // в городе - набережная
-      col = mix(col, b, bank * 0.9);
-    }
+  float bank = (1.0 - smoothstep(30.0, 75.0 + 0.5 * vns(vWp.xz / 40.0) * 40.0, rd)) * step(-60.0, rd), cityK = max(smoothstep(0.22, 0.42, urb), 1.0 - smoothstep(${(CITY.R * 0.55).toFixed(1)}, ${(CITY.R * 0.75).toFixed(1)}, length(vWp.xz)));
+  float bnMud = smoothstep(0.45, 0.7, vns(vWp.xz / 70.0 + 5.0)), bnWet = 1.0 - smoothstep(0.0, 14.0, rd);
+  if (bank > 0.001) {
+    vec3 b = cityK < 1.0 ? mix(gAbs(GM14, 14.0, vWp.xz, cDx, cDy, 4.0, nk) * 0.62, gAbs(GM15, 15.0, vWp.xz, cDx, cDy, 4.0, nk), max(bnMud, bnWet)) : vec3(0.0);
+    if (cityK > 0.0) { pBeg(); pSet(PM14, 14.0, vWp.zx, cDx.yx, cDy.yx, 4.0, nk, 1.0); b = mix(b, PC * 0.6 * mix(1.0, reliefN(vec2(1.0) - PN.yx, uSun), 0.7 * nk), cityK); } // в городе - набережная (плиты вдоль реки)
+    col = mix(col, b, bank * 0.9);
   }
-  col *= mix(dC, 1.0, gm); // трава - слоями выше (без текстур tk = 0 - множитель 1)
+  // бетон и площадки (где нет зелени): плитка относительно своего среднего - оттенок района остаётся; монолит, старый бетон, промзона - пятнами
+  if (gm < 1.0) { pBeg(); pSet(PM9, 9.0, vWp.xz, cDx, cDy, 4.0, nk, 1.0); pSet(PM10, 10.0, vWp.xz, cDx, cDy, 4.0, nk, wv); pSet(PM13, 13.0, vWp.xz, cDx, cDy, 4.0, nk, smoothstep(0.55, 0.75, n3));
+    col *= mix(vec3(1.0), clamp(PC / max(PM, vec3(0.004)), 0.3, 2.5) * mix(1.0, reliefN(PN, uSun), 0.7 * nk), 1.0 - gm); }
   ${LOOK ? `{ // бетон и грунт: крупные пятна грязи, потёки, светлые выгоревшие места (иначе ровная «пластиковая» заливка)
     float gr = vns(vWp.xz / 31.0 + 13.0) * 0.6 + vns(vWp.xz / 8.0 + 4.0) * 0.4, gr2 = vns(vWp.xz / 140.0 + 29.0);
     col *= mix(1.0, (0.62 + 0.62 * gr) * (0.85 + 0.3 * gr2), (1.0 - gm) * 0.85); col *= mix(vec3(1.0), vec3(1.06, 1.0, 0.9), (1.0 - gm) * smoothstep(0.55, 0.8, gr2)); }` : ''}
   col = mix(vec3(dot(col, vec3(0.3, 0.59, 0.11))), col, ${LOOK ? '0.9' : '0.82'}); // земля чуть спокойнее по цвету (без «кислотной» зелени)
+  float yardN = vns(vWp.xz / 38.0 + 3.0), wornN = vns(vWp.xz / 3.0 + 9.0); // шумы - до ветвлений
   if (urb > 0.01) {
-    // дворы: газоны в жилых кварталах, плитка и парковки в мощёных
-    float yard = smoothstep(0.42, 0.62, vns(vWp.xz / 38.0 + 3.0)), wy = yard * 0.75 * smoothstep(0.1, 0.4, urb);
-    // газон (трава с проплешинами сухой земли) или плитка - выборки обеих до выбора по urb (порог - ступенька: у соседних пикселей в разных ветках
-    // уровень мипмапа не определён); нужны, где есть двор (wy - плавно)
-    float dG = mix(dlN(tGG, vWp.xz, 3.6, sqrt(dot(uAvgGG, vec3(0.3, 0.59, 0.11))), tk, wy), dlN(tGD, vWp.xz, 4.2, sqrt(dot(uAvgGD, vec3(0.3, 0.59, 0.11))), tk, wy), smoothstep(0.55, 0.75, n2));
-    float dPy = dlN(tPave, vWp.xz, 2.5, 0.435, tk, wy);
-    col = mix(col, urb > 0.75 ? ${LOOK ? 'col * vec3(0.78, 0.86, 0.72) * mix(1.0, dG, 0.5)' : 'vec3(0.07, 0.11, 0.04) * (0.8 + 0.4 * n1) * dG'} : vec3(0.16, 0.16, 0.15) * dPy, wy);
+    // дворы: газоны с вытоптанными тропами в жилых кварталах, дворовый асфальт в мощёных
+    float yard = smoothstep(0.42, 0.62, yardN), wy = yard * 0.75 * smoothstep(0.1, 0.4, urb);
+    if (wy > 0.0) {
+      vec3 yc;
+      if (urb > 0.75) { LR = vec3(1.0); LH = 0.5; LN = vec2(0.5); vec3 bm = GM0; gSet(GM0, 0.0, vWp.xz, cDx, cDy, 4.0, nk, bm, 1.0, 0.0); gSet(GM2, 2.0, vWp.xz, cDx, cDy, 4.0, nk, bm, wv, 0.0); gSet(GM3, 3.0, vWp.xz, cDx, cDy, 4.0, nk, bm, smoothstep(0.6, 0.8, n3), 0.0);
+        yc = ${LOOK ? 'col * vec3(0.78, 0.86, 0.72) * mix(vec3(1.0), clamp(LR, 0.4, 2.0), 0.6)' : 'bm * clamp(LR, 0.25, 2.6) * 0.75 * (0.85 + 0.3 * n1)'} * mix(1.0, reliefN(LN, uSun), 0.85 * nk); }
+      else { pBeg(); pSet(PM4, 4.0, vWp.xz, cDx, cDy, 4.0, nk, 1.0); pSet(PM5, 5.0, vWp.xz, cDx, cDy, 4.0, nk, wv); yc = PC * 0.6 * mix(1.0, reliefN(PN, uSun), 0.8 * nk); }
+      col = mix(col, yc, wy);
+    }
   }
   {
     // дороги - по сетке отрезков (city.js): улица кончается на перекрёстке, за городом - узкая трасса с обочиной
@@ -516,16 +610,34 @@ void roadAt(float p, out float o, out float hw, out float ave) {
     float walk = max(swX * cX, swZ * cZ) * (1.0 - road);
     float shX = 1.0 - smoothstep(hwx + 2.0 - px, hwx + 3.5 + px, ax), shZ = 1.0 - smoothstep(hwz + 2.0 - px, hwz + 3.5 + px, az);
     float shoulder = max(shX * eX * (1.0 - cX), shZ * eZ * (1.0 - cZ)) * (1.0 - road) * (1.0 - walk);
-    // выборки асфальта, плитки, щебня - в полосе у осей сетки шире любой дороги с тротуаром и обочиной: есть ли тут отрезок и улица это или трасса -
-    // ступенька, и у соседних пикселей в разных ветках уровень мипмапа не определён (см. dG); на краю полосы веса этих текстур с обеих сторон - 0
-    float nR = step(min(ax, az), ${(Math.max(CITY.AVENUE, CITY.STREET) / 2 + Math.max(RURAL_HW, 0) + 6).toFixed(1)} + px), nW = nR, nS = nR;
-    vec3 asph = vec3(0.032, 0.034, 0.038) * (0.85 + 0.3 * n1); float st = max(cX * onX, cZ * onZ);
-    asph = mix(asph * 1.35 * dlN(tAsph, vWp.xz, 7.0, 0.351, tk, nR), asph * dlN(tAsph, vWp.xz, 4.0, 0.351, tk, nR), st); // загородный асфальт светлее, выгоревший, в заплатах
-    col = mix(col, vec3(0.15, 0.15, 0.145) * (0.9 + 0.2 * n1) * dlN(tPave, vWp.xz, 2.5, 0.435, tk, nW), walk);    // тротуар
-    col = mix(col, vec3(0.2, 0.18, 0.15) * (0.85 + 0.3 * n1) * dlN(tGrav, vWp.xz, 2.5, 0.257, tk, nS), shoulder * 0.8); // обочина - щебень
-    ${LOOK ? `{ // вытоптанные обочины: полоса сухой земли у дорог (на зелени), край неровный
-      float vg = max(eX * (1.0 - smoothstep(hwx + 3.0, hwx + 9.0 + 9.0 * n1, ax)), eZ * (1.0 - smoothstep(hwz + 3.0, hwz + 9.0 + 9.0 * n1, az))) * (1.0 - road) * (1.0 - walk) * gm;
-      if (vg > 0.0) col = mix(col, srgb(vec3(0.4, 0.35, 0.27)) * (0.8 + 0.4 * n1) * dlN(tGD, vWp.xz, 4.2, sqrt(dot(uAvgGD, vec3(0.3, 0.59, 0.11))), tk, vg), vg * 0.6); }` : ''}
+    // ось вдоль дороги: плитки - вдоль Y (колея, продольные трещины), у дороги вдоль X - повёрнуты
+    bool alX = onZ > onX || (road <= 0.0 && min(az, 99.0) < ax); vec2 pr = alX ? vWp.zx : vWp.xz, gxr = alX ? cDx.yx : cDx, gyr = alX ? cDy.yx : cDy;
+    float st = alX ? cZ : cX, ave = alX ? avz : avx;
+    // асфальт: улица - старый (два варианта), проспект - 2-3 года, трасса - разбитый пятнами по старому
+    vec3 asph = vec3(0.0); vec2 aN = vec2(0.5);
+    if (road > 0.0) {
+      pBeg(); pSet(PM0, 0.0, pr, gxr, gyr, 4.0, nk, 1.0); pSet(PM1, 1.0, pr, gxr, gyr, 4.0, nk, max(wv, 1.0 - st)); pSet(PM2, 2.0, pr, gxr, gyr, 4.0, nk, ave);
+      pSet(PM3, 3.0, pr, gxr, gyr, 4.0, nk, (1.0 - st) * smoothstep(0.45, 0.7, n3));
+      asph = mix(vec3(dot(PC, vec3(0.3, 0.59, 0.11))), PC, 0.5) * vec3(0.84, 0.9, 1.0) * mix(0.27, 0.33, 1.0 - st) * (0.9 + 0.2 * n1); aN = PN; // серее и темнее плитки: под солнцем игры она почти белая
+      // наклейки износа: два слоя ячеек вдоль дороги (у каждого участка свой набор) - трещины, заплаты, люки, лужи, на трассе - выбоины и колея
+      if (nk > 0.0 && road > 0.5) {
+        float li = alX ? floor(vWp.z / ${G} + 0.5) : floor(vWp.x / ${G} + 0.5), hwR = alX ? hwz : hwx;
+        vec2 q = vec2(alX ? oz : ox, alX ? vWp.x : vWp.z), qx = vec2(gxr.x, gxr.y), qy = vec2(gyr.x, gyr.y);
+        dN = vec4(0.5); vec4 d1 = decal(q, li, 9.0, 0.0, hwR, 1.0 - st, qx, qy, 0.6); vec4 n1d = dN;
+        dN = vec4(0.5); vec4 d2 = decal(q, li + 0.5, 14.0, 4.3, hwR, 1.0 - st, qx, qy, 0.45); vec4 n2d = dN;
+        float a1 = d1.a * nk, a2 = d2.a * nk;
+        float kA = mix(0.27, 0.33, 1.0 - st); asph = mix(asph, d1.rgb * kA, a1); aN = mix(aN, n1d.rg, a1);
+        asph = mix(asph, d2.rgb * kA, a2); aN = mix(aN, n2d.rg, a2);
+      }
+      asph *= mix(1.0, reliefN(alX ? vec2(1.0) - aN.yx : aN, uSun), 0.8 * nk);
+    }
+    if (walk > 0.0) { // тротуар: плиты 500 × 500, в центре (мощёные районы) - «кирпичик» и брусчатка пятнами
+      pBeg(); pSet(PM6, 6.0, pr, gxr, gyr, 4.0, nk, 1.0); float cbd = 1.0 - smoothstep(0.6, 0.75, urb); pSet(PM7, 7.0, pr, gxr, gyr, 4.0, nk, cbd * wv); pSet(PM8, 8.0, pr, gxr, gyr, 4.0, nk, cbd * smoothstep(0.55, 0.7, n3));
+      col = mix(col, PC * 0.45 * (0.9 + 0.2 * n1) * mix(1.0, reliefN(alX ? vec2(1.0) - PN.yx : PN, uSun), 0.8 * nk), walk); }
+    if (shoulder > 0.0) { pBeg(); pSet(PM11, 11.0, pr, gxr, gyr, 4.0, nk, 1.0); col = mix(col, PC * 0.42 * (0.85 + 0.3 * n1) * mix(1.0, reliefN(alX ? vec2(1.0) - PN.yx : PN, uSun), 0.8 * nk), shoulder * 0.8); } // обочина - гравий с песком
+    { // вытоптанные обочины: полоса вытоптанного газона у дорог (на зелени), край неровный
+      float vg = max(eX * (1.0 - smoothstep(hwx + 3.0, hwx + 9.0 + 9.0 * n1, ax)), eZ * (1.0 - smoothstep(hwz + 3.0, hwz + 9.0 + 9.0 * n1, az))) * (1.0 - road) * (1.0 - walk) * gm * ${LOOK ? '0.6' : '0.25'};
+      if (vg > 0.0) col = mix(col, gAbs(GM4, 4.0, pr, gxr, gyr, 4.0, nk) * 0.8 * (0.8 + 0.4 * n1), vg); }
     col = mix(col, asph, road);
     // разметка (пока линия толще ~пикселя)
     float mk = (1.0 - smoothstep(0.25, 0.9, px)) * road;
@@ -535,7 +647,6 @@ void roadAt(float p, out float o, out float hw, out float ave) {
     // осевая: у проспектов - двойная сплошная и пунктир полос, у улиц - пунктир
     lane += inX * (avx > 0.5 ? step(abs(ax - 0.3), 0.12) + step(abs(ax - 7.5), 0.1) * step(fract(vWp.z / 12.0), 0.4) : step(ax, 0.1) * step(fract(vWp.z / 9.0), 0.5));
     lane += inZ * (avz > 0.5 ? step(abs(az - 0.3), 0.12) + step(abs(az - 7.5), 0.1) * step(fract(vWp.x / 12.0), 0.4) : step(az, 0.1) * step(fract(vWp.x / 9.0), 0.5));
-    // «зебры» у перекрёстков
     // загородная трасса: сплошные края
     lane += inX * (1.0 - cX) * step(abs(ax - hwx + 0.5), 0.1) + inZ * (1.0 - cZ) * step(abs(az - hwz + 0.5), 0.1);
     // «зебры» у перекрёстков - только где поперечная улица есть
@@ -543,15 +654,16 @@ void roadAt(float p, out float o, out float hw, out float ave) {
     float nZ = step(0.75, max(roadSeg(ix - 1.0, jz).g, roadSeg(ix, jz).g)), nX = step(0.75, max(roadSeg(ix, jz - 1.0).r, roadSeg(ix, jz).r));
     lane += onX * cX * nZ * step(hz0 + 0.8, az) * step(az, hz0 + 4.0) * step(0.5, fract(vWp.x / 1.1)) * step(ax, hwx - 1.0);
     lane += onZ * cZ * nX * step(hx0 + 0.8, ax) * step(ax, hx0 + 4.0) * step(0.5, fract(vWp.z / 1.1)) * step(az, hwz - 1.0);
-    col = mix(col, vec3(0.55), min(lane, 1.0) * mk);
+    // краска стёрта пятнами (в колее - сильнее)
+    col = mix(col, vec3(0.42) * (0.85 + 0.15 * wv), min(lane, 1.0) * mk * (0.55 + 0.45 * smoothstep(0.25, 0.6, wornN)));
     }
   }
-  // ВПП аэропорта: асфальт, осевая, торцевые «клавиши»
+  // ВПП аэропорта: плиты ПАГ-14 6 × 2 м вдоль полосы, осевая, торцевые «клавиши»
   vec2 ra = abs(vWp.xz - uAir.xy);
   float rwy = (1.0 - smoothstep(uAir.z - px, uAir.z + px, ra.x)) * (1.0 - smoothstep(uAir.w - px, uAir.w + px, ra.y));
   float cl = step(ra.y, 0.7) * step(0.5, fract(vWp.x / 50.0)) * step(ra.x, uAir.z - 90.0);
   float keys = step(uAir.z - 60.0, ra.x) * step(ra.x, uAir.z - 10.0) * step(0.5, fract(ra.y / 3.0)) * step(ra.y, uAir.w - 4.0);
-  col = mix(col, vec3(0.1, 0.1, 0.098) * dlN(tConc, vWp.xz, 5.0, 0.364, tk, rwy), rwy); // ВПП - бетонные плиты
+  if (rwy > 0.0) { pBeg(); pSet(PM15, 15.0, vWp.zx, cDx.yx, cDy.yx, 6.0, nk, 1.0); col = mix(col, PC * 0.42 * mix(1.0, reliefN(vec2(1.0) - PN.yx, uSun), 0.8 * nk), rwy); }
   col = mix(col, vec3(0.6), min(cl + keys, 1.0) * rwy * (1.0 - smoothstep(0.6, 3.0, px)));
   // затенение у домов
   float ao = texture2D(tAO, (vWp.xz + ${CITY.GH.toFixed(1)}) / ${(2 * CITY.GH).toFixed(1)}).r;
@@ -1754,7 +1866,7 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
   const AUT = city.kind === 'autumn', HILLS = WINT || AUT; // осенняя «Туманная топь»: своя земля, лес, дороги и вода болота (без снега)
   const W = WEATHERS[weatherKey] || WEATHERS.day;
   const G = { tiles: [], W, renderer, winter: WINT }; // renderer - снимки моделей для дальних копий домов (makeImpostor)
-  if (P.roofDetail) loadCityTextures(renderer ? Math.min(P.aniso || 4, renderer.capabilities.getMaxAnisotropy()) : 1); // на «Низком» - без текстур
+  if (P.roofDetail) loadCityTextures(renderer ? Math.min(P.aniso || 4, renderer.capabilities.getMaxAnisotropy()) : 1, (P.zoneTex || 1024) >= 2048 || ((P.aniso || 4) >= 8 && !TOUCH_GT), HILLS); // на «Низком» - без текстур; атласы земли 4096 - «Ультра» и ПК
   else for (const u of Object.keys(TEX_FILES)) if (!TEX[u]) TEX[u] = { value: null };
   // солнце и атмосфера по погоде (как setWeather в «Летке»)
   const e = W.el * Math.PI / 180, a = W.az * Math.PI / 180;
@@ -1770,16 +1882,17 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
   // (frame-ab.js, 3 карты × «Средний»/«Высокий»), снимки те же. ?sko=0 - первым, как раньше
   sky.renderOrder = typeof location !== 'undefined' && /[?&]sko=0/.test(location.search) ? -2 : 2; sky.frustumCulled = false; scene.add(sky); G.sky = sky;
   // дымка: не реже, чем нужно, чтобы дальние плитки растворялись до того, как пропадут
-  scene.fog = new THREE.FogExp2(lin(W.fog), Math.max(W.fogD * (LOOK && !HILLS ? 0.6 : 1), 1.15 / P.draw));
+  const LT = !HILLS && LIGHTS[LIGHT] && !W.night ? LIGHTS[LIGHT] : null; // проба света (?light=)
+  scene.fog = new THREE.FogExp2(lin(LT ? LT.fog : W.fog), Math.max(W.fogD * (LT ? LT.fogD : LOOK && !HILLS ? 0.6 : 1), 1.15 / P.draw));
   ATMO.sunDir.x = sunDir.x; ATMO.sunDir.y = sunDir.y; ATMO.sunDir.z = sunDir.z;
-  const sc = lin(W.sun), fc = lin(W.fog), lowSun = 1 - THREE.MathUtils.smoothstep(sunDir.y, 0.1, 0.6);
+  const sc = lin(W.sun), fc = lin(LT ? LT.fog : W.fog), lowSun = 1 - THREE.MathUtils.smoothstep(sunDir.y, 0.1, 0.6);
   ATMO.sunCol.x = fc.r * 0.4 + sc.r * 0.9; ATMO.sunCol.y = fc.g * 0.4 + sc.g * 0.9; ATMO.sunCol.z = fc.b * 0.4 + sc.b * 0.9;
   ATMO.p.y = W.sunVis ? 0.35 + 0.4 * lowSun : 0;
 
   // свет
   const LK = LOOK && !HILLS; // проба «земля и свет» - только город
-  const hemi = new THREE.HemisphereLight(lin(W.sky), lin(W.gnd), 0.55 * W.hemiI * (LK ? 0.62 : 1)); scene.add(hemi);
-  const sunL = new THREE.DirectionalLight(lin(W.sun), 2.0 * W.sunI * (0.35 + 0.65 * Math.min(1, sunDir.y / 0.25)) * (LK ? 1.32 : 1));
+  const hemi = new THREE.HemisphereLight(lin(LT ? LT.sky : W.sky), lin(LT ? LT.gnd : W.gnd), 0.55 * W.hemiI * (LT ? LT.hemi : LK ? 0.62 : 1)); scene.add(hemi);
+  const sunL = new THREE.DirectionalLight(lin(LT && LT.sunC ? LT.sunC : W.sun), 2.0 * W.sunI * (0.35 + 0.65 * Math.min(1, sunDir.y / 0.25)) * (LT ? LT.sun : LK ? 1.32 : 1));
   sunL.position.copy(sunDir).multiplyScalar(5000); scene.add(sunL); scene.add(sunL.target);
   // свет - и на слоях облаков, дыма и огня (2026-10-26): они рисуются отдельными проходами (post.js) - без света в слоях число источников в ключе
   // шейдера было 0, а прогрев (main.js prewarm) собирал вариант с 1 + 1 → первый взрыв собирал шейдеры заново (рывок). Сами они свет не используют

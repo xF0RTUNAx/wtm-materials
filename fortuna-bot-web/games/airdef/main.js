@@ -103,6 +103,9 @@ const GRADE = {
   sunset: { gGain: [1.07, 0.98, 0.88], gLift: [0.01, 0, 0.018], gCon: 1.04 },
   overcast: { gGain: [0.97, 1.0, 1.03], gSat: 0.86, gCon: 0.96 },
 };
+// проба света города (?light=1 / 2, city-render.js LIGHT): контраст и чуть теплее свет - поверх цвета погоды
+const LIGHT_GRADE = { 1: { gCon: 1.08, gSat: 1.05, gGain: [1.03, 1.0, 0.965] }, 2: { gCon: 1.045, gSat: 1.03, gGain: [1.015, 1.0, 0.98] },
+  3: { grade: 0.42, gCon: 0.97, gSat: 0.94, gGain: [1.04, 1.0, 0.95], gLift: [0, 0.008, 0.016], vignette: 0.2 } }; // 3 - мягкий «кино»: холодные тени, тёплые света, без жёсткого контраста
 const CINEMA = Q.get('gfx') === 'cinema'; // запись промо-ролика (tools/airdef-promo): «Ультра» на пределе; в меню его нет
 let gfxKey = CINEMA ? 'ultra' : Q.get('gfx') || ls.get('fortuna_airdef_gfx') || (IS_TOUCH ? 'medium' : 'high');
 if (!PRESETS[gfxKey]) gfxKey = 'medium';
@@ -252,7 +255,7 @@ const perf = { ...P.perf };
 let pipe = null, sceneTM = THREE.ACESFilmicToneMapping;
 if (P.post || perf.aa !== 'off' || perf.up !== 'off') {
   const ldr = !P.post;
-  pipe = createPipeline(renderer, { ...(P.post || {}), ...(GRADE[W_KEY] || {}), ...(Q.get('look') === '1' && MAP === 'city' ? { gGain: [1.045, 1.0, 0.94], gLift: [0.004, 0.002, 0], gCon: 1.12, gSat: 1.04 } : {}) /* проба «земля и свет» города (city-render.js LOOK) */, ldr, exposure: renderer.toneMappingExposure, scale: perf.scale, upscaler: perf.up, sharp: perf.sharp || 0.4, aa: perf.aa,
+  pipe = createPipeline(renderer, { ...(P.post || {}), ...(GRADE[W_KEY] || {}), ...(MAP === 'city' && LIGHT_GRADE[Q.get('light')] && (W_KEY === 'day' || W_KEY === 'morning' || W_KEY === 'evening') ? LIGHT_GRADE[Q.get('light')] : {}), ...(Q.get('look') === '1' && MAP === 'city' ? { gGain: [1.045, 1.0, 0.94], gLift: [0.004, 0.002, 0], gCon: 1.12, gSat: 1.04 } : {}) /* проба «земля и свет» города (city-render.js LOOK) */, ldr, exposure: renderer.toneMappingExposure, scale: perf.scale, upscaler: perf.up, sharp: perf.sharp || 0.4, aa: perf.aa,
     bloomQ: !!P.bloomQ, fx: !!P.halfFx, fxU: FXU, fxLayer: FX_LAYER, fxAddLayer: FX_ADD_LAYER, // fx - облака и дым в половине разрешения (слои FX_*)
     aaCas1: Q.get('pp1') !== '0' }); // FXAA и резкость CAS - одним проходом (post.js; ?pp1=0 - двумя, как раньше)
   sceneTM = ldr ? THREE.ACESFilmicToneMapping : THREE.NoToneMapping;
