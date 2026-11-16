@@ -409,16 +409,14 @@ function groundCover(scene, city, sh, P) {
   };
   return tick;
 }
-function groundMaterial(tex, ao, road) {
+function groundMaterial(tex, ao, road, bake, bakeReady) {
   const m = new THREE.MeshPhongMaterial({ map: tex, specular: 0x0a0a0a, shininess: 8 }); m.userData.farU = FAR_U; m.userData.AT = TEX; m.userData.lazyU = LAZY; m.userData.GT = GT;
   m.extensions = { derivatives: true, shaderTextureLOD: true }; // явные производные выборок (TXG) - на WebGL 1
-  m.onBeforeCompile = (sh) => {
-    Object.assign(sh.uniforms, ENV, TEX, GT, { uFar: FAR_U, uLazy: LAZY, tAO: { value: ao }, tRoad: { value: road }, tNoise: { value: NOISE_ON ? noiseTex() : null }, uAir: { value: new THREE.Vector4(AIRPORT.x, AIRPORT.z, AIRPORT.rwyL / 2, AIRPORT.rwyW / 2) } });
-    sh.vertexShader = 'varying vec3 vWp;\n' + sh.vertexShader.replace('#include <project_vertex>', '#include <project_vertex>\n vWp = (modelMatrix * vec4(transformed, 1.0)).xyz;');
-    const G = CITY.GRID.toFixed(1), AV = CITY.AVE_EVERY.toFixed(1), HA = (CITY.AVENUE / 2).toFixed(1), HS = (CITY.STREET / 2).toFixed(1);
-    const RNf = RN.toFixed(1), RSf = RS.toFixed(1), HR = RURAL_HW.toFixed(1);
-    // шум земли - текстурой (noise-tex.js): vns() здесь - 13 вызовов на пиксель по 4 хэша; в остальных шейдерах города vns прежний
-    sh.fragmentShader = 'varying vec3 vWp; uniform sampler2D tAO, tRoad; uniform vec4 uAir; uniform float uFar, uLazy, uGCR;\n' + GLSL_COMMON + (NOISE_ON ? NOISE_GLSL + '#define vns vnt\n' : '') + GLSL_TEX + `
+  const XU = { uFar: FAR_U, uLazy: LAZY, tAO: { value: ao }, tRoad: { value: road }, tNoise: { value: NOISE_ON ? noiseTex() : null }, uAir: { value: new THREE.Vector4(AIRPORT.x, AIRPORT.z, AIRPORT.rwyL / 2, AIRPORT.rwyW / 2) } };
+  const G = CITY.GRID.toFixed(1), AV = CITY.AVE_EVERY.toFixed(1), HA = (CITY.AVENUE / 2).toFixed(1), HS = (CITY.STREET / 2).toFixed(1);
+  const RNf = RN.toFixed(1), RSf = RS.toFixed(1), HR = RURAL_HW.toFixed(1);
+  // шум земли - текстурой (noise-tex.js): vns() здесь - 13 вызовов на пиксель по 4 хэша; в остальных шейдерах города vns прежний
+  const HEAD = 'varying vec3 vWp; uniform sampler2D tAO, tRoad; uniform vec4 uAir; uniform float uFar, uLazy, uGCR;\n' + GLSL_COMMON + (NOISE_ON ? NOISE_GLSL + '#define vns vnt\n' : '') + GLSL_TEX + `
 // все выборки атласов - с явными производными (cDx, cDy - до ветвлений): ветвления по весам слоёв не дают швов мипмапов
 #if __VERSION__ >= 300 || defined(GL_EXT_shader_texture_lod)
 #define TXG(t, uv, gx, gy) texture2DGradEXT(t, uv, gx, gy)
@@ -485,9 +483,11 @@ vec4 decal(vec2 q, float li, float CL, float off, float hw, float rural, vec2 gx
   vec2 uv = R.xy + l * R.zw, k = R.zw / sz, dx = gd(gx * k), dy = gd(gy * k); vec4 c = TXG(tDC, uv, dx, dy); dN = TXG(tDN, uv, dx, dy); if (fl) dN.rg = 1.0 - dN.rg; // поле между наклейками ~0,0025 атласа - след не шире, иначе соседка затекает
   return vec4(srgb(c.rgb), c.a);
 }
-` + sh.fragmentShader.replace('#include <shadowmap_pars_fragment>', groundShadowChunk()).replace('#include <map_fragment>', `#include <map_fragment>
-  float urb = diffuseColor.a; diffuseColor.a = 1.0; cDx = dFdx(vWp.xz); cDy = dFdy(vWp.xz); vec3 c3x = dFdx(vWp), c3y = dFdy(vWp);
-  float dist = length(vWp - uCam), px = max(0.05, dist * uPx), fine = 1.0 - smoothstep(0.4, 2.5, px);
+`;
+  // цвет земли (до освещения): bk = false - в материале (пиксель экрана), true - в запекании дальней земли (ground-bake.js: пиксель - тексель уровня, дальше 1,6 км)
+  const DER = 'cDx = dFdx(vWp.xz); cDy = dFdy(vWp.xz); vec3 c3x = dFdx(vWp), c3y = dFdy(vWp);';
+  const BODY = (bk, der = true) => `  float urb = diffuseColor.a; diffuseColor.a = 1.0; ${der ? DER : ''}
+  float dist = ${bk ? '1.0e5' : 'length(vWp - uCam)'}, px = ${bk ? 'max(0.05, max(length(cDx), length(cDy)))' : 'max(0.05, dist * uPx)'}, fine = 1.0 - smoothstep(0.4, 2.5, ${bk ? 'px * 0.5' : 'px'}); // запекание (bk): пиксель - тексель уровня (пятна шума - как у живого шейдера, у которого здесь пиксель - полтекселя)
   vec3 col = diffuseColor.rgb;
   // шум в двух масштабах: пятна покрытия, неровный тон
   float n1 = vns(vWp.xz / 23.0), n2 = vns(vWp.xz / 190.0 + 7.0);
@@ -668,7 +668,29 @@ vec4 decal(vec2 q, float li, float CL, float off, float hw, float rural, vec2 gx
   // затенение у домов
   float ao = texture2D(tAO, (vWp.xz + ${CITY.GH.toFixed(1)}) / ${(2 * CITY.GH).toFixed(1)}).r;
   col *= 1.0 - ${LOOK ? '0.72' : '0.55'} * ao;
-  diffuseColor.rgb = col;`);
+  diffuseColor.rgb = col;`;
+  if (bake) { // запечённая дальняя земля (2026-11-16, Mark: «нужна оптимизация»): дальше 1,6 км цвет от камеры не зависит - одна выборка вместо всего расчёта
+    m.userData.bakeU = { ...ENV, ...TEX, ...GT, ...XU, tZone: { value: tex } }; m.userData.bakeReady = bakeReady;
+    m.userData.bakeFS = 'varying vec2 vUv; uniform sampler2D tZone;\n' + HEAD + `
+void main() {
+  vec4 diffuseColor = texture2D(tZone, vUv); diffuseColor.rgb = mix(pow(diffuseColor.rgb * 0.9478672986 + 0.0521327014, vec3(2.4)), diffuseColor.rgb * 0.0773993808, vec3(lessThanEqual(diffuseColor.rgb, vec3(0.04045))));
+` + BODY(true) + `
+  gl_FragColor = vec4(sqrt(clamp(diffuseColor.rgb, 0.0, 1.0)), 0.0);
+}`;
+  }
+  const GLUE = bake ? '#define TEXG(t, uv, gx, gy) TXG(t, uv, gx, gy)\nvec2 gDx, gDy; float gFp;\n' + bake.GLSL : '';
+  // сэмплеров в программе земли с тенями - ровно 16 (предел видеочипов: Metal, iOS, ANGLE D3D): новая текстура здесь - только вместо другой
+  // (ревью 2026-11-16; запас - слить tAO и tRoad в одну). Производные - до ветвления по запечённому
+  const MAIN = bake ? `  ${DER} gDx = cDx; gDy = cDy; gFp = min(length(cDx), length(cDy));
+  float bkK = bakeK(length(vWp - uCam), vWp.xz); vec3 bkC = bkK > 0.0 ? bakeAt(vWp.xz).rgb : vec3(0.0);
+  if (bkK < 1.0) {
+` + BODY(false, false) + `
+  } else diffuseColor.a = 1.0;
+  if (bkK > 0.0) diffuseColor.rgb = mix(diffuseColor.rgb, bkC, bkK);` : BODY(false);
+  m.onBeforeCompile = (sh) => {
+    Object.assign(sh.uniforms, ENV, TEX, GT, XU, bake ? bake.U : {});
+    sh.vertexShader = 'varying vec3 vWp;\n' + sh.vertexShader.replace('#include <project_vertex>', '#include <project_vertex>\n vWp = (modelMatrix * vec4(transformed, 1.0)).xyz;');
+    sh.fragmentShader = HEAD + GLUE + sh.fragmentShader.replace('#include <shadowmap_pars_fragment>', groundShadowChunk()).replace('#include <map_fragment>', '#include <map_fragment>\n' + MAIN);
   };
   return m;
 }
@@ -1920,8 +1942,11 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
   const zt = HILLS ? null : zoneTexture(P.zoneTex || 1024); if (zt) zt.flipY = false;
   if (renderer && zt) zt.anisotropy = Math.min(P.aniso || 4, renderer.capabilities.getMaxAnisotropy());
   const aniso = renderer ? Math.min(P.aniso || 4, renderer.capabilities.getMaxAnisotropy()) : 1;
-  const bake = HILLS && BAKE_ON && renderer ? createGroundBake(CITY.HALF) : null; // запечённый цвет дальней земли осени и зимы (ground-bake.js; ?gb=0 - без него)
-  const ground = new THREE.Mesh(gg, AUT ? autumnGroundMaterial(city, autumnZoneTex(city, P.zoneTex || 1024), winterNormalTex(city), ENV, autumnTextures(aniso, texStats), W, bake) : WINT ? winterGroundMaterial(city, winterZoneTex(city, P.zoneTex || 1024), winterNormalTex(city), ENV, winterTextures(renderer ? Math.min(P.aniso || 4, renderer.capabilities.getMaxAnisotropy()) : 1, texStats), bake) : groundMaterial(zt, aoTexture(city), roadTexture(city)));
+  // город на ПК («Высокий», «Ультра», «Кастомный» - не на сенсорном): уровни 4096, L0 - 2 м на тексель (окно то же, 8,2 км; L1 - 7,8 м): запечённое начинается
+  // там, где тексель не крупнее двух пикселей, а на большом экране при 4 м это было бы лишь с 4-5 км; на телефоне - 2048 (память)
+  const BK_HI = !HILLS && !TOUCH_GT && P.shadows;
+  const bake = BAKE_ON && renderer ? createGroundBake(CITY.HALF, BK_HI ? { n0: 4096, s0: 2, n1: 4096 } : {}) : null; // запечённый цвет дальней земли (ground-bake.js; ?gb=0 - без него): осень, зима и город
+  const ground = new THREE.Mesh(gg, AUT ? autumnGroundMaterial(city, autumnZoneTex(city, P.zoneTex || 1024), winterNormalTex(city), ENV, autumnTextures(aniso, texStats), W, bake) : WINT ? winterGroundMaterial(city, winterZoneTex(city, P.zoneTex || 1024), winterNormalTex(city), ENV, winterTextures(renderer ? Math.min(P.aniso || 4, renderer.capabilities.getMaxAnisotropy()) : 1, texStats), bake) : groundMaterial(zt, aoTexture(city), roadTexture(city), bake, () => (!P.roofDetail || (TEX.uTexOn.value === 1 && GT.uGOn.value === 1))));
   ground.receiveShadow = !!P.shadows; scene.add(ground); G.ground = ground;
   if (bake) { bake.init(renderer, gg, ground.material, aniso); G.bake = bake; }
   // земля - последней из непрозрачного (2026-10-25): её шейдер - самый дорогой, а под лесом, домами и техникой он теперь не считается -

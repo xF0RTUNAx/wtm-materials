@@ -1,16 +1,19 @@
 // Запечённый цвет дальней земли осени и зимы (2026-10-27: пробная на осени → Mark: «пробная устраивает - делай финальную версию на все карты»).
 // Земля - до половины кадра видеокарты на телефоне: шейдер цвета осени - ~35 выборок текстур и шума на пиксель, зимы - ~30. Дальше ~1,6 км цвет
 // от камеры не зависит (вблизи - трава, листва, снег; вдали - средний цвет), поэтому его можно посчитать один раз в текстуру и брать оттуда одной выборкой.
-// Два уровня (clipmap): L1 - вся карта 32 км, 2048² (15,6 м на тексель), считается раз при загрузке; L0 - окно 8,2 км вокруг камеры, 2048² (4 м),
+// Два уровня (clipmap): L1 - вся карта 32 км, 2048² (15,6 м на тексель), считается раз при загрузке; L0 - окно 8,2 км вокруг камеры, 2048² (4 м; город на ПК - 4096², 2 м, L1 4096²),
 // «тороидальное»: камера ушла на 1 км - пересчитывается только вошедшая полоса (8 плиток 256², по 2 за кадр). Считает тот же код цвета, что у
 // материала земли (autumn-render.js / winter-render.js aGround), по той же сетке рельефа. Хранится √цвет (тёмная земля без полос в 8 битах), в альфе -
 // туман (дымка) низин без множителя расстояния. В шейдере земли: ближе 1,6 км - как было, 1,6-2 км - смесь, дальше - запечённое (L0, у края окна - L1).
-// ?gb=0 - без запекания (сравнение); город (city-render.js groundMaterial) - без него: цвет там зависит от размера пикселя (дороги, разметка).
+// ?gb=0 - без запекания (сравнение). Город (2026-11-16, Mark: «нужна оптимизация»; земля - треть кадра «Ультра»): свой шейдер запекания
+// (city-render.js groundMaterial: userData.bakeFS / bakeU / bakeReady) - тот же расчёт цвета, пиксель - тексель уровня; цвет от размера пикселя (дороги,
+// разметка) вдали уже такой же - запечённое берётся только там, где тексель не крупнее двух пикселей экрана (gFp).
 /* global THREE */
 const QS = typeof location !== 'undefined' ? new URLSearchParams(location.search) : new URLSearchParams();
 export const BAKE_ON = QS.get('gb') !== '0'; // ?gb=0 - без запекания (сравнение)
-const N = 2048, T = 256, NT = N / T; // L0: размер, плитка (текселей), плиток на сторону
+const T = 256; // плитка (текселей)
 export function createGroundBake(H, o = {}) {
+  const N = o.n0 || +QS.get('gbn0') || 2048, NT = N / T, HT = NT / 2; // L0: размер (текселей), плиток на сторону; ?gbn0= - для пробы
   const S0 = o.s0 || +QS.get('gbs') || 4, W0 = N * S0, TW = T * S0; // L0: метров на тексель, окно, плитка (м); ?gbs= - для пробы
   const N1 = o.n1 || +QS.get('gbn1') || 2048, NT1 = N1 / T; // L1 - вся карта (?gbn1=1024 - вдвое грубее, вчетверо меньше памяти)
   const S1 = 2 * H / N1; // L1: метров на тексель
@@ -46,7 +49,8 @@ vec4 bakeAt(vec2 p) {
   // запекалась бы с пустыми текстурами до конца боя)
   const up = (t) => { if (!t) return false; if (!t.isCompressedTexture) return !!(t.image && (t.image.width || t.image.data)); if (t.mipmaps && t.mipmaps.length) return true;
     const p = R.properties && R.properties.get(t); return !!(p && p.__version === t.version); };
-  const texReady = () => Object.values(AT).every((u) => up(u.value));
+  let RDY = null; // своя готовность (город: снимок с высоты и атласы земли пришли)
+  const texReady = () => (RDY ? RDY() : Object.values(AT).every((u) => up(u.value)));
   // мипмапы уровня (у заглушек стендов нет properties / state - без них)
   function mips(rt) { const p = R.properties && R.state && R.properties.get(rt.texture); if (!p || !p.__webglTexture) return; const gl = R.getContext(); R.state.bindTexture(gl.TEXTURE_2D, p.__webglTexture); gl.generateMipmap(gl.TEXTURE_2D); R.state.bindTexture(gl.TEXTURE_2D, null); }
   const md = (a) => ((a % NT) + NT) % NT;
@@ -62,12 +66,12 @@ vec4 bakeAt(vec2 p) {
   const slot = new Array(NT * NT).fill(''), fresh = new Array(NT * NT).fill(false);
   let wInit = false;
   const ok = (gx, gz) => { const s = md(gx) + md(gz) * NT; return fresh[s] && slot[s] === gx + ',' + gz; };
-  // окно L0: камера - в одной из двух средних плиток (до края окна - от 3 км)
+  // окно L0: камера - в одной из двух средних плиток (до края окна - от 3 км при 8 плитках по 1 км; город на ПК - 16 по 512 м, от 3,6 км)
   function follow(c) {
     const tx = Math.floor(c.x / TW), tz = Math.floor(c.z / TW); let nx = wx, nz = wz;
-    if (!wInit) { nx = tx - 3; nz = tz - 3; }
-    if (tx < nx + 3) nx = tx - 3; else if (tx > nx + 4) nx = tx - 4;
-    if (tz < nz + 3) nz = tz - 3; else if (tz > nz + 4) nz = tz - 4;
+    if (!wInit) { nx = tx - HT + 1; nz = tz - HT + 1; }
+    if (tx < nx + HT - 1) nx = tx - HT + 1; else if (tx > nx + HT) nx = tx - HT;
+    if (tz < nz + HT - 1) nz = tz - HT + 1; else if (tz > nz + HT) nz = tz - HT;
     if (wInit && nx === wx && nz === wz) return;
     wInit = true; wx = nx; wz = nz;
     for (let i = q.length - 1; i >= 0; i--) { const t = q[i]; if (!t.l && (t.gx < wx || t.gx >= wx + NT || t.gz < wz || t.gz >= wz + NT)) q.splice(i, 1); } // ушли из окна
@@ -101,7 +105,12 @@ vec4 bakeAt(vec2 p) {
     // renderer, сетка земли и её материал (userData.GU, AT, groundGLSL - autumn-render.js); aniso - фильтр запечённых текстур
     init(renderer, geo, gm, aniso = 4) {
       R = renderer; AT = gm.userData.AT; L = [mk(aniso, N), mk(aniso, N1)]; L[0].texture.wrapS = L[0].texture.wrapT = THREE.RepeatWrapping; // L0 - по кругу (тороидально)
-      mat = new THREE.ShaderMaterial({ uniforms: { ...AT, ...gm.userData.GU, uRect: { value: new THREE.Vector4() } }, depthTest: false, depthWrite: false, side: THREE.DoubleSide,
+      RDY = gm.userData.bakeReady || null;
+      if (gm.userData.bakeFS) mat = new THREE.ShaderMaterial({ uniforms: { ...gm.userData.bakeU, uRect: { value: new THREE.Vector4() } }, depthTest: false, depthWrite: false, side: THREE.DoubleSide,
+        vertexShader: `uniform vec4 uRect; varying vec3 vWp; varying vec2 vUv;
+void main() { vUv = uv; vWp = (modelMatrix * vec4(position, 1.0)).xyz; gl_Position = vec4((vWp.xz - uRect.xy) / uRect.zw * 2.0 - 1.0, 0.0, 1.0); }`,
+        fragmentShader: gm.userData.bakeFS });
+      else mat = new THREE.ShaderMaterial({ uniforms: { ...AT, ...gm.userData.GU, uRect: { value: new THREE.Vector4() } }, depthTest: false, depthWrite: false, side: THREE.DoubleSide,
         vertexShader: `uniform vec4 uRect; varying vec3 vWp;
 void main() { vWp = (modelMatrix * vec4(position, 1.0)).xyz; gl_Position = vec4((vWp.xz - uRect.xy) / uRect.zw * 2.0 - 1.0, 0.0, 1.0); }`,
         fragmentShader: `varying vec3 vWp;
