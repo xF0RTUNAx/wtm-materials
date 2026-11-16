@@ -689,7 +689,7 @@ const simFx = {
     C.fx.wpnTrail(w, wpnNozzle(w, TP));
   },
   wpnEnd(w, res) { const g = wpnMeshes.get(w.id); if (g) { scene.remove(g); wpnMeshes.delete(w.id); } if (C.hooks.wpnEnd) C.hooks.wpnEnd(w, res); },
-  explosion(p, R, kind) { C.fx.explosion(p, R, kind); C.fx.crater(p, R, kind, city.groundH(p.x, p.z), city.bldAt(p.x, p.z)); if (kind === 'air') snd.samBurst(dist(p), R / 12); else snd.explosion(dist(p), R / (kind === 'tbm' ? 13 : R >= 45 ? 16 : 20), kind); }, // в воздухе - подрыв ЗУР / перехват
+  explosion(p, R, kind) { if (kind !== 'air' && C.G && C.G.kitHit) C.G.kitHit(p, R); /* свои дома: разрушение от попадания и близкого разрыва */ C.fx.explosion(p, R, kind); C.fx.crater(p, R, kind, city.groundH(p.x, p.z), city.bldAt(p.x, p.z)); if (kind === 'air') snd.samBurst(dist(p), R / 12); else snd.explosion(dist(p), R / (kind === 'tbm' ? 13 : R >= 45 ? 16 : 20), kind); }, // в воздухе - подрыв ЗУР / перехват
   gunFire(u, t, hits, dt) {
     C.fx.gunFire(u.pos, t.pos, hits, dt);
     if (snd.gunLoop(u.id, dist(u.pos), u.key)) return; // многоствольные - записанная очередь
