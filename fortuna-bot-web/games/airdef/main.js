@@ -1469,4 +1469,4 @@ setInterval(() => {
   else C.doors.release(); // створки с прошлой страницы (выход в меню после потери контекста) - открыть; онлайн их откроет сам - вход в бой или лобби
   setTimeout(() => C.crash.offer(), 2000); // окно «Игра закрылась с ошибкой» - когда меню уже на экране
 })();
-if (Q.get('test') === '1') { window.__a = C; window.__frame = frame; C.ctrls = ctrls; C.resize = resize; C.lessons = LESSONS; } // проверка: доступ к игре и шаг кадра вручную (страница в фоне)
+if (Q.get('test') === '1') { window.__a = C; window.__frame = frame; C.ctrls = ctrls; C.resize = resize; C.lessons = LESSONS; Object.defineProperty(C, 'pipe', { get: () => pipe }); } // проверка: доступ к игре и шаг кадра вручную (страница в фоне)

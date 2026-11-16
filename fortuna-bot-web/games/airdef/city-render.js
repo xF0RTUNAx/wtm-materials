@@ -59,6 +59,7 @@ function phPlace(B, i, v) {
   return { base, M: 'ph_' + base, L, D, H, yaw, dir, ox: x + dir[0] * D / 2, oz: z + dir[1] * D / 2, alongX: !toX };
 }
 const KIT_ON = typeof location === 'undefined' || !/[?&]kit=0/.test(location.search); // свои дома модулями вместо вида 2 (девятиэтажки bld_p9); ?kit=0 - прежняя модель
+const KVAR = typeof location !== 'undefined' && /[?&]kvar=1/.test(location.search); // ?kvar=1 - варианты этажей одним набором (kitVarMat): вызовов меньше, но вершин вчетверо - по замеру кадр дольше (2026-11-16), по умолчанию выкл.
 let TILE = 3000; // (buildCityScene: на сенсорных и без теней - 6 км: вызовов вдвое меньше, «Средний» на телефоне −11…14 % кадра; на ПК с тенями 6 км не быстрее - больше экземпляров в проходе теней) плитка инстансов: 3 км - на 20 % меньше вызовов отрисовки, чем 2 км, при почти тех же треугольниках
 const ROOFX = 6, ROOF = 7; // виды только для отрисовки: надстройки на крышах и скатные крыши домов
 
@@ -1449,7 +1450,7 @@ function yardLayer(scene, YL, sh) {
 }
 function nearHouses(G, scene, B, near, P, sh) {
   KB.length = 0; OFFB = new Uint8Array(0); OFFH = new Uint8Array(0); KITGS.clear(); // свои дома: данные прошлой сборки города - не тащить
-  const R = P.bldNear || 0, sets = new Map(), mtx = new THREE.Matrix4(), q = new THREE.Quaternion(), Y = new THREE.Vector3(0, 1, 0), p = new THREE.Vector3(), s = new THREE.Vector3();
+  const R = P.bldNear || 0, sets = (G.sets = new Map()), mtx = new THREE.Matrix4(), q = new THREE.Quaternion(), Y = new THREE.Vector3(0, 1, 0), p = new THREE.Vector3(), s = new THREE.Vector3();
   ENV.uMdl.value.fill(0); // город пересобран - коробки снова видны, пока не придут модели
   if (!R) return;
   // набор моделей вблизи: slot - номер в uMdl (коробки / процедурные деревья с этим aMdl прячутся в радиусе), 0 - прятать нечего
@@ -1501,9 +1502,15 @@ function nearHouses(G, scene, B, near, P, sh) {
   // модуль набора пришёл: один меш (часть модели по имени), без упрощения и импостора - у набора свои *_lod1 (кольцо rIn…R)
   const kitAttach = (S, key, group) => {
     if (KITGS.get(S.name) !== group) { KITGS.set(S.name, group); group.traverse((q) => { if (q.isMesh && !q.material.userData.kitM) { q.material.userData.kitM = 1; q.material.specular.setHex(0x0c0c0c); q.material.shininess = 10; if (G.winter) snowify(q.material); } }); if (dmgB.size || dmgH.size) kitDirty = true; } // все модули серии: матовые, зимой со снегом; задетые до прихода модели - дорисовать
-    const cs = S.part.split('+').map((n) => group.getObjectByName(n)); if (cs.some((c) => !c || !c.isMesh)) return;
-    const c = cs.length > 1 ? { geometry: kitMerge(cs.map((q) => q.geometry)), material: cs[0].material } : cs[0];
-    const m = new THREE.InstancedMesh(c.geometry, c.material, S.n); m.instanceMatrix = S.im; m.count = 0; m.frustumCulled = false; m.userData.set = key;
+    let c;
+    if (S.part.startsWith('V:')) { // варианты этажа одним набором: номер варианта экземпляра - в ячейке [0][3] матрицы (kitVarMat), чужие варианты - в точку
+      const gs = []; for (let v = 0; v < 4; v++) { const cv = S.part.slice(2).replace(/#/g, v).split('+').map((n) => group.getObjectByName(n)); if (cv.some((q) => !q || !q.isMesh)) { console.warn('свои дома: нет варианта', v, S.part); return; } const g = kitMerge(cv.map((q) => q.geometry)); g.setAttribute('aVar', new THREE.BufferAttribute(new Float32Array(g.attributes.position.count).fill(v), 1)); gs.push(g); }
+      const m0 = group.getObjectByName(S.part.slice(2).replace(/#/g, 0).split('+')[0]).material; c = { geometry: kitMerge(gs), material: kitVarMat(m0), varM: true };
+    } else {
+      const cs = S.part.split('+').map((n) => group.getObjectByName(n)); if (cs.some((q) => !q || !q.isMesh)) return;
+      c = cs.length > 1 ? { geometry: kitMerge(cs.map((q) => q.geometry)), material: cs[0].material } : cs[0];
+    }
+    const m = new THREE.InstancedMesh(c.geometry, c.material, S.n); if (c.varM) m.customDepthMaterial = c.material.userData.depthM; m.instanceMatrix = S.im; m.count = 0; m.frustumCulled = false; m.userData.set = key;
     m.castShadow = !!sh.cast && !S.rIn; m.receiveShadow = !!sh.receive; scene.add(m); S.meshes.push(m); // упрощённые (кольцо дали) - без тени: за коробкой теней
     if (!c.geometry.boundingSphere) c.geometry.computeBoundingSphere();
     const bs = c.geometry.boundingSphere, r0 = bs.center.length() + bs.radius;
@@ -1513,6 +1520,18 @@ function nearHouses(G, scene, B, near, P, sh) {
     if (S.kit && !G.kitOn.has(S.kit) && serAll) { // первый модуль вида пришёл - его коробки прячутся до внешнего радиуса; цвет коробок дали - по атласу серии
       const kr = S.kitR || G.kitRf; G.kitOn.set(S.kit, kr); ENV.uMdl.value[S.kit] = kr * (G.kitK || 1); const mc = modelColor(group); if (mc) ENV.uMdlCol.value[S.kit].set(mc.r, mc.g, mc.b, 1); }
     lx = 1e9;
+  };
+  // материал набора вариантов: клон материала модели; номер варианта экземпляра - instanceMatrix[0][3] (в аффинной матрице там 0): вершины чужих
+  // вариантов (aVar ≠ номер) - в точку (треугольники нулевые, не рисуются), ячейка обнуляется перед умножением. Тени - тот же отбор (customDepthMaterial)
+  const KVAR_GLSL = (src) => src.replace('#include <common>', '#include <common>\nattribute float aVar;')
+    .replace('#include <begin_vertex>', '#include <begin_vertex>\n  #ifdef USE_INSTANCING\n  if (abs(aVar - instanceMatrix[0][3]) > 0.5) transformed = vec3(0.0);\n  mat4 kIM = instanceMatrix; kIM[0][3] = 0.0;\n  #endif')
+    .replace('#include <project_vertex>', THREE.ShaderChunk.project_vertex.replace('instanceMatrix * mvPosition', 'kIM * mvPosition'))
+    .replace('#include <worldpos_vertex>', THREE.ShaderChunk.worldpos_vertex.replace('instanceMatrix * worldPosition', 'kIM * worldPosition'));
+  const kitVarMat = (m0) => {
+    if (m0.userData.varMat) return m0.userData.varMat;
+    const m = m0.clone(), prev = m0.onBeforeCompile, pk = m0.customProgramCacheKey(); m.onBeforeCompile = (sh, r) => { if (prev) prev.call(m, sh, r); sh.vertexShader = KVAR_GLSL(sh.vertexShader); }; m.customProgramCacheKey = () => pk + 'kitvar'; // поверх своих подмен модели (снег и т. п.)
+    const d = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking }); d.onBeforeCompile = (sh) => { sh.vertexShader = KVAR_GLSL(sh.vertexShader); }; d.customProgramCacheKey = () => 'kitvard';
+    m.userData.depthM = d; m0.userData.varMat = m; return m;
   };
   const kitMerge = (gs) => {
     const g = new THREE.BufferGeometry(), names = Object.keys(gs[0].attributes).filter((a) => gs.every((q) => q.attributes[a]));
@@ -1551,8 +1570,10 @@ function nearHouses(G, scene, B, near, P, sh) {
         for (let sI = 0; sI < N; sI++) {
           const xs = -N * SEC / 2 + SEC / 2 + sI * SEC;
           for (let f = 0; f < F; f++) {
-            const v = lod ? 0 : (sI * 3 + f * 5 + i) % 4, y = f === 0 ? 0 : 1.0 + f * FL, kind = f === 0 ? 'sec_ground' : f === F - 1 ? 'sec_top' + v : 'sec_floor' + v;
-            put(M, FY(kind + '_#' + st) + tag, c, at(xs, y, 0));
+            const v = lod ? 0 : (sI * 3 + f * 5 + i) % 4, y = f === 0 ? 0 : 1.0 + f * FL;
+            if (f === 0) put(M, FY('sec_ground_#' + st) + tag, c, at(xs, y, 0));
+            else if (lod || !KVAR) put(M, FY((f === F - 1 ? 'sec_top' : 'sec_floor') + v + '_#' + st) + tag, c, at(xs, y, 0)); // ?kvar=0 - варианты отдельными наборами (как раньше)
+            else { const kind = f === F - 1 ? 'sec_top' : 'sec_floor', m = at(xs, y, 0); m.elements[3] = v; put(M, 'V:' + kind + '#_F' + st + '+' + kind + '#_Y' + st + tag, c, m); } // варианты - одним набором (kitVarMat)
           }
           for (const [nm, x, z, r] of kitRoof(ser, hip, N, sI, lod)) put(M, nm + tag, c, r ? mm.copy(mb).multiply(mt.makeTranslation(x, 1.0 + F * FL, z)).multiply(rot) : at(x, 1.0 + F * FL, z));
         }
