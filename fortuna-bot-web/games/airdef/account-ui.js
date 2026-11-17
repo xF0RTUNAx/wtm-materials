@@ -4,10 +4,10 @@
 // новичку аккаунт сайта в игре не нужен (только аккаунт игры), «старому» игроку с прогрессом он работает до переноса, но без рейтинга.
 // В комнате и в бою аккаунт сменить нельзя; вне их смена закрывает соединение онлайна (net.js accChanged).
 import { ico } from './icons.js?v=20261117d';
-import { tr, trIf, LANG } from './i18n.js?v=20261117d';
+import { tr, trIf, L10N } from './i18n.js?v=20261117d';
 import { avaSrc, ownAva } from './avatar.js?v=20261117d';
 import { gameAcc, siteAcc, setGameAcc, clearGameAcc, logoutGame, ensureSession, reloginNeeded, accountApi, siteStatus, siteStatusDone, transferOk, siteNewbie, legacySite, onAccChange } from './account.js?v=20261117d';
-const CONFIRM_WORD = LANG === 'en' ? 'CONFIRM' : 'ПОДТВЕРДИТЬ'; // удаление аккаунта - набрать это слово (Mark 2026-11-17)
+const CONFIRM_WORD = L10N.confirm; // удаление аккаунта - набрать это слово (Mark 2026-11-17)
 
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const LOGIN_RE = /^[a-zA-Z0-9_]{3,24}$/, NICK_RE = /^[\p{L}\p{N}_\- ]{3,16}$/u;

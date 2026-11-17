@@ -1,0 +1,1414 @@
+[
+ [
+  "Волну собирает {0}: дроны, крылатые ракеты, баллистика. Что и по каким объектам, неизвестно. Пушки и ПЗРК ставьте у объектов, противоракетные - у самых ценных.",
+  "{0} is building the wave: drones, cruise and ballistic missiles; targets unknown. Put guns and MANPADS near facilities, anti-missile systems by the most valuable."
+ ],
+ [
+  "{0} · {1} км{2}",
+  "{0} · {1} km{2}"
+ ],
+ [
+  " · сбивает баллистику",
+  " · anti-ballistic"
+ ],
+ [
+  "Раунд {0}/{1} · оборона",
+  "Round {0}/{1} · defense"
+ ],
+ [
+  "Разрушено: <b>{0}%</b> ценности объектов",
+  "Destroyed: <b>{0}%</b> of target value"
+ ],
+ [
+  "Коснитесь своего комплекса: «Управлять» - сесть оператором, «Цели» - по каким видам стрелять (дальним - только баллистика, чтобы беречь ракеты). Остальными стреляют расчёты.",
+  "Tap one of your sites: \"Operate\" to take the console, \"Targets\" to choose what it fires at (long-range ones: ballistic only, to save missiles). Crews man the rest."
+ ],
+ [
+  "Нужна помощь - метка союзникам",
+  "Need help: mark for allies"
+ ],
+ [
+  "Раунд {0} - итоги",
+  "Round {0} results"
+ ],
+ [
+  "{0} в атаке: разрушено <b>{1}%</b> ценности",
+  "{0} attack: <b>{1}%</b> of value destroyed"
+ ],
+ [
+  "Восток",
+  "East"
+ ],
+ [
+  "Запад",
+  "West"
+ ],
+ [
+  "Следующий раунд - стороны меняются: кто атаковал, теперь обороняется.",
+  "Next round: sides swap, attackers now defend."
+ ],
+ [
+  "Сообщение команде",
+  "Message your team"
+ ],
+ [
+  "Игрок заглушён - его сообщений больше не видно",
+  "Player muted: their messages are hidden"
+ ],
+ [
+  "Чат команды - договоритесь, кто что бьёт или прикрывает. Касание имени - заглушить.",
+  "Team chat: agree who strikes or covers what. Tap a name to mute."
+ ],
+ [
+  "Заказано: {0} ×{1}",
+  "Ordered: {0} ×{1}"
+ ],
+ [
+  "· <b>{0} с</b>",
+  "· <b>{0} s</b>"
+ ],
+ [
+  "Раунд {0}/{1}",
+  "Round {0}/{1}"
+ ],
+ [
+  "{0} · {1}{2} · очки <b>{3}</b>",
+  "{0} · {1}{2} · points <b>{3}</b>"
+ ],
+ [
+  "план волны",
+  "wave plan"
+ ],
+ [
+  "расстановка ПВО",
+  "AD deployment"
+ ],
+ [
+  "{0}{1} · {2} · разрушено <b>{3}%</b>{4}",
+  "{0}{1} · {2} · destroyed <b>{3}%</b>{4}"
+ ],
+ [
+  "ваша волна",
+  "your wave"
+ ],
+ [
+  "оборона",
+  "defense"
+ ],
+ [
+  "· <b>время ×3</b>",
+  "· <b>time ×3</b>"
+ ],
+ [
+  "{0} · итоги",
+  "{0} · results"
+ ],
+ [
+  "Расстановка · волна {0}/{1}{2} · очки <b>{3}</b>",
+  "Deployment · wave {0}/{1}{2} · points <b>{3}</b>"
+ ],
+ [
+  "Волна <b>{0}/{1}</b>{2} · объекты целы <b>{3}%</b>",
+  "Wave <b>{0}/{1}</b>{2} · facilities intact <b>{3}%</b>"
+ ],
+ [
+  "План волны · очки угрозы <b>{0}</b>",
+  "Wave plan · threat points <b>{0}</b>"
+ ],
+ [
+  "{0}Волна · цели разрушены <b>{1}%</b>{2}",
+  "{0}Wave · targets destroyed <b>{1}%</b>{2}"
+ ],
+ [
+  " · время ×{0}",
+  " · time ×{0}"
+ ],
+ [
+  "{0}Мульти-волна · сбито <b>{1}</b> · цели целы <b>{2}%</b>{3}",
+  "{0}Multi-Wave · shot down <b>{1}</b> · targets intact <b>{2}%</b>{3}"
+ ],
+ [
+  "Расстановка · очки обороны <b>{0}</b>",
+  "Deployment · defense points <b>{0}</b>"
+ ],
+ [
+  "≈ КР - вот-вот",
+  "≈ cruise any moment"
+ ],
+ [
+  "≈ КР через {0}",
+  "≈ cruise in {0}"
+ ],
+ [
+  "КР <b>≈ вот-вот</b>",
+  "cruise <b>≈ any moment</b>"
+ ],
+ [
+  "КР <b>≈ через {0}</b>",
+  "cruise <b>≈ in {0}</b>"
+ ],
+ [
+  "волна",
+  "wave"
+ ],
+ [
+  "объекты",
+  "facilities"
+ ],
+ [
+  "очки",
+  "points"
+ ],
+ [
+  "{0} <b>≈ через {1}</b>",
+  "{0} <b>≈ in {1}</b>"
+ ],
+ [
+  "{0} <b>≈ вот-вот</b>",
+  "{0} <b>≈ any moment</b>"
+ ],
+ [
+  "≈ {0} дрон",
+  "≈ {0} drone"
+ ],
+ [
+  "≈ {0} дрона",
+  "≈ {0} drones"
+ ],
+ [
+  "≈ {0} дронов",
+  "≈ {0} drones"
+ ],
+ [
+  "≈ {0} через {1}",
+  "≈ {0} in {1}"
+ ],
+ [
+  "≈ {0} - вот-вот",
+  "≈ {0} any moment"
+ ],
+ [
+  "КР и Б",
+  "cruise & ballistic"
+ ],
+ [
+  "Б",
+  "ballistic"
+ ],
+ [
+  "20-60 с",
+  "20-60 s"
+ ],
+ [
+  "1-2 мин",
+  "1-2 min"
+ ],
+ [
+  "2-3 мин",
+  "2-3 min"
+ ],
+ [
+  "3-5 мин",
+  "3-5 min"
+ ],
+ [
+  "Волна <b>{0}/{1}</b> · сбито <b>{2}</b> · объекты целы <b>{3}%</b> · очки {4}",
+  "Wave <b>{0}/{1}</b> · shot down <b>{2}</b> · facilities intact <b>{3}%</b> · points {4}"
+ ],
+ [
+  "Карта: тянуть - сдвиг, щипок - масштаб, касание - выбор. Оператор: тянуть - поворот, касание отметки или ИКО - назначить цель. «Кам.» - вид снаружи (тянуть - облёт).",
+  "Map: drag to pan, pinch to zoom, tap to select. Operator: drag to turn, tap a mark or the scope to assign a target. \"Cam.\": external view (drag to orbit)."
+ ],
+ [
+  "Карта: тянуть - сдвиг, колесо - масштаб, щелчок - выбор и постановка, Пробел - начать волну.<br>Оператор: тянуть мышью или стрелки/WASD - поворот, колесо или Z - увеличение, щелчок по отметке - цель, Tab - следующая цель,<br>Пробел/F - пуск (у пушек - держать), E - РЛС, M - метод, V - камера (оператор / снаружи), Q - на карту, Esc - пауза.",
+  "Map: drag to pan, wheel to zoom, click to select and place, Space to start the wave.<br>Operator: drag the mouse or arrows/WASD to turn, wheel or Z to zoom, click a mark to target, Tab: next target,<br>Space/F: fire (guns: hold), E: radar, M: method, V: camera (operator / external), Q: back to map, Esc: pause."
+ ],
+ [
+  "Авиация",
+  "Aircraft"
+ ],
+ [
+  "Любая",
+  "Any"
+ ],
+ [
+  "Случайно",
+  "Random"
+ ],
+ [
+  "Онлайн",
+  "Online"
+ ],
+ [
+  "Онлайн - только с аккаунтом игры. Войдите или создайте его.",
+  "Online needs a game account. Sign in or create one."
+ ],
+ [
+  "Создайте аккаунт игры - онлайн только с ним.",
+  "Create a game account: online is only available with one."
+ ],
+ [
+  "Создайте аккаунт игры - бой не засчитан",
+  "Create a game account: this battle was not counted"
+ ],
+ [
+  "Сервер онлайна сейчас недоступен. Попробуйте позже.",
+  "The online server is unavailable right now. Try again later."
+ ],
+ [
+  "Подключаемся к серверу…",
+  "Connecting to the server…"
+ ],
+ [
+  "Повторить",
+  "Retry"
+ ],
+ [
+  "Поиск боя",
+  "Matchmaking"
+ ],
+ [
+  "Отменить",
+  "Cancel"
+ ],
+ [
+  "Загрузка…",
+  "Loading…"
+ ],
+ [
+  "Загружаем карту",
+  "Loading the map"
+ ],
+ [
+  "ОНЛАЙН",
+  "ONLINE"
+ ],
+ [
+  "поиск соперников",
+  "finding opponents"
+ ],
+ [
+  "Ждём соперников",
+  "Waiting for opponents"
+ ],
+ [
+  "Соперники найдены - старт через <b>{0}</b> с",
+  "Opponents found: starting in <b>{0}</b> s"
+ ],
+ [
+  "Игра",
+  "Game"
+ ],
+ [
+  "Быстрый бой",
+  "Quick match"
+ ],
+ [
+  "Режим",
+  "Mode"
+ ],
+ [
+  "Роль",
+  "Role"
+ ],
+ [
+  "Команда против команды, два раунда. В одном ваша команда собирает волну (дроны, крылатые, баллистика), в другом ставит ПВО против волны соперника. Побеждает тот, чья волна разрушила больше. Подготовка - {0} с, в это время работает чат команды.{1}",
+  "Team vs team, two rounds. In one, your team builds a wave (drones, cruise and ballistic missiles); in the other, it sets up air defense against the enemy wave. The team whose wave destroys more wins. Prep: {0} s, with team chat.{1}"
+ ],
+ [
+  " Сейчас ищут: аркада {0}, реализм {1}.",
+  " In queue: Arcade {0}, Realistic {1}."
+ ],
+ [
+  "Авиация против ПВО города, три волны. Ждём минимум 2 на 2, затем ещё 15 с, вдруг подтянутся другие. Если людей долго нет, добавим ботов.{0}",
+  "Aircraft vs city air defense, three waves. We wait for at least 2v2, then 15 s more in case others join. If no one shows up for a while, bots fill in.{0}"
+ ],
+ [
+  "Своя комната",
+  "Private room"
+ ],
+ [
+  "· на рейтинг",
+  "· ranked"
+ ],
+ [
+  "Бинокль: цель и своё оружие (B)",
+  "Binoculars: target and your weapon (B)"
+ ],
+ [
+  "Бинокль: нет цели и оружия в полёте",
+  "Binoculars: no target and no weapon in flight"
+ ],
+ [
+  "Бинокль: целей больше нет",
+  "Binoculars: no targets left"
+ ],
+ [
+  "Пуск ракеты по вам - бинокль выключен",
+  "Missile launched at you - binoculars off"
+ ],
+ [
+  "Заход {0}, {1}",
+  "Ingress {0}, {1}"
+ ],
+ [
+  "с юга",
+  "from the south"
+ ],
+ [
+  "с юго-востока",
+  "from the southeast"
+ ],
+ [
+  "с востока",
+  "from the east"
+ ],
+ [
+  "с северо-востока",
+  "from the northeast"
+ ],
+ [
+  "с севера",
+  "from the north"
+ ],
+ [
+  "с северо-запада",
+  "from the northwest"
+ ],
+ [
+  "с запада",
+  "from the west"
+ ],
+ [
+  "с юго-запада",
+  "from the southwest"
+ ],
+ [
+  "низко",
+  "low"
+ ],
+ [
+  "на средней высоте",
+  "at medium altitude"
+ ],
+ [
+  "высоко",
+  "high"
+ ],
+ [
+  "Ракета летит в вас - бинокль недоступен",
+  "A missile is coming at you - binoculars unavailable"
+ ],
+ [
+  "{0} - {1} из {2}",
+  "{0} - {1} of {2}"
+ ],
+ [
+  "км",
+  "km"
+ ],
+ [
+  "<b>Бинокль</b> · {0}",
+  "<b>Binoculars</b> · {0}"
+ ],
+ [
+  " · <b class=\"okd\">задача выполнена</b> <span class=\"dim\">- выход за границу района, {0} км</span>",
+  " · <b class=\"okd\">mission complete</b> <span class=\"dim\">- exit past the area border, {0} km</span>"
+ ],
+ [
+  "· без рейтинга",
+  "· unranked"
+ ],
+ [
+  "Формат",
+  "Format"
+ ],
+ [
+  "Пустые места",
+  "Empty slots"
+ ],
+ [
+  "Боты",
+  "Bots"
+ ],
+ [
+  "Без ботов",
+  "No bots"
+ ],
+ [
+  "Создать комнату",
+  "Create room"
+ ],
+ [
+  "Войти по коду",
+  "Join by code"
+ ],
+ [
+  "Код",
+  "Code"
+ ],
+ [
+  "бот",
+  "bot"
+ ],
+ [
+  "Перейти сюда",
+  "Move here"
+ ],
+ [
+  "+ бот",
+  "+ bot"
+ ],
+ [
+  "Комната <b class=\"adcode\">{0}</b>",
+  "Room <b class=\"adcode\">{0}</b>"
+ ],
+ [
+  "Пригласить",
+  "Invite"
+ ],
+ [
+  "{0}{1}{2} · {3}×{4} · ранг {5}{6}{7}",
+  "{0}{1}{2} · {3}×{4} · rank {5}{6}{7}"
+ ],
+ [
+  "Мульти-волна · два раунда со сменой сторон",
+  "Multi-Wave · two rounds, sides swap"
+ ],
+ [
+  "Мульти-волна · два раунда со сменой сторон · {0} · {1}×{2}{3}",
+  "Multi-Wave · two rounds, sides swap · {0} · {1}×{2}{3}"
+ ],
+ [
+  " · авиация - {0}",
+  " · aircraft: {0}"
+ ],
+ [
+  "восток",
+  "East"
+ ],
+ [
+  "запад",
+  "West"
+ ],
+ [
+  " · пустые места - боты",
+  " · empty slots: bots"
+ ],
+ [
+  "<b>Бой окончен, вы снова в комнате.</b> Хост может сменить игру, режим, формат, ранг и сторону; затем все нажимают «Готов».",
+  "<b>Battle over, you're back in the room.</b> The host can change the game, mode, format, rank and side; then everyone presses \"Ready\"."
+ ],
+ [
+  "Бой начнётся, когда все нажмут «Готов».",
+  "The battle starts when everyone presses \"Ready\"."
+ ],
+ [
+  "Отменить поиск",
+  "Cancel search"
+ ],
+ [
+  "Найти бой",
+  "Find match"
+ ],
+ [
+  "Бой «Air Superiority Online»: комната {0}",
+  "Air Superiority Online battle: room {0}"
+ ],
+ [
+  "Ссылка скопирована",
+  "Link copied"
+ ],
+ [
+  "Код комнаты: {0}",
+  "Room code: {0}"
+ ],
+ [
+  "{0}{1}{2} · ищем {3}:{4}{5}",
+  "{0}{1}{2} · searching {3}:{4}{5}"
+ ],
+ [
+  "Мульти-волна · ",
+  "Multi-Wave · "
+ ],
+ [
+  " · роль: {0}",
+  " · role: {0}"
+ ],
+ [
+  " · набралось 2 на 2 - старт через {0} с",
+  " · 2v2 ready, starting in {0} s"
+ ],
+ [
+  "Волна {0}/{1} · выбор связки · {2} с",
+  "Wave {0}/{1} · pick a loadout · {2} s"
+ ],
+ [
+  "Очки: <b style=\"color:#fde68a\">{0}</b> · вылетов на волну: {1}{2}",
+  "Points: <b style=\"color:#fde68a\">{0}</b> · sorties per wave: {1}{2}"
+ ],
+ [
+  " (+1: команда отстаёт)",
+  " (+1: your team is behind)"
+ ],
+ [
+  "Охотников за ПВО в команде: {0}/{1} · после {2} с каждая уничтоженная РЛС замедляет перезарядку ПВО{3}",
+  "SEAD hunters on the team: {0}/{1} · after {2} s, each radar destroyed slows AD reloads{3}"
+ ],
+ [
+  " · вы ведёте - связки на 10 % дороже",
+  " · you're ahead: loadouts cost 10% more"
+ ],
+ [
+  "выбирает…",
+  "choosing…"
+ ],
+ [
+  "Связки",
+  "Loadouts"
+ ],
+ [
+  " · контейнер",
+  " · pod"
+ ],
+ [
+  "целей: {0} - по силе подвески",
+  "targets: {0}, by loadout strength"
+ ],
+ [
+  "· <b class=\"warnc\">лимит охотников</b>",
+  "· <b class=\"warnc\">hunter limit</b>"
+ ],
+ [
+  "Загружаем карту комнаты…",
+  "Loading map…"
+ ],
+ [
+  "Волна {0}!",
+  "Wave {0}!"
+ ],
+ [
+  "{0}: Мне нужна помощь!",
+  "{0}: I need help!"
+ ],
+ [
+  "Просить помощи снова можно через {0} с",
+  "You can ask for help again in {0} s"
+ ],
+ [
+  "Союзникам: «Нужна помощь!» - знак на их карте",
+  "Tell allies \"Need help!\" with a marker on their map"
+ ],
+ [
+  "подготовка",
+  "prep"
+ ],
+ [
+  "расстановка",
+  "deployment"
+ ],
+ [
+  "бой",
+  "battle"
+ ],
+ [
+  "итоги",
+  "results"
+ ],
+ [
+  "итоги боя",
+  "battle results"
+ ],
+ [
+  "<b>Комната {0}</b> · {1} · {2}{3}",
+  "<b>Room {0}</b> · {1} · {2}{3}"
+ ],
+ [
+  "Закрыть",
+  "Close"
+ ],
+ [
+  " · волна",
+  " · wave"
+ ],
+ [
+  " · ПВО",
+  " · AD"
+ ],
+ [
+  "нет связи",
+  "offline"
+ ],
+ [
+  "{0}{1} · {2} оч.{3}",
+  "{0}{1} · {2} pts{3}"
+ ],
+ [
+  "вылетов {0} · ",
+  "sorties {0} · "
+ ],
+ [
+  "{0} в сети · {1} нет связи · {2} бот{3} · число - сбито / уничтожено",
+  "{0} online · {1} offline · {2} bot{3} · number: shot down / destroyed"
+ ],
+ [
+  "готов",
+  "ready"
+ ],
+ [
+  "Раунд {0}: {1} разрушил {2}% ценности объектов{3}",
+  "Round {0}: {1} destroyed {2}% of target value{3}"
+ ],
+ [
+  " · стороны меняются",
+  " · sides swap"
+ ],
+ [
+  "РЛС уничтожено: {0} · сбито охотников за ПВО: {1}, ударников: {2}",
+  "Radars destroyed: {0} · SEAD hunters shot down: {1}, strikers: {2}"
+ ],
+ [
+  "Авиация уничтожила цели",
+  "Aircraft destroyed the targets"
+ ],
+ [
+  "Последняя волна отбита",
+  "Final wave repelled"
+ ],
+ [
+  "Волна {0} окончена · уничтожено {1}% ценности целей · {2}{3}",
+  "Wave {0} over · {1}% of target value destroyed · {2}{3}"
+ ],
+ [
+  " · ведёт {0}",
+  " · led by {0}"
+ ],
+ [
+  "авиация",
+  "aircraft"
+ ],
+ [
+  "В комнату",
+  "Back to room"
+ ],
+ [
+  "Победа",
+  "Victory"
+ ],
+ [
+  "Поражение",
+  "Defeat"
+ ],
+ [
+  "Ничья",
+  "Draw"
+ ],
+ [
+  "Волна Востока разрушила {0}%, Запада - {1}% ценности объектов",
+  "East's wave destroyed {0}% of target value, West's {1}%"
+ ],
+ [
+  "{0}{1} - {2}: {3} перехв./уничт., {4} очков",
+  "{0}{1} - {2}: {3} intercepted/destroyed, {4} points"
+ ],
+ [
+  "Авиация уничтожила {0}% ценности целей",
+  "Aircraft destroyed {0}% of target value"
+ ],
+ [
+  "ПВО отстояла город: уничтожено {0}% ценности целей",
+  "Air defense held the city: {0}% of target value destroyed"
+ ],
+ [
+  "комплексов уничтожено",
+  "sites destroyed"
+ ],
+ [
+  "победила",
+  "won"
+ ],
+ [
+  "{0}{1} - {2}: {3}/{4}, {5} очков",
+  "{0}{1} - {2}: {3}/{4}, {5} points"
+ ],
+ [
+  "Связь потеряна",
+  "Connection lost"
+ ],
+ [
+  "Не удалось вернуться в бой: комната закрыта или сервер недоступен",
+  "Couldn't return to the battle: the room is closed or the server is unavailable"
+ ],
+ [
+  "Переподключаемся{0}… {1} с<br>",
+  "Reconnecting{0}… {1} s<br>"
+ ],
+ [
+  " · попытка {0}",
+  " · attempt {0}"
+ ],
+ [
+  "Ваше место в команде сохранено{0}.",
+  "Your team slot is saved{0}."
+ ],
+ [
+  ", бой продолжается (самолёт пока ведёт ИИ)",
+  ", the battle goes on (the AI is flying your aircraft for now)"
+ ],
+ [
+  "Выйти в меню",
+  "Exit to menu"
+ ],
+ [
+  "Возвращаемся в комнату {0}",
+  "Returning to room {0}"
+ ],
+ [
+  "Ждём остальных игроков{0}…<br>",
+  "Waiting for the other players{0}…<br>"
+ ],
+ [
+  ", не дольше {0} с",
+  ", no longer than {0} s"
+ ],
+ [
+  "Людей в комнате: {0}",
+  "Players in the room: {0}"
+ ],
+ [
+  "Выйти из комнаты",
+  "Leave room"
+ ],
+ [
+  "Покинуть бой?",
+  "Leave the battle?"
+ ],
+ [
+  "Покинуть комнату?",
+  "Leave the room?"
+ ],
+ [
+  "Вы действительно хотите покинуть бой и текущую комнату? Ваш самолёт или комплексы дальше поведёт ИИ.",
+  "Are you sure you want to leave the battle and the room? The AI will take over your aircraft or sites."
+ ],
+ [
+  "Вы действительно хотите покинуть текущую комнату? Вернуться можно будет только по коду.",
+  "Are you sure you want to leave the room? You can only rejoin with the code."
+ ],
+ [
+  "Покинуть",
+  "Leave"
+ ],
+ [
+  "Остаться",
+  "Stay"
+ ],
+ [
+  "{0}: нужна помощь - {1}: карта",
+  "{0} needs help ({1}: map)"
+ ],
+ [
+  "+{0} деталей",
+  "+{0} parts"
+ ],
+ [
+  "+1 билет",
+  "+1 ticket"
+ ],
+ [
+  "Награда: {0}",
+  "Reward: {0}"
+ ],
+ [
+  "Наградные бои на сегодня закончились - результат засчитан",
+  "No reward battles left today; result counted"
+ ],
+ [
+  "Результат засчитан",
+  "Result counted"
+ ],
+ [
+  "Не удалось засчитать бой",
+  "Couldn't count the battle"
+ ],
+ [
+  "только СПО и датчик пуска, полный урон, опытные расчёты; одно пополнение у точки вылета",
+  "RWR and missile warning only, full damage, veteran crews; one rearm at the takeoff point"
+ ],
+ [
+  "комплекс уничтожен",
+  "site destroyed"
+ ],
+ [
+  "нет ракет",
+  "no missiles"
+ ],
+ [
+  "пусковая не готова",
+  "launcher not ready"
+ ],
+ [
+  "ГСН не захватила цель",
+  "seeker has no lock"
+ ],
+ [
+  "нет захвата цели",
+  "no target lock"
+ ],
+ [
+  "РЛС выключена - ракету некому вести",
+  "radar off: nothing to guide the missile"
+ ],
+ [
+  "станция РЭБ не стреляет",
+  "jammers can't fire"
+ ],
+ [
+  "далеко - цель вне зоны",
+  "target out of range"
+ ],
+ [
+  "цель ниже зоны поражения",
+  "target below the engagement zone"
+ ],
+ [
+  "цель выше зоны поражения",
+  "target above the engagement zone"
+ ],
+ [
+  "пусковая разворачивается",
+  "launcher is slewing"
+ ],
+ [
+  "пакет поднимается - ещё {0} с",
+  "tubes are being raised - {0} s more"
+ ],
+ [
+  "Исправен",
+  "Intact"
+ ],
+ [
+  "Лёгкие повреждения",
+  "Light damage"
+ ],
+ [
+  "Повреждён",
+  "Damaged"
+ ],
+ [
+  "Тяжёлые повреждения",
+  "Heavy damage"
+ ],
+ [
+  "Критично",
+  "Critical"
+ ],
+ [
+  "Разваливается",
+  "Breaking apart"
+ ],
+ [
+  "пилон",
+  "pylon"
+ ],
+ [
+  "крыло",
+  "wing"
+ ],
+ [
+  "нет пилона",
+  "no pylon"
+ ],
+ [
+  "нет законцовки",
+  "no wingtip"
+ ],
+ [
+  " Л",
+  " L"
+ ],
+ [
+  " П",
+  " R"
+ ],
+ [
+  "нет хвостовой балки",
+  "no tail boom"
+ ],
+ [
+  "рулевой винт",
+  "tail rotor"
+ ],
+ [
+  "нет хвоста",
+  "no tail"
+ ],
+ [
+  "пол-хвоста",
+  "half tail"
+ ],
+ [
+  "Пожар",
+  "Fire"
+ ],
+ [
+  "ПОЖАР",
+  "FIRE"
+ ],
+ [
+  "течь",
+  "leak"
+ ],
+ [
+  "Охотников за ПВО в команде уже {0} (лимит {1}) - возьмите штурмовку",
+  "Team already has {0} SEAD hunters (limit {1}): take a strike loadout"
+ ],
+ [
+  "«Кинжал» - только без другой баллистики",
+  "Kinzhal: no other ballistic missiles allowed"
+ ],
+ [
+  "«Искандер» - только без другой баллистики",
+  "Iskander: no other ballistic missiles allowed"
+ ],
+ [
+  "ARRW - только без другой баллистики",
+  "ARRW: no other ballistic missiles allowed"
+ ],
+ [
+  "«Кинжал» - не больше {0}",
+  "Kinzhal: max {0}"
+ ],
+ [
+  "«Искандер» - не больше {0}",
+  "Iskander: max {0}"
+ ],
+ [
+  "ARRW - не больше {0}",
+  "ARRW: max {0}"
+ ],
+ [
+  "Баллистика - не больше {0}",
+  "Ballistic: max {0}"
+ ],
+ [
+  "Фронтовой бомбардировщик",
+  "Tactical bomber"
+ ],
+ [
+  "Ударный истребитель",
+  "Strike fighter"
+ ],
+ [
+  "{0}: пусковая {1}",
+  "{0}: launcher {1}"
+ ],
+ [
+  "в воздухе · засечено ПВО: {0}",
+  "in the air · AD detected: {0}"
+ ],
+ [
+  "вылет",
+  "takeoff"
+ ],
+ [
+  "в воздухе {0}{1}{2}",
+  "in the air {0}{1}{2}"
+ ],
+ [
+  " · ещё вылетят {0}",
+  " · yet to take off: {0}"
+ ],
+ [
+  " · закончили полёт {0}",
+  " · finished: {0}"
+ ],
+ [
+  "сбит{0}",
+  "shot down{0}"
+ ],
+ [
+  " - не пущено {0}",
+  ", not launched: {0}"
+ ],
+ [
+  "вылет {eta}",
+  "takeoff {eta}"
+ ],
+ [
+  "к рубежу пуска · высота {0} м",
+  "heading to the launch line · altitude {0} m"
+ ],
+ [
+  "пуск {0}/{1}",
+  "launch {0}/{1}"
+ ],
+ [
+  "пуск {eta} · пущено {0}/{1}",
+  "launch {eta} · launched {0}/{1}"
+ ],
+ [
+  "пущено {0}/{1}",
+  "launched {0}/{1}"
+ ],
+ [
+  "{0} · {1} км/ч · до цели {2} км · {3} с",
+  "{0} · {1} km/h · {2} km to target · {3} s"
+ ],
+ [
+  "Пригород",
+  "Suburbs"
+ ],
+ [
+  "Частный сектор",
+  "Private Housing"
+ ],
+ [
+  "Спальный район",
+  "Residential District"
+ ],
+ [
+  "Сити",
+  "Downtown"
+ ],
+ [
+  "Промзона",
+  "Industrial Zone"
+ ],
+ [
+  "Парк",
+  "Park"
+ ],
+ [
+  "Река",
+  "River"
+ ],
+ [
+  "Аэродром",
+  "Airfield"
+ ],
+ [
+  "Военно-морская база",
+  "Naval Base"
+ ],
+ [
+  "Узел связи",
+  "Comms Hub"
+ ],
+ [
+  "Командный пункт",
+  "Command Post"
+ ],
+ [
+  "Склад боеприпасов",
+  "Ammo Depot"
+ ],
+ [
+  "Склад горючего",
+  "Fuel Depot"
+ ],
+ [
+  "Парк бронетехники",
+  "Armor Park"
+ ],
+ [
+  "Военный аэродром",
+  "Military Airfield"
+ ],
+ [
+  "Мост",
+  "Bridge"
+ ],
+ [
+  "КП «Погост»",
+  "CP \"Churchyard\""
+ ],
+ [
+  "Гарнизон «Пугало»",
+  "Garrison \"Scarecrow\""
+ ],
+ [
+  "Склад «Фонарь Джека»",
+  "Depot \"Jack-o'-Lantern\""
+ ],
+ [
+  "Рембаза «Костяной овраг»",
+  "Repair Base \"Bone Gully\""
+ ],
+ [
+  "Вертолётная площадка «Ведьмина поляна»",
+  "Helipad \"Witch's Glade\""
+ ],
+ [
+  "Склад ГСМ «Болотный огонь»",
+  "Fuel Depot \"Will-o'-the-Wisp\""
+ ],
+ [
+  "РЛС «Лысая гора»",
+  "Radar \"Bald Mountain\""
+ ],
+ [
+  "Авиабаза",
+  "Air Base"
+ ],
+ [
+  "Склад ГСМ",
+  "Fuel Depot"
+ ],
+ [
+  "Арсенал в ущелье",
+  "Gorge Arsenal"
+ ],
+ [
+  "РЛС на вершине",
+  "Summit Radar"
+ ],
+ [
+  "ГЭС на плотине",
+  "Hydroelectric Dam"
+ ],
+ [
+  "Железнодорожный узел",
+  "Rail Junction"
+ ],
+ [
+  "Военный городок",
+  "Garrison Town"
+ ],
+ [
+  "Текстуры земли, дорог, крыш и фасадов",
+  "Ground, road, roof and facade textures"
+ ],
+ [
+  "Текстуры асфальта, щебня, скал и пашни; панорамы неба",
+  "Asphalt, gravel, rock and farmland textures; sky panoramas"
+ ],
+ [
+  "Иконки управления",
+  "Control icons"
+ ],
+ [
+  "бесплатно, с указанием автора",
+  "free, with attribution"
+ ],
+ [
+  "Комната заполнена",
+  "Room is full"
+ ],
+ [
+  "Бот",
+  "Bot"
+ ],
+ [
+  "Беркут",
+  "Berkut"
+ ],
+ [
+  "Кречет",
+  "Gyrfalcon"
+ ],
+ [
+  "Сапсан",
+  "Peregrine"
+ ],
+ [
+  "Ястреб",
+  "Hawk"
+ ],
+ [
+  "Гроза",
+  "Thunder"
+ ],
+ [
+  "Буран",
+  "Blizzard"
+ ],
+ [
+  "Вихрь",
+  "Whirlwind"
+ ],
+ [
+  "Шквал",
+  "Squall"
+ ],
+ [
+  "Тайфун",
+  "Typhoon"
+ ],
+ [
+  "Орлан",
+  "Sea Eagle"
+ ],
+ [
+  "Филин",
+  "Eagle Owl"
+ ],
+ [
+  "Гранит",
+  "Granite"
+ ],
+ [
+  "Комплекс недоступен",
+  "Site not available"
+ ],
+ [
+  "Не хватает очков",
+  "Not enough points"
+ ],
+ [
+  "На первой волне - один дальний комплекс",
+  "First wave: only one long-range site"
+ ],
+ [
+  "На первой волне - один комплекс средней дальности",
+  "First wave: only one medium-range site"
+ ],
+ [
+  "Вне карты",
+  "Off the map"
+ ],
+ [
+  "Больше этого типа нельзя",
+  "No more of this type"
+ ],
+ [
+  "На крышу - только ПЗРК",
+  "Only MANPADS on a roof"
+ ],
+ [
+  "Сюда на крышу нельзя",
+  "Can't place on this roof"
+ ],
+ [
+  "Место занято - нужна свободная земля",
+  "Spot taken: needs open ground"
+ ],
+ [
+  "Место занято",
+  "Spot taken"
+ ],
+ [
+  "Не удалось войти: обновите страницу",
+  "Couldn't join: refresh the page"
+ ],
+ [
+  "Сервер занят",
+  "Server busy"
+ ],
+ [
+  "Комната не найдена",
+  "Room not found"
+ ],
+ [
+  "Бой уже закончился",
+  "The battle is already over"
+ ],
+ [
+  "Не хватает очков на эту связку",
+  "Not enough points for this loadout"
+ ],
+ [
+  "Слишком часто - сброс не прошёл",
+  "Too frequent: drop rejected"
+ ],
+ [
+  "Нет такого оружия",
+  "No such weapon"
+ ],
+ [
+  "это не комплекс под управлением",
+  "this isn't the site you control"
+ ],
+ [
+  "нет комплекса под управлением",
+  "no site under control"
+ ],
+ [
+  "{0} на команду",
+  "{0} per team"
+ ],
+ [
+  "В «Реализме» - только купленное в «Исследованиях»: {0}",
+  "In Realistic mode, only equipment bought in Research: {0}"
+ ],
+ [
+  "ЗЕМЛЯ",
+  "GROUND"
+ ],
+ [
+  "Земля",
+  "Ground"
+ ],
+ [
+  "пожар",
+  "fire"
+ ],
+ [
+  "Разведка",
+  "Recon"
+ ],
+ [
+  "Дроны",
+  "Drones"
+ ],
+ [
+  "Носители",
+  "Carriers"
+ ],
+ [
+  "Пусковые",
+  "Launchers"
+ ],
+ [
+  "Бюджет - <b>{0}</b> очков угрозы, цена единицы - по её силе в бою: дрон и ложная цель - 1-2, крылатая - 5-10, баллистическая - 4-13. Одного типа - не больше 10 (дронов - 12, ложных целей - 8), баллистики - не больше 2. В волну идёт всё открытое оружие вместе. На карте выбираете 1-4 цели, состав, маршруты (до 3 точек), высоту, время прихода (эшелонами или разом) и долю по ПВО. Где ПВО, заранее неизвестно: её засекает разведчик, выдают излучение РЛС и пуски. В бою «Ход волны» показывает, что летит и когда пуски носителей и баллистики; «Смотреть» и «Ждать» - камера к событию, время ×4. ПВО противника - ИИ: чем мощнее оружие в наряде, тем современнее его комплексы. Волна прорвалась, если разрушено 50 % ценности целей.",
+  "Budget: <b>{0}</b> threat points; each unit costs what it is worth in battle: drone or decoy 1-2, cruise missile 5-10, ballistic 4-13. Up to 10 of one type (drones 12, decoys 8), up to 2 ballistic missiles. Everything you have unlocked goes into the wave together. On the map you pick 1-4 targets, the force mix, routes (up to 3 waypoints), altitude, arrival timing (staggered or all at once) and the share sent against air defense. Air defense positions are unknown at first: recon spots them, and radar emissions and launches give them away. In battle the \"Wave timeline\" shows what is in the air and when carriers and ballistic missiles launch; \"Watch\" and \"Wait\" jump the camera to the event at ×4 time. Enemy air defense is AI: the stronger the weapons in your order, the more modern its systems. The wave breaks through once 50% of target value is destroyed."
+ ],
+ [
+  "Одна большая волна по 3 целям. Расстановка - <b>{0}</b> очков обороны, докупки нет: берите любые открытые комплексы своей стороны, одного типа - не больше 6 (дальних - 2, ПЗРК - 12). Ожидается: {1}. Волна прорвалась, если разрушено 50 % ценности целей. Время в бою можно ускорить ×4; «Смотреть» - камера за ракетой.",
+  "One big wave against 3 targets. Deployment: <b>{0}</b> defense points, no buying later: take any unlocked systems of your side, up to 6 of one type (long-range 2, MANPADS 12). Expected: {1}. The wave breaks through once 50% of target value is destroyed. In battle you can speed time up ×4; \"Watch\" puts the camera on a missile."
+ ],
+ [
+  "Баллистика в полёте",
+  "Ballistic in flight"
+ ],
+ [
+  "Крылатые в полёте",
+  "Cruise missiles in flight"
+ ],
+ [
+  "Все",
+  "All"
+ ],
+ [
+  "все",
+  "all"
+ ],
+ [
+  "самолёты",
+  "aircraft"
+ ],
+ [
+  "дроны",
+  "drones"
+ ],
+ [
+  "бомбы",
+  "bombs"
+ ],
+ [
+  "крылатые",
+  "cruise"
+ ],
+ [
+  "цели: {0}",
+  "targets: {0}"
+ ],
+ [
+  "Самолёты и вертолёты налёта",
+  "Raid aircraft and helicopters"
+ ],
+ [
+  "Хотя бы один вид целей должен остаться",
+  "At least one target type must stay on"
+ ]
+]

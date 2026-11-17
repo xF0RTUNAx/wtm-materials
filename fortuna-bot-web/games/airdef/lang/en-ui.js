@@ -1261,4 +1261,7 @@ export default {
   "Ещё (на телефоне): «Обзор», «Карта», «Бинокль» и «Авто» - ряд справа вверху; золотой уголок - «Авто» включён": "More (on a phone): \"View\", \"Map\", \"Binoculars\" and \"Auto\" - a row at the top right; a gold corner means \"Auto\" is on",
   "Ещё: обзор, карта, бинокль, авто": "More: view, map, binoculars, auto",
   "Ещё": "More",
+  // ── menu.js: «Обучение», набор Б (2026-11-18) ──
+  "Первые шаги": "First steps",
+  "подобрать урок по ответам": "pick a lesson by your answers",
 };

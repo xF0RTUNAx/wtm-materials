@@ -9,12 +9,12 @@
 // открывает его сразу (openMe), «Назад» - к таблице рейтинга; в нём же «Аккаунт» - логин, смена ника, выход (что было в окне аккаунта).
 /* global CONFIG */
 import { ico } from './icons.js?v=20261117d';
-import { tr, trIf, LANG } from './i18n.js?v=20261117d';
+import { tr, trIf, LANG, LOCALE } from './i18n.js?v=20261117d';
 import { activeAcc, gameAcc, rating as fetchRating, profile as fetchProfile, transferOk } from './account.js?v=20261117d';
 import { avaSrc, ownAva } from './avatar.js?v=20261117d';
 import { NODE } from './progress.js?v=20261117d';
 
-const LOC = LANG === 'en' ? 'en-US' : 'ru-RU';
+const LOC = LOCALE;
 const nf = (v) => Math.round(v).toLocaleString(LOC);
 const kf = (v) => String(v).replace('.', LANG === 'en' ? '.' : ',');
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));

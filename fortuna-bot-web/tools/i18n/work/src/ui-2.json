@@ -1,0 +1,2738 @@
+[
+ [
+  "Ошибка сервера",
+  "Server error"
+ ],
+ [
+  "тест",
+  "test"
+ ],
+ [
+  "Подождите…",
+  "Please wait…"
+ ],
+ [
+  "Войдите в аккаунт игры",
+  "Sign in to a game account"
+ ],
+ [
+  "нужно: ",
+  "requires: "
+ ],
+ [
+  "Авиация",
+  "Aircraft"
+ ],
+ [
+  "Вооружение",
+  "Weapons"
+ ],
+ [
+  "Волна",
+  "Wave"
+ ],
+ [
+  "Опыт и серебро копятся, когда вы вошли в аккаунт игры.",
+  "XP and silver are earned only when signed in to a game account."
+ ],
+ [
+  "Начисляем опыт…",
+  "Awarding XP…"
+ ],
+ [
+  "Бой не зарегистрирован",
+  "Battle not registered"
+ ],
+ [
+  "Опыт не начислен: {0}",
+  "XP not awarded: {0}"
+ ],
+ [
+  "За этот бой опыта нет.",
+  "No XP for this battle."
+ ],
+ [
+  "«Реализм» на некупленной технике - засчитано как «Аркада».",
+  "Realistic with unowned equipment: counted as Arcade."
+ ],
+ [
+  "Исследовано: <b>{0}</b> - купить в «Исследованиях».",
+  "Researched: <b>{0}</b>. Buy it in Research."
+ ],
+ [
+  "Сзади",
+  "Behind"
+ ],
+ [
+  "Сбоку",
+  "Side"
+ ],
+ [
+  "Спереди",
+  "Front"
+ ],
+ [
+  "Снизу",
+  "Below"
+ ],
+ [
+  "Сверху",
+  "Above"
+ ],
+ [
+  "Облёт",
+  "Orbit"
+ ],
+ [
+  "Пролёт",
+  "Flyby"
+ ],
+ [
+  "Борт",
+  "Onboard"
+ ],
+ [
+  "Центр",
+  "Center"
+ ],
+ [
+  "край крыла → корпус и сопла",
+  "wingtip → fuselage and nozzles"
+ ],
+ [
+  "у сопла → вперёд",
+  "at the nozzle → forward"
+ ],
+ [
+  "передняя кромка → назад",
+  "leading edge → aft"
+ ],
+ [
+  "у хвоста → вперёд",
+  "at the tail → forward"
+ ],
+ [
+  "у носа → назад",
+  "at the nose → aft"
+ ],
+ [
+  "{0} км",
+  "{0} km"
+ ],
+ [
+  "{0} м",
+  "{0} m"
+ ],
+ [
+  " (ложная цель)",
+  " (decoy)"
+ ],
+ [
+  " - разрыв",
+  " - burst"
+ ],
+ [
+  " · {0} км/ч · {1}",
+  " · {0} km/h · {1}"
+ ],
+ [
+  "Ракета {0}{1}",
+  "{0} missile{1}"
+ ],
+ [
+  " - подрыв",
+  " - detonated"
+ ],
+ [
+  " · {0} км/ч · до цели {1} км",
+  " · {0} km/h · {1} km to target"
+ ],
+ [
+  "{0} · {1} км/ч · {2}",
+  "{0} · {1} km/h · {2}"
+ ],
+ [
+  "на подвеске",
+  "on the pylon"
+ ],
+ [
+  "во внутреннем отсеке",
+  "in the internal bay"
+ ],
+ [
+  "пилон пуст - ждём пополнения",
+  "pylon empty: waiting for rearm"
+ ],
+ [
+  "Ракета ПВО: пока не пускали - пока самолёт",
+  "AD missile: none launched yet, showing the aircraft"
+ ],
+ [
+  " · ведёт самолёт",
+  " · tracking the aircraft"
+ ],
+ [
+  " - уничтожен",
+  " - destroyed"
+ ],
+ [
+  "цель на сопровождении",
+  "tracking target"
+ ],
+ [
+  "перезарядка {0} с",
+  "reloading {0} s"
+ ],
+ [
+  "поиск",
+  "searching"
+ ],
+ [
+  "ждём пуска",
+  "waiting for launch"
+ ],
+ [
+  "Цель {0}: {1}",
+  "Target {0}: {1}"
+ ],
+ [
+  "самолёт",
+  "aircraft"
+ ],
+ [
+  "целей нет",
+  "no targets"
+ ],
+ [
+  "Ударник налёта",
+  "Raid striker"
+ ],
+ [
+  " - сбит",
+  " - shot down"
+ ],
+ [
+  "ждём налёта",
+  "waiting for the raid"
+ ],
+ [
+  "Вертолёт налёта{0}",
+  "Raid helicopter{0}"
+ ],
+ [
+  "ждём вертолёта",
+  "waiting for a helicopter"
+ ],
+ [
+  "ждём волну",
+  "waiting for the wave"
+ ],
+ [
+  "{0} - прикрывает {1}",
+  "{0}: covering {1}"
+ ],
+ [
+  "пуск {0}/{1}",
+  "launch {0}/{1}"
+ ],
+ [
+  "уходит",
+  "leaving"
+ ],
+ [
+  "{0} · пущено {1}/{2}",
+  "{0} · fired {1}/{2}"
+ ],
+ [
+  "Точка прицеливания",
+  "Aim point"
+ ],
+ [
+  "носитель вылетит через {0} с",
+  "carrier takes off in {0} s"
+ ],
+ [
+  "ПВО: пока не стреляли",
+  "Air defense: no shots yet"
+ ],
+ [
+  "Ракета ПВО",
+  "AD missile"
+ ],
+ [
+  "Комплекс ПВО",
+  "AD site"
+ ],
+ [
+  "Его ракета",
+  "Its missile"
+ ],
+ [
+  "Его цель",
+  "Its target"
+ ],
+ [
+  "Ракеты и дроны",
+  "Missiles and drones"
+ ],
+ [
+  "Самолёт налёта",
+  "Raid aircraft"
+ ],
+ [
+  "Вертолёт налёта",
+  "Raid helicopter"
+ ],
+ [
+  "Объект",
+  "Object"
+ ],
+ [
+  "Пусковая",
+  "Launcher"
+ ],
+ [
+  "Издалека",
+  "Far"
+ ],
+ [
+  "Зум",
+  "Zoom"
+ ],
+ [
+  "Пуск сейчас (F)",
+  "Fire now (F)"
+ ],
+ [
+  "«Пуск» (F) - пуск комплекса или оружия сразу.",
+  "\"Launch\" (F) - fire the system or weapon right now."
+ ],
+ [
+  " · камера: {0} (тап по «Борт» - другое место)",
+  " · camera: {0} (tap \"Onboard\" for another spot)"
+ ],
+ [
+  "Тяните по экрану - камера вокруг объекта, два пальца - ближе или дальше. Внизу - что снимать и ракурс, справа - ＋/－, зум, скорость (×½, ×¼, стоп-кадр), ⟲ - ракурс по умолчанию, ↻ - новый бой, ◎ - спрятать интерфейс (тап по экрану - вернуть).",
+  "Drag to orbit the camera, pinch to zoom in or out. Bottom: subject and angle; right: ＋/－, zoom, speed (×½, ×¼, freeze frame), ⟲ default angle, ↻ new battle, ◎ hide UI (tap the screen to bring it back)."
+ ],
+ [
+  "Мышь: тянуть - камера вокруг объекта, колесо - ближе/дальше · ←/→ - ракурс · ↑/↓ - объект · +/− - дальность · Z - зум · 1/2/3 - скорость ×1/×½/×¼ · Пробел - стоп-кадр · R - ракурс по умолчанию · N - новый бой · H - спрятать интерфейс",
+  "Mouse: drag to orbit, wheel: closer/farther · ←/→ angle · ↑/↓ subject · +/− distance · Z zoom · 1/2/3 speed ×1/×½/×¼ · Space freeze frame · R default angle · N new battle · H hide UI"
+ ],
+ [
+  "зона ручки - палец в любом месте слева",
+  "stick zone: touch anywhere on the left"
+ ],
+ [
+  "Пуск",
+  "Launch"
+ ],
+ [
+  "Газ / форсаж",
+  "Throttle / AB"
+ ],
+ [
+  "Ползунок газа",
+  "Throttle slider"
+ ],
+ [
+  "Газ",
+  "Throttle"
+ ],
+ [
+  "ступени газа в бою",
+  "throttle steps in battle"
+ ],
+ [
+  "нажмите, чтобы включить или выключить",
+  "tap to turn on or off"
+ ],
+ [
+  "Форсаж - всегда последняя ступень",
+  "Afterburner is always the last step"
+ ],
+ [
+  "Кнопка «Газ»: {0}",
+  "\"Throttle\" button: {0}"
+ ],
+ [
+  "газ в бою",
+  "throttle in battle"
+ ],
+ [
+  "кнопка ступенями",
+  "step button"
+ ],
+ [
+  "ползунок",
+  "slider"
+ ],
+ [
+  "Форсаж всегда последний, если он есть у самолёта. На ПК W / S - по этим же ступеням, Shift - форсаж.",
+  "Afterburner is always last, if the aircraft has one. On PC, W / S use the same steps, Shift is afterburner."
+ ],
+ [
+  "Понял",
+  "Got it"
+ ],
+ [
+  "Понял: заглушить писк захвата",
+  "Got it: mute the lock tone"
+ ],
+ [
+  "Обзор",
+  "View"
+ ],
+ [
+  "Крестовина",
+  "D-pad"
+ ],
+ [
+  "РЛС",
+  "Radar"
+ ],
+ [
+  "Метод",
+  "Method"
+ ],
+ [
+  "Кам.",
+  "Cam."
+ ],
+ [
+  "Перетащите кнопку пальцем, нажмите - размер и прозрачность.",
+  "Drag a button to move it; tap it to set size and opacity."
+ ],
+ [
+  "Размер",
+  "Size"
+ ],
+ [
+  "Прозрачность",
+  "Opacity"
+ ],
+ [
+  "Вернуть кнопку",
+  "Reset button"
+ ],
+ [
+  "Всё по умолчанию",
+  "Reset all"
+ ],
+ [
+  "{0} · {1} ПВО, ранг {2}",
+  "{0} · {1} air defense, rank {2}"
+ ],
+ [
+  "советская/российская",
+  "Soviet/Russian"
+ ],
+ [
+  "западная",
+  "Western"
+ ],
+ [
+  "Ударная группа · {0}",
+  "Strike group · {0}"
+ ],
+ [
+  "Пролёт · {0}",
+  "Flyby · {0}"
+ ],
+ [
+  "Вид с улицы · {0}",
+  "Street view · {0}"
+ ],
+ [
+  "{0} · цель захвачена - пусковая разворачивается",
+  "{0} · target locked, launcher slewing"
+ ],
+ [
+  " · «холодный» старт",
+  " · cold launch"
+ ],
+ [
+  " · вышибной заряд",
+  " · ejection charge"
+ ],
+ [
+  " · из наклонного контейнера",
+  " · from an inclined canister"
+ ],
+ [
+  "Пуск: {0} · {1}{2}",
+  "Launch: {0} · {1}{2}"
+ ],
+ [
+  "{0}: встреча с целью",
+  "{0}: closing in on the target"
+ ],
+ [
+  "наводится на пятно лазера",
+  "homing on the laser spot"
+ ],
+ [
+  "летит на излучение РЛС",
+  "homing on radar emissions"
+ ],
+ [
+  "летит по спутниковой навигации",
+  "flying by satellite navigation"
+ ],
+ [
+  "крылатая ракета на малой высоте",
+  "low-altitude cruise missile"
+ ],
+ [
+  "ТВ-головка, «выстрелил и забыл»",
+  "TV seeker, fire-and-forget"
+ ],
+ [
+  "свободное падение",
+  "free fall"
+ ],
+ [
+  "{0} · заградительный огонь",
+  "{0} · barrage fire"
+ ],
+ [
+  "Ударник",
+  "Striker"
+ ],
+ [
+  "рядом с ведущим",
+  "alongside the lead"
+ ],
+ [
+  "из-за плеча",
+  "over the shoulder"
+ ],
+ [
+  "подвеска",
+  "loadout"
+ ],
+ [
+  "облёт",
+  "orbit"
+ ],
+ [
+  "{0} вблизи",
+  "{0} up close"
+ ],
+ [
+  "Город вблизи",
+  "City up close"
+ ],
+ [
+  "бомбардировщик",
+  "bomber"
+ ],
+ [
+  "носитель ТВ-ракет",
+  "TV missile carrier"
+ ],
+ [
+  "охотник за РЛС",
+  "radar hunter"
+ ],
+ [
+  "прорыв на малой высоте",
+  "low-level penetration"
+ ],
+ [
+  "носитель крылатых ракет",
+  "cruise missile carrier"
+ ],
+ [
+  "носитель ложных целей",
+  "decoy carrier"
+ ],
+ [
+  "ложная цель",
+  "decoy"
+ ],
+ [
+  "ударник",
+  "striker"
+ ],
+ [
+  "Генерируем город: улицы, кварталы, река…",
+  "Generating the city: streets, blocks, river…"
+ ],
+ [
+  "Маскировка",
+  "Masked"
+ ],
+ [
+  "Поверните телефон горизонтально",
+  "Turn your phone to landscape"
+ ],
+ [
+  "Игра рассчитана на широкий экран. Как повернёте - продолжим с того же места.",
+  "The game is designed for widescreen. Turn your phone and you'll pick up where you left off."
+ ],
+ [
+  "объяснение - нажмите «?» (игра на паузе)",
+  "explanation: press \"?\" (game paused)"
+ ],
+ [
+  "⌖ вся карта",
+  "⌖ whole map"
+ ],
+ [
+  "☰ Ход волны",
+  "☰ Wave timeline"
+ ],
+ [
+  "Следующая",
+  "Next"
+ ],
+ [
+  "Помощь",
+  "Help"
+ ],
+ [
+  "подскок: вверх, пуск, вниз",
+  "pop-up: climb, fire, drop"
+ ],
+ [
+  "подскок: на сколько подняться",
+  "pop-up: how high to climb"
+ ],
+ [
+  "Газ 80%",
+  "Throttle 80%"
+ ],
+ [
+  "Сейчас",
+  "Now"
+ ],
+ [
+  "Начать урок заново",
+  "Restart lesson"
+ ],
+ [
+  "Ищем бой…",
+  "Finding a match…"
+ ],
+ [
+  "Отмена",
+  "Cancel"
+ ],
+ [
+  "В бой",
+  "To battle"
+ ],
+ [
+  "Продолжить",
+  "Resume"
+ ],
+ [
+  "В меню",
+  "Main menu"
+ ],
+ [
+  "Завершить бой",
+  "End battle"
+ ],
+ [
+  "Обучение · игра на паузе",
+  "Training · game paused"
+ ],
+ [
+  "Понятно, продолжить",
+  "Got it, continue"
+ ],
+ [
+  "Бой окончен",
+  "Battle over"
+ ],
+ [
+  "Поверните телефон",
+  "Rotate your phone"
+ ],
+ [
+  "Сдвиг карты",
+  "Pan the map"
+ ],
+ [
+  "Мельче",
+  "Zoom out"
+ ],
+ [
+  "Масштаб",
+  "Zoom"
+ ],
+ [
+  "Крупнее",
+  "Zoom in"
+ ],
+ [
+  "Выйти",
+  "Exit"
+ ],
+ [
+  "Урок",
+  "Lesson"
+ ],
+ [
+  "Свернуть",
+  "Collapse"
+ ],
+ [
+  "Игроки: кто в сети и кто готов",
+  "Players: who's here and who's ready"
+ ],
+ [
+  "Спрятать интерфейс (H) - тап по экрану вернёт",
+  "Hide UI (H); tap the screen to bring it back"
+ ],
+ [
+  "Новый бой (N)",
+  "New battle (N)"
+ ],
+ [
+  "Ракурс по умолчанию (R)",
+  "Default angle (R)"
+ ],
+ [
+  "Скорость: ×1 / ×½ / ×¼ / стоп-кадр",
+  "Speed: ×1 / ×½ / ×¼ / freeze frame"
+ ],
+ [
+  "Угол поля зрения (Z)",
+  "Field of view (Z)"
+ ],
+ [
+  "Дальше (−)",
+  "Farther (−)"
+ ],
+ [
+  "Ближе (+)",
+  "Closer (+)"
+ ],
+ [
+  "Предыдущий план",
+  "Previous shot"
+ ],
+ [
+  "Следующий план",
+  "Next shot"
+ ],
+ [
+  "Исследования: дерево техники",
+  "Research: tech tree"
+ ],
+ [
+  "Событие: вертолёты над «Туманной топью»",
+  "Event: helicopters over Misty Mire"
+ ],
+ [
+  "Режимы игры",
+  "Game modes"
+ ],
+ [
+  "Исследования: опыт и серебро",
+  "Research: XP and silver"
+ ],
+ [
+  "Задание",
+  "Mission"
+ ],
+ [
+  "Раздел",
+  "Section"
+ ],
+ [
+  "I - 1960-70-е",
+  "I - 1960s-70s"
+ ],
+ [
+  "II - 1980-е",
+  "II - 1980s"
+ ],
+ [
+  "III - 1990-2000-е",
+  "III - 1990s-2000s"
+ ],
+ [
+  "IV - сейчас",
+  "IV - present day"
+ ],
+ [
+  "Аркада",
+  "Arcade"
+ ],
+ [
+  "Реализм",
+  "Realistic"
+ ],
+ [
+  "больше ловушек, меньше урона, ПВО медленнее реагирует, все угрозы на экране; запас - 2 комплекта подвески, пополняется сам",
+  "more countermeasures, less damage, slower air defense, all threats shown; 2 spare loadouts, auto-replenished"
+ ],
+ [
+  "только СПО и датчик пуска, полный урон, опытные расчёты; одно пополнение у точки вылета",
+  "RWR and missile warning only, full damage, veteran crews; one rearm at the takeoff point"
+ ],
+ [
+  "охота за ПВО",
+  "SEAD hunt"
+ ],
+ [
+  "штурмовка",
+  "strike"
+ ],
+ [
+  "свободнопадающая",
+  "unguided"
+ ],
+ [
+  "лазерная",
+  "laser-guided"
+ ],
+ [
+  "ТВ, «выстрелил и забыл»",
+  "TV-guided, fire-and-forget"
+ ],
+ [
+  "управляемая ракета",
+  "guided missile"
+ ],
+ [
+  "противорадиолокационная",
+  "anti-radiation"
+ ],
+ [
+  "неуправляемые ракеты",
+  "unguided rockets"
+ ],
+ [
+  "радиокомандное",
+  "radio command"
+ ],
+ [
+  "полуактивное (подсвет цели)",
+  "semi-active (target illumination)"
+ ],
+ [
+  "тепловая ГСН",
+  "infrared seeker"
+ ],
+ [
+  "по линии визирования",
+  "line-of-sight (SACLOS)"
+ ],
+ [
+  "зенитная артиллерия",
+  "anti-aircraft artillery"
+ ],
+ [
+  "Ясный день",
+  "Clear day"
+ ],
+ [
+  "Утро",
+  "Morning"
+ ],
+ [
+  "Закат",
+  "Sunset"
+ ],
+ [
+  "Пасмурно",
+  "Overcast"
+ ],
+ [
+  "Ливень",
+  "Downpour"
+ ],
+ [
+  "Ночь",
+  "Night"
+ ],
+ [
+  "Осенний вечер",
+  "Autumn evening"
+ ],
+ [
+  "Мороз, ясно",
+  "Clear and frosty"
+ ],
+ [
+  "Морозная дымка",
+  "Frosty haze"
+ ],
+ [
+  "Снегопад",
+  "Snowfall"
+ ],
+ [
+  "Некорректные параметры",
+  "Invalid parameters"
+ ],
+ [
+  "Игрок не найден - войдите в аккаунт игры",
+  "Player not found: sign in to your game account"
+ ],
+ [
+  "Создайте аккаунт игры - новым игрокам прогресс копится только на нём",
+  "Create a game account: for new players, progress is saved only there"
+ ],
+ [
+  "Слишком много попыток, подождите 15 минут",
+  "Too many attempts, wait 15 minutes"
+ ],
+ [
+  "Этот ник занят",
+  "This nickname is taken"
+ ],
+ [
+  "Игрок не найден - войдите на сайте",
+  "Player not found: sign in on the website"
+ ],
+ [
+  "Неизвестное действие",
+  "Unknown action"
+ ],
+ [
+  "Нельзя",
+  "Not allowed"
+ ],
+ [
+  "Внутренняя ошибка сервера",
+  "Internal server error"
+ ],
+ [
+  "Итог боя не подтверждён",
+  "Battle result not confirmed"
+ ],
+ [
+  "Этот бой уже засчитан",
+  "Battle already counted"
+ ],
+ [
+  "Бой уже засчитан или устарел",
+  "Battle already counted or expired"
+ ],
+ [
+  "Онлайн ещё не настроен",
+  "Online is not set up yet"
+ ],
+ [
+  "Игрок не найден - перезайдите на сайт",
+  "Player not found: sign in on the website again"
+ ],
+ [
+  "Звук для слабого устройства",
+  "Sound for low-end devices"
+ ],
+ [
+  "авто (при заряде ≤ 35 %)",
+  "auto (at battery ≤ 35%)"
+ ],
+ [
+  "включён - если трещит",
+  "on (if it crackles)"
+ ],
+ [
+  "выключен",
+  "off"
+ ],
+ [
+  "Меньше нагрузка на процессор: убирает треск и обрывы на планшетах и телефонах в режиме экономии. Применится после перезапуска игры.",
+  "Reduces CPU load: fixes crackling and dropouts on tablets and phones in power-saving mode. Takes effect after restart."
+ ],
+ [
+  "Крайне рекомендуем установить горизонтальную ориентацию устройства перед началом игры!",
+  "We strongly recommend switching to landscape before you start!"
+ ],
+ [
+  "Поверните телефон - бой начнётся сам. Кнопки и обзор рассчитаны на широкий экран.",
+  "Turn your phone and the battle will start. Controls and view are designed for widescreen."
+ ],
+ [
+  "Понятно",
+  "Got it"
+ ],
+ [
+  " (оптика)",
+  " (optical)"
+ ],
+ [
+  " · залп {0}",
+  " · salvo {0}"
+ ],
+ [
+  " км",
+  " km"
+ ],
+ [
+  "{0} кг",
+  "{0} kg"
+ ],
+ [
+  "{0} км/ч",
+  "{0} km/h"
+ ],
+ [
+  "{0} м/с",
+  "{0} m/s"
+ ],
+ [
+  "{0} с",
+  "{0} s"
+ ],
+ [
+  "{0} снарядов",
+  "{0} rounds"
+ ],
+ [
+  "{0} т",
+  "{0} t"
+ ],
+ [
+  "{0}°/с",
+  "{0}°/s"
+ ],
+ [
+  "Боекомплект",
+  "Ammo"
+ ],
+ [
+  "Вернулся живым +20 %",
+  "Returned alive +20%"
+ ],
+ [
+  "Винт",
+  "Rotor"
+ ],
+ [
+  "Волны",
+  "Waves"
+ ],
+ [
+  "Время полёта",
+  "Flight time"
+ ],
+ [
+  "Высота полёта",
+  "Flight altitude"
+ ],
+ [
+  "Захват",
+  "Lock-on"
+ ],
+ [
+  "Комплексы ПВО",
+  "Air defense sites"
+ ],
+ [
+  "Крен",
+  "Roll"
+ ],
+ [
+  "Масса",
+  "Weight"
+ ],
+ [
+  "Нет такой единицы",
+  "No such unit"
+ ],
+ [
+  "Нет такой ветки",
+  "No such branch"
+ ],
+ [
+  "Носитель",
+  "Carrier"
+ ],
+ [
+  "Обучение - без наград",
+  "Training: no rewards"
+ ],
+ [
+  "Очки угрозы",
+  "Threat points"
+ ],
+ [
+  "Первая победа дня",
+  "First win of the day"
+ ],
+ [
+  "Перегрузка",
+  "G-limit"
+ ],
+ [
+  "Перехват ударов",
+  "Strike interceptions"
+ ],
+ [
+  "Перехваты",
+  "Interceptions"
+ ],
+ [
+  "Победа команды",
+  "Team victory"
+ ],
+ [
+  "Подавление",
+  "Jam range"
+ ],
+ [
+  "Подвесок",
+  "Loadouts"
+ ],
+ [
+  "Подъём",
+  "Climb"
+ ],
+ [
+  "Помехи",
+  "Jamming"
+ ],
+ [
+  "Потолок",
+  "Ceiling"
+ ],
+ [
+  "Промах",
+  "CEP"
+ ],
+ [
+  "Прочность",
+  "Durability"
+ ],
+ [
+  "Радиус",
+  "Radius"
+ ],
+ [
+  "Ракет",
+  "Missiles"
+ ],
+ [
+  "Сбитые самолёты",
+  "Aircraft shot down"
+ ],
+ [
+  "Скорость",
+  "Speed"
+ ],
+ [
+  "Сначала исследуйте",
+  "Research it first"
+ ],
+ [
+  "У земли",
+  "Sea level"
+ ],
+ [
+  "Удар: комплексы",
+  "Strike: sites"
+ ],
+ [
+  "Удар: разрушено",
+  "Strike: destroyed"
+ ],
+ [
+  "Уже исследовано",
+  "Already researched"
+ ],
+ [
+  "Снят с продажи",
+  "No longer available"
+ ],
+ [
+  "Уже куплено",
+  "Already bought"
+ ],
+ [
+  "Урон",
+  "Damage"
+ ],
+ [
+  "Удар (ФАБ-500 = 100)",
+  "Strike (FAB-500 = 100)"
+ ],
+ [
+  "Форсаж",
+  "Afterburner"
+ ],
+ [
+  "Целей сразу",
+  "Targets at once"
+ ],
+ [
+  "Цели задания",
+  "Mission targets"
+ ],
+ [
+  "бомбы и ракеты подвесок",
+  "bombs and missiles for loadouts"
+ ],
+ [
+  "вертолёты для вылета",
+  "helicopters for sorties"
+ ],
+ [
+  "дроны, крылатые и баллистика «Мульти-волны»",
+  "Multi-Wave drones, cruise and ballistic missiles"
+ ],
+ [
+  "есть",
+  "yes"
+ ],
+ [
+  "комплексы для обороны",
+  "sites for defense"
+ ],
+ [
+  "многоцелевой вертолёт",
+  "multirole helicopter"
+ ],
+ [
+  "охотник за ПВО",
+  "SEAD hunter"
+ ],
+ [
+  "с рулевым",
+  "tail rotor"
+ ],
+ [
+  "самолёты для вылета",
+  "aircraft for sorties"
+ ],
+ [
+  "соосный",
+  "coaxial"
+ ],
+ [
+  "ударный",
+  "strike"
+ ],
+ [
+  "ударный вертолёт",
+  "attack helicopter"
+ ],
+ [
+  "ударный и охотник за ПВО",
+  "strike and SEAD hunter"
+ ],
+ [
+  "Сбивает баллистические ракеты: перехват {0} %",
+  "Shoots down ballistic missiles: {0}% per intercept"
+ ],
+ [
+  "Убрать панель",
+  "Hide panel"
+ ],
+ [
+  "Сбивает дроны «Мульти-волны»",
+  "Shoots down Multi-Wave drones"
+ ],
+ [
+  "Сбивает бомбы и ракеты с самолётов, в том числе крылатые",
+  "Shoots down bombs and missiles released by aircraft, cruise missiles included"
+ ],
+ [
+  "Сбивает крылатые ракеты «Мульти-волны» (ниже {0} м - нет)",
+  "Shoots down Multi-Wave cruise missiles (not below {0} m)"
+ ],
+ [
+  "Вертолёт: управление",
+  "Helicopter: controls"
+ ],
+ [
+  "Подтвердить",
+  "Confirm"
+ ],
+ [
+  "Рейтинг",
+  "Rating"
+ ],
+ [
+  "Рейтинг: таблица сезона",
+  "Rating: season table"
+ ],
+ [
+  "сезон {0}",
+  "season {0}"
+ ],
+ [
+  "сезон {0} · ещё {1} дн.",
+  "season {0} · {1} d left"
+ ],
+ [
+  "скоро откроется",
+  "opening soon"
+ ],
+ [
+  "нет связи",
+  "offline"
+ ],
+ [
+  "Как начисляются очки",
+  "How points are earned"
+ ],
+ [
+  "За каждый онлайн-бой: итог команды, ваш вклад и сила соперников.",
+  "Every online battle: the team result, your contribution and the strength of your opponents."
+ ],
+ [
+  "Аркада - ×0,6.",
+  "Arcade - ×0.6."
+ ],
+ [
+  "Ранг боя II, III, IV - +2, +5, +8 %. В Мульти-волне надбавки нет.",
+  "Battle rank II, III, IV - +2, +5, +8 %. No bonus in Multi-Wave."
+ ],
+ [
+  "Чем больше ботов среди соперников, тем меньше очков.",
+  "The more bots among your opponents, the fewer points."
+ ],
+ [
+  "Итог сезона - 7 боёв: по 2 лучших за ПВО, за лётчика и в Мульти-волне и ещё 1 лучший из остальных.",
+  "Season total - 7 battles: your 2 best as air defense, 2 best as pilot, 2 best in Multi-Wave, plus 1 best of the rest."
+ ],
+ [
+  "Своя комната не считается. Вышли из боя раньше - 0.",
+  "A private room does not count. Leave a battle early - 0."
+ ],
+ [
+  "Загружаем…",
+  "Loading…"
+ ],
+ [
+  "Рейтинг скоро откроется",
+  "The rating opens soon"
+ ],
+ [
+  "Таблица сезона появится, как только сервер рейтинга заработает.",
+  "The season table will appear as soon as the rating server is up."
+ ],
+ [
+  "Повторить",
+  "Retry"
+ ],
+ [
+  "В этом сезоне ещё нет результатов.",
+  "No results in this season yet."
+ ],
+ [
+  "засчитано {0} из {1}",
+  "{0} of {1} counted"
+ ],
+ [
+  "Мои бои",
+  "My battles"
+ ],
+ [
+  "В рейтинге - только аккаунты игры",
+  "Only game accounts are in the rating"
+ ],
+ [
+  "Войти",
+  "Sign in"
+ ],
+ [
+  "Перенести прогресс",
+  "Transfer progress"
+ ],
+ [
+  "Мои бои · сезон {0}",
+  "My battles · season {0}"
+ ],
+ [
+  "засчитано {0} из {1} · сумма {2}",
+  "{0} of {1} counted · total {2}"
+ ],
+ [
+  "В этом сезоне боёв пока нет.",
+  "No battles in this season yet."
+ ],
+ [
+  "Бой",
+  "Battle"
+ ],
+ [
+  "Итог",
+  "Result"
+ ],
+ [
+  "Из чего очки",
+  "Points breakdown"
+ ],
+ [
+  "Очки",
+  "Points"
+ ],
+ [
+  "В рейтинге",
+  "In the rating"
+ ],
+ [
+  "реализм",
+  "realistic"
+ ],
+ [
+  "аркада",
+  "arcade"
+ ],
+ [
+  "ранг {0}",
+  "rank {0}"
+ ],
+ [
+  "лётчик",
+  "pilot"
+ ],
+ [
+  "волна",
+  "wave"
+ ],
+ [
+  "победа",
+  "victory"
+ ],
+ [
+  "ничья",
+  "draw"
+ ],
+ [
+  "поражение",
+  "defeat"
+ ],
+ [
+  "аркада ×{0}",
+  "arcade ×{0}"
+ ],
+ [
+  "ранг {0} +{1} %",
+  "rank {0} +{1} %"
+ ],
+ [
+  "боты ×{0}",
+  "bots ×{0}"
+ ],
+ [
+  "без действий - 0",
+  "no actions - 0"
+ ],
+ [
+  "засчитан",
+  "counted"
+ ],
+ [
+  "не засчитан",
+  "not counted"
+ ],
+ [
+  "Рейтинг: <b>+{0}</b>",
+  "Rating: <b>+{0}</b>"
+ ],
+ [
+  "Рейтинг: 0 - без действий в бою",
+  "Rating: 0 - no actions in the battle"
+ ],
+ [
+  "Очки рейтинга: <b>{0}</b> - засчитаются, когда перенесёте прогресс в аккаунт игры",
+  "Rating points: <b>{0}</b> - they will count once you transfer your progress to a game account"
+ ],
+ [
+  "Аккаунт игры",
+  "Game account"
+ ],
+ [
+  "Войти в аккаунт игры",
+  "Sign in to a game account"
+ ],
+ [
+  "Аккаунт",
+  "Account"
+ ],
+ [
+  "Вход",
+  "Sign in"
+ ],
+ [
+  "Регистрация",
+  "Sign up"
+ ],
+ [
+  "Логин",
+  "Login"
+ ],
+ [
+  "Пароль",
+  "Password"
+ ],
+ [
+  "3-24: латиница, цифры, _",
+  "3-24: Latin letters, digits, _"
+ ],
+ [
+  "от 6 символов",
+  "at least 6 characters"
+ ],
+ [
+  "Ник для рейтинга",
+  "Nickname for the rating"
+ ],
+ [
+  "3-16: буквы, цифры, пробел, _ и -",
+  "3-16: letters, digits, space, _ and -"
+ ],
+ [
+  "Создать аккаунт",
+  "Create account"
+ ],
+ [
+  "Перенесутся опыт, серебро, исследования, покупки и онлайн-бои «Воздушного превосходства». Мини-игры сайта останутся на аккаунте сайта. Перенос - один раз.",
+  "XP, silver, research, purchases and online battles of Air Superiority will be transferred. The website mini-games stay on the website account. The transfer is one-time."
+ ],
+ [
+  "Для переноса нужен аккаунт игры.",
+  "A game account is required for the transfer."
+ ],
+ [
+  "Логин сайта",
+  "Website login"
+ ],
+ [
+  "Пароль сайта",
+  "Website password"
+ ],
+ [
+  "Пароль аккаунта игры",
+  "Game account password"
+ ],
+ [
+  "Логин: {0}",
+  "Login: {0}"
+ ],
+ [
+  "Сменить ник",
+  "Change nickname"
+ ],
+ [
+  "Выйти из аккаунта",
+  "Sign out"
+ ],
+ [
+  "Новый ник",
+  "New nickname"
+ ],
+ [
+  "Сохранить",
+  "Save"
+ ],
+ [
+  "Ник виден в рейтинге и в онлайн-боях. Меняется раз в сезон.",
+  "The nickname is shown in the rating and in online battles. It can be changed once per season."
+ ],
+ [
+  "Ник изменён",
+  "Nickname changed"
+ ],
+ [
+  "одиночных боёв - {0}",
+  "solo battles - {0}"
+ ],
+ [
+  "онлайн-боёв - {0}",
+  "online battles - {0}"
+ ],
+ [
+  "Логин: 3-24 символа - латиница, цифры, подчёркивание",
+  "Login: 3-24 characters - Latin letters, digits, underscore"
+ ],
+ [
+  "Пароль: минимум 6 символов",
+  "Password: at least 6 characters"
+ ],
+ [
+  "Ник: 3-16 символов - буквы, цифры, пробел, _ и -",
+  "Nickname: 3-16 characters - letters, digits, space, _ and -"
+ ],
+ [
+  "Неверный логин или пароль",
+  "Wrong login or password"
+ ],
+ [
+  "Неверный пароль",
+  "Wrong password"
+ ],
+ [
+  "Неверный пароль аккаунта игры",
+  "Wrong game account password"
+ ],
+ [
+  "Неверный логин или пароль сайта",
+  "Wrong website login or password"
+ ],
+ [
+  "Этот логин уже занят",
+  "This login is already taken"
+ ],
+ [
+  "Этот ник уже занят",
+  "This nickname is already taken"
+ ],
+ [
+  "Ник меняется раз в сезон",
+  "The nickname can be changed once per season"
+ ],
+ [
+  "С этого аккаунта сайта прогресс уже перенесён",
+  "The progress of this website account has already been transferred"
+ ],
+ [
+  "В этот аккаунт игры прогресс уже переносили",
+  "Progress has already been transferred to this game account"
+ ],
+ [
+  "Это не аккаунт сайта",
+  "This is not a website account"
+ ],
+ [
+  "Это не аккаунт игры",
+  "This is not a game account"
+ ],
+ [
+  "Придумайте логин для игры: 3-24 символа - латиница, цифры, подчёркивание",
+  "Choose a game login: 3-24 characters - Latin letters, digits, underscore"
+ ],
+ [
+  "Придумайте пароль для игры: минимум 6 символов",
+  "Choose a game password: at least 6 characters"
+ ],
+ [
+  "Придумайте ник для рейтинга: 3-16 символов - буквы, цифры, пробел, _ и -",
+  "Choose a nickname for the rating: 3-16 characters - letters, digits, space, _ and -"
+ ],
+ [
+  "Перенос с сайта",
+  "Transfer from the website"
+ ],
+ [
+  "Прогресс «Воздушного превосходства» с аккаунта сайта <b>{0}</b> переедет в аккаунт игры. Мини-игры сайта останутся на сайте. Перенос - один раз.",
+  "The Air Superiority progress of the website account <b>{0}</b> will move to a game account. The website mini-games stay on the website. The transfer is one-time."
+ ],
+ [
+  "Прогресс «Воздушного превосходства» с вашего аккаунта сайта переедет в аккаунт игры. Мини-игры сайта останутся на сайте. Перенос - один раз.",
+  "The Air Superiority progress of your website account will move to a game account. The website mini-games stay on the website. The transfer is one-time."
+ ],
+ [
+  "Пароль в игре",
+  "Game password"
+ ],
+ [
+  "как на сайте",
+  "same as on the website"
+ ],
+ [
+  "другой",
+  "different"
+ ],
+ [
+  "Новый пароль для игры",
+  "New password for the game"
+ ],
+ [
+  "Логин для игры",
+  "Login for the game"
+ ],
+ [
+  "В игре: логин и ник - <b>{0}</b>.",
+  "In the game: login and nickname - <b>{0}</b>."
+ ],
+ [
+  "В игре: логин - <b>{0}</b>, ник - <b>{1}</b>.",
+  "In the game: login - <b>{0}</b>, nickname - <b>{1}</b>."
+ ],
+ [
+  "Ник можно один раз поменять в этом сезоне.",
+  "You can change the nickname once this season."
+ ],
+ [
+  "Перенести прогресс сайта в этот аккаунт ({0})",
+  "Transfer the website progress to this account ({0})"
+ ],
+ [
+  "тот, которым вы входите в игру",
+  "the one you sign in to the game with"
+ ],
+ [
+  "опыт и серебро, исследования",
+  "XP and silver, research"
+ ],
+ [
+  "Прогресс перенесён в аккаунт игры <b>{0}</b>: {1}.",
+  "Progress has been transferred to the game account <b>{0}</b>: {1}."
+ ],
+ [
+  "Аккаунт игры <b>{0}</b> готов. Переносить было нечего.",
+  "The game account <b>{0}</b> is ready. There was nothing to transfer."
+ ],
+ [
+  "Дальше входите в игру этим логином.",
+  "From now on, sign in to the game with this login."
+ ],
+ [
+  "Пароль - тот же, что на сайте.",
+  "The password is the same as on the website."
+ ],
+ [
+  "Логин «{0}» в игре уже занят - введите другой логин для игры",
+  "The login “{0}” is already taken in the game: enter a different login for the game"
+ ],
+ [
+  "Логин сайта не подходит для игры - придумайте логин для игры: 3-24 символа, латиница, цифры, _",
+  "The website login can't be used in the game: choose a game login - 3-24 characters, Latin letters, digits, _"
+ ],
+ [
+  "Ник «{0}» занят - введите другой ник для рейтинга",
+  "The nickname “{0}” is taken: enter a different nickname for the rating"
+ ],
+ [
+  "Пароль сайта короче 6 символов - придумайте пароль для игры",
+  "The website password is shorter than 6 characters: choose a password for the game"
+ ],
+ [
+  "С этого аккаунта сайта прогресс уже перенесён. Войдите в аккаунт игры",
+  "The progress of this website account has already been transferred. Sign in to the game account"
+ ],
+ [
+  "Введите логин сайта",
+  "Enter the website login"
+ ],
+ [
+  "Введите пароль сайта",
+  "Enter the website password"
+ ],
+ [
+  "Слишком много попыток - подождите немного",
+  "Too many attempts: wait a little"
+ ],
+ [
+  "Этот ник - логин аккаунта сайта. Если он ваш - перенесите прогресс, ник останется за вами",
+  "This nickname is a website account login. If it is yours, transfer your progress and the nickname stays yours"
+ ],
+ [
+  "Считаем рейтинг…",
+  "Counting the rating…"
+ ],
+ [
+  "уничтожено ценности целей",
+  "target value destroyed"
+ ],
+ [
+  "порог победы авиации - {0} %",
+  "air victory threshold - {0} %"
+ ],
+ [
+  "ЗРК уничтожено",
+  "SAMs destroyed"
+ ],
+ [
+  "очки",
+  "points"
+ ],
+ [
+  "Волна Востока",
+  "East wave"
+ ],
+ [
+  "Волна Запада",
+  "West wave"
+ ],
+ [
+  "раунд {0} · по ПВО Запада",
+  "round {0} · against West air defense"
+ ],
+ [
+  "раунд {0} · по ПВО Востока",
+  "round {0} · against East air defense"
+ ],
+ [
+  "перехвачено",
+  "intercepted"
+ ],
+ [
+  "разрушено",
+  "destroyed"
+ ],
+ [
+  "без действий в бою",
+  "no actions in the battle"
+ ],
+ [
+  "очки засчитаются, когда перенесёте прогресс в аккаунт игры",
+  "points will count once you transfer your progress to a game account"
+ ],
+ [
+  "место в сезоне {0} → {1}",
+  "season place {0} → {1}"
+ ],
+ [
+  "место в сезоне {0}",
+  "season place {0}"
+ ],
+ [
+  "бой не вошёл в засчитанные",
+  "the battle did not make the season count"
+ ],
+ [
+  "взлёт",
+  "takeoff"
+ ],
+ [
+  "пуск ЗУР по вам",
+  "SAM launched at you"
+ ],
+ [
+  "цель 1",
+  "target 1"
+ ],
+ [
+  "цели 2 и 3",
+  "targets 2 and 3"
+ ],
+ [
+  "«Шилка» уничтожена",
+  "Shilka destroyed"
+ ],
+ [
+  "посадка",
+  "landing"
+ ],
+ [
+  "пуск ПЗРК",
+  "MANPADS launch"
+ ],
+ [
+  "ловушки поздно",
+  "countermeasures too late"
+ ],
+ [
+  "Задание выполнено",
+  "Mission accomplished"
+ ],
+ [
+  "Торфяные карьеры разбиты, «Шилка» у дамбы подавлена. Вертолёт вернулся на площадку.",
+  "The peat quarries are destroyed, the Shilka by the dam is suppressed. The helicopter is back at the pad."
+ ],
+ [
+  "Попадание ПЗРК «Игла» после пуска по второй цели.",
+  "Hit by an Igla MANPADS after launching at the second target."
+ ],
+ [
+  "ранг III",
+  "rank III"
+ ],
+ [
+  "Победа авиации",
+  "Air victory"
+ ],
+ [
+  "Победа ПВО",
+  "Air defense victory"
+ ],
+ [
+  "Победа Востока",
+  "East victory"
+ ],
+ [
+  "Победа Запада",
+  "West victory"
+ ],
+ [
+  "попадание",
+  "hit"
+ ],
+ [
+  "сброс {0}",
+  "{0} dropped"
+ ],
+ [
+  "пуск {0}",
+  "{0} launched"
+ ],
+ [
+  "{0} уничтожен",
+  "{0} destroyed"
+ ],
+ [
+  "выход из района",
+  "left the area"
+ ],
+ [
+  "вылет окончен",
+  "sortie over"
+ ],
+ [
+  "волна пошла",
+  "wave launched"
+ ],
+ [
+  "сбито {0}",
+  "{0} shot down"
+ ],
+ [
+  "разрушено {0} %",
+  "{0} % destroyed"
+ ],
+ [
+  "город отстоял",
+  "city defended"
+ ],
+ [
+  "оборона прорвана",
+  "defense broken"
+ ],
+ [
+  "баллистика",
+  "ballistic"
+ ],
+ [
+  "пуск волны",
+  "wave launch"
+ ],
+ [
+  "перехваты",
+  "intercepts"
+ ],
+ [
+  "разрушен {0}",
+  "{0} destroyed"
+ ],
+ [
+  "потерян {0}",
+  "{0} lost"
+ ],
+ [
+  "бой завершён",
+  "battle over"
+ ],
+ [
+  "Взять ник - войти паролем сайта",
+  "Take the nickname: sign in with the website password"
+ ],
+ [
+  "Это логин вашего аккаунта сайта - перенесите прогресс, ник останется за вами",
+  "This is your website login: transfer your progress and the nickname stays yours"
+ ],
+ [
+  "Это логин вашего аккаунта сайта - подтвердите паролем сайта, и ник останется за вами",
+  "This is your website login: confirm with the website password and the nickname stays yours"
+ ],
+ [
+  "Этот ник - логин другого аккаунта сайта. Выберите другой ник",
+  "This nickname is another website account’s login. Choose another nickname"
+ ],
+ [
+  "Ник «{0}» - логин другого аккаунта сайта, введите другой ник",
+  "Nickname “{0}” is another website account’s login, enter another nickname"
+ ],
+ [
+  "Логин сайта не подходит как ник (3-16 символов) - придумайте ник для рейтинга",
+  "The website login does not fit as a nickname (3-16 characters): choose a nickname for the rating"
+ ],
+ [
+  "С этого аккаунта сайта прогресс уже перенесён. Войдите в аккаунт игры - пароль как на сайте, если не меняли",
+  "Progress from this website account has already been transferred. Sign in to the game account: the password is the website one unless you changed it"
+ ],
+ [
+  "Этот ник - логин чужого аккаунта сайта",
+  "This nickname is another website account’s login"
+ ],
+ [
+  "Магазин камуфляжей - скоро",
+  "Camouflage shop: coming soon"
+ ],
+ [
+  "Магазин",
+  "Shop"
+ ],
+ [
+  "скоро",
+  "coming soon"
+ ],
+ [
+  "Разделы: исследования, задания, событие, рейтинг, магазин",
+  "Sections: research, tasks, event, rating, shop"
+ ],
+ [
+  "сезон {0} завершён",
+  "season {0} is over"
+ ],
+ [
+  "сезон {0} завершён · сезон {1} через {2} дн.",
+  "season {0} is over · season {1} in {2} d"
+ ],
+ [
+  "Между сезонами - неделя межсезонья: бои в рейтинг не идут.",
+  "Between seasons there is a one-week off-season: battles do not count for the rating."
+ ],
+ [
+  "межсезонье - бой не идёт в рейтинг",
+  "off-season - the battle does not count for the rating"
+ ],
+ [
+  "Магазин: окраски и аватарки за кристаллы",
+  "Shop: liveries and avatars for crystals"
+ ],
+ [
+  "окраски",
+  "liveries"
+ ],
+ [
+  "Инферно",
+  "Inferno"
+ ],
+ [
+  "Нефритовый дракон",
+  "Jade Dragon"
+ ],
+ [
+  "Окраска на выбор",
+  "Livery of your choice"
+ ],
+ [
+  "Кристаллы",
+  "Crystals"
+ ],
+ [
+  "кристаллы",
+  "crystals"
+ ],
+ [
+  "Откуда кристаллы",
+  "Where crystals come from"
+ ],
+ [
+  "Текстуры самолётов",
+  "Aircraft textures"
+ ],
+ [
+  "Оптимизированные",
+  "Optimized"
+ ],
+ [
+  "Максимальные",
+  "Maximum"
+ ],
+ [
+  "Где",
+  "Where"
+ ],
+ [
+  "В ангаре",
+  "In the hangar"
+ ],
+ [
+  "В бою",
+  "In battle"
+ ],
+ [
+  "Везде",
+  "Everywhere"
+ ],
+ [
+  "Максимальные: надписи и окраска чётче вблизи, но файлы больше и нужно больше памяти. В бою - только у своего самолёта.",
+  "Maximum: markings and paint look sharper up close, but files are larger and use more memory. In battle only your own aircraft."
+ ],
+ [
+  "Арсенал, справка, настройки",
+  "Arsenal, help, settings"
+ ],
+ [
+  "во внутренних отсеках - снаружи не видно",
+  "in internal bays - not visible from outside"
+ ],
+ [
+  "2 вылета",
+  "2 sorties"
+ ],
+ [
+  "ПВО: {0}",
+  "Air defence: {0}"
+ ],
+ [
+  "советская",
+  "Soviet"
+ ],
+ [
+  "прицельный контейнер",
+  "targeting pod"
+ ],
+ [
+  "свободнопадающая бомба",
+  "free-fall bomb"
+ ],
+ [
+  "бомба с лазерным наведением",
+  "laser-guided bomb"
+ ],
+ [
+  "спутниковая бомба",
+  "GPS-guided bomb"
+ ],
+ [
+  "бомба с телевизионным наведением",
+  "TV-guided bomb"
+ ],
+ [
+  "ракета по наземным целям",
+  "air-to-ground missile"
+ ],
+ [
+  "ракета по радарам",
+  "anti-radiation missile"
+ ],
+ [
+  "контейнер",
+  "pod"
+ ],
+ [
+  "прицел",
+  "sight"
+ ],
+ [
+  "ракета",
+  "missile"
+ ],
+ [
+  "Этой аватарки сейчас нет в магазине",
+  "This avatar is not in the shop right now"
+ ],
+ [
+  "Эта аватарка уже ваша",
+  "You already own this avatar"
+ ],
+ [
+  "Сначала купите эту аватарку",
+  "Buy this avatar first"
+ ],
+ [
+  "Окраски",
+  "Liveries"
+ ],
+ [
+  "Аватарки",
+  "Avatars"
+ ],
+ [
+  "окраски и аватарки",
+  "liveries and avatars"
+ ],
+ [
+  "Так вас увидят в рейтинге и в онлайне:",
+  "This is how others see you in the rating and online:"
+ ],
+ [
+  "Эта аватарка у вас в профиле.",
+  "This avatar is on your profile."
+ ],
+ [
+  "Кристаллы и аватарки - только у аккаунта игры.",
+  "Crystals and avatars are for game accounts only."
+ ],
+ [
+  "ежедневные и еженедельные",
+  "daily and weekly"
+ ],
+ [
+  "Ваш ник",
+  "Your nickname"
+ ],
+ [
+  "{0} место · очки: {1}",
+  "#{0} · points: {1}"
+ ],
+ [
+  "Аватарка {0}",
+  "Avatar {0}"
+ ],
+ [
+  "Окраска на выбор - возьмите любую",
+  "Livery of your choice - take any"
+ ],
+ [
+  "Награда за онлайн-рейтинг",
+  "A reward for the online rating"
+ ],
+ [
+  "начисляются в конце сезона",
+  "credited at the end of the season"
+ ],
+ [
+  "Покупка - навсегда",
+  "Purchases are permanent"
+ ],
+ [
+  "надеть или снять - здесь же",
+  "equip or remove it right here"
+ ],
+ [
+  "окраски сезона {0}",
+  "season {0} liveries"
+ ],
+ [
+  "на выбор: {0}",
+  "your choice: {0}"
+ ],
+ [
+  "Кристаллы и окраски - только у аккаунта игры.",
+  "Crystals and liveries are for game accounts only."
+ ],
+ [
+  "Магазин скоро откроется.",
+  "The shop opens soon."
+ ],
+ [
+  "Надета",
+  "Equipped"
+ ],
+ [
+  "Эта окраска на самолёте.",
+  "This livery is on the plane."
+ ],
+ [
+  "Снять",
+  "Remove"
+ ],
+ [
+  "Куплена",
+  "Owned"
+ ],
+ [
+  "Надеть",
+  "Equip"
+ ],
+ [
+  "Взять на выбор",
+  "Take it"
+ ],
+ [
+  "Не хватает",
+  "Not enough"
+ ],
+ [
+  "Кристаллы - за задания и рейтинг.",
+  "Crystals come from tasks and the rating."
+ ],
+ [
+  "Откуда?",
+  "Where from?"
+ ],
+ [
+  "надета",
+  "equipped"
+ ],
+ [
+  "куплена",
+  "owned"
+ ],
+ [
+  "на выбор",
+  "your choice"
+ ],
+ [
+  "получена",
+  "received"
+ ],
+ [
+  "Эта окраска уже ваша",
+  "This livery is already yours"
+ ],
+ [
+  "Не хватает кристаллов",
+  "Not enough crystals"
+ ],
+ [
+  "Окраски на выбор нет",
+  "No livery pick available"
+ ],
+ [
+  "Кристаллы и окраски - только у аккаунта игры",
+  "Crystals and liveries are for game accounts only"
+ ],
+ [
+  "Сначала купите эту окраску",
+  "Buy this livery first"
+ ],
+ [
+  "Этой окраски сейчас нет в магазине",
+  "This livery isn't in the shop right now"
+ ],
+ [
+  "Профиль",
+  "Profile"
+ ],
+ [
+  "место",
+  "place"
+ ],
+ [
+  "в игре с {0}",
+  "playing since {0}"
+ ],
+ [
+  "онлайн-боёв: {0}",
+  "online battles: {0}"
+ ],
+ [
+  "Так ваш профиль видят другие игроки",
+  "This is how other players see your profile"
+ ],
+ [
+  "По режимам",
+  "By mode"
+ ],
+ [
+  "Сезон {0}",
+  "Season {0}"
+ ],
+ [
+  "Всё время",
+  "All time"
+ ],
+ [
+  "Боёв",
+  "Battles"
+ ],
+ [
+  "Побед",
+  "Wins"
+ ],
+ [
+  "Поражено",
+  "Kills"
+ ],
+ [
+  "Лучший",
+  "Best"
+ ],
+ [
+  "Всего",
+  "Total"
+ ],
+ [
+  "Лётчик - уничтоженные ЗРК, ПВО - сбитые, Мульти-волна - всё поражённое",
+  "Pilot - SAMs destroyed, air defense - aircraft shot down, Multi-Wave - everything hit"
+ ],
+ [
+  "Любимое",
+  "Favorites"
+ ],
+ [
+  "за сезон",
+  "this season"
+ ],
+ [
+  "за всё время",
+  "all time"
+ ],
+ [
+  "ЗРК",
+  "SAM"
+ ],
+ [
+  "вылетов: {0} из {1}",
+  "sorties: {0} of {1}"
+ ],
+ [
+  "боёв: {0} из {1}",
+  "battles: {0} of {1}"
+ ],
+ [
+  "Появится после онлайн-боёв.",
+  "Appears after online battles."
+ ],
+ [
+  "Лучшие бои сезона",
+  "Best battles of the season"
+ ],
+ [
+  "Награды",
+  "Awards"
+ ],
+ [
+  "места за сезоны",
+  "season places"
+ ],
+ [
+  "{0} место",
+  "place {0}"
+ ],
+ [
+  "Наград пока нет. Место за сезон появляется после его конца.",
+  "No awards yet. A season place appears after the season ends."
+ ],
+ [
+  "Профили скоро откроются",
+  "Profiles open soon"
+ ],
+ [
+  "Профиль появится, как только сервер рейтинга обновится.",
+  "The profile will appear as soon as the rating server is updated."
+ ],
+ [
+  "Игрок не найден",
+  "Player not found"
+ ],
+ [
+  "Задания",
+  "Tasks"
+ ],
+ [
+  "Задания: ежедневные и еженедельные",
+  "Tasks: daily and weekly"
+ ],
+ [
+  "ЗАБРАТЬ",
+  "CLAIM"
+ ],
+ [
+  "ДЕМО",
+  "DEMO"
+ ],
+ [
+  "Сводка недели",
+  "Weekly summary"
+ ],
+ [
+  "неделя закончится через",
+  "week ends in"
+ ],
+ [
+  "Ежедневно",
+  "Daily"
+ ],
+ [
+  "Еженедельно",
+  "Weekly"
+ ],
+ [
+  "засчитывается:",
+  "counts:"
+ ],
+ [
+  "база",
+  "base"
+ ],
+ [
+  "{0} из {1}",
+  "{0} of {1}"
+ ],
+ [
+  "{0} / {1} очков",
+  "{0} / {1} points"
+ ],
+ [
+  "{0} очков · маршрут пройден",
+  "{0} points · route complete"
+ ],
+ [
+  "{0} д {1} ч",
+  "{0}d {1}h"
+ ],
+ [
+  "{0} ч",
+  "{0} h"
+ ],
+ [
+  "{0} мин",
+  "{0} min"
+ ],
+ [
+  "{0} тыс.",
+  "{0}k"
+ ],
+ [
+  "ещё {0}",
+  "{0} to go"
+ ],
+ [
+  "Ящик снабжения за все три сегодня",
+  "Supply crate for all three today"
+ ],
+ [
+  "Кейс недели за все пять",
+  "Weekly case for all five"
+ ],
+ [
+  "Продвинуть задания этой вкладки",
+  "Advance this tab's tasks"
+ ],
+ [
+  "Следующий день",
+  "Next day"
+ ],
+ [
+  "Следующая неделя",
+  "Next week"
+ ],
+ [
+  "МиГ-31 серый",
+  "Grey MiG-31"
+ ],
+ [
+  "«Нефритовый дракон»",
+  "Jade Dragon"
+ ],
+ [
+  "Сбросить демо",
+  "Reset demo"
+ ],
+ [
+  "Сыграть 3 боя",
+  "Play 3 battles"
+ ],
+ [
+  "Провести 30 минут в боях",
+  "Spend 30 minutes in battle"
+ ],
+ [
+  "Набрать 2 000 опыта",
+  "Earn 2,000 XP"
+ ],
+ [
+  "Два боя в «Реализме»",
+  "Two Realistic battles"
+ ],
+ [
+  "Сбить 10 воздушных целей",
+  "Shoot down 10 air targets"
+ ],
+ [
+  "Отразить 5 волн обороны",
+  "Repel 5 defense waves"
+ ],
+ [
+  "«Оборона», любая карта",
+  "Defense, any map"
+ ],
+ [
+  "Перехватить 20 ракет и бомб",
+  "Intercept 20 missiles and bombs"
+ ],
+ [
+  "Сбить 5 крылатых ракет или дронов",
+  "Shoot down 5 cruise missiles or drones"
+ ],
+ [
+  "Пройти «Оборону» до конца",
+  "Finish a Defense battle"
+ ],
+ [
+  "«Оборона», все волны одного боя",
+  "Defense, all waves of one battle"
+ ],
+ [
+  "Поразить 4 объекта ударом",
+  "Hit 4 objectives"
+ ],
+ [
+  "Подавить 2 зенитных комплекса",
+  "Suppress 2 SAM systems"
+ ],
+ [
+  "Разрушить 20 построек",
+  "Destroy 20 buildings"
+ ],
+ [
+  "Сыграть 25 боёв",
+  "Play 25 battles"
+ ],
+ [
+  "Провести 4 часа в боях",
+  "Spend 4 hours in battle"
+ ],
+ [
+  "Набрать 20 000 опыта",
+  "Earn 20,000 XP"
+ ],
+ [
+  "8 боёв в «Реализме»",
+  "8 Realistic battles"
+ ],
+ [
+  "Выполнить 15 ежедневных заданий",
+  "Complete 15 daily tasks"
+ ],
+ [
+  "Раздел «Задания», вкладка «Ежедневно»",
+  "Tasks section, Daily tab"
+ ],
+ [
+  "Играть 5 дней из 7",
+  "Play 5 days out of 7"
+ ],
+ [
+  "Сбить 80 воздушных целей",
+  "Shoot down 80 air targets"
+ ],
+ [
+  "Отстоять город в обороне 4 раза",
+  "Hold the city in Defense 4 times"
+ ],
+ [
+  "Перехватить 150 ракет и бомб",
+  "Intercept 150 missiles and bombs"
+ ],
+ [
+  "Поразить 30 объектов ударом",
+  "Hit 30 objectives"
+ ],
+ [
+  "Подавить 12 зенитных комплексов",
+  "Suppress 12 SAM systems"
+ ],
+ [
+  "Онлайн, любая сторона",
+  "Online, either side"
+ ],
+ [
+  "Онлайн в «Реализме»",
+  "Online on Realistic"
+ ],
+ [
+  "Стать лучшим в команде",
+  "Top your team"
+ ],
+ [
+  "Онлайн: больше всех очков в своей команде",
+  "Online: most points in your team"
+ ],
+ [
+  "Онлайн за ПВО, «Мульти-волна» за ПВО",
+  "Online as air defense, Multi-Wave as air defense"
+ ],
+ [
+  "Онлайн, «Мульти-волна» за ПВО",
+  "Online, Multi-Wave as air defense"
+ ],
+ [
+  "Сбить 3 самолёта за один бой",
+  "Shoot down 3 aircraft in one battle"
+ ],
+ [
+  "Онлайн за ПВО",
+  "Online as air defense"
+ ],
+ [
+  "Онлайн за авиацию",
+  "Online as aviation"
+ ],
+ [
+  "Онлайн, «Мульти-волна» за нападение",
+  "Online, Multi-Wave as the attacker"
+ ],
+ [
+  "Уничтожить 3 комплекса ударами волны",
+  "Destroy 3 SAM systems with wave strikes"
+ ],
+ [
+  "Хотя бы один онлайн-бой в день",
+  "At least one online battle a day"
+ ],
+ [
+  "Уничтожить 20 комплексов ударами волны",
+  "Destroy 20 SAM systems with wave strikes"
+ ],
+ [
+  "Целей готово: {0}",
+  "Goals ready: {0}"
+ ],
+ [
+  "Можно купить: {0}",
+  "Ready to buy: {0}"
+ ],
+ [
+  "Можно исследовать: {0}",
+  "Ready to research: {0}"
+ ],
+ [
+  "Перехватить 1 баллистическую ракету",
+  "Intercept 1 ballistic missile"
+ ],
+ [
+  "Перехватить 15 баллистических ракет",
+  "Intercept 15 ballistic missiles"
+ ],
+ [
+  "Тестовый режим: состояние в памяти этой вкладки, на сервер ничего не уходит.",
+  "Test mode: state lives in this tab's memory, nothing goes to the server."
+ ],
+ [
+  "Вы не вошли: задания считаются только в аккаунте игры.",
+  "You are not signed in: tasks count only on a game account."
+ ],
+ [
+  "Такого задания сейчас нет",
+  "This task is not available now"
+ ],
+ [
+  "Задание ещё не выполнено",
+  "The task is not complete yet"
+ ],
+ [
+  "Награда уже получена",
+  "Reward already claimed"
+ ],
+ [
+  "Сначала заберите все задания",
+  "Claim all the tasks first"
+ ],
+ [
+  "Загружаем город",
+  "Loading the city"
+ ],
+ [
+  "Ранг",
+  "Rank"
+ ],
+ [
+  "Топливо",
+  "Fuel"
+ ],
+ [
+  "в отсеках",
+  "in bays"
+ ],
+ [
+  "Охота за ПВО",
+  "SEAD"
+ ],
+ [
+  "Штурмовка",
+  "Strike"
+ ],
+ [
+  "Разбитое в 1-м вылете остаётся разбитым · +300 за два возвращения",
+  "What sortie 1 destroys stays destroyed · +300 for two returns"
+ ],
+ [
+  "Ф",
+  "AB"
+ ],
+ [
+  "По удержанию: рули отклонены, пока палец на кнопке. По нажатию: нажали - рули отклонены и остаются, нажали ту же кнопку ещё раз - отпущены, противоположную - переключились; тап в середину крестовины - всё выключить.",
+  "Hold: the controls stay deflected while your finger is on the button. Tap: press to deflect and keep them there, press the same button again to release, the opposite one to switch; tap the middle of the D-pad to release all."
+ ],
+ [
+  "Ещё (на телефоне): «Обзор», «Карта», «Бинокль» и «Авто» - ряд справа вверху; золотой уголок - «Авто» включён",
+  "More (on a phone): \"View\", \"Map\", \"Binoculars\" and \"Auto\" - a row at the top right; a gold corner means \"Auto\" is on"
+ ],
+ [
+  "Ещё: обзор, карта, бинокль, авто",
+  "More: view, map, binoculars, auto"
+ ],
+ [
+  "Ещё",
+  "More"
+ ]
+]

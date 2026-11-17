@@ -1,6 +1,6 @@
 // Главное меню: слева - режимы, справа - «папка задания» (настройки режима и старт), Арсенал / Справка / Настройки /
 // Об игре - панель поверх. Фон - готовые кадры (menubg.js), пока их нет - живой бой (director.js).
-import { LANG, LANGS, setLang, tr, trIf, trDom } from './i18n.js?v=20261117d';
+import { LANG, LANGS, LOCALE, setLang, tr, trIf, trDom } from './i18n.js?v=20261117d';
 import { CITY, ZONE } from './city.js?v=20261117d';
 import { AG, SAM, ERAS, LOADOUTS, DEFENSE, SAM_TYPE, AG_KIND, SAM_COST, PLANES, loadoutsOf, loadoutRole, loadoutTargets, ROLE_NAME, COMBINED, CARRIERS, MULTI, multiBudget, multiItems } from './arsenal.js?v=20261117d';
 import { combinedOk, COMBINED_NAME, levelIn, levelOfSams } from './sim/combined.js?v=20261117d';
@@ -18,7 +18,7 @@ import { guideChapters } from './guide.js?v=20261117d';
 import { iconize, ico, capsHtml } from './icons.js?v=20261117d';
 import { NODE, owned, researched, canBuy, canResearch, retiredHidden } from './progress.js?v=20261117d';
 
-const LOC = LANG === 'en' ? 'en-US' : 'ru-RU'; // разделитель тысяч в числах
+const LOC = LOCALE; // разделитель тысяч в числах
 const GAMES = [
   { k: 'air', name: tr('Вылет'), desc: tr('за самолёт: прорвать ПВО и уничтожить цели') },
   { k: 'defense', name: tr('Оборона'), desc: tr('за ПВО: отразить волны налётов на город') },
@@ -46,6 +46,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
   const { $, setup, ls, snd } = C;
   const save = () => C.saveSetup();
   let tab = 'play';
+  let trSec = null; // раскрытый раздел учебника (null - тот, где выбранный урок)
   const stats = () => { try { return JSON.parse(ls.get('fortuna_airdef_stats') || '{}') || {}; } catch (_) { return {}; } };
   const seg = (id, cur, items) => `<div class="seg" data-seg="${id}">${items.map(([v, l]) => `<button data-v="${v}" class="${String(v) === String(cur) ? 'on' : ''}">${l}</button>`).join('')}</div>`;
   const tags = (k, t) => `<span class="tag ${k}">${t}</span>`;
@@ -94,21 +95,27 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
   };
   function renderPlay() {
     const g = setup.game, el = $('tab-play'); C.realBlock = false;
+    document.body.classList.toggle('trOn', g === 'training'); // «Обучение»: набор «Учебный класс» (airdef.html, .trOn)
     if (g === 'online') { C.online.panel(el); return; } // онлайн - свой раздел (online.js)
     if (g === 'training' && !setup.tlist) { el.innerHTML = renderFirst(); return; } // «Первые шаги»
     if (g === 'training') {
-      const done = lessonsDone(), list = LESSONS[setup.tside];
+      const done = lessonsDone(), list = LESSONS[setup.tside], sl = [...el.querySelectorAll('.trSecs, .seg')].map((n) => n.scrollLeft); // прокрутка вбок закладок и переключателей переживает перерисовку
       // учебник: уроки по разделам («Основы», «Системы», «Бомбы»… / «Оборона», «Комплексы»…), номер - сквозной
       const mw = setup.tside === 'matk' || setup.tside === 'mdef'; // учебник «Мульти-волны» - свои две ветки
-      let h = `<p class="hint"><button class="fsl" data-fs="wiz">${tr('‹ Первые шаги - подобрать урок по ответам')}</button></p><div class="prow"><span>${tr('Учебник')}</span>${seg('tbook', mw ? 'multi' : 'base', [['base', tr('Вылет и оборона')], ['multi', tr('Мульти-волна')]])}</div>
+      // раздел (закладка) - тот, где выбранный урок; клик по закладке только переключает показ (trSec), урок не меняется
+      const secs = [...new Set(list.map((l) => l.sec))], cur = secs.includes(trSec) ? trSec : (list[setup.tl] || list[0]).sec, L0 = list[setup.tl] || list[0];
+      let h = `<p class="hint trWiz"><button class="fsl" data-fs="wiz"><b>${tr('Первые шаги')}</b><small>${tr('подобрать урок по ответам')}</small></button></p><div class="prow"><span>${tr('Учебник')}</span>${seg('tbook', mw ? 'multi' : 'base', [['base', tr('Вылет и оборона')], ['multi', tr('Мульти-волна')]])}</div>
         <div class="prow"><span>${tr('Сторона')}</span>${seg('tside', setup.tside, mw ? [['matk', tr('За волну')], ['mdef', tr('За ПВО')]] : [['air', tr('За самолёт')], ['heli', tr('За вертолёт')], ['def', tr('За ПВО')]])}</div>${mw ? '' : `
-        <div class="prow"><span>${tr('Чьей техникой')}</span>${seg('tnat', setup.tside !== 'def' ? (setup.side === 'east' ? 'west' : 'east') : setup.side, [['east', tr('Восток')], ['west', tr('Запад')]])}</div>`}`, sec = null;
-      list.forEach((l, i) => {
-        if (l.sec !== sec) { sec = l.sec; const n = list.filter((q) => q.sec === sec).length, k = list.filter((q) => q.sec === sec && done[q.id]).length; h += `<div class="cat-h">${trIf(sec)} <span class="dim">${k}/${n}</span></div>`; }
-        h += `<button class="opt ${i === setup.tl ? 'on' : ''} ${done[l.id] ? 'done' : ''}" data-tl="${i}"><div class="nm"><b>${i + 1}. ${trIf(l.name)}${done[l.id] ? ' ' + ico('ok', 'ii') : ''}</b><span>${trIf(l.desc)}</span></div></button>`;
-      });
+        <div class="prow"><span>${tr('Чьей техникой')}</span>${seg('tnat', setup.tside !== 'def' ? (setup.side === 'east' ? 'west' : 'east') : setup.side, [['east', tr('Восток')], ['west', tr('Запад')]])}</div>`}`;
+      // учебник: уроки по разделам («Основы», «Системы», «Бомбы»… / «Оборона», «Комплексы»…) - закладки с «пройдено k/n»; под ними карточки уроков раздела, номер - сквозной
+      h += `<div class="trSecs">${secs.map((sec, j) => { const q = list.filter((l) => l.sec === sec); return `<button class="trSec ${sec === cur ? 'on' : ''}" data-trsec="${j}"><span>${trIf(sec)}</span><em>${q.filter((l) => done[l.id]).length}/${q.length}</em></button>`; }).join('')}</div><div class="trGrid">`;
+      list.forEach((l, i) => { if (l.sec === cur) h += `<button class="opt trCard ${i === setup.tl ? 'on' : ''} ${done[l.id] ? 'done' : ''}" data-tl="${i}"><i class="trNum">${i + 1}</i><b class="trNm">${trIf(l.name)}</b>${done[l.id] ? '<i class="trMk"></i>' : ''}</button>`; });
+      h += `</div><div class="trDesc"><b>${setup.tl + 1}. ${trIf(L0.name)}</b><span>${trIf(L0.desc)}</span></div>`;
       el.innerHTML = h + (mw ? '<p class="hint">' + tr('Каждый урок: объяснение и шаги с подсказками в панели «Урок» (кнопка вверху справа; пока она открыта, игра на паузе). Уроки идут по порядку: от карты и первой покупки до контрольной волны.') + '</p>'
         : '<p class="hint">' + tr('Каждый урок: объяснение, показ (самолёт всё делает сам), затем вы. Проиграть нельзя: урона нет, боеприпасы пополняются. Шаги - в панели «Урок» вверху справа (пока она открыта, игра на паузе). Кнопка «?» объясняет оружие или комплекс.') + '</p>');
+      [...el.querySelectorAll('.trSecs, .seg')].forEach((n, i) => { n.scrollLeft = sl[i] || 0; });
+      const bar = el.querySelector('.trSecs'), on = bar && bar.querySelector('.on'); // выбранная закладка - в видимой части ряда
+      if (on) { const r = on.getBoundingClientRect(), q = bar.getBoundingClientRect(); if (r.right > q.right) bar.scrollLeft += r.right - q.right + 8; else if (r.left < q.left) bar.scrollLeft -= q.left - r.left + 8; }
       return;
     }
     if (g === 'multi') { el.innerHTML = renderMulti(); return; }
@@ -336,6 +343,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
     const sum = e.target.closest('[data-hgset]'); if (sum) { snd.click(); hgSet = !hgSet; render(); return; }
     const fw = e.target.closest('.hgl.on .hgr:not(.inb) [data-fw]'); if (fw) { snd.click(); C.hangar.focusWeapon(fw.dataset.fw); render(); return; }
     const ops = e.target.closest('[data-ops]'); if (ops) { const n = +ops.dataset.ops; if (n !== opSlot) { snd.click(); opSlot = n; render(); } return; } // «Операция»: какой вылет выбирать в ленте // оружие выбранной подвески - камера подлетает
+    const ts = e.target.closest('[data-trsec]'); if (ts) { const secs = [...new Set(LESSONS[setup.tside].map((l) => l.sec))]; snd.click(); trSec = secs[+ts.dataset.trsec]; render(); return; }
     const f = e.target.closest('[data-fs]'); if (f) { firstClick(f.dataset.fs); snd.click(); render(); return; }
     const nd = e.target.closest('[data-need]'); if (nd) { snd.click(); C.research.open(nd.dataset.need); return; } // закрыто в «Реализме» - к нужной единице дерева
     const b = e.target.closest('[data-v]'), lo = e.target.closest('[data-lo]'), lo1 = e.target.closest('[data-lo1]'), lo2 = e.target.closest('[data-lo2]'), tl = e.target.closest('[data-tl]');
@@ -346,7 +354,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
         if (id === 'pmap') setup.pmap = v; else setup.pwx = { ...(setup.pwx || {}), [C.MAP]: v };
         save(); const u = new URL(location.href); u.searchParams.delete('weather'); u.searchParams.delete('map'); location.replace(u.href); return;
       }
-      if (id === 'pside') { const ms = photoMs(); setup.pside = v; setup.side = v === 'def' ? ms : ms === 'east' ? 'west' : 'east'; } else if (id === 'pms') setup.side = (setup.pside || 'air') === 'def' ? v : v === 'east' ? 'west' : 'east'; else if (id === 'palt') setup.palt = v; else if (id === 'pvs') setup.pvs = v; else if (id === 'op') setup.op = v === 'op'; else if (id === 'mrole') setup.mrole = v; else if (id === 'cs') setup.cs = v === 'on'; else if (id === 'diff') setup.diff = v; else if (id === 'era') { setup.era = +v; setup.lo = 0; } else if (id === 'side') setup.side = v; else if (id === 'aside') setup.side = v === 'east' ? 'west' : 'east'; else if (id === 'tnat') setup.side = setup.tside !== 'def' ? (v === 'east' ? 'west' : 'east') : v; /* обучение: своя техника; setup.side - сторона ПВО */ else if (id === 'tside') { setup.tside = v; setup.tl = 0; } else if (id === 'tbook') { setup.tside = v === 'multi' ? 'matk' : 'air'; setup.tl = 0; }
+      if (id === 'pside') { const ms = photoMs(); setup.pside = v; setup.side = v === 'def' ? ms : ms === 'east' ? 'west' : 'east'; } else if (id === 'pms') setup.side = (setup.pside || 'air') === 'def' ? v : v === 'east' ? 'west' : 'east'; else if (id === 'palt') setup.palt = v; else if (id === 'pvs') setup.pvs = v; else if (id === 'op') setup.op = v === 'op'; else if (id === 'mrole') setup.mrole = v; else if (id === 'cs') setup.cs = v === 'on'; else if (id === 'diff') setup.diff = v; else if (id === 'era') { setup.era = +v; setup.lo = 0; } else if (id === 'side') setup.side = v; else if (id === 'aside') setup.side = v === 'east' ? 'west' : 'east'; else if (id === 'tnat') setup.side = setup.tside !== 'def' ? (v === 'east' ? 'west' : 'east') : v; /* обучение: своя техника; setup.side - сторона ПВО */ else if (id === 'tside') { setup.tside = v; setup.tl = 0; trSec = null; } else if (id === 'tbook') { setup.tside = v === 'multi' ? 'matk' : 'air'; setup.tl = 0; trSec = null; }
     } else if (e.target.closest('[data-psam]')) setup.psam = e.target.closest('[data-psam]').dataset.psam; else if (e.target.closest('[data-pmun]')) setup.pmun = e.target.closest('[data-pmun]').dataset.pmun;
     else if (lo) setup.lo = +lo.dataset.lo; else if (lo1) setup.lo1 = +lo1.dataset.lo1; else if (lo2) setup.lo2 = +lo2.dataset.lo2; else if (tl) setup.tl = +tl.dataset.tl; else return;
     save(); render();

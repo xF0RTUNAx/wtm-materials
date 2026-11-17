@@ -1,0 +1,2270 @@
+[
+ [
+  "Сбит: {0}",
+  "Shot down: {0}"
+ ],
+ [
+  "Оторвало законцовку левого крыла - тянет влево, держите ручку",
+  "Left wingtip lost: pulling left, hold the stick"
+ ],
+ [
+  "Оторвало законцовку правого крыла - тянет вправо, держите ручку",
+  "Right wingtip lost: pulling right, hold the stick"
+ ],
+ [
+  "Разбит хвост слева - управление хуже, уводит",
+  "Left tail damaged: sluggish handling, drifting"
+ ],
+ [
+  "Разбит хвост справа - управление хуже, уводит",
+  "Right tail damaged: sluggish handling, drifting"
+ ],
+ [
+  "Хвост разрушен - самолёт неуправляем!",
+  "Tail destroyed: aircraft out of control!"
+ ],
+ [
+  "Пожар на борту!",
+  "Fire on board!"
+ ],
+ [
+  "Разбит левый пилон - подвеска на нём потеряна",
+  "Left pylon destroyed: its weapons are lost"
+ ],
+ [
+  "Разбит правый пилон - подвеска на нём потеряна",
+  "Right pylon destroyed: its weapons are lost"
+ ],
+ [
+  "Повреждён рулевой винт - разворачивает, держите педали и сбросьте шаг",
+  "Tail rotor damaged: yawing, hold the pedals and lower the collective"
+ ],
+ [
+  "Хвостовая балка разрушена - вращение! Садитесь",
+  "Tail boom destroyed: spinning! Land now"
+ ],
+ [
+  "левое крыло",
+  "left wing"
+ ],
+ [
+  "правое крыло",
+  "right wing"
+ ],
+ [
+  "хвост",
+  "tail"
+ ],
+ [
+  "оба двигателя",
+  "both engines"
+ ],
+ [
+  "левый двигатель",
+  "left engine"
+ ],
+ [
+  "правый двигатель",
+  "right engine"
+ ],
+ [
+  "двигатель",
+  "engine"
+ ],
+ [
+  "бак - течь",
+  "fuel tank leak"
+ ],
+ [
+  "Попадание{0} · повреждено: {1}",
+  "Hit{0} · damaged: {1}"
+ ],
+ [
+  "Нет прицельного контейнера - цели для бомб по координатам выбираются сами",
+  "No targeting pod: coordinate-guided bomb targets are picked automatically"
+ ],
+ [
+  "Нет целей",
+  "No targets"
+ ],
+ [
+  "Цель: {0}",
+  "Target: {0}"
+ ],
+ [
+  "далеко - ближе {0} км",
+  "too far (≤ {0} km)"
+ ],
+ [
+  "слишком близко",
+  "too close"
+ ],
+ [
+  "низко - выше {0} м",
+  "too low: climb to {0} m"
+ ],
+ [
+  "закрыта корпусом",
+  "masked by airframe"
+ ],
+ [
+  "закрыта домами",
+  "blocked by buildings"
+ ],
+ [
+  "Залп - когда прицел придёт на цель",
+  "Salvo fires when the reticle is on target"
+ ],
+ [
+  "Нужен захват контейнером (ТВ-ГСН)",
+  "Pod lock required (TV seeker)"
+ ],
+ [
+  "Ночь: ТВ-головка не видит цель",
+  "Night: TV seeker can't see the target"
+ ],
+ [
+  "Цель вне поля ГСН - доверните на неё",
+  "Target outside seeker FOV: turn toward it"
+ ],
+ [
+  "Далеко для ГСН",
+  "Too far for the seeker"
+ ],
+ [
+  "Нет включённой РЛС впереди в поле ГСН",
+  "No active radar ahead in seeker FOV"
+ ],
+ [
+  "Нужен захват контейнером (лазер)",
+  "Pod lock required (laser)"
+ ],
+ [
+  "Нет координат: захватите точку контейнером или доверните на цель задания",
+  "No coordinates: lock a point with the pod or turn toward the mission target"
+ ],
+ [
+  "Сброс невозможен: крен больше 60° или самолёт перевёрнут",
+  "Can't drop: bank over 60° or inverted"
+ ],
+ [
+  "Ловушки кончились",
+  "Out of countermeasures"
+ ],
+ [
+  "Лазер: {0}",
+  "Laser: {0}"
+ ],
+ [
+  "авто",
+  "auto"
+ ],
+ [
+  "вкл",
+  "on"
+ ],
+ [
+  "выкл",
+  "off"
+ ],
+ [
+  "Нет прицельного контейнера в этой подвеске",
+  "No targeting pod in this loadout"
+ ],
+ [
+  "Обзор: ведите пальцем - камера осматривается, самолёт держит курс",
+  "View: drag to look around, the aircraft holds course"
+ ],
+ [
+  "Камера - снова за самолётом",
+  "Camera back on the aircraft"
+ ],
+ [
+  "пополнение",
+  "rearm"
+ ],
+ [
+  "пуск по координатам · {0} км",
+  "coordinate launch · {0} km"
+ ],
+ [
+  "нет координат цели",
+  "no target coordinates"
+ ],
+ [
+  "В зоне · {0} с до попадания",
+  "In range · {0} s to impact"
+ ],
+ [
+  "Далеко - ближе или выше",
+  "Too far: get closer or climb"
+ ],
+ [
+  "Близко - проскочили",
+  "Too close: overshot"
+ ],
+ [
+  "падение через {0} с",
+  "impact in {0} s"
+ ],
+ [
+  "нужен захват контейнером",
+  "pod lock required"
+ ],
+ [
+  "НАР · механический прицел (кольцо)",
+  "Rockets · iron sight (ring)"
+ ],
+ [
+  "НАР: опустите нос - точка падения дальше 4 км",
+  "Rockets: lower the nose, impact point beyond 4 km"
+ ],
+ [
+  "далеко · {0} км",
+  "too far · {0} km"
+ ],
+ [
+  "{0} · дальность {1} км · {2} с{3}",
+  "{0} · range {1} km · {2} s{3}"
+ ],
+ [
+  " · залп ждёт цель",
+  " · salvo awaits target"
+ ],
+ [
+  "НАР · {0} км · {1} с",
+  "Rockets · {0} km · {1} s"
+ ],
+ [
+  "РЛС {0} · {1} км - пуск",
+  "Radar {0} · {1} km: launch"
+ ],
+ [
+  "нет РЛС впереди",
+  "no radar ahead"
+ ],
+ [
+  "в зоне · {0} км",
+  "in range · {0} km"
+ ],
+ [
+  "вылет {0} км",
+  "base {0} km"
+ ],
+ [
+  "Пополнение {0}{1}",
+  "Rearm {0}{1}"
+ ],
+ [
+  " · ниже 1500 м",
+  " · below 1500 m"
+ ],
+ [
+  "Крен",
+  "Roll"
+ ],
+ [
+  "<span class=\"dim\">нет целей</span>",
+  "<span class=\"dim\">no targets</span>"
+ ],
+ [
+  "<b class=\"lk\">Захват</b>{0}",
+  "<b class=\"lk\">Lock</b>{0}"
+ ],
+ [
+  "<span class=\"lk2\">захват…</span>",
+  "<span class=\"lk2\">locking…</span>"
+ ],
+ [
+  "ТВ",
+  "TV"
+ ],
+ [
+  "км/ч",
+  "km/h"
+ ],
+ [
+  "м",
+  "m"
+ ],
+ [
+  "Ф",
+  "AB"
+ ],
+ [
+  " <span class=\"fly\">· в полёте {0}</span>",
+  " <span class=\"fly\">· in flight {0}</span>"
+ ],
+ [
+  "ловушки",
+  "countermeasures"
+ ],
+ [
+  "(диполи)",
+  "(chaff)"
+ ],
+ [
+  " · РЛС {0}/{1}",
+  " · radars {0}/{1}"
+ ],
+ [
+  " · цели {0}/{1}",
+  " · targets {0}/{1}"
+ ],
+ [
+  "Авто",
+  "Auto"
+ ],
+ [
+  " · лазер {0}",
+  " · laser {0}"
+ ],
+ [
+  " · <b style=\"color:#86efac\">пополнение {0} с</b>",
+  " · <b style=\"color:#86efac\">rearm {0} s</b>"
+ ],
+ [
+  "ПУСК РАКЕТЫ{0}",
+  "MISSILE LAUNCH{0}"
+ ],
+ [
+  "ЗАХВАТ - {0}",
+  "LOCK: {0}"
+ ],
+ [
+  "ИК",
+  "IR"
+ ],
+ [
+  "  Захват {0} км",
+  "  Lock {0} km"
+ ],
+ [
+  "  поиск",
+  "  searching"
+ ],
+ [
+  "  обзор",
+  "  scanning"
+ ],
+ [
+  "Лазер",
+  "Laser"
+ ],
+ [
+  "за самолётом",
+  "chase"
+ ],
+ [
+  "облёт",
+  "orbit"
+ ],
+ [
+  "из кабины",
+  "cockpit"
+ ],
+ [
+  "за оружием (бомбы и ракеты)",
+  "weapon cam (bombs and missiles)"
+ ],
+ [
+  "Камера: {0}",
+  "Camera: {0}"
+ ],
+ [
+  " (бот)",
+  " (bot)"
+ ],
+ [
+  "союзник",
+  "ally"
+ ],
+ [
+  "{0}: попадание - {1}",
+  "{0} hit: {1}"
+ ],
+ [
+  "сбита ПВО",
+  "shot down by AD"
+ ],
+ [
+  "мимо - помехи навигации",
+  "missed: navigation jammed"
+ ],
+ [
+  "мимо",
+  "missed"
+ ],
+ [
+  "УНИЧТОЖЕН: {0}{1}",
+  "DESTROYED: {0}{1}"
+ ],
+ [
+  " - цель задания",
+  " (mission target)"
+ ],
+ [
+  "ЗАДАЧА ВЫПОЛНЕНА - уходите за границу района или охотьтесь на ПВО",
+  "MISSION COMPLETE: leave the area or hunt air defenses"
+ ],
+ [
+  "ЗАДАЧА ВЫПОЛНЕНА - ПВО подавлена: уходите за границу района или продолжайте охоту",
+  "MISSION COMPLETE, air defenses suppressed: leave the area or keep hunting"
+ ],
+ [
+  "ЗАДАЧА ВЫПОЛНЕНА - вылет завершится через {0} с",
+  "MISSION COMPLETE: sortie ends in {0} s"
+ ],
+ [
+  "Задание выполнено - вертолёт уходит на площадку",
+  "Mission complete: the helicopter heads back to base"
+ ],
+ [
+  "Уничтожен комплекс: {0}",
+  "SAM site destroyed: {0}"
+ ],
+ [
+  "Вылет 2 из 2 - удар: {0}. Комплексов с РЛС осталось: {1}",
+  "Sortie 2 of 2, strike: {0}. Radar sites left: {1}"
+ ],
+ [
+  "Операция, вылет 1 из 2 - охота за ПВО: уничтожьте {0} комплекса с РЛС. Вторым вылетом - удар по целям города.",
+  "Operation, sortie 1 of 2: SEAD hunt. Destroy {0} radar sites. Sortie 2: strike the city targets."
+ ],
+ [
+  "Охота за ПВО: уничтожьте {0} из {1} комплексов с РЛС (цели города - по желанию).",
+  "SEAD hunt: destroy {0} of {1} radar sites (city targets optional)."
+ ],
+ [
+  "Цели: {0}. ПВО: {1}, ранг {2}",
+  "Targets: {0}. Air defense: {1}, rank {2}"
+ ],
+ [
+  "Цели ({0} - по силе подвески): {1}. ПВО: {2}, ранг {3}",
+  "Targets ({0}, by loadout strength): {1}. Air defense: {2}, rank {3}"
+ ],
+ [
+  "советская",
+  "Soviet"
+ ],
+ [
+  "западная",
+  "Western"
+ ],
+ [
+  "Ждём вылета",
+  "Waiting to take off"
+ ],
+ [
+  "разрыв",
+  "burst"
+ ],
+ [
+  "Связь восстановлена - управление снова у вас",
+  "Connection restored: you have control again"
+ ],
+ [
+  "Вылет! Цели: {0}. Вылетов в запасе: {1}",
+  "Take off! Targets: {0}. Sorties left: {1}"
+ ],
+ [
+  "Связь пропала - самолёт ведёт ИИ. Управление вернётся, как только связь восстановится",
+  "Connection lost: the AI is flying your aircraft until it's restored"
+ ],
+ [
+  "Попадание: {0}",
+  "Hit: {0}"
+ ],
+ [
+  "Самолёт сбит",
+  "Aircraft shot down"
+ ],
+ [
+  "Вылет 1 из 2 завершён",
+  "Sortie 1 of 2 complete"
+ ],
+ [
+  "Вылет 2: удар →",
+  "Sortie 2: strike →"
+ ],
+ [
+  "РЛС уничтожено",
+  "radars destroyed"
+ ],
+ [
+  "комплексов ПВО",
+  "SAM sites"
+ ],
+ [
+  "очков",
+  "points"
+ ],
+ [
+  "сбит",
+  "shot down"
+ ],
+ [
+  "вернулся",
+  "returned"
+ ],
+ [
+  "самолёт",
+  "aircraft"
+ ],
+ [
+  "Уничтоженное остаётся уничтоженным; уцелевшие комплексы перезарядятся и снова включат РЛС. {0}",
+  "What's destroyed stays destroyed; surviving sites will reload and switch their radars back on. {0}"
+ ],
+ [
+  "ПВО подавлена - удару будет легче.",
+  "Air defenses suppressed: the strike will be easier."
+ ],
+ [
+  "ПВО подавлена не полностью - удар будет опаснее.",
+  "Air defenses not fully suppressed: the strike will be riskier."
+ ],
+ [
+  "Операция завершена",
+  "Operation complete"
+ ],
+ [
+  "Новая операция",
+  "New operation"
+ ],
+ [
+  "РЛС (вылет 1)",
+  "radars (sortie 1)"
+ ],
+ [
+  "целей (вылет 2)",
+  "targets (sortie 2)"
+ ],
+ [
+  "Очки: {0} + {1}{2}. {3}, ранг {4}.",
+  "Points: {0} + {1}{2}. {3}, rank {4}."
+ ],
+ [
+  " + {0} за два возвращения",
+  " + {0} for returning twice"
+ ],
+ [
+  "Реализм",
+  "Realistic"
+ ],
+ [
+  "Аркада",
+  "Arcade"
+ ],
+ [
+  "Самолёт потерян",
+  "Aircraft lost"
+ ],
+ [
+  "Вылет завершён",
+  "Sortie complete"
+ ],
+ [
+  "целей уничтожено",
+  "targets destroyed"
+ ],
+ [
+  "ранг {0}",
+  "rank {0}"
+ ],
+ [
+  "Задание выполнено.",
+  "Mission accomplished."
+ ],
+ [
+  "Пополнение: {0} · осталось: топливо {1}, БК {2}",
+  "Rearm: {0} · left: fuel {1}, ammo {2}"
+ ],
+ [
+  "топливо",
+  "fuel"
+ ],
+ [
+  "боекомплект и ловушки",
+  "ammo and countermeasures"
+ ],
+ [
+  "пополнение {0} с",
+  "rearm {0} s"
+ ],
+ [
+  "{0} км{1}",
+  "{0} km{1}"
+ ],
+ [
+  " · {0} с",
+  " · {0} s"
+ ],
+ [
+  "{0}×{1}с",
+  "{0}×{1}s"
+ ],
+ [
+  "Пуск / сброс",
+  "Launch / drop"
+ ],
+ [
+  "{0}: пополнено {1}/{2}",
+  "{0}: rearmed {1}/{2}"
+ ],
+ [
+  "Пополнение: подвеска, ловушки и топливо{0}",
+  "Rearm: loadout, countermeasures and fuel{0}"
+ ],
+ [
+  " · осталось пополнений: {0}",
+  " · rearms left: {0}"
+ ],
+ [
+  "Потеря управления: хвост разрушен",
+  "Loss of control: tail destroyed"
+ ],
+ [
+  "Сгорел: пожар на борту",
+  "Lost to fire on board"
+ ],
+ [
+  "Мало топлива - 20 %",
+  "Low fuel: 20%"
+ ],
+ [
+  "Топливо кончилось - двигатель встал, планируйте",
+  "Out of fuel: engine out, glide"
+ ],
+ [
+  "двиг.",
+  "eng."
+ ],
+ [
+  "макс.",
+  "max"
+ ],
+ [
+  "Газ",
+  "Throttle"
+ ],
+ [
+  "Учебный вылет: высоту вернули - не прижимайтесь так низко",
+  "Training sortie: altitude restored, don't fly so low"
+ ],
+ [
+  "Врезались в здание",
+  "Crashed into a building"
+ ],
+ [
+  "Столкновение с землёй",
+  "Hit the ground"
+ ],
+ [
+  "назад",
+  "back"
+ ],
+ [
+  "висение",
+  "hover"
+ ],
+ [
+  "{0} км/ч",
+  "{0} km/h"
+ ],
+ [
+  "шаг {0}%",
+  "coll. {0}%"
+ ],
+ [
+  "Скорость: ступени (W/S)",
+  "Speed: steps (W/S)"
+ ],
+ [
+  "Шаг винта",
+  "Collective"
+ ],
+ [
+  "Взлёт",
+  "Takeoff"
+ ],
+ [
+  "Учебный вылет: высоту вернули - садитесь мягче",
+  "Training sortie: altitude restored, land more gently"
+ ],
+ [
+  "Упали в воду",
+  "Crashed into the water"
+ ],
+ [
+  "Разбились о здание",
+  "Crashed into a building"
+ ],
+ [
+  "Удар о землю - {0} м/с",
+  "Ground impact at {0} m/s"
+ ],
+ [
+  "Жёсткая посадка - повреждения",
+  "Hard landing: damaged"
+ ],
+ [
+  "жёсткая посадка",
+  "hard landing"
+ ],
+ [
+  "Задели землю - повреждения",
+  "Scraped the ground: damaged"
+ ],
+ [
+  "удар о землю",
+  "ground strike"
+ ],
+ [
+  "далеко - ближе к цели",
+  "too far: get closer"
+ ],
+ [
+  "в зоне - залп",
+  "in range: fire"
+ ],
+ [
+  "поднимите нос",
+  "raise the nose"
+ ],
+ [
+  "опустите нос",
+  "lower the nose"
+ ],
+ [
+  "нос ведёт на цель…",
+  "nose tracking target…"
+ ],
+ [
+  "сбавьте скорость - нос наведётся",
+  "slow down: the nose will aim"
+ ],
+ [
+  "ЗАХВАТ - {0} · вниз, за рельеф!",
+  "LOCK: {0} · get down behind terrain!"
+ ],
+ [
+  "ВАС ВИДИТ {0} - снижайтесь за рельеф",
+  "{0} SEES YOU: drop behind terrain"
+ ],
+ [
+  "{0} км",
+  "{0} km"
+ ],
+ [
+  "«Пуск»",
+  "\"Launch\""
+ ],
+ [
+  "Пробел",
+  "Space"
+ ],
+ [
+  "«Цель»",
+  "\"Target\""
+ ],
+ [
+  "Подскок: нет цели впереди в досягаемости - доверните на цель",
+  "Pop-up: no target ahead in range, turn toward one"
+ ],
+ [
+  "Подскок: поднимитесь на +{0} м - {1} покажется; пуск - и вниз",
+  "Pop-up: climb +{0} m and {1} will show; fire, then drop back"
+ ],
+ [
+  "{0} видна - пуск, затем вниз",
+  "{0} is visible: fire, then drop back"
+ ],
+ [
+  "Цель не покажется и с +80 м - смените позицию",
+  "Target hidden even at +80 m: change position"
+ ],
+ [
+  "Подскок отменён - вниз",
+  "Pop-up canceled: descending"
+ ],
+ [
+  "Подскок: вверх, пока цель не покажется",
+  "Pop-up: climbing until the target shows"
+ ],
+ [
+  "Подскок: управление у вас",
+  "Pop-up: you have control"
+ ],
+ [
+  "Подскок: цель не показалась - смените позицию",
+  "Pop-up: target never showed, change position"
+ ],
+ [
+  "Подскок: нет захвата - вниз",
+  "Pop-up: no lock, descending"
+ ],
+ [
+  "Подскок: круг не лёг на цель - вниз",
+  "Pop-up: aim circle never settled on the target, descending"
+ ],
+ [
+  "Подскок: выберите ПТУР или НАР",
+  "Pop-up: select ATGM or rockets"
+ ],
+ [
+  "Подскок завершён",
+  "Pop-up complete"
+ ],
+ [
+  "Ручка слева: вперёд - разгон, назад - тормоз, вбок - поворот. ▲▼ - высота, ◀▶ - шаг вбок, «Газ» - ступени скорости. «Подскок» - сам вверх до цели, пуск и вниз. «Ловушки» - ЛТЦ и диполи (зажмите - очередью). Панель слева: тап по оружию - выбор, по строке цели - следующая цель, «ТВ» - окно прицела. Прицел вертолёта захватывает цель сам, и у земли тоже. «Понял» (появляется при долгом захвате) глушит писк захвата; сигнал пуска ракеты остаётся.",
+  "Left stick: forward speeds up, back brakes, sideways turns. ▲▼ altitude, ◀▶ sidestep, \"Throttle\" speed steps. \"Pop-up\" climbs to the target, fires and drops by itself. \"Countermeasures\" fires flares and chaff (hold for a stream). Left panel: tap a weapon to select it, the target line for the next target, \"TV\" for the sight view. The helicopter sight locks targets by itself, even near the ground. \"Got it\" (shown after a long radar lock) silences the lock tone; the missile-launch warning stays."
+ ],
+ [
+  "Ручка слева - наклон и крен. ▲▼ - шаг-газ (вверх / вниз), ◀▶ - педали. «Подскок» - на сколько подняться, чтобы цель показалась. «Ловушки» - ЛТЦ и диполи (зажмите - очередью). Панель слева: тап по оружию - выбор, по строке цели - следующая цель, «ТВ» - окно прицела. Прицел вертолёта захватывает цель сам, и у земли тоже. «Понял» (появляется при долгом захвате) глушит писк захвата; сигнал пуска ракеты остаётся.",
+  "Left stick: pitch and roll. ▲▼ collective (up / down), ◀▶ pedals. \"Pop-up\" tells you how high to climb to see the target. \"Countermeasures\" fires flares and chaff (hold for a stream). Left panel: tap a weapon to select it, the target line for the next target, \"TV\" for the sight view. The helicopter sight locks targets by itself, even near the ground. \"Got it\" (shown after a long radar lock) silences the lock tone; the missile-launch warning stays."
+ ],
+ [
+  "W/S - разгон и торможение · A/D - поворот · ↑ или Shift / ↓ или Ctrl - высота · ← / → - шаг вбок · мышь - прицел и камера<br>Пробел/F - пуск ПТУР, залп НАР · Q - оружие · R - следующая цель · E - подскок (вверх, пуск, вниз) · G - окно прицела · Z - увеличение<br>X - ловушки (держать - очередью) · Y - «Понял»: заглушить писк захвата · V - камера · M - карта · F1 - подсказки клавиш · Esc - пауза",
+  "W/S speed up and brake · A/D turn · ↑ or Shift / ↓ or Ctrl altitude · ← / → sidestep · mouse aim and camera<br>Space/F fire ATGM, rocket salvo · Q weapon · R next target · E pop-up (climb, fire, drop) · G sight view · Z zoom<br>X countermeasures (hold for a stream) · Y “Got it”: mute the lock tone · V camera · M map · F1 key hints · Esc pause"
+ ],
+ [
+  "W/S - ручка вперёд / назад · A/D - крен · ↑ или Shift / ↓ или Ctrl - шаг-газ · ← / → - педали · мышь - прицел и камера<br>Пробел/F - пуск · Q - оружие · R - следующая цель · E - на сколько подняться до цели · G - окно прицела · Z - увеличение<br>X - ловушки (держать - очередью) · Y - «Понял»: заглушить писк захвата · V - камера · M - карта · F1 - подсказки клавиш · Esc - пауза",
+  "W/S stick forward / back · A/D roll · ↑ or Shift / ↓ or Ctrl collective · ← / → pedals · mouse aim and camera<br>Space/F fire · Q weapon · R next target · E how high to climb for the target · G sight view · Z zoom<br>X countermeasures (hold for a stream) · Y “Got it”: mute the lock tone · V camera · M map · F1 key hints · Esc pause"
+ ],
+ [
+  "«Подскок»",
+  "“Pop-up”"
+ ],
+ [
+  "Посадка на площадке - пополнение",
+  "Landed on the pad: rearming"
+ ],
+ [
+  "Посадка",
+  "Landing"
+ ],
+ [
+  "Вылет завершён - оружие израсходовано",
+  "Sortie complete: ordnance expended"
+ ],
+ [
+  "Вышли из района целей",
+  "Left the target area"
+ ],
+ [
+  "Граница района - разворот",
+  "Area boundary: turning back"
+ ],
+ [
+  "Новый вылет - через несколько секунд",
+  "New sortie in a few seconds"
+ ],
+ [
+  "Вылеты на эту волну кончились - смотрите за союзниками",
+  "No sorties left this wave: watch your allies"
+ ],
+ [
+  "«Кам.» - следующий союзник",
+  "\"Cam.\": next ally"
+ ],
+ [
+  "B - следующий союзник",
+  "B: next ally"
+ ],
+ [
+  "Смотрите за: {0}",
+  "Watching: {0}"
+ ],
+ [
+  "{0} · {1} км",
+  "{0} · {1} km"
+ ],
+ [
+  "Камера: за оружием - нет оружия в воздухе",
+  "Camera: weapon (nothing in the air)"
+ ],
+ [
+  "Камера: {0}{1}",
+  "Camera: {0}{1}"
+ ],
+ [
+  " · {0} км/ч · {1} м",
+  " · {0} km/h · {1} m"
+ ],
+ [
+  "Камера: ракета {0} летит в вас{1}",
+  "Camera: {0} missile inbound{1}"
+ ],
+ [
+  " - подрыв",
+  " - detonated"
+ ],
+ [
+  " · {0} км",
+  " · {0} km"
+ ],
+ [
+  "процедурный",
+  "procedural"
+ ],
+ [
+  "{0} «Газ» - ступени или ползунок (их выбирают в настройках), форсаж - последняя ступень. «Ловушки» - ЛТЦ и диполи разом (зажмите - очередью). Под «⋯» справа вверху - «Обзор», «Карта», «Бинокль», «Авто». Панель слева: тап по оружию - выбор, по строке цели - следующая цель, «ТВ» - окно контейнера (тап по окну - увеличение). Контейнер захватывает цель сам: 1-18 км, высота от 400 м, цель не закрыта домами.",
+  "{0} \"Throttle\": steps or a slider (set in Settings), afterburner is the last step. \"Countermeasures\" fires flares and chaff together (hold for a stream). Under \"⋯\" at the top right: \"View\", \"Map\", \"Binoculars\", \"Auto\". Left panel: tap a weapon to select it, tap the target line for the next target, \"TV\" opens the pod window (tap it to zoom). The pod locks targets by itself: 1-18 km, altitude above 400 m, target not blocked by buildings."
+ ],
+ [
+  "Ведите пальцем по экрану - камера поворачивается, самолёт летит туда, куда она смотрит (белый кружок). Крестовина - точные крен и тангаж.",
+  "Drag on the screen to turn the camera; the aircraft flies where it looks (white circle). D-pad: precise roll and pitch."
+ ],
+ [
+  "Левая половина экрана - ручка.",
+  "The left half of the screen is the stick."
+ ],
+ [
+  "Стрелки - тангаж и крен · A/D - крен · W/S - газ по выбранным ступеням (форсаж - последняя) · Shift - форсаж вкл/выкл · Пробел/F - сброс · Q - оружие · V - камера · N - камера за оружием · L - обзор (камера мышью, самолёт держит курс)<br>Контейнер захватывает цель сам (1-18 км, высота от 400 м, цель не закрыта домами) · R - следующая цель · G - окно контейнера · Z - увеличение · O - лазер<br>X - ловушки (ЛТЦ и диполи; зажать - очередью) · M - карта · Esc - пауза",
+  "Arrows: pitch and roll · A/D: roll · W/S: throttle in your chosen steps (afterburner last) · Shift: afterburner on/off · Space/F: fire · Q: weapon · V: camera · N: weapon cam · L: look (mouse camera, aircraft holds course)<br>The pod locks targets by itself (1-18 km, altitude above 400 m, target not blocked by buildings) · R: next target · G: pod window · Z: zoom · O: laser<br>X: countermeasures (flares and chaff; hold for a stream) · M: map · Esc: pause"
+ ],
+ [
+  "В «Реализме» - только купленное в «Исследованиях»",
+  "In Realistic mode, only equipment bought in Research"
+ ],
+ [
+  "{0} - за пультом",
+  "{0}: at the console"
+ ],
+ [
+  "{0}с",
+  "{0}s"
+ ],
+ [
+  "{0}: помощь",
+  "{0}: help"
+ ],
+ [
+  "{0} - «Подтвердить»",
+  "{0}: \"Confirm\""
+ ],
+ [
+  "{0} км · {1} с",
+  "{0} km · {1} s"
+ ],
+ [
+  "район пусковых",
+  "launch area"
+ ],
+ [
+  "точки маршрута - внутри",
+  "waypoints: inside"
+ ],
+ [
+  "вход дронов - край района",
+  "drone entry: area edge"
+ ],
+ [
+  "рубеж пуска: {0}",
+  "launch line: {0}"
+ ],
+ [
+  "носитель",
+  "carrier"
+ ],
+ [
+  "{0} {1} · пуск {2}{3}",
+  "{0} {1} · launch {2}{3}"
+ ],
+ [
+  " · баллистика",
+  " · ballistic"
+ ],
+ [
+  "пущена",
+  "launched"
+ ],
+ [
+  "пуск ",
+  "launch "
+ ],
+ [
+  " км",
+  " km"
+ ],
+ [
+  " м",
+  " m"
+ ],
+ [
+  "своя высота",
+  "default alt."
+ ],
+ [
+  "Не больше 3 точек маршрута",
+  "Max 3 waypoints"
+ ],
+ [
+  "Точка - внутри района",
+  "Waypoint must be inside the area"
+ ],
+ [
+  "Не больше 3 точек маршрута - «Сбросить», чтобы начать заново",
+  "Max 3 waypoints: \"Reset route\" to start over"
+ ],
+ [
+  "Коснитесь цели: объект или засечённый ЗРК",
+  "Tap a target: an object or a detected SAM"
+ ],
+ [
+  "Здесь нельзя: нужна земля или плоская крыша",
+  "Can't place here: needs ground or a flat roof"
+ ],
+ [
+  "Здесь нельзя: крутой склон, постройка или край карты",
+  "Can't place here: steep slope, building or map edge"
+ ],
+ [
+  "Здесь нельзя: дом, река или край карты",
+  "Can't place here: building, river or map edge"
+ ],
+ [
+  "Сначала коснитесь карты - место",
+  "Tap the map first to pick a spot"
+ ],
+ [
+  "Не хватает очков обороны",
+  "Not enough defense points"
+ ],
+ [
+  "Лимит первой волны для этого класса",
+  "First-wave limit for this class"
+ ],
+ [
+  "{0} - размещение",
+  "{0}: placement"
+ ],
+ [
+  "место выбрано - коснитесь карты, чтобы сдвинуть",
+  "spot chosen: tap the map to move it"
+ ],
+ [
+  "коснитесь карты - место",
+  "tap the map to pick a spot"
+ ],
+ [
+  " · можно на плоскую крышу",
+  " · flat roof allowed"
+ ],
+ [
+  " · Enter - подтвердить, Esc или правая кнопка - отмена",
+  " · Enter: confirm, Esc or right-click: cancel"
+ ],
+ [
+  "Подтвердить −{0}",
+  "Confirm −{0}"
+ ],
+ [
+  "Отмена",
+  "Cancel"
+ ],
+ [
+  "Подтвердить перенос",
+  "Confirm move"
+ ],
+ [
+  "Не переносить",
+  "Don't move"
+ ],
+ [
+  "Переместить",
+  "Move"
+ ],
+ [
+  "{0} Зелёная тень - что будет перекрыто на 300 м, серая - нынешняя зона.{1}",
+  "{0} Green shade: coverage at 300 m from the new spot; gray: current zone.{1}"
+ ],
+ [
+  "Новое место выбрано - «Подтвердить перенос» или коснитесь карты ещё раз.",
+  "New spot chosen: \"Confirm move\" or tap the map again."
+ ],
+ [
+  "Коснитесь карты - новое место комплекса.",
+  "Tap the map to pick a new spot for the site."
+ ],
+ [
+  "Наведите мышь - тень зоны с нового места, щелчок - выбрать место.",
+  "Hover to preview coverage from a new spot, click to pick it."
+ ],
+ [
+  " Enter - подтвердить, Esc или правая кнопка - отмена.",
+  " Enter: confirm, Esc or right-click: cancel."
+ ],
+ [
+  "уничтожен",
+  "destroyed"
+ ],
+ [
+  "подавляет спутниковую навигацию в радиусе {0} км",
+  "jams satellite navigation within {0} km"
+ ],
+ [
+  "РЛС излучает",
+  "radar on"
+ ],
+ [
+  "засада: РЛС молчит",
+  "ambush: radar silent"
+ ],
+ [
+  "РЛС выключена",
+  "radar off"
+ ],
+ [
+  "захват цели",
+  "target lock"
+ ],
+ [
+  "ракет {0}/{1}",
+  "missiles {0}/{1}"
+ ],
+ [
+  "дальний",
+  "long-range"
+ ],
+ [
+  "средний",
+  "medium-range"
+ ],
+ [
+  "ближний",
+  "short-range"
+ ],
+ [
+  "Расстановка · волна {0}/{1}{2}",
+  "Deployment · wave {0}/{1}{2}"
+ ],
+ [
+  "Очки обороны: <b style=\"color:#fde68a\">{0}</b>",
+  "Defense points: <b style=\"color:#fde68a\">{0}</b>"
+ ],
+ [
+  "Первая волна: не больше 1 дальнего и 1 среднего комплекса, ближние - за очки.",
+  "First wave: max 1 long-range and 1 medium-range site; short-range sites just cost points."
+ ],
+ [
+  "{0} · до {1} км",
+  "{0} · up to {1} km"
+ ],
+ [
+  "Продать +{0}",
+  "Sell +{0}"
+ ],
+ [
+  "Готово",
+  "Done"
+ ],
+ [
+  "союзника",
+  "ally's"
+ ],
+ [
+  "Купить",
+  "Buy"
+ ],
+ [
+  "{0} · {1} · {2} км{3}",
+  "{0} · {1} · {2} km{3}"
+ ],
+ [
+  " · можно ещё {0}",
+  " · {0} more allowed"
+ ],
+ [
+  "Касайтесь карты, пока место не устроит, затем «Подтвердить». Зелёная тень - зона комплекса на высоте 300 м, просветы - то, что закрывают дома. «Отмена» - не покупать.",
+  "Tap the map until you like the spot, then \"Confirm\". The green shade is the site's coverage at 300 m; gaps are what buildings block. \"Cancel\" means don't buy."
+ ],
+ [
+  "Ведите мышь по карте: зелёная тень - зона комплекса на высоте 300 м, просветы - то, что закрывают дома. Щелчок выбирает место (можно менять), затем «Подтвердить» или Enter. «Отмена», Esc или правая кнопка - не покупать.",
+  "Move the mouse over the map: the green shade is the site's coverage at 300 m; gaps are what buildings block. Click to pick a spot (you can change it), then \"Confirm\" or Enter. \"Cancel\", Esc or right-click: don't buy."
+ ],
+ [
+  "Выберите комплекс в каталоге и коснитесь карты. Коснитесь своего комплекса: перенос (новое место и «Подтвердить») или продажа.",
+  "Pick a site in the catalog and tap the map. Tap one of your sites to move it (new spot, then \"Confirm\") or sell it."
+ ],
+ [
+  "Готов (снять)",
+  "Ready (undo)"
+ ],
+ [
+  "Готов",
+  "Ready"
+ ],
+ [
+  "Волна {0}/{1}{2}",
+  "Wave {0}/{1}{2}"
+ ],
+ [
+  "В воздухе: <b>{0}</b> · объекты целы <b>{1}%</b>",
+  "In the air: <b>{0}</b> · facilities intact <b>{1}%</b>"
+ ],
+ [
+  "Управлять",
+  "Operate"
+ ],
+ [
+  "РЛС: выключить",
+  "Radar: off"
+ ],
+ [
+  "РЛС: включить",
+  "Radar: on"
+ ],
+ [
+  "Снять выбор",
+  "Deselect"
+ ],
+ [
+  "Коснитесь своего комплекса: «Управлять» - сесть оператором. Остальными стреляют расчёты. Красные треугольники - цели, которые видит сеть РЛС.",
+  "Tap one of your sites: \"Operate\" to take the console; crews man the rest. Red triangles: targets seen by the radar network."
+ ],
+ [
+  "Мне нужна помощь!",
+  "I need help!"
+ ],
+ [
+  "Волна {0} - итоги",
+  "Wave {0} results"
+ ],
+ [
+  "сбито",
+  "shot down"
+ ],
+ [
+  "потеряно ЗРК",
+  "sites lost"
+ ],
+ [
+  "объекты целы",
+  "facilities intact"
+ ],
+ [
+  "Бой окончен - итоги…",
+  "Battle over. Results…"
+ ],
+ [
+  "Скоро расстановка следующей волны.",
+  "Next wave: deployment soon."
+ ],
+ [
+  "{0} с",
+  "{0} s"
+ ],
+ [
+  "своя",
+  "own"
+ ],
+ [
+  "300 м",
+  "300 m"
+ ],
+ [
+  "3 км",
+  "3 km"
+ ],
+ [
+  "ПВО противника",
+  "Enemy AD"
+ ],
+ [
+  "{0} (засечён)",
+  "{0} (detected)"
+ ],
+ [
+  "на команду",
+  "per team"
+ ],
+ [
+  "на волну",
+  "per wave"
+ ],
+ [
+  " (у союзников уже {0})",
+  " (allies already have {0})"
+ ],
+ [
+  "Не хватает очков угрозы",
+  "Not enough threat points"
+ ],
+ [
+  "{0} - не больше {1}",
+  "{0}: no more than {1}"
+ ],
+ [
+  " · не больше {0}",
+  " · max {0}"
+ ],
+ [
+  " · всего {0} из {1}",
+  " · {0} of {1} in total"
+ ],
+ [
+  "Цели - коснитесь объекта на карте",
+  "Targets: tap an object on the map"
+ ],
+ [
+  " (запас ×{0})",
+  " (reserve ×{0})"
+ ],
+ [
+  "ничего - коснитесь, чтобы назначить",
+  "nothing: tap to assign"
+ ],
+ [
+  "наряд пуст",
+  "package empty"
+ ],
+ [
+  "Без цели",
+  "No target"
+ ],
+ [
+  "{0} - пойдут поровну по целям",
+  "{0}: split evenly among targets"
+ ],
+ [
+  "Раздать поровну",
+  "Split evenly"
+ ],
+ [
+  "Наряд на «{0}»",
+  "Package: \"{0}\""
+ ],
+ [
+  "Очки угрозы: <b style=\"color:#fde68a\">{0}</b> · баллистика <b>{1}/{2}</b>{3}{4}",
+  "Threat points: <b style=\"color:#fde68a\">{0}</b> · ballistic <b>{1}/{2}</b>{3}{4}"
+ ],
+ [
+  " («Кинжал» - без другой)",
+  " (Kinzhal: no other ballistic)"
+ ],
+ [
+  " («Искандер» - без другой)",
+  " (Iskander: no other ballistic)"
+ ],
+ [
+  " (ARRW - без другой)",
+  " (ARRW: no other ballistic)"
+ ],
+ [
+  " («Кинжал», «Искандер» и ARRW - только без другой)",
+  " (Kinzhal, Iskander and ARRW: no other ballistic)"
+ ],
+ [
+  " на команду",
+  " per team"
+ ],
+ [
+  "Прочность {0}/{1} · наряд разрушит",
+  "Durability {0}/{1} · package will destroy"
+ ],
+ [
+  " · запас ×{0} - часть можно перенести на другие цели",
+  " · reserve ×{0}: some can be moved to other targets"
+ ],
+ [
+  "Оценка: часть собьют (дроны чаще, баллистику реже), ложные цели урона не наносят.{0}",
+  "Estimate: some will be shot down (drones often, ballistic rarely); decoys do no damage.{0}"
+ ],
+ [
+  " Мало - добавьте ещё.",
+  " Not enough: add more."
+ ],
+ [
+  "Где ПВО, заранее неизвестно. Назначенные сюда бьют по комплексам, засечённым к моменту пуска (разведчик, излучение РЛС, пуски ЗУР); если таких нет, то по целям наряда. По комплексам, которых разведчик не видел, баллистика промахивается сильнее. Ложные цели лучше назначать сюда: ПВО тратит на них ракеты.",
+  "Enemy AD positions are unknown in advance. Units assigned here hit sites detected by launch time (recon, radar emissions, SAM launches); if there are none, they hit the package targets. Ballistic missiles are less accurate against sites the recon hasn't seen. Decoys work best here: AD wastes missiles on them."
+ ],
+ [
+  "Засечённый комплекс ПВО: назначенные сюда бьют именно по нему (уничтожен - по другим засечённым).",
+  "Detected air defense site: units assigned here strike it (if it's destroyed, other detected sites)."
+ ],
+ [
+  "пусковая",
+  "launcher"
+ ],
+ [
+  "своим ходом",
+  "under own power"
+ ],
+ [
+  " · ложная",
+  " · decoy"
+ ],
+ [
+  " · пущено {0}",
+  " · launched {0}"
+ ],
+ [
+  " · без цели: {0}",
+  " · no target: {0}"
+ ],
+ [
+  " · м",
+  " · R"
+ ],
+ [
+  "все {0}",
+  "all {0}"
+ ],
+ [
+  "«+» берёт единицу без цели, а если её нет, покупает новую ({0}). «−» - {1}. Коснитесь единицы: маршрут, высота и время пуска («м» - свой маршрут). «⚙ все» - те же настройки для всех единиц этого типа здесь.",
+  "\"+\" takes an unassigned unit, or buys a new one if there is none ({0}). \"−\": {1}. Tap a unit for its route, altitude and launch time (\"R\": custom route). \"⚙ all\" applies the same settings to all units of this type here."
+ ],
+ [
+  "в бою - пуск через 30 с после заказа",
+  "in battle: launch 30 s after ordering"
+ ],
+ [
+  "за очки угрозы",
+  "for threat points"
+ ],
+ [
+  "снять с цели (ещё не пущенную)",
+  "unassign (if not yet launched)"
+ ],
+ [
+  "убрать и вернуть очки",
+  "remove and refund points"
+ ],
+ [
+  " · бой идёт",
+  " · in battle"
+ ],
+ [
+  "Все здесь ({0})",
+  "All here ({0})"
+ ],
+ [
+  "{0} уже пущена - её не изменить. «✓» - пущенные.",
+  "{0} has already launched and can't be changed. \"✓\" marks launched units."
+ ],
+ [
+  "Бой идёт: можно менять только то, что ещё не пущено. Время - не раньше «сейчас» и прилёта носителя на рубеж.",
+  "In battle, only units not yet launched can be changed. Time: no earlier than \"now\" or the carrier reaching the launch line."
+ ],
+ [
+  "Настройки - сразу для {0} единиц ({1} {2}). Одну - во вкладке с её номером («•» - есть свои).",
+  "Settings apply to all {0} units ({1} {2}) at once. For one unit, use its numbered tab (\"•\": custom settings)."
+ ],
+ [
+  "{0} · носитель {1}",
+  "{0} · carrier {1}"
+ ],
+ [
+  "Маршрут",
+  "Route"
+ ],
+ [
+  "{0}. Точки маршрута ставьте внутри района (белый круг): касайтесь карты, до 3 точек, от края к цели. Точек: <b>{1}</b>. Без маршрута ракета идёт прямо к цели со своей стороны.",
+  "{0}. Place waypoints inside the area (white circle): tap the map, up to 3 waypoints, from the edge to the target. Waypoints: <b>{1}</b>. With no route, the missile flies straight to the target from its side."
+ ],
+ [
+  "Дроны входят с края района (голубой круг)",
+  "Drones enter from the area edge (blue circle)"
+ ],
+ [
+  "Ракеты пускаются с рубежа {0} за краем района (оранжевый круг)",
+  "Missiles launch from the {0} launch line beyond the area edge (orange circle)"
+ ],
+ [
+  "носителя",
+  "carrier"
+ ],
+ [
+  "Высота полёта",
+  "Flight altitude"
+ ],
+ [
+  "Своя - {0} м{1}: РЛС видят поздно, но над городом работают пушки и ПЗРК. 3 км: дальние ЗРК видят издалека, зато пушки и ПЗРК не достают.",
+  "Default: {0} m{1}. Radars detect it late, but guns and MANPADS cover the city. 3 km: long-range SAMs see it from afar, but guns and MANPADS can't reach it."
+ ],
+ [
+  ", огибая дома",
+  ", hugging buildings"
+ ],
+ [
+  "Время пуска",
+  "Launch time"
+ ],
+ [
+  "Пуск: <b style=\"color:#fde68a\">{0}</b> от начала боя{1}",
+  "Launch: <b style=\"color:#fde68a\">{0}</b> after battle start{1}"
+ ],
+ [
+  "· у цели ≈ <b>{0}</b>",
+  "· at target ≈ <b>{0}</b>"
+ ],
+ [
+  "{0}{1} с",
+  "{0}{1} s"
+ ],
+ [
+  "Пуск сейчас",
+  "Launch now"
+ ],
+ [
+  "Баллистике ждать не страшно: пусковая за городом, пуск - в любой момент до 15 мин.",
+  "Ballistic missiles can wait: the launcher is outside the city and can fire any time up to 15 min."
+ ],
+ [
+  "Дроны можно выпустить в любой момент до 10 мин.",
+  "Drones can be released any time up to 10 min."
+ ],
+ [
+  "Носителю нужно {0}, чтобы долететь до рубежа пуска. Долго ходить у района он не может: пуск не позже {1}, а между первым и последним пуском - не больше {2}.",
+  "The carrier needs {0} to reach the launch line and can't loiter near the area: launch no later than {1}, and no more than {2} between its first and last launch."
+ ],
+ [
+  " Сдвиг - для всех сразу, порядок сохраняется.",
+  " Time shifts apply to all at once, keeping the order."
+ ],
+ [
+  "Цель",
+  "Target"
+ ],
+ [
+  "без цели (поровну по целям)",
+  "no target (split evenly among targets)"
+ ],
+ [
+  "Перенести на другую цель",
+  "Move to another target"
+ ],
+ [
+  "<b>Коснитесь новой цели на карте</b> (объект или засечённый ЗРК) или «ПВО противника»:",
+  "<b>Tap a new target on the map</b> (an object or a detected SAM) or \"Enemy AD\":"
+ ],
+ [
+  "Сбросить маршрут",
+  "Reset route"
+ ],
+ [
+  "Как у всех здесь",
+  "Same as the rest"
+ ],
+ [
+  "План волны{0}",
+  "Wave plan{0}"
+ ],
+ [
+  " · раунд {0}/{1}{2}",
+  " · round {0}/{1}{2}"
+ ],
+ [
+  "Очки угрозы: <b style=\"color:#fde68a\">{0}</b> из {1}",
+  "Threat points: <b style=\"color:#fde68a\">{0}</b> of {1}"
+ ],
+ [
+  "разведчик: без боевой части, бесплатно. Засекает ПВО, летит сам с начала боя",
+  "recon: free, no warhead. Spots AD, launches itself at battle start"
+ ],
+ [
+  "{0}коснитесь объекта на карте, откроется его наряд: «+» покупает единицу сразу на эту цель, там же у каждой единицы маршрут, высота и время пуска. Номера единиц («Калибр 3») те же на карте. Где ПВО противника, заранее неизвестно.",
+  "{0}tap an object on the map to open its package: \"+\" buys a unit for this target, and each unit there has its own route, altitude and launch time. Unit numbers (\"Kalibr 3\") match the map. Enemy air defense positions are unknown in advance."
+ ],
+ [
+  "Соберите волну сами:",
+  "Build the wave yourself:"
+ ],
+ [
+  "Волна стартует, когда все готовы или кончится время подготовки. Пустой план - волны от вас не будет.",
+  "The wave starts when everyone is ready or prep time runs out. An empty plan means no wave from you."
+ ],
+ [
+  "Ожидается: {0}.",
+  "Expected: {0}."
+ ],
+ [
+  "<b>Баллистика</b> приходит последней. Её сбивают только {0}, и только на снижении, в своей зоне. Сохраните им ракеты: не тратьте их на дроны и ложные цели.",
+  "<b>Ballistic missiles</b> come last. Only {0} can shoot them down, and only on descent within their zone. Save missiles for them: don't waste them on drones and decoys."
+ ],
+ [
+  "<b>Баллистика</b> приходит последней. Сбить её нечем: сбивайте крылатые ракеты и носители, пока они не дошли.",
+  "<b>Ballistic missiles</b> come last. You have nothing that can shoot them down: kill the cruise missiles and their carriers before they arrive."
+ ],
+ [
+  "Баллистика: {0}",
+  "Ballistic: {0}"
+ ],
+ [
+  "до падения {0} с · сбить можно только на снижении",
+  "{0} s to impact · can only be shot down on descent"
+ ],
+ [
+  "РЛС выключена!",
+  "Radar off!"
+ ],
+ [
+  "ракет {0}",
+  "missiles {0}"
+ ],
+ [
+  "Противоракетных комплексов нет - баллистику не сбить.",
+  "No anti-missile systems: ballistic missiles can't be intercepted."
+ ],
+ [
+  "Время ×{0}",
+  "Time ×{0}"
+ ],
+ [
+  "Волна идёт",
+  "Wave in progress"
+ ],
+ [
+  "Пущено <b>{0}</b> · сбито <b>{1}</b> · попаданий <b>{2}</b>",
+  "Launched <b>{0}</b> · shot down <b>{1}</b> · hits <b>{2}</b>"
+ ],
+ [
+  "Цели разрушены на <b>{0}%</b>",
+  "Targets destroyed: <b>{0}%</b>"
+ ],
+ [
+  "ушёл",
+  "left"
+ ],
+ [
+  "на подлёте к рубежу пуска",
+  "approaching the launch line"
+ ],
+ [
+  "пуск: осталось {0}",
+  "launch: {0} left"
+ ],
+ [
+  "уходит",
+  "leaving"
+ ],
+ [
+  "Наряд (можно менять) · очки угрозы: {0}",
+  "Package (editable) · threat points: {0}"
+ ],
+ [
+  "Коснитесь цели (объекта или засечённого ЗРК): откроется её наряд. Можно докупить и перенацелить; у ещё не пущенных единиц - время («Пуск сейчас»), маршрут, высота.",
+  "Tap a target (object or detected SAM) to open its package. You can buy more and retarget; for unlaunched units: time (\"Launch now\"), route, altitude."
+ ],
+ [
+  "«Ход волны» слева: что летит, что будет и когда. «Смотреть» и «Ждать» - камера к событию. Коснитесь ракеты или носителя на карте, камера пойдёт за ним. Синие - ваши",
+  "\"Wave timeline\" on the left: what's flying, what's next and when. \"Watch\" and \"Wait\" jump the camera to the event. Tap a missile or carrier on the map to follow it. Blue: yours"
+ ],
+ [
+  ", фиолетовые - союзников",
+  ", purple: allies'"
+ ],
+ [
+  ", красные - засечённые комплексы ПВО (жёлтый круг - РЛС излучает, «Пуск» - стреляет).",
+  ", red: detected air defense sites (yellow circle: radar emitting, \"Launch\": firing)."
+ ],
+ [
+  "Расстановка · {0}",
+  "Deployment · {0}"
+ ],
+ [
+  "Мульти-волна",
+  "Multi-Wave"
+ ],
+ [
+  "волна {0}/{1}",
+  "wave {0}/{1}"
+ ],
+ [
+  "{0} · до {1} км · {2}",
+  "{0} · up to {1} km · {2}"
+ ],
+ [
+  "Засада: вкл",
+  "Ambush: on"
+ ],
+ [
+  "Засада: выкл",
+  "Ambush: off"
+ ],
+ [
+  "не в этом уроке",
+  "not in this lesson"
+ ],
+ [
+  "{0} · {1} км / {2} км",
+  "{0} · {1} km / {2} km"
+ ],
+ [
+  "Выберите комплекс в каталоге и коснитесь карты. Коснитесь своего комплекса: тень его зоны на высоте 300 м, перенос (новое место и «Подтвердить») или продажа.",
+  "Pick a site in the catalog and tap the map. Tap one of your sites to see its coverage at 300 m, move it (new spot, then \"Confirm\") or sell it."
+ ],
+ [
+  "В бой - {0}",
+  "To battle: {0}"
+ ],
+ [
+  "волна {0}",
+  "wave {0}"
+ ],
+ [
+  "Волна {0}/{1}",
+  "Wave {0}/{1}"
+ ],
+ [
+  "В воздухе: <b>{0}</b> · сбито: <b>{1}</b>",
+  "In the air: <b>{0}</b> · shot down: <b>{1}</b>"
+ ],
+ [
+  "Коснитесь комплекса: приказы и «Управлять» - сесть оператором. Красные треугольники - цели, которые видит сеть РЛС (высота над землёй, м).",
+  "Tap a site for orders, or \"Operate\" to take the console. Red triangles: targets seen by the radar network (height above ground, m)."
+ ],
+ [
+  "Волна {0} отбита",
+  "Wave {0} repelled"
+ ],
+ [
+  "ушли",
+  "left"
+ ],
+ [
+  "+{0} очков обороны · всего очков {1}",
+  "+{0} defense points · total {1}"
+ ],
+ [
+  "К расстановке - волна {0}",
+  "Deploy for wave {0}"
+ ],
+ [
+  "В этом уроке - {0}",
+  "In this lesson: {0}"
+ ],
+ [
+  " или ",
+  " or "
+ ],
+ [
+  "Коснитесь новой цели на карте или «ПВО противника»",
+  "Tap a new target on the map or \"Enemy AD\""
+ ],
+ [
+  "Пуск - как только сможет",
+  "Launch ASAP"
+ ],
+ [
+  "Позже нельзя: носитель не ждёт, а у дронов и баллистики - свой предел",
+  "Can't be later: the carrier won't wait, and drones and ballistic missiles have their own limits"
+ ],
+ [
+  "Раньше нельзя",
+  "Can't be earlier"
+ ],
+ [
+  " - носитель не ждёт у района больше {0}",
+  " - the carrier can't loiter longer than {0}"
+ ],
+ [
+  "Позже нельзя: не позже {0}{1}",
+  "Can't be later: no later than {0}{1}"
+ ],
+ [
+  "Раньше нельзя: не раньше {0}{1}",
+  "Can't be earlier: no earlier than {0}{1}"
+ ],
+ [
+  "Волна пошла: разведчик над городом, остальное - по вашему расписанию («Ход волны» слева). Цели: {0}",
+  "Wave launched: recon over the city, the rest on your schedule (\"Wave timeline\", left). Targets: {0}"
+ ],
+ [
+  "Волна {0}: {1} - разведка и дроны, затем крылатые ракеты, в конце баллистика. Цели: {2}",
+  "Wave {0}: {1}. Recon and drones first, then cruise missiles, ballistic last. Targets: {2}"
+ ],
+ [
+  "Волна {0}: цели - {1}",
+  "Wave {0} targets: {1}"
+ ],
+ [
+  "Потеряно 75 % ценности военных объектов и больше",
+  "75% or more of military facility value lost"
+ ],
+ [
+  "Все {0} волн отбиты",
+  "All {0} waves repelled"
+ ],
+ [
+  "Волна прорвалась",
+  "Wave broke through"
+ ],
+ [
+  "Волна отражена",
+  "Wave repelled"
+ ],
+ [
+  "Цели разрушены на {0} % (нужно 50 %)",
+  "Targets destroyed: {0}% (50% needed)"
+ ],
+ [
+  "пущено",
+  "launched"
+ ],
+ [
+  "сбито ПВО",
+  "shot down by AD"
+ ],
+ [
+  "цели разрушены",
+  "targets destroyed"
+ ],
+ [
+  "Уничтожено комплексов ПВО: {0}. Носителей потеряно: {1}. {2}",
+  "AD sites destroyed: {0}. Carriers lost: {1}. {2}"
+ ],
+ [
+  "Реализм - очки ×1,5.",
+  "Realistic: points ×1.5."
+ ],
+ [
+  "Цели разрушены на {0} % (поражение - от 50 %)",
+  "Targets destroyed: {0}% (defeat at 50%)"
+ ],
+ [
+  "цели целы",
+  "targets intact"
+ ],
+ [
+  "Город отстоял",
+  "City held"
+ ],
+ [
+  "Оборона прорвана",
+  "Defense breached"
+ ],
+ [
+  "Бой завершён",
+  "Battle over"
+ ],
+ [
+  "самолётов сбито",
+  "aircraft shot down"
+ ],
+ [
+  "волн",
+  "waves"
+ ],
+ [
+  "Потеряно комплексов: {0}. {1}",
+  "Sites lost: {0}. {1}"
+ ],
+ [
+  "вид оператора",
+  "operator view"
+ ],
+ [
+  "снаружи - пусковая от третьего лица",
+  "external: launcher, third person"
+ ],
+ [
+  "Бинокль выключен",
+  "Binoculars off"
+ ],
+ [
+  "Бинокль - только когда цель захвачена",
+  "Binoculars need a target lock"
+ ],
+ [
+  "У этой установки - только вид оператора",
+  "Operator view only for this launcher"
+ ],
+ [
+  "Камера: ",
+  "Camera: "
+ ],
+ [
+  "Огонь",
+  "Fire"
+ ],
+ [
+  "Пуск",
+  "Launch"
+ ],
+ [
+  "Бомба",
+  "Bomb"
+ ],
+ [
+  "УР",
+  "AGM"
+ ],
+ [
+  "ПРР",
+  "ARM"
+ ],
+ [
+  "КР",
+  "CRUISE"
+ ],
+ [
+  "Оружие",
+  "Weapons"
+ ],
+ [
+  "Самолёт",
+  "Aircraft"
+ ],
+ [
+  "Нет целей в обзоре",
+  "No targets in view"
+ ],
+ [
+  "ПУСК!",
+  "LAUNCH!"
+ ],
+ [
+  "Коснитесь отметки цели",
+  "Tap a target mark"
+ ],
+ [
+  "Метод: половинное спрямление",
+  "Method: half-lead"
+ ],
+ [
+  "Метод: три точки",
+  "Method: three-point"
+ ],
+ [
+  "Комплекс уничтожен",
+  "Site destroyed"
+ ],
+ [
+  "Захват",
+  "Lock-on"
+ ],
+ [
+  "{0}{1} · {2} км · {3} м",
+  "{0}{1} · {2} km · {3} m"
+ ],
+ [
+  "{0} · {1} · {2} км",
+  "{0} · {1} · {2} km"
+ ],
+ [
+  "Пуск в упреждение",
+  "Fire ahead"
+ ],
+ [
+  "Далеко",
+  "Too far"
+ ],
+ [
+  "Близко",
+  "Too close"
+ ],
+ [
+  "Высоко",
+  "Too high"
+ ],
+ [
+  "Низко",
+  "Too low"
+ ],
+ [
+  "В зоне",
+  "In range"
+ ],
+ [
+  "<b style=\"color:#86efac\">Авто</b> ·",
+  "<b style=\"color:#86efac\">Auto</b> ·"
+ ],
+ [
+  " · метод: {0}",
+  " · method: {0}"
+ ],
+ [
+  "половинное спрямление",
+  "half-lead"
+ ],
+ [
+  "три точки",
+  "three-point"
+ ],
+ [
+  "<br>цель: {0} км, {1} м - <b>{2}</b>{3}",
+  "<br>target: {0} km, {1} m - <b>{2}</b>{3}"
+ ],
+ [
+  " · захват {0}%",
+  " · lock {0}%"
+ ],
+ [
+  "<br>наведите перекрестие на самолёт - ГСН «зарычит» и захватит",
+  "<br>put the crosshair on the aircraft: the seeker growls and locks on"
+ ],
+ [
+  "<br>ведите ствол в жёлтый кружок упреждения и держите «Огонь»",
+  "<br>aim the barrel at the yellow lead circle and hold \"Fire\""
+ ],
+ [
+  "<br>коснитесь отметки цели на экране или на круговом обзоре",
+  "<br>tap a target mark on the screen or the radar scope"
+ ],
+ [
+  "ПРР ЛЕТИТ В ВАС - выключите РЛС!",
+  "ARM INBOUND: switch off your radar!"
+ ],
+ [
+  "РЛС включена - выключить",
+  "Radar on: switch off"
+ ],
+ [
+  "РЛС выключена - включить",
+  "Radar off: switch on"
+ ],
+ [
+  "идёт на вас - нос к вам",
+  "inbound, nose-on"
+ ],
+ [
+  "уходит - хвост к вам",
+  "outbound, tail-on"
+ ],
+ [
+  "проходит боком",
+  "crossing"
+ ],
+ [
+  " · разворот",
+  " · turning"
+ ],
+ [
+  " · набирает высоту",
+  " · climbing"
+ ],
+ [
+  " · снижается",
+  " · descending"
+ ],
+ [
+  "Бинокль ×{0} · {1}{2}",
+  "Binoculars ×{0} · {1}{2}"
+ ],
+ [
+  "Метод ½",
+  "Method ½"
+ ],
+ [
+  "Метод 3Т",
+  "Method 3P"
+ ],
+ [
+  "Авто: пуск",
+  "Auto: launch"
+ ],
+ [
+  "Захват потерян - бинокль выключен, нужен новый захват",
+  "Lock lost: binoculars off, re-lock needed"
+ ],
+ [
+  "Ход волны",
+  "Wave timeline"
+ ],
+ [
+  "Союзник {0} · {1}",
+  "Ally {0} · {1}"
+ ],
+ [
+  " · через {0} с",
+  " · in {0} s"
+ ],
+ [
+  "через {0} с",
+  "in {0} s"
+ ],
+ [
+  "вот-вот",
+  "imminent"
+ ],
+ [
+  "Смотреть",
+  "Watch"
+ ],
+ [
+  "Ждём…",
+  "Waiting…"
+ ],
+ [
+  "Ждать",
+  "Wait"
+ ],
+ [
+  "Ждём события: время ×4, за 4 с - камера к нему.",
+  "Waiting for the event: time ×4, camera jumps to it 4 s before."
+ ],
+ [
+  "Ждём события - время ×4",
+  "Waiting for the event: time ×4"
+ ],
+ [
+  "Для этого оружия нет модели - следите по карте",
+  "No model for this weapon: follow it on the map"
+ ],
+ [
+  "Сейчас в воздухе смотреть не на что",
+  "Nothing to watch in the air right now"
+ ],
+ [
+  " (ложная)",
+  " (decoy)"
+ ],
+ [
+  " · до падения {0} с",
+  " · {0} s to impact"
+ ],
+ [
+  " · до цели {0} с",
+  " · {0} s to target"
+ ],
+ [
+  "{0}{1} · высота {2} · {3} км/ч{4}{5}",
+  "{0}{1} · altitude {2} · {3} km/h{4}{5}"
+ ],
+ [
+  " · пуск {0}/{1}",
+  " · launch {0}/{1}"
+ ],
+ [
+  " · поражена",
+  " · hit"
+ ],
+ [
+  "Пуск «Кинжала» с МиГ-31К - у цели через ≈ {0} с",
+  "Kinzhal launched from a MiG-31K: impact in ≈ {0} s"
+ ],
+ [
+  "Пуск ARRW с B-52H - у цели через ≈ {0} с",
+  "ARRW launched from a B-52H: impact in ≈ {0} s"
+ ],
+ [
+  "Угроза баллистических ракет",
+  "Ballistic missile threat"
+ ],
+ [
+  "Угроза крылатых ракет",
+  "Cruise missile threat"
+ ],
+ [
+  "Пуск баллистической ракеты «{0}»! До падения ≈ {1} с - готовьте {2}",
+  "{0} ballistic missile launched! Impact in ≈ {1} s: get {2} ready"
+ ],
+ [
+  "противоракетные ЗРК",
+  "anti-missile SAMs"
+ ],
+ [
+  "укрытие",
+  "shelter"
+ ],
+ [
+  "Сбит носитель {0}{1}",
+  "Carrier shot down: {0}{1}"
+ ],
+ [
+  " - не пущено ракет: {0}",
+  ", unlaunched missiles: {0}"
+ ],
+ [
+  "Пуск: {0}, до цели ≈ {1} с",
+  "Launch: {0}, ≈ {1} s to target"
+ ],
+ [
+  "ПВО сбила: {0}{1}",
+  "AD shot down: {0}{1}"
+ ],
+ [
+  " (ложная цель)",
+  " (decoy)"
+ ],
+ [
+  "Цель поражена: {0}",
+  "Target hit: {0}"
+ ],
+ [
+  "Уничтожен комплекс ПВО: {0}",
+  "AD site destroyed: {0}"
+ ],
+ [
+  "Сбита ложная цель - ракеты потрачены впустую",
+  "Decoy shot down: missiles wasted"
+ ],
+ [
+  "Сбит {0}!",
+  "{0} shot down!"
+ ],
+ [
+  "носитель {0}{1}",
+  "carrier {0}{1}"
+ ],
+ [
+  "ударник",
+  "striker"
+ ],
+ [
+  "Перехвачено: {0}{1}",
+  "Intercepted: {0}{1}"
+ ],
+ [
+  "Разрушен: {0}",
+  "Destroyed: {0}"
+ ],
+ [
+  "Потерян комплекс: {0}",
+  "Site lost: {0}"
+ ],
+ [
+  "Сбита ложная цель",
+  "Decoy shot down"
+ ],
+ [
+  "Самолёт сбит!",
+  "Aircraft shot down!"
+ ],
+ [
+  "Перехвачено: {0}",
+  "Intercepted: {0}"
+ ],
+ [
+  "Волна {0}: налёт!",
+  "Wave {0}: incoming!"
+ ],
+ [
+  "Раунд {0}: ваша команда собирает волну - коснитесь целей на карте",
+  "Round {0}: your team builds the wave. Tap targets on the map"
+ ],
+ [
+  "Раунд {0}: вы - ПВО. Ставьте комплексы: что и куда полетит, неизвестно",
+  "Round {0}: you're the air defense. Deploy sites; what's coming and where is unknown"
+ ],
+ [
+  "Волна пошла: разведчик над городом, остальное - по вашему расписанию («Ход волны» слева)",
+  "Wave launched: recon over the city, the rest on your schedule (\"Wave timeline\", left)"
+ ],
+ [
+  "Волна пошла! Красные треугольники - что видит ваша сеть РЛС",
+  "Wave incoming! Red triangles: what your radar network sees"
+ ],
+ [
+  "Союзники",
+  "Allies"
+ ],
+ [
+  "{0} · {1} очк.",
+  "{0} · {1} pts"
+ ],
+ [
+  "без цели",
+  "no target"
+ ],
+ [
+  "ещё собирает",
+  "still building"
+ ],
+ [
+  "Раунд {0}/{1} · расстановка ПВО{2}",
+  "Round {0}/{1} · AD deployment{2}"
+ ]
+]

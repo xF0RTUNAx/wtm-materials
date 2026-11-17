@@ -5,19 +5,19 @@
 import { NODE, newProgress, owned, loadoutMissing, samOk, strikeOk, strikeId, RANK_NAME } from './progress.js?v=20261117d';
 import { LOADOUTS } from './arsenal.js?v=20261117d';
 import { ico } from './icons.js?v=20261117d';
-import { tr, trIf, LANG } from './i18n.js?v=20261117d';
+import { tr, trIf, LANG, XL, LOCALE } from './i18n.js?v=20261117d';
 import { activeAcc, isMock, siteNoProgress, withSess, refreshSession } from './account.js?v=20261117d';
 import { DAILY, WEEKLY, mskDay, questApply, questClaim, questRoll, questView } from './quests-data.js?v=20261117d';
 
 const TEST = new URLSearchParams(location.search).get('pgtest'); // ?pgtest=1 - тестовый прогресс в памяти (без сервера)
 export function account() { return activeAcc(); } // аккаунт игры, иначе «старый» аккаунт сайта с прогрессом (account.js)
 const LOCAL = () => !!TEST || isMock((account() || {}).id); // ?pgtest=1 и заглушка рейтинга ?rmock=1 (аккаунт rmock-…): прогресс в памяти, без сервера
-const n2 = (v) => Math.round(v).toLocaleString(LANG === 'en' ? 'en-US' : 'ru-RU');
+const n2 = (v) => Math.round(v).toLocaleString(LOCALE);
 // сообщение «нельзя» - с сервера (функции Supabase) или из progress.js (причины покупки): на выбранном языке; фразы с подстановкой - по образцу
 const WHY = [[/^Ранг (\S+) закрыт - нужен паритет в ранге (\S+)$/, (a) => tr('Ранг {0} закрыт - нужен паритет в ранге {1}', a)], [/^Сначала исследуйте (.+)$/, (a) => tr('Сначала исследуйте {0}', a)],
   [/^Не хватает опыта: (\d+)$/, (a) => tr('Не хватает опыта: {0}', a)], [/^Не хватает серебра: (\d+)$/, (a) => tr('Не хватает серебра: {0}', a)]];
 export function trMsg(m) {
-  if (LANG !== 'en' || typeof m !== 'string') return m;
+  if (!XL || typeof m !== 'string') return m;
   const s = trIf(m); if (s !== m) return s;
   for (const [re, f] of WHY) { const x = re.exec(m); if (x) return f(x.slice(1).map(trIf)); }
   const p = /^Паритет: сначала купите единицу ранга (\S+) за (\S+?)(?: - например, (.+))?$/.exec(m);
@@ -26,7 +26,7 @@ export function trMsg(m) {
 }
 // строка награды из progress.js (battleReward): «Время в бою (N мин)» и «После N за день» - с числом
 export function trLine(t) {
-  if (LANG !== 'en') return t;
+  if (!XL) return t;
   const a = /^Время в бою \((\d+) мин\)$/.exec(t); if (a) return tr('Время в бою ({0} мин)', [a[1]]);
   const b = /^После (\d+) за день$/.exec(t); if (b) return tr('После {0} за день', [b[1]]);
   return trIf(t);

@@ -10,7 +10,7 @@
 /* global THREE */
 import { localizeTree } from './lang/data.js?v=20261117d'; // язык: названия и описания из данных (arsenal, flight, heli) - до progress.js, который строит по ним дерево
 import { TREE, BRANCHES } from './progress.js?v=20261117d';
-import { trDom, tr, trIf, LANG, askLang } from './i18n.js?v=20261117d';
+import { trDom, tr, trIf, LANG, XL, askLang } from './i18n.js?v=20261117d';
 import { ktxInit, ktxRestore, ktxBusy } from './ktx.js?v=20261117d';
 import { buildCity, CITY, SITES, bldMask } from './city.js?v=20261117d';
 import { buildWinter } from './map-winter.js?v=20261117d';
@@ -64,10 +64,10 @@ const $ = (id) => document.getElementById(id);
 const Q = new URLSearchParams(location.search);
 localizeTree(TREE, BRANCHES); // страховка: узлы прокачки - по уже переведённым данным (если progress.js построил дерево раньше)
 trDom(document.body); // язык: статичный HTML страницы - до того, как меню и бой допишут свой текст (i18n.js)
-if (LANG === 'en') { const mf = document.querySelector('link[rel="manifest"]'); if (mf) mf.href = 'airdef-en.webmanifest'; } // «На экран „Домой“» (Android) - английское описание
+if (XL) { const mf = document.querySelector('link[rel="manifest"]'); if (mf) mf.href = 'airdef-en.webmanifest'; } // «На экран „Домой“» (Android) - английское описание
 askLang(); // первый вход: язык ещё не выбран - спросить (угаданный по устройству / Telegram выделен)
 // окна общих модулей (предупреждение о повороте телефона - orient-warn.js, «Летка» делит его с игрой), которые сами добавляют русский текст прямо в body
-if (LANG === 'en' && typeof MutationObserver !== 'undefined') new MutationObserver((ms) => { for (const m of ms) for (const n of m.addedNodes) if (n.nodeType === 1) trDom(n); }).observe(document.body, { childList: true });
+if (XL && typeof MutationObserver !== 'undefined') new MutationObserver((ms) => { for (const m of ms) for (const n of m.addedNodes) if (n.nodeType === 1) trDom(n); }).observe(document.body, { childList: true });
 if (Q.get('test') === '1') addEventListener('error', (e) => (window.__errs = window.__errs || []).push(e.error ? e.error.stack : e.message)); // для проверки: стеки ошибок
 const IS_TOUCH = Q.get('touch') === '1' || matchMedia('(pointer: coarse)').matches;
 document.body.classList.toggle('coarse', IS_TOUCH);

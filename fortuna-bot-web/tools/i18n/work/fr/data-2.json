@@ -1,0 +1,15 @@
+{
+ "МиГ-17Ф": "MiG-17F",
+ "Т-4 «Сотка»": "T-4 Sotka",
+ "М-4": "M-4",
+ "Модернизированный Hawk: восемь ракет на пусковой, РЛС Sentinel и цифровое управление - два канала, лучше против помех и низколетящих целей. Полуактивная ГСН - цель нужно подсвечивать до попадания.": "Hawk modernisé : huit missiles par lanceur, radar Sentinel et conduite de tir numérique - deux voies, meilleur contre le brouillage et les cibles volant bas. Autodirecteur semi-actif : il faut illuminer la cible jusqu'à l'impact.",
+ "США / Норвегия": "États-Unis / Norvège",
+ "до ≈ 45 км (в игре меньше)": "jusqu'à ≈ 45 km (moins dans le jeu)",
+ "Планирующие": "Planantes",
+ "Дроны и ложные цели": "Drones et leurres",
+ "РЛС TRML-4D даёт целеуказание, ракета стартует вертикально и захватывает цель тепловизионной ГСН уже в полёте. Ловушки почти бесполезны.": "Le radar TRML-4D fournit la désignation d'objectifs ; le missile part à la verticale et accroche la cible avec son autodirecteur infrarouge imageur en vol. Les leurres IR ne servent presque à rien.",
+ "Германия": "Allemagne",
+ "инерциальное + тепловизионное": "inertiel + infrarouge imageur",
+ "Skynex (35 мм, снаряды AHEAD)": "Skynex (35 mm, obus AHEAD)",
+ "Револьверная 35-мм пушка: снаряды AHEAD подрываются перед целью облаком поражающих элементов - хороши против дронов, ракет и бомб.": "Canon revolver de 35 mm : les obus AHEAD éclatent devant la cible en un nuage de sous-projectiles - efficaces contre les drones, missiles et bombes."
+}

@@ -1,0 +1,422 @@
+[
+ [
+  "PAC-3 за пультом: назначить «Искандер» и пустить заранее",
+  "PAC-3 at the console: assign Iskander and fire early"
+ ],
+ [
+  "Баллистику сбивают только <b>противоракетные</b> ЗРК: Patriot и PAC-3 (у востока - С-300, С-400, «Бук-М3»). И только на снижении.",
+  "Only <b>anti-missile</b> SAMs can shoot down ballistic missiles: Patriot and PAC-3 (S-300, S-400, Buk-M3 for the East). And only on descent."
+ ],
+ [
+  "Ракета падает со скоростью 1,5-2 км/с. Если ждать, пока она войдёт в зону, ЗУР не успеет. Поэтому противоракетный ЗРК стреляет <b>в упреждённую точку</b> - заранее, когда к подлёту ЗУР цель окажется в зоне. За пультом это видно: «<b>Пуск в упреждение</b>».",
+  "The missile falls at 1.5-2 km/s. If you wait for it to enter the zone, your missile won't make it in time. So an anti-missile SAM fires <b>at a lead point</b>, early enough that the target is in the zone when the interceptor arrives. At the console you'll see \"<b>Fire ahead</b>\"."
+ ],
+ [
+  "«Искандер» на снижении отделяет ложные цели и маневрирует: на одну ракету - две ЗУР.",
+  "On descent, Iskander releases decoys and maneuvers: fire two interceptors per missile."
+ ],
+ [
+  "Комплекс стреляет и сам; за пультом цель и момент выбираете вы.",
+  "The site also fires by itself; at the console, you choose the target and timing."
+ ],
+ [
+  "Выключить РЛС: ракету некому вести.",
+  "Switching the radar off: nothing guides the missile."
+ ],
+ [
+  "Пустить всё по ложным целям «Искандера».",
+  "Firing everything at Iskander's decoys."
+ ],
+ [
+  "У ГЭС - PAC-3 и Patriot. Нажмите «<b>В бой</b>».",
+  "PAC-3 and Patriot are at the dam. Press \"<b>To battle</b>\"."
+ ],
+ [
+  "Коснитесь <b>PAC-3</b> на карте и нажмите «<b>Управлять</b>» - вы за пультом.",
+  "Tap <b>PAC-3</b> on the map and press \"<b>Operate</b>\": you're at the console."
+ ],
+ [
+  "Вернитесь за пульт PAC-3: коснитесь его на карте → «Управлять».",
+  "Return to the PAC-3 console: tap it on the map → \"Operate\"."
+ ],
+ [
+  "«Искандер» пошёл вниз - отметка на круговом обзоре (слева внизу). <b>Коснитесь её</b> - назначить цель.",
+  "Iskander is descending: a mark on the scope (bottom left). <b>Tap it</b> to assign the target."
+ ],
+ [
+  "Ждите пуск баллистики (сирена). До «Управлять» включите «Время ×4» на карте. Отметка появится, когда ракета пойдёт вниз.",
+  "Wait for the ballistic launch (siren). Switch on \"Time ×4\" on the map before pressing \"Operate\". The mark appears when the missile starts descending."
+ ],
+ [
+  "Вернитесь за пульт PAC-3.",
+  "Return to the PAC-3 console."
+ ],
+ [
+  "Идёт захват. Появится «<b>Пуск в упреждение</b>» - пускайте: {0}. Две ЗУР надёжнее одной.",
+  "Locking. When \"<b>Fire ahead</b>\" appears, fire: {0}. Two interceptors are more reliable than one."
+ ],
+ [
+  "<b>Перехват!</b>",
+  "<b>Intercept!</b>"
+ ],
+ [
+  "ЗУР ушла навстречу. Следующий «Искандер» - так же: назначить, захват, пуск в упреждение.",
+  "The interceptor is on its way. Same for the next Iskander: assign, lock, fire ahead."
+ ],
+ [
+  "Сбито «Искандеров»: {0} из 2{1}.",
+  "Iskanders shot down: {0} of 2{1}."
+ ],
+ [
+  ", долетело: {0}",
+  ", got through: {0}"
+ ],
+ [
+  "Контрольная «Мульти-волна»",
+  "Final test Multi-Wave"
+ ],
+ [
+  "расстановка на свой вкус и полная волна",
+  "deploy as you like, then a full wave"
+ ],
+ [
+  "Полный бюджет обороны и полная волна: дроны, крылатые, ложные цели, баллистика. Цели станут известны в начале боя - прикройте все военные объекты.",
+  "Full defense budget and a full wave: drones, cruise missiles, decoys, ballistic missiles. Targets are revealed when the battle starts, so cover all military facilities."
+ ],
+ [
+  "Что работает: пушки и ПЗРК у объектов - против дронов; комплексы средней дальности на подходах - против крылатых; противоракетный ЗРК - у самого ценного, ракеты бережём для баллистики («Цели» - только баллистика).",
+  "What works: guns and MANPADS at facilities against drones; medium-range sites on the approaches against cruise missiles; an anti-missile SAM by the most valuable facility, saving its missiles for ballistic threats (\"Targets\": ballistic only)."
+ ],
+ [
+  "Отстоять - значит не дать разрушить цели на 50 %.",
+  "Holding means keeping target damage below 50%."
+ ],
+ [
+  "Всё у одного объекта.",
+  "Everything at one facility."
+ ],
+ [
+  "Дальние ЗРК без прикрытия пушек - их выбьют.",
+  "Long-range SAMs without gun cover: they'll get knocked out."
+ ],
+ [
+  "<b>Волна отражена:</b> цели целы на {0} %.",
+  "<b>Wave repelled:</b> targets {0}% intact."
+ ],
+ [
+  "Цели разрушены на {0} % - волна прорвалась. Урок можно пройти заново из меню.",
+  "Targets {0}% destroyed: the wave broke through. You can replay the lesson from the menu."
+ ],
+ [
+  "Расставьте ПВО на свой вкус и нажмите «<b>В бой</b>».",
+  "Deploy air defense as you like and press \"<b>To battle</b>\"."
+ ],
+ [
+  "Бой идёт: выбирайте комплексы, отдавайте приказы, садитесь за пульт.",
+  "The battle is on: select sites, give orders, take the console."
+ ],
+ [
+  "путь цели →",
+  "target's path →"
+ ],
+ [
+  "цель сейчас",
+  "target now"
+ ],
+ [
+  "линия визирования",
+  "line of sight"
+ ],
+ [
+  "«три точки»",
+  "\"three-point\""
+ ],
+ [
+  "догоняет, изгиб",
+  "chases, curves"
+ ],
+ [
+  "«спрямление»",
+  "\"half-lead\""
+ ],
+ [
+  "на точку встречи",
+  "to the intercept point"
+ ],
+ [
+  "станция",
+  "radar"
+ ],
+ [
+  "1 км",
+  "1 km"
+ ],
+ [
+  "Урок {0} из {1}{2}",
+  "Lesson {0} of {1}{2}"
+ ],
+ [
+  "<b>{0}</b> Урок начнётся заново.",
+  "<b>{0}</b> The lesson will start over."
+ ],
+ [
+  "{0} Урок начнётся заново.",
+  "{0} The lesson will start over."
+ ],
+ [
+  "Урок не пройден: {0}",
+  "Lesson failed: {0}"
+ ],
+ [
+  "Обучение",
+  "Training"
+ ],
+ [
+  "Ещё раз",
+  "Play again"
+ ],
+ [
+  "Урок пройден: {0}",
+  "Lesson complete: {0}"
+ ],
+ [
+  "Следующий урок - <b>{0}</b>: {1}.",
+  "Next lesson: <b>{0}</b> ({1})."
+ ],
+ [
+  "Это был последний урок этой ветки. Попробуйте обучение за другую сторону или настоящий бой.",
+  "That was the last lesson in this course. Try training for the other side, or a real battle."
+ ],
+ [
+  "Обучение · {0}",
+  "Training · {0}"
+ ],
+ [
+  "Следующий урок",
+  "Next lesson"
+ ],
+ [
+  "В меню",
+  "Main menu"
+ ],
+ [
+  "Понятно, продолжить",
+  "Got it, continue"
+ ],
+ [
+  "<b>{0}</b> - {1}.<br><span class=\"dim\">Задание и подсказки - кнопка «?» вверху справа</span>",
+  "<b>{0}</b>: {1}.<br><span class=\"dim\">Task and hints: the \"?\" button at the top right</span>"
+ ],
+ [
+  "{0} <span class=\"dim\">· подробности - «?»</span>",
+  "{0} <span class=\"dim\">· details: \"?\"</span>"
+ ],
+ [
+  "В «Аркаде» подвеска пополняется сама - посадка для пополнения нужна в «Реализме».",
+  "In Arcade the loadout rearms by itself; landing to rearm is only needed in Realistic."
+ ],
+ [
+  "Захват есть. <b>Окно ТВ</b> уже открыто справа - {0} скрывает и показывает его.",
+  "Locked. The <b>TV window</b> is already open on the right: {0} hides and shows it."
+ ],
+ [
+  "Слева - «<b>☰ Ход волны</b>»: там Ту-160 и время до его прилёта.",
+  "On the left is \"<b>☰ Wave timeline</b>\": it shows the Tu-160 and the time until it arrives."
+ ],
+ [
+  "Пусковая - за краем района (значок у края карты). Слева - «☰ Ход волны»: нажмите «<b>Ждать</b>» у пусковой - увидите подъём и старт.",
+  "The launcher is beyond the area edge (icon at the map edge). On the left is \"☰ Wave timeline\": press \"<b>Wait</b>\" by the launcher to watch it raise the missile and fire."
+ ],
+ [
+  "Наберите <b>150 км/ч</b> - держите {0}. Сейчас {1} км/ч.",
+  "Speed up to <b>150 km/h</b>: hold {0}. Now: {1} km/h."
+ ],
+ [
+  " Крестовина слева - точные крен и тангаж.",
+  " The D-pad on the left gives precise roll and pitch."
+ ],
+ [
+  "<b>Тени зон</b>: дома закрывают обзор - щёлкните по комплексу, зелёным видно, где он видит цель на 300 м.",
+  "<b>Coverage shadows</b>: buildings block the view. Click a site; green shows where it sees a target at 300 m."
+ ],
+ [
+  "Это тактическая карта города. Справа - <b>очки обороны</b> и комплексы. Выберите «<b>Оса</b>», щёлкните по карте рядом со складом боеприпасов (жёлтый ромб) - место можно менять щелчками - и «<b>Подтвердить</b>».",
+  "This is the tactical map of the city. On the right: <b>defense points</b> and sites. Select \"<b>Osa</b>\", click the map next to the ammo depot (yellow diamond; click again to change the spot) and press \"<b>Confirm</b>\"."
+ ],
+ [
+  "Щёлкните по своему комплексу: <b>зелёная тень</b> - где он видит цель на 300 м, а где её закрывают дома (щелчок по карте и «Подтвердить перенос» - переставить). Поставьте ещё ПЗРК («Игла») поближе к складу.",
+  "Click your site: the <b>green shade</b> shows where it sees a target at 300 m and where buildings block it (click the map and \"Confirm move\" to relocate). Place another MANPADS (Igla) closer to the depot."
+ ],
+ [
+  "Вы - оператор: слева внизу <b>круговой обзор</b> (ИКО) - отметки целей. Щелчок по отметке (или в кадре) - назначить цель.",
+  "You're the operator. Bottom left is the <b>radar scope</b> (PPI) with target marks. Click a mark (or in the view) to assign a target."
+ ],
+ [
+  "Щёлкните по отметке цели (на ИКО слева внизу или в кадре){0}.",
+  "Click a target mark (on the scope bottom left or in the view){0}."
+ ],
+ [
+  "Назначьте цель - щелчок по отметке.",
+  "Assign a target: click a mark."
+ ],
+ [
+  "Две цели - назначьте одну (щелчок по отметке).",
+  "Two targets: assign one (click a mark)."
+ ],
+ [
+  "Назначьте цель (щелчок по отметке).",
+  "Assign a target (click a mark)."
+ ],
+ [
+  "Оранжевые ромбы «Бомба» - назначайте их (щелчок по отметке) и пускайте.",
+  "Orange \"Bomb\" diamonds: assign them (click a mark) and fire."
+ ],
+ [
+  "Щёлкните по цели на карте - ромбу с подписью, например «<b>{0}</b>». Откроется <b>окно цели</b>.",
+  "Click a target on the map, a labeled diamond such as \"<b>{0}</b>\". The <b>target window</b> opens."
+ ],
+ [
+  "Окно цели закрыто - щёлкните по объекту на карте ещё раз.",
+  "The target window is closed: click the facility on the map again."
+ ],
+ [
+  "Откройте любую цель - щёлкните по объекту на карте.",
+  "Open any target: click a facility on the map."
+ ],
+ [
+  "Окно цели закрыто - щёлкните по объекту на карте.",
+  "The target window is closed: click a facility on the map."
+ ],
+ [
+  "Откройте <b>другую цель</b> (щёлкните по другому ромбу на карте) и купите на неё что-нибудь.",
+  "Open <b>another target</b> (click another diamond on the map) and buy something for it."
+ ],
+ [
+  "Щелчок по единице в окне цели - её настройки: <b>маршрут</b> (до 3 точек щелчками по карте, внутри белого круга), <b>высота</b> (своя - низко, огибая дома; 3 км - дальние ЗРК видят издалека, зато пушки и ПЗРК не достают) и <b>время пуска</b> от начала боя.",
+  "Click a unit in the target window for its settings: <b>route</b> (up to 3 waypoints, click the map inside the white circle), <b>altitude</b> (default: low, hugging buildings; 3 km: long-range SAMs see it from afar, but guns and MANPADS can't reach it) and <b>launch time</b> from battle start."
+ ],
+ [
+  "Окно закрыто - щёлкните по «<b>{0}</b>» на карте.",
+  "The window is closed: click \"<b>{0}</b>\" on the map."
+ ],
+ [
+  "Под строкой «Калибр» - единицы. Щёлкните по «<b>Калибр 1 · …</b>»: откроются настройки этой ракеты.",
+  "The units are listed under the \"Kalibr\" row. Click \"<b>Kalibr 1 · …</b>\" to open this missile's settings."
+ ],
+ [
+  "<b>Маршрут:</b> щёлкните по карте 2 раза внутри белого круга - точки пути. Например, обойдите стороной вершину с РЛС.",
+  "<b>Route:</b> click the map twice inside the white circle to set waypoints. For example, steer around the peak with the radar."
+ ],
+ [
+  "Щёлкните по «<b>Искандер 1 · …</b>» - его время пуска.",
+  "Click \"<b>Iskander 1 · …</b>\" to set its launch time."
+ ],
+ [
+  "Засечённый комплекс на карте - тоже цель: щёлкните по красному треугольнику, и наряд на него будет бить именно по нему.",
+  "A detected site on the map is a target too: click the red triangle, and the package will hit that exact site."
+ ],
+ [
+  "В правой панели, в списке целей, - «<b>ПВО противника</b>». Щёлкните по ней (сначала «Готово», если открыто окно цели).",
+  "In the right panel's target list: \"<b>Enemy AD</b>\". Click it (press \"Done\" first if a target window is open)."
+ ],
+ [
+  "Щелчок по <b>засечённому ЗРК</b> (красный треугольник) - его окно: наряд бьёт именно по нему.",
+  "Click a <b>detected SAM</b> (red triangle) to open its window: the package strikes that exact site."
+ ],
+ [
+  "Бой идёт. Откройте «<b>{0}</b>» (щёлкните на карте) и <b>докупите</b> ударный дрон («+»).",
+  "The battle is on. Open \"<b>{0}</b>\" (click it on the map) and <b>buy</b> another strike drone (\"+\")."
+ ],
+ [
+  "Заказ принят - дрон вылетит через 30 с. Теперь откройте «<b>{0}</b>», щёлкните по «<b>Искандер 1</b>» и нажмите «<b>Пуск сейчас</b>».",
+  "Order accepted: the drone launches in 30 s. Now open \"<b>{0}</b>\", click \"<b>Iskander 1</b>\" and press \"<b>Launch now</b>\"."
+ ],
+ [
+  "Засечён <b>{0}</b> - красный треугольник. Щёлкните по нему на карте и назначьте на него ударный дрон («+»).",
+  "<b>{0}</b> detected: a red triangle. Click it on the map and assign a strike drone to it (\"+\")."
+ ],
+ [
+  "Соберите волну: щёлкайте по целям на карте, покупайте «+», настраивайте единицы. Затем «<b>Пуск</b>».",
+  "Build the wave: click targets on the map, buy with \"+\", configure units. Then press \"<b>Launch</b>\"."
+ ],
+ [
+  "Щёлкните по <b>PAC-3</b> на карте и нажмите «<b>Управлять</b>» - вы за пультом.",
+  "Click <b>PAC-3</b> on the map and press \"<b>Operate</b>\": you're at the console."
+ ],
+ [
+  "Вернитесь за пульт PAC-3: щёлкните по нему на карте → «Управлять».",
+  "Return to the PAC-3 console: click it on the map → \"Operate\"."
+ ],
+ [
+  "«Искандер» пошёл вниз - отметка на круговом обзоре (слева внизу). <b>Щёлкните по ней</b> - назначить цель.",
+  "Iskander is descending: a mark on the scope (bottom left). <b>Click it</b> to assign the target."
+ ],
+ [
+  "Вертолёты идут к гарнизону «Пугало» низко, по оврагу. Садитесь за пульт пушки или ПЗРК (щёлкните по комплексу) и ловите подскок. Сбито: {0}/2.",
+  "The helicopters are heading for Garrison \"Scarecrow\", low along the gully. Take the console of a gun or MANPADS (click the site) and catch the pop-up. Shot down: {0}/2."
+ ],
+ [
+  "Мышь (в обзоре L)",
+  "Mouse (in look mode, L)"
+ ],
+ [
+  "осмотреться",
+  "look around"
+ ],
+ [
+  "Это <b>«Бинокль»</b>: {0} Самолёт держит курс и высоту сам. {1} - следующий вид, {2} - обратно к управлению.",
+  "This is the <b>Binoculars</b>: {0} The aircraft holds course and altitude by itself. {1} - next view, {2} - back to flying."
+ ],
+ [
+  "камера летит за бомбой до разрыва.",
+  "the camera follows the bomb until it explodes."
+ ],
+ [
+  "вид с самолёта на цель.",
+  "a view of the target from the aircraft."
+ ],
+ [
+  "кнопка с биноклем",
+  "the binoculars button"
+ ],
+ [
+  "клавиши полёта",
+  "the flight keys"
+ ],
+ [
+  "ручка, крестовина или палец по экрану",
+  "the stick, the pad or a finger on the screen"
+ ],
+ [
+  "Бомба ушла и летит к цели. Посмотрите на неё в <b>«Бинокль»</b> ({0}): сначала вид на цель, ещё раз - за бомбой.",
+  "The bomb is away and flying to the target. Watch it through the <b>Binoculars</b> ({0}): first the target, press again - follow the bomb."
+ ],
+ [
+  "кнопка с биноклем справа",
+  "the binoculars button on the right"
+ ],
+ [
+  "ползунок газа - до «Ф»",
+  "throttle slider - up to \"AB\" (afterburner)"
+ ],
+ [
+  "Ползунок газа - тяните вверх, «Ф» наверху - форсаж.",
+  "Throttle slider: drag up; \"AB\" at the top is afterburner."
+ ],
+ [
+  "ползунок газа до «Ф»",
+  "throttle slider up to \"AB\""
+ ],
+ [
+  "«⋯», затем «Карта»",
+  "\"⋯\", then \"Map\""
+ ],
+ [
+  "На карте видно весь район. Закройте её так же: «⋯», затем «Карта».",
+  "The map shows the whole area. Close it the same way: \"⋯\", then \"Map\"."
+ ],
+ [
+  "кнопка с биноклем под «⋯»",
+  "the binoculars button under \"⋯\""
+ ]
+]

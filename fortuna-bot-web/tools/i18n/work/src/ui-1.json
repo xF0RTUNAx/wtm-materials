@@ -1,0 +1,2218 @@
+[
+ [
+  "Вылет",
+  "Sortie"
+ ],
+ [
+  "за самолёт: прорвать ПВО и уничтожить цели",
+  "as pilot: break through air defenses and destroy targets"
+ ],
+ [
+  "Оборона",
+  "Defense"
+ ],
+ [
+  "за ПВО: отразить волны налётов на город",
+  "as air defense: repel waves of raids on the city"
+ ],
+ [
+  "Мульти-волна",
+  "Multi-Wave"
+ ],
+ [
+  "ракеты, дроны и баллистика: за атакующую волну или за ПВО",
+  "drones, cruise and ballistic missiles: launch the wave or defend against it"
+ ],
+ [
+  "Обучение",
+  "Training"
+ ],
+ [
+  "по шагам, с объяснениями, проиграть нельзя",
+  "step by step, with explanations; you can't lose"
+ ],
+ [
+  "Онлайн",
+  "Online"
+ ],
+ [
+  "командные бои с другими игроками: авиация против ПВО",
+  "team battles against other players: aircraft vs air defense"
+ ],
+ [
+  "Режим съёмки",
+  "Photo mode"
+ ],
+ [
+  "автобой и свободная камера: красивые кадры",
+  "auto battle and free camera for great shots"
+ ],
+ [
+  "Здания закрывают РЛС обзор: на малой высоте между домами комплекс видит вас урывками и не успевает выстрелить.",
+  "Buildings block radar: flying low between houses, you flicker in and out of a site's view and it has no time to fire."
+ ],
+ [
+  "Лазерную бомбу нужно подсвечивать до попадания. Отвернули так, что контейнер закрыло корпусом, - бомба упадёт мимо.",
+  "A laser-guided bomb must be lased until impact. Turn so the airframe masks the pod and the bomb will miss."
+ ],
+ [
+  "Shrike летит только на включённую РЛС. HARM и Х-58 помнят место станции - спасёт лишь переезд.",
+  "Shrike homes only on an active radar. HARM and Kh-58 remember the radar's position: only relocating saves it."
+ ],
+ [
+  "Против полуактивной ракеты («Куб», Hawk) - «траверз»: поставьте РЛС на 3 или 9 часов и снижайтесь, когерентная станция потеряет вас в доплеровском провале.",
+  "Against semi-active missiles (Kub, Hawk), beam the radar: put it at your 3 or 9 o'clock and descend, and a coherent radar loses you in the Doppler notch."
+ ],
+ [
+  "Диполи хорошо работают против старых РЛС (С-75), а против когерентных - только если идти поперёк луча.",
+  "Chaff works well against old radars (S-75), but against coherent ones only if you fly across the beam."
+ ],
+ [
+  "ПЗРК на крышах не видны на СПО: о них предупредит только датчик пуска. Отстреливайте ловушки сразу.",
+  "Rooftop MANPADS don't show on the RWR; only the missile warning will alert you. Pop countermeasures at once."
+ ],
+ [
+  "В обороне смотрите на «тени» зон: здание рядом с комплексом может закрыть целый сектор на малой высоте.",
+  "In Defense mode, watch the coverage \"shadows\": a building next to a site can blind a whole low-altitude sector."
+ ],
+ [
+  "Оператору командного ЗРК: «три точки» надёжнее по манёвренной цели, «половинное спрямление» экономит энергию ракеты по быстрой цели, идущей поперёк.",
+  "Command-guided SAM operators: \"three-point\" is more reliable against maneuvering targets, \"half-lead\" saves missile energy against fast crossing targets."
+ ],
+ [
+  "Опытный расчёт выключает РЛС при пуске противорадиолокационной ракеты. В обороне это делаете вы - кнопка «РЛС».",
+  "Experienced crews shut the radar down when an anti-radiation missile is launched. In Defense mode it's up to you: the \"Radar\" button."
+ ],
+ [
+  "ТВ-головки ночью не видят: в вечерних и ночных вылетах берите лазерные бомбы или ПРР.",
+  "TV seekers are blind at night: for evening and night sorties, take laser-guided bombs or ARMs."
+ ],
+ [
+  "Засада: комплекс с выключенной РЛС не виден на СПО и включается, только когда сеть ПВО сообщит о цели рядом.",
+  "Ambush: a site with its radar off is invisible on the RWR and lights up only when the air defense network reports a target nearby."
+ ],
+ [
+  "Пушкам нужно упреждение: ведите ствол в кружок впереди самолёта, а не на сам самолёт.",
+  "Guns need lead: aim the barrel at the circle ahead of the aircraft, not at the aircraft itself."
+ ],
+ [
+  "Начать урок",
+  "Start lesson"
+ ],
+ [
+  "Снимать",
+  "Film"
+ ],
+ [
+  "К расстановке",
+  "Deploy"
+ ],
+ [
+  "К плану волны",
+  "Plan the wave"
+ ],
+ [
+  "Взлёт",
+  "Takeoff"
+ ],
+ [
+  "‹ Первые шаги - подобрать урок по ответам",
+  "‹ First steps: quick quiz to pick a lesson"
+ ],
+ [
+  "Учебник",
+  "Course"
+ ],
+ [
+  "Вылет и оборона",
+  "Sortie and Defense"
+ ],
+ [
+  "Сторона",
+  "Side"
+ ],
+ [
+  "За волну",
+  "As attacker"
+ ],
+ [
+  "За ПВО",
+  "As air defense"
+ ],
+ [
+  "За самолёт",
+  "As pilot"
+ ],
+ [
+  "За вертолёт",
+  "As helicopter pilot"
+ ],
+ [
+  "Чьей техникой",
+  "Equipment"
+ ],
+ [
+  "Восток",
+  "East"
+ ],
+ [
+  "Запад",
+  "West"
+ ],
+ [
+  "Каждый урок: объяснение и шаги с подсказками в панели «Урок» (кнопка вверху справа; пока она открыта, игра на паузе). Уроки идут по порядку: от карты и первой покупки до контрольной волны.",
+  "Each lesson: an explanation, then steps with hints in the \"Lesson\" panel (top-right button; the game is paused while it's open). Lessons go in order, from the map and first purchase to the test wave."
+ ],
+ [
+  "Каждый урок: объяснение, показ (самолёт всё делает сам), затем вы. Проиграть нельзя: урона нет, боеприпасы пополняются. Шаги - в панели «Урок» вверху справа (пока она открыта, игра на паузе). Кнопка «?» объясняет оружие или комплекс.",
+  "Each lesson: an explanation, a demo (the aircraft flies itself), then your turn. You can't lose: no damage, ammo is replenished. Steps are in the \"Lesson\" panel at the top right (the game is paused while it's open). The \"?\" button explains a weapon or site."
+ ],
+ [
+  "Режим",
+  "Mode"
+ ],
+ [
+  "Ваша ПВО",
+  "Your air defense"
+ ],
+ [
+  "Налёт",
+  "Raid"
+ ],
+ [
+  "дальность",
+  "range"
+ ],
+ [
+  "высота",
+  "altitude"
+ ],
+ [
+  "наведение",
+  "guidance"
+ ],
+ [
+  "Своя комната",
+  "Private room"
+ ],
+ [
+  "По коду",
+  "By code"
+ ],
+ [
+  "Ваша авиация",
+  "Your aircraft"
+ ],
+ [
+  "Ник можно сменить один раз в сезон.",
+  "You can change your nickname once per season."
+ ],
+ [
+  "Удалить аккаунт",
+  "Delete account"
+ ],
+ [
+  "Удаление аккаунта",
+  "Deleting the account"
+ ],
+ [
+  "Аккаунт, прогресс, исследования, кристаллы, бои и место в рейтинге будут удалены навсегда. Вернуть их будет нельзя.",
+  "The account, progress, research, crystals, battles and rating place will be deleted forever. They cannot be restored."
+ ],
+ [
+  "Для подтверждения введите {0}",
+  "To confirm, type {0}"
+ ],
+ [
+  "Удалить навсегда",
+  "Delete forever"
+ ],
+ [
+  "Сейчас нельзя: вы в комнате или в бою",
+  "Not now: you are in a room or in battle"
+ ],
+ [
+  "Аккаунт удалён",
+  "Account deleted"
+ ],
+ [
+  "Войдите в аккаунт игры заново",
+  "Please sign in to your game account again"
+ ],
+ [
+  "Войдите в аккаунт игры заново: вход теперь защищён ключом устройства",
+  "Please sign in again: sign-in is now protected by a device key"
+ ],
+ [
+  "Аккаунт не найден",
+  "Account not found"
+ ],
+ [
+  "Нет подтверждения",
+  "No confirmation"
+ ],
+ [
+  "день",
+  "day"
+ ],
+ [
+  "утро",
+  "morning"
+ ],
+ [
+  "вечер",
+  "evening"
+ ],
+ [
+  "закат",
+  "sunset"
+ ],
+ [
+  "туман",
+  "fog"
+ ],
+ [
+  "ясно",
+  "clear"
+ ],
+ [
+  "дымка",
+  "haze"
+ ],
+ [
+  "снег",
+  "snow"
+ ],
+ [
+  "Против самолётов",
+  "vs aircraft"
+ ],
+ [
+  "разведка",
+  "recon"
+ ],
+ [
+  "дроны и ложные",
+  "drones & decoys"
+ ],
+ [
+  "Позвать",
+  "Invite"
+ ],
+ [
+  "сюда",
+  "join"
+ ],
+ [
+  "Код комнаты",
+  "Room code"
+ ],
+ [
+  "боты",
+  "bots"
+ ],
+ [
+  "Создать",
+  "Create"
+ ],
+ [
+  "{0}×{1} · ранг {2} · {3}",
+  "{0}×{1} · rank {2} · {3}"
+ ],
+ [
+  "Мульти-волна · {0} · {1}×{2}",
+  "Multi-wave · {0} · {1}×{2}"
+ ],
+ [
+  "Авиация: {0}",
+  "Aircraft: {0}"
+ ],
+ [
+  "ПВО противника: {0}.",
+  "Enemy air defence: {0}."
+ ],
+ [
+  "ПВО города",
+  "City air defense"
+ ],
+ [
+  "Советская",
+  "Soviet"
+ ],
+ [
+  "Западная",
+  "Western"
+ ],
+ [
+  "Комплексы: {0}.",
+  "Sites: {0}."
+ ],
+ [
+  "Подвеска",
+  "Loadout"
+ ],
+ [
+  " · контейнер",
+  " · pod"
+ ],
+ [
+  " · прицел",
+  " · sight"
+ ],
+ [
+  "{0} - открыть в «Исследованиях»",
+  "{0} (open in Research)"
+ ],
+ [
+  "В «Реализме» ранга {0} нет подвески за эту сторону. Купите самолёт и оружие в «Исследованиях» или играйте в «Аркаде».",
+  "No rank {0} loadout for this side in Realistic mode. Buy an aircraft and weapons in Research, or play Arcade."
+ ],
+ [
+  "Вылеты",
+  "Sorties"
+ ],
+ [
+  "Один вылет",
+  "Single sortie"
+ ],
+ [
+  "Операция: 2 вылета",
+  "Operation: 2 sorties"
+ ],
+ [
+  "Сначала подавить ПВО, потом бить по городу. Разбитое в первом вылете остаётся разбитым, уцелевшие комплексы перезарядятся. Очки считаются за оба вылета, +300 за два возвращения.",
+  "Suppress air defenses first, then hit the city. What you destroy in sortie 1 stays destroyed; surviving sites reload. Points from both sorties count, +300 for returning twice."
+ ],
+ [
+  "Вылет 1 - охота за ПВО",
+  "Sortie 1: SEAD hunt"
+ ],
+ [
+  "Вылет 2 - штурмовка",
+  "Sortie 2: strike"
+ ],
+ [
+  "«Охота за ПВО» - уничтожить комплексы с РЛС, «штурмовка» - цели города.",
+  "\"SEAD hunt\": destroy radar sites. \"Strike\": hit city targets."
+ ],
+ [
+  "Последняя волна",
+  "Final wave"
+ ],
+ [
+  "Обычный налёт",
+  "Regular raid"
+ ],
+ [
+  "{0}: разведчик и {1}, затем крылатые ракеты с нескольких направлений на малой высоте, в конце оперативно-тактические: {2}. Баллистику сбивают только противоракетные комплексы ({3}).",
+  "{0}: a recon drone and {1}, then low-flying cruise missiles from several directions, finally tactical ballistic missiles: {2}. Only anti-missile systems can shoot down ballistic missiles ({3})."
+ ],
+ [
+  "ударные дроны",
+  "strike drones"
+ ],
+ [
+  "ложные цели",
+  "decoys"
+ ],
+ [
+  "нет",
+  "none"
+ ],
+ [
+  "в этом ранге - никто",
+  "none in this rank"
+ ],
+ [
+  "Комплексы в вашем распоряжении",
+  "Available sites"
+ ],
+ [
+  "{0} · до {1} км, высота до {2} км",
+  "{0} · up to {1} km, altitude up to {2} km"
+ ],
+ [
+  "в «Реализме» - после покупки в «Исследованиях»",
+  "in Realistic mode: buy in Research first"
+ ],
+ [
+  "{0} очк",
+  "{0} pts"
+ ],
+ [
+  "Перед каждой волной расставьте комплексы за очки обороны; между волнами можно докупить, перевезти и продать. Волн: {0}. Поражение - если потеряно 75 % ценности военных объектов. В бою можно сесть в любой комплекс оператором.",
+  "Before each wave, place sites using defense points; between waves you can buy, move or sell. Waves: {0}. You lose if 75% of military facility value is lost. In battle you can take over any site as operator."
+ ],
+ [
+  "Снимаем",
+  "Filming"
+ ],
+ [
+  "Самолёт",
+  "Aircraft"
+ ],
+ [
+  "ПВО",
+  "Air defense"
+ ],
+ [
+  "Сторона ПВО",
+  "Air defense side"
+ ],
+ [
+  "Карта",
+  "Map"
+ ],
+ [
+  "Северный рубеж",
+  "Northern Frontier"
+ ],
+ [
+  "Город",
+  "City"
+ ],
+ [
+  "Речной узел",
+  "River Junction"
+ ],
+ [
+  "Погода",
+  "Weather"
+ ],
+ [
+  "Случайная",
+  "Random"
+ ],
+ [
+  "Сейчас: {0}. Смена карты и погоды перезапускает страницу.",
+  "Current: {0}. Changing the map or weather reloads the page."
+ ],
+ [
+  "Высота",
+  "Altitude"
+ ],
+ [
+  "250 м",
+  "250 m"
+ ],
+ [
+  "1,5 км",
+  "1.5 km"
+ ],
+ [
+  "4 км",
+  "4 km"
+ ],
+ [
+  "Самолёт и подвеска",
+  "Aircraft and loadout"
+ ],
+ [
+  "Самолёт сам летит от цели к цели, сбрасывает, пускает и ставит ловушки. Урона нет, подвеска пополняется. Камеру можно привязать к любому оружию на пилоне: сход с подвески и полёт до разрыва. На 250 м контейнер не берёт цели, лазерные и ТВ не пускаются.",
+  "The aircraft flies from target to target on its own, releasing weapons and countermeasures. No damage, the loadout is replenished. The camera can follow any weapon on a pylon, from release to impact. At 250 m the pod can't lock targets, so laser and TV weapons aren't used."
+ ],
+ [
+  "Против",
+  "Against"
+ ],
+ [
+  "Самолётов",
+  "Aircraft"
+ ],
+ [
+  "Комплекс",
+  "Site"
+ ],
+ [
+  "{0} · до {1} км",
+  "{0} · up to {1} km"
+ ],
+ [
+  "Комплекс стоит у цели и отражает налёт за налётом: неуязвим, быстро перезаряжается. Вокруг - ИИ-ПВО города.",
+  "The site guards the target and repels raid after raid: invulnerable, fast reload. The city's AI air defense is around it."
+ ],
+ [
+  "Оружие волны",
+  "Wave weapons"
+ ],
+ [
+  "разведчик",
+  "recon"
+ ],
+ [
+  "дрон",
+  "drone"
+ ],
+ [
+  "аэробаллистическая",
+  "air-launched ballistic"
+ ],
+ [
+  "баллистическая, с пусковой",
+  "ground-launched ballistic"
+ ],
+ [
+  "крылатая / планирующая",
+  "cruise / glide"
+ ],
+ [
+  " · носитель {0}",
+  " · carrier {0}"
+ ],
+ [
+  "В этом ранге у этой стороны нечего снять - выберите другой ранг.",
+  "This side has nothing to film in this rank: pick another one."
+ ],
+ [
+  "Выбранное оружие снова и снова идёт на город: носитель или пусковая → пуск → полёт → перехват или попадание. ПВО города - ИИ.",
+  "The chosen weapon attacks the city again and again: carrier or launcher → launch → flight → intercept or hit. City air defense is AI-controlled."
+ ],
+ [
+  "{0} Внизу - что снимать и ракурс, справа - зум, скорость (×½, ×¼, стоп-кадр) и ◎ - убрать весь интерфейс (тап по экрану вернёт).",
+  "{0} Bottom: subject and angle; right: zoom, speed (×½, ×¼, freeze frame) and ◎ to hide the UI (tap the screen to bring it back)."
+ ],
+ [
+  "Тяните по экрану - камера вокруг объекта, два пальца - ближе/дальше.",
+  "Drag to orbit the camera, pinch to zoom in or out."
+ ],
+ [
+  "Мышь - вокруг объекта, колесо - ближе/дальше, ←/→ ракурс, ↑/↓ объект, H - спрятать интерфейс.",
+  "Mouse: orbit, wheel: closer/farther, ←/→ angle, ↑/↓ subject, H: hide UI."
+ ],
+ [
+  "Вы уже летали в авиасимуляторах?",
+  "Have you played flight sims before?"
+ ],
+ [
+  "Нет, впервые",
+  "No, first time"
+ ],
+ [
+  "начнём с управления самолётом",
+  "start with flight controls"
+ ],
+ [
+  "Да, немного",
+  "Yes, a little"
+ ],
+ [
+  "сразу к бомбам и ракетам",
+  "straight to bombs and missiles"
+ ],
+ [
+  "Да, уверенно",
+  "Yes, I'm experienced"
+ ],
+ [
+  "к уклонению от ракет ПВО",
+  "skip to evading SAMs"
+ ],
+ [
+  "Вы уже играли за ПВО в похожих играх?",
+  "Have you played air defense in other games?"
+ ],
+ [
+  "начнём с расстановки комплексов",
+  "start with deploying sites"
+ ],
+ [
+  "сразу к стрельбе из комплекса",
+  "straight to firing from a site"
+ ],
+ [
+  "к защите от противорадарных ракет",
+  "skip to countering ARMs"
+ ],
+ [
+  "Что хотите освоить в «Мульти-волне»?",
+  "What do you want to learn in Multi-Wave?"
+ ],
+ [
+  "Собирать удар",
+  "Build a strike"
+ ],
+ [
+  "дроны, крылатые ракеты, баллистика",
+  "drones, cruise and ballistic missiles"
+ ],
+ [
+  "Отбивать удар",
+  "Repel a strike"
+ ],
+ [
+  "ПВО против волны",
+  "air defense against a wave"
+ ],
+ [
+  "За кого",
+  "Play as"
+ ],
+ [
+  "Роль",
+  "Role"
+ ],
+ [
+  "Опыт",
+  "Experience"
+ ],
+ [
+  "Первый урок",
+  "First lesson"
+ ],
+ [
+  "Все уроки",
+  "All lessons"
+ ],
+ [
+  "За кого хотите научиться играть?",
+  "Who do you want to learn to play as?"
+ ],
+ [
+  "прорваться через ПВО и поразить цели",
+  "break through air defenses and hit targets"
+ ],
+ [
+  "защитить город от налётов",
+  "defend the city from raids"
+ ],
+ [
+  "дроны, ракеты и баллистика",
+  "drones, cruise and ballistic missiles"
+ ],
+ [
+  "‹ Назад",
+  "‹ Back"
+ ],
+ [
+  "Ваш первый урок",
+  "Your first lesson"
+ ],
+ [
+  "Урок короткий, проиграть нельзя: объяснение, показ, потом вы. Дальше уроки идут по порядку (список в «Все уроки»).",
+  "A short lesson, you can't lose: explanation, demo, then your turn. After that lessons go in order (see \"All lessons\")."
+ ],
+ [
+  "Ответить заново",
+  "Answer again"
+ ],
+ [
+  "Карта «Северный рубеж»: зимняя горная долина. Объекты разнесены: авиабаза, ГЭС на плотине, РЛС на вершине, арсенал в ущелье. Хребты прикрывают от РЛС и ракет.",
+  "Northern Frontier is a winter mountain valley. Objectives are spread out: an air base, a hydroelectric dam, a summit radar, a gorge arsenal. Ridges shield you from radar and missiles."
+ ],
+ [
+  "Как идёт волна",
+  "How a wave works"
+ ],
+ [
+  "1. <b>Дрон разведчик</b> (без боевой части, с камерой) облетает город и засекает ПВО. 2. <b>{0} и ложные цели</b>: ПВО тратит на них ракеты и включает РЛС. 3. <b>Крылатые ракеты</b>: носители ({1}) заходят из-за края карты и пускают их с рубежа за краем района, куда ПВО не достаёт. Ракеты идут на малой высоте с 2-3 направлений. 4. <b>Баллистика</b>: с пусковых за городом, по крутой дуге с высоты 25-45 км. Расписание не ждёт: несбитые дроны долетают до целей, крылатые и баллистика приходят в свой срок.",
+  "1. A <b>recon drone</b> (camera, no warhead) circles the city and spots air defense. 2. <b>{0} and decoys</b>: air defense wastes missiles on them and switches its radars on. 3. <b>Cruise missiles</b>: carriers ({1}) come in from beyond the map edge and launch from a line outside the area, out of air defense reach. The missiles fly low from 2-3 directions. 4. <b>Ballistic missiles</b> launch from outside the city on a steep arc peaking at 25-45 km. The schedule doesn't wait: surviving drones reach their targets, cruise and ballistic missiles arrive on time."
+ ],
+ [
+  "Ударные дроны",
+  "Strike drones"
+ ],
+ [
+  "Дроны",
+  "Drones"
+ ],
+ [
+  "<b>Баллистику</b> сбивают только противоракетные ЗРК: С-300, С-400, Patriot, PAC-3 (немного «Бук-М3»), и только на снижении, в последние ~20 с. О пуске предупреждает тревога. На карте ромб показывает высоту и время до падения, круг - район падения.",
+  "Only anti-missile SAMs can shoot down <b>ballistic missiles</b>: S-300, S-400, Patriot, PAC-3 (Buk-M3 a little), and only on descent, in the last ~20 s. An alarm warns of the launch. On the map a diamond shows altitude and time to impact, a circle shows the impact area."
+ ],
+ [
+  "Бюджет - <b>{0}</b> очков угрозы{1}: дрон и ложная цель - 1, крылатая - 3, малозаметная - 4, баллистическая - 4-6, «Искандер» - 7, «Кинжал» - 9, ARRW - 8. На карте выбираете 1-4 цели, состав, маршруты (до 3 точек), высоту, время прихода (эшелонами или разом) и долю по ПВО. Где ПВО, заранее неизвестно: её засекает разведчик, выдают излучение РЛС и пуски. В бою «Ход волны» показывает, что летит и когда пуски носителей и баллистики; «Смотреть» и «Ждать» - камера к событию, время ×4. ПВО противника - ИИ ({2}). Волна прорвалась, если разрушено 50 % ценности целей.",
+  "Budget: <b>{0}</b> threat points{1}: drone or decoy 1, cruise missile 3, stealth 4, ballistic 4-6, Iskander 7, Kinzhal 9, ARRW 8. On the map you pick 1-4 targets, the force mix, routes (up to 3 waypoints), altitude, arrival timing (staggered or all at once) and the share sent against air defense. Air defense positions are unknown at first: recon spots them, and radar emissions and launches give them away. In battle the \"Wave timeline\" shows what is in the air and when carriers and ballistic missiles launch; \"Watch\" and \"Wait\" jump the camera to the event at ×4 time. Enemy air defense is AI ({2}). The wave breaks through once 50% of target value is destroyed."
+ ],
+ [
+  " (у запада +15 %: моделей меньше)",
+  " (West gets +15%: fewer models)"
+ ],
+ [
+  "Одна большая волна по 3 целям. Расстановка - <b>{0}</b> очков обороны, докупки нет. Ожидается: {1}. Волна прорвалась, если разрушено 50 % ценности целей. Время в бою можно ускорить ×4; «Смотреть» - камера за ракетой.",
+  "One big wave against 3 targets. Deployment: <b>{0}</b> defense points, no buying later. Expected: {1}. The wave breaks through once 50% of target value is destroyed. In battle you can speed time up ×4; \"Watch\" puts the camera on a missile."
+ ],
+ [
+  "Реальные характеристики - округлённые открытые данные. Дальности в игре уменьшены под размер карты.",
+  "Real-world specs are rounded public data. In-game ranges are scaled down to fit the map."
+ ],
+ [
+  "Су-17М4",
+  "Su-17M4"
+ ],
+ [
+  "СССР · истребитель-бомбардировщик с крылом изменяемой стреловидности: ФАБ, ПРР Х-28 и Х-58, Х-25МЛ.",
+  "USSR · swing-wing fighter-bomber: FAB bombs, Kh-28 and Kh-58 ARMs, Kh-25ML."
+ ],
+ [
+  "Су-24М",
+  "Su-24M"
+ ],
+ [
+  "СССР / Россия · фронтовой бомбардировщик, встроенная лазерно-телевизионная система «Кайра»: КАБ-500Л, Х-58, Х-29Т, Х-31П.",
+  "USSR / Russia · tactical bomber with the built-in Kaira laser-TV system: KAB-500L, Kh-58, Kh-29T, Kh-31P."
+ ],
+ [
+  "Су-25",
+  "Su-25"
+ ],
+ [
+  "СССР / Россия · бронированный штурмовик: ФАБ-500, Х-29Т, Х-25МЛ (у Су-25Т - встроенный «Шквал»).",
+  "USSR / Russia · armored attack aircraft: FAB-500, Kh-29T, Kh-25ML (Su-25T: built-in Shkval)."
+ ],
+ [
+  "Су-30",
+  "Su-30"
+ ],
+ [
+  "Россия · двухместный многоцелевой: КАБ-500, УМПК.",
+  "Russia · two-seat multirole: KAB-500, UMPK."
+ ],
+ [
+  "МиГ-29СМТ",
+  "MiG-29SMT"
+ ],
+ [
+  "Россия · лёгкий фронтовой: ПРР Х-31П.",
+  "Russia · light frontline fighter: Kh-31P ARM."
+ ],
+ [
+  "Су-34",
+  "Su-34"
+ ],
+ [
+  "Россия · фронтовой бомбардировщик, встроенный прицельный комплекс «Платан»: КАБ-500С, УМПК, Х-59М, Х-31П.",
+  "Russia · tactical bomber with the built-in Platan targeting system: KAB-500S, UMPK, Kh-59M, Kh-31P."
+ ],
+ [
+  "МиГ-31БМ",
+  "MiG-31BM"
+ ],
+ [
+  "Россия · перехватчик, в модернизации - ПРР Х-31П против ПВО.",
+  "Russia · interceptor; upgraded with the Kh-31P ARM for SEAD."
+ ],
+ [
+  "Су-57",
+  "Su-57"
+ ],
+ [
+  "Россия · малозаметный: оружие во внутренних отсеках (Х-59МК2 создавалась под них), выходит из отсека при пуске.",
+  "Russia · stealth: weapons in internal bays (the Kh-59MK2 was designed for them), extended at launch."
+ ],
+ [
+  "США · «Дикая ласка» F-4G - охотник за ПВО: Shrike, HARM.",
+  "USA · F-4G \"Wild Weasel\", a SEAD hunter: Shrike, HARM."
+ ],
+ [
+  "США · палубный многоцелевой: Mk 82, GBU-12, JDAM, HARM, AARGM-ER.",
+  "USA · carrier-based multirole: Mk 82, GBU-12, JDAM, HARM, AARGM-ER."
+ ],
+ [
+  "США · лёгкий многоцелевой: Mk 82, Maverick, HARM, JASSM.",
+  "USA · light multirole: Mk 82, Maverick, HARM, JASSM."
+ ],
+ [
+  "Швеция · лёгкий многоцелевой с контейнером LITENING: GBU-12, JDAM.",
+  "Sweden · light multirole with a LITENING pod: GBU-12, JDAM."
+ ],
+ [
+  "США · малозаметный: JDAM и SDB во внутренних отсеках, наведение по GPS (прицельного контейнера нет).",
+  "USA · stealth: JDAM and SDB in internal bays, GPS guidance (no targeting pod)."
+ ],
+ [
+  "США · малозаметный: SDB во внутренних отсеках, встроенная оптико-электронная система EOTS.",
+  "USA · stealth: SDB in internal bays, built-in EOTS electro-optical system."
+ ],
+ [
+  "Самолёты",
+  "Aircraft"
+ ],
+ [
+  "Подвески: {0}.",
+  "Loadouts: {0}."
+ ],
+ [
+  "{0} (ранг {1})",
+  "{0} (rank {1})"
+ ],
+ [
+  "Зенитные комплексы · ранг {0}",
+  "Air defense systems · rank {0}"
+ ],
+ [
+  "АРТ",
+  "GUN"
+ ],
+ [
+  "ИК",
+  "IR"
+ ],
+ [
+  "ПАРЛ",
+  "SARH"
+ ],
+ [
+  "ЛВ",
+  "SACLOS"
+ ],
+ [
+  "АРЛ",
+  "ARH"
+ ],
+ [
+  "РЭБ",
+  "EW"
+ ],
+ [
+  "РК",
+  "CMD"
+ ],
+ [
+  "В игре",
+  "In-game"
+ ],
+ [
+  "{0} · {1}-{2} км · высоты {3}-{4} м{5}{6}{7}{8}{9} · стоимость в обороне {10}",
+  "{0} · {1}-{2} km · alt. {3}-{4} m{5}{6}{7}{8}{9} · defense cost {10}"
+ ],
+ [
+  " · РЛС видит цель ЭПР 5 м² с {0} км, захват {1} с{2}",
+  " · radar detects a 5 m² RCS target at {0} km, lock {1} s{2}"
+ ],
+ [
+  ", когерентная - есть доплеровский провал",
+  ", coherent (Doppler notch)"
+ ],
+ [
+  " · радиус подавления {0} км",
+  " · jamming radius {0} km"
+ ],
+ [
+  " · без РЛС - на СПО не виден",
+  " · no radar, invisible on the RWR"
+ ],
+ [
+  " · целевых каналов {0}",
+  " · {0} target channels"
+ ],
+ [
+  " · вертикальный старт",
+  " · vertical launch"
+ ],
+ [
+  " · сбивает бомбы и ракеты",
+  " · shoots down bombs and missiles"
+ ],
+ [
+  " · оптический канал без излучения",
+  " · passive optical channel"
+ ],
+ [
+  "Ударное оружие · ранг {0}",
+  "Strike weapons · rank {0}"
+ ],
+ [
+  "ФАБ",
+  "BOMB"
+ ],
+ [
+  "ЛАЗ",
+  "LASER"
+ ],
+ [
+  "ТВ",
+  "TV"
+ ],
+ [
+  "ПРР",
+  "ARM"
+ ],
+ [
+  "КР",
+  "CRUISE"
+ ],
+ [
+  "ЛЦ",
+  "DECOY"
+ ],
+ [
+  "НАР",
+  "ROCKET"
+ ],
+ [
+  "{0}{1} · радиус поражения {2} м",
+  "{0}{1} · blast radius {2} m"
+ ],
+ [
+  " · пуск до ≈ {0} км",
+  " · launch range ≈ {0} km"
+ ],
+ [
+  "Кастомный - свои настройки",
+  "Custom settings"
+ ],
+ [
+  "Разрешение",
+  "Resolution"
+ ],
+ [
+  "Динамическое",
+  "Dynamic"
+ ],
+ [
+  "Вкл",
+  "On"
+ ],
+ [
+  "Выкл",
+  "Off"
+ ],
+ [
+  "Цель кадров",
+  "Target FPS"
+ ],
+ [
+  "30 к/с",
+  "30 fps"
+ ],
+ [
+  "60 к/с",
+  "60 fps"
+ ],
+ [
+  "Не ниже",
+  "Minimum"
+ ],
+ [
+  "Предел кадров",
+  "FPS cap"
+ ],
+ [
+  "Авто (60)",
+  "Auto (60)"
+ ],
+ [
+  "Авто",
+  "Auto"
+ ],
+ [
+  "Файлы игры",
+  "Game files"
+ ],
+ [
+  "бинокль работает и при пуске ракеты по вам",
+  "binoculars keep working when a missile is launched at you"
+ ],
+ [
+  "кнопка «Бинокль» в вылете (B): вид на цель и на своё оружие, самолёт держит курс",
+  "\"Binoculars\" button in sorties (B): view of the target and your weapon while the aircraft holds course"
+ ],
+ [
+  "Экран и кнопки",
+  "Screen and buttons"
+ ],
+ [
+  "Оператор ЗРК",
+  "SAM operator"
+ ],
+ [
+  "Помощь в бою",
+  "Combat assist"
+ ],
+ [
+  "Скачанные модели, текстуры и звуки хранятся на устройстве и не догружаются ни в бою, ни при следующих запусках.",
+  "Downloaded models, textures and sounds stay on the device and aren't loaded again, in battle or on later launches."
+ ],
+ [
+  "Остановить",
+  "Stop"
+ ],
+ [
+  "Скачать всё заранее (≈ {0} МБ, лучше по Wi-Fi)",
+  "Download everything now (≈ {0} MB, Wi-Fi recommended)"
+ ],
+ [
+  "Скачать всё заранее (лучше по Wi-Fi)",
+  "Download everything now (Wi-Fi recommended)"
+ ],
+ [
+  "Хранилище недоступно: ресурсы грузятся при каждом запуске.",
+  "Storage is not available: assets load on every launch."
+ ],
+ [
+  "Занято: {0} МБ.",
+  "Used: {0} MB."
+ ],
+ [
+  "Хранилище на этом устройстве недоступно.",
+  "Storage is not available on this device."
+ ],
+ [
+  "Скачиваем…",
+  "Downloading…"
+ ],
+ [
+  "Скачано {0} из {1} МБ (файлов {2} из {3})",
+  "Downloaded {0} of {1} MB ({2} of {3} files)"
+ ],
+ [
+  "Остановлено. Скачанное сохранено, остальное догрузится по ходу игры.",
+  "Stopped. What was downloaded is kept; the rest loads as you play."
+ ],
+ [
+  "Готово. Не скачалось файлов: {0}, они догрузятся по ходу игры.",
+  "Done. {0} files failed; they will load as you play."
+ ],
+ [
+  "Готово: всё на устройстве, в бою ничего не догружается.",
+  "Done: everything is on the device, nothing loads during battle."
+ ],
+ [
+  "Чёткость",
+  "Sharpness"
+ ],
+ [
+  "Обычная",
+  "Normal"
+ ],
+ [
+  "Высокая",
+  "High"
+ ],
+ [
+  "Как у экрана",
+  "Native"
+ ],
+ [
+  "Высокая и «как у экрана»: картинка чётче, но больше нагрузка на видеочип и нагрев. Применяется после перезапуска.",
+  "High and Native give a sharper picture but more GPU load and heat. Applied after a restart."
+ ],
+ [
+  "Нет",
+  "None"
+ ],
+ [
+  "Контейнер",
+  "Pod"
+ ],
+ [
+  "Каждый кадр",
+  "Every frame"
+ ],
+ [
+  "Апскейлер",
+  "Upscaler"
+ ],
+ [
+  "Сглаживание",
+  "Anti-aliasing"
+ ],
+ [
+  "Тени",
+  "Shadows"
+ ],
+ [
+  "Вблизи",
+  "Near"
+ ],
+ [
+  "Средние",
+  "Medium"
+ ],
+ [
+  "Высокие",
+  "High"
+ ],
+ [
+  "Обновление теней",
+  "Shadow update"
+ ],
+ [
+  "Через кадр",
+  "Every other frame"
+ ],
+ [
+  "Простой",
+  "Simple"
+ ],
+ [
+  "Средний",
+  "Medium"
+ ],
+ [
+  "Полный",
+  "Full"
+ ],
+ [
+  "Деревья",
+  "Trees"
+ ],
+ [
+  "Мало",
+  "Few"
+ ],
+ [
+  "Обычно",
+  "Normal"
+ ],
+ [
+  "Много",
+  "Many"
+ ],
+ [
+  "Текстуры",
+  "Textures"
+ ],
+ [
+  "Низкие",
+  "Low"
+ ],
+ [
+  "Обычные",
+  "Normal"
+ ],
+ [
+  "Детали улиц",
+  "Street details"
+ ],
+ [
+  "Эффекты кадра",
+  "Post-processing"
+ ],
+ [
+  "Дальность",
+  "Range"
+ ],
+ [
+  "Облака",
+  "Clouds"
+ ],
+ [
+  "Частицы",
+  "Particles"
+ ],
+ [
+  "полное разрешение экрана",
+  "native screen resolution"
+ ],
+ [
+  "Тяжелее всего: разрешение, тени, эффекты кадра, город «Полный» и окно контейнера. Слабому устройству: «Предел кадров 30», «Контейнер 30 к/с», «Тени через кадр» или без теней, разрешение 60-70%. Техника, ракеты, бомбы и самолёты одинаково подробны при любых настройках. «Детали улиц» работают при городе «Средний» или «Полный».",
+  "Most demanding: resolution, shadows, post-processing, \"Full\" city and the pod window. For weak devices: \"FPS cap 30\", \"Pod 30 fps\", shadows \"Every other frame\" or off, resolution 60-70%. Vehicles, missiles, bombs and aircraft look equally detailed at any setting. \"Street details\" work with a \"Medium\" or \"Full\" city."
+ ],
+ [
+  "Применить (перезапуск)",
+  "Apply (restarts)"
+ ],
+ [
+  "Язык · Language",
+  "Language"
+ ],
+ [
+  "Графика",
+  "Graphics"
+ ],
+ [
+  "счётчик производительности в бою",
+  "performance overlay in battle"
+ ],
+ [
+  "Видеочип: {0}",
+  "GPU: {0}"
+ ],
+ [
+  "Время и погода",
+  "Time and weather"
+ ],
+ [
+  "Управление",
+  "Controls"
+ ],
+ [
+  "Расположение и размер кнопок…",
+  "Button layout and size…"
+ ],
+ [
+  "полный экран",
+  "fullscreen"
+ ],
+ [
+  "скорость камеры пальцем",
+  "camera speed by finger"
+ ],
+ [
+  "скорость обзора мышью",
+  "look speed by mouse"
+ ],
+ [
+  "инверсия тангажа: вверх - нос вниз (как в авиасимуляторах)",
+  "invert pitch: up = nose down (as in flight sims)"
+ ],
+ [
+  "наведение камерой: самолёт летит туда, куда смотрит камера (выкл - ручка в левой половине экрана)",
+  "camera steering: the aircraft flies where the camera looks (off: stick on the left half of the screen)"
+ ],
+ [
+  "крестовина: тангаж и крен кнопками (точные манёвры)",
+  "D-pad: pitch and roll with buttons (precise maneuvers)"
+ ],
+ [
+  "ловушки по нажатию: серия из 3 залпов (выкл - один залп). Удержание кнопки или X / C - очередью",
+  "countermeasures on a tap: a burst of 3 salvos (off: one salvo). Holding the button or X / C fires a stream"
+ ],
+ [
+  "крен ↺ ↻",
+  "roll ↺ ↻"
+ ],
+ [
+  "тангаж ▲ ▼",
+  "pitch ▲ ▼"
+ ],
+ [
+  "по удержанию",
+  "hold"
+ ],
+ [
+  "по нажатию",
+  "tap"
+ ],
+ [
+  "Скорость крена и тангажа зависит от самолёта: масса, скорость, высота, повреждения. Тяжёлый бомбардировщик поворачивает медленнее истребителя.",
+  "Roll and pitch rate depend on the aircraft: mass, speed, altitude, damage. A heavy bomber turns slower than a fighter."
+ ],
+ [
+  "подсказки клавиш в бою: панель слева внизу (F1 - вкл. и выкл.)",
+  "key hints in battle: bottom-left panel (F1 toggles it)"
+ ],
+ [
+  "поворот обзора оператора ЗРК",
+  "SAM operator look sensitivity"
+ ],
+ [
+  "«Авто» - помощь в бою (кнопка «Авто» или клавиша T)",
+  "\"Auto\" assist in battle (\"Auto\" button or T key)"
+ ],
+ [
+  "«Авто» в вылете сбрасывает бомбы и пускает ракеты, у оператора ЗРК назначает цель, пускает и наводит пушку. Помогает, но не идеально: реагирует с задержкой и ошибается. Пилотирование, уклонение и выбор момента остаются за вами.",
+  "In a sortie, \"Auto\" drops bombs and fires missiles; as a SAM operator, it picks targets, fires and aims the gun. It helps but isn't perfect: it reacts late and makes mistakes. Flying, evading and timing are still up to you."
+ ],
+ [
+  "Звук",
+  "Sound"
+ ],
+ [
+  "звук включён",
+  "sound on"
+ ],
+ [
+  "громкость",
+  "volume"
+ ],
+ [
+  "Об игре",
+  "About"
+ ],
+ [
+  "Air Superiority Online - игра, созданная исключительно в образовательных и развлекательных целях.",
+  "Air Superiority Online is a game created solely for educational and entertainment purposes."
+ ],
+ [
+  "Техника, вооружение, камуфляжи, обозначения, 3D-модели, звуки и игровые механики упрощены, несмотря на цель приблизиться к реализму, и служат только для того, чтобы создать атмосферу. Они не обязаны отражать реальные характеристики, тактику и боевое применение и не являются руководством к действию.",
+  "Vehicles, weapons, camouflage, markings, 3D models, sounds and game mechanics are simplified despite the aim of realism and serve only to create atmosphere. They do not necessarily reflect real specifications, tactics or combat use and are not a guide to action."
+ ],
+ [
+  "Город, объекты, позывные и события в игре вымышлены. Любые совпадения с реальными местами, людьми, организациями и событиями случайны.",
+  "The city, locations, call signs and events in the game are fictional. Any resemblance to real places, people, organizations or events is coincidental."
+ ],
+ [
+  "Игра не пропагандирует войну и насилие и не выражает политических позиций. Названия и модели образцов техники используются только для узнаваемости и реалистичности; права на товарные знаки принадлежат их владельцам. Игра не связана с производителями техники, военными ведомствами и игровыми компаниями и не одобрена ими.",
+  "The game does not promote war or violence and does not express political positions. Equipment names and models are used only for recognition and realism; trademarks belong to their respective owners. The game is not affiliated with or endorsed by equipment manufacturers, military agencies or game companies."
+ ],
+ [
+  "Отдельное спасибо за помощь",
+  "Special thanks"
+ ],
+ [
+  "3D-модели (для игры упрощены, разделены на части, текстуры уменьшены): {0}.",
+  "3D models (simplified for the game, split into parts, textures downscaled): {0}."
+ ],
+ [
+  "Звуки (обрезаны, обработаны, сведены в моно): {0}.",
+  "Sounds (trimmed, processed, mixed down to mono): {0}."
+ ],
+ [
+  "лицензия куплена",
+  "license purchased"
+ ],
+ [
+  "Арсенал",
+  "Arsenal"
+ ],
+ [
+  "Справка",
+  "Help"
+ ],
+ [
+  "Настройки",
+  "Settings"
+ ],
+ [
+  "Онлайн: авиация против ПВО города, три волны.",
+  "Online: aircraft vs city air defense, three waves."
+ ],
+ [
+  "Бой идёт сам, вы - оператор камеры.",
+  "The battle plays itself; you're the camera operator."
+ ],
+ [
+  "Обучение: {0} из {1} уроков пройдено.",
+  "Training: {0} of {1} lessons completed."
+ ],
+ [
+  "Рекорд «Мульти-волны»: <b>{0}</b> очков · боёв {1}",
+  "Multi-Wave best: <b>{0}</b> pts · {1} battles"
+ ],
+ [
+  "Мульти-волну пока не играли.",
+  "You haven't played Multi-Wave yet."
+ ],
+ [
+  "Рекорд вылета: <b>{0}</b> очков · вылетов {1}",
+  "Sortie best: <b>{0}</b> pts · {1} sorties"
+ ],
+ [
+  "Вылетов пока не было.",
+  "No sorties yet."
+ ],
+ [
+  "Рекорд обороны: <b>{0}</b> очков · лучший итог - {1} волн",
+  "Defense best: <b>{0}</b> pts · best run: {1} waves"
+ ],
+ [
+  "Обороны пока не было.",
+  "No defense battles yet."
+ ],
+ [
+  "Совет.",
+  "Tip:"
+ ],
+ [
+  "Войдите на сайте - опыт и серебро копятся в аккаунте",
+  "Sign in on the website to save XP and silver to your account"
+ ],
+ [
+  "Лысая гора",
+  "Bald Mountain"
+ ],
+ [
+  " м",
+  " m"
+ ],
+ [
+  "Гиблая топь",
+  "Doom Mire"
+ ],
+ [
+  "Чёрная вода",
+  "Black Water"
+ ],
+ [
+  "Костяной овраг",
+  "Bone Gully"
+ ],
+ [
+  "Совиный яр",
+  "Owl Ravine"
+ ],
+ [
+  "Низкий",
+  "Low"
+ ],
+ [
+  "слабые телефоны",
+  "weak phones"
+ ],
+ [
+  "большинство телефонов",
+  "most phones"
+ ],
+ [
+  "Кастомный",
+  "Custom"
+ ],
+ [
+  "свои настройки: разрешение, тени, город, эффекты",
+  "your own settings: resolution, shadows, city, effects"
+ ],
+ [
+  "Высокий",
+  "High"
+ ],
+ [
+  "мощные телефоны и ПК: тени, свечение",
+  "powerful phones and PCs: shadows, bloom"
+ ],
+ [
+  "Ультра",
+  "Ultra"
+ ],
+ [
+  "тени 4K, тени деревьев, дальняя прорисовка",
+  "4K shadows, tree shadows, long draw distance"
+ ],
+ [
+  "Кино",
+  "Cinematic"
+ ],
+ [
+  "Авто включено: захват, сброс и пуск - сами (не идеально)",
+  "Auto on: lock, drop and launch are automatic (not perfect)"
+ ],
+ [
+  "Авто выключено",
+  "Auto off"
+ ],
+ [
+  "Ещё раз",
+  "Play again"
+ ],
+ [
+  "Объяснение · игра на паузе",
+  "Explanation · game paused"
+ ],
+ [
+  "Бой завершён досрочно",
+  "Battle ended early"
+ ],
+ [
+  "Ловушки",
+  "Countermeasures"
+ ],
+ [
+  "Цель",
+  "Target"
+ ],
+ [
+  "Авто - помощник",
+  "Auto assist"
+ ],
+ [
+  "Обзор - свободная камера",
+  "View: free camera"
+ ],
+ [
+  "Камера: следующий союзник",
+  "Camera: next ally"
+ ],
+ [
+  "Нужна помощь",
+  "Need help"
+ ],
+ [
+  "Подскок",
+  "Pop-up"
+ ],
+ [
+  "Авто - расчёт сам",
+  "Auto: crew takes over"
+ ],
+ [
+  "Камера",
+  "Camera"
+ ],
+ [
+  "Бинокль",
+  "Binoculars"
+ ],
+ [
+  "РЛС: включить / выключить",
+  "Radar: on / off"
+ ],
+ [
+  "Пауза",
+  "Pause"
+ ],
+ [
+  "Игроки",
+  "Players"
+ ],
+ [
+  "Урок: задание и подсказки",
+  "Lesson: task and hints"
+ ],
+ [
+  "Объяснение",
+  "Explanation"
+ ],
+ [
+  "Звук выключен",
+  "Sound off"
+ ],
+ [
+  "{0} мс · PL {1}%",
+  "{0} ms · PL {1}%"
+ ],
+ [
+  "связь…",
+  "connecting…"
+ ],
+ [
+  "Полный экран",
+  "Full screen"
+ ],
+ [
+  "Игра закрылась с ошибкой",
+  "The game closed with an error"
+ ],
+ [
+  "Похоже, в прошлый раз игра вылетела в бою. Отправьте отчёт - он поможет найти причину.",
+  "Looks like the game crashed during your last battle. Send a report - it helps find the cause."
+ ],
+ [
+  "Если вылетает часто: «Настройки» → «Конфиденциальность и безопасность» → «Аналитика и улучшения» → «Данные аналитики» - перешлите файлы, начинающиеся с WebKit или Jetsam.",
+  "If it crashes often: Settings → Privacy & Security → Analytics & Improvements → Analytics Data - forward the files starting with WebKit or Jetsam."
+ ],
+ [
+  "Отправить",
+  "Send"
+ ],
+ [
+  "Не надо",
+  "No thanks"
+ ],
+ [
+  "Отправляем…",
+  "Sending…"
+ ],
+ [
+  "Отчёт отправлен - спасибо!",
+  "Report sent - thank you!"
+ ],
+ [
+  "Сервер игры сейчас недоступен. Скопируйте отчёт и перешлите его в Telegram.",
+  "The game server is unavailable right now. Copy the report and forward it in Telegram."
+ ],
+ [
+  "Скопировать",
+  "Copy"
+ ],
+ [
+  "Отчёт скопирован - перешлите его в Telegram",
+  "Report copied - forward it in Telegram"
+ ],
+ [
+  "плашка «Потяните вверх», когда панели Safari видны в бою",
+  "\"Swipe up\" bar when Safari bars show in battle"
+ ],
+ [
+  "кнопка возврата, когда полный экран слетел в бою",
+  "return button when full screen drops in battle"
+ ],
+ [
+  "Проведите пальцем вверх по плашке - Safari спрячет панели",
+  "Swipe up on the bar and Safari will hide its bars"
+ ],
+ [
+  "Потяните вверх для полноэкранного режима",
+  "Swipe up for full screen"
+ ],
+ [
+  "Волна окончена - самолёт вернулся на базу",
+  "Wave over - your aircraft returned to base"
+ ],
+ [
+  "Бой, из которого вас выбросило, уже закрыт",
+  "The battle you dropped out of has already closed"
+ ],
+ [
+  " · JS {0} МБ",
+  " · JS {0} MB"
+ ],
+ [
+  "{0} · {1} к/с · кадр {2} мс (ЦП {3} · ГП ≈{4}) · {5} выз. · {6} млн тр. · {7}% · геом. {8} · текст. {9}{10}",
+  "{0} · {1} fps · frame {2} ms (CPU {3} · GPU ≈{4}) · {5} calls · {6} M tris · {7}% · geo {8} · tex {9}{10}"
+ ],
+ [
+  "{0} · {1} к/с · {2}%",
+  "{0} · {1} fps · {2}%"
+ ],
+ [
+  "Загружаем город: модели {0} из {1}{2}",
+  "Loading city: models {0} of {1}{2}"
+ ],
+ [
+  ", текстуры {0} из {1}",
+  ", textures {0} of {1}"
+ ],
+ [
+  "Город загружен",
+  "City loaded"
+ ],
+ [
+  "Строим улицы, дома и реку…",
+  "Building streets, houses and the river…"
+ ],
+ [
+  "Деревья, вода, облака и эффекты…",
+  "Trees, water, clouds and effects…"
+ ],
+ [
+  "Режимы игры: вылет, оборона, обучение…",
+  "Game modes: sortie, defense, training…"
+ ],
+ [
+  "Готовим графику (шейдеры)…",
+  "Compiling shaders…"
+ ],
+ [
+  "Готово",
+  "Done"
+ ],
+ [
+  "газ больше / меньше",
+  "throttle up / down"
+ ],
+ [
+  "форсаж",
+  "afterburner"
+ ],
+ [
+  "крен",
+  "roll"
+ ],
+ [
+  "тангаж",
+  "pitch"
+ ],
+ [
+  "Мышь",
+  "Mouse"
+ ],
+ [
+  "куда лететь",
+  "where to fly"
+ ],
+ [
+  "Пробел / F",
+  "Space / F"
+ ],
+ [
+  "пуск, сброс",
+  "fire, drop"
+ ],
+ [
+  "следующее оружие",
+  "next weapon"
+ ],
+ [
+  "ловушки",
+  "countermeasures"
+ ],
+ [
+  "вид контейнера",
+  "pod view"
+ ],
+ [
+  "следующая цель контейнера",
+  "next pod target"
+ ],
+ [
+  "увеличение контейнера",
+  "pod zoom"
+ ],
+ [
+  "лазер: авто / вкл / выкл",
+  "laser: auto / on / off"
+ ],
+ [
+  "камера",
+  "camera"
+ ],
+ [
+  "камера за оружием",
+  "weapon cam"
+ ],
+ [
+  "обзор мышью",
+  "mouse look"
+ ],
+ [
+  "карта",
+  "map"
+ ],
+ [
+  "Авто: захват и пуск",
+  "Auto: lock and fire"
+ ],
+ [
+  "пауза",
+  "pause"
+ ],
+ [
+  "разгон / торможение (держать)",
+  "accelerate / brake (hold)"
+ ],
+ [
+  "поворот",
+  "turn"
+ ],
+ [
+  "вверх",
+  "up"
+ ],
+ [
+  "вниз",
+  "down"
+ ],
+ [
+  "шаг вбок",
+  "sidestep"
+ ],
+ [
+  "прицел и камера",
+  "aim and camera"
+ ],
+ [
+  "пуск ПТУР, залп НАР",
+  "fire ATGM / rocket salvo"
+ ],
+ [
+  "вид прицела",
+  "sight view"
+ ],
+ [
+  "ловушки (держать - очередью)",
+  "countermeasures (hold for a stream)"
+ ],
+ [
+  "«Понял»: заглушить писк захвата",
+  "“Got it”: mute the lock tone"
+ ],
+ [
+  "следующая цель",
+  "next target"
+ ],
+ [
+  "увеличение",
+  "zoom"
+ ],
+ [
+  "наклон вперёд / назад (ручка)",
+  "nose down / up (cyclic)"
+ ],
+ [
+  "крен влево / вправо (ручка)",
+  "roll left / right (cyclic)"
+ ],
+ [
+  "шаг-газ: вверх",
+  "collective: up"
+ ],
+ [
+  "шаг-газ: вниз",
+  "collective: down"
+ ],
+ [
+  "педали: поворот",
+  "pedals: yaw"
+ ],
+ [
+  "Мышь / WASD",
+  "Mouse / WASD"
+ ],
+ [
+  "Колесо / Z",
+  "Wheel / Z"
+ ],
+ [
+  "Щелчок",
+  "Click"
+ ],
+ [
+  "выбрать цель",
+  "select target"
+ ],
+ [
+  "пуск (пушки - держать)",
+  "fire (guns: hold)"
+ ],
+ [
+  "РЛС вкл / выкл",
+  "radar on / off"
+ ],
+ [
+  "метод наведения",
+  "guidance method"
+ ],
+ [
+  "бинокль",
+  "binoculars"
+ ],
+ [
+  "на карту",
+  "back to map"
+ ],
+ [
+  "Тянуть",
+  "Drag"
+ ],
+ [
+  "сдвиг карты",
+  "pan map"
+ ],
+ [
+  "Колесо",
+  "Wheel"
+ ],
+ [
+  "масштаб",
+  "zoom"
+ ],
+ [
+  "выбрать, поставить",
+  "select, place"
+ ],
+ [
+  "подтвердить место",
+  "confirm spot"
+ ],
+ [
+  "Пробел",
+  "Space"
+ ],
+ [
+  "начать волну",
+  "start wave"
+ ],
+ [
+  "отмена, пауза",
+  "cancel, pause"
+ ],
+ [
+  "{0} · F1 - скрыть",
+  "{0} · F1 to hide"
+ ],
+ [
+  "Вертолёт",
+  "Helicopter"
+ ],
+ [
+  "Вертолёт · Реализм",
+  "Helicopter · Realistic"
+ ],
+ [
+  "Оператор комплекса",
+  "Site operator"
+ ],
+ [
+  "Карта обороны",
+  "Defense map"
+ ],
+ [
+  "Вечер",
+  "Evening"
+ ],
+ [
+  "Сумерки",
+  "Dusk"
+ ],
+ [
+  "Поздний вечер",
+  "Late evening"
+ ],
+ [
+  "Туман",
+  "Fog"
+ ],
+ [
+  "ещё {0} д {1} ч",
+  "{0} d {1} h left"
+ ],
+ [
+  "ещё {0} ч",
+  "{0} h left"
+ ],
+ [
+  "Туманная топь",
+  "Misty Mire"
+ ],
+ [
+  "исследовать",
+  "research"
+ ],
+ [
+  "Оборона от вертолётов",
+  "Anti-helicopter defense"
+ ],
+ [
+  "<b>Угроза{0}.</b> Налёт идёт самолётами; со 2-й волны к ним присоединяется вертолёт, с 4-й - пара. Они подходят низко, по оврагам, и прячутся за холмами.",
+  "<b>Threat{0}.</b> Raids are flown by aircraft; a helicopter joins from wave 2, a pair from wave 4. They come in low through the gullies and hide behind hills."
+ ],
+ [
+  "Ниже ~30 м за рельефом РЛС вертолёт не видит, поэтому берегите ближние комплексы: пушки, ЗРК ближнего действия, ПЗРК. Поражение - если потеряно 75 % ценности военных объектов. Волн: {0}.",
+  "Below ~30 m, radar can't see a helicopter behind terrain, so protect your short-range sites: guns, short-range SAMs, MANPADS. You lose if 75% of military facility value is lost. Waves: {0}."
+ ],
+ [
+  "Вылет на вертолёте",
+  "Helicopter sortie"
+ ],
+ [
+  " · скоро",
+  " · soon"
+ ],
+ [
+  "Закрыть",
+  "Close"
+ ],
+ [
+  "событие · {0}",
+  "event · {0}"
+ ],
+ [
+  "ещё {0} дн.",
+  "{0} d left"
+ ],
+ [
+  "Куплен",
+  "Owned"
+ ],
+ [
+  "Старт",
+  "Starter"
+ ],
+ [
+  "Исследован",
+  "Researched"
+ ],
+ [
+  "открыт",
+  "unlocked"
+ ],
+ [
+  "паритет ранга {0} есть",
+  "rank {0} parity reached"
+ ],
+ [
+  "сначала ранг {0}",
+  "unlock rank {0} first"
+ ],
+ [
+  "купить в ранге {0}: {1}",
+  "buy in rank {0}: {1}"
+ ],
+ [
+  "Ранг {0}",
+  "Rank {0}"
+ ],
+ [
+  "Войдите в аккаунт игры - опыт и серебро копятся только в нём.",
+  "Sign in to a game account: XP and silver are only earned with one."
+ ],
+ [
+  "Войти или создать аккаунт",
+  "Sign in or create an account"
+ ],
+ [
+  "Создайте аккаунт игры",
+  "Create a game account"
+ ],
+ [
+  "Создайте аккаунт игры - без него опыт и серебро не копятся.",
+  "Create a game account: XP and silver are not earned without one."
+ ],
+ [
+  "Выйдите из комнаты, чтобы сменить аккаунт",
+  "Leave the room to change accounts"
+ ],
+ [
+  "У игры свой аккаунт - аккаунт сайта здесь не используется.",
+  "The game has its own account: the website account is not used here."
+ ],
+ [
+  "Купить",
+  "Buy"
+ ],
+ [
+  "Исследовать",
+  "Research"
+ ],
+ [
+  "Цель исследования (снять)",
+  "Research goal (clear)"
+ ],
+ [
+  "Сделать целью - опыт за бой пойдёт сюда",
+  "Set as goal: battle XP goes here"
+ ],
+ [
+  "Цель (снять)",
+  "Goal (clear)"
+ ],
+ [
+  "Сделать целью",
+  "Set as goal"
+ ],
+ [
+  "Доступно в «Реализме».",
+  "Available in Realistic mode."
+ ],
+ [
+  "аналог · {0}",
+  "counterpart · {0}"
+ ],
+ [
+  "Стартовый",
+  "Starter"
+ ],
+ [
+  " закрыт",
+  " locked"
+ ],
+ [
+  "исследован",
+  "researched"
+ ],
+ [
+  "не исследован",
+  "not researched"
+ ],
+ [
+  "{0} · ранг {1} · {2}",
+  "{0} · rank {1} · {2}"
+ ],
+ [
+  "Назад",
+  "Back"
+ ],
+ [
+  "Исследования",
+  "Research"
+ ],
+ [
+  "Опыт - исследовать",
+  "XP to research"
+ ],
+ [
+  "Серебро - покупать",
+  "Silver to buy"
+ ],
+ [
+  "куплено {0} из {1}",
+  "owned {0} of {1}"
+ ],
+ [
+  "Вертолёты",
+  "Helicopters"
+ ],
+ [
+  "Только для <b>«Реализма»</b>. Аркада и обучение - всё открыто.",
+  "<b>Realistic mode</b> only. In Arcade and Training, everything is unlocked."
+ ],
+ [
+  "Вы не вошли: показан стартовый набор. Опыт и серебро копятся в аккаунте.",
+  "You're not signed in: showing the starter set. XP and silver are saved to your account."
+ ],
+ [
+  "Нет связи с сайтом: {0}",
+  "No connection to the website: {0}"
+ ],
+ [
+  "Куплено: {0} - доступно в «Реализме»",
+  "Purchased: {0}. Available in Realistic mode"
+ ],
+ [
+  "Исследовано: {0}",
+  "Researched: {0}"
+ ],
+ [
+  "Цель снята",
+  "Goal cleared"
+ ],
+ [
+  "Цель выбрана",
+  "Goal set"
+ ],
+ [
+  "Пуск / сброс выбранного оружия; у ПВО - пуск ракеты",
+  "Fire / drop the selected weapon; for air defense, launch a missile"
+ ],
+ [
+  "Ловушки: ЛТЦ и диполи разом",
+  "Countermeasures: flares and chaff together"
+ ],
+ [
+  "Цель: следующая цель контейнера",
+  "Target: next pod target"
+ ],
+ [
+  "Газ: ступени из настроек, форсаж - последняя ступень",
+  "Throttle: steps from Settings, afterburner is the last step"
+ ],
+ [
+  "Авто: помощник (за самолёт - захват и сброс, за ПВО - расчёт ведёт комплекс сам)",
+  "Auto: assist (as pilot: lock and drop; as air defense: the crew handles the site)"
+ ],
+ [
+  "Обзор: свободная камера (самолёт держит курс); у ПВО - вид камеры, онлайн - следующий союзник",
+  "View: free camera (the aircraft holds its course); for air defense, camera view; online, next ally"
+ ],
+ [
+  "РЛС ПВО: закрашена - излучает, пустая - молчит",
+  "Air defense radar: filled = emitting, hollow = silent"
+ ],
+ [
+  "Бинокль: у оператора - при захвате; в вылете - вид на цель и за своим оружием",
+  "Binoculars: for a SAM operator - while locked; in a sortie - view of the target and your weapon in flight"
+ ],
+ [
+  "Нужна помощь - союзникам (онлайн)",
+  "Need help: call your allies (online)"
+ ],
+ [
+  "Игроки онлайна: кто в сети и кто готов",
+  "Online players: who's here and who's ready"
+ ],
+ [
+  "Урок и объяснения: задание, подсказки, справка о технике",
+  "Lesson and explanations: task, hints, equipment reference"
+ ],
+ [
+  "Звук (зачёркнут - выключен)",
+  "Sound (crossed out means off)"
+ ],
+ [
+  "Ранг {0} закрыт - нужен паритет в ранге {1}",
+  "Rank {0} locked: rank {1} parity required"
+ ],
+ [
+  "Сначала исследуйте {0}",
+  "Research {0} first"
+ ],
+ [
+  "Не хватает опыта: {0}",
+  "Not enough XP: {0}"
+ ],
+ [
+  "Не хватает серебра: {0}",
+  "Not enough silver: {0}"
+ ],
+ [
+  "Паритет: сначала купите единицу ранга {0} за {1}{2}",
+  "Parity: first buy a rank {0} unit for {1}{2}"
+ ],
+ [
+  " - например, {0}",
+  ", for example {0}"
+ ],
+ [
+  "Время в бою ({0} мин)",
+  "Time in battle ({0} min)"
+ ],
+ [
+  "После {0} за день",
+  "After {0} per day"
+ ],
+ [
+  "Нет связи с сайтом",
+  "No connection to the website"
+ ]
+]

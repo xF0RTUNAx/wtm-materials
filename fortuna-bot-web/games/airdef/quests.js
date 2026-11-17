@@ -3,9 +3,9 @@
 // Тестовый режим (?pgtest=1) - кнопка «ДЕМО»: продвинуть задания, следующий день и неделя, состояние в памяти.
 import { DAILY, WEEKLY, ROUTE, ROUTE_MAX, PTS_DAILY, PTS_WEEKLY, CRATE, CASE, mskDay } from './quests-data.js?v=20261117d';
 import { QI } from './quest-icons.js?v=20261117d';
-import { tr, LANG } from './i18n.js?v=20261117d';
+import { tr, XL, LOCALE } from './i18n.js?v=20261117d';
 
-const UI = 'airdef/ui/quests/', LOC = LANG === 'en' ? 'en-US' : 'ru-RU';
+const UI = 'airdef/ui/quests/', LOC = LOCALE;
 const TILE = { silver: UI + 't_silver.webp', xp: UI + 't_xp.webp', gem: UI + 't_gems.webp', star: UI + 't_star.webp', crate: UI + 't_crate.webp', case: UI + 't_case.webp' };
 const CSS = `
 #quests { position: fixed; inset: 0; z-index: 40; display: none; overflow: hidden; color: #ece8dc; font: 14px 'Golos Text', -apple-system, sans-serif; background: #14160f url(${UI}bg.jpg) center / cover;
@@ -101,7 +101,7 @@ const rPath = (p) => { const L = []; for (let x = 0; x < p; x += ROUTE_MAX / 150
 export function createQuests(C) {
   const $ = (id) => document.getElementById(id), snd = () => { if (C.snd && C.snd.click) C.snd.click(); };
   const css = document.createElement('style'); css.textContent = CSS; (document.head || document.body).appendChild(css);
-  const root = document.createElement('div'); root.id = 'quests'; if (LANG === 'en') root.classList.add('en'); document.body.appendChild(root);
+  const root = document.createElement('div'); root.id = 'quests'; if (XL) root.classList.add('en'); document.body.appendChild(root);
   // на экране - то, что показано (МиГ, числа): догоняет настоящее состояние во время полёта и анимации наград
   const S = { tab: 'd', pop: false, shown: 0, paid: 0, disp: { xp: 0, silver: 0, gem: 0 }, raf: 0, fresh: null, msg: '', busy: false, flying: 0, mig: null };
   const PG = () => C.progress;

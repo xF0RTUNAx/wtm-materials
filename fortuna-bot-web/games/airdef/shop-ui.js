@@ -6,12 +6,12 @@
 // picks - окраски «на выбор», worn - надетые: самолёт → окраска); ?rmock=1 - заглушка account.js (?shop=token|owned|poor - её состояния для снимков).
 // Правила наград за сезон в игре не объявляются (Mark): в подсказке - только «за рейтинг, в конце сезона».
 import { ico } from './icons.js?v=20261117d';
-import { tr, trIf, LANG } from './i18n.js?v=20261117d';
+import { tr, trIf, LANG, LOCALE } from './i18n.js?v=20261117d';
 import { activeAcc, callFn } from './account.js?v=20261117d';
 import { CAMOS, CAMO_PRICE, PLANES, AVA_SHOP, AVA_PRICE, avaKey } from './arsenal.js?v=20261117d';
 import { avaSrc } from './avatar.js?v=20261117d';
 
-const LOC = LANG === 'en' ? 'en-US' : 'ru-RU';
+const LOC = LOCALE;
 const nf = (v) => Math.round(v).toLocaleString(LOC);
 const RM = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 const FRESH = 60000, RETRY = 30000;

@@ -619,7 +619,7 @@
   @media (max-height: 500px) { .hgop .opn { font-size: 13px; } .hgt.hgpl { flex-basis: 78px; } .hgc.op { flex-basis: 112px; height: 56px; } .hgc.op > img { bottom: 10px; width: 70px; height: 38px; } .hgc .hgw { left: 4px; bottom: 2px; gap: 4px; } .hgc .hgw span { width: 24px; height: 12px; } .hgc .hgw u { font-size: 9.5px; right: -5px; bottom: -3px; } }
   /* «Оборона» в ангаре (Mark 2026-11-17, макет «Лента ПВО»): настройки кнопками, выбранный комплекс крупно, комплексы в ленте */
   .dset { display: flex; flex-direction: column; gap: 5px; margin: 0 0 6px; padding: 6px; background: rgba(14,17,15,.86); border: 1px solid rgba(84,96,70,.75); }
-  .dset .drow { display: flex; gap: 5px; } #menu .dset .seg { display: flex; flex-wrap: nowrap; flex: 1; margin: 0; min-width: 0; gap: 3px; } #menu .dset .seg button { flex: 1; min-width: 0; height: 30px; padding: 0 4px; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .dset .drow { display: flex; gap: 5px; } html:not([lang=ru]) #menu .dset .seg[data-seg="diff"] button { padding: 0 2px; letter-spacing: -.01em; } html[lang=de] #menu .dset .seg[data-seg="diff"] button { font-size: 10.5px; } html[lang=de] #menu .dset .seg[data-seg="diff"] button:last-child { flex: 1.25; } /* «Realistisch» (2026-11-18) */ #menu .dset .seg { display: flex; flex-wrap: nowrap; flex: 1; margin: 0; min-width: 0; gap: 3px; } #menu .dset .seg button { flex: 1; min-width: 0; height: 30px; padding: 0 4px; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   #menu .dset .seg button { font: 600 12.5px 'Golos Text', sans-serif; } #menu .dset .seg[data-seg="era"], #menu .dset .seg[data-seg="side"] { flex: none; } #menu .dset .seg[data-seg="era"] button { flex: none; width: 30px; } #menu .dset .seg[data-seg="side"] button { flex: none; width: 36px; display: grid; place-items: center; padding: 0; } #menu .dset .seg[data-seg="side"] .ic.star { display: block; vertical-align: 0; } #menu .dset .seg[data-seg="cs"] button { padding: 0 3px; } #menu .dset .seg[data-seg="cs"] button:first-child { flex: 2; } #menu .dset .seg[data-seg="cs"] button { text-overflow: clip; letter-spacing: -.01em; } .dset .ic.star { width: 18px; height: 18px; vertical-align: -.25em; }
   @media (max-height: 500px) { #menu .dset .seg button { height: 24px; font-size: 11px; } #menu .dset .seg[data-seg="era"] button { width: 24px; } #menu .dset .seg[data-seg="side"] button { width: 28px; } #menu .dset .seg[data-seg="cs"] button { font-size: 10.5px; } .dset .ic.star { width: 14px; height: 14px; } }
   #menu .opt.hgl.dsam { padding-bottom: 6px; cursor: default; } #menu .opt.hgl.dsam.lock { cursor: pointer; } .dsam .hgh2 i.cost { margin: 0 18px 0 auto; font: 600 15px 'Oswald', sans-serif; color: #f3c96f; }
@@ -939,6 +939,136 @@
   @font-face { font-family: 'JetBrains Mono'; font-style: normal; font-weight: 400 700; font-display: swap; src: url(airdef/fonts/jetbrains-mono-latin.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
   @font-face { font-family: 'Oswald'; font-style: normal; font-weight: 400 700; font-display: swap; src: url(airdef/fonts/oswald-cyrillic.woff2) format('woff2'); unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
   @font-face { font-family: 'Oswald'; font-style: normal; font-weight: 400 700; font-display: swap; src: url(airdef/fonts/oswald-latin.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+</style>
+<style id="trCss">
+/* «Обучение» - набор Б «Учебный класс» (чистовик 2026-11-18): грифельная доска в стальной раме, эмалированные таблички на винтах, зелёный жетон «зачёт».
+   Картинки - airdef/ui/training/b_*.webp (файлы 3× от CSS-пикселей), срезы 9-slice - ПАСПОРТ.json (Обучение). Разметку строит menu.js (renderPlay, renderFirst), панель боя - training.js. */
+/* Б «Учебный класс»: грифельная доска в стальной раме, эмалированные таблички на винтах, зелёный жетон «зачёт» */
+:root { --tr-panel: url(airdef/ui/training/b_panel.webp?v=20261117d); --tr-q: url(airdef/ui/training/b_q_n.webp?v=20261117d); --tr-q-on: url(airdef/ui/training/b_q_on.webp?v=20261117d);
+  --tr-btn: url(airdef/ui/training/b_btn_n.webp?v=20261117d); --tr-btn-down: url(airdef/ui/training/b_btn_down.webp?v=20261117d); --tr-tab: url(airdef/ui/training/b_tab_n.webp?v=20261117d); --tr-tab-on: url(airdef/ui/training/b_tab_on.webp?v=20261117d);
+  --tr-sw: url(airdef/ui/training/b_sw_n.webp?v=20261117d); --tr-sw-on: url(airdef/ui/training/b_sw_on.webp?v=20261117d); --tr-sec: url(airdef/ui/training/b_sec_n.webp?v=20261117d); --tr-sec-on: url(airdef/ui/training/b_sec_on.webp?v=20261117d);
+  --tr-step: url(airdef/ui/training/b_step_n.webp?v=20261117d); --tr-step-on: url(airdef/ui/training/b_step_on.webp?v=20261117d); --tr-step-ok: url(airdef/ui/training/b_step_ok.webp?v=20261117d);
+  --tr-card: url(airdef/ui/training/b_card_n.webp?v=20261117d); --tr-card-on: url(airdef/ui/training/b_card_on.webp?v=20261117d); --tr-card-done: url(airdef/ui/training/b_card_done.webp?v=20261117d);
+  --tr-num: url(airdef/ui/training/b_num.webp?v=20261117d); --tr-mark: url(airdef/ui/training/b_mark.webp?v=20261117d); --tr-note: url(airdef/ui/training/b_note.webp?v=20261117d); --tr-ans: url(airdef/ui/training/b_ans_n.webp?v=20261117d); --tr-ans-on: url(airdef/ui/training/b_ans_on.webp?v=20261117d);
+  --tr-tx: #e8e6da; --tr-lbl: #a7ae9f; --tr-head: #e8e6da; --tr-head2: #f1efe4; --tr-qc: #f3c96f; --tr-qc-on: #1d1a10; --tr-btnc: #f0d27a;
+  --tr-tabc: #dcd9cc; --tr-tabc-on: #1d1a10; --tr-swc: #d4d2c6; --tr-swc-on: #1d1a10; --tr-secc: #23221d; --tr-secc-on: #1d1a10;
+  --tr-stepc: #23221d; --tr-stepc-on: #1d1a10; --tr-stepc-ok: #23221d; --tr-cardc: #1f1e19; --tr-numc: #ece9dd; --tr-notec: #e8e6da; --tr-noteb: #f3c96f; --tr-noteh: #f4f1e6;
+  --tr-qtx: #f1efe4; --tr-headpad: 4px; --tr-headpad-ph: 3px; --tr-cardpl: 12px; --tr-cardpl-ph: 8px; }
+/* мел: заголовки на доске чуть «меловые» */
+body.trOn .mphead .mpk, #lsnPanel #lsnName { text-shadow: 0 0 1px rgba(232,230,218,.35); }
+
+/* base.css - раскладка «Обучения» на пререндеренных элементах (общая для наборов А/Б/В; картинки и цвета - переменные в a.css / b.css / c.css).
+   Срезы border-image - в пикселях файла (3× от CSS); ширина рамки - в CSS-пикселях. Только для проб. */
+
+/* ───── меню: панель ───── */
+body.hgOn.trOn .mpanel { background: none; border: 0; border-image: var(--tr-panel) 72 fill / 24px stretch; }
+body.trOn .mphead { padding: calc(14px + var(--tr-headpad, 0px)) 22px 4px; }
+body.trOn .mphead .mpk { color: var(--tr-head); font: 500 15px/1.1 'Oswald', sans-serif; letter-spacing: .08em; text-transform: uppercase; }
+body.trOn #mpClose { top: calc(12px + var(--tr-headpad, 0px)); right: 14px; width: 30px; height: 27px; border: 0; background: var(--tr-q) center / 100% 100% no-repeat; color: var(--tr-qc); padding: 6px; }
+body.trOn #menu #tab-play { padding: 0 22px 14px; color: var(--tr-tx); scrollbar-width: none; }
+body.trOn #menu #tab-play::-webkit-scrollbar { display: none; }
+
+/* «Первые шаги» - малая кнопка во всю ширину */
+#tab-play p.trWiz { margin: 0 0 8px; opacity: 1; }
+#tab-play .fsl[data-fs="wiz"] { display: flex; flex-direction: column; align-items: flex-start; width: 100%; margin: 0; padding: 5px 14px 6px 16px; border: 0; border-image: var(--tr-btn) 36 fill / 12px stretch; color: var(--tr-btnc); text-align: left; }
+#tab-play .fsl[data-fs="wiz"]:active { border-image-source: var(--tr-btn-down); }
+#tab-play .fsl[data-fs="wiz"] b { font: 500 14px/1.15 'Oswald', sans-serif; letter-spacing: .03em; }
+#tab-play .fsl[data-fs="wiz"] small { font: 11px/1.25 'Golos Text', sans-serif; opacity: .78; }
+
+/* учебник - вкладки во всю ширину, подпись «Учебник» не нужна */
+#tab-play .prow:has(.seg[data-seg="tbook"]) > span { display: none; }
+#tab-play .prow:has(.seg[data-seg="tbook"]) { margin: 2px 0 6px; }
+#menu #tab-play .seg[data-seg="tbook"] { display: flex; width: 100%; gap: 4px; background: none; padding: 0; border-radius: 0; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+#menu #tab-play .seg[data-seg="tbook"] button { flex: 1 0 auto; height: 34px; padding: 3px 8px 0; border-radius: 0; background: none; border: 0; border-image: var(--tr-tab) 39 fill / 13px stretch; color: var(--tr-tabc); font: 500 14px 'Oswald', sans-serif; letter-spacing: .02em; white-space: nowrap; }
+#menu #tab-play .seg[data-seg="tbook"] button.on { border-image-source: var(--tr-tab-on); color: var(--tr-tabc-on); }
+
+/* сторона и техника - переключатели в строку */
+#tab-play .prow { margin: 4px 0; flex-wrap: nowrap; font: 600 11.5px 'Golos Text', sans-serif; color: var(--tr-lbl); }
+#menu #tab-play .seg[data-seg="tside"], #menu #tab-play .seg[data-seg="tnat"] { background: none; padding: 0; gap: 3px; flex-wrap: nowrap; border-radius: 0; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+#menu #tab-play .seg[data-seg]::-webkit-scrollbar { display: none; }
+#menu #tab-play .seg[data-seg="tside"] button, #menu #tab-play .seg[data-seg="tnat"] button { flex: 0 0 auto; height: 27px; padding: 0 9px; border-radius: 0; background: none; border: 0; border-image: var(--tr-sw) 30 fill / 10px stretch; color: var(--tr-swc); font: 500 13px 'Oswald', sans-serif; white-space: nowrap; }
+#menu #tab-play .seg[data-seg="tside"] button.on, #menu #tab-play .seg[data-seg="tnat"] button.on { border-image-source: var(--tr-sw-on); color: var(--tr-swc-on); }
+
+/* разделы - закладки */
+.trSecs { display: flex; gap: 3px; overflow-x: auto; margin: 10px 0 0; scrollbar-width: none; }
+.trSecs::-webkit-scrollbar { display: none; }
+.trSec { flex: none; white-space: nowrap; height: 31px; padding: 2px 11px 0; display: flex; align-items: center; gap: 6px; background: none; border: 0; border-image: var(--tr-sec) 33 fill / 11px stretch; color: var(--tr-secc); font: 500 13.5px 'Oswald', sans-serif; letter-spacing: .02em; cursor: pointer; }
+.trSec em { font: 600 10.5px 'Golos Text', sans-serif; font-style: normal; opacity: .7; }
+.trSec.on { border-image-source: var(--tr-sec-on); color: var(--tr-secc-on); }
+
+/* уроки - карточки */
+.trGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; margin: var(--tr-gridtop, 6px) 0 6px; }
+#menu #tab-play .opt.trCard { position: relative; display: flex; align-items: center; gap: 8px; min-height: 56px; margin: 0; padding: 6px 10px 6px var(--tr-cardpl, 11px); background: none; border: 0; border-radius: 0; border-image: var(--tr-card) 60 fill / 20px stretch; color: var(--tr-cardc); filter: none; text-align: left; }
+#menu #tab-play .opt.trCard.done { border-image-source: var(--tr-card-done); }
+#menu #tab-play .opt.trCard.on { border-image-source: var(--tr-card-on); }
+.trNum { flex: none; width: 30px; height: 30px; display: grid; place-items: center; background: var(--tr-num) center / 100% 100% no-repeat; color: var(--tr-numc); font: 600 14px/1 'Oswald', sans-serif; font-style: normal; }
+.trNm { flex: 1; min-width: 0; overflow-wrap: break-word; hyphens: auto; -webkit-hyphens: auto; font: 500 13px/1.15 'Oswald', sans-serif; letter-spacing: .01em; color: inherit; }
+.trMk { position: absolute; right: -5px; top: -7px; width: 36px; height: 36px; background: var(--tr-mark) center / contain no-repeat; transform: rotate(-8deg); pointer-events: none; }
+
+/* описание выбранного урока */
+.trDesc { margin: 2px 0 8px; padding: 10px 16px 11px; border-image: var(--tr-note) 60 fill / 20px stretch; color: var(--tr-notec); font: 12px/1.35 'Golos Text', sans-serif; }
+.trDesc b { display: block; font: 500 14.5px/1.2 'Oswald', sans-serif; margin-bottom: 2px; color: var(--tr-noteh, inherit); }
+body.trOn #tab-play > p.hint { color: var(--tr-lbl); opacity: 1; } body.hgOn.hgPlain .mpanel #tab-play p.trWiz { display: block; }
+
+/* «Первые шаги» */
+body.trOn .fsh { gap: 3px; margin: 2px 0 10px; }
+body.trOn .fsc { white-space: nowrap; height: 27px; padding: 1px 11px 0; display: inline-flex; align-items: center; background: none; border-image: var(--tr-step) 33 fill / 11px stretch; color: var(--tr-stepc); font: 500 13px 'Oswald', sans-serif; letter-spacing: .02em; }
+body.trOn .fsc.on { border-image-source: var(--tr-step-on); color: var(--tr-stepc-on); }
+body.trOn .fsc.ok { border-image-source: var(--tr-step-ok); color: var(--tr-stepc-ok); }
+body.trOn .fsc .ic { width: 1em; height: 1em; vertical-align: -.12em; }
+body.trOn #tab-play .fsl:not([data-fs="wiz"]) { padding: 5px 14px 5px 16px; border: 0; border-image: var(--tr-btn) 36 fill / 12px stretch; color: var(--tr-btnc); font: 500 13px 'Oswald', sans-serif; letter-spacing: .02em; }
+body.trOn #tab-play > .fsl { margin-top: 4px; }
+body.trOn .fsq { color: var(--tr-qtx); font: 500 17px/1.2 'Oswald', sans-serif; }
+body.trOn .fso { flex-direction: column; gap: 1px; margin-bottom: 5px; padding: 10px 16px 11px var(--tr-anspl, 18px); background: none; border: 0; border-image: var(--tr-ans) 60 fill / 20px stretch; color: var(--tr-cardc); }
+body.trOn .fso:hover, body.trOn .fso:active { border-image-source: var(--tr-ans-on); }
+body.trOn .fso b { font: 500 15.5px/1.15 'Oswald', sans-serif; letter-spacing: .02em; } body.trOn .fso span { color: inherit; opacity: .78; text-align: left; font-size: 12px; }
+body.trOn #tab-play > .opt.on:not(.trCard) { margin: 0 0 6px; padding: 10px 16px 11px var(--tr-anspl, 18px); background: none; border: 0; border-radius: 0; border-image: var(--tr-ans-on) 60 fill / 20px stretch; color: var(--tr-cardc); }
+body.trOn #tab-play > .opt.on:not(.trCard) .nm b { font: 500 15.5px 'Oswald', sans-serif; } body.trOn #tab-play > .opt.on:not(.trCard) .nm span { opacity: .78; }
+
+/* ───── бой: кнопка «?» и панель «Урок» ───── */
+body.playing.training #lsnBtn { background: var(--tr-q) center / 100% 100% no-repeat; border: 0; border-radius: 0; box-shadow: none; color: var(--tr-qc); animation: trQ 2.6s ease-in-out infinite; }
+body.playing.training #lsnBtn.new { animation: trQ 1.1s ease-in-out 4, trQ 2.6s ease-in-out infinite; }
+body.lsnOpen.playing.training #lsnBtn { background-image: var(--tr-q-on); color: var(--tr-qc-on); animation: none; }
+@keyframes trQ { 50% { filter: brightness(1.45); } }
+#lsnPanel { background: none; border: 0; border-image: var(--tr-panel) 72 fill / 24px stretch; padding: calc(20px + var(--tr-headpad, 0px)) 22px 20px; color: var(--tr-tx); }
+#lsnPanel .lph { color: var(--tr-lbl); }
+#lsnPanel #lsnX { color: var(--tr-lbl); }
+#lsnPanel #lsnName { color: var(--tr-head2); font: 500 18px/1.2 'Oswald', sans-serif; letter-spacing: .02em; }
+#lsnPanel .lnow { position: relative; border: 0; background: none; border-image: var(--tr-note) 60 fill / 20px stretch; padding: 11px 16px 12px 26px; margin: 0 0 12px; color: #fff6dc; outline: 2px solid #e8b04a; outline-offset: -2px; box-shadow: 0 0 0 1px rgba(0,0,0,.55), 0 0 14px rgba(232,176,74,.45); } /* «Сейчас» выделен золотом поверх доски набора Б (Mark 2026-11-17/18: чтобы игрок не терялся) */
+#lsnPanel .lnow::before { content: ''; position: absolute; left: 2px; top: 2px; bottom: 2px; width: 6px; background: #e8b04a; }
+#lsnPanel .lnow b { color: #ffd77a; }
+#lsnPanel .lnow .cat-h { display: inline-block; padding: 2px 9px; margin: 0 0 6px; background: #e8b04a; color: #1c1708; opacity: 1; font: 600 11px 'Oswald', sans-serif; letter-spacing: .16em; text-transform: uppercase; }
+#lsnPanel h4 { color: var(--tr-lbl); font: 500 12.5px 'Oswald', sans-serif; letter-spacing: .08em; text-transform: uppercase; }
+#lsnPanel #lsnBody b { color: var(--tr-bodyb, inherit); }
+#lsnPanel #lsnRestart { margin-top: 12px; padding: 8px 14px; background: none; border: 0; border-image: var(--tr-btn) 36 fill / 12px stretch; color: var(--tr-btnc); font: 500 14px 'Oswald', sans-serif; letter-spacing: .03em; }
+
+/* «Сейчас» - вспышка при новом шаге (рамка-картинка закрывает фон, поэтому светом, а не цветом фона) */
+#lsnPanel .lnow.flash { animation: trFlash 1.1s ease-out; }
+@keyframes trFlash { 0% { filter: brightness(1.8) drop-shadow(0 0 12px rgba(243,201,111,.95)); } 100% { filter: brightness(1) drop-shadow(0 0 0 rgba(243,201,111,0)); } }
+
+/* ───── телефон (низкий экран) ───── */
+@media (max-height: 500px) {
+  body.hgOn.trOn .mpanel { border-image-width: 18px; }
+  body.trOn .mphead { padding: calc(9px + var(--tr-headpad-ph, 0px)) 15px 2px; } body.trOn .mphead .mpk { font-size: 12.5px; }
+  body.trOn #mpClose { top: calc(7px + var(--tr-headpad-ph, 0px)); right: 9px; width: 24px; height: 22px; padding: 4px; }
+  body.trOn #menu #tab-play { padding: 0 14px 10px; }
+  #tab-play p.trWiz { margin-bottom: 5px; } #tab-play .fsl[data-fs="wiz"] { padding: 3px 10px 4px 12px; border-image-width: 9px; }
+  #tab-play .fsl[data-fs="wiz"] b { font-size: 12px; } #tab-play .fsl[data-fs="wiz"] small { display: none; }
+  #menu #tab-play .seg[data-seg="tbook"] button { height: 26px; font-size: 11.5px; padding: 2px 4px 0; border-image-width: 9px; }
+  #tab-play .prow { margin: 3px 0; } #tab-play .prow > span { display: none; }
+  #menu #tab-play .seg[data-seg="tside"], #menu #tab-play .seg[data-seg="tnat"] { width: 100%; }
+  #menu #tab-play .seg[data-seg="tside"] button, #menu #tab-play .seg[data-seg="tnat"] button { flex: 1 0 auto; height: 22px; padding: 0 3px; font-size: 11px; border-image-width: 7px; }
+  .trSecs { margin-top: 6px; } .trSec { height: 24px; padding: 1px 8px 0; font-size: 11.5px; border-image-width: 8px; } .trSec em { font-size: 9px; }
+  .trGrid { gap: 4px; } #menu #tab-play .opt.trCard { min-height: 42px; gap: 5px; padding: 4px 6px 4px var(--tr-cardpl-ph, 7px); border-image-width: 14px; }
+  .trNum { width: 22px; height: 22px; font-size: 11.5px; } .trNm { font-size: 11px; line-height: 1.12; } .trMk { width: 27px; height: 27px; right: -4px; top: -6px; }
+  .trDesc { padding: 7px 11px 8px; font-size: 10.5px; border-image-width: 14px; } .trDesc b { font-size: 12px; }
+  body.trOn #tab-play > p.hint:not(.trWiz) { display: none; }
+  body.trOn .fsc { height: 22px; padding: 1px 8px 0; font-size: 11px; border-image-width: 8px; }
+  body.trOn #tab-play .fsl:not([data-fs="wiz"]) { padding: 3px 10px; font-size: 11px; border-image-width: 9px; }
+  body.trOn .fsq { font-size: 14px; margin: 2px 0 6px; } body.trOn .fso { padding: 6px 11px 7px var(--tr-anspl-ph, 13px); border-image-width: 14px; } body.trOn .fso b { font-size: 13px; } body.trOn .fso span { font-size: 10.5px; }
+  #lsnPanel { border-image-width: 18px; padding: calc(13px + var(--tr-headpad-ph, 0px)) 16px 14px; } #lsnPanel .lnow { border-image-width: 14px; padding: 8px 12px 9px 22px; }
+  #lsnPanel #lsnName { font-size: 15px; margin: 2px 0 6px; }
+}
 </style>
 </head>
 <body>

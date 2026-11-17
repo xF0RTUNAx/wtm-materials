@@ -3,7 +3,7 @@
 // переход в бой (лётчик - air.js, ПВО - defense.js в режиме онлайна), итоги волн и боя, журнал сбитий (6 с) и
 // «Мне нужна помощь!» союзникам (метка в кадре и на карте). Связь и зеркало боя - net.js.
 /* global THREE, CONFIG */
-import { tr, trIf, LANG } from './i18n.js?v=20261117d';
+import { tr, trIf, XL, LOCALE, L10N } from './i18n.js?v=20261117d';
 import { trFmt } from './i18n-fmt.js?v=20261117d';
 import { createNet } from './net.js?v=20261117d';
 import * as O from './sim/online.js?v=20261117d';
@@ -67,7 +67,7 @@ export function createOnline(C, ctrls) {
     }
     if (ui.sub === 'code') {
       el.innerHTML = `<div class="rhead"><button class="rback" data-oa="sub" data-t="code">‹</button><b>${tr('По коду')}</b></div>
-        <div class="rplate"><div class="rlbl">${tr('Код комнаты')}</div><div class="prow"><input id="adCode" maxlength="4" placeholder="${tr('Код')}" value="${esc(ui.code)}" style="text-transform:uppercase;width:110px"><button class="btn alt" data-oa="join" style="width:auto">${LANG === 'en' ? 'Join' : 'Войти'}</button></div></div>`;
+        <div class="rplate"><div class="rlbl">${tr('Код комнаты')}</div><div class="prow"><input id="adCode" maxlength="4" placeholder="${tr('Код')}" value="${esc(ui.code)}" style="text-transform:uppercase;width:110px"><button class="btn alt" data-oa="join" style="width:auto">${L10N.join}</button></div></div>`;
       return;
     }
     el.innerHTML = `<div class="seg otiles og" data-oseg="kind">${tile('air', ui.kind, pic('air_e_mig27', 'left:2%;top:0;width:58%;height:84%') + pic('pvo_hawk', 'right:2%;top:16%;width:50%;height:84%'), tr('Вылет и оборона'))}${tile('multi', ui.kind, pic('strike_kalibr', 'left:0;top:6%;width:60%;height:80%') + pic('strike_shahed', 'right:2%;top:18%;width:52%;height:78%'), tr('Мульти-волна'))}</div>
@@ -135,7 +135,7 @@ export function createOnline(C, ctrls) {
     }
   }
   function invite() {
-    const url = `https://fortunawtm.com/airsuperiority/${LANG === 'en' ? 'en/' : ''}?ad=${N.room.code}` /* красивая ссылка (/airsuperiority/ → игра с тем же ?ad=; со слешем - без лишнего перенаправления GitHub Pages); в английской игре - /en/: превью по-английски */, text = tr('Бой «Air Superiority Online»: комната {0}', [N.room.code]);
+    const url = `https://fortunawtm.com/airsuperiority/${XL ? 'en/' : ''}?ad=${N.room.code}` /* красивая ссылка (/airsuperiority/ → игра с тем же ?ad=; со слешем - без лишнего перенаправления GitHub Pages); в английской игре - /en/: превью по-английски */, text = tr('Бой «Air Superiority Online»: комната {0}', [N.room.code]);
     try { const tg = window.Telegram && window.Telegram.WebApp; if (tg && tg.openTelegramLink) { tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`); return; } } catch (_) { /* не Telegram */ }
     if (navigator.share) { navigator.share({ title: text, url }).catch(() => {}); return; }
     try { navigator.clipboard.writeText(url); C.say(tr('Ссылка скопирована'), 2); } catch (_) { C.say(tr('Код комнаты: {0}', [N.room.code]), 3); }
@@ -427,8 +427,8 @@ export function createOnline(C, ctrls) {
   // строка рейтинга в итогах боя: аккаунт игры - «Рейтинг: +882»; аккаунт сайта - очки лежат и засчитаются после переноса прогресса
   const ratingNote = (r, acc) => {
     if (!r || typeof r.points !== 'number') return '';
-    const body = acc.kind === 'airdef' ? (r.parts && r.parts.idle ? tr('Рейтинг: 0 - без действий в бою') : tr('Рейтинг: <b>+{0}</b>', [r.points.toLocaleString(LANG === 'en' ? 'en-US' : 'ru-RU')]))
-      : r.points > 0 ? tr('Очки рейтинга: <b>{0}</b> - засчитаются, когда перенесёте прогресс в аккаунт игры', [r.points.toLocaleString(LANG === 'en' ? 'en-US' : 'ru-RU')]) : '';
+    const body = acc.kind === 'airdef' ? (r.parts && r.parts.idle ? tr('Рейтинг: 0 - без действий в бою') : tr('Рейтинг: <b>+{0}</b>', [r.points.toLocaleString(LOCALE)]))
+      : r.points > 0 ? tr('Очки рейтинга: <b>{0}</b> - засчитаются, когда перенесёте прогресс в аккаунт игры', [r.points.toLocaleString(LOCALE)]) : '';
     return body ? `<div class="pgRes ratLine">${ico('rating')} ${body}</div>` : '';
   };
   // награда за онлайн-бой: подписанный сервером итог → функция airdef-claim (результат в таблицу, награда по правилам «Летки»)

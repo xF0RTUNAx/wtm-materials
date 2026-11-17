@@ -1,7 +1,7 @@
 // Снимки интерфейса на выбранном языке (меню - все режимы и вкладки, «Исследования», событие, пауза): ПК 1280×720 и телефон 844×390.
-//   deno run -A tools/i18n/ui-shots.js [lang=en] [pc|phone]   (нужен сервер localhost:8935) → tools/i18n/shots/ui-<устройство>-<кадр>.png
+//   deno run -A tools/i18n/ui-shots.js [lang=en] [pc|phone]   (нужен сервер localhost:8935) → tools/i18n/shots/ui-<язык>-<устройство>-<кадр>.png
 import puppeteer from 'npm:puppeteer-core@22.15.0';
-const LANG = Deno.args.find((a) => /^(en|ru)$/.test(a)) || 'en', DEV = Deno.args.find((a) => /^(pc|phone)$/.test(a)) || 'pc';
+const LANG = Deno.args.find((a) => /^(en|ru|uk|de|es|fr)$/.test(a)) || 'en', DEV = Deno.args.find((a) => /^(pc|phone)$/.test(a)) || 'pc';
 const OUT = new URL('./shots/', import.meta.url).pathname, sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const b = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: 'new', args: ['--use-angle=metal', '--enable-gpu', '--ignore-gpu-blocklist', '--autoplay-policy=no-user-gesture-required'] });
 const p = await b.newPage();
@@ -13,7 +13,7 @@ p.on('console', (m) => { if (m.type() === 'error') errs.push(m.text()); });
 await p.goto(`http://localhost:8935/fortuna-bot-web/games/airdef.html?lang=${LANG}&gfx=low&test=1${phone ? '&touch=1' : ''}`, { waitUntil: 'load' });
 await p.waitForFunction(() => !document.getElementById('loading') && document.getElementById('menu') && document.getElementById('menu').classList.contains('on'), { timeout: 240000, polling: 500 });
 await sleep(1500);
-const shot = async (name) => { await sleep(500); await p.screenshot({ path: `${OUT}ui-${DEV}-${name}.png` }); console.log('снимок', name); };
+const shot = async (name) => { await sleep(500); await p.screenshot({ path: `${OUT}ui-${LANG}-${DEV}-${name}.png` }); console.log('снимок', name); };
 const click = async (sel) => { await p.evaluate((s) => document.querySelector(s).click(), sel); await sleep(400); };
 const tab = async (t) => { await click(`#mtabs button[data-tab="${t}"]`); };
 // режимы меню

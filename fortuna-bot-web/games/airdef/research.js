@@ -6,7 +6,7 @@ import { NODE, BRANCHES, SIDES, SIDE_NAME, RANKS, RANK_NAME, nodesOf, owned, res
 import { SAM, AG, ERAS, LOADOUTS } from './arsenal.js?v=20261117d';
 import { ico, capsHtml } from './icons.js?v=20261117d';
 import { XP, SV, trMsg } from './progress-net.js?v=20261117d';
-import { tr, trIf, LANG } from './i18n.js?v=20261117d';
+import { tr, trIf, LANG, XL, LOCALE, numLoc, L10N } from './i18n.js?v=20261117d';
 
 // сцены категорий (рендеры сборщика, Mark 2026-11-04): файл ветка_сторона.jpg, у «Авиации» ещё вертолёты
 const BG_SCENE = {}; for (const k of ['air.east', 'air.west', 'air.heli', 'wpn.east', 'wpn.west', 'pvo.east', 'pvo.west', 'strike.east', 'strike.west']) BG_SCENE[k] = `airdef/ui/research/${k.replace('.', '_')}.jpg`;
@@ -72,19 +72,18 @@ const CSS = `
   #research .sides { top: calc(var(--rt) + var(--hh)); width: calc(92px + var(--sa-l, 0px)); padding: 10px 0 0 8px; padding-left: max(8px, var(--sa-l, 0px)); } #research .sides button { height: 52px; font-size: 13px; padding: 0 8px; } #research .sides button small, #research .note { display: none; }
   #research .wrap { left: calc(96px + var(--sa-l, 0px)); top: calc(var(--rt) + var(--hh)); right: 0; } #research .dos { display: none; } #research.open .dos { display: flex; top: calc(var(--rt) + var(--hh)); width: min(320px, 70vw); }
   #research.open .veil { display: block; position: absolute; inset: calc(var(--rt) + var(--hh)) 0 0 0; background: rgba(0,0,0,.45); z-index: 3; }
-  html[lang=en] #research .sides button { font-size: 12px; padding: 0 5px; } /* английские «Helicopters» и т. п. шире русских подписей */
+  html:not([lang=ru]) #research .sides button { font-size: 12px; padding: 0 5px; } /* английские «Helicopters» и т. п. шире русских подписей */
   #research .card .nm { font-size: 12.5px; } #research .card .rk { font-size: 16px; } #research .card .pr { font-size: 12.5px; }
   #research .rh b { font-size: 14px; } #research .rh span { display: none; } #research .dos .hero { height: 110px; } #research .guest { font-size: 11.5px; }
 }`;
 
-const n2 = (v) => Math.round(v).toLocaleString(LANG === 'en' ? 'en-US' : 'ru-RU');
+const n2 = (v) => Math.round(v).toLocaleString(LOCALE);
 // значения карточки из progress.js (cardStats): «480 км/ч», «1,5-30 км», «2,5 т», «есть» - единицы и запятая на выбранном языке
-const trVal = (v) => (LANG !== 'en' ? v : trIf(v).replace(/^none$/, 'no').replace(/(\d),(\d)/g, '$1.$2').replace(/ км\/ч/g, ' km/h').replace(/ км(?![А-Яа-я\/])/g, ' km').replace(/ м\/с/g, ' m/s').replace(/ кг/g, ' kg').replace(/ т$/g, ' t').replace(/ м$/g, ' m').replace(/ с$/g, ' s').replace(/°\/с/g, '°/s')
-  .replace(/ снарядов$/, ' rounds').replace(/ · залп /, ' · salvo ').replace(/ \(оптика\)$/, ' (optical)'));
+const trVal = (v) => (!XL ? v : LANG === 'en' ? numLoc(trIf(v).replace(/^none$/, 'no')) : numLoc(trIf(v)));
 const thumb = (n) => `airdef/thumbs/${n.branch}_${n.key}.webp?v=20261117d`;
 // подпись строки карточки; «Обзор» у ЗРК без РЛС - дальность обзора оптикой (Detection), а в словаре «Обзор» - кнопка камеры (View)
-const statName = (k) => (LANG === 'en' && k === 'Обзор' ? 'Detection' : trIf(k));
-const GOAL_TAG = LANG === 'en' ? 'GOAL' : 'Цель'; // по-русски та же «ЦЕЛЬ», что кнопка захвата цели (словарь - один ключ на оба), по-английски это разные слова
+const statName = (k) => (XL && k === 'Обзор' ? L10N.detect : trIf(k));
+const GOAL_TAG = L10N.goal; // по-русски та же «ЦЕЛЬ», что кнопка захвата цели (словарь - один ключ на оба), по-английски это разные слова
 const era = (r) => (ERAS[r - 1] ? trIf(ERAS[r - 1].name).split('- ')[1] || '' : '');
 const guide = (n) => (n.branch === 'pvo' ? trIf(SAM[n.key]?.guide) : n.branch === 'air' || n.branch === 'heli' ? tr('Подвески: {0}.', [RANKS.flatMap((e) => (LOADOUTS[e] || []).filter((L) => L.plane === n.key).map((L) => trIf(L.name))).join(' · ')]) : trIf(AG[n.item || n.key]?.guide)) || '';
 

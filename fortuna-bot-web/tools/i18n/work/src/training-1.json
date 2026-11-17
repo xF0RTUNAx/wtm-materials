@@ -1,0 +1,1166 @@
+[
+ [
+  "за самолёт",
+  "as pilot"
+ ],
+ [
+  "за ПВО",
+  "as air defense"
+ ],
+ [
+  "за вертолёт",
+  "as helicopter pilot"
+ ],
+ [
+  "мульти-волна за волну",
+  "Multi-Wave as attacker"
+ ],
+ [
+  "мульти-волна за ПВО",
+  "Multi-Wave as air defense"
+ ],
+ [
+  "Сорвите ему сопровождение: уйдите за здания или ниже его «земли» (у старых РЛС - ниже 100 м).",
+  "Break its track: duck behind buildings or below its \"floor\" (100 m for old radars)."
+ ],
+ [
+  "Ловушки ({0} - ЛТЦ и диполи разом): диполи хорошо работают против некогерентных станций.",
+  "Countermeasures ({0}: flares and chaff together): chaff works well against non-coherent radars."
+ ],
+ [
+  "Резкий отворот за 2-3 км до ракеты - радиокомандная ракета «догоняет» и теряет энергию.",
+  "Turn hard 2-3 km before the missile reaches you: a command-guided missile has to chase you and bleeds energy."
+ ],
+ [
+  "Станция должна подсвечивать вас до попадания. Поставьте её на 3 или 9 часов («траверз») и снижайтесь - когерентная РЛС потеряет вас в доплеровском провале.",
+  "The radar must illuminate you until impact. Put it at your 3 or 9 o'clock (beam it) and descend: a coherent radar loses you in the Doppler notch."
+ ],
+ [
+  "Диполи - только вместе с «траверзом».",
+  "Chaff only works while beaming."
+ ],
+ [
+  "Здания между вами и станцией тоже срывают подсвет.",
+  "Buildings between you and the radar also break the illumination."
+ ],
+ [
+  "На СПО его не видно - только датчик пуска («ПУСК РАКЕТЫ»). Сразу ловушки ({0}) пачкой.",
+  "It doesn't show on the RWR; only the missile warning (\"MISSILE LAUNCH\") alerts you. Pop countermeasures at once ({0}), several in a row."
+ ],
+ [
+  "Не включайте форсаж рядом - сопло горячее в 2 раза.",
+  "Don't use the afterburner near it: the nozzle gets twice as hot."
+ ],
+ [
+  "Ранние ГСН (Стрела-2, Redeye) видят только сопло - не подставляйте хвост.",
+  "Early seekers (Strela-2, Redeye) only see the nozzle: don't show your tail."
+ ],
+ [
+  "Оператор ведёт ракету по линии визирования - разрывайте её зданиями.",
+  "The operator guides the missile along the line of sight: break it with buildings."
+ ],
+ [
+  "В оптическом режиме комплекс не излучает: противорадиолокационная ракета его не найдёт.",
+  "In optical mode the system doesn't emit: an anti-radiation missile won't find it."
+ ],
+ [
+  "Смертельно вблизи и низко. Не проходите ближе 2-3 км на малой высоте.",
+  "Deadly up close and low. Don't pass within 2-3 km at low altitude."
+ ],
+ [
+  "Высота выше потолка пушки (1,5-3 км) - полная безопасность от неё.",
+  "Above the gun's ceiling (1.5-3 km) you're completely safe from it."
+ ],
+ [
+  "Помехи и диполи почти не помогают - спасают дома и малая высота: РЛС должна видеть вас до попадания.",
+  "Jamming and chaff barely help. Buildings and low altitude save you: the radar must see you until impact."
+ ],
+ [
+  "Ведёт несколько целей сразу - не надейтесь, что она занята другим.",
+  "It tracks several targets at once: don't count on it being busy with someone else."
+ ],
+ [
+  "Против неё - ПРР с памятью (HARM, Х-31П, AARGM-ER) с предельной дальности.",
+  "Counter it with a memory-equipped ARM (HARM, Kh-31P, AARGM-ER) from max range."
+ ],
+ [
+  "После включения активной ГСН ракете РЛС уже не нужна - уходите за дома и отворачивайте резко.",
+  "Once its active seeker is on, the missile no longer needs the radar: get behind buildings and turn hard."
+ ],
+ [
+  "До включения ГСН летит по командам - сорвите сопровождение (дома, высота) и смените курс.",
+  "Until its seeker activates, it flies on commands: break the track (buildings, altitude) and change course."
+ ],
+ [
+  "Ваши спутниковые бомбы и ракеты в радиусе станции промахнутся - используйте лазерные или ТВ, или сначала уничтожьте станцию.",
+  "Your satellite-guided bombs and missiles will miss inside the jammer's radius: use laser or TV weapons, or destroy the jammer first."
+ ],
+ [
+  "Назначьте цель, дождитесь захвата, пускайте в зоне.",
+  "Assign a target, wait for lock, fire when in range."
+ ],
+ [
+  "Держите РЛС включённой до попадания - ракету ведёт ваша станция.",
+  "Keep the radar on until impact: your radar guides the missile."
+ ],
+ [
+  "Метод «три точки» надёжнее против манёвра, «половинное спрямление» - против быстрой цели, идущей поперёк.",
+  "Three-point is more reliable against maneuvering targets; half-lead is better against fast crossing targets."
+ ],
+ [
+  "После пуска нужен подсвет до попадания - не выключайте РЛС.",
+  "After launch, keep illuminating the target until impact: don't switch the radar off."
+ ],
+ [
+  "Цель, идущая поперёк низко над землёй, уходит в доплеровский провал - пускайте, когда она идёт на вас или от вас.",
+  "A target crossing low over the ground falls into the Doppler notch: fire when it's flying toward or away from you."
+ ],
+ [
+  "Наведите перекрестие на самолёт: ГСН «зарычит», через секунду - захват.",
+  "Put the crosshair on the aircraft: the seeker growls and locks a second later."
+ ],
+ [
+  "Ранние ГСН - только вдогон, в хвост. Против ловушек лучше пускать ближе.",
+  "Early seekers only work from the rear. Against flares, fire from closer."
+ ],
+ [
+  "Назначьте цель - расчёт ведёт ракету по линии визирования; без излучения - по оптике.",
+  "Assign a target: the crew guides the missile along the line of sight, by optics if the radar is silent."
+ ],
+ [
+  "Ведите ствол в жёлтый кружок упреждения и держите «Огонь» короткими очередями.",
+  "Aim the barrel at the yellow lead circle and hold \"Fire\" in short bursts."
+ ],
+ [
+  "Дальше 2-3 км попадания редки.",
+  "Hits are rare beyond 2-3 km."
+ ],
+ [
+  "Назначайте цели одну за другой: комплекс ведёт несколько сразу.",
+  "Assign targets one after another: the system tracks several at once."
+ ],
+ [
+  "РЛС не выключать до попадания; против ПРР с памятью спасает только перенос позиции между волнами.",
+  "Don't switch the radar off until impact; against an ARM with memory, only relocating between waves helps."
+ ],
+ [
+  "Пустили - ракета дойдёт до цели по командам и включит свою ГСН; после этого РЛС можно выключить от ПРР.",
+  "Once fired, the missile flies to the target on commands and switches on its own seeker; after that you can turn the radar off to dodge an ARM."
+ ],
+ [
+  "Ставьте у ценных объектов: спутниковое оружие в радиусе промахивается. Против лазерного и ТВ не помогает.",
+  "Place it near valuable facilities: satellite-guided weapons miss within its radius. Useless against laser and TV guidance."
+ ],
+ [
+  "Что это",
+  "What it is"
+ ],
+ [
+  "Наведение",
+  "Guidance"
+ ],
+ [
+  " · без РЛС - на СПО не виден",
+  " · no radar, invisible on the RWR"
+ ],
+ [
+  "В игре: {0}-{1} км, высоты {2}-{3} м.",
+  "In-game: {0}-{1} km, altitude {2}-{3} m."
+ ],
+ [
+  "Как воевать",
+  "How to fight"
+ ],
+ [
+  "Что делать",
+  "What to do"
+ ],
+ [
+  "Кружок на экране - точка падения. Выведите его на цель и сбрасывайте.",
+  "The circle on the screen is the impact point. Put it on the target and release."
+ ],
+ [
+  "Чем ниже и медленнее - тем точнее; но низко - опасно от пушек.",
+  "The lower and slower, the more accurate, but flying low exposes you to guns."
+ ],
+ [
+  "Контейнер захватит цель сам: до неё 1-18 км, вы не ниже 400 м, цель не закрыта домами («Цель» / R - другая цель).",
+  "The pod locks targets by itself: 1-18 km away, you above 400 m, target not blocked by buildings (\"Target\" / R: next target)."
+ ],
+ [
+  "Сбросьте, когда в панели оружия «В зоне».",
+  "Release when the weapon panel shows \"In range\"."
+ ],
+ [
+  "Держите подсвет до попадания: лазер ● горит, пока контейнер видит точку. Корпус («Маскировка») и здания его срывают.",
+  "Keep lasing until impact: laser ● stays lit while the pod sees the spot. The airframe (\"Masked\") and buildings break it."
+ ],
+ [
+  "Нужен захват контейнером до сброса (он захватывает сам) - ТВ-головка запоминает картинку.",
+  "The pod must lock before release (it locks by itself): the TV seeker memorizes the image."
+ ],
+ [
+  "После сброса можно уходить. Ночью не работает.",
+  "You can turn away after release. Doesn't work at night."
+ ],
+ [
+  "Дождитесь захвата контейнером, нос на цель (в поле ГСН), пуск - дальше ракета сама.",
+  "Wait for the pod lock, nose on the target (within the seeker's FOV), fire: the missile does the rest."
+ ],
+ [
+  "Ночью ТВ-головка не видит.",
+  "The TV seeker is blind at night."
+ ],
+ [
+  "Захват контейнером, пуск, подсвет до попадания - как у лазерной бомбы.",
+  "Pod lock, fire, lase until impact, just like a laser-guided bomb."
+ ],
+ [
+  "Пуск по включённой РЛС впереди (в поле ГСН ±{0}°) - на СПО она должна быть.",
+  "Fire at an active radar ahead (within the seeker's ±{0}° FOV): it must show on your RWR."
+ ],
+ [
+  "Миллиметровая ГСН на конце находит даже выключенную машину, если та не уехала.",
+  "Its millimeter-wave terminal seeker finds even a switched-off vehicle if it hasn't moved."
+ ],
+ [
+  "Помнит место станции: выключение РЛС не спасёт, только переезд.",
+  "It remembers the radar's position: switching off won't help, only relocating."
+ ],
+ [
+  "Памяти нет: если расчёт выключит РЛС, ракета промахнётся.",
+  "No memory: if the crew switches the radar off, the missile misses."
+ ],
+ [
+  "Координаты - захват контейнером или ближайшая цель задания впереди.",
+  "Coordinates come from a pod lock or the nearest mission target ahead."
+ ],
+ [
+  "Сбрасывать, когда «В зоне»; дальше - сама, ночью и в облаках.",
+  "Release at \"In range\"; then it guides itself, at night and through clouds."
+ ],
+ [
+  "В зоне станции подавления навигации уйдёт на десятки метров.",
+  "Inside a navigation jammer's radius it misses by tens of meters."
+ ],
+ [
+  "Пуск издалека по координатам цели: ракета идёт на малой высоте, огибая дома.",
+  "Fire from afar at the target's coordinates: the missile flies low, hugging buildings."
+ ],
+ [
+  "Сбить её могут только комплексы ближнего рубежа - «Тор», «Панцирь», Patriot, SAMP/T.",
+  "Only close-in defense systems can shoot it down: Tor, Pantsir, Patriot, SAMP/T."
+ ],
+ [
+  "Пустите перед ударом: для РЛС - ещё один самолёт, ПВО тратит на неё ракеты.",
+  "Launch it before the strike: radars see one more aircraft, and air defense wastes missiles on it."
+ ],
+ [
+  "Работает весь вылет: РЛС видят вас ближе и чаще теряют. Против помехозащищённых станций - слабее.",
+  "Active the whole sortie: radars detect you later and lose you more often. Less effective against jam-resistant radars."
+ ],
+ [
+  "Как применять",
+  "How to use it"
+ ],
+ [
+  "Комплексы",
+  "Systems"
+ ],
+ [
+  "<p class=\"dim\">Сначала - показ: «Авто» сам ведёт комплекс по первой цели. Потом - вы.</p>",
+  "<p class=\"dim\">First a demo: \"Auto\" operates the system against the first target. Then it's your turn.</p>"
+ ],
+ [
+  "Комплекс уничтожен.",
+  "Site destroyed."
+ ],
+ [
+  "<b>Показ.</b> {0} <span class=\"dim\">«Авто» назначает цель и стреляет сам - смотрите.</span>",
+  "<b>Demo.</b> {0} <span class=\"dim\">\"Auto\" assigns the target and fires; just watch.</span>"
+ ],
+ [
+  "<b>Теперь вы.</b> {0}",
+  "<b>Your turn.</b> {0}"
+ ],
+ [
+  "Как это работает в игре",
+  "How it works in the game"
+ ],
+ [
+  "Типичные ошибки",
+  "Common mistakes"
+ ],
+ [
+  "Бомбы",
+  "Bombs"
+ ],
+ [
+  "<p class=\"dim\">Сначала - показ: автопилот сам применит оружие по учебной цели. Потом - вы.</p>",
+  "<p class=\"dim\">First a demo: the autopilot uses the weapon on a training target. Then it's your turn.</p>"
+ ],
+ [
+  "<b>Показ.</b> {0} <span class=\"dim\">Автопилот и «Авто» всё делают сами.</span>",
+  "<b>Demo.</b> {0} <span class=\"dim\">The autopilot and \"Auto\" do everything.</span>"
+ ],
+ [
+  "Оружие ушло - камера следит за ним.",
+  "Weapon away: the camera follows it."
+ ],
+ [
+  "Теперь вы",
+  "Your turn"
+ ],
+ [
+  "Подвеска пополнена (обучение)",
+  "Loadout replenished (training)"
+ ],
+ [
+  "простое кольцо прицела - точку падения ракет прикидываете сами",
+  "a simple sight ring: you judge the rocket impact point yourself"
+ ],
+ [
+  "прицел показывает, куда лягут ракеты (с учётом дальности и скорости)",
+  "the sight shows where the rockets will land (accounting for range and speed)"
+ ],
+ [
+  "прицел ещё и отмечает цель под маркой и дальность до неё",
+  "the sight also marks the target under the reticle and its range"
+ ],
+ [
+  "залп можно поручить автомату - он пустит ракеты сам, когда точка падения ляжет на цель",
+  "the salvo can be left to the fire-control system: it fires when the impact point is on the target"
+ ],
+ [
+  "Оружие",
+  "Weapons"
+ ],
+ [
+  "Полёт",
+  "Flight"
+ ],
+ [
+  "Управление («Аркада»)",
+  "Controls (Arcade)"
+ ],
+ [
+  "скорость ступенями, поворот, высота, шаг вбок",
+  "stepped speed, turning, altitude, sidestep"
+ ],
+ [
+  "Вертолёт: «Аркада»",
+  "Helicopter: Arcade"
+ ],
+ [
+  "{0}/{1} (держать) - разгон и торможение; заданная скорость держится сама.",
+  "{0}/{1} (hold): accelerate and brake; the set speed is held automatically."
+ ],
+ [
+  "Ручка слева: вперёд - разгон, назад - торможение; отпустили - скорость держится. Кнопка «газ» листает ступени: висение, 25 / 50 / 75 / 100 %.",
+  "Left stick: forward to accelerate, back to brake; release it and the speed holds. The \"Throttle\" button cycles through hover, 25 / 50 / 75 / 100%."
+ ],
+ [
+  "{0}/{1} - поворот (на скорости - вираж с креном).",
+  "{0}/{1}: turn (banked turn at speed)."
+ ],
+ [
+  "Ручка вбок - поворот (на скорости - вираж с креном).",
+  "Stick sideways: turn (banked turn at speed)."
+ ],
+ [
+  "↑ или {0} - вверх, ↓ или {1} - вниз.",
+  "↑ or {0}: up, ↓ or {1}: down."
+ ],
+ [
+  "▲▼ крестовины - вверх и вниз.",
+  "D-pad ▲▼: up and down."
+ ],
+ [
+  "← / → - шаг вбок: смещение без поворота носа (на висении и малой скорости).",
+  "← / →: sidestep, moving sideways without turning the nose (in a hover and at low speed)."
+ ],
+ [
+  "◀▶ крестовины - шаг вбок без поворота носа.",
+  "D-pad ◀▶: sidestep without turning the nose."
+ ],
+ [
+  "Высота над землёй - в панели слева. Ниже 30-40 м рельеф и лес закрывают вас от РЛС.",
+  "Height above ground is shown in the left panel. Below 30-40 m, terrain and forest hide you from radar."
+ ],
+ [
+  "Разогнаться и забыть о высоте - склон оврага приходит быстро.",
+  "Speeding up and forgetting your altitude: a gully slope comes up fast."
+ ],
+ [
+  "Наводиться одним шагом вбок - он медленный, им только доводят.",
+  "Aiming with sidesteps alone: they're slow, only good for fine adjustments."
+ ],
+ [
+  "Наберите <b>150 км/ч</b> - {0} или кнопкой газа. Сейчас {1} км/ч.",
+  "Speed up to <b>150 km/h</b>: {0} or the throttle button. Now: {1} km/h."
+ ],
+ [
+  "ручку вперёд",
+  "push the stick forward"
+ ],
+ [
+  "Поднимитесь на <b>150 м</b> над землёй - {0}. Сейчас {1} м.",
+  "Climb to <b>150 m</b> above ground: {0}. Now: {1} m."
+ ],
+ [
+  "↑ или {0}",
+  "↑ or {0}"
+ ],
+ [
+  "Теперь вниз, до <b>40 м</b> - {0}: так прячутся от РЛС. Сейчас {1} м.",
+  "Now descend to <b>40 m</b> ({0}): that's how you hide from radar. Now: {1} m."
+ ],
+ [
+  "↓ или {0}",
+  "↓ or {0}"
+ ],
+ [
+  "Сбросьте скорость почти до нуля ({0}, сейчас {1} км/ч) и сделайте <b>шаг вбок</b> - {2}. Нос остаётся на месте.",
+  "Slow down to almost zero ({0}, now {1} km/h) and <b>sidestep</b>: {2}. The nose stays put."
+ ],
+ [
+  "ручку назад",
+  "pull the stick back"
+ ],
+ [
+  "Отлично. Летите к жёлтому ромбу - <b>{0}</b>, {1} км. Держитесь ниже 60 м.",
+  "Good. Fly to the yellow diamond, <b>{0}</b>, {1} km away. Stay below 60 m."
+ ],
+ [
+  "Долетели. Так и воюют вертолёты: низко, от укрытия к укрытию.",
+  "You made it. That's how helicopters fight: low, from cover to cover."
+ ],
+ [
+  "Управление («Реализм»)",
+  "Controls (Realistic)"
+ ],
+ [
+  "ручка, шаг-газ, педали, стабилизация",
+  "cyclic, collective, pedals, stabilization"
+ ],
+ [
+  "Вертолёт: «Реализм»",
+  "Helicopter: Realistic"
+ ],
+ [
+  "{0}/{1} - ручка вперёд и назад: наклон. Наклонились вперёд - разгон, назад - торможение.",
+  "{0}/{1}: cyclic forward and back tilts the helicopter. Tilt forward to accelerate, back to brake."
+ ],
+ [
+  "Ручка слева: вперёд и назад - наклон (разгон и торможение), вбок - крен.",
+  "Left stick: forward and back to tilt (accelerate and brake), sideways to roll."
+ ],
+ [
+  "{0}/{1} - ручка вбок: крен, вертолёт смещается в сторону.",
+  "{0}/{1}: cyclic sideways rolls the helicopter, and it drifts to the side."
+ ],
+ [
+  "Крен уводит вертолёт в сторону.",
+  "Rolling makes the helicopter drift sideways."
+ ],
+ [
+  "↑ или {0} / ↓ или {1} - шаг-газ: больше - вверх, меньше - вниз (кнопка газа показывает шаг в %).",
+  "↑ or {0} / ↓ or {1}: collective, more to climb, less to descend (the throttle button shows collective in %)."
+ ],
+ [
+  "▲▼ - шаг-газ: вверх и вниз (кнопка газа показывает шаг в %).",
+  "▲▼: collective up and down (the throttle button shows collective in %)."
+ ],
+ [
+  "← / → - педали: поворот носа.",
+  "← / →: pedals turn the nose."
+ ],
+ [
+  "◀▶ - педали: поворот носа.",
+  "◀▶: pedals turn the nose."
+ ],
+ [
+  "<b>Стабилизация</b>: отпустите ручку - вертолёт сам плавно выйдет в горизонт и погасит снос на малой скорости.",
+  "<b>Stabilization</b>: release the stick and the helicopter levels out smoothly and damps drift at low speed."
+ ],
+ [
+  "Ручку до упора назад - нос задирается, скорость падает рывком.",
+  "Stick fully back: the nose pitches up and speed drops abruptly."
+ ],
+ [
+  "У земли резко сбросить шаг-газ - просядете и ударитесь.",
+  "Dropping the collective sharply near the ground: you sink and hit it."
+ ],
+ [
+  "<b>Висение.</b> Затормозите - {0}, потом отпустите: стабилизация выровняет вертолёт и погасит снос. Шагом-газом держите высоту 25-160 м и скорость меньше 20 км/ч <b>5 с</b>. Сейчас {1} м, {2} км/ч{3}.",
+  "<b>Hover.</b> Brake ({0}), then release: stabilization levels the helicopter and damps drift. Use the collective to hold 25-160 m and under 20 km/h for <b>5 s</b>. Now: {1} m, {2} km/h{3}."
+ ],
+ [
+  "ручку назад ({0})",
+  "stick back ({0})"
+ ],
+ [
+  " · {0} с",
+  " · {0} s"
+ ],
+ [
+  "Педалями ({0}) поверните нос на жёлтый ромб - <b>{1}</b>.",
+  "Use the pedals ({0}) to point the nose at the yellow diamond: <b>{1}</b>."
+ ],
+ [
+  "Наклоните ручку вперёд ({0}) и разгонитесь до <b>120 км/ч</b>; шагом-газом не дайте просесть. Сейчас {1} км/ч, {2} м.",
+  "Push the stick forward ({0}) and accelerate to <b>120 km/h</b>; use the collective to avoid sinking. Now: {1} km/h, {2} m."
+ ],
+ [
+  "Летите к ромбу, {0} км. Отпустите ручку, когда надо выровняться, - стабилизация поможет.",
+  "Fly to the diamond, {0} km. Release the stick to level out: stabilization helps."
+ ],
+ [
+  "Получилось. В «Реализме» скорость - это наклон, высота - шаг-газ, курс - педали.",
+  "Nice. In Realistic mode, tilt sets speed, collective sets altitude, pedals set heading."
+ ],
+ [
+  "Посадка и пополнение",
+  "Landing and rearming"
+ ],
+ [
+  "сесть на площадку - подвеска, ловушки, топливо",
+  "land on the pad: loadout, countermeasures, fuel"
+ ],
+ [
+  "Вертолёт пополняется <b>посадкой на свою площадку</b> - точку вылета: сядьте ближе 800 м от неё, и через 12 с вернутся подвеска, ловушки и топливо.",
+  "A helicopter rearms by <b>landing on its own pad</b> (the takeoff point): land within 800 m of it, and in 12 s the loadout, countermeasures and fuel are restored."
+ ],
+ [
+  "Садиться - на малой скорости (меньше 30 км/ч) и плавно: снижайтесь медленно, у земли - совсем тихо.",
+  "Land slowly (under 30 km/h) and gently: descend smoothly, and very gently near the ground."
+ ],
+ [
+  "Мягкое касание - посадка, жёсткое - повреждения, очень жёсткое или в воду - авария.",
+  "A soft touchdown is a landing; a hard one causes damage; a very hard one, or one in water, is a crash."
+ ],
+ [
+  "Садиться на скорости - удар и поломка.",
+  "Landing at speed: impact and damage."
+ ],
+ [
+  "Садиться в болото - вода, авария.",
+  "Landing in the swamp: water means a crash."
+ ],
+ [
+  "Подвеска пуста (так задумано). Отлетите от площадки на <b>1 км</b> - {0} км.",
+  "The loadout is empty (on purpose). Fly <b>1 km</b> away from the pad: {0} km."
+ ],
+ [
+  "Возвращайтесь и <b>сядьте</b> на площадку: ближе 800 м ({0} м), скорость меньше 30 км/ч ({1}), плавно вниз ({2} м).",
+  "Come back and <b>land</b> on the pad: within 800 m ({0} m), under 30 km/h ({1}), descend gently ({2} m)."
+ ],
+ [
+  "Сели. Пополнение - 12 с, не взлетайте: {0} с.",
+  "Landed. Rearming takes 12 s; don't take off: {0} s."
+ ],
+ [
+  "Пополнение: подвеска, ловушки и топливо",
+  "Rearm: loadout, countermeasures and fuel"
+ ],
+ [
+  "Подвеска на месте. Взлетайте - {0}.",
+  "Loadout restored. Take off: {0}."
+ ],
+ [
+  "НАР и прицел",
+  "Rockets and sights"
+ ],
+ [
+  "залп неуправляемыми ракетами; прицел у разных вертолётов",
+  "rocket salvos; sights on different helicopters"
+ ],
+ [
+  "Неуправляемые ракеты (НАР)",
+  "Unguided rockets"
+ ],
+ [
+  "Блоки НАР - залпом по площади: склады, техника, позиции. Ракеты летят по прямой и падают с дальностью - целиться надо чуть выше.",
+  "Rocket pods fire salvos at an area: depots, vehicles, positions. Rockets fly straight and drop with range: aim slightly high."
+ ],
+ [
+  "Прицел зависит от поколения вертолёта: у вашего - {0}.",
+  "The sight depends on the helicopter's generation: yours has {0}."
+ ],
+ [
+  "Остальные: UH-1H и Ми-8 - {0}; Ми-24, AH-1W, UH-60 - {1}; Ми-28, AH-64, Ка-50 - {2}; Ка-52 и RAH-66 - {3}.",
+  "The others: UH-1H and Mi-8: {0}; Mi-24, AH-1W, UH-60: {1}; Mi-28, AH-64, Ka-50: {2}; Ka-52 and RAH-66: {3}."
+ ],
+ [
+  "Лучшая дальность - 1,5-3 км: ближе - рискуете попасть под пушки, дальше - разлёт.",
+  "Best range is 1.5-3 km: any closer and you risk the guns, any farther and the rockets scatter."
+ ],
+ [
+  "Подпись у марки подсказывает: «опустите нос», «поднимите нос», зелёное «в зоне - залп» - жмите пуск.",
+  "The label by the pipper tells you: “lower the nose”, “raise the nose”, green “in range: fire” means press fire."
+ ],
+ [
+  "Помогает автоматика: цель впереди - нос сам доворачивает на неё, а на висении доводит и марку; остаётся дать залп.",
+  "The computer helps: with a target ahead the nose turns to it by itself, and in a hover it also brings the pipper onto it, so you only have to fire."
+ ],
+ [
+  "Лучшая дальность - 1,5-3 км: ближе - рискуете попасть под пушки, дальше - разлёт. С высоты 100-200 м ракеты падают круче и ложатся кучнее.",
+  "Best range is 1.5-3 km: closer you risk the guns, farther the rockets scatter. From 100-200 m up the rockets come down steeper and group tighter."
+ ],
+ [
+  "Цель - <b>{0}</b> ({1} км). Выберите НАР ({2}) и сбавьте скорость до висения - нос и марка наведутся сами; «в зоне - залп» - {3}.",
+  "Target: <b>{0}</b> ({1} km). Select rockets ({2}) and slow to a hover: the nose and pipper will aim by themselves; at “in range: fire” press {3}."
+ ],
+ [
+  "Надпись «<b>ВАС ВИДИТ …</b>» - комплекс уже берёт вас. У земли (ниже 60 м) ему нужно примерно на 3 с больше - этого хватает на подскок и пуск, а потом сразу вниз.",
+  "“<b>… SEES YOU</b>” means a system is already locking you. Near the ground (below 60 m) it needs about 3 s longer, enough to pop up and fire, then drop straight back down."
+ ],
+ [
+  "На карте ({0}) у замеченных комплексов закрашена зона поражения - пускайте из-за её края.",
+  "On the map ({0}) the kill zone of every spotted system is shaded: fire from outside its edge."
+ ],
+ [
+  "<b>Вас видит {0}</b> - у вас около 3 с: пуск или вниз, за склон.",
+  "<b>{0} sees you</b>: you have about 3 s. Fire or drop behind the slope."
+ ],
+ [
+  "<b>Подскок одной кнопкой</b> - {0}: вертолёт сам поднимется, пока цель не покажется, захватит её, пустит ПТУР, доведёт и опустится обратно.",
+  "<b>One-button pop-up</b>, {0}: the helicopter climbs until the target shows, locks it, fires the ATGM, guides it in and drops back down."
+ ],
+ [
+  "«Подскок»",
+  "“Pop-up”"
+ ],
+ [
+  "В болоте у целей - сухие <b>гривы</b> высотой 30-45 м: за ними висят на 15-20 м, а на пуск выскакивают.",
+  "In the bog near the targets there are dry <b>ridges</b> 30-45 m high: hover behind them at 15-20 m and pop up to fire."
+ ],
+ [
+  "Комплекс, открывший по вам огонь, появляется на карте с зоной поражения - обходите её.",
+  "Any system that fires at you appears on the map with its kill zone: go around it."
+ ],
+ [
+  "Низкий вертолёт (ниже 60 м) комплекс берёт на сопровождение примерно на 3 с дольше - ставьте пушки и ПЗРК так, чтобы видеть выходы из оврагов заранее.",
+  "A low helicopter (below 60 m) takes a system about 3 s longer to lock: place guns and MANPADS where they can watch the ravine exits in advance."
+ ],
+ [
+  "Пускать с 5 км - ракеты рассыпаются по полю.",
+  "Firing from 5 km: the rockets scatter all over the field."
+ ],
+ [
+  "Пускать в пологом снижении на малой высоте - ракеты уходят в землю перед целью.",
+  "Firing in a shallow dive at low altitude: the rockets hit the ground short of the target."
+ ],
+ [
+  "Ракеты ушли - смотрите, куда легли.",
+  "Rockets away: watch where they land."
+ ],
+ [
+  "Нос на <b>{0}</b> ({1} км). Выберите НАР ({2}), марка прицела - на цель, залп - {3}.",
+  "Nose on <b>{0}</b> ({1} km). Select rockets ({2}), put the sight on the target, fire the salvo: {3}."
+ ],
+ [
+  "тап по строке оружия",
+  "tap the weapon row"
+ ],
+ [
+  "Пробел",
+  "Space"
+ ],
+ [
+  "«Пуск»",
+  "\"Launch\""
+ ],
+ [
+  "Цель накрыта! НАР - по площади, с 1,5-3 км.",
+  "Target hit! Rockets are for area targets, from 1.5-3 km."
+ ],
+ [
+  "ПТУР",
+  "ATGM"
+ ],
+ [
+  "захват, пуск, подсвет до попадания",
+  "lock, fire, lase until impact"
+ ],
+ [
+  "Противотанковая управляемая ракета летит туда, куда смотрит прицел: <b>держите марку на цели до попадания</b>.",
+  "An anti-tank guided missile flies where the sight points: <b>keep the sight on the target until impact</b>."
+ ],
+ [
+  "Захват - {0}, пуск - {1}. Дальность - до {2} км.",
+  "Lock: {0}, fire: {1}. Range: up to {2} km."
+ ],
+ [
+  "«Цель»",
+  "\"Target\""
+ ],
+ [
+  "Пока ракета летит, вертолёт висит носом на цель - это самый опасный момент: выбирайте позицию за укрытием, чтобы подняться только на пуск.",
+  "While the missile flies, the helicopter hangs nose-on to the target. This is the most dangerous moment: pick a spot behind cover and rise only to fire."
+ ],
+ [
+  "Отвернуть сразу после пуска - ракета теряет цель.",
+  "Turning away right after launch: the missile loses the target."
+ ],
+ [
+  "Пускать с открытого места, когда рядом ЗРК, - за время полёта ракеты вас успеют сбить.",
+  "Firing from open ground with a SAM nearby: you'll be shot down before the missile arrives."
+ ],
+ [
+  "<b>Ракета летит - держите марку на цели</b>, не отворачивайте.",
+  "<b>Missile in flight: keep the sight on the target</b>, don't turn away."
+ ],
+ [
+  "Цель - <b>{0}</b>, {1} км. Выберите ПТУР ({2}), подойдите на дальность пуска, захват и пуск.",
+  "Target: <b>{0}</b>, {1} km. Select the ATGM ({2}), get within launch range, lock and fire."
+ ],
+ [
+  "строка оружия",
+  "weapon row"
+ ],
+ [
+  "Попадание! ПТУР ведёте до конца - потом уходите.",
+  "Hit! Guide the ATGM all the way, then get out."
+ ],
+ [
+  "Выживание",
+  "Survival"
+ ],
+ [
+  "Укрытия и подскок",
+  "Cover and pop-up"
+ ],
+ [
+  "подойти оврагом, подскочить, пустить, уйти вниз",
+  "approach along a gully, pop up, fire, drop back down"
+ ],
+ [
+  "Вертолёт живёт, пока его не видно. Склоны оврагов, лес и холмы закрывают от РЛС и прицелов - держитесь <b>ниже 30 м</b> за рельефом.",
+  "A helicopter survives as long as it isn't seen. Gully slopes, forest and hills hide you from radar and sights: stay <b>below 30 m</b> behind terrain."
+ ],
+ [
+  "<b>Подскок</b>: подошли за укрытием на дальность пуска - поднялись, пока цель не покажется, пустили и сразу вниз.",
+  "<b>Pop-up</b>: reach launch range behind cover, rise until the target appears, fire and drop straight back down."
+ ],
+ [
+  "На СПО видно, кто вас облучает: метка «сопровождение» - пора вниз, за склон.",
+  "The RWR shows who's illuminating you: a \"tracking\" mark means it's time to drop behind the slope."
+ ],
+ [
+  "Висеть над склоном после пуска - ЗРК успевает взять вас.",
+  "Hovering above the slope after firing: the SAM has time to get you."
+ ],
+ [
+  "Лететь к цели по прямой над открытым полем.",
+  "Flying straight to the target across an open field."
+ ],
+ [
+  "Ракета летит - держите марку, а потом сразу вниз.",
+  "Missile in flight: keep the sight on target, then drop down at once."
+ ],
+ [
+  "<b>Вас сопровождает {0}</b> - ниже, за склон!",
+  "<b>{0} is tracking you</b>: get lower, behind the slope!"
+ ],
+ [
+  "Цель - рембаза на дне оврага ({0} км), рядом ЗРК. Подходите низко (ниже 30 м), на 3-5 км подскочите, пустите ПТУР и уйдите вниз.",
+  "The target is a repair base at the bottom of a gully ({0} km), with a SAM next to it. Approach low (below 30 m), pop up at 3-5 km, fire the ATGM and drop back down."
+ ],
+ [
+  "Цель уничтожена из-за укрытия. Так и надо: подскок - пуск - вниз.",
+  "Target destroyed from cover. That's the way: pop up, fire, drop down."
+ ],
+ [
+  "Защита: ловушки и манёвр",
+  "Defense: countermeasures and maneuvers"
+ ],
+ [
+  "датчик пуска, залп ЛТЦ, бросок вниз за рельеф",
+  "missile warning, flare salvo, dive behind terrain"
+ ],
+ [
+  "Защита вертолёта",
+  "Helicopter defense"
+ ],
+ [
+  "<b>Датчик пуска</b> предупреждает о любой ракете - и тепловой, и радиолокационной.",
+  "<b>The missile warning</b> alerts you to any missile, infrared or radar-guided."
+ ],
+ [
+  "<b>Ловушки</b> - {0}: залп ЛТЦ уводит тепловые ракеты ПЗРК, диполи - радиолокационные. Двигатели вертолёта с экранами выхлопа - тепловой ГСН и так труднее.",
+  "<b>Countermeasures</b> ({0}): a flare salvo decoys infrared MANPADS missiles, chaff decoys radar-guided ones. Helicopter engines with exhaust suppressors are already harder for infrared seekers."
+ ],
+ [
+  "«Ловушки»",
+  "\"Countermeasures\""
+ ],
+ [
+  "<b>Бросок вниз</b> за склон или лес - лучшее, что может вертолёт: ракете нужно видеть цель.",
+  "<b>Diving</b> behind a slope or forest is the best thing a helicopter can do: the missile needs to see its target."
+ ],
+ [
+  "Ловушки поздно - сбрасывайте сразу по сигналу пуска.",
+  "Countermeasures too late: pop them the moment the launch warning sounds."
+ ],
+ [
+  "Уходить вверх - там вас видно всем.",
+  "Climbing away: up there everyone can see you."
+ ],
+ [
+  "<b>Две ракеты мимо!</b> Датчик пуска - ловушки сразу - вниз за рельеф.",
+  "<b>Two missiles missed!</b> Missile warning, countermeasures at once, down behind terrain."
+ ],
+ [
+  "<b>Пуск!</b> Ловушки - {0} - и вниз, за склон или лес.",
+  "<b>Launch!</b> Countermeasures ({0}) and down, behind a slope or forest."
+ ],
+ [
+  "Летите к гарнизону «Пугало»: вокруг ПЗРК и ЗРК. Уклонитесь от двух ракет ({0}/2). Вертолёт неуязвим.",
+  "Fly to Garrison \"Scarecrow\": MANPADS and SAMs all around. Evade two missiles ({0}/2). The helicopter is invulnerable."
+ ],
+ [
+  "Контрольный вылет",
+  "Final test sortie"
+ ],
+ [
+  "две цели под огнём ПВО - всё вместе",
+  "two targets under air defense fire: everything together"
+ ],
+ [
+  "Две цели: гарнизон «Пугало» и склад «Фонарь Джека». Вокруг - пушки, ПЗРК и ЗРК.",
+  "Two targets: Garrison \"Scarecrow\" and Depot \"Jack-o'-Lantern\". Guns, MANPADS and SAMs all around."
+ ],
+ [
+  "Всё вместе: низко за рельефом, подскок, ПТУР и НАР, ловушки по датчику пуска, пополнение посадкой на своей площадке.",
+  "Everything together: low behind terrain, pop-ups, ATGMs and rockets, countermeasures on missile warning, rearming by landing on your own pad."
+ ],
+ [
+  "Лететь прямо через поле к цели.",
+  "Flying straight across the field to the target."
+ ],
+ [
+  "Забыть о топливе и подвеске - площадка далеко.",
+  "Forgetting about fuel and loadout: the pad is far away."
+ ],
+ [
+  "<b>Обе цели уничтожены!</b> Вы прошли вертолётную ветку.",
+  "<b>Both targets destroyed!</b> You've completed the helicopter course."
+ ],
+ [
+  "Цели: {0} · {1}. Низко, подскок, ловушки по датчику пуска.",
+  "Targets: {0} · {1}. Stay low, pop up, countermeasures on missile warning."
+ ],
+ [
+  "<b>{0}</b> {1} км",
+  "<b>{0}</b> {1} km"
+ ],
+ [
+  "За ПВО",
+  "As air defense"
+ ],
+ [
+  "Оборона от вертолётов",
+  "Anti-helicopter defense"
+ ],
+ [
+  "низкие цели в оврагах: пушки и ПЗРК, подскок перед пуском",
+  "low targets in gullies: guns and MANPADS, the pop-up before firing"
+ ],
+ [
+  "Вертолёты противника",
+  "Enemy helicopters"
+ ],
+ [
+  "Вертолёты идут низко, по оврагам и за лесом, и поднимаются только на пуск (подскок) - РЛС дальних комплексов их почти не видят.",
+  "Helicopters fly low, along gullies and behind forest, and rise only to fire (pop-up): long-range radars barely see them."
+ ],
+ [
+  "Против них - <b>пушки</b> ({0}) и <b>ПЗРК</b> ({1}) у объектов: ловите момент подскока.",
+  "Counter them with <b>guns</b> ({0}) and <b>MANPADS</b> ({1}) near facilities: catch the pop-up."
+ ],
+ [
+  "Вертолёт висит, пока ведёт ПТУР, - это лучший момент для очереди или пуска.",
+  "A helicopter hovers while guiding an ATGM: the best moment for a burst or a missile."
+ ],
+ [
+  "Ставить ЗРК далеко от объектов - вертолёт выйдет из оврага уже рядом с целью.",
+  "Placing SAMs far from facilities: the helicopter pops out of the gully right next to its target."
+ ],
+ [
+  "Ждать, пока вертолёт подлетит, - он стреляет с 4-6 км.",
+  "Waiting for the helicopter to come close: it fires from 4-6 km."
+ ],
+ [
+  "<b>Два вертолёта сбиты!</b> Пушки и ПЗРК у объектов - лучшая защита от вертолётов.",
+  "<b>Two helicopters shot down!</b> Guns and MANPADS near facilities are the best defense against helicopters."
+ ],
+ [
+  "Вертолёты идут к гарнизону «Пугало» низко, по оврагу. Садитесь за пульт пушки или ПЗРК (коснитесь комплекса) и ловите подскок. Сбито: {0}/2.",
+  "The helicopters are heading for Garrison \"Scarecrow\", low along the gully. Take the console of a gun or MANPADS (tap the site) and catch the pop-up. Shot down: {0}/2."
+ ],
+ [
+  "Основы",
+  "Basics"
+ ],
+ [
+  "Управление",
+  "Controls"
+ ],
+ [
+  "наведение камерой, крен и тангаж, газ и форсаж, высота",
+  "camera steering, roll and pitch, throttle and afterburner, altitude"
+ ],
+ [
+  "Ручка - стрелки или {0}/{1} и ↑/↓: крен и тангаж. Самолёт поворачивает креном - накрените и потяните на себя.",
+  "Stick: arrow keys or {0}/{1} and ↑/↓ for roll and pitch. The aircraft turns by banking: roll, then pull back."
+ ],
+ [
+  "<b>Наведение камерой</b>: ведите пальцем по экрану - самолёт сам летит туда, куда смотрит камера (белый кружок). Это основной способ на телефоне.",
+  "<b>Camera steering</b>: drag across the screen and the aircraft flies where the camera looks (white circle). This is the main way to fly on a phone."
+ ],
+ [
+  "Левая половина экрана - ручка: от себя - нос вниз, на себя - вверх, в стороны - крен.",
+  "The left half of the screen is the stick: push for nose down, pull for nose up, sideways to roll."
+ ],
+ [
+  "Крестовина слева - точные крен и тангаж{0}: пока работает, камера идёт за носом.",
+  "D-pad on the left: precise roll and pitch{0}; while you use it, the camera follows the nose."
+ ],
+ [
+  "слева",
+  "on the left"
+ ],
+ [
+  " (по осям, в настройках: «по удержанию» - пока палец на кнопке, «по нажатию» - нажали: рули отклонены, нажали ещё раз: отпущены)",
+  " (per axis, in Settings: \"hold\" - while your finger is on the button, \"tap\" - press to deflect the controls, press again to release)"
+ ],
+ [
+  "Газ ступенями (их выбирают в настройках, по умолчанию 40-60-80-100 %), <b>форсаж</b> - последняя ступень, если он есть у самолёта ({0}). На форсаже топливо уходит втрое быстрее, а сопло горячее вдвое - тепловым ракетам легче.",
+  "Throttle in steps (you choose them in Settings, 40-60-80-100% by default); <b>afterburner</b> is the last step if the aircraft has one ({0}). Afterburner burns fuel three times faster and doubles nozzle heat, making you easier for infrared missiles."
+ ],
+ [
+  "{0}/{1}, {2} - сразу",
+  "{0}/{1}, {2} for instant"
+ ],
+ [
+  "кнопка «Газ»",
+  "the \"Throttle\" button"
+ ],
+ [
+  "Высота над землёй - в панели слева вверху. Ниже ~100 м многие РЛС вас не видят, но дома и земля ближе.",
+  "Height above ground is in the top-left panel. Below ~100 m many radars can't see you, but buildings and the ground are closer."
+ ],
+ [
+  "Кнопки сверху - значки: пауза, звук, «?» - этот урок. Мышью тяните по экрану в обзоре (L).",
+  "The top buttons are icons: pause, sound, \"?\" (this lesson). With a mouse, drag across the screen in look mode (L)."
+ ],
+ [
+  "Кнопки - значки: «Пуск», «Ловушки», «Цель», «Газ». Редкие - «Карта», «Авто», «Обзор» (осмотреться, самолёт держит курс) и «Бинокль» - под кнопкой «⋯»: нажмите её, ряд откроется справа вверху. Все значки - в руководстве, глава «Значки кнопок».",
+  "The buttons are icons: \"Launch\", \"Countermeasures\", \"Target\", \"Throttle\". The rare ones - \"Map\", \"Auto\", \"View\" (look around while the aircraft holds course) and \"Binoculars\" - are under the \"⋯\" button: tap it and a row opens at the top right. All icons are in the manual, chapter \"Button icons\"."
+ ],
+ [
+  "Резкий тангаж на малой высоте - задели крышу высотки.",
+  "Pulling up sharply at low altitude: you clip a high-rise roof."
+ ],
+ [
+  "Весь полёт на форсаже - топливо кончится за пару минут.",
+  "Flying the whole sortie on afterburner: fuel runs out in a couple of minutes."
+ ],
+ [
+  "Это ваш ударный самолёт. {0}",
+  "This is your strike aircraft. {0}"
+ ],
+ [
+  "Тангаж и крен - стрелки (или {0}/{1}), газ - {2}/{3} по ступеням из настроек, форсаж - последняя ступень ({4} - сразу).",
+  "Pitch and roll: arrow keys (or {0}/{1}); throttle: {2}/{3} through the steps from Settings, afterburner is the last step ({4} for instant)."
+ ],
+ [
+  "Ведите пальцем по экрану - камера поворачивается, самолёт сам летит туда, куда она смотрит (белый кружок).{0} {1}",
+  "Drag across the screen to turn the camera; the aircraft flies where it looks (white circle).{0} {1}"
+ ],
+ [
+  "Левая половина экрана - ручка: от себя - нос вниз, на себя - вверх, в стороны - крен. {0}",
+  "The left half of the screen is the stick: push for nose down, pull for nose up, sideways to roll. {0}"
+ ],
+ [
+  "Наберите высоту <b>2500 м</b>: нос вверх, при нужде - форсаж. Сейчас {0} м.",
+  "Climb to <b>2500 m</b>: nose up, afterburner if needed. Now: {0} m."
+ ],
+ [
+  "Теперь снизьтесь до <b>300 м</b> над городом - так ПВО видит вас хуже, но осторожно с высотками. Сейчас {0} м.",
+  "Now descend to <b>300 m</b> over the city: air defense sees you less well, but watch out for high-rises. Now: {0} m."
+ ],
+ [
+  "Отлично. Карта - {0}. Над городом каждый дом закрывает вас от РЛС.",
+  "Good. Map: {0}. Over the city, every building hides you from radar."
+ ],
+ [
+  "{0}, камера - {1}",
+  "{0}, camera: {1}"
+ ],
+ [
+  "«Карта»",
+  "\"Map\""
+ ],
+ [
+  "HUD, СПО и карта",
+  "HUD, RWR and map"
+ ],
+ [
+  "панель слева, круг СПО, метки, карта",
+  "left panel, RWR circle, marks, map"
+ ],
+ [
+  "Что на экране",
+  "What's on the screen"
+ ],
+ [
+  "<b>Панель слева вверху</b>: скорость, высота над землёй, топливо (Ф - форсаж); строка оружия (тап - выбор); состояние прицела; цель контейнера и «ТВ»; ловушки, цели задания, повреждения.",
+  "<b>Top-left panel</b>: speed, height above ground, fuel (AB = afterburner); weapon row (tap to select); sight status; pod target and \"TV\"; countermeasures, mission targets, damage."
+ ],
+ [
+  "<b>Жёлтые ромбы</b> - цели задания с дальностью в км, <b>красные треугольники</b> - замеченные комплексы ПВО (в «Аркаде» - все излучающие).",
+  "<b>Yellow diamonds</b> are mission targets with range in km; <b>red triangles</b> are spotted air defense sites (in Arcade, every emitting one)."
+ ],
+ [
+  "<b>Круг СПО</b> - откуда вас облучают РЛС (см. урок «Защита»). Тепловые ПЗРК и пушки с оптикой на нём не видны.",
+  "<b>The RWR circle</b> shows where radars are illuminating you from (see the \"Defense\" lesson). Infrared MANPADS and optically aimed guns don't show on it."
+ ],
+ [
+  "<b>Карта</b> ({0}) - весь район: цели, известные ПВО и их зоны.",
+  "<b>The map</b> ({0}) shows the whole area: targets, known air defenses and their zones."
+ ],
+ [
+  "Смотреть только вперёд: угрозы сбоку и сзади видны лишь на СПО.",
+  "Looking only ahead: threats to the side and rear show only on the RWR."
+ ],
+ [
+  "Принимать отсутствие меток за отсутствие ПВО - молчащие комплексы не видны, пока не начнут стрелять.",
+  "Assuming no marks means no air defense: silent sites stay hidden until they open fire."
+ ],
+ [
+  "Панель слева вверху: скорость, высота, топливо, оружие, цель контейнера, ловушки. Жёлтый ромб впереди - <b>цель задания</b> «Командный пункт». Летите к нему.",
+  "Top-left panel: speed, altitude, fuel, weapons, pod target, countermeasures. The yellow diamond ahead is the <b>mission target</b>, Command Post. Fly to it."
+ ],
+ [
+  "Впереди «{0}». Когда её РЛС вас увидит, на <b>СПО</b> ({1}) появится зелёная метка «{2}» - это обзор.{3}",
+  "{0} ahead. When its radar sees you, a green \"{2}\" mark appears on the <b>RWR</b> ({1}): that's search mode.{3}"
+ ],
+ [
+  "круг справа внизу",
+  "circle at the bottom right"
+ ],
+ [
+  "круг вверху",
+  "circle at the top"
+ ],
+ [
+  " <b>Есть!</b>",
+  " <b>There it is!</b>"
+ ],
+ [
+  "<b>Красная метка в кружке</b> - «{0}» {1} вас на сопровождение и может стрелять. Самолёт в уроке неуязвим.",
+  "<b>A red mark in a ring</b>: {0} {1} you and may fire. In the lesson the aircraft is invulnerable."
+ ],
+ [
+  "взяла",
+  "is tracking"
+ ],
+ [
+  "взял",
+  "is tracking"
+ ],
+ [
+  "Подлетайте ближе: метка станет красной в кружке - это сопровождение.",
+  "Get closer: the mark turns red inside a ring, which means tracking."
+ ],
+ [
+  "Откройте <b>карту</b> - {0}: цели, ПВО и их зоны.",
+  "Open the <b>map</b> ({0}): targets, air defenses and their zones."
+ ],
+ [
+  "На карте видно весь район. Закройте её той же кнопкой.",
+  "The map shows the whole area. Close it with the same button."
+ ],
+ [
+  "Топливо и пополнение",
+  "Fuel and rearming"
+ ],
+ [
+  "расход, форсаж, пополнение подвески в «Аркаде» и «Реализме»",
+  "consumption, afterburner, rearming in Arcade and Realistic"
+ ],
+ [
+  "Топливо - в панели (⛽). Расход растёт с газом, на <b>форсаже - втрое</b>. Кончилось - двигатель встаёт, самолёт планирует.",
+  "Fuel is shown in the panel (⛽). Consumption rises with throttle and <b>triples on afterburner</b>. Run dry and the engine quits; the aircraft glides."
+ ],
+ [
+  "<b>«Аркада»</b>: опустевший пилон пополняется сам - по одной бомбе или ракете, тяжёлое дольше (20-60 с). Таймер - значок ↻ в строке оружия.",
+  "<b>Arcade</b>: an empty pylon rearms by itself, one bomb or missile at a time; heavy ones take longer (20-60 s). The timer is the ↻ icon in the weapon row."
+ ],
+ [
+  "<b>«Реализм»</b>: пополнение только у точки вылета - зелёная метка «Пополнение»: подлетите ближе 2,5 км, снизьтесь ниже 1500 м и продержитесь 12 с - вернутся подвеска, ловушки и топливо.",
+  "<b>Realistic</b>: rearm only at the takeoff point, the green \"Rearm\" mark: get within 2.5 km, descend below 1500 m and stay for 12 s to restore loadout, countermeasures and fuel."
+ ],
+ [
+  "В онлайне - новый вылет за очки.",
+  "Online: a new sortie costs points."
+ ],
+ [
+  "Тратить всё в первом заходе, а потом лететь домой через всю ПВО.",
+  "Spending everything on the first pass, then flying home through all the air defenses."
+ ],
+ [
+  "Форсаж «на всякий случай» - на нём топливо уходит втрое быстрее: больше половины бака за минуту.",
+  "Afterburner \"just in case\": it burns fuel three times faster, over half a tank per minute."
+ ],
+ [
+  "Сбросьте обе бомбы куда угодно - {0}.",
+  "Drop both bombs anywhere: {0}."
+ ],
+ [
+  "Пилон пуст - смотрите в строку оружия: <b>↻ {0} с</b> до следующей бомбы (так в «Аркаде»). В «Реализме» за ней пришлось бы лететь к точке вылета.",
+  "The pylon is empty. Check the weapon row: <b>↻ {0} s</b> until the next bomb (that's Arcade). In Realistic you'd have to fly back to the takeoff point for it."
+ ],
+ [
+  "Бомба вернулась на пилон.",
+  "The bomb is back on the pylon."
+ ],
+ [
+  "<b>Пополнено.</b> Включите форсаж ({0}) и посмотрите, как быстрее тает топливо ⛽.",
+  "<b>Rearmed.</b> Turn on the afterburner ({0}) and watch the fuel ⛽ drain faster."
+ ],
+ [
+  "«Газ» до «Форсаж»",
+  "\"Throttle\" up to afterburner"
+ ],
+ [
+  "Системы",
+  "Systems"
+ ],
+ [
+  "Контейнер и окно ТВ",
+  "Pod and TV window"
+ ],
+ [
+  "автозахват, дальность и высота, окно, увеличение",
+  "auto-lock, range and altitude, window, zoom"
+ ],
+ [
+  "Прицельный контейнер",
+  "Targeting pod"
+ ],
+ [
+  "Контейнер <b>сам ищет</b> цель: сначала цели задания, потом замеченные комплексы. Захват - через ~1 с, если до цели <b>1-18 км</b>, вы <b>не ниже 400 м</b> и цель не закрыта домами.",
+  "The pod <b>finds targets by itself</b>: mission targets first, then spotted sites. It locks in ~1 s if the target is <b>1-18 km</b> away, you're <b>above 400 m</b> and buildings don't block it."
+ ],
+ [
+  "Что мешает - пишется в строке «◎» («низко - выше 400 м», «далеко», «закрыто»). {0} - следующая цель.",
+  "What's preventing a lock is shown in the \"◎\" row (\"too low\", \"too far\", \"blocked by buildings\"). {0}: next target."
+ ],
+ [
+  "<b>Окно ТВ</b> - {0}: картинка контейнера; тап по окну - увеличение. Ночью - тепловизор.",
+  "<b>TV window</b> ({0}): the pod's view; tap the window to zoom. At night it's thermal."
+ ]
+]

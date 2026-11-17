@@ -1,0 +1,1074 @@
+[
+ [
+  "«ТВ» в панели",
+  "\"TV\" in the panel"
+ ],
+ [
+  "Нужен лазерным и ТВ-бомбам и ракетам; спутниковым даёт точные координаты. Корпус самолёта может закрыть точку («Маскировка») - не отворачивайте круто.",
+  "Required for laser and TV bombs and missiles; gives satellite-guided ones precise coordinates. The airframe can mask the spot (\"Masked\"): don't turn away hard."
+ ],
+ [
+  "Заходить на 200-300 м - контейнер не захватит.",
+  "Coming in at 200-300 m: the pod won't lock."
+ ],
+ [
+  "Ждать захват из-за высотки - нужна прямая видимость.",
+  "Waiting for a lock behind a high-rise: you need a clear line of sight."
+ ],
+ [
+  "Строка «◎» в панели - цель контейнера. Ждём <b>Захват</b> ({0}).",
+  "The \"◎\" row in the panel is the pod target. Wait for <b>Lock</b> ({0})."
+ ],
+ [
+  "захват…",
+  "locking…"
+ ],
+ [
+  "Захват есть. Откройте <b>окно ТВ</b> - {0}.",
+  "Locked. Open the <b>TV window</b>: {0}."
+ ],
+ [
+  "«ТВ» в панели оружия",
+  "\"TV\" in the weapon panel"
+ ],
+ [
+  "Это картинка контейнера. {0} - <b>увеличение</b>. Затем смените цель - {1}.",
+  "This is the pod's view. {0}: <b>zoom</b>. Then switch targets: {1}."
+ ],
+ [
+  "Колесо мыши или клик по окну",
+  "Mouse wheel or click the window"
+ ],
+ [
+  "Тап по окну",
+  "Tap the window"
+ ],
+ [
+  "Контейнер перешёл на другую цель. Готово - дальше лазерные и ТВ-бомбы используют этот захват.",
+  "The pod switched to another target. Done: laser and TV bombs will use this lock."
+ ],
+ [
+  "Защита: ловушки, диполи, манёвр",
+  "Defense: flares, chaff, maneuvers"
+ ],
+ [
+  "СПО, датчик пуска, ЛТЦ и диполи, «траверз», дома",
+  "RWR, missile warning, flares and chaff, beaming, buildings"
+ ],
+ [
+  "Защита от ЗУР",
+  "Defending against SAMs"
+ ],
+ [
+  "<b>СПО</b> (круг {0}) показывает РЛС, которые вас облучают: зелёная метка - обзор, красная в кружке - сопровождение, мигает в центре - пуск.",
+  "<b>The RWR</b> (circle {0}) shows radars illuminating you: green mark = search, red in a ring = tracking, flashing in the center = launch."
+ ],
+ [
+  "справа внизу",
+  "at the bottom right"
+ ],
+ [
+  "вверху",
+  "at the top"
+ ],
+ [
+  "<b>Датчик пуска</b> («ПУСК РАКЕТЫ», красная точка на краю круга) видит любую ракету, в том числе тепловую, которой на СПО нет.",
+  "<b>The missile warning</b> (\"MISSILE LAUNCH\", a red dot on the edge of the circle) detects any missile, including infrared ones that don't show on the RWR."
+ ],
+ [
+  "<b>Ловушки</b> ({0}) - ЛТЦ и диполи разом. ЛТЦ уводят тепловые ракеты, диполи - радиолокационные (у доплеровских РЛС - только вместе с «траверзом»).",
+  "<b>Countermeasures</b> ({0}): flares and chaff together. Flares decoy infrared missiles, chaff decoys radar-guided ones (against Doppler radars, only while beaming)."
+ ],
+ [
+  "За одно нажатие - <b>залп</b> из своих блоков машины: у истребителей 2 ЛТЦ, у штурмовиков 4, у тяжёлых бомбардировщиков 6-8 - чем больше залп, тем вернее уводит. У машин 1950-60-х (МиГ-17, МиГ-19, МиГ-21, Су-7, Ил-28, Ту-16, М-4, Hunter, F-100, Draken, Vulcan) ЛТЦ нет - только диполи: от тепловых ракет спасают манёвр, дома и малая высота.",
+  "One press fires a <b>salvo</b> from the aircraft's dispensers: 2 flares on fighters, 4 on attack aircraft, 6-8 on heavy bombers; the bigger the salvo, the better it decoys. 1950s-60s aircraft (MiG-17, MiG-19, MiG-21, Su-7, Il-28, Tu-16, M-4, Hunter, F-100, Draken, Vulcan) have no flares, only chaff: against infrared missiles, rely on maneuvers, buildings and low altitude."
+ ],
+ [
+  "<b>«Траверз»</b> - поставить станцию на 3 или 9 часов: для доплеровской РЛС вы почти неподвижны и пропадаете. <b>Дома и малая высота</b> рвут сопровождение у всех.",
+  "<b>Beaming</b>: put the radar at your 3 or 9 o'clock; to a Doppler radar you're almost stationary and vanish. <b>Buildings and low altitude</b> break any radar's track."
+ ],
+ [
+  "Командным и полуактивным ракетам РЛС нужна до попадания: сорвали сопровождение больше чем на ~2,5 с - ракета теряет вас.",
+  "Command-guided and semi-active missiles need the radar until impact: break the track for more than ~2.5 s and the missile loses you."
+ ],
+ [
+  "Ловушки по одной и поздно - сбрасывайте пачкой сразу по сигналу пуска.",
+  "Countermeasures one at a time and too late: pop several at once on the launch warning."
+ ],
+ [
+  "Отворот слишком рано: ракета успевает довернуть. Резко - за 2-3 км.",
+  "Turning too early: the missile has time to correct. Turn hard at 2-3 km."
+ ],
+ [
+  "Форсаж рядом с ПЗРК.",
+  "Using afterburner near MANPADS."
+ ],
+ [
+  "<b>Три ракеты мимо!</b> СПО предупреждает о радиолокационных, датчик пуска - о любых; ловушки, диполи, «траверз» и дома спасают.",
+  "<b>Three missiles missed!</b> The RWR warns of radar-guided missiles, the missile warning of any; flares, chaff, beaming and buildings save you."
+ ],
+ [
+  "<b>Датчик пуска!</b> Тепловая ракета - на СПО её нет. Ловушки - {0} пачкой, резкий отворот.",
+  "<b>Missile warning!</b> An infrared missile, not on the RWR. Countermeasures ({0}), several at once, and turn hard."
+ ],
+ [
+  "<b>Пуск {0}!</b> Ловушки - {1}, поставьте станцию на 3 или 9 часов, снижайтесь за дома.",
+  "<b>{0} launch!</b> Countermeasures ({1}), put the radar at 3 or 9 o'clock, descend behind buildings."
+ ],
+ [
+  "Вас <b>захватил {0}</b> (кружок на СПО). Уйдите за здания или снизьтесь - сорвёте сопровождение.",
+  "<b>{0} has locked you</b> (ring on the RWR). Get behind buildings or descend to break the track."
+ ],
+ [
+  "Летите к складу боеприпасов над городом: вокруг него ПВО. Уклонитесь от трёх ракет ({0}/3). Самолёт неуязвим.",
+  "Fly to the ammo depot over the city; it's ringed by air defenses. Evade three missiles ({0}/3). The aircraft is invulnerable."
+ ],
+ [
+  "Свободнопадающие бомбы",
+  "Unguided bombs"
+ ],
+ [
+  "ФАБ-500 / Mk 82: точка падения (CCIP)",
+  "FAB-500 / Mk 82: impact point (CCIP)"
+ ],
+ [
+  "Прицел - <b>зелёный кружок</b>: куда упадёт бомба, если сбросить сейчас (CCIP). Выведите его на цель и сбрасывайте.",
+  "The sight is a <b>green circle</b>: where the bomb lands if released now (CCIP). Put it on the target and release."
+ ],
+ [
+  "Радиус поражения {0} - около {1} м: промах на 30-40 м уже не страшен, на 100 м - мимо.",
+  "The {0}'s blast radius is about {1} m: 30-40 m off is still fine, 100 m off is a miss."
+ ],
+ [
+  "Чем ниже и медленнее - тем точнее, но низко и близко к цели работают пушки и ПЗРК.",
+  "The lower and slower, the more accurate, but low and close to the target you're in range of guns and MANPADS."
+ ],
+ [
+  "Бомба летит долго: с 1000 м - около 15 с до земли.",
+  "A bomb takes a while to fall: about 15 s from 1000 m."
+ ],
+ [
+  "Сброс, когда кружок только подходит к цели, - бомба ляжет с недолётом.",
+  "Releasing as the circle is only approaching the target: the bomb falls short."
+ ],
+ [
+  "Крен в момент сброса - кружок «гуляет», бомба уходит вбок.",
+  "Banking at release: the circle drifts and the bomb goes wide."
+ ],
+ [
+  "Автопилот ведёт самолёт на цель на 900 м - следите за зелёным кружком: он ползёт к ромбу, и как только накроет его - сброс.",
+  "The autopilot flies to the target at 900 m. Watch the green circle creep toward the diamond; the moment it covers it, release."
+ ],
+ [
+  "Цель - «{0}». Ведите самолёт так, чтобы <b>зелёный кружок</b> наехал на ромб, и сбрасывайте - {1}.",
+  "Target: {0}. Fly so the <b>green circle</b> slides onto the diamond, and release: {1}."
+ ],
+ [
+  "Цель поражена! Свободнопадающая бомба - только прицел и ваш заход.",
+  "Target hit! With an unguided bomb, it's all down to the sight and your run."
+ ],
+ [
+  "Лазерные бомбы",
+  "Laser-guided bombs"
+ ],
+ [
+  "КАБ-500Л / GBU-12: захват, «В зоне», подсвет до попадания",
+  "KAB-500L / GBU-12: lock, \"In range\", lase until impact"
+ ],
+ [
+  "Контейнер захватывает цель и <b>подсвечивает её лазером</b>, бомба летит на пятно.",
+  "The pod locks the target and <b>lases it</b>; the bomb homes on the spot."
+ ],
+ [
+  "Сброс - когда в панели «<b>В зоне</b>»: бомба долетит до точки. Дальность {0} в игре - до {1} км.",
+  "Release when the panel shows \"<b>In range</b>\": the bomb can reach the point. In-game {0} range: up to {1} km."
+ ],
+ [
+  "После сброса <b>держите подсвет</b> до попадания: лазер ● горит, пока контейнер видит точку.",
+  "After release, <b>keep lasing</b> until impact: laser ● stays lit while the pod sees the spot."
+ ],
+ [
+  "Работает ночью и в дымке; облака и дым между контейнером и целью мешают.",
+  "Works at night and in haze; clouds and smoke between pod and target interfere."
+ ],
+ [
+  "Резкий отворот после сброса - точку закрывает корпус («Маскировка»), бомба падает мимо.",
+  "Turning hard after release: the airframe masks the spot (\"Masked\") and the bomb misses."
+ ],
+ [
+  "Сброс вне зоны - бомба не долетит.",
+  "Releasing out of range: the bomb falls short."
+ ],
+ [
+  "Подход ниже 400 м - нет захвата.",
+  "Approaching below 400 m: no lock."
+ ],
+ [
+  "Автопилот идёт на «Узел связи» на 2 км. Контейнер {0} - сброс будет, когда бомба долетит до точки.",
+  "The autopilot heads for the Comms Hub at 2 km. The pod {0}; the bomb is released once it can reach the point."
+ ],
+ [
+  "<b>захватил</b> цель",
+  "<b>has locked</b> the target"
+ ],
+ [
+  "ищет цель",
+  "is searching for a target"
+ ],
+ [
+  "Захват «{0}» есть. Летите к цели, при «<b>В зоне</b>» - сброс ({1}), потом держите подсвет - не отворачивайте круто.",
+  "Locked on {0}. Fly to the target, release at \"<b>In range</b>\" ({1}), then keep lasing: don't turn away hard."
+ ],
+ [
+  "Ждём захват контейнером: {0}.",
+  "Waiting for pod lock: {0}."
+ ],
+ [
+  "Цель поражена! Бомба шла на лазерное пятно, пока вы его держали.",
+  "Target hit! The bomb followed the laser spot as long as you held it."
+ ],
+ [
+  "ТВ-бомбы",
+  "TV-guided bombs"
+ ],
+ [
+  "КАБ-500Кр: захват до сброса - «сбросил и забыл»",
+  "KAB-500Kr: lock before release, fire-and-forget"
+ ],
+ [
+  "ТВ-головка бомбы <b>запоминает картинку</b> цели из контейнера: захват нужен <b>до сброса</b>.",
+  "The bomb's TV seeker <b>memorizes the target image</b> from the pod: you need a lock <b>before release</b>."
+ ],
+ [
+  "После сброса бомба наводится сама - можно сразу уходить. Дальность {0} в игре - до {1} км.",
+  "After release the bomb guides itself, so you can leave at once. In-game {0} range: up to {1} km."
+ ],
+ [
+  "Ночью не видит - только днём и в сумерках.",
+  "Blind at night: day and dusk only."
+ ],
+ [
+  "Сброс без захвата - бомба упадёт как обычная.",
+  "Releasing without a lock: it falls like an unguided bomb."
+ ],
+ [
+  "Ночной вылет с ТВ-оружием - бесполезно, берите лазерное или спутниковое.",
+  "A night sortie with TV weapons is pointless: take laser- or satellite-guided ones."
+ ],
+ [
+  "Сейчас ночь - ТВ-головка не видит, показ будет без сброса.",
+  "It's night: the TV seeker is blind, so the demo won't release."
+ ],
+ [
+  "Автопилот идёт на «Командный пункт». Контейнер {0} цель - бомба запомнит её и после сброса уйдёт сама.",
+  "The autopilot heads for the Command Post. The pod {0} the target; the bomb memorizes it and guides itself after release."
+ ],
+ [
+  "<b>захватил</b>",
+  "<b>has locked</b>"
+ ],
+ [
+  "захватывает",
+  "is locking"
+ ],
+ [
+  "Ночью ТВ-бомба не видит цель. Выберите дневную погоду в «Настройках» и пройдите урок ещё раз.",
+  "At night a TV-guided bomb can't see the target. Pick daytime weather in Settings and replay the lesson."
+ ],
+ [
+  "Захват «{0}» есть - при «<b>В зоне</b>» сбрасывайте ({1}) и можно отворачивать.",
+  "Locked on {0}. Release at \"<b>In range</b>\" ({1}), then you're free to turn away."
+ ],
+ [
+  "Ждём захват: {0}.",
+  "Waiting for lock: {0}."
+ ],
+ [
+  "Цель поражена! Вы могли уходить сразу после сброса - бомба наводилась сама.",
+  "Target hit! You could have left right after release: the bomb guided itself."
+ ],
+ [
+  "Спутниковые бомбы",
+  "Satellite-guided bombs"
+ ],
+ [
+  "JDAM / КАБ-500С: по координатам, ночью и в облаках",
+  "JDAM / KAB-500S: coordinates, at night and through clouds"
+ ],
+ [
+  "Бомба летит в <b>координаты</b>: захват контейнером или цель задания впереди.",
+  "The bomb flies to <b>coordinates</b> from a pod lock or a mission target ahead."
+ ],
+ [
+  "Сброс при «<b>В зоне</b>», дальше - сама: ночью, в облаках, в дыму. Дальность {0} в игре - до {1} км, радиус поражения ~{2} м.",
+  "Release at \"<b>In range</b>\"; then it guides itself, at night, through clouds and smoke. In-game {0} range: up to {1} km, blast radius ~{2} m."
+ ],
+ [
+  "Подсвет не нужен - сразу уходите.",
+  "No lasing needed: leave at once."
+ ],
+ [
+  "<b>Станция подавления навигации</b> ПВО (РЭБ, ранги III-IV) в радиусе 9 км сбивает её на десятки метров - «мимо - помехи навигации».",
+  "The enemy's <b>navigation jammer</b> (EW, ranks III-IV) throws it off by tens of meters within 9 km: \"missed: navigation jammed\"."
+ ],
+ [
+  "Бросать в зоне РЭБ - промах. Сначала уничтожьте станцию или возьмите лазерное оружие.",
+  "Dropping inside the EW zone: a miss. Destroy the jammer first or take laser-guided weapons."
+ ],
+ [
+  "Сбрасывать с предела дальности на малой высоте - не долетит.",
+  "Releasing from max range at low altitude: it falls short."
+ ],
+ [
+  "Автопилот идёт на «Военно-морскую базу» на 4 км. Координаты есть - бомба уйдёт, когда будет «В зоне».",
+  "The autopilot heads for the Naval Base at 4 km. Coordinates are set: the bomb goes at \"In range\"."
+ ],
+ [
+  "Цель - «{0}». Координаты дадут контейнер или сама цель задания. При «<b>В зоне</b>» - сброс ({1}), дальше бомба сама.",
+  "Target: {0}. Coordinates come from the pod or the mission target itself. At \"<b>In range</b>\", release ({1}); the bomb does the rest."
+ ],
+ [
+  "Цель поражена! Спутниковой бомбе не нужен ни подсвет, ни картинка - только координаты.",
+  "Target hit! A satellite-guided bomb needs no lasing and no image, just coordinates."
+ ],
+ [
+  "Ракеты",
+  "Missiles"
+ ],
+ [
+  "Управляемые ракеты",
+  "Guided missiles"
+ ],
+ [
+  "Maverick / Х-29Т: ТВ-головка, захват до пуска",
+  "Maverick / Kh-29T: TV seeker, lock before launch"
+ ],
+ [
+  "Ракета с двигателем: летит быстро и далеко, ТВ-головка <b>запоминает цель из контейнера</b> - захват нужен до пуска.",
+  "A powered missile flies fast and far; its TV seeker <b>memorizes the target from the pod</b>, so you need a lock before launch."
+ ],
+ [
+  "Пуск - нос на цель (поле ГСН ±{0}°), дальность {1} в игре - до {2} км; дальше ракета сама.",
+  "Fire with the nose on the target (seeker FOV ±{0}°); in-game {1} range: up to {2} km. Then the missile does the rest."
+ ],
+ [
+  "Лазерные ракеты (Х-25МЛ) - как лазерная бомба: подсвет до попадания.",
+  "Laser-guided missiles (Kh-25ML) work like laser-guided bombs: lase until impact."
+ ],
+ [
+  "ТВ-головка ночью не видит.",
+  "The TV seeker is blind at night."
+ ],
+ [
+  "Пуск без захвата или в сторону от цели - ракета уйдёт мимо.",
+  "Firing without a lock or off-axis: the missile goes wide."
+ ],
+ [
+  "Ночной вылет с ТВ-ракетами.",
+  "A night sortie with TV missiles."
+ ],
+ [
+  "Сейчас ночь - ТВ-головка не видит, показ будет без пуска.",
+  "It's night: the TV seeker is blind, so the demo won't fire."
+ ],
+ [
+  "Автопилот ведёт нос на «Склад горючего». Контейнер {0}.",
+  "The autopilot points the nose at the Fuel Depot. The pod {0}."
+ ],
+ [
+  "<b>захватил</b> цель - пуск, как только цель войдёт в поле ГСН",
+  "<b>has locked</b> the target: firing once it's within the seeker's FOV"
+ ],
+ [
+  "захватывает цель",
+  "is locking the target"
+ ],
+ [
+  "Ночью ТВ-головка не видит. Выберите день в «Настройках».",
+  "The TV seeker is blind at night. Pick daytime in Settings."
+ ],
+ [
+  "Захват есть - доверните нос на «{0}» и пускайте ({1}). После пуска можно уходить.",
+  "Locked. Turn the nose onto {0} and fire ({1}). You can leave after launch."
+ ],
+ [
+  "Цель поражена! ТВ-головка вела ракету сама.",
+  "Target hit! The TV seeker guided the missile by itself."
+ ],
+ [
+  "Противорадиолокационные ракеты",
+  "Anti-radiation missiles"
+ ],
+ [
+  "Shrike / Х-28 без памяти и HARM / Х-58 с памятью",
+  "Shrike / Kh-28 without memory and HARM / Kh-58 with memory"
+ ],
+ [
+  "Противорадиолокационные ракеты (ПРР)",
+  "Anti-radiation missiles (ARMs)"
+ ],
+ [
+  "ПРР летит на <b>излучение РЛС</b>: цель - комплекс, который сейчас на вашем СПО. Пуск - когда станция впереди в поле ГСН (±15-30°).",
+  "An ARM homes on <b>radar emissions</b>: the target is a site currently on your RWR. Fire when the radar is ahead, within the seeker's FOV (±15-30°)."
+ ],
+ [
+  "<b>Без памяти</b> (Shrike, Х-28): расчёт выключил РЛС - ракете некуда лететь, промах.",
+  "<b>No memory</b> (Shrike, Kh-28): if the crew switches the radar off, the missile has nothing to home on and misses."
+ ],
+ [
+  "<b>С памятью</b> (Х-58У, HARM, Х-31П): запоминает место станции - выключение не спасает, только переезд. AARGM-ER с миллиметровой ГСН находит и выключенную машину.",
+  "<b>With memory</b> (Kh-58U, HARM, Kh-31P): it remembers the radar's position, so switching off won't help, only relocating. AARGM-ER's millimeter-wave seeker finds even a switched-off vehicle."
+ ],
+ [
+  "Комплексы без РЛС (ПЗРК, «Стрела-10», оптика) ПРР не видит.",
+  "ARMs can't see systems without radar (MANPADS, Strela-10, optics)."
+ ],
+ [
+  "Пуск по станции сбоку или сзади - вне поля ГСН ракета не захватит.",
+  "Firing at a radar to your side or behind: outside the seeker's FOV the missile won't lock."
+ ],
+ [
+  "Shrike по расчёту, который «мигает» РЛС, - промах.",
+  "A Shrike against a crew that \"blinks\" its radar: a miss."
+ ],
+ [
+  "<b>«{0}» уничтожен{1}!</b> {2} запомнила место станции - выключение РЛС не спасло.",
+  "<b>{0} destroyed!</b> {2} remembered the radar's position: switching off didn't help."
+ ],
+ [
+  "<b>«{0}» уничтожен{1}.</b> Расчёт не успел выключить РЛС - {2} попала.",
+  "<b>{0} destroyed.</b> The crew didn't switch the radar off in time, and {2} hit."
+ ],
+ [
+  "На СПО (круг {0}) - «{1}»: её РЛС облучает вас. Выберите <b>{2}</b> ({3}), доверните нос на станцию и пускайте.",
+  "On the RWR (circle {0}): \"{1}\", its radar is illuminating you. Select <b>{2}</b> ({3}), turn the nose onto the radar and fire."
+ ],
+ [
+  "тап по строке в панели оружия",
+  "tap the row in the weapon panel"
+ ],
+ [
+  "Смотрите: расчёт услышал пуск и <b>выключил РЛС</b>. У {0} нет памяти - ракета потеряет цель.",
+  "Watch: the crew detected the launch and <b>switched the radar off</b>. {0} has no memory, so the missile loses its target."
+ ],
+ [
+  "Промах. Теперь <b>{0}</b> - она помнит место станции. Дождитесь, пока «{1}» снова появится на СПО, и пускайте ({2} - выбор).",
+  "A miss. Now take <b>{0}</b>: it remembers the radar's position. Wait for \"{1}\" to reappear on the RWR and fire ({2} to select)."
+ ],
+ [
+  "тап по строке в панели",
+  "tap the row in the panel"
+ ],
+ [
+  "{0} летит в запомненную точку. Комплекс не успеет уехать.",
+  "{0} is heading for the remembered position. The system won't get away in time."
+ ],
+ [
+  "{0} промахнулась - пополнено, пускайте ещё раз.",
+  "{0} missed. Rearmed: fire again."
+ ],
+ [
+  "Крылатые ракеты",
+  "Cruise missiles"
+ ],
+ [
+  "JASSM / Х-59М: пуск издалека, полёт над крышами",
+  "JASSM / Kh-59M: long-range launch, rooftop-level flight"
+ ],
+ [
+  "Пуск <b>издалека по координатам</b> (цель задания впереди или захват контейнера) - самолёт может не входить в зону ПВО.",
+  "Launch <b>from afar at coordinates</b> (mission target ahead or pod lock): the aircraft needn't enter air defense range."
+ ],
+ [
+  "Ракета идёт на {0} м, огибая дома: сбить её могут только комплексы ближнего рубежа - «Тор», «Панцирь», Patriot, SAMP/T.",
+  "The missile flies at {0} m, hugging buildings: only close-in defense systems can shoot it down (Tor, Pantsir, Patriot, SAMP/T)."
+ ],
+ [
+  "Летит долго ({0} м/с) - её успевают перехватить; {1} в игре - до {2} км.",
+  "It's slow ({0} m/s), so it can be intercepted; in-game {1} range: up to {2} km."
+ ],
+ [
+  "Пуск ближе 5 км - ракета не успеет снизиться и разогнаться.",
+  "Firing from under 5 km: the missile has no time to descend and speed up."
+ ],
+ [
+  "Одна ракета по объекту под «Тором» - перехватят; пускайте парой или вместе с ложными целями.",
+  "A single missile at a target covered by a Tor gets intercepted: fire in pairs or with decoys."
+ ],
+ [
+  "Автопилот идёт к «Складу боеприпасов» - пуск с ~9 км, дальше смотрите за ракетой: она прижимается к крышам.",
+  "The autopilot heads for the Ammo Depot and launches from ~9 km; then watch the missile hug the rooftops."
+ ],
+ [
+  "Цель - «{0}». Пуск издалека ({1}), когда цель впереди, - ракета найдёт её сама.",
+  "Target: {0}. Launch from afar ({1}) with the target ahead: the missile finds it by itself."
+ ],
+ [
+  "Цель поражена! Самолёт даже не входил в зону ПВО.",
+  "Target hit! The aircraft never even entered the air defense zone."
+ ],
+ [
+  "Защита",
+  "Defense"
+ ],
+ [
+  "Ложные цели",
+  "Decoys"
+ ],
+ [
+  "MALD: для РЛС - ещё один самолёт",
+  "MALD: one more aircraft to radars"
+ ],
+ [
+  "Ложная цель (MALD, имитатор) - маленькая ракета, которая для РЛС <b>выглядит как самолёт</b>: летит к точке и кружит.",
+  "A decoy (MALD) is a small missile that <b>looks like an aircraft</b> to radar: it flies to a point and circles."
+ ],
+ [
+  "ПВО тратит на неё время и ракеты, а сопровождение переключается - в этот момент проходят ударники.",
+  "Air defense wastes time and missiles on it and switches its tracking: that's when the strikers get through."
+ ],
+ [
+  "Пускать <b>до входа в зону</b> - за 10-15 км до ПВО, по курсу на цель.",
+  "Launch <b>before entering the zone</b>, 10-15 km short of the air defenses, on course to the target."
+ ],
+ [
+  "Тепловые ПЗРК её почти не видят - против них не поможет.",
+  "Infrared MANPADS barely see it, so it won't help against them."
+ ],
+ [
+  "Пускать поздно, когда ПВО уже держит вас.",
+  "Launching late, when air defense already has you locked."
+ ],
+ [
+  "Ждать, что одна ложная цель отвлечёт сразу несколько комплексов.",
+  "Expecting one decoy to distract several sites at once."
+ ],
+ [
+  "<b>{0} стреляет по ложной цели!</b> Для РЛС она - самолёт. Пока ПВО занята ею, ударники проходят.",
+  "<b>{0} is firing at the decoy!</b> To radar it's an aircraft. While air defense is busy with it, the strikers get through."
+ ],
+ [
+  "Впереди - склад боеприпасов под прикрытием «{0}». Выберите <b>{1}</b> ({2}) и пустите её вперёд, пока до ПВО больше 10 км ({3}).",
+  "Ahead is an ammo depot covered by {0}. Select <b>{1}</b> ({2}) and launch it ahead while the air defense is over 10 km away ({3})."
+ ],
+ [
+  "Ложная цель летит к складу. Смотрите на метки: <b>«{0}»</b> возьмёт её на сопровождение, как самолёт.",
+  "The decoy is flying to the depot. Watch the marks: <b>{0}</b> will track it like an aircraft."
+ ],
+ [
+  "Станция помех",
+  "Jammer"
+ ],
+ [
+  "«Сорбция» / ALQ-131: два захода - без помех и с ними",
+  "Sorbtsiya / ALQ-131: two passes, without and with jamming"
+ ],
+ [
+  "Подвесная станция активных помех («Сорбция», ALQ-131) работает весь вылет, не сбрасывается.",
+  "A podded active jammer (Sorbtsiya, ALQ-131) works the whole sortie and can't be dropped."
+ ],
+ [
+  "<b>РЛС видит вас ближе</b>: дальность обнаружения × (1 − 0,36 × (1 − помехозащищённость)). У {0} помехозащищённость {1} % - видит на {2} % ближе.",
+  "<b>Radars detect you later</b>: detection range × (1 − 0.36 × (1 − jam resistance)). {0} has {1}% jam resistance, so it detects you {2}% closer."
+ ],
+ [
+  "<b>Срывает сопровождение</b>: у {0} примерно раз в {1} с; повторный захват - ~0,8 с. Командной и полуактивной ракете без сопровождения дольше ~2,5 с - промах.",
+  "<b>It breaks tracking</b>: for {0}, about once every {1} s; re-lock takes ~0.8 s. A command-guided or semi-active missile that loses track for over ~2.5 s misses."
+ ],
+ [
+  "Против современных (С-300, С-400, «Тор», NASAMS) - почти бесполезна. На тепловые ракеты, оптику и активные ГСН не действует.",
+  "Nearly useless against modern systems (S-300, S-400, Tor, NASAMS). No effect on infrared missiles, optics or active seekers."
+ ],
+ [
+  "Надеяться на помехи против ПЗРК.",
+  "Counting on jamming against MANPADS."
+ ],
+ [
+  "Лезть станцией помех на С-400 - он почти не заметит.",
+  "Taking a jammer against an S-400: it will barely notice."
+ ],
+ [
+  "<p class=\"dim\">Сейчас - два захода на один комплекс: без станции и с ней. Самолёт неуязвим.</p>",
+  "<p class=\"dim\">Now two passes at one site: without the jammer and with it. The aircraft is invulnerable.</p>"
+ ],
+ [
+  "Заход 1 - <b>без помех</b>. Летите на {0} ({1} км) и смотрите на СПО: появится метка - РЛС вас увидела.",
+  "Pass 1: <b>no jamming</b>. Fly toward {0} ({1} km) and watch the RWR: when a mark appears, the radar has seen you."
+ ],
+ [
+  "{0} увидел вас с <b>{1} км</b>. Летите дальше - сопровождение держится{2}.",
+  "{0} detected you at <b>{1} km</b>. Keep flying: the track holds{2}."
+ ],
+ [
+  " устойчиво",
+  " steadily"
+ ],
+ [
+  "Заход 2 - <b>со станцией помех</b> (● в строке оружия). Тот же курс: смотрите, когда появится метка ({0} км).",
+  "Pass 2: <b>with the jammer</b> (● in the weapon row). Same course: watch when the mark appears ({0} km)."
+ ],
+ [
+  "С помехами {0} увидел вас с <b>{1} км</b> (без них - {2}). Срывов сопровождения: <b>{3}</b>.",
+  "With jamming, {0} detected you at <b>{1} km</b> (without: {2}). Track breaks: <b>{3}</b>."
+ ],
+ [
+  "<b>Итог:</b> без помех - {0} км, с помехами - {1} км; сопровождение срывалось {2} раз за 25 с. Против С-400 разница была бы в пару километров.",
+  "<b>Result:</b> without jamming {0} km, with jamming {1} km; the track broke {2} times in 25 s. Against an S-400 the difference would be just a couple of kilometers."
+ ],
+ [
+  "Прорыв под ближним рубежом",
+  "Breaking through the close-in layer"
+ ],
+ [
+  "ПВО сбивает бомбы: серия, ПРР, ложные цели, крылатые ракеты",
+  "air defense shoots down bombs: salvo, ARMs, decoys, cruise missiles"
+ ],
+ [
+  "Когда ПВО сбивает оружие",
+  "When air defense shoots down weapons"
+ ],
+ [
+  "{0} и подобные («Тор», «Панцирь», Patriot, SAMP/T, Phalanx) сбивают <b>летящие бомбы и ракеты</b>, а не только самолёты.",
+  "{0} and similar systems (Tor, Pantsir, Patriot, SAMP/T, Phalanx) shoot down <b>incoming bombs and missiles</b>, not just aircraft."
+ ],
+ [
+  "У них мало каналов и ракет: <b>серия</b> из 3-4 бомб сразу перегружает комплекс - часть дойдёт.",
+  "They have few channels and missiles: a <b>salvo</b> of 3-4 bombs at once overloads the system, and some get through."
+ ],
+ [
+  "Можно сначала выбить сам комплекс <b>ПРР</b>, потом бомбить спокойно.",
+  "Or take out the system first with an <b>ARM</b>, then bomb in peace."
+ ],
+ [
+  "Ложные цели и крылатые ракеты на малой высоте тоже отвлекают и проходят.",
+  "Decoys and low-flying cruise missiles also distract it and get through."
+ ],
+ [
+  "Бросать по одной бомбе - каждую сбивают.",
+  "Dropping bombs one at a time: each gets shot down."
+ ],
+ [
+  "Лезть самому в зону ближнего рубежа - он стреляет и по вам.",
+  "Flying into the short-range layer yourself: it shoots at you too."
+ ],
+ [
+  "<b>Склад поражён!</b> {0} Серия, ПРР и ложные цели - так прорывают ближний рубеж.",
+  "<b>Depot hit!</b> {0} Salvos, ARMs and decoys: that's how you break through short-range defenses."
+ ],
+ [
+  "ПВО сбила {0} из ваших бомб, но не все.",
+  "Air defense shot down {0} of your bombs, but not all."
+ ],
+ [
+  "Склад боеприпасов прикрывает <b>{0}</b>. Сбросьте <b>одну</b> спутниковую бомбу при «В зоне» ({1}) - посмотрим, что будет.",
+  "The ammo depot is covered by <b>{0}</b>. Drop <b>one</b> satellite-guided bomb at \"In range\" ({1}) and see what happens."
+ ],
+ [
+  "Комплекс уничтожен - теперь бомбы дойдут. Сбрасывайте.",
+  "Site destroyed: now the bombs will get through. Drop them."
+ ],
+ [
+  "<b>{0} сбил бомбу.</b> Два способа: <b>ПРР</b> по комплексу ({1} - выбор, нос на него) или <b>серия</b> - сбросьте 3-4 бомбы подряд.",
+  "<b>{0} shot down a bomb.</b> Two options: an <b>ARM</b> at the site ({1} to select, nose on it) or a <b>salvo</b>: drop 3-4 bombs in a row."
+ ],
+ [
+  "Оборона",
+  "Defense"
+ ],
+ [
+  "Расстановка",
+  "Deployment"
+ ],
+ [
+  "покупка, тени зон, приказы, первая волна",
+  "buying, coverage shadows, orders, first wave"
+ ],
+ [
+  "Расстановка ПВО",
+  "Deploying air defense"
+ ],
+ [
+  "Перед волной - <b>очки обороны</b>: покупайте комплексы и ставьте их на карте. Между волнами - докупка, перенос и продажа.",
+  "Before each wave you get <b>defense points</b>: buy sites and place them on the map. Between waves: buy more, relocate and sell."
+ ],
+ [
+  "<b>Тени зон</b>: дома закрывают обзор - коснитесь комплекса, зелёным видно, где он видит цель на 300 м.",
+  "<b>Coverage shadows</b>: buildings block the view. Tap a site; green shows where it sees a target at 300 m."
+ ],
+ [
+  "Дальние комплексы - по краю, ближние (пушки, ПЗРК, «Оса», «Тор») - у ценных объектов; ПЗРК можно ставить на крыши.",
+  "Long-range sites go on the outskirts, short-range ones (guns, MANPADS, Osa, Tor) near valuable facilities; MANPADS can go on rooftops."
+ ],
+ [
+  "В бою комплексы стреляют сами; приказы - излучение вкл/выкл и «Цели» (по каким видам стрелять); «Управлять» - вы - оператор.",
+  "In battle, sites fire on their own; your orders are radar on/off and \"Targets\" (which kinds to engage); \"Operate\" puts you at the console."
+ ],
+ [
+  "Всё в одну точку - один ПРР или удар по скоплению выбивает всё.",
+  "Everything in one spot: a single ARM or strike on the cluster wipes it all out."
+ ],
+ [
+  "Дальний комплекс в глубине застройки - тени съедают зону.",
+  "A long-range site deep among buildings: the shadows eat its coverage."
+ ],
+ [
+  "Это тактическая карта города. Справа - <b>очки обороны</b> и комплексы. Выберите «<b>Оса</b>», коснитесь карты рядом со складом боеприпасов (жёлтый ромб) - место можно менять касаниями - и «<b>Подтвердить</b>».",
+  "This is the tactical map of the city. On the right: <b>defense points</b> and sites. Select \"<b>Osa</b>\", tap the map next to the ammo depot (yellow diamond; tap again to change the spot) and press \"<b>Confirm</b>\"."
+ ],
+ [
+  "Коснитесь своего комплекса: <b>зелёная тень</b> - где он видит цель на 300 м, а где её закрывают дома (касание карты и «Подтвердить перенос» - переставить). Поставьте ещё ПЗРК («Игла») поближе к складу.",
+  "Tap your site: the <b>green shade</b> shows where it sees a target at 300 m and where buildings block it (tap the map and \"Confirm move\" to relocate). Place another MANPADS (Igla) closer to the depot."
+ ],
+ [
+  "Готово - нажмите «<b>В бой</b>». Комплексы стреляют сами; комплекс можно выбрать и отдать приказ.",
+  "All set: press \"<b>To battle</b>\". Sites fire by themselves; you can select one and give it orders."
+ ],
+ [
+  "Оборона прорвана.",
+  "Defense breached."
+ ],
+ [
+  "<b>Волна отбита!</b>",
+  "<b>Wave repelled!</b>"
+ ],
+ [
+  "Волна идёт: красные треугольники - цели, которые видит сеть РЛС (цифра - высота над землёй).",
+  "The wave is coming: red triangles are targets seen by the radar network (the number is height above ground)."
+ ],
+ [
+  "Короткая оборона",
+  "Short defense"
+ ],
+ [
+  "две волны: расстановка и бой целиком",
+  "two waves: deployment and a full battle"
+ ],
+ [
+  "Две волны целиком: расстановка → бой → итог и докупка → вторая волна.",
+  "Two full waves: deployment → battle → results and buying → second wave."
+ ],
+ [
+  "Сеть РЛС делится целями: красные треугольники на карте - то, что видят ваши станции (цифра - высота).",
+  "The radar network shares targets: red triangles on the map are what your radars see (the number is altitude)."
+ ],
+ [
+  "Цель - сберечь ценность города: потери объектов важнее сбитых самолётов.",
+  "The goal is to protect the city's value: losing facilities matters more than aircraft shot down."
+ ],
+ [
+  "Держать все РЛС включёнными весь бой - охотники за РЛС выбьют их ПРР.",
+  "Keeping every radar on all battle: radar hunters will kill them with ARMs."
+ ],
+ [
+  "Не докупать между волнами - вторая волна сильнее.",
+  "Not buying between waves: the second wave is stronger."
+ ],
+ [
+  "<b>Оборона выдержала!</b> Теперь можно играть «Оборону» на очки.",
+  "<b>The defense held!</b> Now you can play Defense for points."
+ ],
+ [
+  "Расставьте ПВО на свой вкус и начните волну. Дальние комплексы - по краю, пушки и ПЗРК - у целей.",
+  "Deploy air defense as you like and start the wave. Long-range sites on the outskirts, guns and MANPADS by the targets."
+ ],
+ [
+  "Командуйте: выберите комплекс → «Управлять», чтобы стрелять самому.",
+  "Take command: select a site → \"Operate\" to fire yourself."
+ ],
+ [
+  "Итоги волны - докупите комплексы и продолжайте.",
+  "Wave results: buy more sites and carry on."
+ ],
+ [
+  "Командное наведение",
+  "Command guidance"
+ ],
+ [
+  "«Оса»: обзор, назначение цели, захват, пуск, методы",
+  "Osa: scan, target assignment, lock, launch, methods"
+ ],
+ [
+  "Вы - оператор: слева внизу <b>круговой обзор</b> (ИКО) - отметки целей. Тап по отметке (или в кадре) - назначить цель.",
+  "You're the operator. Bottom left is the <b>radar scope</b> (PPI) with target marks. Tap a mark (or in the view) to assign a target."
+ ],
+ [
+  "Захват - ~{0} с прямой видимости; дом между вами и целью срывает его.",
+  "Lock takes ~{0} s of clear line of sight; a building between you and the target breaks it."
+ ],
+ [
+  "<b>РЛС ведёт ракету до попадания</b> - не выключайте её.",
+  "<b>The radar guides the missile until impact</b>: don't switch it off."
+ ],
+ [
+  "Цель захвачена - <b>«Бинокль»</b> (на ПК - B) приближает её: видно, какой стороной она к вам и как маневрирует. Захват сорвался - бинокль выключится сам, нужен новый захват.",
+  "Once locked, <b>\"Binoculars\"</b> (B on PC) zoom in on the target: you see its aspect and how it maneuvers. If the lock breaks, the binoculars switch off and you need a new lock."
+ ],
+ [
+  "Метод «три точки» - надёжно против манёвра; «половинное спрямление» - против быстрой цели поперёк.",
+  "Three-point is reliable against maneuvering targets; half-lead suits fast crossing targets."
+ ],
+ [
+  "Пуск вне зоны - ракета не догонит.",
+  "Firing out of range: the missile won't catch the target."
+ ],
+ [
+  "Выключить РЛС после пуска - ракета теряет управление.",
+  "Switching the radar off after launch: the missile loses guidance."
+ ],
+ [
+  "Включать «Бинокль» без захвата: он работает только по захваченной цели и сам выключается, если захват сорвался.",
+  "Using \"Binoculars\" without a lock: they only work on a locked target and switch off if the lock breaks."
+ ],
+ [
+  "«Оса» сама назначит ближайшую цель, захватит и пустит. Смотрите на ИКО и окно сопровождения.",
+  "Osa will pick the nearest target, lock it and fire. Watch the scope and the tracking window."
+ ],
+ [
+  "Коснитесь отметки цели (на ИКО слева внизу или в кадре){0}.",
+  "Tap a target mark (on the scope bottom left or in the view){0}."
+ ],
+ [
+  " или {0}",
+  " or {0}"
+ ],
+ [
+  "Идёт <b>захват</b> - нужна прямая видимость.",
+  "<b>Locking</b>: needs a clear line of sight."
+ ],
+ [
+  "Захват есть! «<b>В зоне</b>» - {0}. РЛС держать до попадания.",
+  "Locked! \"<b>In range</b>\": {0}. Keep the radar on until impact."
+ ],
+ [
+  "Цель сбита! Захват → пуск → РЛС ведёт ракету.",
+  "Target shot down! Lock → launch → the radar guides the missile."
+ ],
+ [
+  "Методы наведения",
+  "Guidance methods"
+ ],
+ [
+  "«три точки» и «половинное спрямление»: два пуска по одной цели",
+  "three-point and half-lead: two launches at one target"
+ ],
+ [
+  "Методы наведения командных ракет",
+  "Command guidance methods"
+ ],
+ [
+  "<b>«Три точки»</b>: станция, цель и ракета - на одной прямой. Ракета всё время на линии «станция → цель» и <b>догоняет</b> цель: путь изгибается, к концу - резкие повороты, ракета теряет скорость.",
+  "<b>Three-point</b>: radar, target and missile on one line. The missile stays on the \"radar → target\" line and <b>chases</b> the target: the path curves, turns get sharp near the end and the missile bleeds speed."
+ ],
+ [
+  "<b>«Половинное спрямление»</b>: ракету выводят <b>вперёд</b> линии визирования - на половину угла упреждения, туда, где цель будет. Путь прямее, скорость сохраняется, достаёт дальше.",
+  "<b>Half-lead</b>: the missile is steered <b>ahead</b> of the line of sight by half the lead angle, toward where the target will be. The path is straighter, it keeps speed and reaches farther."
+ ],
+ [
+  "Цель идёт на вас или от вас - разницы почти нет, «три точки» надёжнее против манёвра. Цель <b>поперёк</b>, быстрая и далеко - «половинное спрямление».",
+  "Target coming toward or away from you: little difference, and three-point is more reliable against maneuvers. Target <b>crossing</b>, fast and far: half-lead."
+ ],
+ [
+  "Переключатель - «Метод 3Т / ½» у оператора (на ПК - M). Только у командных комплексов: С-75, С-125, «Оса», «Тор», «Панцирь», «Тунгуска».",
+  "Toggle with \"Method 3P / ½\" at the console (M on PC). Command-guided systems only: S-75, S-125, Osa, Tor, Pantsir, Tunguska."
+ ],
+ [
+  "«Три точки» по быстрой цели поперёк на пределе дальности - ракета не догонит.",
+  "Three-point against a fast crossing target at max range: the missile won't catch it."
+ ],
+ [
+  "«Спрямление» по цели, которая резко отворачивает рядом, - ракета уходит вперёд «не туда».",
+  "Half-lead against a target turning hard nearby: the missile leads the wrong way."
+ ],
+ [
+  "<p class=\"dim\">Сейчас - опыт: самолёт пройдёт поперёк, «Оса» пустит по нему дважды - сначала «три точки» (красный след), потом «спрямление» (зелёный).</p>",
+  "<p class=\"dim\">Now an experiment: an aircraft crosses in front, and Osa fires at it twice, first three-point (red trail), then half-lead (green).</p>"
+ ],
+ [
+  "<b>Пуск 1 - «три точки».</b> Самолёт идёт поперёк. Смотрите на <b>красный след</b>: ракета держится на линии «станция → цель» и заворачивает за самолётом.",
+  "<b>Launch 1: three-point.</b> The aircraft is crossing. Watch the <b>red trail</b>: the missile stays on the \"radar → target\" line and curves in behind the aircraft."
+ ],
+ [
+  "<b>Пуск 2 - «половинное спрямление»</b>, тот же заход. <b>Зелёный след</b>: ракета сразу идёт вперёд, на точку встречи.",
+  "<b>Launch 2: half-lead</b>, same pass. <b>Green trail</b>: the missile heads straight for the intercept point."
+ ],
+ [
+  "{0}, полёт {1} с, скорость ракеты у цели {2} м/с",
+  "{0}, flight time {1} s, missile speed at target {2} m/s"
+ ],
+ [
+  "попала",
+  "hit"
+ ],
+ [
+  "промах",
+  "miss"
+ ],
+ [
+  "Два пуска - сверху",
+  "Two launches: top view"
+ ],
+ [
+  "<p class=\"dim\">Квадрат - станция, пунктир - путь цели, кружки - где ракеты закончили полёт.</p><ul><li><b style=\"color:#ff6b6b\">«Три точки»</b>: {0}.</li><li><b style=\"color:#4ade80\">«Спрямление»</b>: {1}.</li></ul><p>{2}</p><p class=\"dim\">Теперь вы: цель снова пойдёт поперёк - включите «Метод ½» и собейте её.</p>",
+  "<p class=\"dim\">Square: the radar; dashed line: the target's path; circles: where the missiles ended their flight.</p><ul><li><b style=\"color:#ff6b6b\">Three-point</b>: {0}.</li><li><b style=\"color:#4ade80\">Half-lead</b>: {1}.</li></ul><p>{2}</p><p class=\"dim\">Your turn: the target will cross again. Switch to \"Method ½\" and shoot it down.</p>"
+ ],
+ [
+  "<b>«Три точки» не догнала</b>: ракета всё время доворачивала за целью, теряла скорость, и время её полёта кончилось. «Спрямление» сразу пошло на точку встречи и успело.",
+  "<b>Three-point didn't catch it</b>: the missile kept turning after the target, lost speed and ran out of flight time. Half-lead went straight for the intercept point and made it."
+ ],
+ [
+  "Спрямлённый путь короче, ракета приходит быстрее и с большей скоростью - запас на манёвр цели. «Три точки» тратит скорость на погоню.",
+  "The half-lead path is shorter; the missile arrives sooner and faster, with energy to spare for the target's maneuvers. Three-point wastes speed on the chase."
+ ],
+ [
+  "Опыт · вид сверху",
+  "Experiment · top view"
+ ],
+ [
+  "<b>Сбит!</b> Поперечную быструю цель лучше бить «спрямлением».",
+  "<b>Shot down!</b> Half-lead is better against fast crossing targets."
+ ],
+ [
+  "Включите <b>«Метод ½»</b> ({0}).",
+  "Switch to <b>\"Method ½\"</b> ({0})."
+ ],
+ [
+  "кнопка справа",
+  "button on the right"
+ ],
+ [
+  "Назначьте цель - тап по отметке.",
+  "Assign a target: tap a mark."
+ ],
+ [
+  "Захват…",
+  "Locking…"
+ ],
+ [
+  "Пуск - {0}.",
+  "Fire: {0}."
+ ],
+ [
+  "Полуактивное наведение",
+  "Semi-active guidance"
+ ],
+ [
+  "Куб / Hawk: подсвет цели до попадания",
+  "Kub / Hawk: illuminating the target until impact"
+ ],
+ [
+  "Ракета летит на <b>отражённый от цели сигнал</b> вашей РЛС подсвета - РЛС должна держать цель до попадания.",
+  "The missile homes on your illumination radar's <b>signal reflected off the target</b>: the radar must hold the target until impact."
+ ],
+ [
+  "{0} - доплеровская РЛС: цель, идущая <b>поперёк</b> низко над землёй, пропадает в «провале». Пускайте, когда она идёт на вас или от вас.",
+  "{0} is a Doppler radar: a target <b>crossing</b> low over the ground vanishes in the notch. Fire when it's flying toward or away from you."
+ ],
+ [
+  "Против диполей - устойчивее старых командных.",
+  "More chaff-resistant than the old command-guided systems."
+ ],
+ [
+  "Пуск по цели, идущей поперёк на малой высоте, - срыв подсвета.",
+  "Firing at a target crossing at low altitude: illumination breaks."
+ ],
+ [
+  "Переключиться на другую цель до попадания - ракета теряет подсвет.",
+  "Switching to another target before impact: the missile loses illumination."
+ ],
+ [
+  "«Авто» ведёт {0}: захват, пуск - и подсвет до попадания.",
+  "\"Auto\" operates {0}: lock, launch and illumination until impact."
+ ],
+ [
+  "Захват - пуск ({0}). Подсвет держать до попадания.",
+  "Lock, then fire ({0}). Keep illuminating until impact."
+ ],
+ [
+  "Цель сбита! РЛС подсвечивала её до самого попадания.",
+  "Target shot down! The radar illuminated it all the way to impact."
+ ],
+ [
+  "Наведение через ракету",
+  "Track-via-missile guidance"
+ ],
+ [
+  "С-300 / Patriot: несколько целей сразу",
+  "S-300 / Patriot: several targets at once"
+ ],
+ [
+  "{0} ведёт <b>несколько целей и ракет сразу</b> (каналов: {1}).",
+  "{0} tracks <b>several targets and missiles at once</b> (channels: {1})."
+ ],
+ [
+  "Ракета принимает сигнал от цели и передаёт на РЛС - помехи и диполи почти не помогают.",
+  "The missile picks up the target's return and relays it to the radar: jamming and chaff barely help."
+ ],
+ [
+  "Огромная дальность, но <b>малые высоты прячутся за домами</b> - низкие цели видит поздно.",
+  "Huge range, but <b>low-flying targets hide behind buildings</b>: it sees them late."
+ ],
+ [
+  "Главная угроза - ПРР с памятью: переезд между волнами.",
+  "The main threat is a memory-equipped ARM: relocate between waves."
+ ],
+ [
+  "Пакет {0} поднимается, только пока РЛС включена: после включения - ≈ 13 с до первого пуска, после выключения он ложится. «Мигать» РЛС у него дорого.",
+  "The {0} launcher raises its tubes only while the radar is on: ≈ 13 s from switch-on to the first launch, and it lowers them when the radar is off. Blinking its radar is costly."
+ ],
+ [
+  "Стрелять по одной цели, когда можно назначить несколько.",
+  "Firing at one target when you can assign several."
+ ],
+ [
+  "Ставить в глубине застройки - тени съедают зону.",
+  "Placing it deep among buildings: the shadows eat its coverage."
+ ],
+ [
+  "Две цели. «Авто» назначит и пустит по ним по очереди - {0} ведёт обе.",
+  "Two targets. \"Auto\" will assign and engage them in turn: {0} tracks both."
+ ],
+ [
+  "Две цели - назначьте одну (тап по отметке).",
+  "Two targets: assign one (tap a mark)."
+ ],
+ [
+  "Пуск ({0}), затем сразу назначайте вторую цель - комплекс ведёт обе.",
+  "Fire ({0}), then assign the second target right away: the system tracks both."
+ ],
+ [
+  "Обе цели сбиты! Многоканальный комплекс ведёт несколько ракет сразу.",
+  "Both targets shot down! A multi-channel system guides several missiles at once."
+ ],
+ [
+  "Активная ГСН",
+  "Active seeker"
+ ],
+ [
+  "Бук-М3 / NASAMS: «выстрелил и забыл»",
+  "Buk-M3 / NASAMS: fire-and-forget"
+ ],
+ [
+  "Ракета летит по командам РЛС, а у цели <b>включает свою ГСН</b> и дальше наводится сама.",
+  "The missile flies on radar commands, then near the target <b>switches on its own seeker</b> and guides itself."
+ ],
+ [
+  "После включения ГСН вашу РЛС можно <b>выключить</b> - ПРР потеряют вас, а ракета дойдёт.",
+  "Once the seeker is on, you can <b>switch your radar off</b>: ARMs lose you, and the missile still hits."
+ ],
+ [
+  "{0} хорошо видит низкие цели и крылатые ракеты.",
+  "{0} sees low targets and cruise missiles well."
+ ],
+ [
+  "Выключить РЛС до включения ГСН ракеты - ей некуда лететь.",
+  "Switching the radar off before the missile's seeker activates: it has nothing to home on."
+ ],
+ [
+  "Держать РЛС включённой, когда в небе охотники за РЛС.",
+  "Keeping the radar on while radar hunters are around."
+ ],
+ [
+  "«Авто» пустит ракету {0}; когда ГСН включится, ракете РЛС уже не нужна.",
+  "\"Auto\" will fire {0}; once the seeker is on, the missile no longer needs the radar."
+ ]
+]
