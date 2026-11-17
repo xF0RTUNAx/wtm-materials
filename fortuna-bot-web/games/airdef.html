@@ -667,6 +667,20 @@
   .rlamp { position: absolute; right: 4px; top: 26px; width: 13px; height: 13px; background: url(airdef/ui/hangar/b_lamp_off.webp) center / contain no-repeat; } .rlamp.on { background-image: url(airdef/ui/hangar/b_lamp_on.webp); }
   .rkick { position: absolute; right: 0; top: -4px; width: 16px; height: 16px; padding: 0; border-radius: 50%; background: #3a2a22; border: 1px solid #7a5040; color: #f0b0a0; font: 600 11px/14px 'Golos Text', sans-serif; cursor: pointer; }
   @media (max-height: 500px) { #menu .seg.rgrid button { height: 32px; } #menu .seg.rgrid[data-oseg="side"] button { height: 42px; gap: 3px; } .rgrid .ic { width: 15px; height: 15px; } .rplate { border-width: 8px; padding: 0 2px 4px; } .rhead { margin-bottom: 3px; } .rback { width: 24px; height: 24px; } .rbtn { height: 26px; font-size: 12px; } #menu .seg.rgrid button b { font-size: 14px; } .rava { width: 30px; height: 30px; } .rseat { width: 44px; } .rlamp { top: 20px; } .rlabel { height: 26px; font-size: 14px; } .rcode .btn { height: 26px; font-size: 12px; } }
+  /* «Мульти-волна» и «Съёмка» в ангаре (Mark 2026-11-17, макеты «Этапы волны» и «Плитки») */
+  #menu .seg.otiles.o3 { grid-template-columns: repeat(3, 1fr); } #menu .seg.otiles.o3 button { height: 64px; }
+  .mwst { margin-top: 6px; padding: 6px; background: rgba(16,19,15,.86); border: 1px solid rgba(110,104,80,.55); }
+  .mwst .stages { display: flex; align-items: flex-start; gap: 2px; } .mwst .stg { flex: 1; min-width: 0; text-align: center; }
+  .mwst .stg .im { position: relative; display: block; height: 36px; background: rgba(8,10,7,.7); border: 1px solid #3c3a2c; } .mwst .stg .im img { width: 100%; height: 100%; object-fit: contain; }
+  .mwst .stg .im b { position: absolute; left: 3px; top: 1px; font: 600 11px 'Oswald', sans-serif; color: #f3c96f; } .mwst .stg em { display: block; margin-top: 2px; font: 500 10px/1.1 'Oswald', sans-serif; font-style: normal; color: #c2c7b2; }
+  .mwst .arr { color: #e8b04a; font: 600 13px 'Oswald', sans-serif; padding-top: 10px; }
+  #menu .seg.pmaps { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin: 0; } #menu .seg.pmaps button { position: relative; height: 54px; padding: 0; overflow: hidden; border: 1px solid #3c3a2c; background: #111; }
+  #menu .seg.pmaps button img { width: 100%; height: 100%; object-fit: cover; opacity: .85; } #menu .seg.pmaps button.on { border-color: #e8b04a; box-shadow: inset 0 0 0 2px #e8b04a; background: #111; }
+  #menu .seg.pmaps button em { position: absolute; left: 0; right: 0; bottom: 0; padding: 6px 0 2px; background: linear-gradient(transparent, rgba(0,0,0,.85)); font: 500 11px 'Oswald', sans-serif; font-style: normal; color: #fff; }
+  #menu .seg.wxs { display: flex; gap: 3px; margin: 0; } #menu .seg.wxs button { flex: 1; min-width: 0; height: 26px; padding: 0; display: grid; place-items: center; border: 1px solid #3c3a2c; background: rgba(10,12,9,.8); color: #fff; font: 600 11px 'Oswald', sans-serif; text-shadow: 0 1px 2px #000; }
+  #menu .seg.wxs button.on { outline: 2px solid #e8b04a; outline-offset: -2px; color: #fff; } #menu .seg.wxs button:first-child { color: #f3c96f; } .wxs .ic { width: 15px; height: 15px; }
+  #menu .dset .seg[data-seg="pms"] { flex: none; } #menu .dset .seg[data-seg="pms"] button { flex: none; width: 36px; display: grid; place-items: center; padding: 0; } #menu .dset .seg[data-seg="pms"] .ic.star { display: block; }
+  @media (max-height: 500px) { #menu .seg.otiles.o3 button { height: 50px; } #menu .seg.pmaps button { height: 40px; } #menu .seg.wxs button { height: 22px; font-size: 9.5px; } .mwst .stg .im { height: 28px; } .mwst .stg em { font-size: 8.5px; } #menu .dset .seg[data-seg="pms"] button { width: 28px; } }
   .hgl.on .hgr:not(.inb) .hgt { cursor: pointer; } .hgl.on .hgt.fo .im { box-shadow: inset 0 0 0 1px #e8b04a, inset 0 1px 3px rgba(0,0,0,.8); }
 
   @media (max-height: 500px) {

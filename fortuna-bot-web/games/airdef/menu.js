@@ -75,6 +75,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
   $('mtFold').onclick = (e) => { e.stopPropagation(); snd.click(); $('mtabs').classList.toggle('open'); };
   $('hgStrip').onclick = (e) => {
     const ol = e.target.closest('[data-ol]'), nd = e.target.closest('[data-need]'), sm = e.target.closest('[data-sam]');
+    const pl = e.target.closest('[data-plo],[data-psam],[data-pmun]'); if (pl) { panel(true); snd.click(); if (pl.dataset.plo) setup.lo = +pl.dataset.plo; else if (pl.dataset.psam) setup.psam = pl.dataset.psam; else setup.pmun = pl.dataset.pmun; save(); render(); return; } // «Съёмка»: что снимать
     if (sm) { panel(true); if (hgSam !== sm.dataset.sam) { snd.click(); hgSam = sm.dataset.sam; } render(); return; } // «Оборона»: комплекс крупно в панели
     if (nd) { snd.click(); C.research.open(nd.dataset.need); return; }
     if (ol) { panel(true); const k = opSlot === 1 ? 'lo1' : 'lo2', v = +ol.dataset.ol; if (setup[k] !== v) { snd.click(); setup[k] = v; save(); } render(); return; } // «Операция»: подвеска выбранного вылета
@@ -200,7 +201,38 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
     el.innerHTML = h;
   }
   // «Съёмка»: что снимаем (самолёт с подвеской, комплекс ПВО, оружие «Мульти-волны»), эпоха и сторона ПВО города
+  // «Съёмка» в ангаре (Mark 2026-11-17, макет «Плитки»): что снимаем, карта и погода - картинками; сторона - снимаемого; самолёты, комплексы или оружие - в ленте внизу
+  function renderPhotoHg() {
+    const ps = setup.pside || 'air', ms = photoMs(), att = setup.side === 'east' ? 'west' : 'east', SP = SIDE_PIC[ms];
+    const wxk = C.MAP === 'winter' ? WINTER_KEYS : WEATHER_KEYS, wxCur = wxk.includes(C.weatherKey) ? C.weatherKey : 'random';
+    let h = `<div class="seg otiles og o3" data-seg="pside">${ptile('air', ps, thumb(SP.air, 'left:6%;top:4%;width:88%;height:92%'), tr('Самолёт'))}${ptile('def', ps, thumb(SP.pvo, 'left:6%;top:4%;width:88%;height:92%'), tr('ПВО'))}${ptile('multi', ps, thumb(SP.wave[0], 'left:0;top:10%;width:100%;height:80%'), tr('Волна'))}</div>
+      <div class="dset"><div class="seg pmaps" data-seg="pmap">${[['city', 'drone-city-evening', tr('Речной узел')], ['winter', 'gripen-gbu12-snow', tr('Северный рубеж')]].map(([k, img, l]) => `<button data-v="${k}" class="${C.MAP === k ? 'on' : ''}"><img src="airdef/shots/${img}.webp" alt=""><em>${l}</em></button>`).join('')}</div>
+        <div class="seg wxs" data-seg="pwx">${[['random', ''], ...wxk.map((k) => [k, WX_SHORT[k] || trIf(WEATHERS[k].name)])].map(([k, l]) => `<button data-v="${k}" class="${k === wxCur ? 'on' : ''}" style="background:${WX_BG[k] || 'rgba(10,12,9,.8)'}">${k === 'random' ? DICE_I : l}</button>`).join('')}</div>
+        <div class="drow">${seg('era', setup.era, ERAS.filter((e) => LOADOUTS[e.id]).map((e) => [e.id, e.short]))}${seg('pms', ms, [['east', STAR_SEG.east], ['west', STAR_SEG.west]])}</div>
+        ${ps === 'air' ? `<div class="drow">${seg('palt', setup.palt || 'mid', [['low', tr('250 м')], ['mid', tr('1,5 км')], ['high', tr('4 км')]])}</div>` : ''}
+        ${ps === 'def' && combinedOk(att, setup.era) ? `<div class="drow">${seg('pvs', setup.pvs === 'multi' ? 'multi' : 'air', [['air', tr('Против самолётов')], ['multi', trIf(COMBINED_NAME)]])}</div>` : ''}</div>`;
+    let strip = '';
+    if (ps === 'air') {
+      const mine = loadoutsOf(setup.era, att).filter(([L, i]) => !L.heli && (!retiredHidden(C.progress && C.progress.P, L.plane) || (!(C.progress && C.progress.P) && i === setup.lo)));
+      if (!mine.some(([, i]) => i === setup.lo)) setup.lo = mine[0][1];
+      strip = mine.map(([L, i]) => `<button class="hgc op${i === setup.lo ? ' on' : ''}" data-plo="${i}"><b>${trIf(PLANES[L.plane])}</b><img src="airdef/thumbs/air_${L.plane}.webp?v=20261117a" alt="" loading="lazy"><span class="hgw">${L.items.map(([k, n]) => `<span><img src="airdef/thumbs/wpn_${k}.webp?v=20261117a" alt="" onerror="this.style.visibility='hidden'"><u>×${n}</u></span>`).join('')}</span></button>`).join('');
+    } else if (ps === 'def') {
+      const list = Object.entries(SAM).filter(([, s]) => s.side === setup.side && s.era <= setup.era && s.type !== 'jammer');
+      if (!list.some(([k]) => k === setup.psam)) setup.psam = list[0][0];
+      strip = list.map(([k, s]) => `<button class="hgc sam${k === setup.psam ? ' on' : ''}" data-psam="${k}"><b>${trIf(s.short || s.name)}</b><img src="airdef/thumbs/pvo_${k}.webp?v=20261117a" alt="" loading="lazy"></button>`).join('');
+    } else {
+      const items = photoItems(att);
+      if (!items.some(([k]) => k === setup.pmun) && items.length) setup.pmun = items[0][0];
+      strip = items.map(([k]) => `<button class="hgc sam${k === setup.pmun ? ' on' : ''}" data-pmun="${k}"><b>${trIf(AG[k].short || AG[k].name)}</b><img src="airdef/thumbs/${AG[k].recon ? SIDE_PIC[att].stages[0] : 'strike_' + k}.webp?v=20261117a" alt="" loading="lazy" onerror="this.onerror=null;this.src='airdef/thumbs/wpn_${k}.webp?v=20261117a'"></button>`).join('');
+      if (!items.length) h += `<p class="hint">${tr('В этом ранге у этой стороны нечего снять - выберите другой ранг.')}</p>`;
+    }
+    $('hgStrip').innerHTML = strip;
+    const sel = $('hgStrip').querySelector && $('hgStrip').querySelector('.hgc.on'); if (sel && sel.scrollIntoView) sel.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    return h;
+  }
+  const DICE_I = '<svg class="ic" viewBox="0 0 24 24"><path fill="currentColor" d="M4 2h16a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm3.5 3.5a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm9 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM12 10a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-4.5 4.5a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm9 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/></svg>';
   function renderPhoto() {
+    if (C.hangar && C.hangar.has()) return renderPhotoHg();
     const ps = setup.pside || 'air', att = setup.side === 'east' ? 'west' : 'east';
     let h = `<div class="prow"><span>${tr('Снимаем')}</span>${seg('pside', ps, [['air', tr('Самолёт')], ['def', tr('ПВО')], ['multi', tr('Мульти-волна')]])}</div>
       <div class="prow"><span>${tr('Ранг')}</span>${seg('era', setup.era, ERAS.filter((e) => LOADOUTS[e.id]).map((e) => [e.id, e.short]))}</div>
@@ -266,7 +298,24 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
     }
   }
   // «Мульти-волна» отдельно: роль, сторона игрока, что ждёт. Эпох нет (Mark 2026-10-25): берётся всё открытое, один бюджет; уровень ИИ скрытый (sim/combined.js)
+  // ── плитки «Мульти-волны» и «Съёмки» в ангаре (Mark 2026-11-17, макеты «Этапы волны» и «Плитки»): картинки - юниты выбранной стороны ──
+  const SIDE_PIC = { east: { air: 'air_e_su24', pvo: 'pvo_s300', wave: ['strike_kalibr', 'strike_shahed'], stages: ['strike_shahed', 'strike_kh55d', 'strike_kalibr', 'strike_iskander'] },
+    west: { air: 'air_f16', pvo: 'pvo_patriot', wave: ['strike_tomahawk', 'strike_uav_w'], stages: ['strike_uav_w', 'strike_quail', 'strike_tomahawk', 'strike_atacms'] } };
+  const thumb = (n, st) => `<img src="airdef/thumbs/${n}.webp?v=20261117a" alt="" style="${st || ''}" onerror="this.style.visibility='hidden'">`;
+  const ptile = (v, cur, pics, l) => `<button data-v="${v}" class="${String(v) === String(cur) ? 'on' : ''}"><span class="opics">${pics}</span><em>${l}</em></button>`;
+  const STAR_SEG = { east: '<svg class="ic star" viewBox="0 0 24 24"><path fill="#d8332a" stroke="#f3e7c8" stroke-width="1.2" d="M12 1.8l2.9 7.2 7.6.4-5.9 4.9 2 7.5L12 17.6l-6.6 4.2 2-7.5-5.9-4.9 7.6-.4z"/></svg>',
+    west: '<svg class="ic star" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#28427a" stroke="#f3e7c8" stroke-width="1.2"/><path fill="#fff" d="M12 4.2l2 5 5.3.3-4.1 3.4 1.4 5.2L12 15.2l-4.6 2.9 1.4-5.2-4.1-3.4 5.3-.3z"/></svg>' };
+  const WX_SHORT = { day: tr('день'), morning: tr('утро'), evening: tr('вечер'), sunset: tr('закат'), overcast: tr('туман'), w_clear: tr('ясно'), w_frost: tr('дымка'), w_snow: tr('снег') };
+  const WX_BG = { day: 'linear-gradient(#7fb8f0,#dcefff)', morning: 'linear-gradient(#f6c58a,#9ec9f0)', evening: 'linear-gradient(#f08a4b,#5a6ea8)', sunset: 'linear-gradient(#ff7b54,#3b2f63)', overcast: 'linear-gradient(#9aa3ab,#d5d9dd)', w_clear: 'linear-gradient(#8eb6e8,#eef4fb)', w_frost: 'linear-gradient(#c9d6e6,#f2f5f8)', w_snow: 'linear-gradient(#a7b1bc,#e3e8ee)' };
+  const photoMs = () => (setup.pside || 'air') === 'def' ? setup.side : setup.side === 'east' ? 'west' : 'east'; // «Съёмка»: сторона снимаемого (самолёт, волна - атакующая; ПВО - своя)
   function renderMulti() {
+    if (C.hangar && C.hangar.has()) {
+      const atk = setup.mrole === 'atk', me = setup.side, att = atk ? me : me === 'east' ? 'west' : 'east', SP = SIDE_PIC[me];
+      let h = `<div class="seg otiles og" data-seg="mrole">${ptile('def', atk ? 'atk' : 'def', thumb(SP.pvo, 'left:10%;top:2%;width:80%;height:96%'), tr('За ПВО'))}${ptile('atk', atk ? 'atk' : 'def', thumb(SP.wave[0], 'left:0;top:8%;width:62%;height:80%') + thumb(SP.wave[1], 'right:0;top:18%;width:50%;height:76%'), tr('За волну'))}</div>
+        <div class="dset"><div class="drow">${seg('side', me, [['east', STAR_SEG.east], ['west', STAR_SEG.west]])}${seg('diff', setup.diff, Object.entries(MODES).map(([k, m]) => [k, trIf(m.name)]))}</div></div>
+        <div class="mwst"><div class="rlbl">${tr('Как идёт волна')}</div><div class="stages">${SIDE_PIC[att].stages.map((n, i) => `${i ? '<span class="arr">›</span>' : ''}<div class="stg"><span class="im">${thumb(n)}<b>${i + 1}</b></span><em>${[tr('разведка'), tr('дроны и ложные'), tr('крылатые'), tr('баллистика')][i]}</em></div>`).join('')}</div></div>`;
+      return h;
+    }
     const atk = setup.mrole === 'atk', me = setup.side, att = atk ? me : me === 'east' ? 'west' : 'east';
     let h = `<div class="prow"><span>${tr('Роль')}</span>${seg('mrole', atk ? 'atk' : 'def', [['def', tr('За ПВО')], ['atk', tr('За волну')]])}</div>
       <div class="prow"><span>${tr('Сторона')}</span>${seg('side', me, [['east', tr('Восток')], ['west', tr('Запад')]])}</div>
@@ -297,7 +346,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
         if (id === 'pmap') setup.pmap = v; else setup.pwx = { ...(setup.pwx || {}), [C.MAP]: v };
         save(); const u = new URL(location.href); u.searchParams.delete('weather'); u.searchParams.delete('map'); location.replace(u.href); return;
       }
-      if (id === 'pside') setup.pside = v; else if (id === 'palt') setup.palt = v; else if (id === 'pvs') setup.pvs = v; else if (id === 'op') setup.op = v === 'op'; else if (id === 'mrole') setup.mrole = v; else if (id === 'cs') setup.cs = v === 'on'; else if (id === 'diff') setup.diff = v; else if (id === 'era') { setup.era = +v; setup.lo = 0; } else if (id === 'side') setup.side = v; else if (id === 'aside') setup.side = v === 'east' ? 'west' : 'east'; else if (id === 'tnat') setup.side = setup.tside !== 'def' ? (v === 'east' ? 'west' : 'east') : v; /* обучение: своя техника; setup.side - сторона ПВО */ else if (id === 'tside') { setup.tside = v; setup.tl = 0; } else if (id === 'tbook') { setup.tside = v === 'multi' ? 'matk' : 'air'; setup.tl = 0; }
+      if (id === 'pside') { const ms = photoMs(); setup.pside = v; setup.side = v === 'def' ? ms : ms === 'east' ? 'west' : 'east'; } else if (id === 'pms') setup.side = (setup.pside || 'air') === 'def' ? v : v === 'east' ? 'west' : 'east'; else if (id === 'palt') setup.palt = v; else if (id === 'pvs') setup.pvs = v; else if (id === 'op') setup.op = v === 'op'; else if (id === 'mrole') setup.mrole = v; else if (id === 'cs') setup.cs = v === 'on'; else if (id === 'diff') setup.diff = v; else if (id === 'era') { setup.era = +v; setup.lo = 0; } else if (id === 'side') setup.side = v; else if (id === 'aside') setup.side = v === 'east' ? 'west' : 'east'; else if (id === 'tnat') setup.side = setup.tside !== 'def' ? (v === 'east' ? 'west' : 'east') : v; /* обучение: своя техника; setup.side - сторона ПВО */ else if (id === 'tside') { setup.tside = v; setup.tl = 0; } else if (id === 'tbook') { setup.tside = v === 'multi' ? 'matk' : 'air'; setup.tl = 0; }
     } else if (e.target.closest('[data-psam]')) setup.psam = e.target.closest('[data-psam]').dataset.psam; else if (e.target.closest('[data-pmun]')) setup.pmun = e.target.closest('[data-pmun]').dataset.pmun;
     else if (lo) setup.lo = +lo.dataset.lo; else if (lo1) setup.lo1 = +lo1.dataset.lo1; else if (lo2) setup.lo2 = +lo2.dataset.lo2; else if (tl) setup.tl = +tl.dataset.tl; else return;
     save(); render();
@@ -561,9 +610,9 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
   // самолёт в ангаре и подпись кнопки - по тому, что выбрано (в обороне и других режимах - последний выбранный)
   function syncHangar() {
     if (!C.hangar || !C.hangar.has()) return;
-    const air = setup.game === 'air' || setup.game === 'defense'; // лента внизу: самолёты (и в «Операции» - выбранного вылета), в «Обороне» - комплексы
+    const air = setup.game === 'air' || setup.game === 'defense' || setup.game === 'photo'; // «Съёмка»: в ленте - самолёты, комплексы или оружие волны // лента внизу: самолёты (и в «Операции» - выбранного вылета), в «Обороне» - комплексы
     document.body.classList.toggle('hgAir', air);
-    document.body.classList.toggle('hgFlat', setup.game === 'online'); // онлайн (Mark 2026-11-17): панель без тёмной подложки, как в макете - плитки и таблички прямо на фоне ангара
+    document.body.classList.toggle('hgFlat', setup.game === 'online' || setup.game === 'multi'); // онлайн (Mark 2026-11-17): панель без тёмной подложки, как в макете - плитки и таблички прямо на фоне ангара
     document.body.classList.toggle('hgPlain', ['air', 'defense', 'multi'].includes(setup.game)); // Mark: без описаний режимов в правой панели
     const list = LOADOUTS[setup.era] || [], cur = list[setup.op ? (opSlot === 1 ? setup.lo1 : setup.lo2) : setup.lo], ok = (L) => L && L.plane && !L.heli && PLANES[L.plane];
     const L = setup.game === 'air' && !setup.op && hgPlane && (!cur || cur.plane !== hgPlane) ? list.find((q) => q.plane === hgPlane && ok(q)) : ok(cur) ? cur : list.find(ok);
