@@ -827,8 +827,8 @@ export function createAir(C) {
   thrBuild(false); slDraw(); // ступени по настройке - сразу (ползунок виден и в редакторе кнопок до первого вылета)
   { const b = $('tFlare'); b.addEventListener('pointerdown', (e) => { e.preventDefault(); if (mine()) cmPress('btn'); }); for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) b.addEventListener(ev, () => cmRelease('btn')); } // зажата - ловушки очередью
   tap('tHelp', () => { if (game.net && !craft.dead && C.askHelp) C.askHelp([craft.pos.x, craft.pos.z]); });
-  // «Ещё» (#tMore): «Обзор», «Карта», «Бинокль», «Авто» спрятаны в ряд справа вверху под рядом паузы (Mark 2026-11-14); нажатие на кнопку ряда - её действие и ряд закрывается,
-  // повторное на «Ещё» - закрыть, сам закрывается через 4 с, новый вылет - закрыт. В ряду - только доступные кнопки (бинокль - не у вертолёта и не выключенный в настройках)
+  // «Ещё» (#tMore): «Обзор», «Карта», «Бинокль», «Авто» спрятаны в ряд справа вверху под рядом паузы (Mark 2026-11-14); нажатие на кнопку ряда - её действие, ряд остаётся
+  // открытым, пока игрок сам не закроет повторным нажатием на «Ещё» (Mark 2026-11-17); новый вылет - закрыт. В ряду - только доступные кнопки (бинокль - не у вертолёта и не выключенный в настройках)
   const moreB = $('tMore'), moreRow = $('tMoreRow'); let moreOn = false, moreTm = 0;
   const rareIds = () => ['tAuto', ...(!craft.heli && C.sens.bino !== false ? ['tBino'] : []), 'tMap', 'tLook'];
   function moreShow(on) {
@@ -837,12 +837,11 @@ export function createAir(C) {
       moreRow.style.right = ''; document.body.classList.add('moreOpen');
       const r = moreRow.getBoundingClientRect(), m = moreB.getBoundingClientRect();
       if (m.width && r.right > m.left && r.left < m.right && r.bottom > m.top - 4 && r.top < m.bottom) moreRow.style.right = `${Math.max(0, innerWidth - m.left + 6)}px`;
-      moreTm = setTimeout(() => moreShow(false), 4000);
     } else document.body.classList.remove('moreOpen');
     if (on === moreOn) return; moreOn = on; moreB.classList.toggle('on', on); moreB.innerHTML = ico(on ? 'close' : 'list');
   }
   tap('tMore', () => moreShow(!moreOn));
-  const tapR = (id, fn) => tap(id, () => { fn(); moreShow(false); }); // кнопка ряда: действие, потом ряд закрывается
+  const tapR = (id, fn) => tap(id, fn); // кнопка ряда: только действие, ряд не закрывается
   tapR('tLook', () => freeLook(!free.on)); tapR('tBino', binoTap);
   tap('tPop', popToggle); tapR('tMap', () => toggleMap()); tapR('tAuto', () => C.setAuto(!C.auto)); tap('tCam', () => { if (game.net && craft.dead) { spec.i++; spec.init = false; } else nextCam(); });
   // панель: тап по строке оружия - выбрать его, «ЦЕЛЬ …» - следующая цель, «ТВ» - окно контейнера
@@ -1620,7 +1619,7 @@ export function createAir(C) {
       return;
     }
     const dh = Math.hypot(craft.pos.x - home.x, craft.pos.z - home.z);
-    const near = craft.heli ? craft.landed && dh < 800 : dh < 2500 && craft.pos.y - city.groundH(craft.pos.x, craft.pos.z) < 1500; // вертолёт - сесть у точки вылета
+    const near = craft.heli ? craft.landed && dh < 1060 : dh < 3330 && craft.pos.y - city.groundH(craft.pos.x, craft.pos.z) < 1500; // вертолёт - сесть у точки вылета; радиусы +33 % (Mark 2026-11-17: 800 → 1060, 2500 → 3330)
     const need = homeLeft > 0 && (needsRearm() || cmLow(0.5) || craft.fuel < 0.6);
     if (!near || !need) { homeT = 0; return; }
     homeT += dt;

@@ -51,7 +51,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
   const tags = (k, t) => `<span class="tag ${k}">${t}</span>`;
   const realLock = () => setup.diff === 'real' && C.progress && C.progress.ready(); // прокачка ограничивает только «Реализм»
   // ангар (hangar.js): какой самолёт смотрим в ленте; настройки вылета свёрнуты в одну строку над подвеской
-  let hgPlane = null, hgSet = false;
+  let hgPlane = null, hgSet = false, opSlot = 1, hgSam = null; // hgSam - комплекс, открытый крупно в «Обороне» ангара // opSlot - какой вылет «Операции» выбирается в ленте ангара (1 - охота за ПВО, 2 - штурмовка)
   // таблички подвесок (Mark 2026-11-10, вариант «Таблички»): миниатюра, название и количество; описаний оружия здесь нет - они в «Арсенале»
   const wpnTiles = (L) => L.items.map(([k, n]) => `<span class="hgt${C.hangar && C.hangar.focused() === k ? ' fo' : ''}" data-fw="${k}"><span class="im"><img src="airdef/thumbs/wpn_${k}.webp?v=20261117a" alt="" onerror="this.style.visibility='hidden'"></span><em>${trIf(AG[k].short)}<u>×${n}</u></em></span>`).join('') + (L.pod ? `<span class="hgt pod"><span class="im">${ico('target')}</span><em>${podBuiltIn(L.plane) ? tr('прицел') : tr('контейнер')}</em></span>` : ''); // встроенный прицел («Кайра», «Платан», EOTS) - модель без контейнера (pod: null)
 
@@ -73,7 +73,12 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
   // Арсенал, Справка, Настройки, Об игре (Mark): свёрнуты в кнопку, как табличка разделов
   $('mtFold').innerHTML = ico('cog');
   $('mtFold').onclick = (e) => { e.stopPropagation(); snd.click(); $('mtabs').classList.toggle('open'); };
-  $('hgStrip').onclick = (e) => { const b = e.target.closest('[data-hgp]'); if (!b) return; panel(true); if (b.dataset.hgp === hgPlane) return; snd.click(); hgPlane = b.dataset.hgp; render(); save(); };
+  $('hgStrip').onclick = (e) => {
+    const ol = e.target.closest('[data-ol]'), nd = e.target.closest('[data-need]'), sm = e.target.closest('[data-sam]');
+    if (sm) { panel(true); if (hgSam !== sm.dataset.sam) { snd.click(); hgSam = sm.dataset.sam; } render(); return; } // «Оборона»: комплекс крупно в панели
+    if (nd) { snd.click(); C.research.open(nd.dataset.need); return; }
+    if (ol) { panel(true); const k = opSlot === 1 ? 'lo1' : 'lo2', v = +ol.dataset.ol; if (setup[k] !== v) { snd.click(); setup[k] = v; save(); } render(); return; } // «Операция»: подвеска выбранного вылета
+    const b = e.target.closest('[data-hgp]'); if (!b) return; panel(true); if (b.dataset.hgp === hgPlane) return; snd.click(); hgPlane = b.dataset.hgp; render(); save(); };
   $('modeSel').onclick = (e) => {
     const b = e.target.closest('button'); if (!b) return;
     panel(true); setup.game = b.dataset.g; setup.evd = false; save(); // evd - оборона события на осенней карте (event.js): обычное меню её сбрасывает
@@ -109,10 +114,10 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
     if (g === 'photo') { el.innerHTML = renderPhoto(); return; }
     let h = `<div class="prow"><span>${tr('Режим')}</span>${seg('diff', setup.diff, Object.entries(MODES).map(([k, m]) => [k, trIf(m.name)]))}</div><p class="hint">${trIf(MODES[setup.diff].desc)}</p>
       <div class="prow"><span>${tr('Ранг')}</span>${seg('era', setup.era, ERAS.filter((e) => LOADOUTS[e.id]).map((e) => [e.id, e.short]))}</div>
-      <div class="prow"><span>${g === 'defense' ? tr('Ваша ПВО') : tr('ПВО города')}</span>${seg('side', setup.side, [['east', tr('Советская')], ['west', tr('Западная')]])}</div>`;
+      <div class="prow">${g === 'defense' ? `<span>${tr('Ваша ПВО')}</span>${seg('side', setup.side, [['east', tr('Советская')], ['west', tr('Западная')]])}` /* вылет (Mark 2026-11-17): выбирается своя авиация, ПВО города - другой стороны */ : `<span>${tr('Ваша авиация')}</span>${seg('aside', setup.side === 'east' ? 'west' : 'east', [['east', tr('Советская')], ['west', tr('Западная')]])}`}</div>`;
     if (g === 'air') {
       const hg = C.hangar && C.hangar.has();
-      const setRow = `<p class="hint">${tr('Комплексы: {0}.', [DEFENSE[setup.side][setup.era].map(([k]) => trIf(SAM[k].short)).join(', ')])}</p>`;
+      const setRow = `<p class="hint">${tr('ПВО противника: {0}.', [DEFENSE[setup.side][setup.era].map(([k]) => trIf(SAM[k].short)).join(', ')])}</p>`;
       const segs = h; if (!hg) h += `${setRow}<div class="cat-h">${tr('Подвеска')}</div>`;
       // подвески стороны, которая атакует выбранную ПВО; у каждой - свой самолёт
       const att = setup.side === 'east' ? 'west' : 'east', mine = loadoutsOf(setup.era, att).filter(([L, i]) => !L.heli && (!retiredHidden(C.progress && C.progress.P, L.plane) || (!(C.progress && C.progress.P) && i === setup.lo))); // вертолёты - в событии «Туманная топь» (event.js); снятые с продажи - только у купивших
@@ -129,14 +134,25 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
       const seadOk = sead.filter(can), strikeOk = strike.filter(can);
       const canOp = seadOk.length > 0 && strikeOk.length > 0; if (!canOp) setup.op = false;
       const opRow = canOp ? `<div class="prow"><span>${tr('Вылеты')}</span>${seg('op', setup.op ? 'op' : 'one', [['one', tr('Один вылет')], ['op', tr('Операция: 2 вылета')]])}</div>` : '';
-      if (hg) h = `<button class="hgTop${hgSet ? ' open' : ''}" data-hgset="1"><b class="hgRank">${tr('Ранг')} ${ERAS[setup.era - 1].short}</b><span class="hgSum">${trIf(MODES[setup.diff].name)} · ${tr('ПВО: {0}', [setup.side === 'east' ? tr('советская') : tr('западная')])}${setup.op ? ' · ' + tr('2 вылета') : ''}</span></button>${hgSet ? `<div class="hgSet">${segs}${setRow}${opRow}</div>` : ''}${noneHint}`;
+      if (hg) h = `<button class="hgTop${hgSet ? ' open' : ''}" data-hgset="1"><b class="hgRank">${tr('Ранг')} ${ERAS[setup.era - 1].short}</b><span class="hgSum">${trIf(MODES[setup.diff].name)} · ${tr('Авиация: {0}', [setup.side === 'east' ? tr('западная') : tr('советская')])}${setup.op ? ' · ' + tr('2 вылета') : ''}</span></button>${hgSet ? `<div class="hgSet">${segs}${setRow}${opRow}</div>` : ''}${noneHint}`;
       else h += opRow;
       if (setup.op) {
         if (!seadOk.some(([, i]) => i === setup.lo1)) setup.lo1 = seadOk[0][1];
         if (!strikeOk.some(([, i]) => i === setup.lo2)) setup.lo2 = strikeOk[0][1];
-        h += `<p class="hint">${tr('Сначала подавить ПВО, потом бить по городу. Разбитое в первом вылете остаётся разбитым, уцелевшие комплексы перезарядятся. Очки считаются за оба вылета, +300 за два возвращения.')}</p>`;
-        h += `<div class="cat-h">${tr('Вылет 1 - охота за ПВО')}</div>` + sead.map((x) => loBtn(x, 'data-lo1', x[1] === setup.lo1)).join('');
-        h += `<div class="cat-h">${tr('Вылет 2 - штурмовка')}</div>` + strike.map((x) => loBtn(x, 'data-lo2', x[1] === setup.lo2)).join('');
+        if (hg) { // ангар (Mark 2026-11-17, макет «Таблички + лента»): в панели две таблички вылетов - самолёт и оружие миниатюрами; самолёты выбранного вылета - в ленте внизу
+          const opTile = (L) => `<span class="hgt hgpl"><span class="im"><img src="airdef/thumbs/air_${L.plane}.webp?v=20261117a" alt="" onerror="this.style.visibility='hidden'"></span><em>${trIf(PLANES[L.plane])}</em></span>`;
+          h += [[1, setup.lo1, 'sead', tr('Охота за ПВО')], [2, setup.lo2, 'strike', tr('Штурмовка')]].map(([n, i, rk, rn]) => { const L = LOADOUTS[setup.era][i], inb = planeMeta(L.plane) && stationsFor(L.plane, L.items.map(([k]) => k)).internal;
+            return `<div class="opt hgl hgop ${opSlot === n ? 'on' : ''}" role="button" tabindex="0" data-ops="${n}">${opSlot === n ? '<i class="pin"></i>' : ''}<span class="hgh2"><em class="opn">${n}</em><b class="${rk}">${rn}</b>${inb ? `<i>${tr('в отсеках')}</i>` : ''}</span><span class="hgr${inb || opSlot !== n ? ' inb' : ''}">${opTile(L)}${wpnTiles(L)}</span></div>`; }).join('');
+          h += `<p class="hint">${tr('Разбитое в 1-м вылете остаётся разбитым · +300 за два возвращения')}</p>`;
+          const pool = opSlot === 1 ? sead : strike, cur = opSlot === 1 ? setup.lo1 : setup.lo2;
+          $('hgStrip').innerHTML = pool.map(([L, i]) => { const miss = can([L, i]) ? [] : C.progress.loadoutMissing(L);
+            return `<button class="hgc op${i === cur && !miss.length ? ' on' : ''}${miss.length ? ' lock' : ''}" ${miss.length ? `data-need="${miss[0].id}"` : `data-ol="${i}"`}><b>${miss.length ? ico('lock') + ' ' : ''}${trIf(PLANES[L.plane])}</b><img src="airdef/thumbs/air_${L.plane}.webp?v=20261117a" alt="" loading="lazy"><span class="hgw">${L.items.map(([k, n]) => `<span><img src="airdef/thumbs/wpn_${k}.webp?v=20261117a" alt="" onerror="this.style.visibility='hidden'"><u>×${n}</u></span>`).join('')}</span></button>`; }).join('');
+          const sel = $('hgStrip').querySelector && $('hgStrip').querySelector('.hgc.on'); if (sel && sel.scrollIntoView) sel.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+        } else {
+          h += `<p class="hint">${tr('Сначала подавить ПВО, потом бить по городу. Разбитое в первом вылете остаётся разбитым, уцелевшие комплексы перезарядятся. Очки считаются за оба вылета, +300 за два возвращения.')}</p>`;
+          h += `<div class="cat-h">${tr('Вылет 1 - охота за ПВО')}</div>` + sead.map((x) => loBtn(x, 'data-lo1', x[1] === setup.lo1)).join('');
+          h += `<div class="cat-h">${tr('Вылет 2 - штурмовка')}</div>` + strike.map((x) => loBtn(x, 'data-lo2', x[1] === setup.lo2)).join('');
+        }
       } else if (hg) {
         // лента внизу - самолёты стороны; в панели - подвески выбранного. Закрытый в «Реализме» самолёт можно смотреть, «Взлёт» ведёт в «Исследования»
         const planes = mine.map(([L]) => L.plane).filter((p, i, a) => a.indexOf(p) === i), loPlane = LOADOUTS[setup.era][setup.lo].plane;
@@ -151,6 +167,24 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
       } else h += mine.map((x) => loBtn(x, 'data-lo', x[1] === setup.lo)).join('') + `<p class="hint">${tr('«Охота за ПВО» - уничтожить комплексы с РЛС, «штурмовка» - цели города.')}</p>`;
       if (!hg) { const L = LOADOUTS[setup.era][setup.op ? setup.lo1 : setup.lo]; // в ангаре описаний оружия нет (Mark 2026-11-10)
         h += `<p class="hint guide">${L.items.map(([k]) => `<b>${trIf(AG[k].short)}</b> - ${trIf(AG[k].guide)}`).join('<br>')}</p>`; }
+    } else if (g === 'defense' && C.hangar && C.hangar.has()) {
+      // ангар (Mark 2026-11-17, макет «Лента ПВО»): настройки кнопками, комплексы - в ленте внизу, выбранный - крупно с дальностью, высотой и наведением
+      const attS = setup.side === 'east' ? 'west' : 'east', csOk = combinedOk(attS, setup.era);
+      const STE = '<svg class="ic star" viewBox="0 0 24 24"><path fill="#d8332a" stroke="#f3e7c8" stroke-width="1.2" d="M12 1.8l2.9 7.2 7.6.4-5.9 4.9 2 7.5L12 17.6l-6.6 4.2 2-7.5-5.9-4.9 7.6-.4z"/></svg>';
+      const STW = '<svg class="ic star" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#28427a" stroke="#f3e7c8" stroke-width="1.2"/><path fill="#fff" d="M12 4.2l2 5 5.3.3-4.1 3.4 1.4 5.2L12 15.2l-4.6 2.9 1.4-5.2-4.1-3.4 5.3-.3z"/></svg>';
+      h = `<div class="dset"><div class="drow">${seg('diff', setup.diff, Object.entries(MODES).map(([k, m]) => [k, trIf(m.name)]))}${seg('era', setup.era, ERAS.filter((e) => LOADOUTS[e.id]).map((e) => [e.id, e.short]))}</div>
+        <div class="drow">${seg('side', setup.side, [['east', STE], ['west', STW]])}${csOk ? seg('cs', setup.cs === false ? 'off' : 'on', [['on', trIf(COMBINED_NAME)], ['off', tr('Налёт')]]) : ''}</div></div>`;
+      const TT = { guns: tr('АРТ'), ir: tr('ИК'), sarh: tr('ПАРЛ'), saclos: tr('ЛВ'), tvm: 'TVM', arh: tr('АРЛ'), jammer: tr('РЭБ'), command: tr('РК') };
+      const list = Object.entries(SAM).filter(([, s]) => s.side === setup.side && s.era <= setup.era), lockOf = (k) => realLock() && !C.progress.samOk(k);
+      if (!list.some(([k]) => k === hgSam)) hgSam = list[0][0];
+      const S = SAM[hgSam], lk = lockOf(hgSam), km = (m) => tr('{0} км', [(m / 1000).toFixed(m < 10000 ? 1 : 0).replace('.0', '')]);
+      h += `<div class="opt hgl on dsam${lk ? ' lock' : ''}" ${lk ? `data-need="pvo:${hgSam}"` : ''}><span class="hgh2"><b>${lk ? ico('lock') + ' ' : ''}${trIf(S.short || S.name)}</b>${capsHtml(S, 'def')}<i class="cost">${SAM_COST[hgSam]}</i></span>
+        <img class="dpic" src="airdef/thumbs/pvo_${hgSam}.webp?v=20261117a" alt="" onerror="this.style.visibility='hidden'">
+        <span class="dst"><span><b>${km(S.rmax)}</b><small>${tr('дальность')}</small></span><span><b>${km(S.hmax)}</b><small>${tr('высота')}</small></span><span class="t-${S.type}"><b>${TT[S.type] || ''}</b><small>${tr('наведение')}</small></span></span>
+        ${lk ? `<i class="need">${tr('в «Реализме» - после покупки в «Исследованиях»')}</i>` : ''}</div>`;
+      $('hgStrip').innerHTML = list.map(([k, s]) => { const l = lockOf(k);
+        return `<button class="hgc sam${k === hgSam ? ' on' : ''}${l ? ' lock' : ''}" data-sam="${k}"><b>${l ? ico('lock') + ' ' : ''}${trIf(s.short || s.name)}</b><img src="airdef/thumbs/pvo_${k}.webp?v=20261117a" alt="" loading="lazy"><span class="dft"><i class="t-${s.type}">${TT[s.type] || ''}</i><u>${SAM_COST[k]}</u></span></button>`; }).join('');
+      const sel = $('hgStrip').querySelector && $('hgStrip').querySelector('.hgc.on'); if (sel && sel.scrollIntoView) sel.scrollIntoView({ block: 'nearest', inline: 'nearest' });
     } else {
       // последняя волна - «Мульти-волна» (если у атакующей стороны в эпохе есть чем ударить)
       const attS = setup.side === 'east' ? 'west' : 'east';
@@ -162,7 +196,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
       h += `<div class="cat-h">${tr('Комплексы в вашем распоряжении')}</div>` + list.map(([k, s]) => { const lk = realLock() && !C.progress.samOk(k);
         return `<div class="opt ${lk ? 'lock' : ''}" ${lk ? `data-need="pvo:${k}"` : ''}><div class="nm"><b>${lk ? ico('lock') + ' ' : ''}${trIf(s.name)}${capsHtml(s, setup.game === 'multi' ? 'multi' : 'def')}</b><span>${tr('{0} · до {1} км, высота до {2} км', [trIf(SAM_TYPE[s.type]), (s.rmax / 1000).toFixed(1), (s.hmax / 1000).toFixed(1)])}</span>${lk ? `<span class="need">${tr('в «Реализме» - после покупки в «Исследованиях»')}</span>` : ''}</div><span class="pr">${tr('{0} очк', [SAM_COST[k]])}</span></div>`; }).join('') +
         `<p class="hint">${tr('Перед каждой волной расставьте комплексы за очки обороны; между волнами можно докупить, перевезти и продать. Волн: {0}. Поражение - если потеряно 75 % ценности военных объектов. В бою можно сесть в любой комплекс оператором.', [C.WAVES])}</p>`;
-    }
+        }
     el.innerHTML = h;
   }
   // «Съёмка»: что снимаем (самолёт с подвеской, комплекс ПВО, оружие «Мульти-волны»), эпоха и сторона ПВО города
@@ -251,18 +285,19 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
   $('tab-play').onclick = (e) => {
     if (setup.game === 'online') { C.online.onClick(e); return; }
     const sum = e.target.closest('[data-hgset]'); if (sum) { snd.click(); hgSet = !hgSet; render(); return; }
-    const fw = e.target.closest('.hgl.on .hgr:not(.inb) [data-fw]'); if (fw) { snd.click(); C.hangar.focusWeapon(fw.dataset.fw); render(); return; } // оружие выбранной подвески - камера подлетает
+    const fw = e.target.closest('.hgl.on .hgr:not(.inb) [data-fw]'); if (fw) { snd.click(); C.hangar.focusWeapon(fw.dataset.fw); render(); return; }
+    const ops = e.target.closest('[data-ops]'); if (ops) { const n = +ops.dataset.ops; if (n !== opSlot) { snd.click(); opSlot = n; render(); } return; } // «Операция»: какой вылет выбирать в ленте // оружие выбранной подвески - камера подлетает
     const f = e.target.closest('[data-fs]'); if (f) { firstClick(f.dataset.fs); snd.click(); render(); return; }
     const nd = e.target.closest('[data-need]'); if (nd) { snd.click(); C.research.open(nd.dataset.need); return; } // закрыто в «Реализме» - к нужной единице дерева
     const b = e.target.closest('[data-v]'), lo = e.target.closest('[data-lo]'), lo1 = e.target.closest('[data-lo1]'), lo2 = e.target.closest('[data-lo2]'), tl = e.target.closest('[data-tl]');
     if (b) {
       const id = b.parentNode.dataset.seg, v = b.dataset.v;
-      if (id === 'diff' || id === 'era' || id === 'side') hgPlane = null; // ангар: снова самолёт выбранной подвески
+      if (id === 'diff' || id === 'era' || id === 'side' || id === 'aside') hgPlane = null; // ангар: снова самолёт выбранной подвески
       if (id === 'pmap' || id === 'pwx') { // карта и погода «Съёмки» - перезапуск страницы (строятся при загрузке)
         if (id === 'pmap') setup.pmap = v; else setup.pwx = { ...(setup.pwx || {}), [C.MAP]: v };
         save(); const u = new URL(location.href); u.searchParams.delete('weather'); u.searchParams.delete('map'); location.replace(u.href); return;
       }
-      if (id === 'pside') setup.pside = v; else if (id === 'palt') setup.palt = v; else if (id === 'pvs') setup.pvs = v; else if (id === 'op') setup.op = v === 'op'; else if (id === 'mrole') setup.mrole = v; else if (id === 'cs') setup.cs = v === 'on'; else if (id === 'diff') setup.diff = v; else if (id === 'era') { setup.era = +v; setup.lo = 0; } else if (id === 'side') setup.side = v; else if (id === 'tnat') setup.side = setup.tside !== 'def' ? (v === 'east' ? 'west' : 'east') : v; /* обучение: своя техника; setup.side - сторона ПВО */ else if (id === 'tside') { setup.tside = v; setup.tl = 0; } else if (id === 'tbook') { setup.tside = v === 'multi' ? 'matk' : 'air'; setup.tl = 0; }
+      if (id === 'pside') setup.pside = v; else if (id === 'palt') setup.palt = v; else if (id === 'pvs') setup.pvs = v; else if (id === 'op') setup.op = v === 'op'; else if (id === 'mrole') setup.mrole = v; else if (id === 'cs') setup.cs = v === 'on'; else if (id === 'diff') setup.diff = v; else if (id === 'era') { setup.era = +v; setup.lo = 0; } else if (id === 'side') setup.side = v; else if (id === 'aside') setup.side = v === 'east' ? 'west' : 'east'; else if (id === 'tnat') setup.side = setup.tside !== 'def' ? (v === 'east' ? 'west' : 'east') : v; /* обучение: своя техника; setup.side - сторона ПВО */ else if (id === 'tside') { setup.tside = v; setup.tl = 0; } else if (id === 'tbook') { setup.tside = v === 'multi' ? 'matk' : 'air'; setup.tl = 0; }
     } else if (e.target.closest('[data-psam]')) setup.psam = e.target.closest('[data-psam]').dataset.psam; else if (e.target.closest('[data-pmun]')) setup.pmun = e.target.closest('[data-pmun]').dataset.pmun;
     else if (lo) setup.lo = +lo.dataset.lo; else if (lo1) setup.lo1 = +lo1.dataset.lo1; else if (lo2) setup.lo2 = +lo2.dataset.lo2; else if (tl) setup.tl = +tl.dataset.tl; else return;
     save(); render();
@@ -472,7 +507,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
   };
   // Арсенал / Справка / Настройки / Об игре - панель поверх меню; повторное касание, ✕ или Esc - закрыть
   const SHEET = { ref: tr('Арсенал'), guide: tr('Справка'), set: tr('Настройки'), misc: tr('Об игре') };
-  $('mtabs').onclick = (e) => { const b = e.target.closest('button'); if (!b) return; snd.click(); /* ряд шестерни остаётся открытым, пока игрок сам не закроет (Mark 2026-11-17) */ if (b.dataset.tab === 'research') { C.research.open(); return; } tab = tab === b.dataset.tab ? 'play' : b.dataset.tab; showTab(); }; // «Исследования» - свой экран (research.js)
+  $('mtabs').onclick = (e) => { const b = e.target.closest('button'); if (!b) return; snd.click(); $('mtabs').classList.remove('open'); if (b.dataset.tab === 'research') { C.research.open(); return; } tab = tab === b.dataset.tab ? 'play' : b.dataset.tab; showTab(); }; // «Исследования» - свой экран (research.js)
   $('msClose').onclick = () => { tab = 'play'; snd.click(); showTab(); };
   addEventListener('keydown', (e) => { if (e.code === 'Escape' && C.state === 'menu' && tab !== 'play') { tab = 'play'; showTab(); } });
   function showTab() {
@@ -526,11 +561,11 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
   // самолёт в ангаре и подпись кнопки - по тому, что выбрано (в обороне и других режимах - последний выбранный)
   function syncHangar() {
     if (!C.hangar || !C.hangar.has()) return;
-    const air = setup.game === 'air' && !setup.op;
+    const air = setup.game === 'air' || setup.game === 'defense'; // лента внизу: самолёты (и в «Операции» - выбранного вылета), в «Обороне» - комплексы
     document.body.classList.toggle('hgAir', air);
     document.body.classList.toggle('hgPlain', ['air', 'defense', 'multi'].includes(setup.game)); // Mark: без описаний режимов в правой панели
-    const list = LOADOUTS[setup.era] || [], cur = list[setup.op ? setup.lo2 : setup.lo], ok = (L) => L && L.plane && !L.heli && PLANES[L.plane];
-    const L = air && hgPlane && (!cur || cur.plane !== hgPlane) ? list.find((q) => q.plane === hgPlane && ok(q)) : ok(cur) ? cur : list.find(ok);
+    const list = LOADOUTS[setup.era] || [], cur = list[setup.op ? (opSlot === 1 ? setup.lo1 : setup.lo2) : setup.lo], ok = (L) => L && L.plane && !L.heli && PLANES[L.plane];
+    const L = setup.game === 'air' && !setup.op && hgPlane && (!cur || cur.plane !== hgPlane) ? list.find((q) => q.plane === hgPlane && ok(q)) : ok(cur) ? cur : list.find(ok);
     if (L) C.hangar.show(L);
     const b = $('startBtn'); if (setup.game === 'air' && C.realBlock) b.textContent = tr('Исследования');
     if (b.classList) b.classList.toggle('long', b.textContent.length > 8);

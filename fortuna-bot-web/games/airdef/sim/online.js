@@ -100,7 +100,7 @@ export const samOk = (k, era, side) => !!SAM[k] && SAM[k].era <= era && SAM[k].s
 // пополняется: дождётся конца. Одиночный «Вылет» считает её у себя (air.js), онлайн - сервер (airdef-rooms.js) ──
 // «Нужна помощь»: не чаще раза в HELP_CD с (сервер и игра); метка у союзников горит HELP_T с
 export const HELP_CD = 20, HELP_T = 5;
-export const ZONE = { R: 1200, STAY: 12, MOVE: 30, FUEL: 1, AMMO: 2 };
+export const ZONE = { R: 1600, STAY: 12, MOVE: 30, FUEL: 1, AMMO: 2 }; // R: 1200 → 1600 (Mark 2026-11-17: «увеличь зону перезарядки на 33 процента везде»)
 // новое место: кольцо 6,5-11,5 км от центра, не ближе 5 км к прежнему
 export function zoneSpot(rnd, prev) {
   for (let k = 0; k < 40; k++) {

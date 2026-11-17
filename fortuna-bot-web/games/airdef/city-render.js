@@ -2383,13 +2383,18 @@ function attachAirfield(G, scene, name, model, city, P) {
     const im = new THREE.InstancedMesh(c.geometry, c.material, pts.length);
     pts.forEach(([px, pz, yaw], i) => im.setMatrixAt(i, m4.compose(v.set(px, GH(px, pz), pz), q.setFromAxisAngle(Y, yaw), one)));
     im.castShadow = name === 'af_fuel' && !!P.shadows; im.receiveShadow = !!P.shadows; scene.add(im);
+    if (name === 'af_appr') { const R2 = rwyL / 2 + 900 + (P.brNear || 1600); (G.lodTicks = G.lodTicks || []).push((cam) => { im.visible = Math.hypot(cam.position.x - x, cam.position.z - z) < R2; }); } // огни подхода (стойка 4,6 тыс. треугольников) - только вблизи аэродрома
   });
 }
 function attachBridgeSegs(G, scene, model, P) {
   const list = G.bridgeSpans || []; if (!list.length) return;
-  // широкий городской мост - четыре параллельных пролёта (ширина модели 7,75 м), перила - только по внешним краям
-  const L = { deck: [], railL: [], railR: [], pier: [], cap: [] }, m4 = new THREE.Matrix4(), q = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 2), v = new THREE.Vector3(), sc = new THREE.Vector3();
+  // широкий городской мост - четыре параллельных пролёта (ширина модели 7,75 м), перила - только по внешним краям.
+  // У каждого моста - свои экземпляры (Mark 2026-11-17, телефон: пролёты всех мостов рисовались всегда, ~0,3 млн треугольников): ближе NEAR -
+  // моделью, дальше - прежний простой пролёт (G.lodTicks)
+  const m4 = new THREE.Matrix4(), q = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 2), v = new THREE.Vector3(), sc = new THREE.Vector3();
+  const NEAR = P.brNear || 1600;
   for (const b of list) {
+    const L = { deck: [], railL: [], railR: [], pier: [], cap: [] };
     const n = Math.max(1, Math.round(2 * b.SPAN / 9.6)), sl = 2 * b.SPAN / (n * 9.6), NS = 4, sx = (2 * b.HW) / (NS * 7.75), y0 = b.Yd - 3.2;
     for (let k = 0; k < n; k++) for (let st = 0; st < NS; st++) {
       const x = b.o.x - b.SPAN + (k + 0.5) * 2 * b.SPAN / n, z = b.o.z + (st - (NS - 1) / 2) * 7.75 * sx; // поворот на 90°: +x модели → −z мира
@@ -2397,13 +2402,21 @@ function attachBridgeSegs(G, scene, model, P) {
       if (st === 0) L.railR.push(dm); if (st === NS - 1) L.railL.push(dm);
       if (k % 3 === 1 || n < 3) { L.cap.push(dm); const top = y0 - 0.28, bot = CITY.WATER_Y - 8, sy = (top - bot) / 4.43; L.pier.push(m4.compose(v.set(x, top + 0.28 * sy, z), q, sc.set(sx, sy, sl)).clone()); }
     }
-    b.mesh.visible = false;
+    b.ims = [];
+    model.traverse((c) => {
+      if (!c.isMesh) return;
+      const k = (c.name.match(/^(railL|railR|pier|cap)\|/) || [])[1] || 'deck', mats = L[k]; if (!mats.length) return;
+      const im = new THREE.InstancedMesh(c.geometry, c.material, mats.length);
+      mats.forEach((m, i) => im.setMatrixAt(i, m)); im.instanceMatrix.needsUpdate = true; im.frustumCulled = false; im.visible = false;
+      im.castShadow = im.receiveShadow = !!P.shadows; scene.add(im); b.ims.push(im);
+    });
+    b.near = null; b.mesh.visible = true;
   }
-  model.traverse((c) => {
-    if (!c.isMesh) return;
-    const k = (c.name.match(/^(railL|railR|pier|cap)\|/) || [])[1] || 'deck', mats = L[k], im = new THREE.InstancedMesh(c.geometry, c.material, mats.length);
-    mats.forEach((m, i) => im.setMatrixAt(i, m)); im.instanceMatrix.needsUpdate = true; im.frustumCulled = false;
-    im.castShadow = im.receiveShadow = !!P.shadows; scene.add(im);
+  (G.lodTicks = G.lodTicks || []).push((cam) => {
+    for (const b of list) {
+      const near = Math.max(0, Math.hypot(cam.position.x - b.o.x, cam.position.z - b.o.z) - b.SPAN) < NEAR;
+      if (near === b.near) continue; b.near = near; b.mesh.visible = !near; for (const im of b.ims) im.visible = near;
+    }
   });
 }
 
@@ -2757,6 +2770,7 @@ export function updateCityScene(G, camera, P, focus, t, extra) {
   if (G.bake) G.bake.update(camera);
   if (G.lowL) G.lowL(); // осень: туман низин - по свету сцены
   if (G.snow) G.snow.update(camera, t || 0, G.renderer ? G.renderer.domElement.height : 720);
+  if (G.lodTicks) for (const f of G.lodTicks) f(camera); // мосты и огни подхода: вдали - простое или ничего
   if (G.ofTick) G.ofTick(camera); // офисы и стекло: какие здания - настоящими шагами (до отбора наборов: плоскости этих зданий выключены в том же кадре)
   if (G.near) { camera.updateMatrixWorld(); const cs = extra ? CAM2 : CAM1; cs[0] = camera; if (extra) cs[1] = extra; G.near(camera, cs); }
   if (G.kitTick) G.kitTick(camera); // свои дома: руины

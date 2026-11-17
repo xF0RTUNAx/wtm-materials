@@ -18,6 +18,12 @@ import { boardOl, boardMw } from './endscr.js?v=20261117a';
 import { createMM } from './mm.js?v=20261117a';
 import { podBuiltIn } from './models.js?v=20261117a';
 
+// значки «Своей комнаты» (Mark 2026-11-17, макет «Ангарные таблички»): сторона авиации звездой, бот - робот
+const STAR_E = '<svg class="ic star" viewBox="0 0 24 24"><path fill="#d8332a" stroke="#f3e7c8" stroke-width="1.2" d="M12 1.8l2.9 7.2 7.6.4-5.9 4.9 2 7.5L12 17.6l-6.6 4.2 2-7.5-5.9-4.9 7.6-.4z"/></svg>';
+const STAR_W = '<svg class="ic star" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#28427a" stroke="#f3e7c8" stroke-width="1.2"/><path fill="#fff" d="M12 4.2l2 5 5.3.3-4.1 3.4 1.4 5.2L12 15.2l-4.6 2.9 1.4-5.2-4.1-3.4 5.3-.3z"/></svg>';
+const DICE = '<svg class="ic" viewBox="0 0 24 24"><path fill="currentColor" d="M4 2h16a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm3.5 3.5a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm9 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM12 10a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-4.5 4.5a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm9 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/></svg>';
+const BOT = '<svg class="ic" viewBox="0 0 24 24"><path fill="currentColor" d="M11 2h2v3h4a3 3 0 0 1 3 3v9a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V8a3 3 0 0 1 3-3h4zM8.5 10a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm7 0a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zM8 15v2h8v-2zM1 10h2v5H1zm20 0h2v5h-2z"/></svg>';
+const TEAM_PIC = { air: 'air_e_mig27', pvo: 'pvo_buk', east: 'air_e_su24', west: 'air_f16' };
 const pnm = (p) => esc(p.bot ? trIf(p.name) : p.name); // позывные ботов приходят с сервера по-русски
 const ROLES = [['air', tr('Авиация')], ['pvo', tr('ПВО')], ['any', tr('Любая')]];
 const SIDES = [['random', tr('Случайно')], ['west', tr('Запад')], ['east', tr('Восток')]];
@@ -46,35 +52,44 @@ export function createOnline(C, ctrls) {
     const r = N.room;
     if (r && r.state === 'lobby') return lobby(el, r);
     if (N.queued) { el.innerHTML = `<div class="cat-h">${tr('Поиск боя')}</div><p class="hint">${waitText()}</p>`; return; }
-    const mw = ui.kind === 'multi', srch = N.search || {};
-    el.innerHTML = `<div class="prow"><span>${tr('Игра')}</span>${seg('kind', ui.kind, [['air', tr('Вылет и оборона')], ['multi', tr('Мульти-волна')]])}</div>
-      <div class="cat-h">${tr('Быстрый бой')} <span class="dim">${tr('· на рейтинг')}</span></div>
-      <div class="prow"><span>${tr('Режим')}</span>${seg('mode', ui.mode, O.AD_MODES.map((k) => [k, MODES[k].name]))}</div>
-      ${mw ? '' : `<div class="prow"><span>${tr('Роль')}</span>${seg('role', ui.role, ROLES)}</div>`}
-      <p class="hint">${mw ? tr('Команда против команды, два раунда. В одном ваша команда собирает волну (дроны, крылатые, баллистика), в другом ставит ПВО против волны соперника. Побеждает тот, чья волна разрушила больше. Подготовка - {0} с, в это время работает чат команды.{1}', [MW.PREP_T, N.search ? tr(' Сейчас ищут: аркада {0}, реализм {1}.', [srch.marcade || 0, srch.mreal || 0]) : ''])
-        : tr('Авиация против ПВО города, три волны. Ждём минимум 2 на 2, затем ещё 15 с, вдруг подтянутся другие. Если людей долго нет, добавим ботов.{0}', [N.search ? tr(' Сейчас ищут: аркада {0}, реализм {1}.', [srch.arcade, srch.real]) : ''])}</p>
-      <div class="cat-h">${tr('Своя комната')} <span class="dim">${tr('· без рейтинга')}</span></div>
-      <div class="prow"><span>${tr('Формат')}</span>${seg('size', ui.size, O.AD_SIZES.map((n) => [n, `${n}×${n}`]))}</div>
-      ${mw ? '' : `<div class="prow"><span>${tr('Ранг')}</span>${seg('era', ui.era, ERAS.filter((e) => LOADOUTS[e.id]).map((e) => [e.id, e.short || e.name]))}</div>`}
-      ${mw ? '' : `<div class="prow"><span>${tr('Авиация')}</span>${seg('side', ui.sideAir, SIDES)}</div>`}
-      <div class="prow"><span>${tr('Пустые места')}</span>${seg('fill', ui.fill ? 1 : 0, [[1, tr('Боты')], [0, tr('Без ботов')]])}</div>
-      <button class="btn alt" data-oa="create">${tr('Создать комнату')}</button>
-      <div class="cat-h">${tr('Войти по коду')}</div>
-      <div class="prow"><input id="adCode" maxlength="4" placeholder="${tr('Код')}" value="${esc(ui.code)}" style="text-transform:uppercase;width:90px"><button class="btn alt" data-oa="join" style="width:auto">${LANG === 'en' ? 'Join' : 'Войти'}</button></div>`; // не tr: «Войти» в словаре - вход в аккаунт (Sign in), один ключ на слово
+    const mw = ui.kind === 'multi';
+    // макет «Плитки» (Mark 2026-11-17): игра и роль - картинками, меньше текста; своя комната и вход по коду - под кнопками
+    const pic = (n, st) => `<img src="airdef/thumbs/${n}.webp?v=20261117a" alt="" style="${st}" onerror="this.style.visibility='hidden'">`;
+    const tile = (v, cur, pics, l) => `<button data-v="${v}" class="${String(v) === String(cur) ? 'on' : ''}"><span class="opics">${pics}</span><em>${l}</em></button>`;
+    const RP = { air: pic('air_e_mig27', 'left:8%;top:4%;width:84%;height:92%'), pvo: pic('pvo_buk', 'left:8%;top:4%;width:84%;height:92%'), any: pic('air_e_mig27', 'left:-4%;top:-6%;width:70%;height:80%') + pic('pvo_buk', 'right:-4%;top:22%;width:66%;height:80%') };
+    if (ui.sub === 'room') { // своя комната: настройки клетками на табличке, «Создать» - большая кнопка внизу
+      const cell = (v, cur, inner) => `<button data-v="${v}" class="${String(v) === String(cur) ? 'on' : ''}">${inner}</button>`;
+      el.innerHTML = `<div class="rhead"><button class="rback" data-oa="sub" data-t="room">‹</button><b>${tr('Своя комната')}</b><span class="dim">${tr('· без рейтинга')}</span></div>
+        <div class="rplate"><div class="rlbl">${tr('Формат')}</div><div class="seg rgrid" data-oseg="size">${O.AD_SIZES.map((n) => cell(n, ui.size, `<b>${n}×${n}</b>`)).join('')}</div>
+        ${mw ? '' : `<div class="rlbl">${tr('Ваша авиация')}</div><div class="seg rgrid" data-oseg="side">${SIDES.map(([v, l]) => cell(v, ui.sideAir, `${v === 'random' ? DICE : v === 'west' ? STAR_W : STAR_E}<em>${l}</em>`)).join('')}</div>`}</div>
+        <div class="rbox">${mw ? '' : seg('era', ui.era, ERAS.filter((e) => LOADOUTS[e.id]).map((e) => [e.id, e.short || e.name]))}<div class="seg rsw" data-oseg="fill"><button data-v="${ui.fill ? 0 : 1}" class="${ui.fill ? 'on' : ''}">${tr('боты')}<i></i></button></div></div>`;
+      return;
+    }
+    if (ui.sub === 'code') {
+      el.innerHTML = `<div class="rhead"><button class="rback" data-oa="sub" data-t="code">‹</button><b>${tr('По коду')}</b></div>
+        <div class="rplate"><div class="rlbl">${tr('Код комнаты')}</div><div class="prow"><input id="adCode" maxlength="4" placeholder="${tr('Код')}" value="${esc(ui.code)}" style="text-transform:uppercase;width:110px"><button class="btn alt" data-oa="join" style="width:auto">${LANG === 'en' ? 'Join' : 'Войти'}</button></div></div>`;
+      return;
+    }
+    el.innerHTML = `<div class="seg otiles og" data-oseg="kind">${tile('air', ui.kind, pic('air_e_mig27', 'left:2%;top:0;width:58%;height:84%') + pic('pvo_hawk', 'right:2%;top:16%;width:50%;height:84%'), tr('Вылет и оборона'))}${tile('multi', ui.kind, pic('strike_kalibr', 'left:0;top:6%;width:60%;height:80%') + pic('strike_shahed', 'right:2%;top:18%;width:52%;height:78%'), tr('Мульти-волна'))}</div>
+      <div class="oq"><div class="cat-h">${tr('Быстрый бой')} <span class="dim">${tr('· на рейтинг')}</span></div>
+      ${seg('mode', ui.mode, O.AD_MODES.map((k) => [k, MODES[k].name]))}
+      ${mw ? '' : `<div class="seg otiles orole" data-oseg="role">${ROLES.map(([v, l]) => tile(v, ui.role, RP[v], l)).join('')}</div>`}</div>
+      <div class="ofoot"><button class="btn alt" data-oa="sub" data-t="room">${ico('players')} ${tr('Своя комната')}</button><button class="btn alt" data-oa="sub" data-t="code">${ico('key')} ${tr('По коду')}</button></div>`;
   }
   function lobby(el, r) {
     const me = N.myPlayer(), host = r.host === (N.me && N.me.id);
     const TN = r.kind === 'multi' ? MW.TEAM_NAME : O.ROLE_NAMES, TT = r.kind === 'multi' ? MW.TEAMS : ['air', 'pvo'];
-    const col = (t) => `<div class="adteam"><div class="cat-h">${TN[t]} · ${r.players.filter((p) => p.team === t).length}/${r.size}</div>` +
-      r.players.filter((p) => p.team === t).map((p) => `<div class="adp ${p.id === (me && me.id) ? 'me' : ''}">${p.bot ? '' : `<img class="adav" src="${avaSrc(p.ava)}" alt="">`}<b>${pnm(p)}</b>${p.bot ? ` <span class="dim">${tr('бот')}</span>` : ''}${p.ready ? ` <span class="okc">${ico('ok', 'ii')}</span>` : ''}${host && p.bot ? ` <button class="mini" data-kick="${p.id}">×</button>` : ''}</div>`).join('') +
-      (me && me.team !== t ? `<button class="mini" data-oa="team" data-t="${t}">${tr('Перейти сюда')}</button>` : '') + (host ? ` <button class="mini" data-bot="${t}">${tr('+ бот')}</button>` : '') + '</div>';
-    el.innerHTML = `<div class="cat-h">${tr('Комната <b class="adcode">{0}</b>', [r.code])} <button class="mini" data-oa="invite">${tr('Пригласить')}</button> <button class="mini" data-oa="leave">${tr('Выйти')}</button></div>
-      <p class="hint">${r.kind === 'multi' ? tr('Мульти-волна · два раунда со сменой сторон · {0} · {1}×{2}{3}', [MODES[r.mode].name, r.size, r.size, r.fill ? tr(' · пустые места - боты') : '']) /* без эпохи: уровень ботов скрытый */
-        : tr('{0}{1}{2} · {3}×{4} · ранг {5}{6}{7}', [r.map ? (r.map === 'winter' ? tr('Северный рубеж') : tr('Речной узел')) + ' · ' : '', '', MODES[r.mode].name, r.size, r.size, ERAS[r.era - 1].short || r.era, tr(' · авиация - {0}', [r.sideAir === 'east' ? tr('восток') : tr('запад')]), r.fill ? tr(' · пустые места - боты') : ''])}</p>
+    // команда - табличка (Mark 2026-11-17, макет «Ангарные таблички»): места аватарками, лампа - готов; пустое место - «+ бот» у хоста или «сюда»
+    const seat = (p) => `<div class="rseat${p.id === (me && me.id) ? ' me' : ''}${p.ready ? ' ready' : ''}">${p.bot ? `<span class="rava bot">${BOT}</span>` : `<img class="rava" src="${avaSrc(p.ava)}" alt="">`}<i class="rlamp${p.ready ? ' on' : ''}"></i><em>${pnm(p)}</em>${host && p.bot ? `<button class="rkick" data-kick="${p.id}">×</button>` : ''}</div>`;
+    const team = (t) => { const ps = r.players.filter((p) => p.team === t), free = Math.max(0, r.size - ps.length), mine = me && me.team === t;
+      const empty = host ? `<button class="rseat empty" data-bot="${t}"><span class="rava">+</span><em>${tr('бот')}</em></button>` : !mine && me ? `<button class="rseat empty" data-oa="team" data-t="${t}"><span class="rava">↔</span><em>${tr('сюда')}</em></button>` : `<div class="rseat empty"><span class="rava"></span><em>&nbsp;</em></div>`;
+      return `<div class="rteam t-${t}${mine ? ' on' : ''}"><div class="hd">${TEAM_PIC[t] ? `<img src="airdef/thumbs/${TEAM_PIC[t]}.webp?v=20261117a" alt="">` : ''}<b>${TN[t]}</b><i>${ps.length}/${r.size}</i></div><div class="rseats">${ps.map(seat).join('')}${free ? empty : ''}</div></div>`; };
+    const sum = r.kind === 'multi' ? tr('Мульти-волна · {0} · {1}×{2}', [MODES[r.mode].name, r.size, r.size]) : tr('{0}×{1} · ранг {2} · {3}', [r.size, r.size, ERAS[r.era - 1].short || r.era, MODES[r.mode].name]);
+    el.innerHTML = `<div class="rcode"><span class="rlabel">${r.code}</span><button class="rbtn" data-oa="invite">${ico('send')} ${tr('Позвать')}</button><button class="rbtn" data-oa="leave">${tr('Выйти')}</button></div>
       ${afterBattle ? `<p class="hint">${tr('<b>Бой окончен, вы снова в комнате.</b> Хост может сменить игру, режим, формат, ранг и сторону; затем все нажимают «Готов».')}</p>` : ''}
-      ${host ? `<div class="prow"><span>${tr('Игра')}</span>${seg('rkind', r.kind === 'multi' ? 'multi' : 'air', [['air', tr('Вылет и оборона')], ['multi', tr('Мульти-волна')]])}</div><div class="prow"><span>${tr('Формат')}</span>${seg('rsize', r.size, O.AD_SIZES.map((n) => [n, `${n}×${n}`]))}</div>${r.kind === 'multi' ? '' : `<div class="prow"><span>${tr('Ранг')}</span>${seg('rera', r.era, ERAS.filter((e) => LOADOUTS[e.id]).map((e) => [e.id, e.short || e.name]))}</div>`}
-        ${r.kind === 'multi' ? '' : `<div class="prow"><span>${tr('Авиация')}</span>${seg('rside', r.sideAir, SIDES.slice(1))}</div>`}<div class="prow"><span>${tr('Режим')}</span>${seg('rmode', r.mode, O.AD_MODES.map((k) => [k, MODES[k].name]))}</div>` : ''}
-      <div class="adteams">${TT.map(col).join('')}</div>
+      ${host ? `<button class="rsum${ui.rset ? ' open' : ''}" data-oa="rset">${sum}</button>${ui.rset ? `<div class="rbox col"><div class="prow"><span>${tr('Игра')}</span>${seg('rkind', r.kind === 'multi' ? 'multi' : 'air', [['air', tr('Вылет и оборона')], ['multi', tr('Мульти-волна')]])}</div><div class="prow"><span>${tr('Формат')}</span>${seg('rsize', r.size, O.AD_SIZES.map((n) => [n, `${n}×${n}`]))}</div>${r.kind === 'multi' ? '' : `<div class="prow"><span>${tr('Ранг')}</span>${seg('rera', r.era, ERAS.filter((e) => LOADOUTS[e.id]).map((e) => [e.id, e.short || e.name]))}</div><div class="prow"><span>${tr('Авиация')}</span>${seg('rside', r.sideAir, SIDES.slice(1))}</div>`}<div class="prow"><span>${tr('Режим')}</span>${seg('rmode', r.mode, O.AD_MODES.map((k) => [k, MODES[k].name]))}</div></div>` : ''}`
+        : `<div class="rsum">${sum}${r.kind === 'multi' ? '' : tr(' · авиация - {0}', [r.sideAir === 'east' ? tr('восток') : tr('запад')])}</div>`}
+      ${TT.map(team).join('')}
       <p class="hint">${tr('Бой начнётся, когда все нажмут «Готов».')}</p>`;
   }
   // кнопка внизу карточки меню
@@ -82,14 +97,17 @@ export function createOnline(C, ctrls) {
     if (N.conn === 'noacc' && !N.account() || N.conn === 'needgame') return tr('Войти или создать аккаунт');
     if (N.conn !== 'on') return tr('Онлайн');
     if (N.room && N.room.state === 'lobby') { const me = N.myPlayer(); return me && me.ready ? tr('Готов (снять)') : tr('Готов'); }
+    if (ui.sub === 'room') return tr('Создать');
     return N.queued ? tr('Отменить поиск') : tr('Найти бой');
   }
   function primary() {
     if (N.conn === 'noacc' && !N.account() || N.conn === 'needgame') { openAcc(); return; }
     if (N.conn !== 'on') { N.connect(); return; }
     if (N.room && N.room.state === 'lobby') { const me = N.myPlayer(); N.ready(!(me && me.ready)); return; }
+    if (ui.sub === 'room' && !N.queued) { createRoom(); return; }
     if (N.queued) N.unqueue(); else N.queue(ui.mode, ui.role, ui.kind === 'multi' ? 'multi' : undefined);
   }
+  const createRoom = () => { ui.sub = null; N.create(ui.kind === 'multi' ? { kind: 'multi', mode: ui.mode, size: ui.size, fill: ui.fill, era: 2 + Math.floor(Math.random() * 3) /* только для старого сервера до update.ps1 (у запада нет I); новый - игнорирует */ } : { mode: ui.mode, size: ui.size, era: ui.era, sideAir: ui.sideAir === 'random' ? null : ui.sideAir, fill: ui.fill, team: ui.role === 'any' ? null : ui.role }); };
   const openAcc = () => { if (C.account) C.account.open(siteAcc() ? 'reg' : 'login'); }; // у вошедшего на сайте новичка - сразу регистрация
   function onClick(e) {
     const b = e.target.closest('[data-v]'), sg = b && b.closest('[data-oseg]');
@@ -107,8 +125,10 @@ export function createOnline(C, ctrls) {
     switch (a.dataset.oa) {
       case 'retry': N.conn = 'off'; N.connect(); break;
       case 'acc': openAcc(); break;
-      case 'create': N.create(ui.kind === 'multi' ? { kind: 'multi', mode: ui.mode, size: ui.size, fill: ui.fill, era: 2 + Math.floor(Math.random() * 3) /* только для старого сервера до update.ps1 (у запада нет I); новый - игнорирует */ } : { mode: ui.mode, size: ui.size, era: ui.era, sideAir: ui.sideAir === 'random' ? null : ui.sideAir, fill: ui.fill, team: ui.role === 'any' ? null : ui.role }); break;
+      case 'create': createRoom(); break;
+      case 'rset': ui.rset = !ui.rset; rerender(); break;
       case 'join': { const v = ($('adCode') && $('adCode').value || '').toUpperCase(); ui.code = v; if (v.length === 4) N.join(v, ui.kind === 'multi' || ui.role === 'any' ? null : ui.role); break; }
+      case 'sub': ui.sub = ui.sub === a.dataset.t ? null : a.dataset.t; rerender(); if (C.menu && C.menu.render) C.menu.render(); break; // свой экран «Своей комнаты» / «По коду»; кнопка внизу - «Создать» // «Своя комната» / «По коду» - раскрыть или свернуть
       case 'leave': N.leave(); break;
       case 'team': N.team(a.dataset.t); break;
       case 'invite': invite(); break;

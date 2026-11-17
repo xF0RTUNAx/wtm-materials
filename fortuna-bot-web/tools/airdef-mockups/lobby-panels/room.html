@@ -1,0 +1,148 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Своя комната: варианты</title>
+<!-- Макеты (Mark 2026-11-17): «Своя комната» в «Онлайне» - создание комнаты и сама комната (код, команды, готовность). Фон - кадр ангара 844×390
+     без панели (bg_online.jpg, bg_shots.js). Сервер 8935: /fortuna-bot-web/tools/airdef-mockups/lobby-panels/room.html   ?f=a1 - один кадр. В игре ничего не менялось. -->
+<style>
+@font-face { font-family: 'Oswald'; font-weight: 300 700; src: url(../../../games/airdef/fonts/oswald-cyrillic.woff2) format('woff2'); unicode-range: U+0400-045F, U+2116; }
+@font-face { font-family: 'Oswald'; font-weight: 300 700; src: url(../../../games/airdef/fonts/oswald-latin.woff2) format('woff2'); unicode-range: U+0000-00FF, U+2000-206F, U+2191, U+2193; }
+@font-face { font-family: 'Golos Text'; font-weight: 400 800; src: url(../../../games/airdef/fonts/golos-text-cyrillic.woff2) format('woff2'); unicode-range: U+0400-045F; }
+@font-face { font-family: 'Golos Text'; font-weight: 400 800; src: url(../../../games/airdef/fonts/golos-text-latin.woff2) format('woff2'); unicode-range: U+0000-00FF, U+2000-206F; }
+:root { --gold: #e8b04a; --gold2: #f3c96f; --ink: #ece8dc; --dim: #c2c7b2; --mute: #8d9580; --pn: rgba(16,19,15,.88); --ln: rgba(110,104,80,.55); --air: #7fb2e6; --pvo: #e48a6c; }
+* { box-sizing: border-box; } html, body { margin: 0; background: #0d100c; color: var(--ink); font: 14px 'Golos Text', sans-serif; }
+h1 { font: 500 22px 'Oswald'; margin: 18px 20px 4px; } h2 { font: 500 18px 'Oswald'; margin: 26px 20px 2px; color: var(--gold2); } p.d { margin: 0 20px 10px; max-width: 1280px; color: var(--dim); line-height: 1.45; font-size: 13.5px; }
+.rowf { display: flex; flex-wrap: wrap; gap: 16px; padding: 0 20px; } .cap { font: 500 15px 'Oswald'; color: var(--gold2); margin: 6px 0 2px; } .cap span { font: 12.5px 'Golos Text'; color: var(--dim); margin-left: 6px; }
+body.one h1, body.one h2, body.one p.d, body.one .cap { display: none; } body.one .rowf { padding: 0; gap: 0; }
+.ph { position: relative; flex: none; width: 844px; height: 390px; overflow: hidden; background: #111 url(bg_online.jpg) left top / 844px 390px no-repeat; }
+img { display: block; }
+.pn { position: absolute; right: 61px; top: 38px; width: 262px; }
+.pHead { display: flex; align-items: center; gap: 6px; height: 30px; padding: 0 4px 0 10px; background: var(--pn); border: 1px solid var(--ln); font: 500 15px 'Oswald'; color: var(--ink); }
+.pHead .x { margin-left: auto; width: 24px; height: 22px; display: grid; place-items: center; border: 1px solid #5f5a45; color: var(--gold); font: 600 14px 'Oswald'; }
+.pHead .bk { color: var(--gold); font: 600 16px 'Oswald'; }
+.box { margin-top: 4px; padding: 6px; background: var(--pn); border: 1px solid var(--ln); }
+.lbl { font: 500 9.5px 'Oswald'; letter-spacing: .14em; text-transform: uppercase; color: var(--mute); }
+.chip { display: inline-grid; place-items: center; height: 24px; padding: 0 7px; font: 500 12.5px 'Oswald'; color: var(--dim); background: rgba(10,12,9,.8); border: 1px solid #3c3a2c; white-space: nowrap; }
+.chip.on { background: var(--gold); color: #1c1708; border-color: var(--gold); }
+.chips { display: flex; gap: 3px; } .chips .chip { flex: 1; }
+.start { position: absolute; right: 61px; bottom: 30px; width: 168px; height: 44px; display: grid; place-items: center; border-image: url(../../../games/airdef/ui/hangar/b_start.webp) 60 fill / 14px stretch; border-style: solid; border-width: 14px; font: 600 18px 'Oswald'; letter-spacing: .06em; color: #1d1708; text-transform: uppercase; }
+.start.alt { filter: saturate(.2) brightness(.8); }
+.plate { border-style: solid; border-width: 9px; border-image: url(../../../games/airdef/ui/hangar/b_plate_n.webp) 30 fill / 9px stretch; } .plate.on { border-image-source: url(../../../games/airdef/ui/hangar/b_plate_on.webp); }
+.card { border-style: solid; border-width: 7px; border-image: url(../../../games/airdef/ui/hangar/b_card_n.webp) 26 fill / 7px stretch; } .card.on { border-image-source: url(../../../games/airdef/ui/hangar/b_card_on.webp); }
+.label { display: inline-grid; place-items: center; height: 30px; line-height: 1; padding: 0 10px; border-style: solid; border-width: 7px; border-image: url(../../../games/airdef/ui/hangar/b_label.webp) 24 fill / 7px stretch; font: 600 15px 'Oswald'; letter-spacing: .18em; color: #1b1a14; }
+.ava { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; border: 1px solid #6c6650; flex: none; }
+.lamp { width: 13px; height: 13px; flex: none; background: url(../../../games/airdef/ui/hangar/b_lamp_off.webp) center / contain no-repeat; } .lamp.on { background-image: url(../../../games/airdef/ui/hangar/b_lamp_on.webp); }
+.ic { width: 15px; height: 15px; fill: currentColor; flex: none; }
+.star { width: 15px; height: 15px; flex: none; }
+.sw { display: inline-flex; align-items: center; gap: 6px; font: 500 12px 'Oswald'; color: var(--dim); } .sw i { position: relative; width: 30px; height: 16px; border-radius: 8px; background: #3a382b; } .sw i::after { content: ''; position: absolute; left: 2px; top: 2px; width: 12px; height: 12px; border-radius: 50%; background: #8d8770; }
+.sw.on i { background: #8a6a2a; } .sw.on i::after { left: 16px; background: var(--gold2); }
+.btn2 { display: inline-flex; align-items: center; justify-content: center; gap: 5px; height: 26px; padding: 0 9px; background: rgba(10,12,9,.8); border: 1px solid #5f5a45; font: 500 12px 'Oswald'; color: var(--gold2); white-space: nowrap; }
+.r { display: flex; align-items: center; gap: 6px; } .r + .r { margin-top: 5px; } .r > .lbl { width: 52px; flex: none; }
+.th { object-fit: contain; }
+
+/* А «Табло команд» */
+.A .fmt { display: grid; grid-template-columns: repeat(6, 1fr); gap: 3px; } .A .fmt .chip { flex-direction: column; height: 30px; line-height: 1; padding: 0; } .A .fmt .chip small { font: 500 8px 'Oswald'; letter-spacing: .05em; opacity: .7; }
+.A .codeRow { display: flex; align-items: center; gap: 6px; margin-top: 4px; padding: 5px 6px; background: var(--pn); border: 1px solid var(--ln); }
+.A .codeRow .code { font: 600 22px/1 'Oswald'; letter-spacing: .22em; color: var(--gold2); } .A .codeRow .btn2 { margin-left: auto; } .A .codeRow .btn2 + .btn2 { margin-left: 0; }
+.A .teams { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-top: 4px; }
+.A .team { padding: 0; min-height: 150px; }
+.A .team .th2 { display: flex; align-items: center; gap: 5px; height: 26px; padding: 0 2px; border-bottom: 1px solid rgba(255,255,255,.08); } .A .team .th2 img { width: 40px; height: 22px; object-fit: contain; } .A .team .th2 b { font: 600 12.5px 'Oswald'; letter-spacing: .06em; text-transform: uppercase; } .A .team .th2 i { margin-left: auto; font: 500 11px 'Oswald'; font-style: normal; color: var(--mute); }
+.A .team.air .th2 b { color: var(--air); } .A .team.pvo .th2 b { color: var(--pvo); }
+.A .pl { display: flex; align-items: center; gap: 5px; height: 30px; padding: 0 2px; } .A .pl b { font: 500 12px 'Oswald'; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; } .A .pl .lamp { margin-left: auto; }
+.A .pl.me b { color: var(--gold2); } .A .pl .bot { font: 500 9px 'Oswald'; color: var(--mute); letter-spacing: .1em; text-transform: uppercase; margin-left: auto; } .A .pl .bot + .lamp { margin-left: 4px; }
+.A .pl.empty { justify-content: center; border: 1px dashed #4a4636; color: var(--mute); font: 500 11px 'Oswald'; margin-top: 3px; }
+.A .sumR { display: flex; align-items: center; gap: 6px; height: 26px; margin-top: 4px; padding: 0 8px; background: var(--pn); border: 1px solid var(--ln); font: 500 12px 'Oswald'; color: var(--dim); } .A .sumR b { color: var(--gold2); font-weight: 500; } .A .sumR .chev { margin-left: auto; color: var(--gold); }
+
+/* Б «Карточки игроков» */
+.B .stepper { display: flex; align-items: center; gap: 6px; } .B .stepper .st { width: 28px; height: 28px; display: grid; place-items: center; background: rgba(10,12,9,.8); border: 1px solid #5f5a45; font: 600 18px 'Oswald'; color: var(--gold); }
+.B .stepper .v { flex: 1; text-align: center; font: 600 26px/1 'Oswald'; color: var(--ink); } .B .stepper .v small { display: block; font: 500 9px 'Oswald'; letter-spacing: .12em; color: var(--mute); text-transform: uppercase; }
+.B .sidepick { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; } .B .sidepick .card { height: 54px; padding: 0; position: relative; text-align: center; }
+.B .sidepick img { width: 100%; height: 30px; object-fit: contain; } .B .sidepick em { display: block; font: 500 11px 'Oswald'; font-style: normal; } .B .sidepick .dice { height: 30px; display: grid; place-items: center; color: var(--gold2); } .B .sidepick .dice .ic { width: 22px; height: 22px; }
+.B .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; margin-top: 4px; }
+.B .tcol { display: flex; flex-direction: column; gap: 3px; } .B .tcol > .hd { display: flex; align-items: center; gap: 5px; height: 22px; padding: 0 6px; font: 600 11.5px 'Oswald'; letter-spacing: .1em; text-transform: uppercase; color: #111; } .B .tcol.air > .hd { background: var(--air); } .B .tcol.pvo > .hd { background: var(--pvo); } .B .tcol > .hd i { margin-left: auto; font-style: normal; }
+.B .pc { position: relative; height: 54px; display: flex; align-items: center; gap: 6px; padding: 0 6px; background: var(--pn); border: 1px solid var(--ln); }
+.B .pc .ava { width: 34px; height: 34px; } .B .pc b { font: 500 12px/1.1 'Oswald'; } .B .pc b small { display: block; font: 500 9px 'Oswald'; color: var(--mute); letter-spacing: .08em; }
+.B .pc.ready { box-shadow: inset 0 -3px 0 #7fd062; } .B .pc.me { border-color: var(--gold); } .B .pc .ok { position: absolute; right: 4px; top: 4px; width: 14px; height: 14px; border-radius: 50%; background: #7fd062; color: #10200a; font: 700 10px/14px 'Golos Text'; text-align: center; }
+.B .pc.empty { justify-content: center; border-style: dashed; color: var(--mute); font: 500 11px 'Oswald'; background: rgba(16,19,15,.6); }
+.B .top { display: flex; align-items: center; gap: 6px; margin-top: 4px; } .B .top .label { flex: none; } .B .top .btn2 { padding: 0 7px; }
+
+/* В «Ангарные таблички» */
+.C .plate.set { padding: 0; } .C .row3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+.C .opt { position: relative; height: 46px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; background: rgba(8,10,7,.7); border: 1px solid #3c3a2c; font: 500 11px 'Oswald'; color: var(--dim); }
+.C .opt.on { border-color: var(--gold); box-shadow: inset 0 0 0 1px var(--gold); color: var(--ink); } .C .opt b { font: 600 17px/1 'Oswald'; color: var(--ink); } .C .opt .ic, .C .opt .star { width: 18px; height: 18px; }
+.C .tp { padding: 0; margin-top: 4px; } .C .tp .hd { display: flex; align-items: center; gap: 6px; height: 18px; } .C .tp .hd img { width: 44px; height: 24px; object-fit: contain; margin: -4px 0; } .C .tp .hd b { font: 600 12.5px 'Oswald'; letter-spacing: .1em; text-transform: uppercase; } .C .tp .hd i { margin-left: auto; font: 500 11px 'Oswald'; font-style: normal; color: var(--mute); }
+.C .tp.air .hd b { color: var(--air); } .C .tp.pvo .hd b { color: var(--pvo); }
+.C .seats { display: flex; gap: 8px; margin-top: 6px; }
+.C .seat { position: relative; width: 50px; text-align: center; } .C .seat .ava { width: 38px; height: 38px; margin: 0 auto; border-width: 2px; } .C .seat.ready .ava { border-color: #7fd062; } .C .seat.me .ava { border-color: var(--gold); }
+.C .seat em { display: block; margin-top: 2px; font: 500 10px/1 'Oswald'; font-style: normal; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .C .seat .lamp { position: absolute; right: 4px; top: 26px; }
+.C .seat.empty .ava { border: 1px dashed #6c6650; background: rgba(0,0,0,.3); display: grid; place-items: center; color: var(--mute); font: 600 16px 'Oswald'; }
+.C .codeL { display: flex; align-items: center; gap: 6px; margin-top: 4px; }
+</style></head><body>
+<h1>«Своя комната»: варианты</h1>
+<p class="d">Mark 2026-11-17: «давай еще настроим дизайн своей комнаты - тоже предложи мне несколько дизайнов». У каждого варианта два кадра: создание комнаты (после «Своя комната» в «Онлайне») и сама комната - код, приглашение, две команды, готовность. Сейчас это строки кнопок «Формат / Ранг / Авиация / Пустые места» и списки ников текстом. Пример: 2×2, ранг II, вы - хост в авиации, одно место у ПВО свободно («+ бот» - только у хоста).</p>
+<h2>А · «Табло команд»</h2>
+<div class="rowf"><div><div class="cap">Создание <span>формат плитками, сторона значками, боты - переключателем</span></div><div class="ph" id="f_a1"></div></div>
+  <div><div class="cap">Комната <span>код крупно, команды двумя табло, лампы готовности, пустое место - «+ бот»</span></div><div class="ph" id="f_a2"></div></div></div>
+<h2>Б · «Карточки игроков»</h2>
+<div class="rowf"><div><div class="cap">Создание <span>формат «− 2×2 +», сторона авиации картинками</span></div><div class="ph" id="f_b1"></div></div>
+  <div><div class="cap">Комната <span>каждый игрок - карточка с аватаркой, готовые подчёркнуты зелёным</span></div><div class="ph" id="f_b2"></div></div></div>
+<h2>В · «Ангарные таблички»</h2>
+<div class="rowf"><div><div class="cap">Создание <span>настройки крупными клетками на табличке</span></div><div class="ph" id="f_c1"></div></div>
+  <div><div class="cap">Комната <span>код на бирке, команды - таблички с местами-аватарками</span></div><div class="ph" id="f_c2"></div></div></div>
+<script>
+const T = (n) => `../../../games/airdef/thumbs/${n}.webp`, AV = (n) => `../../../games/airdef/ui/avatars/${n}.webp`;
+const STAR_E = '<svg class="star" viewBox="0 0 24 24"><path fill="#d8332a" stroke="#f3e7c8" stroke-width="1.2" d="M12 1.8l2.9 7.2 7.6.4-5.9 4.9 2 7.5L12 17.6l-6.6 4.2 2-7.5-5.9-4.9 7.6-.4z"/></svg>';
+const STAR_W = '<svg class="star" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#28427a" stroke="#f3e7c8" stroke-width="1.2"/><path fill="#fff" d="M12 4.2l2 5 5.3.3-4.1 3.4 1.4 5.2L12 15.2l-4.6 2.9 1.4-5.2-4.1-3.4 5.3-.3z"/></svg>';
+const DICE = '<svg class="ic" viewBox="0 0 24 24"><path d="M4 2h16a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm3.5 3.5a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm9 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM12 10a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-4.5 4.5a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm9 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/></svg>';
+const SHARE = '<svg class="ic" viewBox="0 0 24 24"><path d="M18 16a3 3 0 0 0-2.2 1l-7-3.6a3 3 0 0 0 0-2.8l7-3.6A3 3 0 1 0 15 5l-7 3.6a3 3 0 1 0 0 6.8l7 3.6A3 3 0 1 0 18 16z"/></svg>';
+const EXIT = '<svg class="ic" viewBox="0 0 24 24"><path d="M10 3h9a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-9v-2h9V5h-9zm-1 5 1.4 1.4L8.8 11H16v2H8.8l1.6 1.6L9 16l-4-4z"/></svg>';
+const BOT = '<svg class="ic" viewBox="0 0 24 24"><path d="M11 2h2v3h4a3 3 0 0 1 3 3v9a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V8a3 3 0 0 1 3-3h4zM8.5 10a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm7 0a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zM8 15v2h8v-2zM1 10h2v5H1zm20 0h2v5h-2z"/></svg>';
+const P = { me: ['xFORTUNAx', 'a26', true], p2: ['Sokol_77', 'a07', true], p3: ['Grom', 'a15', false] };
+const put = (id, h) => { document.getElementById('f_' + id).innerHTML = h; };
+const head = (t, back) => `<div class="pHead">${back ? '<span class="bk">‹</span>' : ''}${t}<span class="x">›</span></div>`;
+
+// ── А
+put('a1', `<div class="pn A">${head('Своя комната', true)}
+  <div class="box"><div class="lbl" style="margin-bottom:4px">формат</div><div class="fmt">${[1, 2, 3, 4, 5, 6].map((n) => `<span class="chip ${n === 2 ? 'on' : ''}">${n}×${n}<small>${n * 2} игр.</small></span>`).join('')}</div>
+    <div class="r" style="margin-top:7px"><span class="lbl">ранг</span><div class="chips" style="flex:1"><span class="chip">I</span><span class="chip on">II</span><span class="chip">III</span><span class="chip">IV</span></div></div>
+    <div class="r"><span class="lbl">авиация</span><div class="chips" style="flex:1"><span class="chip on">${DICE}</span><span class="chip">${STAR_W}</span><span class="chip">${STAR_E}</span></div></div>
+    <div class="r"><span class="lbl">режим</span><div class="chips" style="flex:1"><span class="chip on">Аркада</span><span class="chip">Реализм</span></div></div>
+    <div class="r" style="justify-content:space-between"><span class="lbl" style="width:auto">пустые места - боты</span><span class="sw on"><i></i></span></div></div></div>
+  <div class="start">Создать</div>`);
+const plA = (p, ready, me) => `<div class="pl ${me ? 'me' : ''}"><img class="ava" src="${AV(p[1])}"><b>${p[0]}</b><i class="lamp ${ready ? 'on' : ''}"></i></div>`;
+put('a2', `<div class="pn A">${head('Комната', true)}
+  <div class="codeRow"><span class="lbl">код</span><span class="code">K7QF</span><span class="btn2">${SHARE} Позвать</span><span class="btn2">${EXIT}</span></div>
+  <div class="sumR"><b>2×2</b> · Ранг II · Аркада · авиация - случайно<span class="chev">▾</span></div>
+  <div class="teams"><div class="team card air"><div class="th2"><img src="${T('air_e_mig27')}"><b>Авиация</b><i>2/2</i></div>${plA(P.me, true, true)}${plA(P.p2, true)}</div>
+    <div class="team card pvo"><div class="th2"><img src="${T('pvo_buk')}"><b>ПВО</b><i>1/2</i></div>${plA(P.p3, false)}<div class="pl empty">${BOT} + бот</div></div></div></div>
+  <div class="start">Готов</div>`);
+
+// ── Б
+put('b1', `<div class="pn B">${head('Своя комната', true)}
+  <div class="box"><div class="stepper"><span class="st">−</span><span class="v">2×2<small>игроков в команде</small></span><span class="st">+</span></div></div>
+  <div class="box"><div class="lbl" style="margin-bottom:4px">ваша авиация</div><div class="sidepick"><div class="card on"><div class="dice">${DICE}</div><em>Случайно</em></div><div class="card"><img src="${T('air_f16')}"><em>Запад</em></div><div class="card"><img src="${T('air_e_su24')}"><em>Восток</em></div></div></div>
+  <div class="box"><div class="r"><div class="chips" style="flex:1"><span class="chip">I</span><span class="chip on">II</span><span class="chip">III</span><span class="chip">IV</span></div><div class="chips" style="flex:1.3"><span class="chip on">Аркада</span><span class="chip">Реализм</span></div></div>
+    <div class="r" style="justify-content:space-between;margin-top:6px"><span class="lbl" style="width:auto">боты на пустые места</span><span class="sw on"><i></i></span></div></div></div>
+  <div class="start">Создать</div>`);
+const pcB = (p, ready, me) => `<div class="pc ${ready ? 'ready' : ''} ${me ? 'me' : ''}"><img class="ava" src="${AV(p[1])}"><b>${p[0]}<small>${ready ? 'готов' : 'выбирает'}</small></b>${ready ? '<i class="ok">✓</i>' : ''}</div>`;
+put('b2', `<div class="pn B">${head('Комната', true)}
+  <div class="top"><span class="label">K7QF</span><span class="btn2">${SHARE} Позвать</span><span class="btn2" style="margin-left:auto">${EXIT}</span></div>
+  <div class="grid"><div class="tcol air"><div class="hd">Авиация<i>2/2</i></div>${pcB(P.me, true, true)}${pcB(P.p2, true)}</div>
+    <div class="tcol pvo"><div class="hd">ПВО<i>1/2</i></div>${pcB(P.p3, false)}<div class="pc empty">${BOT} + бот</div></div></div>
+  <div class="box" style="display:flex;justify-content:space-between;align-items:center;padding:4px 8px"><span class="lbl">2×2 · ранг II · аркада</span><span class="btn2" style="height:22px">Настройки</span></div></div>
+  <div class="start">Готов</div>`);
+
+// ── В
+put('c1', `<div class="pn C">${head('Своя комната', true)}
+  <div class="plate set" style="margin-top:4px"><div class="lbl" style="margin:0 0 4px">формат</div><div class="row3">${[1, 2, 3].map((n) => `<div class="opt ${n === 2 ? 'on' : ''}"><b>${n}×${n}</b></div>`).join('')}${[4, 5, 6].map((n) => `<div class="opt"><b>${n}×${n}</b></div>`).join('')}</div>
+    <div class="lbl" style="margin:7px 0 4px">ваша авиация</div><div class="row3"><div class="opt on">${DICE}случайно</div><div class="opt">${STAR_W}запад</div><div class="opt">${STAR_E}восток</div></div></div>
+  <div class="box"><div class="r"><div class="chips" style="flex:1"><span class="chip">I</span><span class="chip on">II</span><span class="chip">III</span><span class="chip">IV</span></div><span class="sw on">боты <i></i></span></div></div></div>
+  <div class="start">Создать</div>`);
+const seat = (p, ready, me) => `<div class="seat ${ready ? 'ready' : ''} ${me ? 'me' : ''}"><img class="ava" src="${AV(p[1])}"><i class="lamp ${ready ? 'on' : ''}"></i><em>${p[0]}</em></div>`;
+put('c2', `<div class="pn C">${head('Комната', true)}
+  <div class="codeL"><span class="label">K7QF</span><span class="btn2">${SHARE} Позвать</span><span class="btn2" style="margin-left:auto">${EXIT} Выйти</span></div>
+  <div class="plate tp air on"><div class="hd"><img src="${T('air_e_mig27')}"><b>Авиация</b><i>2/2 · случайно</i></div><div class="seats">${seat(P.me, true, true)}${seat(P.p2, true)}</div></div>
+  <div class="plate tp pvo"><div class="hd"><img src="${T('pvo_buk')}"><b>ПВО</b><i>1/2</i></div><div class="seats">${seat(P.p3, false)}<div class="seat empty"><div class="ava">+</div><em>бот</em></div></div></div></div>
+  <div class="start">Готов</div>`);
+
+const one = new URLSearchParams(location.search).get('f');
+if (one) { document.body.classList.add('one'); document.querySelectorAll('.ph').forEach((e) => { if (e.id !== 'f_' + one) e.parentNode.parentNode.removeChild(e.parentNode); }); document.querySelectorAll('h2,p.d').forEach((e) => e.remove()); }
+Promise.all([...document.images].map((i) => i.decode().catch(() => 0))).then(() => document.fonts.ready).then(() => { window.__ready = true; });
+</script></body></html>
