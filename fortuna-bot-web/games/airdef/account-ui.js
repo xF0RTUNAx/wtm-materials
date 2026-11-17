@@ -4,9 +4,10 @@
 // новичку аккаунт сайта в игре не нужен (только аккаунт игры), «старому» игроку с прогрессом он работает до переноса, но без рейтинга.
 // В комнате и в бою аккаунт сменить нельзя; вне их смена закрывает соединение онлайна (net.js accChanged).
 import { ico } from './icons.js?v=20261117b';
-import { tr, trIf } from './i18n.js?v=20261117b';
+import { tr, trIf, LANG } from './i18n.js?v=20261117b';
 import { avaSrc, ownAva } from './avatar.js?v=20261117b';
 import { gameAcc, siteAcc, setGameAcc, clearGameAcc, accountApi, siteStatus, siteStatusDone, transferOk, siteNewbie, legacySite, onAccChange } from './account.js?v=20261117b';
+const CONFIRM_WORD = LANG === 'en' ? 'CONFIRM' : 'ПОДТВЕРДИТЬ'; // удаление аккаунта - набрать это слово (Mark 2026-11-17)
 
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const LOGIN_RE = /^[a-zA-Z0-9_]{3,24}$/, NICK_RE = /^[\p{L}\p{N}_\- ]{3,16}$/u;
@@ -57,7 +58,7 @@ export function createAccount(C) {
   // m - ход переноса в один шаг (что сервер попросил добавить: другой пароль, логин, ник; used - с этого аккаунта сайта уже переносили); nickSite - регистрация упёрлась
   // в ник, равный логину аккаунта сайта; f - введённое (в памяти, пока окно открыто)
   const newM = () => ({ pwNew: false, needLogin: false, needNick: false, used: false });
-  const S = { tab: 'login', err: '', ok: '', done: '', busy: false, rename: false, pend: false, nickSite: false, m: newM(), f: {} };
+  const S = { tab: 'login', err: '', ok: '', done: '', busy: false, rename: false, del: false, pend: false, nickSite: false, m: newM(), f: {} };
   const fv = (k) => esc(S.f[k] || '');
 
   // в комнате и в бою аккаунт сменить нельзя: соединение онлайна держит место за прежним аккаунтом, итог боя уйдёт ему
@@ -137,7 +138,9 @@ export function createAccount(C) {
     // acc: вошёл
     const me = `<div class="me"><b>${esc(g.nick || g.login)}</b><span>${tr('Логин: {0}', [esc(g.login)])}</span></div>`;
     if (S.rename) return `${me}<form class="frm" data-form="rename" novalidate>${fld('newnick', tr('Новый ник'), 'text', 'nickname', tr('3-16: буквы, цифры, пробел, _ и -'), 'full')}${fld('npass', tr('Пароль аккаунта игры'), 'password', 'current-password', '', 'full')}<button class="btn" type="submit">${tr('Сохранить')}</button><button class="btn alt" type="button" data-a="rename-no">${tr('Отмена')}</button></form>${msg()}`;
-    return `${me}<div class="row"><button class="btn alt" data-a="rename">${tr('Сменить ник')}</button><button class="btn alt" data-a="logout">${tr('Выйти из аккаунта')}</button></div><p>${tr('Ник виден в рейтинге и в онлайн-боях. Меняется раз в сезон.')}</p>${msg()}`;
+    // удаление (Mark 2026-11-17): предупреждение, пароль и слово-подтверждение (CONFIRM_WORD) - кнопка оживает, только когда слово набрано точно
+    if (S.del) return `${me}<div class="delwarn"><b>${tr('Удаление аккаунта')}</b><p>${tr('Аккаунт, прогресс, исследования, кристаллы, бои и место в рейтинге будут удалены навсегда. Вернуть их будет нельзя.')}</p></div><form class="frm" data-form="del" novalidate>${fld('dpass', tr('Пароль аккаунта игры'), 'password', 'current-password', '', 'full')}${fld('dword', tr('Для подтверждения введите {0}', [CONFIRM_WORD]), 'text', 'off', '', 'full')}<button class="btn danger" type="submit"${(S.f.dword || '').trim() === CONFIRM_WORD ? '' : ' disabled'}>${tr('Удалить навсегда')}</button><button class="btn alt" type="button" data-a="del-no">${tr('Отмена')}</button></form>${msg()}`;
+    return `${me}<div class="row"><button class="btn alt" data-a="rename">${tr('Сменить ник')}</button><button class="btn alt" data-a="logout">${tr('Выйти из аккаунта')}</button></div><p>${tr('Ник можно сменить один раз в сезон.')}</p><div class="row"><button class="btn alt danger" data-a="del">${tr('Удалить аккаунт')}</button></div>${msg()}`;
   }
   function draw() {
     if (!S.done && !tabs().some(([k]) => k === S.tab)) S.tab = gameAcc() ? 'acc' : 'login';
@@ -230,6 +233,14 @@ export function createAccount(C) {
       S.done = doneText(acc, m, false); S.ok = ''; S.err = '';
       changed(); draw();
     }),
+    del: () => run(async () => {
+      const g = gameAcc();
+      if ((S.f.dword || '').trim() !== CONFIRM_WORD) throw new Error(tr('Для подтверждения введите {0}', [CONFIRM_WORD]));
+      if (!S.f.dpass) throw new Error(tr('Неверный пароль'));
+      if (lock()) throw new Error(tr('Сейчас нельзя: вы в комнате или в бою'));
+      await accountApi.remove(g.id, S.f.dpass);
+      clearGameAcc(); S.del = false; S.f = {}; changed(); api.close(); if (C.rating && C.rating.close) C.rating.close(); if (C.say) C.say(tr('Аккаунт удалён'), 3);
+    }),
     rename: () => run(async () => {
       const g = gameAcc(), nick = cleanNick(S.f.newnick);
       if (!NICK_RE.test(nick)) throw new Error(tr('Ник: 3-16 символов - буквы, цифры, пробел, _ и -'));
@@ -241,6 +252,7 @@ export function createAccount(C) {
 
   root.addEventListener('input', (e) => {
     const k = e.target && e.target.dataset && e.target.dataset.f; if (!k) return; S.f[k] = e.target.value;
+    if (k === 'dword') { const b = root.querySelector && root.querySelector('form[data-form="del"] button[type=submit]'); if (b) b.disabled = S.f.dword.trim() !== CONFIRM_WORD; } // кнопка удаления - только при точном слове
     if (k === 'slogin' || k === 'glogin' || k === 'gnick') { const gi = root.querySelector && root.querySelector('.ginfo'); if (gi) gi.innerHTML = migInfo(); } // «В игре: …» следует за вводом
   });
   root.addEventListener('submit', (e) => { e.preventDefault(); const f = e.target && e.target.dataset && e.target.dataset.form; if (f && submit[f]) submit[f](); });
@@ -252,6 +264,8 @@ export function createAccount(C) {
     else if (a === 'pw-same' || a === 'pw-new') { S.m.pwNew = a === 'pw-new'; draw(); if (S.m.pwNew) focusF('npw'); }
     else if (a === 'rename') { S.rename = true; S.err = S.ok = ''; draw(); }
     else if (a === 'rename-no') { S.rename = false; S.err = S.ok = ''; draw(); }
+    else if (a === 'del') { if (lock()) { S.err = tr('Сейчас нельзя: вы в комнате или в бою'); draw(); return; } S.del = true; S.rename = false; S.err = S.ok = ''; S.f.dword = S.f.dpass = ''; draw(); }
+    else if (a === 'del-no') { S.del = false; S.err = S.ok = ''; S.f.dword = S.f.dpass = ''; draw(); }
     else if (a === 'logout') { if (lock()) return; clearGameAcc(); S.f = {}; changed(); api.close(); }
   });
   // ── клавиатура телефона (Mark 2026-10-26: «при активации клавиатуры не видно, что печатаешь… трудно двигать, всё скидывается»): окно - в видимой
@@ -284,8 +298,8 @@ export function createAccount(C) {
     // tab: 'xfer' - «Перенос с сайта»; 'login' / 'reg' - вход / регистрация; 'rename' - сразу смена ника (кнопка в своём профиле). «Старый» игрок с прогрессом сайта, ещё без аккаунта игры, по умолчанию попадает на перенос
     // (регистрация ему не нужна: перенос сам создаёт аккаунт игры), на вход - только если просили 'login'
     open(tab) {
-      const g = gameAcc(); S.err = S.ok = S.done = ''; S.busy = false; S.rename = false; S.nickSite = false; S.m = newM();
-      if (g) { S.tab = tab === 'xfer' ? 'xfer' : 'acc'; S.rename = tab === 'rename'; }
+      const g = gameAcc(); S.err = S.ok = S.done = ''; S.busy = false; S.rename = false; S.del = false; S.nickSite = false; S.m = newM();
+      if (g) { S.tab = tab === 'xfer' ? 'xfer' : 'acc'; S.rename = tab === 'rename'; S.del = tab === 'delete'; }
       else if (tab === 'xfer' || (legacySite() && tab !== 'login')) S.tab = 'xfer';
       else S.tab = tab === 'reg' ? 'reg' : 'login';
       S.f.slogin = S.f.slogin || (siteAcc() || {}).login || '';
@@ -293,7 +307,7 @@ export function createAccount(C) {
       const p = siteStatus(); if (p && p.then) p.then(() => { if (root.classList.contains('on')) drawSoon(); });
       const f = root.querySelector && root.querySelector('input'); if (f && f.focus && !(typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches)) try { f.focus(); } catch (_) { /* нет */ }
     },
-    close() { root.classList.remove('on', 'kb'); Object.assign(root.style, { top: '', left: '', width: '', height: '', right: '', bottom: '' }); redraw = false; S.f.pass = S.f.gpass = S.f.spass = S.f.npass = S.f.npw = ''; S.busy = false; },
+    close() { root.classList.remove('on', 'kb'); Object.assign(root.style, { top: '', left: '', width: '', height: '', right: '', bottom: '' }); redraw = false; S.f.pass = S.f.gpass = S.f.spass = S.f.npass = S.f.npw = S.f.dpass = S.f.dword = ''; S.busy = false; },
     isOpen: () => root.classList.contains('on'),
     // выход из своего профиля (rating-ui.js): в комнате и в бою нельзя - окно аккаунта с причиной; true - вышли
     logout() { if (lock()) { api.open('acc'); return false; } clearGameAcc(); S.f = {}; changed(); return true; },

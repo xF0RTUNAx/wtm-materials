@@ -681,6 +681,12 @@
   #menu .seg.wxs button.on { outline: 2px solid #e8b04a; outline-offset: -2px; color: #fff; } #menu .seg.wxs button:first-child { color: #f3c96f; } .wxs .ic { width: 15px; height: 15px; }
   #menu .dset .seg[data-seg="pms"] { flex: none; } #menu .dset .seg[data-seg="pms"] button { flex: none; width: 36px; display: grid; place-items: center; padding: 0; } #menu .dset .seg[data-seg="pms"] .ic.star { display: block; }
   @media (max-height: 500px) { #menu .seg.otiles.o3 button { height: 50px; } #menu .seg.pmaps button { height: 40px; } #menu .seg.wxs button { height: 22px; font-size: 9.5px; } .mwst .stg .im { height: 28px; } .mwst .stg em { font-size: 8.5px; } #menu .dset .seg[data-seg="pms"] button { width: 28px; } }
+  /* удаление аккаунта (Mark 2026-11-17): табличка-предупреждение с сигнальной полосой, красные кнопки */
+  .delwarn { margin: 6px 0 8px; padding: 8px 10px 8px 16px; position: relative; background: rgba(60,18,14,.7); border: 1px solid #8a3a2c; color: #f2d6cf; font-size: 13px; line-height: 1.4; }
+  .delwarn::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 7px; background: repeating-linear-gradient(-45deg, #e8b04a 0 6px, #b8261c 6px 12px); }
+  .delwarn b { display: block; margin-bottom: 3px; font: 600 14px 'Oswald', sans-serif; letter-spacing: .04em; color: #ffb3a3; text-transform: uppercase; } .delwarn p { margin: 0; }
+  .btn.danger, .btnm.danger { background: #8e2a1f !important; border-color: #c4483a !important; color: #fff1ec !important; } .btn.alt.danger, .btnm.alt.danger { background: rgba(80,22,16,.6) !important; color: #ffb3a3 !important; }
+  .btn.danger:disabled { opacity: .45; filter: saturate(.4); cursor: not-allowed; }
   .hgl.on .hgr:not(.inb) .hgt { cursor: pointer; } .hgl.on .hgt.fo .im { box-shadow: inset 0 0 0 1px #e8b04a, inset 0 1px 3px rgba(0,0,0,.8); }
 
   @media (max-height: 500px) {

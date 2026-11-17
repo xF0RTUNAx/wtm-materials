@@ -248,7 +248,7 @@ export function createRating(C) {
     const hero = `<div class="hero${g}"><span class="ava"><img src="${avaSrc(own ? ownAva(C, P.ava) : P.ava)}" alt=""></span><span class="nick">${esc(P.nick)}</span>
       <span class="place"><span class="lb">${tr('место')}</span><span class="pn">${P.place && P.place <= 3 ? ico('rating') : ''}${P.place || '-'}</span><span class="pts">${nf(P.points || 0)}</span><span class="slots">${Array.from({ length: SLOTS }, (_, i) => `<i${i < (P.n || 0) ? ' class="on"' : ''}></i>`).join('')}</span></span>
       <span class="since">${tr('в игре с {0}', [ddmm(P.since, true)])}<br>${tr('онлайн-боёв: {0}', [nf(P.games || 0)])}</span>
-      ${own ? `<span class="mine"><button class="btnm" data-a="mine">${tr('Мои бои')}</button><small>${tr('Так ваш профиль видят другие игроки')}</small></span>` : ''}</div>`;
+      ${own ? `<span class="mine"><button class="btnm" data-a="mine">${tr('Мои бои')}</button></span>` : ''}</div>`;
     const M = (P.modes && P.modes[per]) || {}, tot = [0, 0, 0, null];
     const mrow = ([k, ic, name]) => {
       const x = M[k] || { n: 0, w: 0, k: 0, best: null }, pc = x.n ? Math.round(100 * x.w / x.n) : 0;
@@ -277,8 +277,8 @@ export function createRating(C) {
   function accSec() {
     const g = gameAcc(); if (!g) return '';
     return `<div class="sec"><div class="sh"><b>${tr('Аккаунт')}</b><small>${tr('Логин: {0}', [esc(g.login)])}</small></div>
-      <span class="acts"><button class="btnm alt" data-a="rename">${tr('Сменить ник')}</button><button class="btnm alt" data-a="logout">${tr('Выйти из аккаунта')}</button></span>
-      <span class="empty">${tr('Ник виден в рейтинге и в онлайн-боях. Меняется раз в сезон.')}</span></div>`;
+      <span class="acts"><button class="btnm alt" data-a="rename">${tr('Сменить ник')}</button><button class="btnm alt" data-a="logout">${tr('Выйти из аккаунта')}</button><button class="btnm alt danger" data-a="delacc">${tr('Удалить аккаунт')}</button></span>
+      <span class="empty">${tr('Ник можно сменить один раз в сезон.')}</span></div>`;
   }
   function viewProfile() {
     const p = S.p, d = p.data, head = (s) => `<div class="whead"><button class="back" data-a="back">${ico('triL')}${p.menu ? tr('Рейтинг') : tr('Назад')}</button><span class="t">${ico('rating')}${tr('Профиль')}</span><span class="s">${s}</span><button class="rx" data-a="close" aria-label="${tr('Закрыть')}" title="${tr('Закрыть')}">${ico('close')}</button></div>`;
@@ -318,6 +318,7 @@ export function createRating(C) {
     else if (a === 'per') { S.per = t.dataset.per === 'all' ? 'all' : 'season'; draw(); }
     else if (a === 'pretry') { if (S.p) openProfile(S.p.nick, S.p.own, S.p.menu); }
     else if (a === 'rename') { if (C.account) C.account.open('rename'); } // окно аккаунта - поверх профиля
+    else if (a === 'delacc') { if (C.account) C.account.open('delete'); } // окно аккаунта: предупреждение, пароль, слово-подтверждение
     else if (a === 'logout') { if (C.account && C.account.logout()) api.close(); } // в комнате и в бою выйти нельзя - откроется окно аккаунта с причиной
   });
   addEventListener('keydown', (e) => { if (e.code === 'Escape' && root.classList.contains('on') && !(C.account && C.account.isOpen())) { if (S.q) { S.q = false; draw(); } else api.close(); } });
