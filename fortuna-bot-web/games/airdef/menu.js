@@ -134,7 +134,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
       const seadOk = sead.filter(can), strikeOk = strike.filter(can);
       const canOp = seadOk.length > 0 && strikeOk.length > 0; if (!canOp) setup.op = false;
       const opRow = canOp ? `<div class="prow"><span>${tr('Вылеты')}</span>${seg('op', setup.op ? 'op' : 'one', [['one', tr('Один вылет')], ['op', tr('Операция: 2 вылета')]])}</div>` : '';
-      if (hg) h = `<button class="hgTop${hgSet ? ' open' : ''}" data-hgset="1"><b class="hgRank">${tr('Ранг')} ${ERAS[setup.era - 1].short}</b><span class="hgSum">${trIf(MODES[setup.diff].name)} · ${tr('Авиация: {0}', [setup.side === 'east' ? tr('западная') : tr('советская')])}${setup.op ? ' · ' + tr('2 вылета') : ''}</span></button>${hgSet ? `<div class="hgSet">${segs}${setRow}${opRow}</div>` : ''}${noneHint}`;
+      if (hg) h = `<button class="hgTop${hgSet ? ' open' : ''}" data-hgset="1"><b class="hgRank">${tr('Ранг')} ${ERAS[setup.era - 1].short}</b><span class="hgSum">${trIf(MODES[setup.diff].name)} · ${setup.side === 'east' ? tr('Запад') : tr('Восток')}</span></button>${hgSet ? `<div class="hgSet">${segs}${setRow}${opRow}</div>` : ''}${noneHint}`;
       else h += opRow;
       if (setup.op) {
         if (!seadOk.some(([, i]) => i === setup.lo1)) setup.lo1 = seadOk[0][1];
@@ -563,6 +563,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
     if (!C.hangar || !C.hangar.has()) return;
     const air = setup.game === 'air' || setup.game === 'defense'; // лента внизу: самолёты (и в «Операции» - выбранного вылета), в «Обороне» - комплексы
     document.body.classList.toggle('hgAir', air);
+    document.body.classList.toggle('hgFlat', setup.game === 'online'); // онлайн (Mark 2026-11-17): панель без тёмной подложки, как в макете - плитки и таблички прямо на фоне ангара
     document.body.classList.toggle('hgPlain', ['air', 'defense', 'multi'].includes(setup.game)); // Mark: без описаний режимов в правой панели
     const list = LOADOUTS[setup.era] || [], cur = list[setup.op ? (opSlot === 1 ? setup.lo1 : setup.lo2) : setup.lo], ok = (L) => L && L.plane && !L.heli && PLANES[L.plane];
     const L = setup.game === 'air' && !setup.op && hgPlane && (!cur || cur.plane !== hgPlane) ? list.find((q) => q.plane === hgPlane && ok(q)) : ok(cur) ? cur : list.find(ok);
