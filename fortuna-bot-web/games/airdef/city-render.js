@@ -53,7 +53,9 @@ const KIT_SER = [
 const PH = { 5: 'st', 7: 'brick', 8: 'mansard', 9: 'wood', 10: 'khata', 12: 'barrack', 13: 'dacha' };
 // «сталинка» (серия 4, ПАСПОРТ_сталинка; вид 5 вместо bld_st): целым домом, как частные; st3 - на коробку до 44 м, st4 - длиннее; без двора,
 // пепелища нет (каменные стены стоят). Модели вида - обе: коробки вида прячутся, когда пришли обе
-const PH_MODELS = { 5: ['bld_st3', 'bld_st4'] };
+const PH_MODELS = { 5: ['bld_st3', 'bld_st4'], 31: ['bld_of', 'bld_gl'] };
+// офисы и стеклянные башни Сити из деталей (серии 5в / 5г): вид 31 - все коробки OFFICE / GLASS, и ярусы (y0 > 0); ?of=0 - прежние модели и коробки
+const OFV = 31, OF_ON = typeof location === 'undefined' || !/[?&]of=0/.test(location.search);
 const PH_SIZE = { st3: [36, 26, 16.8], st4: [54, 26, 20.2], brick: [11.11, 9.1, 6.9], wood: [10.18, 10.9, 6.9], khata: [11.2, 7.2, 6.0], mansard: [11.0, 11.62, 8.4], dacha: [6.8, 6.72, 5.4], barrack: [25.0, 12.05, 9.6] };
 // дом в настоящем размере (не вписан в коробку участка: так он выходил до 2× больше), фасадом к ближайшей улице (улицы - по сетке CITY.GRID);
 // центр дома - в центре его коробки. ox, oz - середина фасада (начало модели), yaw - поворот (фасад модели смотрит в −Z)
@@ -1330,7 +1332,7 @@ const roofH = (c) => 2.2 + c * 2.2; // высота скатной крыши ч
 // какой моделью рисовать дом вблизи (0 - остаётся коробкой): пятиэтажки, длинные девятиэтажки,
 // многоэтажки, сталинки (школы, магазины - невысокие «простые»), цеха складов
 function bldVariant(B, i) {
-  if (B.y0[i] > 0) return 0;
+  if (B.y0[i] > 0) return KIT_ON && OF_ON && (B.k[i] === KIND.OFFICE || B.k[i] === KIND.GLASS) ? OFV : 0;
   const k = B.k[i], h = B.h[i], L = Math.max(B.w[i], B.d[i]), S = Math.min(B.w[i], B.d[i]);
   // башня (L / S < 1,6) - модель растягивается по коробке: годится, если по высоте она растянута не сильнее, чем по плану (×0,7…1,45)
   const tower = (...vs) => { let best = 0, bk = 0.37; for (const v of vs) { const [, mx, my, mz] = BLD[v], kp = Math.sqrt((B.w[i] * B.d[i]) / (mx * mz)), d = Math.abs(Math.log((h / my) / kp)); if (d < bk && kp < 2) { bk = d; best = v; } } return best; }; // и не крупнее ×2 (окна - не огромные)
@@ -1346,6 +1348,7 @@ function bldVariant(B, i) {
     return bk <= Math.log(1.8) ? best : 0; // на карте seed 1: среднее растяжение ×1,16, у 90 % не больше ×1,27; до ×1,8 - лучше цех, чем голая коробка среди цехов
   }
   if (k === KIND.HOUSE) return HOUSES[Math.floor(B.c[i] * HOUSES.length) % HOUSES.length];
+  if ((k === KIND.OFFICE || k === KIND.GLASS) && KIT_ON && OF_ON) return OFV;
   if (k === KIND.OFFICE) return L / S < 1.5 ? (h > 20 && h < 45 ? 11 : 0) : h > 22 && h < 48 ? 20 : 0;
   if (k === KIND.GLASS) return L / S < 1.6 ? tower(21, 22) : 0;
   return 0;
@@ -1512,7 +1515,8 @@ function nearHouses(G, scene, B, near, P, sh) {
   const kitAttach = (S, key, group) => {
     if (KITGS.get(S.name) !== group) { KITGS.set(S.name, group); group.traverse((q) => { if (q.isMesh && !q.material.userData.kitM) { q.material.userData.kitM = 1; q.material.specular.setHex(0x0c0c0c); q.material.shininess = 10; if (G.winter) snowify(q.material); } }); if (dmgB.size || dmgH.size) kitDirty = true; } // все модули серии: матовые, зимой со снегом; задетые до прихода модели - дорисовать
     let c;
-    if (S.part.startsWith('V:')) { // варианты этажа одним набором: номер варианта экземпляра - в ячейке [0][3] матрицы (kitVarMat), чужие варианты - в точку
+    if (S.part.startsWith('C:')) c = { geometry: ofCardGeo(), material: ofCardMat(S.part.slice(2), group), varM: true }; // плоскость фасада офиса / стекла
+    else if (S.part.startsWith('V:')) { // варианты этажа одним набором: номер варианта экземпляра - в ячейке [0][3] матрицы (kitVarMat), чужие варианты - в точку
       const gs = []; for (let v = 0; v < 4; v++) { const cv = S.part.slice(2).replace(/#/g, v).split('+').map((n) => group.getObjectByName(n)); if (cv.some((q) => !q || !q.isMesh)) { console.warn('свои дома: нет варианта', v, S.part); return; } const g = kitMerge(cv.map((q) => q.geometry)); g.setAttribute('aVar', new THREE.BufferAttribute(new Float32Array(g.attributes.position.count).fill(v), 1)); gs.push(g); }
       const m0 = group.getObjectByName(S.part.slice(2).replace(/#/g, 0).split('+')[0]).material; c = { geometry: kitMerge(gs), material: kitVarMat(m0), varM: true };
     } else {
@@ -1524,7 +1528,7 @@ function nearHouses(G, scene, B, near, P, sh) {
     if (!c.geometry.boundingSphere) c.geometry.computeBoundingSphere();
     const bs = c.geometry.boundingSphere, r0 = bs.center.length() + bs.radius;
     S.rad = new Float32Array(S.n); S.cxyz = new Float32Array(S.n * 3);
-    for (let j = 0, e = S.mats; j < S.n; j++) { const o = j * 16, k = Math.max(Math.hypot(e[o], e[o + 1], e[o + 2]), Math.hypot(e[o + 8], e[o + 9], e[o + 10])); S.rad[j] = r0 * k + 45; S.cxyz[j * 3] = e[o + 12]; S.cxyz[j * 3 + 1] = e[o + 13]; S.cxyz[j * 3 + 2] = e[o + 14]; }
+    for (let j = 0, e = S.mats; j < S.n; j++) { const o = j * 16, k = Math.max(Math.hypot(e[o], e[o + 1], e[o + 2]), Math.hypot(e[o + 4], e[o + 5], e[o + 6]), Math.hypot(e[o + 8], e[o + 9], e[o + 10])); S.rad[j] = r0 * k + 45; S.cxyz[j * 3] = e[o + 12]; S.cxyz[j * 3 + 1] = e[o + 13]; S.cxyz[j * 3 + 2] = e[o + 14]; }
     const serAll = (KIT_SER.find((q) => q.v === S.kit) || { models: PH_MODELS[S.kit] || [S.name] }).models.every((q) => KITGS.has(q)); // хрущёвки A и C - один вид: коробки прятать, когда пришли обе
     if (S.kit && !G.kitOn.has(S.kit) && serAll) { // первый модуль вида пришёл - его коробки прячутся до внешнего радиуса; цвет коробок дали - по атласу серии
       const kr = S.kitR || G.kitRf; G.kitOn.set(S.kit, kr); ENV.uMdl.value[S.kit] = kr * (G.kitK || 1); const mc = modelColor(group); if (mc) ENV.uMdlCol.value[S.kit].set(mc.r, mc.g, mc.b, 1); }
@@ -1541,6 +1545,48 @@ function nearHouses(G, scene, B, near, P, sh) {
     const m = m0.clone(), prev = m0.onBeforeCompile, pk = m0.customProgramCacheKey(); m.onBeforeCompile = (sh, r) => { if (prev) prev.call(m, sh, r); sh.vertexShader = KVAR_GLSL(sh.vertexShader); }; m.customProgramCacheKey = () => pk + 'kitvar'; // поверх своих подмен модели (снег и т. п.)
     const d = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking }); d.onBeforeCompile = (sh) => { sh.vertexShader = KVAR_GLSL(sh.vertexShader); }; d.customProgramCacheKey = () => 'kitvard';
     m.userData.depthM = d; m0.userData.varMat = m; return m;
+  };
+  // плоскость фасада офиса / стекла (дальний вид): шаг и этаж - в шейдере; грань шага *_lod1 вида (облицовка × вестибюль / рядовой / тех / верх) - прямоугольник
+  // атласа (углы из модели: U00 - низ шага слева, ex - вдоль, ey - вверх). Матрица экземпляра: [0][3] - шагов, [1][3] - этажей, [2][3] - код (облицовка
+  // + 8 · вестибюль + 16 · верхний этаж с парапетом); ячейки обнуляются перед умножением (и в проходе теней)
+  const OFC_V = (src) => src.replace('#include <common>', '#include <common>\nvarying vec2 vCd; varying vec3 vCp; varying float vCw;')
+    .replace('#include <begin_vertex>', '#include <begin_vertex>\n  #ifdef USE_INSTANCING\n  vCp = vec3(instanceMatrix[0][3], instanceMatrix[1][3], instanceMatrix[2][3]);\n  mat4 kIM = instanceMatrix; kIM[0][3] = 0.0; kIM[1][3] = 0.0; kIM[2][3] = 0.0;\n  vCw = length(kIM[0].xyz);\n  #else\n  mat4 kIM = mat4(1.0); vCp = vec3(1.0, 1.0, 0.0); vCw = 1.0;\n  #endif\n  vCd = vec2(position.x + 0.5, position.y);')
+    .replace('#include <project_vertex>', THREE.ShaderChunk.project_vertex.replace('instanceMatrix * mvPosition', 'kIM * mvPosition'))
+    .replace('#include <worldpos_vertex>', THREE.ShaderChunk.worldpos_vertex.replace('instanceMatrix * worldPosition', 'kIM * worldPosition'));
+  const ofCardGeo = () => G._ofCG || (G._ofCG = (() => { const g = new THREE.PlaneGeometry(1, 1); g.rotateY(Math.PI); g.translate(0, 0.5, 0); return g; })());
+  const ofCardMat = (fam, group) => {
+    const F = OFS[fam], m0 = group.getObjectByName('bay_' + F.st[0] + '_floor0_s0').material; if (m0.userData['card' + fam]) return m0.userData['card' + fam];
+    const K0 = [], KX = [], KY = [];
+    for (const s of F.st) for (const kd of [F.k0, 'floor', 'tech', 'top']) {
+      const o = group.getObjectByName('bay_' + s + '_' + kd + '_lod1'), P = o.geometry.attributes.position, U = o.geometry.attributes.uv;
+      let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9; for (let k = 0; k < P.count; k++) { x0 = Math.min(x0, P.getX(k)); x1 = Math.max(x1, P.getX(k)); y0 = Math.min(y0, P.getY(k)); y1 = Math.max(y1, P.getY(k)); }
+      const at = (x, y) => { let b = 0, bd = 1e9; for (let k = 0; k < P.count; k++) { const d = Math.hypot(P.getX(k) - x, P.getY(k) - y); if (d < bd) { bd = d; b = k; } } return new THREE.Vector2(U.getX(b), U.getY(b)); };
+      const u00 = at(x0, y0); K0.push(u00); KX.push(at(x1, y0).sub(u00)); KY.push(at(x0, y1).sub(u00));
+    }
+    const NK = K0.length, C = `const float LH = ${F.LH.toFixed(2)}, FH = ${F.FH.toFixed(2)}, PAR = ${F.PAR.toFixed(2)}, TECH = ${F.TECH.toFixed(1)}, C0 = ${F.C0.toFixed(2)};\n`;
+    const U = { uK0: { value: K0 }, uKX: { value: KX }, uKY: { value: KY } };
+    // ym - высота в метрах сборщика (ярус растянут в свою коробку: этаж в шейдере - без растяжения, как у настоящих шагов); шаги - между углами (C0)
+    const FR = `{ float n = vCp.x, Fn = vCp.y, code = vCp.z, sty = mod(code, 8.0), lob = mod(floor(code / 8.0 + 0.01), 2.0), topf = mod(floor(code / 16.0 + 0.01), 2.0), cham = mod(floor(code / 32.0 + 0.01), 2.0);
+  float cc = cham > 0.5 ? 0.0 : C0, bx = clamp((vCd.x * vCw - cc) / max(vCw - 2.0 * cc, 0.1), 0.0, 0.9999) * n, ym = vCd.y * (lob * LH + (Fn - lob) * FH + topf * PAR), fu = fract(bx), zl = lob * LH, last = Fn - 1.0, kind, fy, kh, f;
+  if (lob > 0.5 && ym < LH) { kind = 0.0; fy = ym / LH; kh = LH; }
+  else { float r = (ym - zl) / FH; f = lob + floor(r);
+    if (topf > 0.5 && f >= last - 0.5) { kind = 3.0; kh = FH + PAR; fy = clamp((ym - zl - (last - lob) * FH) / kh, 0.0, 1.0); }
+    else { f = min(f, last); kind = mod(f, TECH) > TECH - 1.5 ? 2.0 : 1.0; kh = FH; fy = fract(r); } }
+  int k = int(sty * 4.0 + kind + 0.5); vec2 ko = uK0[k], ex = uKX[k], ey = uKY[k];
+  kUv = ko + fu * ex + fy * ey; dUx = dFdx(bx) * ex + dFdx(ym) / kh * ey; dUy = dFdy(bx) * ex + dFdy(ym) / kh * ey; }\n`;
+    const m = m0.clone(), prev = m0.onBeforeCompile, pk = m0.customProgramCacheKey(); m.extensions = { derivatives: true, shaderTextureLOD: true };
+    m.onBeforeCompile = (sh, r) => {
+      if (prev) prev.call(m, sh, r); Object.assign(sh.uniforms, U); sh.vertexShader = OFC_V(sh.vertexShader);
+      let fs = sh.fragmentShader.replace('#include <common>', `#include <common>\nvarying vec2 vCd; varying vec3 vCp; varying float vCw; uniform vec2 uK0[${NK}]; uniform vec2 uKX[${NK}]; uniform vec2 uKY[${NK}]; vec2 kUv, dUx, dUy;\n${C}#if __VERSION__ >= 300 || defined(GL_EXT_shader_texture_lod)\n#define TXG(t, uv, gx, gy) texture2DGradEXT(t, uv, gx, gy)\n#else\n#define TXG(t, uv, gx, gy) texture2D(t, uv)\n#endif`)
+        .replace('#include <map_fragment>', FR + THREE.ShaderChunk.map_fragment.replace('texture2D( map, vUv )', 'TXG( map, kUv, dUx, dUy )'))
+        .replace('#include <normalmap_pars_fragment>', THREE.ShaderChunk.normalmap_pars_fragment.replace(/dFdx\( vUv\.st \)/g, 'dUx').replace(/dFdy\( vUv\.st \)/g, 'dUy'))
+        .replace('#include <normal_fragment_maps>', THREE.ShaderChunk.normal_fragment_maps.replace(/texture2D\( normalMap, vUv \)/g, 'TXG( normalMap, kUv, dUx, dUy )'));
+      if (!/TXG\( map, kUv/.test(fs) || /texture2D\( normalMap, vUv \)/.test(fs) || /texture2D\( map, vUv \)/.test(fs)) console.warn('офисы: подстановка шейдера плоскости не сработала', fam);
+      sh.fragmentShader = fs;
+    };
+    m.customProgramCacheKey = () => pk + 'ofcard' + fam;
+    const d = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking }); d.onBeforeCompile = (sh) => { sh.vertexShader = OFC_V(sh.vertexShader); }; d.customProgramCacheKey = () => 'ofcardd';
+    m.userData.depthM = d; m0.userData['card' + fam] = m; return m;
   };
   const kitMerge = (gs) => {
     const g = new THREE.BufferGeometry(), names = Object.keys(gs[0].attributes).filter((a) => gs.every((q) => q.attributes[a]));
@@ -1631,6 +1677,163 @@ function nearHouses(G, scene, B, near, P, sh) {
       const S = sets.get(key); if (S && M !== 'ph_yard') { S.bi = Int32Array.from(Ls.bi); S.offA = OFFH; } // двор - без выключения (постройки стоят)
     }
   };
+  // ── Сити: офисы и стеклянные башни из деталей (серии 5в / 5г; ПАСПОРТ_офис / ПАСПОРТ_стекло). Коробка генератора (и каждый её ярус) - здание:
+  // шаги фасада 3 м по сторонам, этажи (вестибюль, рядовые, техэтаж, верхний), углы, кровля / терраса / корона. Шагов в городе ~1,1 млн - поэтому:
+  // вдали - одна плоскость на сторону яруса (ofCardMat: шаги и этажи рисует шейдер по граням *_lod1 атласа; число шагов, этажей и вид - в свободных
+  // ячейках матрицы экземпляра), вблизи (ofRn) и у разрушенных - настоящие шаги и углы (ofTick: собираются на лету), кровли - всегда наборами
+  const OFB = [], dmgO = new Set(), oCache = new Map(), oPool = new Map(); let OFFO = new Uint8Array(0), oIn = '', oDirty = false;
+  const OFS = {
+    of: { M: 'bld_of', st: ['A', 'B', 'C'], k0: 'ground', LH: 5.5, FH: 3.7, PAR: 1.27, TECH: 10, C0: 0.3 },
+    gl: { M: 'bld_gl', st: ['blue', 'teal', 'bronze', 'silver'], k0: 'lobby', LH: 8.0, FH: 4.0, PAR: 1.6, TECH: 15, C0: 0.3 },
+  };
+  const OF_RN = () => (TOUCH_GT ? 150 : 300) * (G.kitK || 1);
+  const rot2 = (rz, x, y) => [x * Math.cos(rz) - y * Math.sin(rz), x * Math.sin(rz) + y * Math.cos(rz)];
+  const oM = new THREE.Matrix4(), oT = new THREE.Matrix4(), oQ = new THREE.Quaternion(), oP = new THREE.Vector3(), oS = new THREE.Vector3(), oY = new THREE.Vector3(0, 1, 0);
+  // матрица детали: координаты сборщика (Blender: x вдоль, y - вглубь отрицательно, z вверх; поворот rz) → игра (x, z, −y), от начала здания b.O
+  const oMat = (b, x, y, z, rz = 0, sx = 1, sy = 1, sz = 1) => oT.makeTranslation(b.O[0], b.O[1], b.O[2]).multiply(oM.compose(oP.set(x, z, -y), oQ.setFromAxisAngle(oY, rz), oS.set(sx, sz, sy)));
+  const ofSides = (b) => { const { W, Dp } = b; return [['F', W, 0, 0, 0], ['XP', Dp, W / 2, -Dp / 2, -Math.PI / 2], ['Y', W, 0, -Dp, Math.PI], ['XN', Dp, -W / 2, -Dp / 2, Math.PI / 2]]; };
+  const ofCorners = (b) => { const { W, Dp } = b; return [[-W / 2, 0, 0], [W / 2, 0, -Math.PI / 2], [W / 2, -Dp, Math.PI], [-W / 2, -Dp, Math.PI / 2]]; };
+  // этаж f: вид (без облицовки), низ z, высота
+  // этаж f: вид (без облицовки), низ z, высота - с растяжением яруса vs (ярус ровно в свою коробку генератора: ярусы стыкуются, кровля - на высоте боя)
+  const ofFloor = (b, f) => {
+    const S = OFS[b.fam], lob = b.lob ? 1 : 0, v = b.vs || 1;
+    const z = (f === 0 ? 0 : lob * S.LH + (f - lob) * S.FH) * v;
+    if (lob && f === 0) return [S.k0, 0, S.LH * v];
+    if (b.topf && f === b.F - 1) return ['top', z, (S.FH + S.PAR) * v];
+    if (f % S.TECH === S.TECH - 1) return ['tech', z, S.FH * v];
+    return ['floor', z, S.FH * v];
+  };
+  const ofH = (b) => { const S = OFS[b.fam]; return (b.lob ? S.LH : 0) + (b.F - (b.lob ? 1 : 0)) * S.FH + (b.topf ? S.PAR : 0); };
+  const ofHouses = (R) => {
+    const list = new Map(), RF = CITY.HALF * 2; // плоскости и кровли - на всю карту (коробки вида 31 больше не нужны)
+    const put = (M, part, b, m) => { const k = M + '|' + part; let L = list.get(k); if (!L) list.set(k, L = { xz: [], mats: [], bi: [] }); L.xz.push(b.cx, b.cz); L.mats.push(...m.elements); L.bi.push(b.bi); };
+    OFB.length = 0; dmgO.clear(); oCache.clear();
+    const byXZ = new Map(); for (const i of near[OFV]) { const k = Math.round(B.x[i]) + ',' + Math.round(B.z[i]); let a = byXZ.get(k); if (!a) byXZ.set(k, a = []); a.push(i); }
+    const gOf = (i) => { const W = B.w[i], Dp = B.d[i], gx = B.x[i], gz = B.z[i]; return Math.min(GH(gx, gz), GH(gx - W / 2, gz - Dp / 2), GH(gx + W / 2, gz - Dp / 2), GH(gx - W / 2, gz + Dp / 2), GH(gx + W / 2, gz + Dp / 2)) - 0.15; };
+    const gBase = (i) => { const a = byXZ.get(Math.round(B.x[i]) + ',' + Math.round(B.z[i])) || [i]; let lo = i; for (const j of a) if (B.y0[j] < B.y0[lo]) lo = j; return gOf(lo); }; // земля башни - у нижнего яруса
+    for (const i of near[OFV]) {
+      const fam = B.k[i] === KIND.GLASS ? 'gl' : 'of', S = OFS[fam], hs = Math.imul(i + 7, 2654435761) >>> 0, W = B.w[i], Dp = B.d[i], H = B.h[i], y0 = B.y0[i];
+      // ярус над этим (та же середина, основание = верх этого) - у этого вместо короны терраса / кровля без надстроек
+      const tier = (byXZ.get(Math.round(B.x[i]) + ',' + Math.round(B.z[i])) || []).some((j) => j !== i && Math.abs(B.y0[j] - (y0 + H)) < 1);
+      const lob = y0 < 0.5, top = fam === 'gl' ? (tier ? 'terrace' : ['roof', 'crownA', 'crownB'][(hs >>> 5) % 3]) : 'roof';
+      const topf = fam === 'gl' ? top === 'roof' || top === 'crownA' : true;
+      const F = Math.max(lob ? 2 : 1, (lob ? 1 : 0) + Math.round((H - (lob ? S.LH : 0) - (topf ? S.PAR : 0)) / S.FH));
+      // основание: нижний ярус - по нижнему углу коробки (склон), верхние - на его основание + y0
+      const gx = B.x[i], gz = B.z[i], g0 = gBase(i);
+      const b = { i, bi: OFB.length, fam, M: S.M, s: S.st[(hs >>> 9) % S.st.length], cham: fam === 'gl' && ((hs >>> 13) & 1) === 1 && Math.min(W, Dp) > 18, lob, top, topf, F, W, Dp, cx: gx, cz: gz, O: [gx, g0 + y0, gz - Dp / 2], hs, dmg: null, tall: y0 + H > 80 };
+      b.c = b.cham ? 3 / Math.SQRT2 : S.C0; b.vs = Math.max(0.8, Math.min(1.25, (H + (lob ? 0.15 : 0)) / ofH(b))); b.Ht = ofH(b) * b.vs; b.R = Math.hypot(W, Dp) / 2; OFB.push(b);
+      // плоскости фасадов (дальний вид): n шагов, F этажей, код = облицовка + 8 · вестибюль + 16 · верхний этаж с парапетом
+      const code = S.st.indexOf(b.s) + (lob ? 8 : 0) + (topf ? 16 : 0) + (b.cham ? 32 : 0), card = (x, y, rz, L, n) => { const m = oMat(b, x, y, 0, rz, L, 1, b.Ht); m.elements[3] = n; m.elements[7] = F; m.elements[11] = code; put(S.M, 'C:' + fam, b, m); };
+      for (const [, L, cx, cy, rz] of ofSides(b)) {
+        const Lb = b.cham ? L - 2 * b.c : L, n = Math.max(1, Math.round((L - 2 * b.c) / 3)), [dx, dy] = rot2(rz, 0, -0.12);
+        card(cx + dx, cy + dy, rz, Lb, n);
+      }
+      if (b.cham) for (const [cx, cy, rz] of ofCorners(b)) { const [dx, dy] = rot2(rz, b.c / 2, -b.c / 2), [ex, ey] = rot2(rz + Math.PI / 4, 0, -0.12); card(cx + dx + ex, cy + dy + ey, rz + Math.PI / 4, 3, 1); }
+      // кровля
+      const zt = b.Ht - (topf ? S.PAR * b.vs : 0), flat = top === 'terrace' ? 'deck_unit' : 'roof_unit', C0 = S.C0, rnd = mulberry32(hs); b.zt = zt;
+      if (b.cham) {
+        put(S.M, flat, b, oMat(b, 0, -Dp / 2, zt, 0, W - 2 * b.c, Dp - 2 * C0)); put(S.M, flat, b, oMat(b, 0, -Dp / 2, zt + 0.01, 0, W - 2 * C0, Dp - 2 * b.c));
+        for (const [cx, cy, rz] of ofCorners(b)) { const [dx, dy] = rot2(rz, b.c, -b.c); put(S.M, top === 'terrace' ? 'deck_tri' : 'roof_tri', b, oMat(b, cx + dx, cy + dy, zt, rz, b.c - C0, b.c - C0, 1)); }
+      } else put(S.M, flat, b, oMat(b, 0, -Dp / 2, zt, 0, W - 2 * C0, Dp - 2 * C0));
+      if (fam === 'of') {
+        // ядро - ближе к задней стене: середину крыши занимают ПЗРК
+        if (!tier) { if (Dp > 22) put(S.M, 'core_top', b, oMat(b, 0, -Dp * 0.78, zt)); const nh = 2 + ((hs >>> 3) % 3);
+          for (let k = 0; k < nh; k++) put(S.M, k % 2 ? 'hvac_b' : 'hvac_a', b, oMat(b, (rnd() - 0.5) * (W - 12), -Dp / 2 + (rnd() < 0.5 ? -1 : 1) * (Dp / 2 - 5) * (0.5 + rnd() * 0.5), zt, rnd() < 0.5 ? 0 : Math.PI / 2));
+          if (b.tall && Dp > 22 && ((hs >>> 17) & 1)) put(S.M, 'mast', b, oMat(b, 0, -Dp * 0.78, zt + 4.15)); }
+      } else if (top === 'terrace') {
+        for (const [, L, cx, cy, rz] of ofSides(b)) { const n = Math.max(1, Math.round((L - 2 * b.c) / 3)), bw = (L - 2 * b.c) / n; for (let k = 0; k < n; k++) { const [dx, dy] = rot2(rz, -L / 2 + b.c + (k + 0.5) * bw, 0); put(S.M, 'rail_' + b.s, b, oMat(b, cx + dx, cy + dy, zt, rz, bw / 3)); } }
+        if (b.cham) for (const [cx, cy, rz] of ofCorners(b)) { const [dx, dy] = rot2(rz, b.c / 2, -b.c / 2); put(S.M, 'rail_' + b.s, b, oMat(b, cx + dx, cy + dy, zt, rz + Math.PI / 4)); }
+        for (let k = 0; k < Math.floor((W + Dp) / 6); k++) { const a = rnd() < 0.5; put(S.M, 'planter', b, oMat(b, a ? -W / 2 + 2 + rnd() * (W - 4) : (rnd() < 0.5 ? -W / 2 + 1.3 : W / 2 - 1.3), a ? (rnd() < 0.5 ? -1.3 : -Dp + 1.3) : -Dp + 2 + rnd() * (Dp - 4), zt)); }
+      } else if (top === 'crownA') {
+        for (const [ins, hz, z1] of [[2, 1, 0], [5, 0.75, 8]]) {
+          const w = W - 2 * ins, d = Dp - 2 * ins; if (w < 4 || d < 4) continue;
+          for (const [L, cx, cy, rz] of [[w, 0, -ins, 0], [d, w / 2, -Dp / 2, -Math.PI / 2], [w, 0, -Dp + ins, Math.PI], [d, -w / 2, -Dp / 2, Math.PI / 2]]) { const n = Math.max(1, Math.round(L / 3)), bw = L / n; for (let k = 0; k < n; k++) { const [dx, dy] = rot2(rz, -L / 2 + (k + 0.5) * bw, 0); put(S.M, 'crownA_' + b.s, b, oMat(b, cx + dx, cy + dy, zt + z1, rz, bw / 3, 1, hz)); } }
+        }
+      } else if (top === 'crownB') {
+        const Hc = 14, n = Math.max(1, Math.round((W - 2 * C0) / 3)), bw = (W - 2 * C0) / n;
+        for (let k = 0; k < n; k++) put(S.M, 'crownB_' + b.s, b, oMat(b, -W / 2 + C0 + (k + 0.5) * bw, -C0, zt, 0, bw / 3, Dp - 2 * C0, Hc));
+        put(S.M, 'crownB_sideL_' + b.s, b, oMat(b, -W / 2 + C0, -C0, zt, 0, 1, Dp - 2 * C0, Hc)); put(S.M, 'crownB_sideR_' + b.s, b, oMat(b, W / 2 - C0, -C0, zt, 0, 1, Dp - 2 * C0, Hc)); put(S.M, 'crownB_back_' + b.s, b, oMat(b, 0, -Dp + C0, zt, 0, W - 2 * C0, 1, Hc));
+      } else put(S.M, 'core_top', b, oMat(b, 0, -Dp / 2, zt));
+    }
+    OFFO = new Uint8Array(OFB.length); PH_MODELS[OFV] = [...new Set(OFB.map((b) => b.M))]; // коробки прятать, когда пришли наборы, которые есть в городе
+    for (const [k, Ls] of list) {
+      const [M, part] = k.split('|'), key = 'of:' + M + ':' + part;
+      // дальность: плоскости, кровля и наклонная корона - вся карта; ядро и корона A - дальнее кольцо панелек; ограждения, кадки, вентустановки, мачты - ближний радиус
+      const Rp = part.startsWith('C:') || /^(roof|deck)_|^crownB/.test(part) ? RF : /^core_top|^crownA/.test(part) ? (TOUCH_GT ? R * 2 : Math.max(R * 1.5, P.bldFar || 0)) : R;
+      G.addNear(key, 0, M, Rp, Float32Array.from(Ls.xz), Float32Array.from(Ls.mats), { part, kit: OFV, kitR: RF });
+      const S = sets.get(key); if (S && part.startsWith('C:')) { S.bi = Int32Array.from(Ls.bi); S.offA = OFFO; } // плоскость прячется, когда здание - настоящими шагами
+    }
+  };
+  // настоящие шаги и углы здания (вблизи и разрушенные): имя детали → матрицы; кэш по зданию
+  const ofWalls = (b) => {
+    let L = oCache.get(b.bi); if (L) return L; L = new Map();
+    const S = OFS[b.fam], add = (nm, m) => { let a = L.get(nm); if (!a) L.set(nm, a = []); for (let k = 0; k < 16; k++) a.push(m.elements[k]); };
+    for (let f = 0; f < b.F; f++) {
+      const [kind, z] = ofFloor(b, f);
+      ofSides(b).forEach(([sd, Ln, cx, cy, rz]) => {
+        const n = Math.max(1, Math.round((Ln - 2 * b.c) / 3)), bw = (Ln - 2 * b.c) / n;
+        for (let k = 0; k < n; k++) {
+          let kd = kind === 'floor' ? ((Math.imul(b.hs + f * 131 + k * 7, 2246822519) >>> 15) & 1 ? 'floor1' : 'floor0') : kind;
+          if (kind === S.k0 && sd === 'F' && k === (n >> 1)) kd = 'entry';
+          const st = (b.dmg && b.dmg.get(sd + '|' + f + '|' + k)) || '0', [dx, dy] = rot2(rz, -Ln / 2 + b.c + (k + 0.5) * bw, 0);
+          add('bay_' + b.s + '_' + kd + '_s' + st, oMat(b, cx + dx, cy + dy, z, rz, bw / 3, 1, b.vs));
+        }
+      });
+      for (const [cx, cy, rz] of ofCorners(b)) {
+        if (b.cham) { const [dx, dy] = rot2(rz, b.c / 2, -b.c / 2); add('bay_' + b.s + '_' + (kind === 'floor' ? 'floor0' : kind) + '_s0', oMat(b, cx + dx, cy + dy, z, rz + Math.PI / 4, 1, 1, b.vs)); }
+        else add('cor_' + b.s + '_' + kind, oMat(b, cx, cy, z, rz, 1, 1, b.vs));
+      }
+    }
+    if (b.rub) for (const [x, y, nm] of b.rub) add(nm, oMat(b, x, y, 0));
+    for (const [k, a] of L) L.set(k, Float32Array.from(a));
+    oCache.set(b.bi, L); if (oCache.size > 120) oCache.delete(oCache.keys().next().value); // старые - вон (вернутся, если подлетим)
+    return L;
+  };
+  // раз в кадр: какие здания - настоящими шагами (ближе ofRn или разрушены и не дальше плоскостей); пересобрать пул, если набор сменился
+  const ofTick = G.ofTick = (cam) => {
+    if (!OFB.length) return;
+    const rn = OF_RN(), x = cam.position.x, y = cam.position.y, z = cam.position.z; let key = '';
+    // по расстоянию в пространстве до коробки яруса (с высоты башни под камерой - плоскостями)
+    const rf = (TOUCH_GT ? R * 2 : Math.max(R * 1.5, P.bldFar || 0)) * (G.kitK || 1);
+    for (const b of OFB) { if (!KITGS.has(b.M)) continue; const dy = Math.max(0, Math.abs(y - b.O[1] - b.Ht / 2) - b.Ht / 2), d2 = (b.cx - x) ** 2 + (b.cz - z) ** 2 + dy * dy, r = rn + b.R + (OFFO[b.bi] ? 25 : 0); // вышел - на 25 м дальше, чем вошёл
+      if (d2 < r * r || (dmgO.has(b.bi) && d2 < (rf + b.R) ** 2)) key += b.bi + ','; } // разрушенные - до дальнего кольца
+    if (!oDirty && key === oIn) return;
+    oIn = key; oDirty = false; OFFO.fill(0);
+    const all = new Map();
+    for (const s of key.split(',')) { if (!s) continue; const b = OFB[+s]; OFFO[b.bi] = 1; for (const [nm, a] of ofWalls(b)) { const k = b.M + '|' + nm; let q = all.get(k); if (!q) all.set(k, q = []); q.push(a); } }
+    for (const [k, P0] of oPool) if (!all.has(k)) { P0.m.count = 0; P0.m.visible = false; }
+    for (const [k, parts] of all) {
+      const [M, nm] = k.split('|'), src = KITGS.get(M).getObjectByName(nm); if (!src || !src.isMesh) continue;
+      let n = 0; for (const a of parts) n += a.length / 16;
+      let P0 = oPool.get(k);
+      if (!P0 || P0.cap < n) { if (P0) { scene.remove(P0.m); P0.m.dispose(); } const cap = Math.max(16, Math.ceil(n * 1.5)), m = new THREE.InstancedMesh(src.geometry, src.material, cap); m.frustumCulled = false; m.castShadow = !!sh.cast; m.receiveShadow = !!sh.receive; m.userData.set = 'ofp:' + k; scene.add(m); oPool.set(k, P0 = { m, cap }); }
+      let o = 0; for (const a of parts) { P0.m.instanceMatrix.array.set(a, o); o += a.length; }
+      P0.m.count = n; P0.m.visible = n > 0; P0.m.instanceMatrix.needsUpdate = true;
+    }
+    lx = 1e9;
+  };
+  // разрыв у офиса / стеклянной башни: шаги в радиусе - пролом (2a / 2b), дальше - стёкла (1g) или пожар (1f у мощных); углы стоят
+  const ofHit = (p, R) => {
+    let any = false; const SEVO = { 0: 0, '1g': 1, '1f': 2, '2a': 3, '2b': 3 };
+    for (const b of OFB) {
+      if (Math.abs(p.x - b.cx) > b.W / 2 + R || Math.abs(p.z - b.cz) > b.Dp / 2 + R || p.y < b.O[1] - R || p.y > b.O[1] + b.Ht + R) continue;
+      const lx0 = p.x - b.O[0], ly0 = -(p.z - b.O[2]), lz0 = p.y - b.O[1]; let hit = false; // в координатах сборщика
+      for (let f = 0; f < b.F; f++) {
+        const [, z, h] = ofFloor(b, f); if (Math.abs(lz0 - (z + h / 2)) > R * 0.7 + h) continue;
+        for (const [sd, Ln, cx, cy, rz] of ofSides(b)) {
+          const n = Math.max(1, Math.round((Ln - 2 * b.c) / 3)), bw = (Ln - 2 * b.c) / n;
+          for (let k = 0; k < n; k++) {
+            const [dx, dy] = rot2(rz, -Ln / 2 + b.c + (k + 0.5) * bw, 0), d = Math.hypot(cx + dx - lx0, cy + dy - ly0, z + h / 2 - lz0);
+            let ns = null; if (d < R * 0.22 + 1.5) ns = (Math.imul(b.hs + f * 17 + k, 40503) >>> 7) & 1 ? '2b' : '2a'; else if (d < R * 0.6) ns = R >= 30 && d < R * 0.4 ? '1f' : '1g';
+            if (!ns) continue; if (!b.dmg) b.dmg = new Map(); const kk = sd + '|' + f + '|' + k, was = b.dmg.get(kk) || '0';
+            if (SEVO[ns] > SEVO[was]) { b.dmg.set(kk, ns); hit = true; if (ns[0] === '2' && f <= 1 && !b.rub) b.rub = []; if (ns[0] === '2' && f <= 1 && b.rub.length < 6) b.rub.push([cx + dx * 1.0 + rot2(rz, 0, 3)[0], cy + dy + rot2(rz, 0, 3)[1], R >= 40 ? 'rubble_l' : 'rubble_m']); }
+          }
+        }
+      }
+      if (hit) { dmgO.add(b.bi); oCache.delete(b.bi); oDirty = true; any = true; }
+    }
+    return any;
+  };
   // ── разрушение своих домов (Mark 2026-11-16: «от прямых попаданий или очень рядом»; лестница - паспорта серий damage_ladder):
   // состояние каждой половины этажа секции (0 целый, 1-2 пожар, 3 выбиты стёкла волной, 4-6 пролом), этаж, с которого секция рухнула.
   // Варианты - по номеру дома и счётчику попаданий (не случайно): онлайн у всех игроков одинаково
@@ -1640,7 +1843,8 @@ function nearHouses(G, scene, B, near, P, sh) {
   const setSt = (b, s, f, h, v) => { if (s < 0 || s >= b.N || f < 0 || f >= b.F) return; const k = (s * b.F + f) * 2 + h; if (SEV[v] > SEV[b.st[k]]) b.st[k] = v; };
   const fire = (b, s, f, h) => setSt(b, s, f, h, 1 + hsh2(b.i + b.hits, s * 31 + f * 7 + h) % 2), hole = (b, s, f, h) => setSt(b, s, f, h, 4 + hsh2(b.i * 3 + b.hits, s * 17 + f * 5 + h) % 3);
   G.kitHit = (p, R) => {
-    if ((!KB.length && !PHB.length) || !(R >= 5)) return; // ложная цель без боевой части (4) - не ломает
+    if ((!KB.length && !PHB.length && !OFB.length) || !(R >= 5)) return;
+    if (OFB.length) ofHit(p, R); // ложная цель без боевой части (4) - не ломает
     let any = false;
     for (let bi = 0; bi < KB.length; bi++) {
       const b = KB[bi]; if (Math.hypot(p.x - b.x0, p.z - b.z0) > b.R + R + 10) continue;
@@ -1728,6 +1932,7 @@ function nearHouses(G, scene, B, near, P, sh) {
     }
   };
   if (PH_ON && Object.keys(PH).some((v) => near[v] && near[v].length)) phHouses(R); // частный сектор - свои дома и дворы
+  if (KIT_ON && OF_ON && near[OFV].length) ofHouses(R); // офисы и стеклянные башни Сити - из деталей
   if (KIT_ON && KIT_SER.some((q) => near[q.v] && near[q.v].length)) kitHouses(G, B, R, TOUCH_GT ? R * (+((typeof location !== 'undefined' && /[?&]kitrf=([\d.]+)/.exec(location.search)) || [0, 2])[1]) : Math.max(R * 1.5, P.bldFar || 0)); // телефон: упрощённые модули - до 2 R (дальше коробки; до bldFar кадр «Среднего» +25 %); ?kitrf= - проба
   G.attachBld = (name, group) => {
     for (const [key, S] of sets) {
@@ -2287,7 +2492,7 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
   water.position.y = AUT ? city.autumn.WY : CITY.WATER_Y; water.receiveShadow = !!P.shadows; if (!WINT) scene.add(water); // зимой реки и озёра - лёд в земле
 
   // здания, надстройки и скатные крыши
-  const B = city.B, list = [], small = [], roofs = [], extras = [], col = new THREE.Color(), near = BLD.map(() => []);
+  const B = city.B, list = [], small = [], roofs = [], extras = [], col = new THREE.Color(), near = Array.from({ length: 32 }, () => []);
   const pick = (kind, c) => { const pal = PAL[kind]; return col.set(pal[Math.floor(c * pal.length) % pal.length]).convertSRGBToLinear().multiplyScalar(0.62 + 0.2 * ((c * 7.31) % 1)).clone(); };
   for (let i = 0; i < B.n; i++) {
     const k = B.k[i], c = B.c[i], y0 = B.y0[i], gy = GH(B.x[i], B.z[i]), gb = RELIEF ? Math.min(gy, GH(B.x[i] - B.w[i] / 2, B.z[i] - B.d[i] / 2), GH(B.x[i] + B.w[i] / 2, B.z[i] - B.d[i] / 2), GH(B.x[i] - B.w[i] / 2, B.z[i] + B.d[i] / 2), GH(B.x[i] + B.w[i] / 2, B.z[i] + B.d[i] / 2)) : gy; // на склоне - цоколь до нижнего угла
@@ -2497,6 +2702,7 @@ export function updateCityScene(G, camera, P, focus, t, extra) {
   if (G.bake) G.bake.update(camera);
   if (G.lowL) G.lowL(); // осень: туман низин - по свету сцены
   if (G.snow) G.snow.update(camera, t || 0, G.renderer ? G.renderer.domElement.height : 720);
+  if (G.ofTick) G.ofTick(camera); // офисы и стекло: какие здания - настоящими шагами (до отбора наборов: плоскости этих зданий выключены в том же кадре)
   if (G.near) { camera.updateMatrixWorld(); const cs = extra ? CAM2 : CAM1; cs[0] = camera; if (extra) cs[1] = extra; G.near(camera, cs); }
   if (G.kitTick) G.kitTick(camera); // свои дома: руины
   const cx = camera.position.x, cz = camera.position.z, D = P.draw + TILE;
