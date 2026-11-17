@@ -106,6 +106,15 @@ const CSS_B = `
   #ratWin .mecard .big { width: 50px; height: 42px; } #ratWin .place .pn { width: 56px; height: 47px; }
 }
 
+
+/* правки Mark 2026-11-17: аватарка и «Мои бои» - не вплотную к сигнальной полосе; очки и лампы «засчитано» - в нижнем правом углу карточки
+   (под табличкой места - только подпись и номер); картинка аватарки - внутри рамки, рамка не меньше картинки */
+#ratWin .win .hero, #ratWin .win.prof .hero { padding-left: 32px; }
+#ratWin .hero .place { grid-row: 1 / 4; grid-column: 3; display: flex; flex-direction: column; align-items: flex-end; align-self: stretch; gap: 3px; }
+#ratWin .hero .place .pts { margin-top: auto; }
+#ratWin .hero .mine { grid-column: 1 / 3; }
+#ratWin .av, #ratWin .ava { box-sizing: border-box; padding: 3px; } #ratWin .ava { padding: 6px; }
+@media (max-height: 500px) { #ratWin .win .hero, #ratWin .win.prof .hero { padding-left: 28px; } }
 `;
 const CSS = `
 #ratWin { position: fixed; inset: 0; z-index: 70; display: none; align-items: center; justify-content: center; box-sizing: border-box; background: rgba(8,11,7,.72); color: #e9e6dc; font: 400 14px/1.4 'Golos Text', -apple-system, sans-serif;
