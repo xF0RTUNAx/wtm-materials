@@ -1,0 +1,271 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Панели лобби: варианты</title>
+<!-- Макеты (Mark 2026-11-17): панель «Операция: 2 вылета», «Оборона» и «Онлайн» - картинками и значками вместо текста, в стиле ангара.
+     Фон - настоящий кадр ангара 844×390 (телефон Mark) без панели: bg_hangar.jpg (bg_shots.js). Сервер 8935:
+     http://localhost:8935/fortuna-bot-web/tools/airdef-mockups/lobby-panels/index.html   ?f=o1 - один кадр без подписей. В игре ничего не менялось. -->
+<style>
+@font-face { font-family: 'Oswald'; font-weight: 300 700; src: url(../../../games/airdef/fonts/oswald-cyrillic.woff2) format('woff2'); unicode-range: U+0400-045F, U+2116; }
+@font-face { font-family: 'Oswald'; font-weight: 300 700; src: url(../../../games/airdef/fonts/oswald-latin.woff2) format('woff2'); unicode-range: U+0000-00FF, U+2000-206F, U+2191, U+2193; }
+@font-face { font-family: 'Golos Text'; font-weight: 400 800; src: url(../../../games/airdef/fonts/golos-text-cyrillic.woff2) format('woff2'); unicode-range: U+0400-045F; }
+@font-face { font-family: 'Golos Text'; font-weight: 400 800; src: url(../../../games/airdef/fonts/golos-text-latin.woff2) format('woff2'); unicode-range: U+0000-00FF, U+2000-206F; }
+:root { --ui: url(../../../games/airdef/ui/hangar/); --gold: #e8b04a; --gold2: #f3c96f; --ink: #ece8dc; --dim: #c2c7b2; --mute: #8d9580; --red: #e0705f; --amb: #e3ae62;
+  --pn: rgba(16,19,15,.86); --ln: rgba(110,104,80,.55); }
+* { box-sizing: border-box; } html, body { margin: 0; background: #0d100c; color: var(--ink); font: 14px 'Golos Text', sans-serif; }
+h1 { font: 500 22px 'Oswald'; margin: 18px 20px 4px; } h2 { font: 500 18px 'Oswald'; margin: 26px 20px 2px; color: var(--gold2); } p.d { margin: 0 20px 10px; max-width: 1280px; color: var(--dim); line-height: 1.45; font-size: 13.5px; }
+.rowf { display: flex; flex-wrap: wrap; gap: 16px; padding: 0 20px; } .cap { font: 500 15px 'Oswald'; color: var(--gold2); margin: 6px 0 2px; } .cap span { font: 12.5px 'Golos Text'; color: var(--dim); margin-left: 6px; }
+body.one h1, body.one h2, body.one p.d, body.one .cap { display: none; } body.one .rowf { padding: 0; gap: 0; }
+.ph { position: relative; flex: none; width: 844px; height: 390px; overflow: hidden; background: #111 url(bg_def.jpg) left top / 844px 390px no-repeat; } .ph.bgop { background-image: url(bg_op.jpg); } .ph.bgon { background-image: url(bg_online.jpg); }
+img { display: block; } .th { object-fit: contain; }
+/* общие детали */
+.pn { position: absolute; right: 61px; top: 38px; width: 252px; }
+.pHead { display: flex; align-items: center; justify-content: space-between; height: 30px; padding: 0 4px 0 10px; background: var(--pn); border: 1px solid var(--ln); font: 500 15px 'Oswald'; color: var(--ink); letter-spacing: .02em; }
+.pHead .x { width: 24px; height: 22px; display: grid; place-items: center; border: 1px solid #5f5a45; color: var(--gold); font: 600 14px 'Oswald'; }
+.start { position: absolute; right: 61px; bottom: 30px; width: 168px; height: 44px; display: grid; place-items: center; border-image: url(../../../games/airdef/ui/hangar/b_start.webp) 60 fill / 14px stretch; border-style: solid; border-width: 14px;
+  font: 600 18px 'Oswald'; letter-spacing: .06em; color: #1d1708; text-transform: uppercase; }
+.plate { border-style: solid; border-width: 9px; border-image: url(../../../games/airdef/ui/hangar/b_plate_n.webp) 30 fill / 9px stretch; }
+.plate.on { border-image-source: url(../../../games/airdef/ui/hangar/b_plate_on.webp); }
+.card { border-style: solid; border-width: 7px; border-image: url(../../../games/airdef/ui/hangar/b_card_n.webp) 26 fill / 7px stretch; }
+.card.on { border-image-source: url(../../../games/airdef/ui/hangar/b_card_on.webp); }
+.cell { border-style: solid; border-width: 5px; border-image: url(../../../games/airdef/ui/hangar/b_cell.webp) 18 fill / 5px stretch; }
+.lbl { font: 500 9.5px 'Oswald'; letter-spacing: .14em; text-transform: uppercase; color: var(--mute); }
+.chip { display: inline-grid; place-items: center; height: 24px; padding: 0 8px; font: 500 12.5px 'Oswald'; color: var(--dim); background: rgba(10,12,9,.8); border: 1px solid #3c3a2c; white-space: nowrap; }
+.chip.on { background: var(--gold); color: #1c1708; border-color: var(--gold); }
+.chips { display: flex; gap: 3px; } .chips .chip { flex: 1; }
+.role { display: inline-block; padding: 1px 5px; font: 600 9px 'Oswald'; letter-spacing: .1em; text-transform: uppercase; }
+.role.sead { background: #6b2a22; color: #ffcfc4; } .role.strike { background: #5a4417; color: #ffe1a4; }
+.wp { position: relative; } .wp img { width: 100%; height: 100%; object-fit: contain; } .wp u { position: absolute; right: 1px; bottom: -2px; font: 600 11px 'Oswald'; color: var(--gold2); text-decoration: none; text-shadow: 0 1px 2px #000, 0 0 3px #000; }
+.badge { display: inline-block; padding: 0 4px; height: 14px; line-height: 14px; font: 600 9px 'Oswald'; letter-spacing: .06em; color: #111; }
+.b-rls { background: #e07b63; } .b-lv { background: #e3b562; } .b-ik { background: #f09a4a; } .b-art { background: #a9b38c; }
+.star { width: 1em; height: 1em; vertical-align: -.15em; }
+.scrollhint { position: absolute; left: 0; right: 0; bottom: 0; height: 26px; background: linear-gradient(transparent, rgba(12,14,10,.95)); pointer-events: none; }
+.sum { display: flex; align-items: center; gap: 6px; height: 28px; padding: 0 8px; background: var(--pn); border: 1px solid var(--ln); font: 500 12px 'Oswald'; color: var(--dim); white-space: nowrap; overflow: hidden; }
+.sum b { font-weight: 500; color: var(--gold2); } .sum .chev { margin-left: auto; color: var(--gold); } .sum .x { width: 22px; height: 20px; display: grid; place-items: center; border: 1px solid #5f5a45; color: var(--gold); margin-left: 6px; font: 600 13px 'Oswald'; } .sum .t { font-size: 14px; color: var(--ink); }
+.strip { position: absolute; left: 60px; right: 330px; bottom: 14px; display: flex; gap: 6px; }
+
+/* ═══ Вылет · А «Два слота» ═══ */
+.vA .slots { display: flex; gap: 4px; margin-top: 4px; }
+.vA .slot { flex: 1; height: 84px; position: relative; padding: 2px 3px; }
+.vA .slot .n { position: absolute; left: 2px; top: 0; font: 600 20px/1 'Oswald'; color: var(--gold2); }
+.vA .slot .role { position: absolute; right: 0; top: 2px; }
+.vA .slot .pl { position: absolute; left: 4px; right: 4px; top: 16px; height: 38px; } .vA .slot .pl img { width: 100%; height: 100%; object-fit: contain; }
+.vA .slot .ws { position: absolute; left: 2px; right: 2px; bottom: 0; display: flex; gap: 2px; } .vA .slot .ws .wp { flex: 1; height: 20px; }
+.vA .grid { margin-top: 4px; padding: 6px; background: var(--pn); border: 1px solid var(--ln); display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; height: 152px; overflow: hidden; position: relative; }
+.vA .grid .t { height: 74px; position: relative; padding: 0; }
+.vA .grid .t .pl { height: 38px; } .vA .grid .t .pl img { width: 100%; height: 100%; object-fit: contain; }
+.vA .grid .t em { display: block; font: 500 9.5px/1 'Oswald'; font-style: normal; color: var(--ink); text-align: center; white-space: nowrap; margin-top: 1px; }
+.vA .grid .t .ws { display: flex; gap: 1px; margin-top: 2px; } .vA .grid .t .ws .wp { flex: 1; height: 15px; } .vA .grid .t .ws .wp u { font-size: 9.5px; }
+.pin { position: absolute; right: -2px; top: -2px; width: 14px; height: 14px; display: grid; place-items: center; background: var(--gold); color: #1c1708; font: 700 10px/1 'Golos Text'; font-style: normal; } .pin::after { content: '✓'; }
+
+/* ═══ Вылет · Б «Таблички + лента» ═══ */
+.vB .slot { position: relative; height: 110px; margin-top: 4px; padding: 0; }
+.vB .slot .hd { display: flex; align-items: center; gap: 6px; height: 16px; }
+.vB .slot .hd b { font: 600 17px/1 'Oswald'; color: var(--gold2); } .vB .slot .hd em { margin-left: auto; font: 500 11px 'Oswald'; font-style: normal; color: var(--ink); }
+.vB .slot .pl { position: absolute; left: 0; top: 18px; width: 120px; height: 66px; } .vB .slot .pl img { width: 100%; height: 100%; object-fit: contain; }
+.vB .slot .ws { position: absolute; right: 0; top: 22px; width: 104px; display: grid; grid-template-columns: 1fr 1fr; gap: 3px; } .vB .slot .ws .wp { height: 30px; }
+.vB .slot .ar { position: absolute; left: 0; right: 0; bottom: -2px; text-align: center; font: 500 9.5px 'Oswald'; letter-spacing: .1em; color: var(--gold); text-transform: uppercase; }
+.vB .note { margin-top: 4px; padding: 5px 8px; background: var(--pn); border: 1px solid var(--ln); font: 11px/1.35 'Golos Text'; color: var(--dim); }
+.vB .note b { color: var(--gold2); font-weight: 600; }
+.hgc { position: relative; width: 92px; height: 74px; padding: 0; flex: none; }
+.hgc .pl { height: 38px; } .hgc .pl img { width: 100%; height: 100%; object-fit: contain; }
+.hgc em { display: block; font: 500 10px/1 'Oswald'; font-style: normal; text-align: center; color: var(--ink); white-space: nowrap; margin-top: 1px; }
+.hgc .ws { display: flex; gap: 1px; margin-top: 2px; } .hgc .ws .wp { flex: 1; height: 15px; } .hgc .ws .wp u { font-size: 9.5px; }
+.stripHd { position: absolute; left: 62px; bottom: 96px; font: 500 11px 'Oswald'; letter-spacing: .12em; text-transform: uppercase; color: var(--gold2); text-shadow: 0 1px 3px #000; }
+
+/* ═══ Вылет · В «Маршрут» ═══ */
+.vC .route { position: relative; height: 100px; margin-top: 4px; background: var(--pn); border: 1px solid var(--ln); }
+.vC .node { position: absolute; top: 4px; width: 104px; height: 94px; text-align: center; }
+.vC .node .ring { width: 66px; height: 66px; margin: 0 auto; border-radius: 50%; border: 2px solid #5a5440; background: radial-gradient(#2a2c22, #14160f); display: grid; place-items: center; overflow: hidden; }
+.vC .node.on .ring { border-color: var(--gold); box-shadow: 0 0 0 2px rgba(232,176,74,.25), 0 0 14px rgba(232,176,74,.35); }
+.vC .node .ring img { width: 96px; height: 56px; object-fit: contain; }
+.vC .node .n { position: absolute; left: 6px; top: -2px; width: 20px; height: 20px; border-radius: 50%; background: var(--gold); color: #1c1708; font: 600 13px/20px 'Oswald'; }
+.vC .node .role { margin-top: 4px; }
+.vC .arrow { position: absolute; left: 112px; top: 38px; width: 28px; height: 2px; border-top: 2px dashed var(--gold); } .vC .arrow::after { content: ''; position: absolute; right: -2px; top: -6px; border: 5px solid transparent; border-left: 7px solid var(--gold); }
+.vC .bonus { position: absolute; left: 104px; width: 44px; top: 50px; text-align: center; line-height: 1.1; font: 500 9.5px 'Oswald'; color: var(--mute); }
+.vC .list { margin-top: 4px; background: var(--pn); border: 1px solid var(--ln); height: 136px; overflow: hidden; position: relative; }
+.vC .row { display: flex; align-items: center; gap: 6px; height: 36px; padding: 0 6px; border-bottom: 1px solid rgba(90,84,64,.35); }
+.vC .row.on { background: rgba(232,176,74,.16); box-shadow: inset 3px 0 0 var(--gold); }
+.vC .row .pl { width: 62px; height: 32px; } .vC .row .pl img { width: 100%; height: 100%; object-fit: contain; }
+.vC .row em { width: 62px; font: 500 11px/1.05 'Oswald'; font-style: normal; color: var(--ink); }
+.vC .row .ws { display: flex; gap: 3px; margin-left: auto; } .vC .row .ws .wp { width: 34px; height: 24px; }
+
+/* ═══ Оборона · А «Плитки» ═══ */
+.dA .set { margin-top: 4px; padding: 6px; background: var(--pn); border: 1px solid var(--ln); display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+.dA .set .chips .chip { padding: 0 4px; }
+.flag { display: inline-flex; align-items: center; gap: 4px; }
+.dA .grid { margin-top: 4px; padding: 6px; background: var(--pn); border: 1px solid var(--ln); display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; height: 166px; overflow: hidden; position: relative; }
+.dA .t { position: relative; height: 62px; padding: 0; }
+.dA .t .pl { height: 36px; } .dA .t .pl img { width: 100%; height: 100%; object-fit: contain; }
+.dA .t em { display: block; font: 500 10px/1 'Oswald'; font-style: normal; text-align: center; color: var(--ink); white-space: nowrap; margin-top: 1px; }
+.dA .t .ft { display: flex; align-items: center; justify-content: space-between; margin-top: 2px; } .dA .t .ft i { font: 600 10.5px 'Oswald'; font-style: normal; color: var(--gold2); }
+
+/* ═══ Оборона · Б «Дальность» ═══ */
+.dB .list { margin-top: 4px; background: var(--pn); border: 1px solid var(--ln); height: 204px; overflow: hidden; position: relative; padding: 2px 0; }
+.dB .row { display: grid; grid-template-columns: 54px 1fr 30px; align-items: center; gap: 6px; height: 30px; padding: 0 6px; }
+.dB .row .pl { height: 28px; } .dB .row .pl img { width: 100%; height: 100%; object-fit: contain; }
+.dB .row .mid em { display: flex; align-items: center; gap: 4px; font: 500 11.5px/1 'Oswald'; font-style: normal; color: var(--ink); }
+.dB .bar { position: relative; height: 5px; margin-top: 4px; background: rgba(255,255,255,.08); } .dB .bar i { position: absolute; left: 0; top: 0; bottom: 0; background: linear-gradient(90deg, #8a6a2a, var(--gold)); }
+.dB .bar span { position: absolute; top: -12px; font: 500 9px 'Oswald'; color: var(--mute); }
+.dB .row b { font: 600 12px 'Oswald'; color: var(--gold2); text-align: right; }
+.dB .legend { display: flex; justify-content: space-between; padding: 0 6px 0 66px; font: 500 9px 'Oswald'; color: var(--mute); letter-spacing: .08em; }
+
+/* ═══ Оборона · В «Лента ПВО» ═══ */
+.dC .set { margin-top: 4px; padding: 6px; background: var(--pn); border: 1px solid var(--ln); display: flex; flex-direction: column; gap: 5px; }
+.dC .set .r { display: flex; align-items: center; gap: 5px; } .dC .set .r .ic { width: 22px; text-align: center; color: var(--gold); font: 600 12px 'Oswald'; }
+.dC .big { margin-top: 4px; position: relative; height: 138px; padding: 0; }
+.dC .big .pl { position: absolute; left: 0; right: 0; top: 0; height: 84px; } .dC .big .pl img { width: 100%; height: 100%; object-fit: contain; }
+.dC .big h3 { position: absolute; left: 2px; top: -2px; margin: 0; font: 600 16px 'Oswald'; color: var(--ink); }
+.dC .big .cost { position: absolute; right: 2px; top: -1px; font: 600 14px 'Oswald'; color: var(--gold2); }
+.dC .big .stats { position: absolute; left: 0; right: 0; bottom: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; }
+.dC .big .stats div { padding: 3px 2px; background: rgba(8,10,7,.7); text-align: center; font: 600 13px/1.1 'Oswald'; color: var(--ink); } .dC .big .stats small { display: block; font: 500 8.5px 'Oswald'; letter-spacing: .1em; color: var(--mute); text-transform: uppercase; }
+.samc { position: relative; width: 74px; height: 64px; padding: 0; flex: none; }
+.samc .pl { height: 36px; } .samc .pl img { width: 100%; height: 100%; object-fit: contain; }
+.samc em { display: block; font: 500 10px/1 'Oswald'; font-style: normal; text-align: center; color: var(--ink); margin-top: 1px; white-space: nowrap; }
+.samc .ft { display: flex; justify-content: space-between; align-items: center; margin-top: 2px; } .samc .ft i { font: 600 10px 'Oswald'; font-style: normal; color: var(--gold2); }
+
+/* ═══ Онлайн · А «Плитки» ═══ */
+.oA .games { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-top: 4px; }
+.oA .g { position: relative; height: 74px; padding: 0; }
+.oA .g .pics { position: relative; height: 44px; } .oA .g .pics img { position: absolute; height: 46px; width: 80px; object-fit: contain; }
+.oA .g em { display: block; text-align: center; font: 500 12px/1 'Oswald'; font-style: normal; color: var(--ink); margin-top: 3px; }
+.oA .q { margin-top: 4px; padding: 6px; background: var(--pn); border: 1px solid var(--ln); }
+.oA .q .hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px; } .oA .q .hd b { font: 500 13px 'Oswald'; color: var(--ink); letter-spacing: .03em; }
+.live { display: inline-flex; align-items: center; gap: 4px; font: 500 10.5px 'Oswald'; color: #9fd58a; } .live::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #7fd062; box-shadow: 0 0 6px #7fd062; }
+.oA .roles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin-top: 5px; }
+.oA .r { height: 52px; padding: 0; position: relative; } .oA .r .pics { position: relative; height: 30px; } .oA .r .pics img { position: absolute; object-fit: contain; }
+.oA .r em { display: block; text-align: center; font: 500 11px/1 'Oswald'; font-style: normal; color: var(--ink); margin-top: 2px; }
+.oA .foot { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-top: 4px; }
+.oA .foot div { height: 30px; display: flex; align-items: center; justify-content: center; gap: 6px; background: var(--pn); border: 1px solid var(--ln); font: 500 12px 'Oswald'; color: var(--gold2); }
+
+/* ═══ Онлайн · Б «Вкладки» ═══ */
+.oB .tabs { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 3px; margin-top: 4px; }
+.oB .tab { height: 34px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--pn); border: 1px solid var(--ln); font: 500 12px/1.05 'Oswald'; color: var(--dim); }
+.oB .tab small { font: 500 8.5px 'Oswald'; letter-spacing: .1em; color: var(--mute); text-transform: uppercase; }
+.oB .tab.on { background: var(--gold); color: #1c1708; border-color: var(--gold); } .oB .tab.on small { color: #4d3a10; }
+.oB .body { margin-top: 4px; padding: 6px; background: var(--pn); border: 1px solid var(--ln); }
+.oB .rr { display: flex; align-items: center; gap: 8px; height: 42px; padding: 0 8px 0 4px; margin-bottom: 4px; }
+.oB .rr .pics { position: relative; width: 84px; height: 40px; flex: none; } .oB .rr .pics img { position: absolute; width: 74px; height: 40px; object-fit: contain; }
+.oB .rr em { font: 500 14px 'Oswald'; font-style: normal; color: var(--ink); } .oB .rr .ck { margin-left: auto; width: 16px; height: 16px; border-radius: 50%; border: 2px solid #6c6650; } .oB .rr.on .ck { border-color: var(--gold); background: radial-gradient(var(--gold) 45%, transparent 50%); }
+.oB .rr small { display: block; font: 10px 'Golos Text'; color: var(--mute); }
+.oB .two { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-bottom: 5px; }
+
+/* ═══ Онлайн · В «Карточка роли» ═══ */
+.oC .gtabs { display: flex; gap: 3px; margin-top: 4px; } .oC .gtabs .chip { flex: 1; height: 28px; font-size: 13px; }
+.oC .hero { position: relative; height: 150px; margin-top: 4px; padding: 0; }
+.oC .hero .pics { position: absolute; left: 22px; right: 22px; top: 4px; height: 92px; } .oC .hero .pics img { position: absolute; object-fit: contain; }
+.oC .hero .nav { position: absolute; top: 34px; width: 22px; height: 34px; display: grid; place-items: center; font: 600 22px 'Oswald'; color: var(--gold); }
+.oC .hero .nav.l { left: -4px; } .oC .hero .nav.r { right: -4px; }
+.oC .hero h3 { position: absolute; left: 0; right: 0; top: 96px; margin: 0; text-align: center; font: 600 18px 'Oswald'; letter-spacing: .04em; color: var(--ink); text-transform: uppercase; }
+.oC .hero .dots { position: absolute; left: 0; right: 0; bottom: 4px; display: flex; justify-content: center; gap: 5px; } .oC .hero .dots i { width: 7px; height: 7px; border-radius: 50%; background: #55503e; } .oC .hero .dots i.on { background: var(--gold); }
+.oC .row2 { display: flex; gap: 4px; margin-top: 4px; align-items: stretch; }
+.oC .row2 .chips { flex: 1; } .oC .row2 .ic2 { width: 36px; display: grid; place-items: center; background: var(--pn); border: 1px solid var(--ln); color: var(--gold2); }
+.ic { width: 16px; height: 16px; fill: currentColor; }
+.sw { display: flex; align-items: center; gap: 6px; font: 500 12px 'Oswald'; color: var(--dim); } .sw i { position: relative; width: 30px; height: 16px; border-radius: 8px; background: #3a382b; } .sw i::after { content: ''; position: absolute; left: 2px; top: 2px; width: 12px; height: 12px; border-radius: 50%; background: #8d8770; }
+.sw.on i { background: #8a6a2a; } .sw.on i::after { left: 16px; background: var(--gold2); }
+</style></head><body>
+<h1>Панели лобби: «Операция», «Оборона», «Онлайн»</h1>
+<p class="d">Mark 2026-11-17: «красиво и понятно задизайнить меню с онлайном, меню с двойным вылетом (просто иконки самолётов и их варианты загрузок, а не куча текста), и модуль с ПВО - тоже иконками и поменьше текста». По три варианта на каждую панель, кадр телефона 844×390 на настоящем фоне ангара. Таблички, плашки и кнопка - текстуры ангара игры, картинки - миниатюры самолётов, оружия и комплексов из игры. Пример: ранг II, ПВО города - западная (атакует восток).</p>
+
+<h2>1. Вылет · «Операция: 2 вылета»</h2>
+<p class="d">Сейчас: два длинных списка текстовых карточек. В вариантах - картинка самолёта и миниатюры оружия с числом, роль цветной плашкой, текста почти нет. Настройки (ранг, режим, ПВО, «1 / 2 вылета») свёрнуты в строку сверху, как в одиночном вылете.</p>
+<div class="rowf">
+  <div><div class="cap">А · «Два слота» <span>вверху два вылета рядом, под выбранным - сетка самолётов с подвесками</span></div><div class="ph bgop" id="f_v1"></div></div>
+  <div><div class="cap">Б · «Таблички + лента» <span>как одиночный вылет: в панели две таблички, самолёты - в ленте внизу</span></div><div class="ph bgop" id="f_v2"></div></div>
+  <div><div class="cap">В · «Маршрут» <span>вылеты кружками со стрелкой 1 → 2, ниже - строки: самолёт и оружие</span></div><div class="ph bgop" id="f_v3"></div></div>
+</div>
+
+<h2>2. Оборона</h2>
+<p class="d">Сейчас: настройки строками и список комплексов текстом («ЗРК средней дальности · до 25 км, высота до 17 км»). В вариантах - комплекс картинкой, тип наведения цветной меткой (РЛС, ЛВ - по лучу, ИК, АРТ), стоимость числом; сторона - звездой.</p>
+<div class="rowf">
+  <div><div class="cap">А · «Плитки» <span>настройки фишками, комплексы сеткой 3 в ряд</span></div><div class="ph" id="f_d1"></div></div>
+  <div><div class="cap">Б · «Дальность» <span>настройки свёрнуты, у каждого комплекса - полоска дальности в одном масштабе</span></div><div class="ph" id="f_d2"></div></div>
+  <div><div class="cap">В · «Лента ПВО» <span>комплексы в ленте внизу, в панели - выбранный крупно и три числа</span></div><div class="ph" id="f_d3"></div></div>
+</div>
+
+<h2>3. Онлайн</h2>
+<p class="d">Сейчас: «Игра», «Режим», «Роль» строками кнопок и абзац текста, ниже «Своя комната» и «Войти по коду». В вариантах - игра и роль картинками, «сейчас ищут» - живой точкой, комната и код - отдельными кнопками (их окно - как сейчас).</p>
+<div class="rowf">
+  <div><div class="cap">А · «Плитки» <span>игра - две картинки, роль - три, комната и код внизу</span></div><div class="ph bgon" id="f_o1"></div></div>
+  <div><div class="cap">Б · «Вкладки» <span>быстрый бой / комната / код вкладками, роль - строками с картинкой</span></div><div class="ph bgon" id="f_o2"></div></div>
+  <div><div class="cap">В · «Карточка роли» <span>одна большая карточка, роль листается стрелками</span></div><div class="ph bgon" id="f_o3"></div></div>
+</div>
+
+<script>
+const T = (n) => `../../../games/airdef/thumbs/${n}.webp`;
+const STAR_E = '<svg class="star" viewBox="0 0 24 24"><path fill="#d8332a" stroke="#f3e7c8" stroke-width="1.2" d="M12 1.8l2.9 7.2 7.6.4-5.9 4.9 2 7.5L12 17.6l-6.6 4.2 2-7.5-5.9-4.9 7.6-.4z"/></svg>';
+const STAR_W = '<svg class="star" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#28427a" stroke="#f3e7c8" stroke-width="1.2"/><path fill="#fff" d="M12 4.2l2 5 5.3.3-4.1 3.4 1.4 5.2L12 15.2l-4.6 2.9 1.4-5.2-4.1-3.4 5.3-.3z"/></svg>';
+const ICO = { players: '<svg class="ic" viewBox="0 0 24 24"><path d="M8 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zm8 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM1.5 20c0-3.6 3-6 6.5-6s6.5 2.4 6.5 6zm14 0c0-1.8-.6-3.4-1.7-4.6.7-.3 1.4-.4 2.2-.4 3 0 5.5 2 5.5 5z"/></svg>',
+  key: '<svg class="ic" viewBox="0 0 24 24"><path d="M14.5 2a7.5 7.5 0 0 0-7 10.2L1.5 18.2V22.5h4.3v-2.3h2.3v-2.3h2.3l1.8-1.8A7.5 7.5 0 1 0 14.5 2zm2.2 3.6a2 2 0 1 1 0 4 2 2 0 0 1 0-4z"/></svg>',
+  dice: '<svg class="ic" viewBox="0 0 24 24"><path d="M4 2h16a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm3.5 3.5a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm9 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM12 10a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-4.5 4.5a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm9 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/></svg>',
+  cog: '<svg class="ic" viewBox="0 0 24 24"><path d="M10.3 1.5h3.4l.5 3 2 .9 2.5-1.8 2.4 2.4-1.8 2.5.9 2 3 .5v3.4l-3 .5-.9 2 1.8 2.5-2.4 2.4-2.5-1.8-2 .9-.5 3h-3.4l-.5-3-2-.9-2.5 1.8-2.4-2.4 1.8-2.5-.9-2-3-.5v-3.4l3-.5.9-2-1.8-2.5 2.4-2.4 2.5 1.8 2-.9zM12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z"/></svg>' };
+const wps = (ws, cls = 'wp') => ws.map(([k, n]) => `<div class="${cls}"><img src="${T('wpn_' + k)}"><u>×${n}</u></div>`).join('');
+// ранг II, ПВО города - западная: атакует восток
+const SEAD = [['e_su17', 'Су-17М4', [['kh58', 2], ['kh25ml', 2]]], ['e_mig25', 'МиГ-25БМ', [['kh58', 4]]]];
+const STRIKE = [['e_su24', 'Су-24М', [['kab500l', 4], ['kh58', 2]]], ['e_tu22m2', 'Ту-22М2', [['fab500', 8]]], ['e_su25', 'Су-25', [['kh29t', 2], ['kh25ml', 2]]], ['e_su25', 'Су-25', [['fab500', 6]]],
+  ['e_mig27', 'МиГ-27К', [['kh29t', 2], ['kab500l', 2]]], ['e_yak38', 'Як-38М', [['ofab250', 4]]], ['e_t4', 'Т-4', [['fab1000', 2], ['fab500', 2]]]];
+const S1 = SEAD[1], S2 = STRIKE[0];
+const sumRow = `<div class="sum"><span class="t">Операция</span> · <b>Ранг II</b> · Аркада · ${STAR_W}<span class="chev">▾</span><span class="x">›</span></div>`;
+const head = (t) => `<div class="pHead">${t}<span class="x">›</span></div>`;
+const put = (id, html) => { document.getElementById('f_' + id).innerHTML = html; };
+
+// ── Вылет А
+put('v1', `<div class="pn vA">${sumRow}
+  <div class="slots">${[[1, 'sead', 'ПВО', S1, false], [2, 'strike', 'Удар', S2, true]].map(([n, r, rn, s, on]) => `<div class="slot card ${on ? 'on' : ''}"><span class="n">${n}</span><span class="role ${r}">${rn}</span><div class="pl"><img src="${T('air_' + s[0])}"></div><div class="ws">${wps(s[2])}</div></div>`).join('')}</div>
+  <div class="grid">${STRIKE.map((s, i) => `<div class="t cell"><div class="pl"><img src="${T('air_' + s[0])}"></div><em>${s[1]}</em><div class="ws">${wps(s[2])}</div>${i === 0 ? '<i class="pin"></i>' : ''}</div>`).join('')}<div class="scrollhint"></div></div></div>
+  <div class="start">В бой</div>`);
+// ── Вылет Б
+put('v2', `<div class="pn vB">${sumRow}
+  ${[[1, 'sead', 'Охота за ПВО', S1, false], [2, 'strike', 'Штурмовка', S2, true]].map(([n, r, rn, s, on]) => `<div class="slot plate ${on ? 'on' : ''}"><div class="hd"><b>${n}</b><span class="role ${r}">${rn}</span><em>${s[1]}</em></div><div class="pl"><img src="${T('air_' + s[0])}"></div><div class="ws">${wps(s[2])}</div>${on ? '<div class="ar">▼ выбор в ленте</div>' : ''}</div>`).join('')}</div>
+  <div class="stripHd">Вылет 2 · штурмовка <span style="color:var(--dim);letter-spacing:0;text-transform:none">· +300 за два возвращения</span></div>
+  <div class="strip">${STRIKE.slice(0, 5).map((s, i) => `<div class="hgc card ${i === 0 ? 'on' : ''}"><div class="pl"><img src="${T('air_' + s[0])}"></div><em>${s[1]}</em><div class="ws">${wps(s[2])}</div></div>`).join('')}</div>
+  <div class="start">В бой</div>`);
+// ── Вылет В
+put('v3', `<div class="pn vC">${sumRow}
+  <div class="route"><div class="node" style="left:8px"><div class="ring"><img src="${T('air_' + S1[0])}"></div><span class="n">1</span><span class="role sead">Охота за ПВО</span></div>
+    <div class="arrow"></div><div class="node on" style="left:140px"><div class="ring"><img src="${T('air_' + S2[0])}"></div><span class="n">2</span><span class="role strike">Штурмовка</span></div><span class="bonus">+300 за оба</span></div>
+  <div class="list">${STRIKE.map((s, i) => `<div class="row ${i === 0 ? 'on' : ''}"><div class="pl"><img src="${T('air_' + s[0])}"></div><em>${s[1]}</em><div class="ws">${wps(s[2])}</div></div>`).join('')}<div class="scrollhint"></div></div></div>
+  <div class="start">В бой</div>`);
+
+// ── Оборона (ПВО - западная, ранг II)
+const SAMS = [['hawk', 'Hawk', 'РЛС', 'rls', 25, 17, 280], ['roland', 'Roland', 'ЛВ', 'lv', 6.3, 5.5, 170], ['rapier', 'Rapier', 'ЛВ', 'lv', 6.8, 3, 170], ['gepard', 'Gepard', 'АРТ', 'art', 3.5, 3, 130], ['skyguard', 'Skyguard', 'АРТ', 'art', 4, 3, 120],
+  ['chaparral', 'Chaparral', 'ИК', 'ik', 5, 3, 110], ['m163', 'Vulcan', 'АРТ', 'art', 1.8, 1.2, 70], ['stinger', 'Stinger', 'ИК', 'ik', 4.8, 3.8, 60], ['redeye', 'Redeye', 'ИК', 'ik', 4.5, 2.7, 40]];
+const setChips = `<div class="chips"><span class="chip on">Аркада</span><span class="chip">Реализм</span></div><div class="chips"><span class="chip">I</span><span class="chip on">II</span><span class="chip">III</span><span class="chip">IV</span></div>
+  <div class="chips"><span class="chip"><span class="flag">${STAR_E}</span></span><span class="chip on"><span class="flag">${STAR_W}</span></span></div><div class="chips"><span class="chip on" style="font-size:11px">Мульти-волна</span><span class="chip" style="font-size:11px">Налёт</span></div>`;
+put('d1', `<div class="pn dA">${head('Оборона')}<div class="set">${setChips}</div>
+  <div class="grid">${SAMS.map((s) => `<div class="t cell"><div class="pl"><img src="${T('pvo_' + s[0])}"></div><em>${s[1]}</em><div class="ft"><span class="badge b-${s[3]}">${s[2]}</span><i>${s[6]}</i></div></div>`).join('')}</div></div>
+  <div class="start">К расстановке</div>`);
+put('d2', `<div class="pn dB">${head('Оборона')}<div style="margin-top:4px"><div class="sum">${STAR_W}<b>Ранг II</b> · Аркада · последняя - <b>мульти-волна</b><span class="chev">▾</span></div></div>
+  <div class="list"><div class="legend"><span>дальность, км</span><span>очки</span></div>${SAMS.map((s) => `<div class="row"><div class="pl"><img src="${T('pvo_' + s[0])}"></div><div class="mid"><em>${s[1]} <span class="badge b-${s[3]}">${s[2]}</span></em><div class="bar"><i style="width:${Math.round(100 * Math.sqrt(s[4] / 25))}%"></i></div></div><b>${s[6]}</b></div>`).join('')}<div class="scrollhint"></div></div></div>
+  <div class="start">К расстановке</div>`);
+put('d3', `<div class="pn dC">${head('Оборона')}<div class="set"><div class="r"><div class="chips" style="flex:1"><span class="chip on">Аркада</span><span class="chip">Реализм</span></div><div class="chips" style="flex:1.2"><span class="chip">I</span><span class="chip on">II</span><span class="chip">III</span><span class="chip">IV</span></div></div>
+  <div class="r"><div class="chips" style="flex:1"><span class="chip">${STAR_E}</span><span class="chip on">${STAR_W}</span></div><span class="sw on" style="flex:1.2;justify-content:flex-end">Мульти-волна <i></i></span></div></div>
+  <div class="big plate"><h3>Hawk</h3><span class="cost">280</span><div class="pl"><img src="${T('pvo_hawk')}"></div><div class="stats"><div>25 км<small>дальность</small></div><div>17 км<small>высота</small></div><div style="color:#ffb3a3">РЛС<small>наведение</small></div></div></div></div>
+  <div class="stripHd">Комплексы · 9</div>
+  <div class="strip">${SAMS.slice(0, 6).map((s, i) => `<div class="samc card ${i === 0 ? 'on' : ''}"><div class="pl"><img src="${T('pvo_' + s[0])}"></div><em>${s[1]}</em><div class="ft"><span class="badge b-${s[3]}">${s[2]}</span><i>${s[6]}</i></div></div>`).join('')}</div>
+  <div class="start">К расстановке</div>`);
+
+// ── Онлайн
+const ROLES = [['Авиация', [['air_e_mig27', 0, 0]]], ['ПВО', [['pvo_buk', 0, 0]]], ['Любая', [['air_e_mig27', -12, -4], ['pvo_buk', 12, 4]]]];
+const pics = (list, w, h) => list.map(([n, dx, dy]) => `<img src="${T(n)}" style="width:${w}px;height:${h}px;left:calc(50% - ${w / 2}px + ${dx}px);top:${dy}px">`).join('');
+put('o1', `<div class="pn oA">${head('Онлайн')}
+  <div class="games"><div class="g card on"><div class="pics">${pics([['air_e_mig27', -14, 0], ['pvo_hawk', 20, 6]], 70, 42)}</div><em>Вылет и оборона</em></div><div class="g card"><div class="pics">${pics([['strike_kalibr', -16, 2], ['strike_shahed', 18, 6]], 68, 40)}</div><em>Мульти-волна</em></div></div>
+  <div class="q"><div class="hd"><b>Быстрый бой · рейтинг</b><span class="live">ищут 6</span></div><div class="chips"><span class="chip on">Аркада</span><span class="chip">Реализм</span></div>
+    <div class="roles">${ROLES.map(([n, l], i) => `<div class="r cell ${i === 2 ? 'on' : ''}" style="${i === 2 ? 'border-image-source:url(../../../games/airdef/ui/hangar/b_card_on.webp)' : ''}"><div class="pics">${pics(l, 60, 32)}</div><em>${n}</em></div>`).join('')}</div></div>
+  <div class="foot"><div>${ICO.players} Своя комната</div><div>${ICO.key} По коду</div></div></div>
+  <div class="start">Найти бой</div>`);
+put('o2', `<div class="pn oB">${head('Онлайн')}
+  <div class="tabs"><div class="tab on">Быстрый бой<small>на рейтинг</small></div><div class="tab">Комната<small>с друзьями</small></div><div class="tab">По коду<small>войти</small></div></div>
+  <div class="body"><div class="two"><div class="chips"><span class="chip on">${ICO.cog.replace('class="ic"', 'class="ic" style="display:none"')}Вылет</span><span class="chip">Мульти</span></div><div class="chips"><span class="chip on">Аркада</span><span class="chip">Реализм</span></div></div>
+    ${ROLES.map(([n, l], i) => `<div class="rr card ${i === 0 ? 'on' : ''}"><div class="pics">${pics(l.map(([a, dx, dy]) => [a, dx, dy]), 66, 36)}</div><div><em>${n}</em><small>${['атакуете ПВО', 'защищаете город', 'куда нужнее'][i]}</small></div><span class="ck"></span></div>`).join('')}
+    <div style="display:flex;justify-content:flex-end"><span class="live">сейчас ищут 6</span></div></div></div>
+  <div class="start">Найти бой</div>`);
+put('o3', `<div class="pn oC">${head('Онлайн')}
+  <div class="gtabs"><span class="chip on">Вылет и оборона</span><span class="chip">Мульти-волна</span></div>
+  <div class="hero plate on"><div class="pics"><img src="${T('air_e_mig27')}" style="width:150px;height:84px;left:0;top:0"><img src="${T('pvo_buk')}" style="width:120px;height:72px;right:-6px;top:20px;opacity:.35;filter:grayscale(.6)"></div>
+    <span class="nav l">‹</span><span class="nav r">›</span><h3>Авиация</h3><div class="dots"><i class="on"></i><i></i><i></i></div></div>
+  <div class="row2"><div class="chips"><span class="chip on">Аркада</span><span class="chip">Реализм</span></div><div class="ic2">${ICO.players}</div><div class="ic2">${ICO.key}</div></div>
+  <div style="margin-top:4px;display:flex;justify-content:space-between;align-items:center;height:22px;padding:0 6px;background:var(--pn);border:1px solid var(--ln)"><span class="lbl" style="color:var(--dim)">быстрый бой · на рейтинг</span><span class="live">ищут 6</span></div></div>
+  <div class="start">Найти бой</div>`);
+
+const one = new URLSearchParams(location.search).get('f');
+if (one) { document.body.classList.add('one'); document.querySelectorAll('.ph').forEach((e) => { if (e.id !== 'f_' + one) e.parentNode.parentNode.removeChild(e.parentNode); }); document.querySelectorAll('h2,p.d').forEach((e) => e.remove()); }
+Promise.all([...document.images].map((i) => i.decode().catch(() => 0))).then(() => document.fonts.ready).then(() => { window.__ready = true; });
+</script></body></html>

@@ -472,7 +472,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
   };
   // Арсенал / Справка / Настройки / Об игре - панель поверх меню; повторное касание, ✕ или Esc - закрыть
   const SHEET = { ref: tr('Арсенал'), guide: tr('Справка'), set: tr('Настройки'), misc: tr('Об игре') };
-  $('mtabs').onclick = (e) => { const b = e.target.closest('button'); if (!b) return; snd.click(); $('mtabs').classList.remove('open'); if (b.dataset.tab === 'research') { C.research.open(); return; } tab = tab === b.dataset.tab ? 'play' : b.dataset.tab; showTab(); }; // «Исследования» - свой экран (research.js)
+  $('mtabs').onclick = (e) => { const b = e.target.closest('button'); if (!b) return; snd.click(); /* ряд шестерни остаётся открытым, пока игрок сам не закроет (Mark 2026-11-17) */ if (b.dataset.tab === 'research') { C.research.open(); return; } tab = tab === b.dataset.tab ? 'play' : b.dataset.tab; showTab(); }; // «Исследования» - свой экран (research.js)
   $('msClose').onclick = () => { tab = 'play'; snd.click(); showTab(); };
   addEventListener('keydown', (e) => { if (e.code === 'Escape' && C.state === 'menu' && tab !== 'play') { tab = 'play'; showTab(); } });
   function showTab() {
