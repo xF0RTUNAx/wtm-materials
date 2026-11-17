@@ -18,7 +18,9 @@ export const isMock = (id) => String(id || '').startsWith('rmock-');
 const read = (k) => { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch (_) { return null; } };
 export function gameAcc() { const a = read(KEY_GAME); return a && a.id && a.login ? a : null; }
 export function siteAcc() { const p = read(KEY_SITE); return p && p.id && p.login ? p : null; }
-export function setGameAcc(a) { try { localStorage.setItem(KEY_GAME, JSON.stringify({ id: a.id, login: a.login, nick: a.nick || a.login, transferred: !!a.transferred })); } catch (_) { /* приватный режим */ } }
+// sess - секретный ключ сессии этого устройства (Mark 2026-11-17, sql/032): функции игры принимают аккаунт игры только по нему; новый объект без ключа
+// (смена ника, перенос) ключ того же аккаунта сохраняет
+export function setGameAcc(a) { const o = read(KEY_GAME), sess = a.sess || (o && o.id === a.id ? o.sess : undefined); try { localStorage.setItem(KEY_GAME, JSON.stringify({ id: a.id, login: a.login, nick: a.nick || a.login, transferred: !!a.transferred, ...(sess ? { sess } : {}) })); } catch (_) { /* приватный режим */ } }
 export function clearGameAcc() { try { localStorage.removeItem(KEY_GAME); } catch (_) { try { localStorage.setItem(KEY_GAME, 'null'); } catch (_2) { /* нет */ } } }
 if (!RMOCK) { const g = read(KEY_GAME); if (g && isMock(g.id)) clearGameAcc(); } // аккаунт заглушки, оставшийся от прежнего запуска ?rmock, без заглушки не нужен
 
@@ -51,7 +53,33 @@ export function activeAcc() {
 export function siteNoProgress() { const s = siteAcc(); if (s && !gameAcc()) stStore({ progress: false, transferred: false }); }
 
 // ── запросы ──
-export async function callFn(fn, body) {
+// ключ сессии: запросы с номером своего аккаунта игры несут ещё и его ключ (sess); сервер ответил «ключ не годится» (401 session) - один раз
+// получаем новый (ensureSession: уже вошедшее до ключей устройство меняет id + логин на ключ) и повторяем
+export async function callFn(fn, body, retried) {
+  const g = gameAcc();
+  if (body && g && g.sess && body.player_id === g.id && !body.sess) body = { ...body, sess: g.sess };
+  try { return await callFn0(fn, body); } catch (e) {
+    if (retried || e.status !== 401 || e.code !== 'session' || !gameAcc()) throw e;
+    if (!(await ensureSession(true))) throw e;
+    const g2 = gameAcc(); return callFn(fn, body && body.player_id === g2.id ? { ...body, sess: g2.sess } : body, true);
+  }
+}
+// ключа нет (вошли до ключей) или он отозван: обмен id + логин на ключ; не вышло (аккаунт засвечен или удалён) - выйти и попросить войти паролем
+let sessP = null;
+export const reloginNeeded = { on: false };
+export function ensureSession(force) {
+  const g = gameAcc(); if (!g || (g.sess && !force)) return Promise.resolve(!!g);
+  if (!sessP) sessP = acct('session', { id: g.id, login: g.login }).then((d) => { const n = gameAcc(); if (n && n.id === g.id && d.session) setGameAcc({ ...n, sess: d.session }); return true; }).catch((e) => {
+    if (e.status === 401 && e.code === 'relogin') { clearGameAcc(); reloginNeeded.on = true; for (const f of subs) try { f(); } catch (_) { /* подписчик */ } }
+    return false;
+  }).finally(() => { sessP = null; });
+  return sessP;
+}
+// выход: ключ этого устройства гасится на сервере (не дожидаясь ответа), аккаунт - с устройства
+export function logoutGame() { const g = gameAcc(); if (g && g.sess && !RMOCK) acct('logout', { sess: g.sess }).catch(() => {}); clearGameAcc(); }
+// поля для своих запросов (билет онлайна, итог боя): номер и, у аккаунта игры, ключ
+export function authBody(acc) { const g = gameAcc(); return { player_id: acc.id, ...(g && g.id === acc.id && g.sess ? { sess: g.sess } : {}) }; }
+async function callFn0(fn, body) {
   if (RMOCK) return mockFn(fn, body);
   if (typeof CONFIG === 'undefined' || !CONFIG.SUPABASE_URL) throw Object.assign(new Error(tr('Нет связи с сайтом')), { status: 0 });
   const key = String(CONFIG.SUPABASE_ANON_KEY).replace(/[^\x21-\x7E]/g, '');
@@ -63,13 +91,13 @@ export async function callFn(fn, body) {
 }
 const acct = (action, body) => callFn('airdef-account', { action, ...body });
 export const accountApi = {
-  register: (login, password, nick) => acct('register', { login, password, nick }).then((d) => d.account),
-  login: (login, password) => acct('login', { login, password }).then((d) => d.account),
+  register: (login, password, nick) => acct('register', { login, password, nick }).then((d) => ({ ...d.account, sess: d.session })),
+  login: (login, password) => acct('login', { login, password }).then((d) => ({ ...d.account, sess: d.session })),
   rename: (id, password, nick) => acct('rename', { id, password, nick }).then((d) => d.account),
-  remove: (id, login) => acct('delete', { id, login, confirm: true }), // удаление аккаунта игры (Mark 2026-11-17): без пароля - id и логин с устройства
-  transfer: (id, password, site_login, site_password) => acct('transfer', { id, password, site_login, site_password }),
+  remove: async () => { await ensureSession(); const g = gameAcc(); if (!g || !g.sess) throw Object.assign(new Error(tr('Войдите в аккаунт игры заново')), { status: 401 }); return acct('delete', { sess: g.sess, confirm: true }); }, // удаление (Mark 2026-11-17): без пароля, по ключу сессии этого устройства
+  transfer: (id, password, site_login, site_password) => acct('transfer', { id, password, site_login, site_password }).then((d) => { if (d.account && d.session) d.account.sess = d.session; return d; }),
   // перенос в один шаг (у игрока нет аккаунта игры): сервер сам создаёт аккаунт игры и переносит прогресс; b: { site_login, site_password, password?, login?, nick? }
-  migrate: (b) => acct('migrate', b),
+  migrate: (b) => acct('migrate', b).then((d) => { if (d.account && d.session) d.account.sess = d.session; return d; }),
 };
 // есть ли у аккаунта сайта прогресс игры, который ещё не перенесён: { progress, transferred } - из кэша; нет кэша для этого аккаунта сайта -
 // запрос (promise; после ошибки - не чаще раза в минуту), его итог ложится в кэш и, если что-то поменялось, оповещает подписчиков
@@ -83,7 +111,7 @@ export function siteStatus() {
 export const siteStatusDone = () => { if (siteAcc()) stStore({ progress: true, transferred: true }); };
 // «Перенести прогресс» уместно: вошёл на сайте, у аккаунта сайта есть прогресс игры, ещё не перенесён, и в аккаунт игры его ещё не переносили
 export function transferOk() { const g = gameAcc(); return legacySite() && !(g && g.transferred); }
-export const rating = (playerId) => callFn('get-airdef-rating', playerId ? { player_id: playerId } : {});
+export const rating = (playerId) => callFn('get-airdef-rating', playerId ? { player_id: playerId } : {}); // свой аккаунт игры - с ключом (callFn)
 // профиль игрока по нику (get-airdef-profile, sql/029; Mark 2026-10-28): season - сезон, который сейчас в окне рейтинга
 export const profile = (nick, season) => callFn('get-airdef-profile', { nick, ...(season ? { season } : {}) });
 
@@ -112,6 +140,8 @@ async function mockFn(fn, b) {
     if (b.action === 'login') { if (b.password === 'wrong') throw mockErr(401, 'Неверный логин или пароль'); return { account: mockAcc(b.login, (read(KEY_GAME) || {}).nick) }; }
     if (b.action === 'rename') { const g = gameAcc(); return { account: mockAcc(g ? g.login : 'player', b.nick) }; }
     if (b.action === 'delete') return { deleted: true };
+    if (b.action === 'session') return { session: 'rmock-session-' + 'x'.repeat(24) };
+    if (b.action === 'logout') return { ok: true };
     if (b.action === 'transfer') { if (b.site_password === 'wrong') throw mockErr(401, 'Неверный логин или пароль сайта'); MOCK.transferred = true; const g = gameAcc(); return { moved: { progress: true, runs: 12, online: 5 }, account: mockAcc(g ? g.login : 'player', g && g.nick) }; }
     if (b.action === 'site_status') return { progress: RMOCK !== 'newsite', transferred: MOCK.transferred }; // ?rmock=newsite - новичок с аккаунтом сайта
     throw mockErr(400, 'Неизвестное действие');

@@ -11,15 +11,17 @@ import { supabaseAdmin } from "../_shared/supabase-admin.ts";
 import { mskToday } from "../_shared/msk.ts";
 import { act, extraOf, load, mutate, questsPending, questsRolled, questTake, toProgress, view, NEED_GAME, NOT_FOUND, type Extra } from "../_shared/airdef-progress.ts";
 import { settleSeasons } from "../_shared/airdef-season.ts";
+import { sessionPlayer } from "../_shared/airdef-session.ts";
 
 const ACTIONS = new Set(["research", "buy", "goal"]);
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   try {
-    const { player_id, action, id, branch, key } = await req.json();
-    if (typeof player_id !== "string" || player_id.length < 8 || player_id.length > 64) return jsonResponse({ error: "Некорректные параметры" }, 400);
+    const body = await req.json(), { action, id, branch, key } = body;
     const db = supabaseAdmin(), today = mskToday();
+    const who = await sessionPlayer(db, body); if (who.err) return who.err; // аккаунт игры - по ключу сессии (sess), сайта - по номеру
+    const player_id = who.id!;
     const crystals = async () => { try { const w = await db.rpc("airdef_wallet_view", { p_player: player_id }); return w.error ? null : Number((w.data as { crystals?: number })?.crystals) || 0; } catch (_) { return null; } }; // кошелёк не прочитался - null, награда уже сохранена
     if (action === "state" || action === undefined || action === "quests") {
       // награды закончившегося сезона (sql/024) - молча; сбой не мешает загрузке прокачки

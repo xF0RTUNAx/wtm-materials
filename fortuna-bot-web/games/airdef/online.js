@@ -12,7 +12,7 @@ import { AG, SAM, CARRIERS, LOADOUTS, PLANES, ERAS, loadoutRole } from './arsena
 import { retiredHidden } from './progress.js?v=20261117b';
 import { MODES } from './sim/strike.js?v=20261117b';
 import { ICON, ico } from './icons.js?v=20261117b';
-import { activeAcc, siteAcc, siteNoProgress } from './account.js?v=20261117b';
+import { activeAcc, siteAcc, siteNoProgress, authBody } from './account.js?v=20261117b';
 import { avaSrc } from './avatar.js?v=20261117b';
 import { boardOl, boardMw } from './endscr.js?v=20261117b';
 import { createMM } from './mm.js?v=20261117b';
@@ -437,7 +437,7 @@ export function createOnline(C, ctrls) {
       if (typeof CONFIG === 'undefined' || !CONFIG.SUPABASE_URL) return;
       const acc = activeAcc(); if (!acc || String(acc.id).startsWith('rmock-')) return; // аккаунт игры, иначе сайта; заглушка рейтинга (?rmock=1) боёв не засчитывает
       const key = String(CONFIG.SUPABASE_ANON_KEY).replace(/[^\x21-\x7E]/g, '');
-      const res = await fetch(CONFIG.SUPABASE_URL + '/functions/v1/airdef-claim', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + key, apikey: key }, body: JSON.stringify({ player_id: acc.id, token }) });
+      const res = await fetch(CONFIG.SUPABASE_URL + '/functions/v1/airdef-claim', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + key, apikey: key }, body: JSON.stringify({ ...authBody(acc), token }) }); // итог подписан сервером на этого игрока; ключ - на будущее
       const d = await res.json().catch(() => ({}));
       const parts = []; if (d.details) parts.push(tr('+{0} деталей', [d.details])); if (d.keys) parts.push(`+${d.keys} ${ico('key', 'ii')}`); if (d.ticket) parts.push(d.ticket === 'ticket' ? tr('+1 билет') : '+1 ' + ico('key', 'ii'));
       const needG = res.status === 403 && d.need_game; // у аккаунта сайта нет прогресса игры: дальше - как гость (account.js оповестит)

@@ -10,6 +10,7 @@ import { supabaseAdmin } from "../_shared/supabase-admin.ts";
 import { mskToday } from "../_shared/msk.ts";
 import { cleanEvents, credit, load, mutate, view, NEED_GAME, NOT_FOUND, type Extra } from "../_shared/airdef-progress.ts";
 import { defenseCounters } from "../_shared/airdef/quests-data.js";
+import { sessionPlayer } from "../_shared/airdef-session.ts";
 
 const GAMES = new Set(["air", "defense", "multi"]), MODES = new Set(["arcade", "real"]);
 
@@ -17,9 +18,10 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   try {
     const body = await req.json();
-    const { player_id, action } = body;
-    if (typeof player_id !== "string" || player_id.length < 8 || player_id.length > 64) return jsonResponse({ error: "Некорректные параметры" }, 400);
+    const { action } = body;
     const db = supabaseAdmin();
+    const who = await sessionPlayer(db, body); if (who.err) return who.err; // аккаунт игры - по ключу сессии
+    const player_id = who.id!;
 
     if (action === "start") {
       const { game, mode } = body, era = Math.max(1, Math.min(4, Math.floor(Number(body.era) || 1)));

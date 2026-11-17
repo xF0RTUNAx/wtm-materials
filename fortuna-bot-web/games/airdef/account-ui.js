@@ -6,7 +6,7 @@
 import { ico } from './icons.js?v=20261117b';
 import { tr, trIf, LANG } from './i18n.js?v=20261117b';
 import { avaSrc, ownAva } from './avatar.js?v=20261117b';
-import { gameAcc, siteAcc, setGameAcc, clearGameAcc, accountApi, siteStatus, siteStatusDone, transferOk, siteNewbie, legacySite, onAccChange } from './account.js?v=20261117b';
+import { gameAcc, siteAcc, setGameAcc, clearGameAcc, logoutGame, ensureSession, reloginNeeded, accountApi, siteStatus, siteStatusDone, transferOk, siteNewbie, legacySite, onAccChange } from './account.js?v=20261117b';
 const CONFIRM_WORD = LANG === 'en' ? 'CONFIRM' : 'ПОДТВЕРДИТЬ'; // удаление аккаунта - набрать это слово (Mark 2026-11-17)
 
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -237,7 +237,7 @@ export function createAccount(C) {
       const g = gameAcc();
       if ((S.f.dword || '').trim() !== CONFIRM_WORD) throw new Error(tr('Для подтверждения введите {0}', [CONFIRM_WORD]));
       if (lock()) throw new Error(tr('Сейчас нельзя: вы в комнате или в бою'));
-      await accountApi.remove(g.id, g.login);
+      await accountApi.remove();
       clearGameAcc(); S.del = false; S.f = {}; changed(); api.close(); if (C.rating && C.rating.close) C.rating.close(); if (C.say) C.say(tr('Аккаунт удалён'), 3);
     }),
     rename: () => run(async () => {
@@ -265,7 +265,7 @@ export function createAccount(C) {
     else if (a === 'rename-no') { S.rename = false; S.err = S.ok = ''; draw(); }
     else if (a === 'del') { if (lock()) { S.err = tr('Сейчас нельзя: вы в комнате или в бою'); draw(); return; } S.del = true; S.rename = false; S.err = S.ok = ''; S.f.dword = S.f.dpass = ''; draw(); }
     else if (a === 'del-no') { S.del = false; S.err = S.ok = ''; S.f.dword = S.f.dpass = ''; draw(); }
-    else if (a === 'logout') { if (lock()) return; clearGameAcc(); S.f = {}; changed(); api.close(); }
+    else if (a === 'logout') { if (lock()) return; logoutGame(); S.f = {}; changed(); api.close(); }
   });
   // ── клавиатура телефона (Mark 2026-10-26: «при активации клавиатуры не видно, что печатаешь… трудно двигать, всё скидывается»): окно - в видимой
   // части над клавиатурой (visualViewport), поле - в середине видимого; перерисовка во время ввода (пришёл статус сайта, сменилась комната)
@@ -309,9 +309,13 @@ export function createAccount(C) {
     close() { root.classList.remove('on', 'kb'); Object.assign(root.style, { top: '', left: '', width: '', height: '', right: '', bottom: '' }); redraw = false; S.f.pass = S.f.gpass = S.f.spass = S.f.npass = S.f.npw = S.f.dpass = S.f.dword = ''; S.busy = false; },
     isOpen: () => root.classList.contains('on'),
     // выход из своего профиля (rating-ui.js): в комнате и в бою нельзя - окно аккаунта с причиной; true - вышли
-    logout() { if (lock()) { api.open('acc'); return false; } clearGameAcc(); S.f = {}; changed(); return true; },
+    logout() { if (lock()) { api.open('acc'); return false; } logoutGame(); S.f = {}; changed(); return true; },
     refresh() { if (root.classList.contains('on')) drawSoon(); }, // в комнату зашли или вышли - перерисовать (кнопки смены аккаунта)
     render: renderRail,
   };
+  // переход на ключи сессий (Mark 2026-11-17): вошедшее раньше устройство тихо получает ключ; аккаунт засвечен в публичной ленте сайта
+  // (или удалён) - вышли, окно входа с объяснением
+  const relog = () => { if (!reloginNeeded.on) return; reloginNeeded.on = false; changed(); api.open('login'); S.err = tr('Войдите в аккаунт игры заново: вход теперь защищён ключом устройства'); draw(); };
+  onAccChange(relog); setTimeout(() => { ensureSession().then(relog); }, 0);
   return api;
 }

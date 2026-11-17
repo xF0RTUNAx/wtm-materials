@@ -7,13 +7,16 @@
 //   { action: 'transfer', id, password, site_login, site_password } → { moved } (в уже существующий аккаунт игры; с каждого аккаунта сайта - один раз)
 // Ошибки с code (login_taken, login_needed, nick_taken, nick_needed, nick_site, password_needed, already_used, already_done) - окну игры понятно, что спросить
 //   { action: 'rename', id, password, nick }              → { account } (раз в сезон)
-//   { action: 'delete', id, login, confirm: true }        → { deleted: true } (аккаунт игры и всё его - каскадом: прогресс, бои, рейтинг, награды)
+//   { action: 'delete', sess, confirm: true }             → { deleted: true }
+//   { action: 'logout', sess } → { ok }; { action: 'session', id, login } → { session } (переход старых устройств на ключи, Mark 2026-11-17)
+//   register / login / migrate / transfer → ещё и { session } - ключ сессии этого устройства (sql/032, _shared/airdef-session.ts) (аккаунт игры и всё его - каскадом: прогресс, бои, рейтинг, награды)
 //   { action: 'site_status', site_id }                    → { progress, transferred } - показывать ли «Перенести прогресс»
 // Перебор паролей: 10 неудач подряд по ключу 'login:<логин игры>' (для пароля сайта - 'site:<логин сайта>') - отказ 429 на 15 минут;
 // удачный вход сбрасывает (sql/022: airdef_auth_fail, airdef_auth_fail_hit).
 // Пароль хешируется только здесь (_shared/password.ts, как auth-password) и наружу не уходит.
 import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
 import { supabaseAdmin } from "../_shared/supabase-admin.ts";
+import { newSession, dropSession, sessionPlayer } from "../_shared/airdef-session.ts";
 import { hashPassword, verifyPassword } from "../_shared/password.ts";
 
 const LOGIN_RE = /^[a-zA-Z0-9_]{3,24}$/;
@@ -111,7 +114,7 @@ Deno.serve(async (req) => {
       if (!NICK_RE.test(nick)) return jsonResponse({ error: "Ник: 3-16 символов - буквы, цифры, пробел, _ и -" }, 400);
       const c = await create(login, password, nick);
       if (!c.p) return c.e!;
-      return jsonResponse({ account: await view(c.p.id, c.p.login) });
+      return jsonResponse({ account: await view(c.p.id, c.p.login), session: await newSession(db, c.p.id) });
     }
 
     // перенос в один шаг (Mark 2026-10-25: «при переносе переводит на регистрацию, пишет, что ник занят - непонятно»): у игрока прогресс на аккаунте
@@ -136,12 +139,12 @@ Deno.serve(async (req) => {
         // перенос - одна транзакция в базе, from_player ставится в ней же. Ответ мог не дойти (обрыв, таймаут), хотя перенос прошёл: тогда аккаунт
         // уже с прогрессом - удалять нельзя (каскад стёр бы перенесённое; ревью 2026-10-25), отдаём успех. Удаляем только пустой (from_player нет)
         const done = await db.from("airdef_accounts").select("from_player").eq("player_id", c.p.id).maybeSingle();
-        if (done.data?.from_player) return jsonResponse({ moved: { progress: true }, account: await view(c.p.id, c.p.login) });
+        if (done.data?.from_player) return jsonResponse({ moved: { progress: true }, account: await view(c.p.id, c.p.login), session: await newSession(db, c.p.id) });
         if (!done.error) { const del = await db.from("players").delete().eq("id", c.p.id); if (del.error) console.error("airdef-account migrate: не удалён пустой аккаунт", c.p.id, del.error); }
         const r = transferErr(t.error); if (r) return r;
         throw t.error;
       }
-      return jsonResponse({ moved: t.data, account: await view(c.p.id, c.p.login) });
+      return jsonResponse({ moved: t.data, account: await view(c.p.id, c.p.login), session: await newSession(db, c.p.id) });
     }
 
     if (action === "login") {
@@ -153,7 +156,7 @@ Deno.serve(async (req) => {
       if (st === "locked") return tooMany();
       if (st === "bad" || !p) return jsonResponse({ error: "Неверный логин или пароль" }, 401);
       await db.from("players").update({ last_seen: new Date().toISOString() }).eq("id", p.id);
-      return jsonResponse({ account: await view(p.id, p.login) });
+      return jsonResponse({ account: await view(p.id, p.login), session: await newSession(db, p.id) });
     }
 
     if (action === "transfer") {
@@ -164,7 +167,7 @@ Deno.serve(async (req) => {
       if (!so.site) return so.e!;
       const t = await db.rpc("airdef_transfer", { p_from: so.site.id, p_to: me.id });
       if (t.error) { const r = transferErr(t.error); if (r) return r; throw t.error; }
-      return jsonResponse({ moved: t.data, account: await view(me.id, me.login) });
+      return jsonResponse({ moved: t.data, account: await view(me.id, me.login), session: await newSession(db, me.id) });
     }
 
     if (action === "rename") {
@@ -182,17 +185,30 @@ Deno.serve(async (req) => {
       return jsonResponse({ account: await view(me.id, me.login) });
     }
 
-    // удаление аккаунта игры (Mark 2026-11-17: без пароля - «а если игрок забыл пароль?»): владение - id и логин аккаунта, как они лежат на устройстве
-    // (id нигде не отдаётся наружу - рейтинг и профиль без него; логин тоже не публичный, публичен только ник); confirm - явное «да» из окна
-    // со словом-подтверждением. Всё по игроку (airdef_progress, airdef_accounts, airdef_mp_results, награды, задания) - каскадом (sql/020-030)
+    // удаление аккаунта игры (Mark 2026-11-17): без пароля (вдруг забыт), по ключу сессии этого устройства + явное «да» из окна со словом-подтверждением.
+    // Всё по игроку (airdef_progress, airdef_accounts, airdef_mp_results, награды, задания, сессии) - каскадом (sql/020-032)
     if (action === "delete") {
-      const id = body.id, login = typeof body.login === "string" ? body.login.trim().toLowerCase() : "";
-      if (typeof id !== "string" || id.length < 8 || id.length > 64 || !login || body.confirm !== true) return jsonResponse({ error: "Нет подтверждения" }, 400);
-      const { data: me } = await db.from("players").select("id, login, kind").eq("id", id).maybeSingle();
-      if (!me || me.kind !== "airdef" || String(me.login).replace(/^ad:/, "").toLowerCase() !== login) return jsonResponse({ error: "Аккаунт не найден" }, 404);
-      const d = await db.from("players").delete().eq("id", me.id).eq("kind", "airdef");
+      if (body.confirm !== true || typeof body.sess !== "string") return jsonResponse({ error: "Нет подтверждения" }, 400);
+      const who = await sessionPlayer(db, body); if (who.err) return who.err;
+      const d = await db.from("players").delete().eq("id", who.id!).eq("kind", "airdef");
       if (d.error) throw d.error;
       return jsonResponse({ deleted: true });
+    }
+
+    // выход: ключ этого устройства больше не действует
+    if (action === "logout") { await dropSession(db, body.sess); return jsonResponse({ ok: true }); }
+
+    // переход на ключи (Mark 2026-11-17): уже вошедшие до них устройства один раз меняют id + логин на ключ - без пароля. Кроме аккаунтов,
+    // чей номер был виден в публичной ленте сайта (activity_feed.target_player_id, аудит 2026-11-17): им - войти паролем заново
+    if (action === "session") {
+      const id = body.id, login = typeof body.login === "string" ? body.login.trim().toLowerCase() : "";
+      if (typeof id !== "string" || id.length < 8 || id.length > 64 || !login) return jsonResponse({ error: "Некорректные параметры" }, 400);
+      const { data: me } = await db.from("players").select("id, login, kind").eq("id", id).maybeSingle();
+      if (!me || me.kind !== "airdef" || String(me.login).replace(/^ad:/, "").toLowerCase() !== login) return err(401, "Войдите в аккаунт игры заново", "relogin");
+      const seen = await db.from("activity_feed").select("id").eq("target_player_id", id).limit(1);
+      if (seen.error) throw seen.error;
+      if (seen.data?.length) return err(401, "Войдите в аккаунт игры заново", "relogin");
+      return jsonResponse({ session: await newSession(db, id) });
     }
 
     if (action === "site_status") {

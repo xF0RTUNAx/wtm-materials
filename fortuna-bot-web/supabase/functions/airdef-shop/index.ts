@@ -9,6 +9,7 @@
 import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
 import { supabaseAdmin } from "../_shared/supabase-admin.ts";
 import { avaCatalog, AVA_PRICE, camosOut, CAMO_PRICE } from "../_shared/airdef/arsenal.js";
+import { sessionPlayer } from "../_shared/airdef-session.ts";
 
 const WHY: Record<string, string> = {
   not_sold: "Этой окраски сейчас нет в магазине",
@@ -23,9 +24,10 @@ const CAMO_RE = /^[a-z0-9_]{1,24}:[a-z0-9_]{1,24}$/, PLANE_RE = /^[a-z0-9_]{1,24
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   try {
-    const { player_id, action, key, plane } = await req.json().catch(() => ({}));
-    if (typeof player_id !== "string" || player_id.length < 8 || player_id.length > 64) return jsonResponse({ error: "Некорректные параметры" }, 400);
+    const body = await req.json().catch(() => ({})), { action, key, plane } = body;
     const db = supabaseAdmin();
+    const who = await sessionPlayer(db, body); if (who.err) return who.err; // кристаллы - только аккаунт игры, по ключу сессии
+    const player_id = who.id!;
     const { data: pl, error } = await db.from("players").select("kind").eq("id", player_id).maybeSingle();
     if (error) throw error;
     if (!pl) return jsonResponse({ error: "Игрок не найден - войдите в аккаунт игры", code: "not_found" }, 404);

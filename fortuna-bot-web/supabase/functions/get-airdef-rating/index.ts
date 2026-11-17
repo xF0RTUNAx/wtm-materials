@@ -5,6 +5,7 @@
 // Межсезонье (sql/027, неделя между сезонами): по умолчанию - итоги прошедшего сезона (live: false), в next - когда начнётся следующий.
 import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
 import { supabaseAdmin } from "../_shared/supabase-admin.ts";
+import { sessionPlayer } from "../_shared/airdef-session.ts";
 
 const TOP = 100, BATTLES = 60;
 
@@ -28,7 +29,7 @@ Deno.serve(async (req) => {
     const rows = (board.data || []) as { player_id: string; nick: string; points: number; n: number; place: number }[];
     const topRows = rows.slice(0, TOP);
     let me: Record<string, unknown> | null = null;
-    const id = body.player_id;
+    const id = (await sessionPlayer(db, body, false)).id || ""; // своё место: аккаунт игры - по ключу сессии, сайта - по номеру; иначе - без «своего»
     if (typeof id === "string" && id.length >= 8 && id.length <= 64) {
       const { data: pl } = await db.from("players").select("kind").eq("id", id).maybeSingle();
       if (pl) {

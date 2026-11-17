@@ -5,6 +5,7 @@
 // Секрет: `supabase secrets set MP_SECRET=...` (тот же - в переменной окружения MP_SECRET игрового сервера).
 // Файл самодостаточный (без ../_shared): его можно и развернуть CLI, и вставить целиком в редактор функций панели Supabase.
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { sessionPlayer } from "../_shared/airdef-session.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -27,12 +28,11 @@ Deno.serve(async (req) => {
   try {
     const secret = Deno.env.get("MP_SECRET");
     if (!secret) return jsonResponse({ error: "Онлайн ещё не настроен" }, 503);
-    const { player_id, game } = await req.json();
-    if (typeof player_id !== "string" || player_id.length < 8 || player_id.length > 64) {
-      return jsonResponse({ error: "Некорректные параметры" }, 400);
-    }
-
+    const rq = await req.json(), { game } = rq;
     const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    // билет онлайна: аккаунт игры - только по ключу сессии (sess), аккаунт сайта - по номеру, как раньше (Mark 2026-11-17, аудит)
+    const who = await sessionPlayer(db, rq); if (who.err) return who.err;
+    const player_id = who.id!;
     const { data: player, error } = await db.from("players").select("id, login, kind, full_name").eq("id", player_id).maybeSingle();
     if (error) throw error;
     if (!player) return jsonResponse({ error: "Игрок не найден - перезайдите на сайт" }, 404);

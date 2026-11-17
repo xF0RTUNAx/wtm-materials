@@ -62,6 +62,8 @@ export default {
   "Удалить навсегда": "Delete forever",
   "Сейчас нельзя: вы в комнате или в бою": "Not now: you are in a room or in battle",
   "Аккаунт удалён": "Account deleted",
+  "Войдите в аккаунт игры заново": "Please sign in to your game account again",
+  "Войдите в аккаунт игры заново: вход теперь защищён ключом устройства": "Please sign in again: sign-in is now protected by a device key",
   "Аккаунт не найден": "Account not found",
   "Нет подтверждения": "No confirmation",
   "день": "day",
