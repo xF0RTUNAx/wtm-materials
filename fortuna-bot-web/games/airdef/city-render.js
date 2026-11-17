@@ -2186,7 +2186,10 @@ function streetProps(G, city, B, P) {
     const pc = city0(zn) ? 0.14 : rural(zn) ? 0.05 : 0; if (!pc || r2() > pc) continue;
     const side = r2() < 0.5 ? 1 : -1, off = (city0(zn) ? lineW(i) / 2 : RURAL_HW) + 4.5, x = rx + (alongX ? 0 : side * off), z = rz + (alongX ? side * off : 0);
     if (city.bldAt(x, z) > 0) continue;
-    put(city0(zn) ? 'pr_bstop' : 'pr_rstop', x, z, alongX ? (side > 0 ? 0 : Math.PI) : (side > 0 ? -Math.PI / 2 : Math.PI / 2));
+    // повороты по модели (Mark 2026-11-17: «остановки стоят поперек дороги»): у pr_bstop длинная сторона вдоль Z модели, открыта на +X;
+    // у pr_rstop длинная вдоль X, открыта на −Z. Поворот Ry: локальный +X → (cos, −sin), −Z → (−sin, −cos); навес - к дороге (−side)
+    const rot = city0(zn) ? (alongX ? side * Math.PI / 2 : (side > 0 ? Math.PI : 0)) : (alongX ? (side > 0 ? 0 : Math.PI) : side * Math.PI / 2);
+    put(city0(zn) ? 'pr_bstop' : 'pr_rstop', x, z, rot);
   }
   // перекрёстки за городом: на одной дороге «Главная», на другой «Уступи дорогу» (знак - лицом к подъезжающим)
   for (let i = -n0; i <= n0; i++) for (let j = -n0; j <= n0; j++) {
@@ -2488,6 +2491,9 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
   const bake = BAKE_ON && renderer ? createGroundBake(CITY.HALF, BK_HI ? { n0: 4096, s0: 2, n1: 4096 } : {}) : null; // запечённый цвет дальней земли (ground-bake.js; ?gb=0 - без него): осень, зима и город
   const ground = new THREE.Mesh(gg, AUT ? autumnGroundMaterial(city, autumnZoneTex(city, P.zoneTex || 1024), winterNormalTex(city), ENV, autumnTextures(aniso, texStats), W, bake) : WINT ? winterGroundMaterial(city, winterZoneTex(city, P.zoneTex || 1024), winterNormalTex(city), ENV, winterTextures(renderer ? Math.min(P.aniso || 4, renderer.capabilities.getMaxAnisotropy()) : 1, texStats), bake) : groundMaterial(zt, aoTexture(city), roadTexture(city), bake, () => (!P.roofDetail || (TEX.uTexOn.value === 1 && GT.uGOn.value === 1))));
   ground.receiveShadow = !!P.shadows; scene.add(ground); G.ground = ground;
+  // вдали точности глубины не хватает (с 600 м на 6 км - ~0,5 м): площадки, асфальт и основания объектов-целей в полуметре над землёй
+  // «спорили» с ней и мерцали (Mark 2026-11-17). Земля по глубине чуть дальше - всё, что на ней лежит, рисуется поверх (?gpo=0 - как раньше)
+  if (!(typeof location !== 'undefined' && /[?&]gpo=0/.test(location.search))) for (const m of [].concat(ground.material)) Object.assign(m, { polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 2 });
   if (AUT && G.ground && G.ground.material.userData.uLowL) { // туман низин осени: цвет дымки без освещения - в темноте («Поздний вечер», ночь) светился пятнами (Mark 2026-11-16)
     const W0 = W.lab0 || W, L0 = Math.max(1e-3, 0.55 * (W0.hemiI ?? 1) + 0.35 * 2.0 * (W0.sunI ?? 1) * (0.35 + 0.65 * Math.min(1, sunDir.y / 0.25))); // опора - свет погоды до правок стенда (иначе тёмная погода = тёмная опора, и туман не темнел бы)
     const LU = G.ground.material.userData.uLowL;
@@ -2700,7 +2706,7 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
     const G2 = CITY.GRID, streetN = Math.floor(P.trees * 0.45);
     for (let t = 0; t < streetN * 3 && tl.length < streetN; t++) {
       const alongX = rnd() < 0.5, i = Math.round((rnd() * 2 - 1) * CITY.R * 0.8 / G2), side = rnd() < 0.5 ? -1 : 1;
-      const hw = (((i % 5) + 5) % 5 === 0 ? CITY.AVENUE : CITY.STREET) / 2 + 2.5;
+      const hw = (((i % 5) + 5) % 5 === 0 ? CITY.AVENUE : CITY.STREET) / 2 + 6.5; // на газоне за тротуаром (тротуар в шейдере - до 4,5 м от края дороги; Mark 2026-11-17: «дерево растёт на тротуаре»)
       const along = (rnd() * 2 - 1) * CITY.R * 0.8, across = i * G2 + side * hw;
       const x = alongX ? along : across, z = alongX ? across : along;
       const zn = ZA(x, z);
