@@ -78,7 +78,9 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
     const b = e.target.closest('button'); if (!b) return;
     panel(true); setup.game = b.dataset.g; setup.evd = false; save(); // evd - оборона события на осенней карте (event.js): обычное меню её сбрасывает
     if (setup.game === 'online' && C.RAND_MAPS.includes(C.MAP)) C.ls.set('fortuna_ad_omap', C.MAP); // онлайн «Вылет и оборона»: карту даст комната - пока подходит загруженная
-    if (C.wantMap(setup.game, setup.pmap, setup.era, -1, false) !== C.MAP) { const u = new URL(location.href); u.searchParams.delete('mp'); u.searchParams.delete('ad'); if (setup.game === 'online') u.searchParams.set('mp', '1'); location.replace(u.href); return; } // «Мульти-волна» - на зимней карте, остальное - на городе
+    // смена режима в лобби страницу не перезагружает (Mark 2026-11-17): карту под режим игра загрузит при старте боя (C.start - сразу в бой, за створками);
+    // «Съёмка» - как раньше: её панель показывает и выбирает карту загруженной страницы
+    if (setup.game === 'photo' && C.wantMap(setup.game, setup.pmap, setup.era, -1, false) !== C.MAP) { const u = new URL(location.href); u.searchParams.delete('mp'); u.searchParams.delete('ad'); if (setup.game === 'online') u.searchParams.set('mp', '1'); location.replace(u.href); return; } // «Мульти-волна» - на зимней карте, остальное - на городе
     if (tab !== 'play') { tab = 'play'; showTab(); } if (C.ctrl && C.ctrl.modeChanged) C.ctrl.modeChanged();
     // ночи в онлайне пока нет (решение Mark 2026-10-12): погода строится при загрузке - перезагрузка вечером, сразу в раздел онлайна
     if (setup.game === 'online' && C.W_KEY === 'night') { const u = new URL(location.href); u.searchParams.set('weather', 'evening'); u.searchParams.set('mp', '1'); location.href = u.href; return; }
