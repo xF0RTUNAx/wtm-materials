@@ -17,6 +17,8 @@
 import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
 import { supabaseAdmin } from "../_shared/supabase-admin.ts";
 import { newSession, dropSession, sessionPlayer } from "../_shared/airdef-session.ts";
+// обмен «номер + логин → ключ» для устройств, вошедших до ключей, - до этой даты (дальше - вход паролем)
+const EXCHANGE_UNTIL = "2027-01-15T00:00:00Z";
 import { hashPassword, verifyPassword } from "../_shared/password.ts";
 
 const LOGIN_RE = /^[a-zA-Z0-9_]{3,24}$/;
@@ -203,8 +205,13 @@ Deno.serve(async (req) => {
     if (action === "session") {
       const id = body.id, login = typeof body.login === "string" ? body.login.trim().toLowerCase() : "";
       if (typeof id !== "string" || id.length < 8 || id.length > 64 || !login) return jsonResponse({ error: "Некорректные параметры" }, 400);
-      const { data: me } = await db.from("players").select("id, login, kind").eq("id", id).maybeSingle();
+      if (Date.now() > Date.parse(EXCHANGE_UNTIL)) return err(401, "Войдите в аккаунт игры заново", "relogin");
+      const { data: me, error: e1 } = await db.from("players").select("id, login, kind").eq("id", id).maybeSingle();
+      if (e1) throw e1; // сбой базы - 500 (клиент не выходит из аккаунта), relogin - только «нет» или «не совпал»
       if (!me || me.kind !== "airdef" || String(me.login).replace(/^ad:/, "").toLowerCase() !== login) return err(401, "Войдите в аккаунт игры заново", "relogin");
+      const acc = await db.from("airdef_accounts").select("sess_since").eq("player_id", id).maybeSingle();
+      if (acc.error) throw acc.error;
+      if (acc.data?.sess_since) return err(401, "Войдите в аккаунт игры заново", "relogin"); // ключ уже выдавался: истёк или вытеснен - только пароль
       const seen = await db.from("activity_feed").select("id").eq("target_player_id", id).limit(1);
       if (seen.error) throw seen.error;
       if (seen.data?.length) return err(401, "Войдите в аккаунт игры заново", "relogin");

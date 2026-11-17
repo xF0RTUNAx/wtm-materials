@@ -20,6 +20,7 @@ export async function newSession(db: Db, playerId: string): Promise<string> {
   const token = btoa(String.fromCharCode(...raw)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
   const ins = await db.from("airdef_sessions").insert({ token_hash: await sha256hex(token), player_id: playerId });
   if (ins.error) throw ins.error;
+  await db.from("airdef_accounts").update({ sess_since: new Date().toISOString() }).eq("player_id", playerId).is("sess_since", null); // ключ выдавался - обмен без пароля больше не нужен
   const old = await db.from("airdef_sessions").select("token_hash").eq("player_id", playerId).order("last_used", { ascending: false }).range(MAX_DEVICES, MAX_DEVICES + 200);
   if (old.data?.length) await db.from("airdef_sessions").delete().in("token_hash", old.data.map((r: { token_hash: string }) => r.token_hash));
   return token;

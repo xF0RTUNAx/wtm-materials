@@ -1,9 +1,9 @@
 // mp-ticket - билет для входа в онлайн-бой «Симулятора Летки» (игровой сервер - fortuna-bot-web/game-server).
-// Вход: { player_id }. Выход: { ticket } - base64url(JSON {pid, login, u, a, ng?, exp}) + "." + base64url(HMAC-SHA256(MP_SECRET, первая часть)).
+// Вход: { sess } (аккаунт игры - ключ сессии, _shared/airdef-session.ts) или { player_id } (аккаунт сайта). Выход: { ticket } - base64url(JSON {pid, login, u, a, ng?, exp}) + "." + base64url(HMAC-SHA256(MP_SECRET, первая часть)).
 // Билет живёт 10 минут: игра берёт новый при каждом подключении. Игровой сервер проверяет подпись тем же
 // секретом (server.js → checkTicket) и берёт ник из билета - подделать чужой ник без секрета нельзя.
 // Секрет: `supabase secrets set MP_SECRET=...` (тот же - в переменной окружения MP_SECRET игрового сервера).
-// Файл самодостаточный (без ../_shared): его можно и развернуть CLI, и вставить целиком в редактор функций панели Supabase.
+// Импортирует ../_shared - разворачивать только CLI (supabase functions deploy), не вставкой в редактор панели.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { sessionPlayer } from "../_shared/airdef-session.ts";
 

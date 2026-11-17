@@ -12,7 +12,7 @@ import { dmgUnpack } from './sim/damage.js?v=20261117b';
 import { LNCH } from './launchers.js?v=20261117b';
 import { bldFromMask, bldKillMains } from './city.js?v=20261117b';
 import { cmOf, cmKey } from './sim/cm.js?v=20261117b';
-import { activeAcc, siteNoProgress, ensureSession, authBody } from './account.js?v=20261117b';
+import { activeAcc, siteNoProgress, ensureSession, authBody, refreshSession } from './account.js?v=20261117b';
 
 const PORT = 8787;
 export function adServerUrl() {
@@ -31,8 +31,9 @@ async function fetchTicket(acc) {
     if (typeof CONFIG === 'undefined' || !CONFIG.MP_TICKET_URL || String(acc.id).startsWith('test-') || String(acc.id).startsWith('rmock-')) return null;
     const key = String(CONFIG.SUPABASE_ANON_KEY).replace(/[^\x21-\x7E]/g, '');
     if (acc.kind === 'airdef') await ensureSession(); // билет аккаунта игры - по ключу сессии (Mark 2026-11-17)
-    const res = await fetch(CONFIG.MP_TICKET_URL, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + key, apikey: key }, body: JSON.stringify({ ...authBody(acc), game: 'airdef' }) }); // game: 'airdef' - сервер сразу отвечает 403 need_game аккаунту сайта без прогресса
-    const d = await res.json().catch(() => ({}));
+    const ask = () => { const b = { ...authBody(acc), game: 'airdef' }; return fetch(CONFIG.MP_TICKET_URL, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + key, apikey: key }, body: JSON.stringify(b) }).then(async (r) => ({ r, d: await r.json().catch(() => ({})), sent: b.sess })); }; // game: 'airdef' - сервер сразу отвечает 403 need_game
+    let { r: res, d, sent } = await ask();
+    if (res.status === 401 && d.code === 'session' && (await refreshSession(sent))) ({ r: res, d } = await ask()); // ключ истёк или вытеснен - обновить и один раз повторить
     if (res.status === 403 && d.need_game) return 'need_game';
     return res.ok && d.ticket ? d.ticket : null;
   } catch (_) { return null; }

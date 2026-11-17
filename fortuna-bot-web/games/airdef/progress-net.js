@@ -6,7 +6,7 @@ import { NODE, newProgress, owned, loadoutMissing, samOk, strikeOk, strikeId, RA
 import { LOADOUTS } from './arsenal.js?v=20261117b';
 import { ico } from './icons.js?v=20261117b';
 import { tr, trIf, LANG } from './i18n.js?v=20261117b';
-import { activeAcc, isMock, siteNoProgress } from './account.js?v=20261117b';
+import { activeAcc, isMock, siteNoProgress, withSess, refreshSession } from './account.js?v=20261117b';
 import { DAILY, WEEKLY, mskDay, questApply, questClaim, questRoll, questView } from './quests-data.js?v=20261117b';
 
 const TEST = new URLSearchParams(location.search).get('pgtest'); // ?pgtest=1 - тестовый прогресс в памяти (без сервера)
@@ -40,12 +40,20 @@ export function createProgress(C) {
   const lPay = (pay) => { G.P.xp += pay.xp || 0; G.P.silver += pay.silver || 0; G.crystals = (G.crystals || 0) + (pay.gem || 0); };
   const lBoost = (L, P, c) => { for (const t of L) if (!t.st && P[t.id]) { const k = P[t.id].c; c[k] = Math.max(c[k] || 0, Math.ceil(P[t.id].of * 0.34)); } };
   const changed = () => { for (const f of G.listeners) try { f(); } catch (e) { console.warn('progress', e); } };
-  async function call(fn, body) {
+  // аккаунт игры - с ключом сессии (Mark 2026-11-17); 401 session - ключ обновить и один раз повторить
+  async function call(fn, body0, retried) {
+    const body = withSess(body0), sent = body && body.sess;
+    try { return await call0(fn, body); } catch (e) {
+      if (retried || e.status !== 401 || e.code !== 'session' || !(await refreshSession(sent))) throw e;
+      return call(fn, body0, true);
+    }
+  }
+  async function call0(fn, body) {
     if (typeof CONFIG === 'undefined' || !CONFIG.SUPABASE_URL) throw new Error(tr('Нет связи с сайтом'));
     const key = String(CONFIG.SUPABASE_ANON_KEY).replace(/[^\x21-\x7E]/g, '');
     const res = await fetch(CONFIG.SUPABASE_URL + '/functions/v1/' + fn, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + key, apikey: key }, body: JSON.stringify(body), keepalive: true }); // keepalive - итог боя дойдёт, даже если страницу сразу перезагрузили (после потери графики)
     const d = await res.json().catch(() => ({}));
-    if (!res.ok) throw Object.assign(new Error(d.need_game ? tr('Создайте аккаунт игры') : d.error || tr('Ошибка сервера')), { status: res.status, need_game: !!d.need_game });
+    if (!res.ok) throw Object.assign(new Error(d.need_game ? tr('Создайте аккаунт игры') : d.error || tr('Ошибка сервера')), { status: res.status, need_game: !!d.need_game, code: d.code || '' });
     return d;
   }
   // сервер: 403 need_game - у аккаунта сайта нет прогресса игры, играть можно только с аккаунтом игры. Клиент считал его «старым» - записать в кэш

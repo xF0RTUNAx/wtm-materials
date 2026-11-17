@@ -20,7 +20,9 @@ export function gameAcc() { const a = read(KEY_GAME); return a && a.id && a.logi
 export function siteAcc() { const p = read(KEY_SITE); return p && p.id && p.login ? p : null; }
 // sess - секретный ключ сессии этого устройства (Mark 2026-11-17, sql/032): функции игры принимают аккаунт игры только по нему; новый объект без ключа
 // (смена ника, перенос) ключ того же аккаунта сохраняет
-export function setGameAcc(a) { const o = read(KEY_GAME), sess = a.sess || (o && o.id === a.id ? o.sess : undefined); try { localStorage.setItem(KEY_GAME, JSON.stringify({ id: a.id, login: a.login, nick: a.nick || a.login, transferred: !!a.transferred, ...(sess ? { sess } : {}) })); } catch (_) { /* приватный режим */ } }
+export function setGameAcc(a) { const o = read(KEY_GAME), sess = a.sess || (o && o.id === a.id ? o.sess : undefined);
+  if (o && o.sess && sess && o.sess !== sess && !RMOCK) acct('logout', { sess: o.sess }).catch(() => {}); // новый ключ на устройстве (вход в другой аккаунт, перенос) - прежний гасим
+  try { localStorage.setItem(KEY_GAME, JSON.stringify({ id: a.id, login: a.login, nick: a.nick || a.login, transferred: !!a.transferred, ...(sess ? { sess } : {}) })); } catch (_) { /* приватный режим */ } }
 export function clearGameAcc() { try { localStorage.removeItem(KEY_GAME); } catch (_) { try { localStorage.setItem(KEY_GAME, 'null'); } catch (_2) { /* нет */ } } }
 if (!RMOCK) { const g = read(KEY_GAME); if (g && isMock(g.id)) clearGameAcc(); } // аккаунт заглушки, оставшийся от прежнего запуска ?rmock, без заглушки не нужен
 
@@ -55,13 +57,16 @@ export function siteNoProgress() { const s = siteAcc(); if (s && !gameAcc()) stS
 // ── запросы ──
 // ключ сессии: запросы с номером своего аккаунта игры несут ещё и его ключ (sess); сервер ответил «ключ не годится» (401 session) - один раз
 // получаем новый (ensureSession: уже вошедшее до ключей устройство меняет id + логин на ключ) и повторяем
+export function withSess(body) { const g = gameAcc(); return body && g && g.sess && body.player_id === g.id && !body.sess ? { ...body, sess: g.sess } : body; }
+// 401 session на ключ sent: если его уже сменил другой запрос - просто повторить; иначе обмен (ensureSession(true)). true - можно повторить с withSess
+export async function refreshSession(sent) { const g = gameAcc(); if (!g) return false; if (g.sess && g.sess !== sent) return true; return ensureSession(true); }
+const resend = (body, sent) => { const g = gameAcc(); if (!body || !g) return body; return body.sess === sent || body.player_id === g.id ? { ...body, sess: g.sess } : body; };
 export async function callFn(fn, body, retried) {
-  const g = gameAcc();
-  if (body && g && g.sess && body.player_id === g.id && !body.sess) body = { ...body, sess: g.sess };
+  body = withSess(body); const sent = body && body.sess;
   try { return await callFn0(fn, body); } catch (e) {
     if (retried || e.status !== 401 || e.code !== 'session' || !gameAcc()) throw e;
-    if (!(await ensureSession(true))) throw e;
-    const g2 = gameAcc(); return callFn(fn, body && body.player_id === g2.id ? { ...body, sess: g2.sess } : body, true);
+    if (!(await refreshSession(sent))) throw e;
+    return callFn(fn, resend(body, sent), true);
   }
 }
 // ключа нет (вошли до ключей) или он отозван: обмен id + логин на ключ; не вышло (аккаунт засвечен или удалён) - выйти и попросить войти паролем
@@ -70,7 +75,7 @@ export const reloginNeeded = { on: false };
 export function ensureSession(force) {
   const g = gameAcc(); if (!g || (g.sess && !force)) return Promise.resolve(!!g);
   if (!sessP) sessP = acct('session', { id: g.id, login: g.login }).then((d) => { const n = gameAcc(); if (n && n.id === g.id && d.session) setGameAcc({ ...n, sess: d.session }); return true; }).catch((e) => {
-    if (e.status === 401 && e.code === 'relogin') { clearGameAcc(); reloginNeeded.on = true; for (const f of subs) try { f(); } catch (_) { /* подписчик */ } }
+    if (e.status === 401 && e.code === 'relogin' && gameAcc() && gameAcc().id === g.id) { clearGameAcc(); reloginNeeded.on = true; for (const f of subs) try { f(); } catch (_) { /* подписчик */ } } // за время обмена вошли в другой - его не трогаем
     return false;
   }).finally(() => { sessP = null; });
   return sessP;

@@ -1,12 +1,12 @@
 // Проверка ключей сессий (supabase/functions/_shared/airdef-session.ts) на подставной базе: выдача, проверка, аккаунт игры без ключа - 401,
 // аккаунт сайта - по номеру, чужой и просроченный ключ, выход, не больше 10 устройств. deno run -A tools/airdef-headless/session-test.js
 import { newSession, dropSession, sessionPlayer, sha256hex } from '../../supabase/functions/_shared/airdef-session.ts';
-const T = { players: [{ id: 'aaaaaaaa-game', kind: 'airdef' }, { id: 'bbbbbbbb-site', kind: 'site' }], airdef_sessions: [] };
+const T = { players: [{ id: 'aaaaaaaa-game', kind: 'airdef' }, { id: 'bbbbbbbb-site', kind: 'site' }], airdef_sessions: [], airdef_accounts: [{ player_id: 'aaaaaaaa-game', sess_since: null }] };
 function q(table) { // крошечная копия цепочек supabase-js, которые использует модуль
   let rows = T[table], op = 'select', patch = null, ins = null, order = null, rng = null;
   const api = {
     select() { return api; }, insert(r) { ins = r; op = 'insert'; return api; }, update(p) { patch = p; op = 'update'; return api; }, delete() { op = 'delete'; return api; },
-    eq(k, v) { rows = rows.filter((r) => r[k] === v); return api; }, in(k, vs) { rows = rows.filter((r) => vs.includes(r[k])); return api; },
+    eq(k, v) { rows = rows.filter((r) => r[k] === v); return api; }, is(k, v) { rows = rows.filter((r) => (r[k] ?? null) === v); return api; }, in(k, vs) { rows = rows.filter((r) => vs.includes(r[k])); return api; },
     order(k, o) { order = [k, o.ascending]; return api; }, range(a, b) { rng = [a, b]; return api; }, limit() { return api; },
     maybeSingle() { return Promise.resolve({ data: rows[0] || null, error: null }); },
     then(res) {
@@ -24,6 +24,8 @@ let bad = 0; const ok = (c, m) => { console.log((c ? 'OK   ' : 'FAIL ') + m); if
 const s1 = await newSession(db, 'aaaaaaaa-game');
 ok(s1.length >= 40 && !T.airdef_sessions.some((r) => r.token_hash === s1), 'ключ длинный, в базе - только хеш');
 ok(T.airdef_sessions[0].token_hash === await sha256hex(s1), 'хеш совпадает');
+const since = T.airdef_accounts[0].sess_since; ok(!!since, 'отмечено: ключ выдавался (обмен без пароля закрыт)');
+await newSession(db, 'aaaaaaaa-game'); ok(T.airdef_accounts[0].sess_since === since, 'отметка не перезаписывается');
 ok((await sessionPlayer(db, { sess: s1 })).id === 'aaaaaaaa-game', 'по ключу - свой игрок');
 ok((await sessionPlayer(db, { player_id: 'aaaaaaaa-game' })).err?.status === 401, 'аккаунт игры по одному номеру - 401');
 ok((await sessionPlayer(db, { player_id: 'aaaaaaaa-game', sess: 'x'.repeat(43) })).err?.status === 401, 'чужой ключ - 401');

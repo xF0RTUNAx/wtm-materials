@@ -27,4 +27,11 @@ revoke execute on function strong_man_tick() from public, anon, authenticated;
 revoke execute on function weak_man_tick() from public, anon, authenticated;
 revoke execute on function anime_girl_tick() from public, anon, authenticated;
 revoke execute on function auto_key_tick() from public, anon, authenticated;
-alter default privileges in schema public revoke execute on functions from public;
+-- новые функции: Supabase сам выдаёт EXECUTE anon и authenticated - снимаем для функций, создаваемых postgres (сайт rpc сам не вызывает)
+alter default privileges for role postgres in schema public revoke execute on functions from anon, authenticated;
+
+-- порог «5 активных» для тиков - тоже только игроки сайта (как и выбор цели выше)
+create or replace function _active_player_count()
+returns int language sql as $$
+  select count(*)::int from players where last_seen > now() - interval '14 days' and kind = 'site'
+$$;

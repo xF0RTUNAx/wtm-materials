@@ -12,3 +12,5 @@ create index if not exists idx_airdef_sessions_player on airdef_sessions (player
 alter table airdef_sessions enable row level security;
 revoke all on airdef_sessions from anon, authenticated;
 grant all privileges on airdef_sessions to service_role;
+-- когда аккаунту впервые выдан ключ: обмен «номер + логин → ключ» (переход старых устройств) - только пока ключа ещё не было (ревью 2026-11-17)
+alter table airdef_accounts add column if not exists sess_since timestamptz;
