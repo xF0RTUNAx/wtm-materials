@@ -21,6 +21,92 @@ const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<
 const HELP_KEY = 'fortuna_airdef_rating_help'; // «?» перестаёт мерцать после первого открытия (на этом устройстве)
 const SLOTS = 7, FRESH = 60000, RETRY = 30000;
 
+// набор Б «Табло аэродрома» (чистовик - ~/Downloads/Воздушное превосходство/Профиль и рейтинг/_чистовые/css_набор_б.css, срезы - ПАСПОРТ.json)
+const CSS_B = `
+/* Окна «Рейтинг» и «Профиль» (#ratWin, rating-ui.js) - набор Б «Табло аэродрома», чистовик 2026-11-17.
+   Картинки - airdef/ui/rating/r_*.webp (файлы 3× от CSS-пикселей), срезы 9-slice - ПАСПОРТ.json. Тексты и разметку окна не меняет - только вид.
+   Подключать после CSS окна (стиль rating-ui.js), например отдельным <style>/<link> в airdef.html. Проверено на игре: телефон 844×390, ПК 1512×860. */
+#ratWin { --line: rgba(0,0,0,.45); --dim: #a3a89a; color: #e2e2d6; }
+
+/* окно и шапка */
+#ratWin .win { background: none; box-sizing: border-box; border-style: solid; border-color: transparent; border-width: 14px; border-image: url(airdef/ui/rating/r_win.webp) 66 fill / 22px stretch; }
+#ratWin .whead { margin: 2px 2px 6px; padding: 8px 12px; border-style: solid; border-color: transparent; border-width: 0; border-image: url(airdef/ui/rating/r_head.webp) 48 fill / 16px stretch; }
+#ratWin .whead .t, #ratWin .whead .t .ic { color: #1b1a14; } #ratWin .whead .s { color: #4a4430; }
+
+/* малые кнопки: закрыть, назад, «?» */
+#ratWin .rx, #ratWin .back, #ratWin .qbtn { background: none; color: #e2e2d6; animation: none; border-style: solid; border-color: transparent; border-width: 0; border-image: url(airdef/ui/rating/r_ibtn.webp) 30 fill / 10px stretch; }
+#ratWin .rx:hover, #ratWin .back:hover { background: none; filter: brightness(1.08); }
+#ratWin .rx:active, #ratWin .back:active, #ratWin .qbtn:active { border-image-source: url(airdef/ui/rating/r_ibtn_down.webp); filter: none; }
+
+/* таблица рейтинга: поле, строки, места 1-3, своя строка */
+#ratWin .rows, #ratWin .battles { margin: 0 2px; padding: 6px; border-style: solid; border-color: transparent; border-width: 0; border-image: url(airdef/ui/rating/r_well.webp) 36 fill / 12px stretch; }
+#ratWin .row, #ratWin button.row { border-bottom: 1px solid rgba(0,0,0,.45); }
+#ratWin button.row:hover { background: rgba(255,255,255,.04); }
+/* все номера мест - одним столбиком: колонка 40px, номер по центру блока 28×28 (как диск медали) - и у медалей, и у обычных строк */
+#ratWin .row .p { display: grid; place-items: center; justify-self: center; width: 28px; height: 28px; text-align: center; font-variant-numeric: tabular-nums; background: center / contain no-repeat; }
+#ratWin .row.g1 .p { background-image: url(airdef/ui/rating/r_g1.webp); color: #1b1a14; }
+#ratWin .row.g2 .p { background-image: url(airdef/ui/rating/r_g2.webp); color: #1b1a14; }
+#ratWin .row.g3 .p { background-image: url(airdef/ui/rating/r_g3.webp); color: #f1e4d4; }
+/* очки - по правому краю, цифры одной ширины */
+#ratWin .row .v { justify-self: end; text-align: right; font-variant-numeric: tabular-nums; }
+#ratWin .row.me, #ratWin button.row.me, #ratWin button.row.me:hover { background: none; color: #1b1a14; border-style: solid; border-color: transparent; border-width: 0 0 1px; border-image: url(airdef/ui/rating/r_row_me.webp) 36 fill / 12px stretch; }
+#ratWin .row.me .p, #ratWin .row.me .go { color: #1b1a14; }
+
+/* аватарки и картинки «Любимое»: рамка поверх картинки */
+#ratWin .av, #ratWin .ava, #ratWin .fv .pic { position: relative; border: 0; background-color: #151716; }
+#ratWin .av::after, #ratWin .ava::after, #ratWin .fv .pic::after { content: ''; position: absolute; inset: 0; pointer-events: none; border-style: solid; border-color: transparent; border-width: 0; border-image: url(airdef/ui/rating/r_ava.webp) 24 / 8px stretch; }
+#ratWin .av { width: 28px; height: 28px; } #ratWin .av::after { border-image-width: 4px; }
+#ratWin .fv .pic { background-image: none; } #ratWin .fv .pic[style] { background-size: contain; background-position: center; background-repeat: no-repeat; }
+
+/* своя карточка под таблицей и шапка профиля: слева на картинке жёлто-чёрная полоса до 12px - содержимое с отступом 26px (телефон 22px), чтобы аватарка, место и «Мои бои» не налезали на неё */
+#ratWin .mecard { margin: 8px 2px 2px; padding: 12px 16px 12px 26px; background: none; color: #e2e2d6; border-style: solid; border-color: transparent; border-width: 0; border-image: url(airdef/ui/rating/r_card.webp) 54 fill / 18px stretch; }
+#ratWin .mecard small { color: #a3a89a; } #ratWin .mecard .nk.lnk u { text-decoration-color: #a3a89a; }
+#ratWin .hero { margin: 4px 2px 6px; padding: 14px 16px 14px 26px; color: #e2e2d6; border-style: solid; border-color: transparent; border-width: 0; border-image: url(airdef/ui/rating/r_card.webp) 54 fill / 18px stretch; }
+#ratWin .hero .since, #ratWin .hero .mine small, #ratWin .place .lb { color: #a3a89a; } #ratWin .place .pts { color: #e2e2d6; }
+/* табличка места (жёлтая, с болтами) */
+#ratWin .mecard .big { display: grid; place-items: center; width: 52px; height: 44px; padding: 0; background: url(airdef/ui/rating/r_place.webp) center / 100% 100% no-repeat; color: #1b1a14; }
+#ratWin .place .pn { display: flex; align-items: center; justify-content: center; width: 64px; height: 54px; padding: 0; background: url(airdef/ui/rating/r_place.webp) center / 100% 100% no-repeat; color: #1b1a14; }
+#ratWin .hero.g1 .pn, #ratWin .hero.g2 .pn, #ratWin .hero.g3 .pn { color: #1b1a14; }
+/* «засчитано N из 7» - лампы */
+#ratWin .slots { gap: 3px; align-items: center; }   /* 7 ламп = 123px: колонка с «Мои бои» в своей карточке не шире, ник не обрезается */
+#ratWin .slots i, #ratWin .place .slots i { width: 15px; height: 8px; background: url(airdef/ui/rating/r_slot_off.webp) center / contain no-repeat; }
+#ratWin .slots i.on, #ratWin .place .slots i.on { background: url(airdef/ui/rating/r_slot_on.webp) center / contain no-repeat; }
+
+/* кнопки */
+#ratWin .btnm { background: none; color: #1b1a14; padding: 7px 14px; border-style: solid; border-color: transparent; border-width: 0; border-image: url(airdef/ui/rating/r_btn.webp) 36 fill / 12px stretch; }
+#ratWin .btnm:hover { background: none; filter: brightness(1.08); } #ratWin .btnm:active { border-image-source: url(airdef/ui/rating/r_btn_down.webp); filter: none; }
+/* у .btnm.alt в игре свой border: 1px solid - он сбрасывает срезы, поэтому border-image здесь полностью */
+#ratWin .btnm.alt { background: none; color: #e2e2d6; border-style: solid; border-color: transparent; border-width: 0; border-image: url(airdef/ui/rating/r_btn_alt.webp) 36 fill / 12px stretch; }
+#ratWin .btnm.alt:hover { background: none; } #ratWin .btnm.alt:active { border-image-source: url(airdef/ui/rating/r_btn_alt_down.webp); }
+/* опасное действие «Удалить аккаунт» в профиле: class="btnm alt danger" (как в rating-ui.js) - картинка и цвет ниже, в блоке окна удаления */
+#ratWin .btnm.danger:hover, #ratWin .btnm.alt.danger:hover { background: none; filter: brightness(1.08); } #ratWin .btnm.danger:active, #ratWin .btnm.alt.danger:active { border-image-source: url(airdef/ui/rating/r_btn_danger_down.webp); filter: none; }
+/* окно удаления аккаунта (#accWin, account-ui.js): предупреждение .delwarn - щит с красно-жёлтой полосой по краю (полоса кладётся без швов: round);
+   своя полоса игры (.delwarn::before) не нужна. Кнопка «Удалить навсегда» .btn.danger и «Удалить аккаунт» .btn.alt.danger - красная сталь.
+   В игре у .danger фон и цвет с !important - поэтому и здесь !important. */
+#accWin .delwarn, #ratWin .delwarn, #ratWin .warn { padding: 16px 20px 16px 22px; background: none; color: #e2e2d6; border-style: solid; border-color: transparent; border-width: 0; border-image: url(airdef/ui/rating/r_warn.webp) 60 fill / 20px round; }
+#accWin .delwarn::before, #ratWin .delwarn::before { display: none; } #accWin .delwarn b, #ratWin .delwarn b { color: #f0d27a; }
+#ratWin .btnm.danger, #ratWin .btnm.alt.danger, #accWin .btn.danger, #accWin .btn.alt.danger { background: none !important; color: #f3e9df !important; border-color: transparent !important; border-style: solid; border-width: 0; border-image: url(airdef/ui/rating/r_btn_danger.webp) 36 fill / 12px stretch; }
+#accWin .btn.danger:hover, #accWin .btn.alt.danger:hover { filter: brightness(1.08); } #accWin .btn.danger:active, #accWin .btn.alt.danger:active { border-image-source: url(airdef/ui/rating/r_btn_danger_down.webp); filter: none; }
+
+/* профиль: разделы, переключатель, таблица режимов, награды */
+#ratWin .sec { border-top: 0; padding: 8px 4px; } #ratWin .win.prof .col + .col { border-left: 0; } #ratWin .pbody { padding: 0 2px; } #ratWin .win.prof .pbody .col { padding: 0 2px; }
+#ratWin .sec .sh { padding: 5px 12px; color: #e2e2d6; border-style: solid; border-color: transparent; border-width: 0; border-image: url(airdef/ui/rating/r_sec.webp) 36 fill / 12px stretch; }
+#ratWin .sec .sh small { color: #a3a89a; }
+#ratWin .seg { border: 0; gap: 3px; }
+#ratWin .seg button { padding: 4px 11px; color: #e2e2d6; border-style: solid; border-color: transparent; border-width: 0; border-image: url(airdef/ui/rating/r_seg_off.webp) 30 fill / 10px stretch; }
+#ratWin .seg button:active { border-image-source: url(airdef/ui/rating/r_seg_off_down.webp); }
+#ratWin .seg button[aria-pressed="true"] { background: none; color: #1b1a14; border-image-source: url(airdef/ui/rating/r_seg_on.webp); }
+#ratWin .mt td, #ratWin .br { border-bottom-color: rgba(0,0,0,.45); } #ratWin .mt .wbar { background: rgba(0,0,0,.35); } #ratWin .mt .wbar i { background: #e0a52a; } #ratWin .mt td:first-child .ic { color: #e0a52a; }
+#ratWin .bd { background: none; padding: 8px 14px 8px 26px; color: #e2e2d6; border-style: solid; border-color: transparent; border-width: 0; border-image: url(airdef/ui/rating/r_award.webp) 42 fill / 14px stretch; }
+#ratWin .bd small { color: #a3a89a; } #ratWin .bd .ic { color: #e2e2d6; opacity: .8; }
+
+/* телефон горизонтально: рамка окна тоньше */
+@media (max-height: 500px) {
+  #ratWin .win { border-width: 10px; border-image-width: 18px; } #ratWin .whead { padding: 5px 10px; } #ratWin .hero { padding: 10px 14px 10px 22px; } #ratWin .mecard { padding: 8px 14px 8px 22px; }
+  #ratWin .mecard .big { width: 50px; height: 42px; } #ratWin .place .pn { width: 56px; height: 47px; }
+}
+
+`;
 const CSS = `
 #ratWin { position: fixed; inset: 0; z-index: 70; display: none; align-items: center; justify-content: center; box-sizing: border-box; background: rgba(8,11,7,.72); color: #e9e6dc; font: 400 14px/1.4 'Golos Text', -apple-system, sans-serif;
   padding: calc(12px + var(--sa-t, 0px) + var(--tg-t, 0px)) max(12px, var(--sa-r, 0px)) max(12px, var(--sa-b, 0px)) max(12px, var(--sa-l, 0px)); --line: #2f3828; --dim: #a9b09b; --amber: #e8b04a; --amber2: #f3c96f; --green: #7fd38f; }
@@ -130,7 +216,9 @@ const pad2 = (v) => String(v).padStart(2, '0');
 const when = (at) => { const d = new Date(at); return isNaN(d) ? '' : `${pad2(d.getDate())}.${pad2(d.getMonth() + 1)}, ${pad2(d.getHours())}:${pad2(d.getMinutes())}`; };
 
 export function createRating(C) {
-  const style = document.createElement('style'); style.textContent = CSS; if (document.head) document.head.appendChild(style); // (заглушка DOM стенда - без head/body)
+  const style = document.createElement('style'); style.textContent = CSS; if (document.head) document.head.appendChild(style);
+  // вид окон - набор Б «Табло аэродрома» (Mark 2026-11-17; элементы ui/rating/r_*.webp): после стилей окон рейтинга и аккаунта (account-ui.js), поэтому - следующим тиком
+  { const sb = document.createElement('style'); sb.textContent = CSS_B; if (document.head) setTimeout(() => document.head.appendChild(sb), 0); } // (заглушка DOM стенда - без head/body)
   const root = document.createElement('div'); root.id = 'ratWin'; root.setAttribute && root.setAttribute('role', 'dialog'); root.setAttribute && root.setAttribute('aria-modal', 'true'); if (document.body && document.body.appendChild) document.body.appendChild(root);
   const S = { data: null, err: '', key: null, at: 0, busy: false, view: 'list', q: false, p: null, per: 'season', listTop: 0 }; // view: list | mine | prof (профиль S.p), per - период профиля
   const $ = (id) => document.getElementById(id);
