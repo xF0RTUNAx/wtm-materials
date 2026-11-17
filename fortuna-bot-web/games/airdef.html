@@ -238,7 +238,11 @@
   #lsnPanel .lph { display: flex; justify-content: space-between; align-items: center; color: #a9b19c; font: 600 12.5px 'Golos Text', -apple-system, sans-serif; letter-spacing: 0; }
   #lsnPanel #lsnX { border: 0; background: none; color: #a9b19c; font-size: 16px; cursor: pointer; padding: 2px 4px; }
   #lsnPanel #lsnName { display: block; font: 500 17px/1.25 'Oswald', sans-serif; margin: 4px 0 8px; color: #f4f1e8; }
-  #lsnPanel .lnow { border-left: 3px solid #e8b04a; background: rgba(232,176,74,.08); padding: 6px 9px; margin-bottom: 8px; } #lsnPanel .lnow b { color: #f3c96f; }
+  /* «Сейчас» - что делать прямо сейчас (Mark 2026-11-17: «нужно как-то выделить, чтобы игрок не терялся»): золотая рамка, ярлык, текст крупнее, вспышка при новом шаге */
+  #lsnPanel .lnow { position: relative; border: 2px solid #e8b04a; border-left-width: 6px; background: linear-gradient(rgba(232,176,74,.22), rgba(232,176,74,.08)); padding: 8px 11px 10px; margin: 2px 0 12px; box-shadow: 0 0 0 1px rgba(0,0,0,.55), 0 4px 14px rgba(0,0,0,.4); color: #fff6dc; font-size: 14.5px; line-height: 1.42; }
+  #lsnPanel .lnow b { color: #ffd77a; } #lsnPanel .lnow .cat-h { display: inline-block; margin: 0 0 6px; padding: 2px 9px; background: #e8b04a; color: #1c1708; font: 600 11px 'Oswald', sans-serif; letter-spacing: .16em; text-transform: uppercase; }
+  #lsnPanel .lnow.flash { animation: lnowFlash 1.1s ease-out; } @keyframes lnowFlash { 0% { box-shadow: 0 0 0 1px rgba(0,0,0,.55), 0 0 0 0 rgba(243,201,111,.9); background-color: rgba(243,201,111,.35); } 100% { box-shadow: 0 0 0 1px rgba(0,0,0,.55), 0 0 0 14px rgba(243,201,111,0); background-color: transparent; } }
+  body.coarse #lsnPanel .lnow { font-size: 13.5px; padding: 6px 9px 8px; }
   #lsnPanel .cat-h { color: #a9b19c; font: 600 12.5px 'Golos Text', -apple-system, sans-serif; letter-spacing: 0; margin: 0 0 3px; }
   #lsnPanel h4 { margin: 10px 0 4px; color: #a9b19c; font: 600 12.5px 'Golos Text', -apple-system, sans-serif; letter-spacing: 0; }
   #lsnPanel ul, #lsnPanel ol { margin: 0; padding-left: 18px; } #lsnPanel li { margin: 2px 0; } #lsnPanel table { font-size: 12px; } #lsnPanel .btn { margin-top: 10px; border-radius: 0; }

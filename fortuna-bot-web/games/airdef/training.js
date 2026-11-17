@@ -926,7 +926,13 @@ export function createTraining(C, ctrls) {
   let lsnOpen = false, nowT = 0;
   const strip = (h) => String(h || '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
   const lead = (h) => { const m = /^\s*<b>([^<]+)<\/b>/.exec(h || ''); return m ? m[1].trim() : strip(h).split(/(?<=[.!?])\s/)[0]; }; // «Теперь вы.» / первая фраза
-  function renderNow() { $('lsnNow').innerHTML = iconize(T.cur || (L ? L.desc : '')); }
+  // «Сейчас»: новый шаг - вспышка рамки и панель к началу (Mark 2026-11-17: «чтобы игрок не терялся»); живые числа (расстояние, счёт) - без вспышки
+  let nowKey = '';
+  function renderNow() {
+    const h = iconize(T.cur || (L ? L.desc : '')), el = $('lsnNow'); el.innerHTML = h;
+    const key = String(T.s) + '|' + (L ? L.id || L.name : ''), box = el.parentNode;
+    if (key !== nowKey && box && box.classList) { nowKey = key; box.classList.remove('flash'); void box.offsetWidth; box.classList.add('flash'); const pn = $('lsnPanel'); if (pn && pn.scrollTop) pn.scrollTop = 0; }
+  }
   function renderLsn() {
     if (!L) return;
     $('lsnSec').textContent = tr('Урок {0} из {1}{2}', [idx + 1, LESSONS[side].length, L.sec ? ' · ' + L.sec : '']);
