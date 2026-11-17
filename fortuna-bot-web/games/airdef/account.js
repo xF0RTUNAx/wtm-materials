@@ -66,7 +66,7 @@ export const accountApi = {
   register: (login, password, nick) => acct('register', { login, password, nick }).then((d) => d.account),
   login: (login, password) => acct('login', { login, password }).then((d) => d.account),
   rename: (id, password, nick) => acct('rename', { id, password, nick }).then((d) => d.account),
-  remove: (id, password) => acct('delete', { id, password, confirm: true }), // удаление аккаунта игры (Mark 2026-11-17)
+  remove: (id, login) => acct('delete', { id, login, confirm: true }), // удаление аккаунта игры (Mark 2026-11-17): без пароля - id и логин с устройства
   transfer: (id, password, site_login, site_password) => acct('transfer', { id, password, site_login, site_password }),
   // перенос в один шаг (у игрока нет аккаунта игры): сервер сам создаёт аккаунт игры и переносит прогресс; b: { site_login, site_password, password?, login?, nick? }
   migrate: (b) => acct('migrate', b),
@@ -111,7 +111,7 @@ async function mockFn(fn, b) {
     }
     if (b.action === 'login') { if (b.password === 'wrong') throw mockErr(401, 'Неверный логин или пароль'); return { account: mockAcc(b.login, (read(KEY_GAME) || {}).nick) }; }
     if (b.action === 'rename') { const g = gameAcc(); return { account: mockAcc(g ? g.login : 'player', b.nick) }; }
-    if (b.action === 'delete') { if (b.password === 'wrong') throw mockErr(401, 'Неверный пароль'); return { deleted: true }; }
+    if (b.action === 'delete') return { deleted: true };
     if (b.action === 'transfer') { if (b.site_password === 'wrong') throw mockErr(401, 'Неверный логин или пароль сайта'); MOCK.transferred = true; const g = gameAcc(); return { moved: { progress: true, runs: 12, online: 5 }, account: mockAcc(g ? g.login : 'player', g && g.nick) }; }
     if (b.action === 'site_status') return { progress: RMOCK !== 'newsite', transferred: MOCK.transferred }; // ?rmock=newsite - новичок с аккаунтом сайта
     throw mockErr(400, 'Неизвестное действие');

@@ -62,6 +62,8 @@ export default {
   "Удалить навсегда": "Delete forever",
   "Сейчас нельзя: вы в комнате или в бою": "Not now: you are in a room or in battle",
   "Аккаунт удалён": "Account deleted",
+  "Аккаунт не найден": "Account not found",
+  "Нет подтверждения": "No confirmation",
   "день": "day",
   "утро": "morning",
   "вечер": "evening",

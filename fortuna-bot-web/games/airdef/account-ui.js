@@ -138,8 +138,8 @@ export function createAccount(C) {
     // acc: вошёл
     const me = `<div class="me"><b>${esc(g.nick || g.login)}</b><span>${tr('Логин: {0}', [esc(g.login)])}</span></div>`;
     if (S.rename) return `${me}<form class="frm" data-form="rename" novalidate>${fld('newnick', tr('Новый ник'), 'text', 'nickname', tr('3-16: буквы, цифры, пробел, _ и -'), 'full')}${fld('npass', tr('Пароль аккаунта игры'), 'password', 'current-password', '', 'full')}<button class="btn" type="submit">${tr('Сохранить')}</button><button class="btn alt" type="button" data-a="rename-no">${tr('Отмена')}</button></form>${msg()}`;
-    // удаление (Mark 2026-11-17): предупреждение, пароль и слово-подтверждение (CONFIRM_WORD) - кнопка оживает, только когда слово набрано точно
-    if (S.del) return `${me}<div class="delwarn"><b>${tr('Удаление аккаунта')}</b><p>${tr('Аккаунт, прогресс, исследования, кристаллы, бои и место в рейтинге будут удалены навсегда. Вернуть их будет нельзя.')}</p></div><form class="frm" data-form="del" novalidate>${fld('dpass', tr('Пароль аккаунта игры'), 'password', 'current-password', '', 'full')}${fld('dword', tr('Для подтверждения введите {0}', [CONFIRM_WORD]), 'text', 'off', '', 'full')}<button class="btn danger" type="submit"${(S.f.dword || '').trim() === CONFIRM_WORD ? '' : ' disabled'}>${tr('Удалить навсегда')}</button><button class="btn alt" type="button" data-a="del-no">${tr('Отмена')}</button></form>${msg()}`;
+    // удаление (Mark 2026-11-17): предупреждение и слово-подтверждение, без пароля (вдруг забыт) (CONFIRM_WORD) - кнопка оживает, только когда слово набрано точно
+    if (S.del) return `${me}<div class="delwarn"><b>${tr('Удаление аккаунта')}</b><p>${tr('Аккаунт, прогресс, исследования, кристаллы, бои и место в рейтинге будут удалены навсегда. Вернуть их будет нельзя.')}</p></div><form class="frm" data-form="del" novalidate>${fld('dword', tr('Для подтверждения введите {0}', [CONFIRM_WORD]), 'text', 'off', '', 'full')}<button class="btn danger" type="submit"${(S.f.dword || '').trim() === CONFIRM_WORD ? '' : ' disabled'}>${tr('Удалить навсегда')}</button><button class="btn alt" type="button" data-a="del-no">${tr('Отмена')}</button></form>${msg()}`;
     return `${me}<div class="row"><button class="btn alt" data-a="rename">${tr('Сменить ник')}</button><button class="btn alt" data-a="logout">${tr('Выйти из аккаунта')}</button></div><p>${tr('Ник можно сменить один раз в сезон.')}</p><div class="row"><button class="btn alt danger" data-a="del">${tr('Удалить аккаунт')}</button></div>${msg()}`;
   }
   function draw() {
@@ -236,9 +236,8 @@ export function createAccount(C) {
     del: () => run(async () => {
       const g = gameAcc();
       if ((S.f.dword || '').trim() !== CONFIRM_WORD) throw new Error(tr('Для подтверждения введите {0}', [CONFIRM_WORD]));
-      if (!S.f.dpass) throw new Error(tr('Неверный пароль'));
       if (lock()) throw new Error(tr('Сейчас нельзя: вы в комнате или в бою'));
-      await accountApi.remove(g.id, S.f.dpass);
+      await accountApi.remove(g.id, g.login);
       clearGameAcc(); S.del = false; S.f = {}; changed(); api.close(); if (C.rating && C.rating.close) C.rating.close(); if (C.say) C.say(tr('Аккаунт удалён'), 3);
     }),
     rename: () => run(async () => {

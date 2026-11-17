@@ -7,7 +7,7 @@
 //   { action: 'transfer', id, password, site_login, site_password } → { moved } (в уже существующий аккаунт игры; с каждого аккаунта сайта - один раз)
 // Ошибки с code (login_taken, login_needed, nick_taken, nick_needed, nick_site, password_needed, already_used, already_done) - окну игры понятно, что спросить
 //   { action: 'rename', id, password, nick }              → { account } (раз в сезон)
-//   { action: 'delete', id, password, confirm: true }     → { deleted: true } (аккаунт игры и всё его - каскадом: прогресс, бои, рейтинг, награды)
+//   { action: 'delete', id, login, confirm: true }        → { deleted: true } (аккаунт игры и всё его - каскадом: прогресс, бои, рейтинг, награды)
 //   { action: 'site_status', site_id }                    → { progress, transferred } - показывать ли «Перенести прогресс»
 // Перебор паролей: 10 неудач подряд по ключу 'login:<логин игры>' (для пароля сайта - 'site:<логин сайта>') - отказ 429 на 15 минут;
 // удачный вход сбрасывает (sql/022: airdef_auth_fail, airdef_auth_fail_hit).
@@ -182,13 +182,15 @@ Deno.serve(async (req) => {
       return jsonResponse({ account: await view(me.id, me.login) });
     }
 
-    // удаление аккаунта игры (Mark 2026-11-17): пароль - под защитой от перебора, confirm - явное «да» из окна с вводом слова-подтверждения;
-    // всё по игроку (airdef_progress, airdef_accounts, airdef_mp_results, награды, задания) уходит каскадом (sql/020-030: on delete cascade)
+    // удаление аккаунта игры (Mark 2026-11-17: без пароля - «а если игрок забыл пароль?»): владение - id и логин аккаунта, как они лежат на устройстве
+    // (id нигде не отдаётся наружу - рейтинг и профиль без него; логин тоже не публичный, публичен только ник); confirm - явное «да» из окна
+    // со словом-подтверждением. Всё по игроку (airdef_progress, airdef_accounts, airdef_mp_results, награды, задания) - каскадом (sql/020-030)
     if (action === "delete") {
-      const o = await own(body.id, body.password, "Неверный пароль");
-      if (!o.me) return o.err!;
-      if (body.confirm !== true) return jsonResponse({ error: "Нет подтверждения" }, 400);
-      const d = await db.from("players").delete().eq("id", o.me.id).eq("kind", "airdef");
+      const id = body.id, login = typeof body.login === "string" ? body.login.trim().toLowerCase() : "";
+      if (typeof id !== "string" || id.length < 8 || id.length > 64 || !login || body.confirm !== true) return jsonResponse({ error: "Нет подтверждения" }, 400);
+      const { data: me } = await db.from("players").select("id, login, kind").eq("id", id).maybeSingle();
+      if (!me || me.kind !== "airdef" || String(me.login).replace(/^ad:/, "").toLowerCase() !== login) return jsonResponse({ error: "Аккаунт не найден" }, 404);
+      const d = await db.from("players").delete().eq("id", me.id).eq("kind", "airdef");
       if (d.error) throw d.error;
       return jsonResponse({ deleted: true });
     }
