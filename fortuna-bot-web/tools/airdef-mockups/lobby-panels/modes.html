@@ -1,0 +1,126 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Мульти-волна и Съёмка: варианты</title>
+<!-- Макеты (Mark 2026-11-17): панели «Мульти-волны» и «Режима съёмки» картинками; основа - room.html; «Своя комната» в «Онлайне» - создание комнаты и сама комната (код, команды, готовность). Фон - кадр ангара 844×390
+     без панели (bg_online.jpg, bg_shots.js). Сервер 8935: /fortuna-bot-web/tools/airdef-mockups/lobby-panels/room.html   ?f=a1 - один кадр. В игре ничего не менялось. -->
+<style>
+@font-face { font-family: 'Oswald'; font-weight: 300 700; src: url(../../../games/airdef/fonts/oswald-cyrillic.woff2) format('woff2'); unicode-range: U+0400-045F, U+2116; }
+@font-face { font-family: 'Oswald'; font-weight: 300 700; src: url(../../../games/airdef/fonts/oswald-latin.woff2) format('woff2'); unicode-range: U+0000-00FF, U+2000-206F, U+2191, U+2193; }
+@font-face { font-family: 'Golos Text'; font-weight: 400 800; src: url(../../../games/airdef/fonts/golos-text-cyrillic.woff2) format('woff2'); unicode-range: U+0400-045F; }
+@font-face { font-family: 'Golos Text'; font-weight: 400 800; src: url(../../../games/airdef/fonts/golos-text-latin.woff2) format('woff2'); unicode-range: U+0000-00FF, U+2000-206F; }
+:root { --gold: #e8b04a; --gold2: #f3c96f; --ink: #ece8dc; --dim: #c2c7b2; --mute: #8d9580; --pn: rgba(16,19,15,.88); --ln: rgba(110,104,80,.55); --air: #7fb2e6; --pvo: #e48a6c; }
+* { box-sizing: border-box; } html, body { margin: 0; background: #0d100c; color: var(--ink); font: 14px 'Golos Text', sans-serif; }
+h1 { font: 500 22px 'Oswald'; margin: 18px 20px 4px; } h2 { font: 500 18px 'Oswald'; margin: 26px 20px 2px; color: var(--gold2); } p.d { margin: 0 20px 10px; max-width: 1280px; color: var(--dim); line-height: 1.45; font-size: 13.5px; }
+.rowf { display: flex; flex-wrap: wrap; gap: 16px; padding: 0 20px; } .cap { font: 500 15px 'Oswald'; color: var(--gold2); margin: 6px 0 2px; } .cap span { font: 12.5px 'Golos Text'; color: var(--dim); margin-left: 6px; }
+body.one h1, body.one h2, body.one p.d, body.one .cap { display: none; } body.one .rowf { padding: 0; gap: 0; }
+.ph { position: relative; flex: none; width: 844px; height: 390px; overflow: hidden; background: #111 url(bg_multi.jpg) left top / 844px 390px no-repeat; }
+img { display: block; }
+.pn { position: absolute; right: 61px; top: 38px; width: 262px; }
+.pHead { display: flex; align-items: center; gap: 6px; height: 30px; padding: 0 4px 0 10px; background: var(--pn); border: 1px solid var(--ln); font: 500 15px 'Oswald'; color: var(--ink); }
+.pHead .x { margin-left: auto; width: 24px; height: 22px; display: grid; place-items: center; border: 1px solid #5f5a45; color: var(--gold); font: 600 14px 'Oswald'; }
+.pHead .bk { color: var(--gold); font: 600 16px 'Oswald'; }
+.box { margin-top: 4px; padding: 6px; background: var(--pn); border: 1px solid var(--ln); }
+.lbl { font: 500 9.5px 'Oswald'; letter-spacing: .14em; text-transform: uppercase; color: var(--mute); }
+.chip { display: inline-grid; place-items: center; height: 24px; padding: 0 7px; font: 500 12.5px 'Oswald'; color: var(--dim); background: rgba(10,12,9,.8); border: 1px solid #3c3a2c; white-space: nowrap; }
+.chip.on { background: var(--gold); color: #1c1708; border-color: var(--gold); }
+.chips { display: flex; gap: 3px; } .chips .chip { flex: 1; }
+.start { position: absolute; right: 61px; bottom: 30px; width: 168px; height: 44px; display: grid; place-items: center; border-image: url(../../../games/airdef/ui/hangar/b_start.webp) 60 fill / 14px stretch; border-style: solid; border-width: 14px; font: 600 18px 'Oswald'; letter-spacing: .06em; color: #1d1708; text-transform: uppercase; }
+.start.alt { filter: saturate(.2) brightness(.8); }
+.plate { border-style: solid; border-width: 9px; border-image: url(../../../games/airdef/ui/hangar/b_plate_n.webp) 30 fill / 9px stretch; } .plate.on { border-image-source: url(../../../games/airdef/ui/hangar/b_plate_on.webp); }
+.card { border-style: solid; border-width: 7px; border-image: url(../../../games/airdef/ui/hangar/b_card_n.webp) 26 fill / 7px stretch; } .card.on { border-image-source: url(../../../games/airdef/ui/hangar/b_card_on.webp); }
+.label { display: inline-grid; place-items: center; height: 30px; line-height: 1; padding: 0 10px; border-style: solid; border-width: 7px; border-image: url(../../../games/airdef/ui/hangar/b_label.webp) 24 fill / 7px stretch; font: 600 15px 'Oswald'; letter-spacing: .18em; color: #1b1a14; }
+.ava { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; border: 1px solid #6c6650; flex: none; }
+.lamp { width: 13px; height: 13px; flex: none; background: url(../../../games/airdef/ui/hangar/b_lamp_off.webp) center / contain no-repeat; } .lamp.on { background-image: url(../../../games/airdef/ui/hangar/b_lamp_on.webp); }
+.ic { width: 15px; height: 15px; fill: currentColor; flex: none; }
+.star { width: 15px; height: 15px; flex: none; }
+.sw { display: inline-flex; align-items: center; gap: 6px; font: 500 12px 'Oswald'; color: var(--dim); } .sw i { position: relative; width: 30px; height: 16px; border-radius: 8px; background: #3a382b; } .sw i::after { content: ''; position: absolute; left: 2px; top: 2px; width: 12px; height: 12px; border-radius: 50%; background: #8d8770; }
+.sw.on i { background: #8a6a2a; } .sw.on i::after { left: 16px; background: var(--gold2); }
+.btn2 { display: inline-flex; align-items: center; justify-content: center; gap: 5px; height: 26px; padding: 0 9px; background: rgba(10,12,9,.8); border: 1px solid #5f5a45; font: 500 12px 'Oswald'; color: var(--gold2); white-space: nowrap; }
+.r { display: flex; align-items: center; gap: 6px; } .r + .r { margin-top: 5px; } .r > .lbl { width: 52px; flex: none; }
+.th { object-fit: contain; }
+
+.ph.bgp { background-image: url(bg_photo.jpg); }
+.sum { display: flex; align-items: center; gap: 5px; height: 30px; padding: 0 6px 0 9px; background: var(--pn); border: 1px solid var(--ln); font: 500 12px 'Oswald'; color: var(--dim); white-space: nowrap; overflow: hidden; } .sum b { font-weight: 500; color: var(--gold2); } .sum .t { font-size: 14px; color: var(--ink); } .sum .chev { margin-left: auto; color: var(--gold); } .sum .x { width: 22px; height: 20px; display: grid; place-items: center; border: 1px solid #5f5a45; color: var(--gold); font: 600 13px 'Oswald'; }
+.tiles { display: grid; gap: 4px; } .t2 { grid-template-columns: 1fr 1fr; } .t3 { grid-template-columns: repeat(3, 1fr); }
+.tile { position: relative; height: 66px; padding: 0; } .tile .pics { position: absolute; inset: -4px -4px 12px; } .tile .pics img { position: absolute; object-fit: contain; }
+.tile em { position: absolute; left: -4px; right: -4px; bottom: -3px; text-align: center; font: 500 12px/1 'Oswald'; font-style: normal; color: var(--ink); text-shadow: 0 1px 2px #000; }
+.tile.ph2 { height: 58px; overflow: hidden; } .tile.ph2 .pics { inset: -7px; bottom: 6px; } .tile.ph2 .pics img { width: 100%; height: 100%; object-fit: cover; opacity: .9; }
+.tile.ph2 em { bottom: -6px; background: linear-gradient(transparent, rgba(0,0,0,.8)); padding: 8px 0 3px; }
+.stages { display: flex; align-items: flex-start; gap: 2px; } .stg { flex: 1; text-align: center; } .stg .im { height: 34px; display: grid; place-items: center; background: rgba(8,10,7,.7); border: 1px solid #3c3a2c; position: relative; }
+.stg .im img { width: 100%; height: 100%; object-fit: contain; } .stg .im b { position: absolute; left: 2px; top: 1px; font: 600 10px 'Oswald'; color: var(--gold2); } .stg em { display: block; margin-top: 2px; font: 500 9.5px/1.1 'Oswald'; font-style: normal; color: var(--dim); }
+.arr { color: var(--gold); font: 600 12px 'Oswald'; padding-top: 10px; }
+.note { display: flex; align-items: center; gap: 5px; margin-top: 5px; font: 500 10.5px/1.2 'Oswald'; color: var(--dim); } .note b { color: var(--gold2); font-weight: 500; }
+.tag { display: inline-block; padding: 0 5px; height: 15px; line-height: 15px; font: 600 9.5px 'Oswald'; letter-spacing: .05em; color: #111; background: #e07b63; }
+.wx { display: grid; grid-template-columns: repeat(6, 1fr); gap: 3px; } .wx i { height: 26px; border: 1px solid #3c3a2c; display: grid; place-items: center; color: #fff; font: 600 10px 'Oswald'; font-style: normal; text-shadow: 0 1px 2px #000; } .wx i.on { outline: 2px solid var(--gold); outline-offset: -2px; }
+.alt { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; } .alt i { position: relative; height: 34px; background: rgba(10,12,9,.8); border: 1px solid #3c3a2c; font: 500 11px 'Oswald'; font-style: normal; color: var(--dim); display: flex; align-items: flex-end; justify-content: center; padding-bottom: 2px; }
+.alt i::before { content: ''; position: absolute; left: 50%; bottom: 15px; width: 10px; margin-left: -5px; height: var(--h); background: linear-gradient(var(--gold2), #8a6a2a); } .alt i.on { border-color: var(--gold); color: var(--ink); }
+.strip { position: absolute; left: 60px; right: 255px; bottom: 14px; display: flex; gap: 5px; } .sc { position: relative; flex: none; width: 96px; height: 62px; padding: 0; } .sc img { position: absolute; right: -6px; bottom: 6px; width: 84px; height: 44px; object-fit: contain; } .sc b { position: absolute; left: 0; top: -3px; font: 500 11px 'Oswald'; color: var(--ink); } .sc .ws { position: absolute; left: 0; bottom: -3px; display: flex; gap: 2px; } .sc .ws img { position: static; width: 22px; height: 11px; }
+.stripHd { position: absolute; left: 62px; bottom: 84px; font: 500 11px 'Oswald'; letter-spacing: .12em; text-transform: uppercase; color: var(--gold2); text-shadow: 0 1px 3px #000; }
+.mapc { position: relative; height: 118px; margin-top: 4px; overflow: hidden; border: 1px solid var(--ln); } .mapc > img { width: 100%; height: 100%; object-fit: cover; } .mapc .pin { position: absolute; width: 12px; height: 12px; border-radius: 50%; background: #e0705f; box-shadow: 0 0 0 2px #fff, 0 0 8px #000; }
+.mapc .pin + .pl { } .mapc .lab { position: absolute; padding: 1px 5px; font: 500 10px 'Oswald'; color: #fff; background: rgba(0,0,0,.6); } .mapc .ttl { position: absolute; left: 6px; bottom: 5px; font: 600 14px 'Oswald'; color: #fff; text-shadow: 0 1px 3px #000; }
+.big { position: relative; height: 112px; margin-top: 4px; padding: 0; } .big > img { position: absolute; left: 0; right: 0; top: 10px; width: 100%; height: 72px; object-fit: contain; } .big h3 { position: absolute; left: 0; top: -3px; margin: 0; font: 600 14px 'Oswald'; color: var(--ink); } .big .ws { position: absolute; left: 0; right: 0; bottom: -2px; display: flex; gap: 4px; justify-content: center; } .big .ws span { position: relative; width: 50px; height: 20px; } .big .ws img { width: 100%; height: 100%; object-fit: contain; } .big .ws u { position: absolute; right: -4px; bottom: -3px; font: 600 10.5px 'Oswald'; color: var(--gold2); text-decoration: none; text-shadow: 0 1px 2px #000; }
+.film { display: grid; grid-template-columns: 22px 1fr; gap: 4px; align-items: center; margin-top: 4px; } .film .n { height: 100%; display: grid; place-items: center; background: var(--gold); color: #1c1708; font: 600 13px 'Oswald'; } .film .row { display: flex; gap: 3px; }
+.film .fr { position: relative; flex: 1; height: 44px; overflow: hidden; border: 1px solid #3c3a2c; background: rgba(8,10,7,.7); } .film .fr.on { border-color: var(--gold); box-shadow: inset 0 0 0 1px var(--gold); } .film .fr img { width: 100%; height: 100%; object-fit: cover; } .film .fr.th img { object-fit: contain; }
+.film .fr em { position: absolute; left: 0; right: 0; bottom: 0; text-align: center; font: 500 9.5px/1.4 'Oswald'; font-style: normal; color: #fff; background: rgba(0,0,0,.6); }
+</style></head><body>
+<h1>«Мульти-волна» и «Режим съёмки»: варианты</h1>
+<p class="d">Mark 2026-11-17: «предложи как еще можно обновить интерфейс меню для мульти волны и режима съемки». Сейчас обе панели - строки кнопок и абзацы текста («Как идёт волна…», подсказки управления). В вариантах - роль, сторона, этапы волны, карта, погода и что снимать - картинками и значками, текста - строка-две. Длинные объяснения волны остаются в «Справке» и уроках.</p>
+<h2>1. Мульти-волна</h2>
+<div class="rowf"><div><div class="cap">А · «Этапы волны» <span>роль - две картинки, волна - четыре шага значками</span></div><div class="ph" id="f_m1"></div></div>
+  <div><div class="cap">Б · «Состав волны» <span>роль вкладками, ожидаемая волна - миниатюрами оружия с числом</span></div><div class="ph" id="f_m2"></div></div>
+  <div><div class="cap">В · «Карта района» <span>картинка «Северного рубежа» с тремя целями, роль и сторона под ней</span></div><div class="ph" id="f_m3"></div></div></div>
+<h2>2. Режим съёмки</h2>
+<div class="rowf"><div><div class="cap">А · «Плитки» <span>что снимать, карта и погода - картинками, самолёты - в ленте</span></div><div class="ph bgp" id="f_p1"></div></div>
+  <div><div class="cap">Б · «Кадр» <span>настройки сцены свёрнуты в строку, объект съёмки крупно, высота - столбиками</span></div><div class="ph bgp" id="f_p2"></div></div>
+  <div><div class="cap">В · «Раскадровка» <span>три шага-ряда: что снимать → где → когда</span></div><div class="ph bgp" id="f_p3"></div></div></div>
+<script>
+const T = (n) => `../../../games/airdef/thumbs/${n}.webp`, SH = (n) => `../../../games/airdef/shots/${n}.webp`;
+const STAR_E = '<svg class="star" viewBox="0 0 24 24"><path fill="#d8332a" stroke="#f3e7c8" stroke-width="1.2" d="M12 1.8l2.9 7.2 7.6.4-5.9 4.9 2 7.5L12 17.6l-6.6 4.2 2-7.5-5.9-4.9 7.6-.4z"/></svg>';
+const STAR_W = '<svg class="star" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#28427a" stroke="#f3e7c8" stroke-width="1.2"/><path fill="#fff" d="M12 4.2l2 5 5.3.3-4.1 3.4 1.4 5.2L12 15.2l-4.6 2.9 1.4-5.2-4.1-3.4 5.3-.3z"/></svg>';
+const DICE = '<svg class="ic" viewBox="0 0 24 24"><path d="M4 2h16a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm3.5 3.5a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm9 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM12 10a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-4.5 4.5a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm9 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/></svg>';
+const put = (id, h) => { document.getElementById('f_' + id).innerHTML = h; };
+const head = (t) => `<div class="pHead">${t}<span class="x">›</span></div>`;
+const pics = (list) => list.map(([n, st]) => `<img src="${T(n)}" style="${st}">`).join('');
+const roleTiles = (on) => `<div class="tiles t2" style="margin-top:4px"><div class="tile card ${on === 'def' ? 'on' : ''}"><div class="pics">${pics([['pvo_s300', 'left:10%;top:2%;width:80%;height:96%']])}</div><em>За ПВО</em></div><div class="tile card ${on === 'atk' ? 'on' : ''}"><div class="pics">${pics([['strike_tomahawk', 'left:0;top:8%;width:62%;height:80%'], ['strike_uav_w', 'right:0;top:18%;width:50%;height:76%']])}</div><em>За волну</em></div></div>`;
+const sideMode = `<div class="box"><div class="r"><div class="chips" style="flex:.8"><span class="chip on">${STAR_E}</span><span class="chip">${STAR_W}</span></div><div class="chips" style="flex:1.2"><span class="chip on">Аркада</span><span class="chip">Реализм</span></div></div></div>`;
+const ST = [['strike_uav_w', 'разведка'], ['strike_quail', 'дроны и ложные'], ['strike_tomahawk', 'крылатые'], ['strike_atacms', 'баллистика']];
+put('m1', `<div class="pn">${head('Мульти-волна')}${roleTiles('def')}${sideMode}
+  <div class="box"><div class="lbl" style="margin-bottom:4px">как идёт волна</div><div class="stages">${ST.map(([n, l], i) => `${i ? '<span class="arr">›</span>' : ''}<div class="stg"><div class="im"><img src="${T(n)}"><b>${i + 1}</b></div><em>${l}</em></div>`).join('')}</div>
+    <div class="note"><span class="tag">ПРО</span>баллистику сбивают <b>С-300, С-400</b></div></div></div>
+  <div class="start">К расстановке</div>`);
+const WAVE = [['uav_w', 12], ['quail', 8], ['tomahawk', 6], ['jassm_s', 4], ['storm_s', 4], ['atacms', 2]];
+put('m2', `<div class="pn"><div class="tiles t2"><div class="chip on" style="height:32px;font-size:14px;display:flex;gap:6px;justify-content:center">${STAR_E} За ПВО</div><div class="chip" style="height:32px;font-size:14px">За волну</div></div>
+  <div class="box"><div class="r"><span class="lbl">сторона</span><div class="chips" style="flex:.7"><span class="chip on">${STAR_E}</span><span class="chip">${STAR_W}</span></div><div class="chips" style="flex:1.2"><span class="chip on">Аркада</span><span class="chip">Реализм</span></div></div></div>
+  <div class="box"><div class="r" style="justify-content:space-between"><span class="lbl" style="width:auto">ожидаемая волна запада</span><span class="lbl" style="width:auto;color:var(--gold2)">3 цели</span></div>
+    <div class="tiles t3" style="margin-top:4px">${WAVE.map(([k, n]) => `<div class="tile card" style="height:46px"><div class="pics" style="inset:-4px -4px 8px">${pics([['strike_' + k, 'left:0;top:0;width:100%;height:100%']])}</div><em style="bottom:-5px;font-size:11px">×${n}</em></div>`).join('')}</div>
+    <div class="note"><b>2400</b> очков на расстановку · докупки нет</div></div></div>
+  <div class="start">К расстановке</div>`);
+put('m3', `<div class="pn">${head('Мульти-волна')}<div class="mapc"><img src="${SH('gripen-gbu12-snow')}"><i class="pin" style="left:22%;top:48%"></i><span class="lab" style="left:calc(22% + 10px);top:42%">авиабаза</span><i class="pin" style="left:58%;top:36%"></i><span class="lab" style="left:calc(58% + 10px);top:30%">ГЭС</span><i class="pin" style="left:80%;top:64%"></i><span class="lab" style="left:calc(80% - 50px);top:72%">арсенал</span><span class="ttl">Северный рубеж</span></div>
+  ${roleTiles('def').replace(/height: 66px/g, '')}${sideMode}</div>
+  <div class="start">К расстановке</div>`);
+
+// ── Съёмка
+const WX = [['', DICE], ['linear-gradient(#7fb8f0,#dcefff)', 'день'], ['linear-gradient(#f6c58a,#9ec9f0)', 'утро'], ['linear-gradient(#f08a4b,#5a6ea8)', 'вечер'], ['linear-gradient(#ff7b54,#3b2f63)', 'закат'], ['linear-gradient(#9aa3ab,#d5d9dd)', 'пасм.']];
+const wxRow = (on) => `<div class="wx">${WX.map(([g, l], i) => `<i class="${i === on ? 'on' : ''}" style="${g ? 'background:' + g : 'background:rgba(10,12,9,.8);color:var(--gold2)'}">${l}</i>`).join('')}</div>`;
+const MAPS = [['drone-city-evening', 'Речной узел'], ['gripen-gbu12-snow', 'Северный рубеж'], ['monastery-eve', 'Туманная топь']];
+const PL = [['e_su24', 'Су-24М', ['kab500l', 'kh58']], ['e_mig27', 'МиГ-27К', ['kh29t', 'kab500l']], ['e_su25', 'Су-25', ['kh29t', 'kh25ml']], ['e_tu22m2', 'Ту-22М2', ['fab500']], ['e_su17', 'Су-17М4', ['kh58', 'kh25ml']]];
+const what = (on) => `<div class="tiles t3"><div class="tile card ${on === 0 ? 'on' : ''}" style="height:54px"><div class="pics">${pics([['air_e_su24', 'left:6%;top:4%;width:88%;height:92%']])}</div><em>Самолёт</em></div><div class="tile card ${on === 1 ? 'on' : ''}" style="height:54px"><div class="pics">${pics([['pvo_patriot', 'left:6%;top:4%;width:88%;height:92%']])}</div><em>ПВО</em></div><div class="tile card ${on === 2 ? 'on' : ''}" style="height:54px"><div class="pics">${pics([['strike_kalibr', 'left:0;top:10%;width:100%;height:80%']])}</div><em>Волна</em></div></div>`;
+put('p1', `<div class="pn">${head('Режим съёмки')}<div style="margin-top:4px">${what(0)}</div>
+  <div class="box"><div class="tiles t3">${MAPS.map(([n, l], i) => `<div class="tile ph2 cell ${i === 0 ? 'on' : ''}" style="${i === 0 ? 'outline:2px solid var(--gold);outline-offset:-2px' : ''}"><div class="pics"><img src="${SH(n)}"></div><em style="font-size:10px">${l}</em></div>`).join('')}</div>
+    <div style="margin-top:5px">${wxRow(1)}</div>
+    <div class="r" style="margin-top:5px"><div class="chips" style="flex:1"><span class="chip">I</span><span class="chip on">II</span><span class="chip">III</span><span class="chip">IV</span></div><div class="chips" style="flex:.8"><span class="chip">${STAR_E}</span><span class="chip on">${STAR_W}</span></div></div></div></div>
+  <div class="stripHd">Самолёт и подвеска</div><div class="strip">${PL.map(([p, n, w], i) => `<div class="sc card ${i === 0 ? 'on' : ''}"><b>${n}</b><img src="${T('air_' + p)}"><span class="ws">${w.map((k) => `<img src="${T('wpn_' + k)}">`).join('')}</span></div>`).join('')}</div>
+  <div class="start">Снимать</div>`);
+put('p2', `<div class="pn"><div class="sum"><span class="t">Съёмка</span> · <b>Речной узел</b> · день · ранг II<span class="chev">▾</span><span class="x">›</span></div>
+  <div style="margin-top:4px">${what(0)}</div>
+  <div class="big plate on"><h3>Су-24М</h3><img src="${T('air_e_su24')}"><div class="ws"><span><img src="${T('wpn_kab500l')}"><u>×4</u></span><span><img src="${T('wpn_kh58')}"><u>×2</u></span></div></div>
+  <div class="box"><div class="lbl" style="margin-bottom:4px">высота</div><div class="alt"><i style="--h:4px">250 м</i><i class="on" style="--h:10px">1,5 км</i><i style="--h:16px">4 км</i></div></div></div>
+  <div class="start">Снимать</div>`);
+put('p3', `<div class="pn">${head('Режим съёмки')}
+  <div class="film"><span class="n">1</span><div class="row"><div class="fr th on"><img src="${T('air_e_su24')}"><em>самолёт</em></div><div class="fr th"><img src="${T('pvo_patriot')}"><em>ПВО</em></div><div class="fr th"><img src="${T('strike_kalibr')}"><em>волна</em></div></div></div>
+  <div class="film"><span class="n">2</span><div class="row">${MAPS.map(([n, l], i) => `<div class="fr ${i === 0 ? 'on' : ''}"><img src="${SH(n)}"><em>${l}</em></div>`).join('')}</div></div>
+  <div class="film"><span class="n">3</span><div class="row">${WX.slice(1, 5).map(([g, l], i) => `<div class="fr ${i === 0 ? 'on' : ''}" style="background:${g}"><em>${l}</em></div>`).join('')}</div></div>
+  <div class="film"><span class="n">4</span><div class="row">${PL.slice(0, 3).map(([p, n], i) => `<div class="fr th ${i === 0 ? 'on' : ''}"><img src="${T('air_' + p)}"><em>${n}</em></div>`).join('')}</div></div></div>
+  <div class="start">Снимать</div>`);
+const one = new URLSearchParams(location.search).get('f');
+if (one) { document.body.classList.add('one'); document.querySelectorAll('.ph').forEach((e) => { if (e.id !== 'f_' + one) e.parentNode.parentNode.removeChild(e.parentNode); }); document.querySelectorAll('h2,p.d').forEach((e) => e.remove()); }
+Promise.all([...document.images].map((i) => i.decode().catch(() => 0))).then(() => document.fonts.ready).then(() => { window.__ready = true; });
+</script></body></html>
