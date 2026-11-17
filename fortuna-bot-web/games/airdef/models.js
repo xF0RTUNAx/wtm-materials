@@ -391,13 +391,13 @@ const GLB_V = Object.fromEntries(['w_gbu10', 'w_ecm', 'gepard', 'gepard_lo', 'ro
   ['zsu234', 'zsu234_lo', 'zu23', 'buk', 'phalanx', 'w_fab100', 'w_ofab250', 'w_fab250', 'w_fab1000', 'w_gbu24', 'w_gbu57', 'w_umpk', 'e_hunter', 'e_su27', 'e_su35', 'e_etendard', 'e_mirage_f1', 'e_f18c'].map((n) => [n, '20261022k'])).concat([['w_agm65b', '20261022l'], ['w_decoy_e', '20261022l']].concat(['h_mi24', 'h_mi28', 'h_ka52', 'h_ah64', 'h_ah1', 'h_uh1', 'w_shturm', 'w_b8', 'w_hellfire', 'aam_stinger'].map((n) => [n, '20261022m'])).concat([['w_shturm', '20261022n']])).concat(['h_ah64', 'h_mi28'].map((n) => [n, '20261022p'])).concat([['h_uh1', '20261022r']]).concat(['w_lau61', 'obj_mill', 'pr_hay', 'pr_well', 'pr_pumpkin', 'pr_grave1', 'pr_grave2', 'pr_grave3', 'pr_grave4', 'pr_fence', 'pr_fpost', 'pr_deadtree', 'pr_oldtree', 'c_vaz'].map((n) => [n, '20261022o'])).concat(['e_vulcan', 'e_draken', 'e_viggen', 'w_bomb1000'].map((n) => [n, '20261023b'])).concat(['h_ka50', 'h_mi8', 'h_uh60', 'h_rah66'].map((n) => [n, '20261023c'])).concat([['w_nar_hydra', '20261024a'], ['w_nar_s8', '20261024a'], ['e_draken', '20261023d'], ['w_bomb1000', '20261023d'], ['h_ka50', '20261023d']]).concat(['e_su33', 'e_m4', 'e_mig19', 'e_mig17', 'e_mig29k'].map((n) => [n, '20261023e']))); // 20261023e - шестая партия: Су-33, М-4, МиГ-19, МиГ-17 (2026-10-21; Т-4 - своя, GLB_V_OWN) // 20261023c - четыре вертолёта manilov.ap (2026-10-21) // 20261023b - Vulcan, Draken, Viggen, бомба 1000 lb (2026-10-21) // l - 2026-10-20: Ту-95 без нарисованных дисков, Maverick и Harpy без сильного упрощения // l - Ту-95 без нарисованных дисков винтов (2026-10-20) // j - четвёртая партия, новая «Шилка», УМПК без сжатия // i - ЗРК без упрощения, камуфляж шейдером, третья партия самолётов (2026-10-19); c - замены моделей 2026-10-19; остальные пересобраны 2026-10-18 (затенение в стыках) - общая версия ниже
 // версии файлов собственных моделей (Blender, tools/airdef-models/own): по строке на ключ; поднимает tools/airdef-models/integrate-own.js при каждом встраивании
 const GLB_V_OWN = {
-  bld_ii49: '20261116a', bld_hr_a: '20261116a', bld_hr_c: '20261116a', // свои дома: модули II-49, хрущёвки
-  bld_d12_b: '20261117a', bld_d12_g: '20261117a', bld_d12_t: '20261117a', // 12-этажка (кондиционеры на стене)
-  bld_of: '20261117a', bld_gl: '20261117a', // офисы, стекло
-  bld_d16_b: '20261117a', bld_d16_g: '20261117a', bld_d16_t: '20261117a', // 16-этажка
-  bld_tw_b: '20261117b', bld_tw_g: '20261117b', bld_tw_t: '20261117b', // точечная башня
-  bld_st3: '20261117a', bld_st4: '20261117a', // сталинка
-  ph_brick: '20261116b', ph_wood: '20261116b', ph_khata: '20261116b', ph_mansard: '20261116b', ph_dacha: '20261116b', ph_barrack: '20261116b', ph_yard: '20261116b', // частный сектор
+  bld_ii49: '20261117c', bld_hr_a: '20261117c', bld_hr_c: '20261117c', // свои дома: модули II-49, хрущёвки
+  bld_d12_b: '20261117c', bld_d12_g: '20261117c', bld_d12_t: '20261117c', // 12-этажка (кондиционеры на стене)
+  bld_of: '20261117c', bld_gl: '20261117c', // офисы, стекло
+  bld_d16_b: '20261117c', bld_d16_g: '20261117c', bld_d16_t: '20261117c', // 16-этажка
+  bld_tw_b: '20261117c', bld_tw_g: '20261117c', bld_tw_t: '20261117c', // точечная башня
+  bld_st3: '20261117c', bld_st4: '20261117c', // сталинка
+  ph_brick: '20261117c', ph_wood: '20261117c', ph_khata: '20261117c', ph_mansard: '20261117c', ph_dacha: '20261117c', ph_barrack: '20261117c', ph_yard: '20261117c', // частный сектор
   e_b2: '20261110b', e_b2_gear: '20261110b', // свой B-2A
   e_vulcan: '20261110c', e_vulcan_gear: '20261110c', // свой Vulcan B.2
   e_b1b: '20261112a', e_b1b_gear: '20261112a', // свой B-1B
@@ -857,6 +857,8 @@ async function load(name, base) {
       ? new THREE.MeshPhongMaterial({ color: new THREE.Color(f[0], f[1], f[2]).lerp(new THREE.Color(0.2, 0.26, 0.32), f[0] + f[1] + f[2] > 1.8 ? 0.8 : 0.4), /* белое «стекло» авторов - в тонированное, своё цветное - почти как есть */ transparent: true, opacity: Math.max(0.5, f[3]), specular: 0xffffff, shininess: 120, side: THREE.DoubleSide, depthWrite: false }) // стекло заметно: не меньше 0,5
       : new THREE.MeshPhongMaterial({ map, ...(nmap ? { normalMap: nmap, normalScale: new THREE.Vector2(1, -1) /* текстуры glTF не перевёрнуты (flipY = false), тангенсов у мешей нет - зелёный канал в three r128 надо инвертировать (как делает GLTFLoader) */ } : {}), color: m.fold ? new THREE.Color(1, 1, 1) : new THREE.Color(f[0], f[1], f[2]), specular: matte ? 0x0c0c0c : 0x3a3a3a, shininess: matte ? 10 : 38, side: THREE.DoubleSide, /* matte - краска техники без блеска */
         ...(m.mat.alphaMode === 'MASK' ? { alphaTest: m.mat.alphaCutoff ?? 0.5 } : {}), ...(m.vc || (m.ao && !/[?&]ao=0/.test(typeof location !== 'undefined' ? location.search : '')) ? { vertexColors: true } : {}) }); // ?ao=0 - без затенения (сравнение)
+    // свои дома: в B карты ORM - маска окон (отражение неба, city-render kitGlass); не в userData - clone() копирует его через JSON
+    if (MM.kit && pbr.metallicRoughnessTexture && tex[pbr.metallicRoughnessTexture.index]) Object.defineProperty(mat, 'kitOrm', { value: tex[pbr.metallicRoughnessTexture.index], enumerable: false });
     const rc = m.fold ? null : MM.recolor && MM.recolor[sub(m.name)]; // у слитых перекраска и яркость - уже в цвете вершин
     if (MM.bright && !glass && !m.fold) mat.color.multiplyScalar(MM.bright);
     if (rc != null) { mat.color.setHex(rc); mat.map = null; }

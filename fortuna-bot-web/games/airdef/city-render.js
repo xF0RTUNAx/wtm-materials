@@ -1513,7 +1513,7 @@ function nearHouses(G, scene, B, near, P, sh) {
   G.nearDirty = () => { lx = 1e9; }; // покров земли пришёл - пересчитать и стоящей камере
   // модуль набора пришёл: один меш (часть модели по имени), без упрощения и импостора - у набора свои *_lod1 (кольцо rIn…R)
   const kitAttach = (S, key, group) => {
-    if (KITGS.get(S.name) !== group) { KITGS.set(S.name, group); group.traverse((q) => { if (q.isMesh && !q.material.userData.kitM) { q.material.userData.kitM = 1; q.material.specular.setHex(0x0c0c0c); q.material.shininess = 10; if (G.winter) snowify(q.material); } }); if (dmgB.size || dmgH.size) kitDirty = true; } // все модули серии: матовые, зимой со снегом; задетые до прихода модели - дорисовать
+    if (KITGS.get(S.name) !== group) { KITGS.set(S.name, group); group.traverse((q) => { if (q.isMesh && !q.material.userData.kitM) { q.material.userData.kitM = 1; q.material.specular.setHex(0x0c0c0c); q.material.shininess = 10; if (G.winter) snowify(q.material); kitGlass(q.material); } }); if (dmgB.size || dmgH.size) kitDirty = true; } // все модули серии: матовые, зимой со снегом; задетые до прихода модели - дорисовать
     let c;
     if (S.part.startsWith('C:')) c = { geometry: ofCardGeo(), material: ofCardMat(S.part.slice(2), group), varM: true }; // плоскость фасада офиса / стекла
     else if (S.part.startsWith('V:')) { // варианты этажа одним набором: номер варианта экземпляра - в ячейке [0][3] матрицы (kitVarMat), чужие варианты - в точку
@@ -1546,6 +1546,31 @@ function nearHouses(G, scene, B, near, P, sh) {
     const d = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking }); d.onBeforeCompile = (sh) => { sh.vertexShader = KVAR_GLSL(sh.vertexShader); }; d.customProgramCacheKey = () => 'kitvard';
     m.userData.depthM = d; m0.userData.varMat = m; return m;
   };
+  // стёкла своих домов: маска окон - канал B карты ORM модели (сборщик, 2026-11-17); на стекле - отражение неба / земли по отражённому лучу
+  // (небо и земля - цвета полусферного света погоды) с силой по Френелю; у плоскостей фасада (ofCardMat, KG_CARD) - те же координаты атласа kUv
+  const KGU = { uGlSky: { value: new THREE.Color() }, uGlGnd: { value: new THREE.Color() } };
+  const kitGlass = (m) => {
+    const orm = m.kitOrm; if (!orm || m.userData.kitGl || /[?&]glass=0/.test(typeof location !== 'undefined' ? location.search : '')) return; m.userData.kitGl = 1;
+    if (G.hemi) { KGU.uGlSky.value = G.hemi.color; KGU.uGlGnd.value = G.hemi.groundColor; }
+    const prev = m.onBeforeCompile, pk = m.customProgramCacheKey(), U = { tOrm: { value: orm } };
+    m.onBeforeCompile = (sh, r) => {
+      if (prev) prev.call(m, sh, r); Object.assign(sh.uniforms, U, KGU);
+      sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nuniform sampler2D tOrm; uniform vec3 uGlSky, uGlGnd;')
+        .replace('#include <output_fragment>', `{
+  #ifdef KG_CARD
+  float wm = TXG(tOrm, kUv, dUx, dUy).b;
+  #else
+  float wm = texture2D(tOrm, vUv).b;
+  #endif
+  if (wm > 0.02) { vec3 Vv = normalize(vViewPosition), Rv = reflect(-Vv, normal); float up = dot(Rv, normalize((viewMatrix * vec4(0.0, 1.0, 0.0, 0.0)).xyz));
+    float fr = 0.04 + 0.96 * pow(1.0 - clamp(dot(normal, Vv), 0.0, 1.0), 5.0);
+    vec3 env = mix(uGlGnd * 0.55, uGlSky * mix(1.15, 0.8, clamp(up, 0.0, 1.0)), smoothstep(-0.15, 0.2, up));
+    outgoingLight = mix(outgoingLight, env, wm * clamp(0.22 + 0.7 * fr, 0.0, 0.85)); }
+}
+#include <output_fragment>`);
+    };
+    m.customProgramCacheKey = () => pk + 'kgl'; m.needsUpdate = true;
+  };
   // плоскость фасада офиса / стекла (дальний вид): шаг и этаж - в шейдере; грань шага *_lod1 вида (облицовка × вестибюль / рядовой / тех / верх) - прямоугольник
   // атласа (углы из модели: U00 - низ шага слева, ex - вдоль, ey - вверх). Матрица экземпляра: [0][3] - шагов, [1][3] - этажей, [2][3] - код (облицовка
   // + 8 · вестибюль + 16 · верхний этаж с парапетом); ячейки обнуляются перед умножением (и в проходе теней)
@@ -1576,7 +1601,7 @@ function nearHouses(G, scene, B, near, P, sh) {
   kUv = ko + fu * ex + fy * ey; dUx = dFdx(bx) * ex + dFdx(ym) / kh * ey; dUy = dFdy(bx) * ex + dFdy(ym) / kh * ey; }\n`;
     const m = m0.clone(), prev = m0.onBeforeCompile, pk = m0.customProgramCacheKey(); m.extensions = { derivatives: true, shaderTextureLOD: true };
     m.onBeforeCompile = (sh, r) => {
-      if (prev) prev.call(m, sh, r); Object.assign(sh.uniforms, U); sh.vertexShader = OFC_V(sh.vertexShader);
+      sh.fragmentShader = '#define KG_CARD\n' + sh.fragmentShader; if (prev) prev.call(m, sh, r); Object.assign(sh.uniforms, U); sh.vertexShader = OFC_V(sh.vertexShader);
       let fs = sh.fragmentShader.replace('#include <common>', `#include <common>\nvarying vec2 vCd; varying vec3 vCp; varying float vCw; uniform vec2 uK0[${NK}]; uniform vec2 uKX[${NK}]; uniform vec2 uKY[${NK}]; vec2 kUv, dUx, dUy;\n${C}#if __VERSION__ >= 300 || defined(GL_EXT_shader_texture_lod)\n#define TXG(t, uv, gx, gy) texture2DGradEXT(t, uv, gx, gy)\n#else\n#define TXG(t, uv, gx, gy) texture2D(t, uv)\n#endif`)
         .replace('#include <map_fragment>', FR + THREE.ShaderChunk.map_fragment.replace('texture2D( map, vUv )', 'TXG( map, kUv, dUx, dUy )'))
         .replace('#include <normalmap_pars_fragment>', THREE.ShaderChunk.normalmap_pars_fragment.replace(/dFdx\( vUv\.st \)/g, 'dUx').replace(/dFdy\( vUv\.st \)/g, 'dUy'))
@@ -1800,17 +1825,31 @@ function nearHouses(G, scene, B, near, P, sh) {
     if (!oDirty && key === oIn) return;
     oIn = key; oDirty = false; OFFO.fill(0);
     const all = new Map();
-    for (const s of key.split(',')) { if (!s) continue; const b = OFB[+s]; OFFO[b.bi] = 1; for (const [nm, a] of ofWalls(b)) { const k = b.M + '|' + nm; let q = all.get(k); if (!q) all.set(k, q = []); q.push(a); } }
+    for (const s of key.split(',')) { if (!s) continue; const b = OFB[+s]; OFFO[b.bi] = 1; for (const [nm, a] of ofWalls(b)) { const k = b.M + '|' + nm; let q = all.get(k); if (!q) all.set(k, q = []); q.push(a); (q.bs || (q.bs = [])).push(b.bi); } }
     for (const [k, P0] of oPool) if (!all.has(k)) { P0.m.count = 0; P0.m.visible = false; }
     for (const [k, parts] of all) {
       const [M, nm] = k.split('|'), src = KITGS.get(M).getObjectByName(nm); if (!src || !src.isMesh) continue;
       let n = 0; for (const a of parts) n += a.length / 16;
       let P0 = oPool.get(k);
       if (!P0 || P0.cap < n) { if (P0) { scene.remove(P0.m); P0.m.dispose(); } const cap = Math.max(16, Math.ceil(n * 1.5)), m = new THREE.InstancedMesh(src.geometry, src.material, cap); m.frustumCulled = false; m.castShadow = !!sh.cast; m.receiveShadow = !!sh.receive; m.userData.set = 'ofp:' + k; scene.add(m); oPool.set(k, P0 = { m, cap }); }
-      let o = 0; for (const a of parts) { P0.m.instanceMatrix.array.set(a, o); o += a.length; }
+      let o = 0; P0.segs = []; parts.forEach((a, j) => { P0.m.instanceMatrix.array.set(a, o); P0.segs.push(parts.bs[j], o, a.length); o += a.length; }); // segs: здание, начало, длина (окно ТВ)
       P0.m.count = n; P0.m.visible = n > 0; P0.m.instanceMatrix.needsUpdate = true;
     }
     lx = 1e9;
+  };
+  // окно ТВ: настоящие шаги - только зданий в радиусе окна от точки взгляда (остальной пул - у игрока, в окне не виден; его коробки и плоскости
+  // окно рисует само); буфер окна - свой у каждого меша пула, основной не трогаем
+  const ofPod = (at, R) => {
+    const kp = [];
+    for (const P0 of oPool.values()) {
+      if (!P0.m.visible || !P0.segs) continue;
+      if (!P0.pod || P0.pod.count < P0.cap) { P0.pod = new THREE.InstancedBufferAttribute(new Float32Array(P0.cap * 16), 16); P0.pod.setUsage(THREE.DynamicDrawUsage); }
+      const src = P0.m.instanceMatrix.array, dst = P0.pod.array; let o = 0;
+      for (let j = 0; j < P0.segs.length; j += 3) { const b = OFB[P0.segs[j]]; if ((b.cx - at.x) ** 2 + (b.cz - at.z) ** 2 > (R + b.R) ** 2) continue; dst.set(src.subarray(P0.segs[j + 1], P0.segs[j + 1] + P0.segs[j + 2]), o); o += P0.segs[j + 2]; }
+      kp.push(P0.m, P0.m.instanceMatrix, P0.m.count);
+      P0.m.instanceMatrix = P0.pod; P0.m.count = o / 16; P0.pod.needsUpdate = true;
+    }
+    return () => { for (let i = 0; i < kp.length; i += 3) { kp[i].instanceMatrix = kp[i + 1]; kp[i].count = kp[i + 2]; } };
   };
   // разрыв у офиса / стеклянной башни: шаги в радиусе - пролом (2a / 2b), дальше - стёкла (1g) или пожар (1f у мощных); углы стоят
   const ofHit = (p, R) => {
@@ -2061,9 +2100,10 @@ function nearHouses(G, scene, B, near, P, sh) {
       if (S.slot && !(S.slot === YARD && G.yardL)) U[S.slot] = R; // коробку площадки порта не рисуем и в окне ТВ: дальше R - бруски yardLayer от точки взгляда
     }
     if (G.yardL) G.yardL.pod(at, R);
+    const ofR = ofPod(at, R);
     const h0 = ENV.uHide.value.clone(); ENV.uHide.value.copy(at);
     return () => {
-      if (G.yardL) G.yardL.restore();
+      if (G.yardL) G.yardL.restore(); ofR();
       for (let i = 0; i < keep.length; i += 3) { const m = keep[i], S = sets.get(m.userData.set); m.instanceMatrix = m.userData.far ? S.imFar : m.userData.lo ? S.imLo : S.im; m.count = keep[i + 1]; m.visible = keep[i + 2]; }
       for (let i = 0; i < 32; i++) U[i] = mdl0[i];
       ENV.uHide.value.copy(h0);
