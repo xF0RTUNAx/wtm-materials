@@ -1136,7 +1136,7 @@ export async function loIndex(geo, ratio, err) {
 }
 // средний цвет модели (текстура × цвет материала, вес - число треугольников): им красится дальняя коробка того же вида,
 // чтобы при подходе коробка не сменялась моделью другого цвета. Текстура - уменьшенной копией 8×8 (среднее по ней)
-const MC = document.createElement('canvas'); MC.width = MC.height = 8;
+const MC = document.createElement('canvas'); MC.width = MC.height = 8; const MCC = new WeakMap(); // картинка → средний цвет
 function modelColor(group) {
   const ctx = MC.getContext('2d', { willReadFrequently: true }); let r = 0, g = 0, b = 0, wsum = 0;
   group.traverse((m) => {
@@ -1144,7 +1144,8 @@ function modelColor(group) {
     const w = (m.geometry.index ? m.geometry.index.count : m.geometry.attributes.position.count) / 3, c = m.material.color || new THREE.Color(1, 1, 1);
     let tr = 1, tg = 1, tb = 1; const img = m.material.map && m.material.map.image, sm = m.material.map && m.material.map.small;
     if (sm) { let a = 0, q = 0, e = 0; for (let i = 0; i < sm.length; i += 3) { a += sm[i]; q += sm[i + 1]; e += sm[i + 2]; } const n = sm.length / 3; tr = a / n; tg = q / n; tb = e / n; } // сжатая текстура: средний цвет - по уменьшенной копии (линейный, models.js smallTex)
-    else if (img) { try { ctx.clearRect(0, 0, 8, 8); ctx.drawImage(img, 0, 0, 8, 8); const d = ctx.getImageData(0, 0, 8, 8).data; let a = 0, q = 0, e = 0; for (let i = 0; i < d.length; i += 4) { a += d[i]; q += d[i + 1]; e += d[i + 2]; } const n = d.length / 4 * 255, L = (x) => (x <= 0.04045 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4)); tr = L(a / n); tg = L(q / n); tb = L(e / n); } catch (_) { /* нет доступа к картинке */ } }
+    else if (img && MCC.has(img)) [tr, tg, tb] = MCC.get(img); // та же картинка у сотен модулей набора - читаем один раз
+    else if (img) { try { ctx.clearRect(0, 0, 8, 8); ctx.drawImage(img, 0, 0, 8, 8); const d = ctx.getImageData(0, 0, 8, 8).data; let a = 0, q = 0, e = 0; for (let i = 0; i < d.length; i += 4) { a += d[i]; q += d[i + 1]; e += d[i + 2]; } const n = d.length / 4 * 255, L = (x) => (x <= 0.04045 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4)); tr = L(a / n); tg = L(q / n); tb = L(e / n); MCC.set(img, [tr, tg, tb]); } catch (_) { /* нет доступа к картинке */ } }
     r += c.r * tr * w; g += c.g * tg * w; b += c.b * tb * w; wsum += w;
   });
   return wsum ? { r: r / wsum, g: g / wsum, b: b / wsum } : null;
