@@ -65,7 +65,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
   const OLD = { air: ['ctl', 'bomb', 'lgb', 'agm', 'arm', 'evade'], def: ['d_plan', 'd_op', 'd_gun', 'd_ir', 'd_arm', 'd_short'] };
   function lessonsDone() { const l = stats().lessons || {}, out = { ...l }; for (const sd in OLD) OLD[sd].forEach((id, i) => { if (l[sd + i]) out[id] = 1; }); return out; }
   // панель задания справа (Mark 2026-10-25): при запуске убрана, выезжает при выборе режима, «›» - убрать; открыта ли - на сеанс вкладки
-  // (смена режима с другой картой перезагружает страницу - панель должна остаться открытой); онлайн по ссылке - сразу открыта
+  // (перезагрузка под карту - при старте боя и в «Съёмке»: панель должна остаться открытой); онлайн по ссылке - сразу открыта
   const mpKey = 'fortuna_airdef_mpanel';
   function panel(on) { document.body.classList.toggle('mpOpen', on); if (C.hangar && C.hangar.panelChanged) C.hangar.panelChanged(); try { sessionStorage.setItem(mpKey, on ? '1' : '0'); } catch (_) { /* нет хранилища - только на эту загрузку */ } }
   { const q = new URLSearchParams(location.search), must = q.get('mp') === '1' || q.has('ad'); let on = q.get('oldbg') !== '1'; /* ангар: подвеска на виду, «›» - убрать */ try { const st = sessionStorage.getItem(mpKey); on = st === '1' || (on && st !== '0'); } catch (_) { /* как есть */ } panel(on || must); }

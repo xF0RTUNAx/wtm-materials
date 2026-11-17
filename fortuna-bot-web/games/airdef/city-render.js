@@ -1549,14 +1549,15 @@ function nearHouses(G, scene, B, near, P, sh) {
   };
   // стёкла своих домов: маска окон - канал B карты ORM модели (сборщик, 2026-11-17); на стекле - отражение неба / земли по отражённому лучу
   // (небо и земля - цвета полусферного света погоды) с силой по Френелю; у плоскостей фасада (ofCardMat, KG_CARD) - те же координаты атласа kUv
-  const KGU = { uGlSky: { value: new THREE.Color() }, uGlGnd: { value: new THREE.Color() } };
+  const KGU = { uGlSky: { value: new THREE.Color() }, uGlGnd: { value: new THREE.Color() }, uGlI: { get value() { return G.hemi ? Math.min(1.2, G.hemi.intensity) : 1; } } }; // сила полусферного света - яркость отражения
   const kitGlass = (m) => {
-    const orm = m.kitOrm; if (!orm || m.userData.kitGl || /[?&]glass=0/.test(typeof location !== 'undefined' ? location.search : '')) return; m.userData.kitGl = 1;
+    // телефоны без теней («Средний», «Низкий») - без стёкол: карты ORM - лишние ~20 МБ видеопамяти; материал без текстур - без uv в шейдере
+    const orm = m.kitOrm; if (!orm || (!m.map && !m.normalMap) || (TOUCH_GT && !P.shadows) || m.userData.kitGl || /[?&]glass=0/.test(typeof location !== 'undefined' ? location.search : '')) return; m.userData.kitGl = 1;
     if (G.hemi) { KGU.uGlSky.value = G.hemi.color; KGU.uGlGnd.value = G.hemi.groundColor; }
     const prev = m.onBeforeCompile, pk = m.customProgramCacheKey(), U = { tOrm: { value: orm } };
     m.onBeforeCompile = (sh, r) => {
       if (prev) prev.call(m, sh, r); Object.assign(sh.uniforms, U, KGU);
-      sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nuniform sampler2D tOrm; uniform vec3 uGlSky, uGlGnd;')
+      sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nuniform sampler2D tOrm; uniform vec3 uGlSky, uGlGnd; uniform float uGlI;')
         .replace('#include <output_fragment>', `{
   #ifdef KG_CARD
   float wm = TXG(tOrm, kUv, dUx, dUy).b;
@@ -1565,7 +1566,7 @@ function nearHouses(G, scene, B, near, P, sh) {
   #endif
   if (wm > 0.02) { vec3 Vv = normalize(vViewPosition), Rv = reflect(-Vv, normal); float up = dot(Rv, normalize((viewMatrix * vec4(0.0, 1.0, 0.0, 0.0)).xyz));
     float fr = 0.04 + 0.96 * pow(1.0 - clamp(dot(normal, Vv), 0.0, 1.0), 5.0);
-    vec3 env = mix(uGlGnd * 0.55, uGlSky * mix(1.15, 0.8, clamp(up, 0.0, 1.0)), smoothstep(-0.15, 0.2, up));
+    vec3 env = mix(uGlGnd * 0.55, uGlSky * mix(1.15, 0.8, clamp(up, 0.0, 1.0)), smoothstep(-0.15, 0.2, up)) * uGlI;
     outgoingLight = mix(outgoingLight, env, wm * clamp(0.22 + 0.7 * fr, 0.0, 0.85)); }
 }
 #include <output_fragment>`);
@@ -1847,10 +1848,10 @@ function nearHouses(G, scene, B, near, P, sh) {
       if (!P0.pod || P0.pod.count < P0.cap) { P0.pod = new THREE.InstancedBufferAttribute(new Float32Array(P0.cap * 16), 16); P0.pod.setUsage(THREE.DynamicDrawUsage); }
       const src = P0.m.instanceMatrix.array, dst = P0.pod.array; let o = 0;
       for (let j = 0; j < P0.segs.length; j += 3) { const b = OFB[P0.segs[j]]; if ((b.cx - at.x) ** 2 + (b.cz - at.z) ** 2 > (R + b.R) ** 2) continue; dst.set(src.subarray(P0.segs[j + 1], P0.segs[j + 1] + P0.segs[j + 2]), o); o += P0.segs[j + 2]; }
-      kp.push(P0.m, P0.m.instanceMatrix, P0.m.count);
-      P0.m.instanceMatrix = P0.pod; P0.m.count = o / 16; P0.pod.needsUpdate = true;
+      kp.push(P0.m, P0.m.instanceMatrix, P0.m.count, P0.m.visible);
+      P0.m.instanceMatrix = P0.pod; P0.m.count = o / 16; P0.m.visible = o > 0; if (o) { P0.pod.updateRange.count = o; P0.pod.needsUpdate = true; } // на видеочип - только занятая часть
     }
-    return () => { for (let i = 0; i < kp.length; i += 3) { kp[i].instanceMatrix = kp[i + 1]; kp[i].count = kp[i + 2]; } };
+    return () => { for (let i = 0; i < kp.length; i += 4) { kp[i].instanceMatrix = kp[i + 1]; kp[i].count = kp[i + 2]; kp[i].visible = kp[i + 3]; } };
   };
   // разрыв у офиса / стеклянной башни: шаги в радиусе - пролом (2a / 2b), дальше - стёкла (1g) или пожар (1f у мощных); углы стоят
   const ofHit = (p, R) => {

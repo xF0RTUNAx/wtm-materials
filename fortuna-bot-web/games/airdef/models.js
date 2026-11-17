@@ -858,7 +858,7 @@ async function load(name, base) {
       : new THREE.MeshPhongMaterial({ map, ...(nmap ? { normalMap: nmap, normalScale: new THREE.Vector2(1, -1) /* текстуры glTF не перевёрнуты (flipY = false), тангенсов у мешей нет - зелёный канал в three r128 надо инвертировать (как делает GLTFLoader) */ } : {}), color: m.fold ? new THREE.Color(1, 1, 1) : new THREE.Color(f[0], f[1], f[2]), specular: matte ? 0x0c0c0c : 0x3a3a3a, shininess: matte ? 10 : 38, side: THREE.DoubleSide, /* matte - краска техники без блеска */
         ...(m.mat.alphaMode === 'MASK' ? { alphaTest: m.mat.alphaCutoff ?? 0.5 } : {}), ...(m.vc || (m.ao && !/[?&]ao=0/.test(typeof location !== 'undefined' ? location.search : '')) ? { vertexColors: true } : {}) }); // ?ao=0 - без затенения (сравнение)
     // свои дома: в B карты ORM - маска окон (отражение неба, city-render kitGlass); не в userData - clone() копирует его через JSON
-    if (MM.kit && pbr.metallicRoughnessTexture && tex[pbr.metallicRoughnessTexture.index]) Object.defineProperty(mat, 'kitOrm', { value: tex[pbr.metallicRoughnessTexture.index], enumerable: false });
+    if (MM.kit && !glass && pbr.metallicRoughnessTexture && tex[pbr.metallicRoughnessTexture.index]) Object.defineProperty(mat, 'kitOrm', { value: tex[pbr.metallicRoughnessTexture.index], enumerable: false });
     const rc = m.fold ? null : MM.recolor && MM.recolor[sub(m.name)]; // у слитых перекраска и яркость - уже в цвете вершин
     if (MM.bright && !glass && !m.fold) mat.color.multiplyScalar(MM.bright);
     if (rc != null) { mat.color.setHex(rc); mat.map = null; }
