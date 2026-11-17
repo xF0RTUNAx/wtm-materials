@@ -1,22 +1,22 @@
 // Главное меню: слева - режимы, справа - «папка задания» (настройки режима и старт), Арсенал / Справка / Настройки /
 // Об игре - панель поверх. Фон - готовые кадры (menubg.js), пока их нет - живой бой (director.js).
-import { LANG, LANGS, setLang, tr, trIf, trDom } from './i18n.js?v=20261117a';
-import { CITY, ZONE } from './city.js?v=20261117a';
-import { AG, SAM, ERAS, LOADOUTS, DEFENSE, SAM_TYPE, AG_KIND, SAM_COST, PLANES, loadoutsOf, loadoutRole, loadoutTargets, ROLE_NAME, COMBINED, CARRIERS, MULTI, multiBudget, multiItems } from './arsenal.js?v=20261117a';
-import { combinedOk, COMBINED_NAME, levelIn, levelOfSams } from './sim/combined.js?v=20261117a';
-import { MODES } from './sim/strike.js?v=20261117a';
-import { WEATHERS } from '../drone/world.js?v=20261117a';
-import { WINTER_KEYS } from './winter-render.js?v=20261117a';
-import { LESSONS } from './training.js?v=20261117a';
-import { MODEL_CREDITS, modelUrls, planeMeta, stationsFor, podBuiltIn } from './models.js?v=20261117a';
-import { storageInfo, prefetchAll, prefetchSize, offlineOk } from './offline.js?v=20261117a';
-import { openLayoutEditor } from './layout.js?v=20261117a';
+import { LANG, LANGS, setLang, tr, trIf, trDom } from './i18n.js?v=20261117b';
+import { CITY, ZONE } from './city.js?v=20261117b';
+import { AG, SAM, ERAS, LOADOUTS, DEFENSE, SAM_TYPE, AG_KIND, SAM_COST, PLANES, loadoutsOf, loadoutRole, loadoutTargets, ROLE_NAME, COMBINED, CARRIERS, MULTI, multiBudget, multiItems } from './arsenal.js?v=20261117b';
+import { combinedOk, COMBINED_NAME, levelIn, levelOfSams } from './sim/combined.js?v=20261117b';
+import { MODES } from './sim/strike.js?v=20261117b';
+import { WEATHERS } from '../drone/world.js?v=20261117b';
+import { WINTER_KEYS } from './winter-render.js?v=20261117b';
+import { LESSONS } from './training.js?v=20261117b';
+import { MODEL_CREDITS, modelUrls, planeMeta, stationsFor, podBuiltIn } from './models.js?v=20261117b';
+import { storageInfo, prefetchAll, prefetchSize, offlineOk } from './offline.js?v=20261117b';
+import { openLayoutEditor } from './layout.js?v=20261117b';
 import { orientGate } from '../orient-warn.js?v=20261011a';
-import { ECO_SELECT, setAudioEcoMode } from '../drone/audio.js?v=20261117a';
-import { photoItems } from './photo.js?v=20261117a';
-import { guideChapters } from './guide.js?v=20261117a';
-import { iconize, ico, capsHtml } from './icons.js?v=20261117a';
-import { NODE, owned, researched, canBuy, canResearch, retiredHidden } from './progress.js?v=20261117a';
+import { ECO_SELECT, setAudioEcoMode } from '../drone/audio.js?v=20261117b';
+import { photoItems } from './photo.js?v=20261117b';
+import { guideChapters } from './guide.js?v=20261117b';
+import { iconize, ico, capsHtml } from './icons.js?v=20261117b';
+import { NODE, owned, researched, canBuy, canResearch, retiredHidden } from './progress.js?v=20261117b';
 
 const LOC = LANG === 'en' ? 'en-US' : 'ru-RU'; // разделитель тысяч в числах
 const GAMES = [
@@ -53,7 +53,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
   // ангар (hangar.js): какой самолёт смотрим в ленте; настройки вылета свёрнуты в одну строку над подвеской
   let hgPlane = null, hgSet = false, opSlot = 1, hgSam = null; // hgSam - комплекс, открытый крупно в «Обороне» ангара // opSlot - какой вылет «Операции» выбирается в ленте ангара (1 - охота за ПВО, 2 - штурмовка)
   // таблички подвесок (Mark 2026-11-10, вариант «Таблички»): миниатюра, название и количество; описаний оружия здесь нет - они в «Арсенале»
-  const wpnTiles = (L) => L.items.map(([k, n]) => `<span class="hgt${C.hangar && C.hangar.focused() === k ? ' fo' : ''}" data-fw="${k}"><span class="im"><img src="airdef/thumbs/wpn_${k}.webp?v=20261117a" alt="" onerror="this.style.visibility='hidden'"></span><em>${trIf(AG[k].short)}<u>×${n}</u></em></span>`).join('') + (L.pod ? `<span class="hgt pod"><span class="im">${ico('target')}</span><em>${podBuiltIn(L.plane) ? tr('прицел') : tr('контейнер')}</em></span>` : ''); // встроенный прицел («Кайра», «Платан», EOTS) - модель без контейнера (pod: null)
+  const wpnTiles = (L) => L.items.map(([k, n]) => `<span class="hgt${C.hangar && C.hangar.focused() === k ? ' fo' : ''}" data-fw="${k}"><span class="im"><img src="airdef/thumbs/wpn_${k}.webp?v=20261117b" alt="" onerror="this.style.visibility='hidden'"></span><em>${trIf(AG[k].short)}<u>×${n}</u></em></span>`).join('') + (L.pod ? `<span class="hgt pod"><span class="im">${ico('target')}</span><em>${podBuiltIn(L.plane) ? tr('прицел') : tr('контейнер')}</em></span>` : ''); // встроенный прицел («Кайра», «Платан», EOTS) - модель без контейнера (pod: null)
 
   function renderModeSel() {
     $('modeSel').innerHTML = GAMES.map((g) => `<button data-g="${g.k}" class="${setup.game === g.k ? 'on' : ''}"><b>${g.name}</b><span>${g.desc}</span></button>`).join('');
@@ -141,13 +141,13 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
         if (!seadOk.some(([, i]) => i === setup.lo1)) setup.lo1 = seadOk[0][1];
         if (!strikeOk.some(([, i]) => i === setup.lo2)) setup.lo2 = strikeOk[0][1];
         if (hg) { // ангар (Mark 2026-11-17, макет «Таблички + лента»): в панели две таблички вылетов - самолёт и оружие миниатюрами; самолёты выбранного вылета - в ленте внизу
-          const opTile = (L) => `<span class="hgt hgpl"><span class="im"><img src="airdef/thumbs/air_${L.plane}.webp?v=20261117a" alt="" onerror="this.style.visibility='hidden'"></span><em>${trIf(PLANES[L.plane])}</em></span>`;
+          const opTile = (L) => `<span class="hgt hgpl"><span class="im"><img src="airdef/thumbs/air_${L.plane}.webp?v=20261117b" alt="" onerror="this.style.visibility='hidden'"></span><em>${trIf(PLANES[L.plane])}</em></span>`;
           h += [[1, setup.lo1, 'sead', tr('Охота за ПВО')], [2, setup.lo2, 'strike', tr('Штурмовка')]].map(([n, i, rk, rn]) => { const L = LOADOUTS[setup.era][i], inb = planeMeta(L.plane) && stationsFor(L.plane, L.items.map(([k]) => k)).internal;
             return `<div class="opt hgl hgop ${opSlot === n ? 'on' : ''}" role="button" tabindex="0" data-ops="${n}">${opSlot === n ? '<i class="pin"></i>' : ''}<span class="hgh2"><em class="opn">${n}</em><b class="${rk}">${rn}</b>${inb ? `<i>${tr('в отсеках')}</i>` : ''}</span><span class="hgr${inb || opSlot !== n ? ' inb' : ''}">${opTile(L)}${wpnTiles(L)}</span></div>`; }).join('');
           h += `<p class="hint">${tr('Разбитое в 1-м вылете остаётся разбитым · +300 за два возвращения')}</p>`;
           const pool = opSlot === 1 ? sead : strike, cur = opSlot === 1 ? setup.lo1 : setup.lo2;
           $('hgStrip').innerHTML = pool.map(([L, i]) => { const miss = can([L, i]) ? [] : C.progress.loadoutMissing(L);
-            return `<button class="hgc op${i === cur && !miss.length ? ' on' : ''}${miss.length ? ' lock' : ''}" ${miss.length ? `data-need="${miss[0].id}"` : `data-ol="${i}"`}><b>${miss.length ? ico('lock') + ' ' : ''}${trIf(PLANES[L.plane])}</b><img src="airdef/thumbs/air_${L.plane}.webp?v=20261117a" alt="" loading="lazy"><span class="hgw">${L.items.map(([k, n]) => `<span><img src="airdef/thumbs/wpn_${k}.webp?v=20261117a" alt="" onerror="this.style.visibility='hidden'"><u>×${n}</u></span>`).join('')}</span></button>`; }).join('');
+            return `<button class="hgc op${i === cur && !miss.length ? ' on' : ''}${miss.length ? ' lock' : ''}" ${miss.length ? `data-need="${miss[0].id}"` : `data-ol="${i}"`}><b>${miss.length ? ico('lock') + ' ' : ''}${trIf(PLANES[L.plane])}</b><img src="airdef/thumbs/air_${L.plane}.webp?v=20261117b" alt="" loading="lazy"><span class="hgw">${L.items.map(([k, n]) => `<span><img src="airdef/thumbs/wpn_${k}.webp?v=20261117b" alt="" onerror="this.style.visibility='hidden'"><u>×${n}</u></span>`).join('')}</span></button>`; }).join('');
           const sel = $('hgStrip').querySelector && $('hgStrip').querySelector('.hgc.on'); if (sel && sel.scrollIntoView) sel.scrollIntoView({ block: 'nearest', inline: 'nearest' });
         } else {
           h += `<p class="hint">${tr('Сначала подавить ПВО, потом бить по городу. Разбитое в первом вылете остаётся разбитым, уцелевшие комплексы перезарядятся. Очки считаются за оба вылета, +300 за два возвращения.')}</p>`;
@@ -163,7 +163,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
         if (!ownOpen.length) { C.realBlock = true; C.realNeed = C.progress.loadoutMissing(own[0][0])[0].id; }
         h += own.map(([L, i]) => { const miss = can([L, i]) ? [] : C.progress.loadoutMissing(L), onn = i === setup.lo && !miss.length;
           return `<div class="opt hgl ${onn ? 'on' : ''} ${miss.length ? 'lock' : ''}" role="button" tabindex="0" ${miss.length ? `data-need="${miss[0].id}"` : `data-lo="${i}"`}>${onn ? '<i class="pin"></i>' : ''}<span class="hgh2"><b>${trIf(ROLE_NAME[loadoutRole(L)])}</b>${miss.length ? `<i class="need">${ico('lock')} ${C.progress.needText(miss)}</i>` : planeMeta(L.plane) && stationsFor(L.plane, L.items.map(([k]) => k)).internal ? `<i>${tr('в отсеках')}</i>` : ''}</span><span class="hgr${planeMeta(L.plane) && stationsFor(L.plane, L.items.map(([k]) => k)).internal ? ' inb' : ''}">${wpnTiles(L)}</span></div>`; }).join('');
-        $('hgStrip').innerHTML = planes.map((p) => { const lk = !mine.some((x) => x[0].plane === p && can(x)); return `<button class="hgc${p === hgPlane ? ' on' : ''}${lk ? ' lock' : ''}" data-hgp="${p}"><b>${lk ? ico('lock') + ' ' : ''}${trIf(PLANES[p])}</b><img src="airdef/thumbs/air_${p}.webp?v=20261117a" alt="" loading="lazy"></button>`; }).join('');
+        $('hgStrip').innerHTML = planes.map((p) => { const lk = !mine.some((x) => x[0].plane === p && can(x)); return `<button class="hgc${p === hgPlane ? ' on' : ''}${lk ? ' lock' : ''}" data-hgp="${p}"><b>${lk ? ico('lock') + ' ' : ''}${trIf(PLANES[p])}</b><img src="airdef/thumbs/air_${p}.webp?v=20261117b" alt="" loading="lazy"></button>`; }).join('');
         const sel = $('hgStrip').querySelector && $('hgStrip').querySelector('.hgc.on'); if (sel && sel.scrollIntoView) sel.scrollIntoView({ block: 'nearest', inline: 'nearest' });
       } else h += mine.map((x) => loBtn(x, 'data-lo', x[1] === setup.lo)).join('') + `<p class="hint">${tr('«Охота за ПВО» - уничтожить комплексы с РЛС, «штурмовка» - цели города.')}</p>`;
       if (!hg) { const L = LOADOUTS[setup.era][setup.op ? setup.lo1 : setup.lo]; // в ангаре описаний оружия нет (Mark 2026-11-10)
@@ -180,11 +180,11 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
       if (!list.some(([k]) => k === hgSam)) hgSam = list[0][0];
       const S = SAM[hgSam], lk = lockOf(hgSam), km = (m) => tr('{0} км', [(m / 1000).toFixed(m < 10000 ? 1 : 0).replace('.0', '')]);
       h += `<div class="opt hgl on dsam${lk ? ' lock' : ''}" ${lk ? `data-need="pvo:${hgSam}"` : ''}><span class="hgh2"><b>${lk ? ico('lock') + ' ' : ''}${trIf(S.short || S.name)}</b>${capsHtml(S, 'def')}<i class="cost">${SAM_COST[hgSam]}</i></span>
-        <img class="dpic" src="airdef/thumbs/pvo_${hgSam}.webp?v=20261117a" alt="" onerror="this.style.visibility='hidden'">
+        <img class="dpic" src="airdef/thumbs/pvo_${hgSam}.webp?v=20261117b" alt="" onerror="this.style.visibility='hidden'">
         <span class="dst"><span><b>${km(S.rmax)}</b><small>${tr('дальность')}</small></span><span><b>${km(S.hmax)}</b><small>${tr('высота')}</small></span><span class="t-${S.type}"><b>${TT[S.type] || ''}</b><small>${tr('наведение')}</small></span></span>
         ${lk ? `<i class="need">${tr('в «Реализме» - после покупки в «Исследованиях»')}</i>` : ''}</div>`;
       $('hgStrip').innerHTML = list.map(([k, s]) => { const l = lockOf(k);
-        return `<button class="hgc sam${k === hgSam ? ' on' : ''}${l ? ' lock' : ''}" data-sam="${k}"><b>${l ? ico('lock') + ' ' : ''}${trIf(s.short || s.name)}</b><img src="airdef/thumbs/pvo_${k}.webp?v=20261117a" alt="" loading="lazy"><span class="dft"><i class="t-${s.type}">${TT[s.type] || ''}</i><u>${SAM_COST[k]}</u></span></button>`; }).join('');
+        return `<button class="hgc sam${k === hgSam ? ' on' : ''}${l ? ' lock' : ''}" data-sam="${k}"><b>${l ? ico('lock') + ' ' : ''}${trIf(s.short || s.name)}</b><img src="airdef/thumbs/pvo_${k}.webp?v=20261117b" alt="" loading="lazy"><span class="dft"><i class="t-${s.type}">${TT[s.type] || ''}</i><u>${SAM_COST[k]}</u></span></button>`; }).join('');
       const sel = $('hgStrip').querySelector && $('hgStrip').querySelector('.hgc.on'); if (sel && sel.scrollIntoView) sel.scrollIntoView({ block: 'nearest', inline: 'nearest' });
     } else {
       // последняя волна - «Мульти-волна» (если у атакующей стороны в эпохе есть чем ударить)
@@ -215,15 +215,15 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
     if (ps === 'air') {
       const mine = loadoutsOf(setup.era, att).filter(([L, i]) => !L.heli && (!retiredHidden(C.progress && C.progress.P, L.plane) || (!(C.progress && C.progress.P) && i === setup.lo)));
       if (!mine.some(([, i]) => i === setup.lo)) setup.lo = mine[0][1];
-      strip = mine.map(([L, i]) => `<button class="hgc op${i === setup.lo ? ' on' : ''}" data-plo="${i}"><b>${trIf(PLANES[L.plane])}</b><img src="airdef/thumbs/air_${L.plane}.webp?v=20261117a" alt="" loading="lazy"><span class="hgw">${L.items.map(([k, n]) => `<span><img src="airdef/thumbs/wpn_${k}.webp?v=20261117a" alt="" onerror="this.style.visibility='hidden'"><u>×${n}</u></span>`).join('')}</span></button>`).join('');
+      strip = mine.map(([L, i]) => `<button class="hgc op${i === setup.lo ? ' on' : ''}" data-plo="${i}"><b>${trIf(PLANES[L.plane])}</b><img src="airdef/thumbs/air_${L.plane}.webp?v=20261117b" alt="" loading="lazy"><span class="hgw">${L.items.map(([k, n]) => `<span><img src="airdef/thumbs/wpn_${k}.webp?v=20261117b" alt="" onerror="this.style.visibility='hidden'"><u>×${n}</u></span>`).join('')}</span></button>`).join('');
     } else if (ps === 'def') {
       const list = Object.entries(SAM).filter(([, s]) => s.side === setup.side && s.era <= setup.era && s.type !== 'jammer');
       if (!list.some(([k]) => k === setup.psam)) setup.psam = list[0][0];
-      strip = list.map(([k, s]) => `<button class="hgc sam${k === setup.psam ? ' on' : ''}" data-psam="${k}"><b>${trIf(s.short || s.name)}</b><img src="airdef/thumbs/pvo_${k}.webp?v=20261117a" alt="" loading="lazy"></button>`).join('');
+      strip = list.map(([k, s]) => `<button class="hgc sam${k === setup.psam ? ' on' : ''}" data-psam="${k}"><b>${trIf(s.short || s.name)}</b><img src="airdef/thumbs/pvo_${k}.webp?v=20261117b" alt="" loading="lazy"></button>`).join('');
     } else {
       const items = photoItems(att);
       if (!items.some(([k]) => k === setup.pmun) && items.length) setup.pmun = items[0][0];
-      strip = items.map(([k]) => `<button class="hgc sam${k === setup.pmun ? ' on' : ''}" data-pmun="${k}"><b>${trIf(AG[k].short || AG[k].name)}</b><img src="airdef/thumbs/${AG[k].recon ? SIDE_PIC[att].stages[0] : 'strike_' + k}.webp?v=20261117a" alt="" loading="lazy" onerror="this.onerror=null;this.src='airdef/thumbs/wpn_${k}.webp?v=20261117a'"></button>`).join('');
+      strip = items.map(([k]) => `<button class="hgc sam${k === setup.pmun ? ' on' : ''}" data-pmun="${k}"><b>${trIf(AG[k].short || AG[k].name)}</b><img src="airdef/thumbs/${AG[k].recon ? SIDE_PIC[att].stages[0] : 'strike_' + k}.webp?v=20261117b" alt="" loading="lazy" onerror="this.onerror=null;this.src='airdef/thumbs/wpn_${k}.webp?v=20261117b'"></button>`).join('');
       if (!items.length) h += `<p class="hint">${tr('В этом ранге у этой стороны нечего снять - выберите другой ранг.')}</p>`;
     }
     $('hgStrip').innerHTML = strip;
@@ -301,7 +301,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
   // ── плитки «Мульти-волны» и «Съёмки» в ангаре (Mark 2026-11-17, макеты «Этапы волны» и «Плитки»): картинки - юниты выбранной стороны ──
   const SIDE_PIC = { east: { air: 'air_e_su24', pvo: 'pvo_s300', wave: ['strike_kalibr', 'strike_shahed'], stages: ['strike_shahed', 'strike_kh55d', 'strike_kalibr', 'strike_iskander'] },
     west: { air: 'air_f16', pvo: 'pvo_patriot', wave: ['strike_tomahawk', 'strike_uav_w'], stages: ['strike_uav_w', 'strike_quail', 'strike_tomahawk', 'strike_atacms'] } };
-  const thumb = (n, st) => `<img src="airdef/thumbs/${n}.webp?v=20261117a" alt="" style="${st || ''}" onerror="this.style.visibility='hidden'">`;
+  const thumb = (n, st) => `<img src="airdef/thumbs/${n}.webp?v=20261117b" alt="" style="${st || ''}" onerror="this.style.visibility='hidden'">`;
   const ptile = (v, cur, pics, l) => `<button data-v="${v}" class="${String(v) === String(cur) ? 'on' : ''}"><span class="opics">${pics}</span><em>${l}</em></button>`;
   const STAR_SEG = { east: '<svg class="ic star" viewBox="0 0 24 24"><path fill="#d8332a" stroke="#f3e7c8" stroke-width="1.2" d="M12 1.8l2.9 7.2 7.6.4-5.9 4.9 2 7.5L12 17.6l-6.6 4.2 2-7.5-5.9-4.9 7.6-.4z"/></svg>',
     west: '<svg class="ic star" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#28427a" stroke="#f3e7c8" stroke-width="1.2"/><path fill="#fff" d="M12 4.2l2 5 5.3.3-4.1 3.4 1.4 5.2L12 15.2l-4.6 2.9 1.4-5.2-4.1-3.4 5.3-.3z"/></svg>' };
