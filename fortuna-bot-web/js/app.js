@@ -1239,7 +1239,7 @@ async function renderFeedTab(mount) {
 
   const listMount = document.getElementById("feed-list-mount");
   try {
-    const rows = await fetchTable("activity_feed", "select=*&order=created_at.desc&limit=30");
+    const rows = await fetchTable("activity_feed", "select=id,event_type,detail,created_at&order=created_at.desc&limit=30");
     listMount.innerHTML = rows.length
       ? `<div class="feed-list">${rows
           .map(
