@@ -2033,6 +2033,17 @@ function nearHouses(G, scene, B, near, P, sh) {
   // модели за спиной не рисуются ни в кадре, ни в тенях, ни в окне контейнера
   let lx = 1e9, lz = 1e9, nk = 0;
   const FR = [new THREE.Frustum(), new THREE.Frustum()], PM = new THREE.Matrix4(), lastM = new Float32Array(16);
+  // сфера клетки сетки набора (все её экземпляры со своими радиусами) - для отсева клетки целиком по полю зрения; считается один раз
+  const cellB = (S, k, cell) => {
+    let m = S.cb; if (!m) m = S.cb = new Map(); let b = m.get(k); if (b) return b;
+    const C3 = S.cxyz; let x0 = 1e9, y0 = 1e9, z0 = 1e9, x1 = -1e9, y1 = -1e9, z1 = -1e9;
+    for (let q = 0; q < cell.length; q++) { const j = cell[q] * 3; x0 = Math.min(x0, C3[j]); x1 = Math.max(x1, C3[j]); y0 = Math.min(y0, C3[j + 1]); y1 = Math.max(y1, C3[j + 1]); z0 = Math.min(z0, C3[j + 2]); z1 = Math.max(z1, C3[j + 2]); }
+    const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, cz = (z0 + z1) / 2; let r = 0;
+    for (let q = 0; q < cell.length; q++) { const j = cell[q]; r = Math.max(r, Math.hypot(C3[j * 3] - cx, C3[j * 3 + 1] - cy, C3[j * 3 + 2] - cz) + S.rad[j]); }
+    b = new Float32Array([cx, cy, cz, r]); m.set(k, b); return b;
+  };
+  const CELLC = typeof location === 'undefined' || !/[?&]cc=0/.test(location.search); // ?cc=0 - без отсева клеток (сравнение)
+  const cellVis = (b, nf) => { for (let f = 0; f < nf; f++) { const pl = FR[f].planes; let v = true; for (let k = 0; k < 6; k++) { const q = pl[k]; if (q.normal.x * b[0] + q.normal.y * b[1] + q.normal.z * b[2] + q.constant < -b[3]) { v = false; break; } } if (v) return true; } return false; };
   G.near = (cam, cams) => {
     const p = cam.position;
     if ((++nk & 1) && lx < 1e8 && Math.abs(p.x - lx) < 120 && Math.abs(p.z - lz) < 120) return; // через кадр (запас по краям поля зрения - 15 м); резкий скачок камеры - сразу
@@ -2048,7 +2059,8 @@ function nearHouses(G, scene, B, near, P, sh) {
       const af = S.far ? S.imFar.array : null, RM = af ? S.Rf : S.R, RM2 = RM * RM; // вдали - упрощённая копия (до Rf)
       const g = S.gb, ix0 = Math.max(g[0], Math.floor((p.x - RM) / GC)), ix1 = Math.min(g[1], Math.floor((p.x + RM) / GC)), iz0 = Math.max(g[2], Math.floor((p.z - RM) / GC)), iz1 = Math.min(g[3], Math.floor((p.z + RM) / GC));
       for (let ix = ix0; ix <= ix1; ix++) for (let iz = iz0; iz <= iz1; iz++) {
-      const cell = S.grid.get(gkey(ix, iz)); if (!cell) continue;
+      const ck = gkey(ix, iz), cell = S.grid.get(ck); if (!cell) continue;
+      if (CELLC && S.rad && !cellVis(cellB(S, ck, cell), nf)) continue; // клетка целиком вне поля зрения - её экземпляры не перебираем
       for (let q = 0; q < cell.length; q++) {
         const j = cell[q], dx = S.xz[j * 2] - p.x, dz = S.xz[j * 2 + 1] - p.z, d2 = dx * dx + dz * dz;
         if (d2 >= RM2 || d2 < S.rIn * S.rIn || (S.bi && S.offA[S.bi[j]])) continue; // разрушенный свой дом - своими модулями (kitDyn)
@@ -2085,7 +2097,8 @@ function nearHouses(G, scene, B, near, P, sh) {
       const a = S.imPod.array, C3 = S.cxyz; let c = 0;
       const ix0 = Math.floor((at.x - R) / GC), ix1 = Math.floor((at.x + R) / GC), iz0 = Math.floor((at.z - R) / GC), iz1 = Math.floor((at.z + R) / GC);
       for (let ix = ix0; ix <= ix1; ix++) for (let iz = iz0; iz <= iz1; iz++) {
-      const cell = S.grid.get(gkey(ix, iz)); if (!cell) continue;
+      const ck = gkey(ix, iz), cell = S.grid.get(ck); if (!cell) continue;
+      if (CELLC && S.rad) { const b = cellB(S, ck, cell); let v = true; for (let k = 0; k < 6; k++) { const q = pl[k]; if (q.normal.x * b[0] + q.normal.y * b[1] + q.normal.z * b[2] + q.constant < -b[3]) { v = false; break; } } if (!v) continue; }
       for (let q = 0; q < cell.length; q++) {
         const j = cell[q], dx = S.xz[j * 2] - at.x, dz = S.xz[j * 2 + 1] - at.z;
         if (dx * dx + dz * dz >= R2 || (S.bi && S.offA[S.bi[j]])) continue;
