@@ -142,7 +142,7 @@ const SET3 = [
   { f: 'gepard-day', m: 'city', w: 'day', t: ['pvo'], cap: 'Gepard у кварталов', setup: D(2, 'west', 'gepard'), shot: { s: 'unit', a: 'front', az: 0.3, el: 0.04, k: 0.35, t: 2.5, ox: 0.1 } },
   { f: 'iskander-evening', m: 'city', w: 'evening', t: ['multi'], cap: 'Пусковая «Искандер», вечер', setup: M(4, 'west', 'iskander'), shot: { s: 'src', a: 'side', az: 0.6, el: 0.06, k: 0.5, t: 14 } },
   { f: 'tomahawk-day', m: 'city', w: 'day', t: ['multi'], cap: 'Tomahawk над городом', setup: M(3, 'east', 'tomahawk'), shot: { s: 'mun', a: 'side', az: 0.3, el: -0.05, k: 0.6, t: 15, max: 200 } },
-  { f: 'drone-city-evening', m: 'city', w: 'evening', t: ['multi'], cap: 'Ударный дрон над городом, вечер', setup: M(4, 'west', 'shahed'), shot: { s: 'mun', a: 'side', az: 0.3, el: -0.05, k: 0.35, t: 20, max: 200, ox: -0.1 } },
+  { f: 'drone-city-evening', m: 'city', w: 'evening', t: ['multi'], cap: 'Ударный дрон над городом, вечер', setup: M(4, 'west', 'shahed'), shot: { s: 'mun', a: 'side', az: 0.3, el: -0.05, k: 0.35, t: 110, max: 260, ox: -0.1 } },
   // ── Северный рубеж ──
   { f: 'mig31-kinzhal-clear', m: 'winter', w: 'w_clear', t: ['multi'], cap: 'МиГ-31К с «Кинжалом»', setup: M(4, 'west', 'kinzhal'), shot: { s: 'src', a: 'side', az: 0.35, el: 0.12, k: 0.55, t: 25, max: 200 } },
   { f: 'kinzhal-flight-frost', m: 'winter', w: 'w_frost', t: ['multi'], cap: '«Кинжал» после пуска, мороз', setup: M(4, 'west', 'kinzhal'), shot: { s: 'mun', a: 'side', az: 0.3, el: 0.02, k: 0.6, t: 30, max: 200 } },

@@ -1,0 +1,23 @@
+{
+ "закрыта домами": "masquée par les bâtiments",
+ "Уничтоженное остаётся уничтоженным; уцелевшие комплексы перезарядятся и снова включат РЛС. {0}": "Ce qui est détruit reste détruit ; les systèmes survivants se rechargeront et rallumeront leurs radars. {0}",
+ "Врезались в здание": "Collision avec un bâtiment",
+ "Упали в воду": "Chute dans l'eau",
+ "Разбились о здание": "Écrasement contre un bâtiment",
+ "Сначала коснитесь карты - место": "Touchez d'abord la carte pour choisir l'emplacement",
+ "коснитесь карты - место": "touchez la carte pour choisir l'emplacement",
+ "{0} Зелёная тень - что будет перекрыто на 300 м, серая - нынешняя зона.{1}": "{0} Zone verte : couverture à 300 m depuis le nouvel emplacement ; grise : zone actuelle.{1}",
+ "Наведите мышь - тень зоны с нового места, щелчок - выбрать место.": "Passez la souris sur la carte : zone depuis le nouvel emplacement ; clic - choisir l'emplacement.",
+ "Первая волна: не больше 1 дальнего и 1 среднего комплекса, ближние - за очки.": "Première vague : 1 système longue portée et 1 moyenne portée au maximum ; courte portée - selon vos points.",
+ " · можно ещё {0}": " · encore {0} possible",
+ "Коснитесь своего комплекса: «Управлять» - сесть оператором. Остальными стреляют расчёты. Красные треугольники - цели, которые видит сеть РЛС.": "Touchez un de vos systèmes : « Commander » - prendre la console. Les autres sont servis par les équipages. Triangles rouges - cibles vues par le réseau de radars.",
+ "Коснитесь комплекса: приказы и «Управлять» - сесть оператором. Красные треугольники - цели, которые видит сеть РЛС (высота над землёй, м).": "Touchez un système : ordres et « Commander » - prendre la console. Triangles rouges - cibles vues par le réseau de radars (hauteur au-dessus du sol, m).",
+ "Своя - {0} м{1}: РЛС видят поздно, но над городом работают пушки и ПЗРК. 3 км: дальние ЗРК видят издалека, зато пушки и ПЗРК не достают.": "Propre - {0} m{1} : les radars le voient tard, mais canons et MANPADS agissent au-dessus de la ville. 3 km : les SAM longue portée le voient de loin, mais canons et MANPADS ne l'atteignent pas.",
+ ", огибая дома": ", en contournant les bâtiments",
+ "снять с цели (ещё не пущенную)": "retirer de la cible (si elle n'est pas encore lancée)",
+ "Бой идёт: можно менять только то, что ещё не пущено. Время - не раньше «сейчас» и прилёта носителя на рубеж.": "Combat en cours : on ne peut modifier que ce qui n'est pas encore lancé. L'heure ne peut précéder ni « maintenant » ni l'arrivée du porteur à la ligne de tir.",
+ "Пущено <b>{0}</b> · сбито <b>{1}</b> · попаданий <b>{2}</b>": "Lancés <b>{0}</b> · abattus <b>{1}</b> · impacts <b>{2}</b>",
+ "Все {0} волн отбиты": "Les {0} vagues ont été repoussées",
+ "Раунд {0}: вы - ПВО. Ставьте комплексы: что и куда полетит, неизвестно": "Manche {0} : vous êtes la DCA. Placez des systèmes : on ignore ce qui viendra et d'où",
+ "+{0} очков обороны · всего очков {1}": "+{0} points de défense · {1} points au total"
+}

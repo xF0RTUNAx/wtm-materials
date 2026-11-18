@@ -12,7 +12,6 @@
 - "MANPADS model 9K333 Verba" (https://sketchfab.com/3d-models/manpads-model-9k333-verba-d7e05be0f5384e93a96ca47d84f1da07) by s-k_2005 - CC-BY-4.0 - `msl_manpads.glb`
 - "Forest soldier (outdated) (расчёт ПЗРК: позы — свои)" (https://sketchfab.com/3d-models/forest-soldier-outdated-b265975196394070837366de9a0ddb7c) by buh - CC-BY-4.0 - `crew_e.glb`, `crew_w.glb`
 - "Wooden Military Crate" (https://polyhaven.com/a/wooden_military_crate) by Prabhjinder Singh - CC0 - `crew_e.glb`, `crew_w.glb`
-- "Saab JAS-39С Gripen fighter jet" (https://sketchfab.com/3d-models/saab-jas-39-gripen-fighter-jet-54b84f308145465187658b074baf3cb7) by Lanko Mykhailo - CC-BY-4.0 - `shots/gripen-gbu12-snow.webp`
 - "Миг - 31" (https://sketchfab.com/3d-models/31-b168fbca1f6c4ad0ad4e45b7a22f52bc) by mamont nikita - CC-BY-4.0 - `e_mig31.glb`, `e_mig31_lo.glb`
 - "Sukhoi Su-57 "Felon"" (https://sketchfab.com/3d-models/sukhoi-su-57-felon-09d546b4355c4fa6882ca46e05069bee) by andertan - CC-BY-4.0 - `e_su57.glb`, `e_su57_lo.glb`
 - "Tornado" (https://sketchfab.com/3d-models/tornado-9fd925dabddc4c1998b7c3df5ac47bf8) by manilov.ap - CC-BY-4.0 - `e_tornado.glb`

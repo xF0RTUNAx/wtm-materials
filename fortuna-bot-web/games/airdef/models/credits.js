@@ -84,15 +84,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "Saab JAS-39С Gripen fighter jet",
-  "author": "Lanko Mykhailo",
-  "url": "https://sketchfab.com/3d-models/saab-jas-39-gripen-fighter-jet-54b84f308145465187658b074baf3cb7",
-  "license": "CC-BY-4.0",
-  "files": [
-   "shots/gripen-gbu12-snow.webp"
-  ]
- },
- {
   "title": "Миг - 31",
   "author": "mamont nikita",
   "url": "https://sketchfab.com/3d-models/31-b168fbca1f6c4ad0ad4e45b7a22f52bc",
