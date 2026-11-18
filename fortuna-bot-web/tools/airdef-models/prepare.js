@@ -263,13 +263,13 @@ const CONFIG = {
   // «Кинжал» (до 2026-10-25 — ракета 9М723 с пусковой «Искандера», dofash_76, перекрашенная в светло-серый)
   w_kinzhal: { src: new URL('./own/kinzhal.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 512, nTex: () => 512, pickMesh: /./, own: true }, // Х-47М2 «Кинжал»: своя модель (Blender, own/kinzhal.glb)
   // ложная цель «Искандера» — отделяемая головная часть той же ракеты (обычного цвета ракеты, без перекраски)
-  w_tbmdec: { src: `${DL}/iskander_dofash76.glb`, scale: ISK_KZ, axes: ISK_FLAT, rulesIn: 'game', pickMesh: /\/Loft\//, tex: () => 256, cutZ: [-99, ISK_CUT], /* только головная часть: обтекатель и боевая часть, ~2 м от носа */ groups: () => 'body' },
+  w_tbmdec: { src: new URL('./own/tbmdec_own.glb', import.meta.url).pathname, scale: 1, nose: '-z', rulesIn: 'game', tex: () => 512, nTex: () => 512, pickMesh: /./, own: true }, // ложная цель «Искандера» - головная часть своей 9М723 (Свои/Искандер-М, 2026-11-18)
   // 9П78 «Искандер» — dofash_76 (CC BY 4.0; прежняя — 42manako, перезалив 3D Warehouse): 13,0 м (у автора 6,64 ед.), нос машины — к −Z; на поднятой направляющей одна ракета
   // (у автора), вторая — её копия рядом (на настоящей 9П78 их две; пуск — по одной, tbm и tbm2 прячутся по очереди); ракета выходит из закрытого кузова
-  l_iskander: { src: `${DL}/iskander_dofash76.glb`, scale: 1.96, nose: '-x', rulesIn: 'game', unit: true, tex: () => 512,
-    copyParts: [{ sel: (c) => /\/Null_5\//.test(c.path), offs: [[-1.16, 0, 0]] }], /* вся поднятая сборка (направляющая и ракета) — копия по другую сторону оси машины (x 0,58 → −0,58 м) */
-    raiseSel: { sel: (c) => /\/Null_5\//.test(c.path), hinge: [ISK_HY, ISK_HZ], angle: ISK_UP }, /* у автора сборка стоит под 56,8° (положение направляющей) — поднята до вертикали вокруг заднего конца ракеты */
-    groups: (c) => (/\/Loft\//.test(c.path) ? (c.ctr[0] > 0 ? 'tbm' : 'tbm2') : 'body') },
+  // 9П78-1 «Искандер-М» - своя модель (сборщик: Свои/Искандер-М, ревизия 1, 2026-11-18) в боевом положении: стрелы подняты, крышки открыты, опоры на
+  // грунте; ракеты 9М723 (tbm - правая, уходит первой; tbm2) - отдельные части, пуск из центра вдоль оси (sim/combined.js RAIL). Метры, нос −Z, 13,0 м
+  l_iskander: { src: new URL('./own/l_iskander.glb', import.meta.url).pathname, scale: 1, nose: '-z', rulesIn: 'game', unit: true, own: true, tex: () => 1024, nTex: () => 512, pickMesh: /./,
+    groups: (c) => (/(^|\/)tbm2(\/|$)/.test(c.path) ? 'tbm2' : /(^|\/)tbm(\/|$)/.test(c.path) ? 'tbm' : 'body') },
   // M752 (пусковая MGM-52 Lance) — своя модель (сборщик: Свои/M752, ревизия 2, 2026-10-25; ракета — w_lance, Свои/MGM-52). Походное положение; подвижные части —
   // свои группы (ось петли задаёт игра, sim/combined.js POD.l_lance): pod — стрела с сёдлами (erect_*), rampA — задняя плита-трап (ramp_in, ramp_hw), rampB — наружная
   // плита (ramp_out, сложена на rampA). Ракету на стрелу ставит игра (main.js, копия w_lance). Метры, нос −Z, 6,5 м, 40 тыс. треугольников

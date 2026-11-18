@@ -203,16 +203,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "ISKANDER",
-  "author": "dofash_76",
-  "url": "https://sketchfab.com/3d-models/iskander-244b511ee2ca4f3794d118b872ee229c",
-  "license": "CC-BY-4.0",
-  "files": [
-   "w_tbmdec",
-   "l_iskander"
-  ]
- },
- {
   "title": "Scud ( Ballistic missile )",
   "author": "AlexDang",
   "url": "https://sketchfab.com/3d-models/scud-ballistic-missile-30cf91617bad4a4bb07d0856ccd55ff0",

@@ -228,7 +228,7 @@ const META = {
   e_typhoon: { side: 'west', cls: 'carrier', only: true, lazy: true, stations: mirror([V(-0.7, -1.834, 2.42), V(-4.35, -1.654, 3.42), V(-3.35, -1.734, 2.77), V(-2.35, -1.814, 1.82)]), nozzles: [V(-0.475, -1.294, 7.3), V(0.475, -1.294, 7.3)], nr: 0.355, pod: V(0, -1.894, 1.47), clearGlass: true, ...(paintOn ? { gearModel: 'e_typhoon_gear' } : {}) }, // Eurofighter Typhoon: своя модель, носитель Storm Shadow: тяжёлое идёт на последнюю точку, это внутренний пилон
   w_nar_hydra: { lazy: true, stations: [], matte: true }, // НАР Hydra 70 в полёте - собственная модель (Blender, tools/airdef-models/own)
   w_nar_s8: { lazy: true, stations: [], matte: true }, // НАР С-8КОМ в полёте - собственная модель (Blender, tools/airdef-models/own)
-  w_tbmdec: { lazy: true, stations: [] }, // ложная цель «Искандера» - головная часть его ракеты
+  w_tbmdec: { lazy: true, stations: [] }, // ложная цель «Искандера» - головная часть своей 9М723
   w_kinzhal: { weapon: 'kinzhal', lazy: true, stations: [] }, // Х-47М2 «Кинжал» - собственная модель (tools/airdef-models/own/kinzhal)
   w_slam: { weapon: 'slam', lazy: true, stations: [] }, // AGM-84E SLAM - по UGM-84 Harpoon (FeriseCAT)
   w_jsow: { weapon: 'jsow', lazy: true, wings: 'deploy', stations: [] }, // AGM-154 JSOW - RickSlash
@@ -237,7 +237,7 @@ const META = {
   w_ecm: { weapon: ['ecm_w', 'ecm_e'], matte: true, stations: [] }, // станция помех ELTA 8222 - Original_linny (Thingiverse); у востока пока она же // Х-101 - HappyBattleSheep (Thingiverse)
   w_ecm_w: { weapon: [], lazy: true, matte: true, stations: [] }, // AN/ALQ-131 - собственная модель (tools/airdef-models/own/alq131); как «Сорбция» ниже - только значок в «Исследованиях» (Mark 2026-10-24: в бою остаётся ELTA - она с разрешённой лицензией, лишней работы не делаем)
   w_ecm_e: { weapon: [], lazy: true, matte: true, stations: [] }, // «Сорбция» (контейнер Су-27) - собственная модель (tools/airdef-models/own/sorbtsiya); пока только значок в «Исследованиях» (thumbs.html, ICON), поэтому weapon: [] - материал как у оружия, но ключу ecm_e не назначена: в бою у него по-прежнему w_ecm. Физически (на законцовки, 4,2 м) - отдельной задачей, AIRDEF_STATE «Открытые задачи»
-  l_iskander: { ev: true, lazy: true, matte: true, stations: [] }, // 9П78 «Искандер» - dofash_76 (две ракеты стоят вертикально - tbm, tbm2)
+  l_iskander: { ev: true, lazy: true, matte: true, stations: [] }, // 9П78-1 «Искандер-М» - своя (сборщик, Свои/Искандер-М, 2026-11-18): боевое положение, ракеты 9М723 стоят вертикально - tbm, tbm2
   l_tochka: { ev: true, lazy: true, matte: true, stations: [] }, // 9П129 «Точка-У» - своя (сборщик, Свои/Точка-У), боевое положение: ракета 9М79 вертикально (tbm)
   l_scud: { ev: true, lazy: true, matte: true, stations: [] }, // Р-17 на МАЗ-543 - AlexDang (tbm)
   l_himars: { ev: true, lazy: true, matte: true, stations: [] }, // M142 HIMARS - своя модель (Свои/HIMARS, 2026-11-10): платформа, клетка, цилиндры, контейнеры и крышки - свои части (main.js himarsPose)
@@ -391,6 +391,7 @@ const GLB_V = Object.fromEntries(['w_gbu10', 'w_ecm', 'gepard', 'gepard_lo', 'ro
   ['zsu234', 'zsu234_lo', 'zu23', 'buk', 'phalanx', 'w_fab100', 'w_ofab250', 'w_fab250', 'w_fab1000', 'w_gbu24', 'w_gbu57', 'w_umpk', 'e_hunter', 'e_su27', 'e_su35', 'e_etendard', 'e_mirage_f1', 'e_f18c'].map((n) => [n, '20261022k'])).concat([['w_agm65b', '20261022l'], ['w_decoy_e', '20261022l']].concat(['h_mi24', 'h_mi28', 'h_ka52', 'h_ah64', 'h_ah1', 'h_uh1', 'w_shturm', 'w_b8', 'w_hellfire', 'aam_stinger'].map((n) => [n, '20261022m'])).concat([['w_shturm', '20261022n']])).concat(['h_ah64', 'h_mi28'].map((n) => [n, '20261022p'])).concat([['h_uh1', '20261022r']]).concat(['w_lau61', 'obj_mill', 'pr_hay', 'pr_well', 'pr_pumpkin', 'pr_grave1', 'pr_grave2', 'pr_grave3', 'pr_grave4', 'pr_fence', 'pr_fpost', 'pr_deadtree', 'pr_oldtree', 'c_vaz'].map((n) => [n, '20261022o'])).concat(['e_vulcan', 'e_draken', 'e_viggen', 'w_bomb1000'].map((n) => [n, '20261023b'])).concat(['h_ka50', 'h_mi8', 'h_uh60', 'h_rah66'].map((n) => [n, '20261023c'])).concat([['w_nar_hydra', '20261024a'], ['w_nar_s8', '20261024a'], ['e_draken', '20261023d'], ['w_bomb1000', '20261023d'], ['h_ka50', '20261023d']]).concat(['e_su33', 'e_m4', 'e_mig19', 'e_mig17', 'e_mig29k'].map((n) => [n, '20261023e']))); // 20261023e - шестая партия: Су-33, М-4, МиГ-19, МиГ-17 (2026-10-21; Т-4 - своя, GLB_V_OWN) // 20261023c - четыре вертолёта manilov.ap (2026-10-21) // 20261023b - Vulcan, Draken, Viggen, бомба 1000 lb (2026-10-21) // l - 2026-10-20: Ту-95 без нарисованных дисков, Maverick и Harpy без сильного упрощения // l - Ту-95 без нарисованных дисков винтов (2026-10-20) // j - четвёртая партия, новая «Шилка», УМПК без сжатия // i - ЗРК без упрощения, камуфляж шейдером, третья партия самолётов (2026-10-19); c - замены моделей 2026-10-19; остальные пересобраны 2026-10-18 (затенение в стыках) - общая версия ниже
 // версии файлов собственных моделей (Blender, tools/airdef-models/own): по строке на ключ; поднимает tools/airdef-models/integrate-own.js при каждом встраивании
 const GLB_V_OWN = {
+  l_iskander: '20261118a', w_tbmdec: '20261118a', // свой «Искандер-М» 9П78-1 в боевом положении и ложная цель - ГЧ своей 9М723 (Свои/Искандер-М)
   bld_ii49: '20261117c', bld_hr_a: '20261117c', bld_hr_c: '20261117c', // свои дома: модули II-49, хрущёвки
   bld_d12_b: '20261117c', bld_d12_g: '20261117c', bld_d12_t: '20261117c', // 12-этажка (кондиционеры на стене)
   bld_of: '20261117c', bld_gl: '20261117c', // офисы, стекло
@@ -604,7 +605,7 @@ Object.assign(GLB_V, Object.fromEntries(['tunguska', 'tunguska_lo', 'pantsir', '
 GLB_V.w_storm = '20261024k'; // Storm Shadow: консоли крыла - свои части (сложены на подвеске)
 Object.assign(GLB_V, { su30: '20261024p' }); // Су-30МКИ и F-16E/F - andertan (CC BY 4.0) вместо Immersive3D и Muhamad Mirza Arrafi (сомнительные права: F-16 помечен на Sketchfab как сгенерированный нейросетью, у Immersive3D - рипы Unreal) (2026-10-24)
 Object.assign(GLB_V, { e_b1b: '20261024q' }); // прежний B-1B - manilov.ap, теперь свой (GLB_V_OWN перекрывает) (Су-25 - своя модель с 2026-11-13, GLB_V_OWN; прежде mamont nikita) (все CC BY 4.0) вместо моделей Muhamad Mirza Arrafi, Rhine_Lab_Muelsyse и Immersive3D (сомнительные права) (2026-10-24)
-Object.assign(GLB_V, { l_iskander: '20261024s', w_tbmdec: '20261024r' }); // «Искандер» и ложная цель («Кинжал» - своя модель с 2026-10-25, GLB_V_OWN) - dofash_76 «ISKANDER» (CC BY 4.0) вместо 42manako (перезалив модели из 3D Warehouse - лицензия недействительна) (2026-10-24)
+// «Искандер-М» и ложная цель - свои с 2026-11-18 (GLB_V_OWN); прежние dofash_76 убраны
 Object.assign(GLB_V, { hawk: '20261024m', w_gbu24: '20261024m' }); // Hawk: ракета без деталей пусковой (absorb 0); GBU-24 - AnirudhRao, своя окраска
 Object.assign(GLB_V, GLB_V_OWN);
 META.hg_jack = { lazy: true, matte: true, stations: [] }; // подъёмник ангара (hangar.js): части base, ram, head
