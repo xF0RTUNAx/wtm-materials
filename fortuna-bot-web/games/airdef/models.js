@@ -1073,7 +1073,7 @@ const CAMO_R = (() => { try { const q = new URLSearchParams(location.search); re
 // Модель сборщика с новой развёрткой и картинкой окраски (tools/airdef-shots/camo-glb.js --game → models/camo/<самолёт>.<окраска>.glb, JPEG) грузится,
 // только когда окраска надета и самолёт в бою; оси, масштаб и центр - как у обычной модели, описание (подвески, сопла, зоны) - её же (mOf).
 // В LOADED - под ключом '<самолёт>@<окраска>'; пока не пришла - обычная модель, потом самолёт пересобирается (modelsReady)
-const CAMO_V = { 'e_f15e@inferno': '20261105a', 'e_mig31@dragon': '20261028a', 'e_typhoon@harlequin': '20261106b', 'e_su34@cosmos': '20261115a' };
+const CAMO_V = { 'e_f15e@inferno': '20261105a', 'e_mig31@dragon': '20261028a', 'e_typhoon@harlequin': '20261106b', 'e_su34@cosmos': '20261115a', 'e_tu22@milk': '20261118a' }; // «Сгущёнка» на своём Ту-22 (Свои/Ту-22/окраски/milk, PREPARE_BASE=e_tu22)
 // Максимальные текстуры (настройка «Текстуры», Mark 2026-11-04): та же модель с картинками исходного размера, models/camo/<самолёт>.hi.glb (tools/airdef-models/hi-textures.js), тот же механизм, что у окраски
 for (const n of HI_PLANES) CAMO_V[`${n}@hi`] = '20261104a';
 export const hiKnown = (name) => !!CAMO_V[`${name}@hi`];

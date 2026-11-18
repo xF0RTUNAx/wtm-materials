@@ -1055,6 +1055,8 @@ export default {
   "окраски": "peintures",
   "Инферно": "Inferno",
   "Нефритовый дракон": "Dragon de jade",
+  "Сгущёнка": "Lait concentré",
+  "Арлекин": "Arlequin",
   "Окраска на выбор": "Peinture au choix",
   "Кристаллы": "Cristaux",
   "кристаллы": "cristaux",

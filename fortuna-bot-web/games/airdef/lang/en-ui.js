@@ -1074,6 +1074,8 @@ export default {
   "окраски": "liveries",
   "Инферно": "Inferno",
   "Нефритовый дракон": "Jade Dragon",
+  "Сгущёнка": "Condensed Milk",
+  "Арлекин": "Harlequin",
   "Окраска на выбор": "Livery of your choice",
   "Кристаллы": "Crystals",
   "кристаллы": "crystals",
