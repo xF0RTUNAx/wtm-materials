@@ -122,24 +122,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "Su24",
-  "author": "manilov.ap",
-  "url": "https://sketchfab.com/3d-models/su24-3439ae4000df438894a44127ebda538c",
-  "license": "CC-BY-4.0",
-  "files": [
-   "shots/su24-kh58-overcast.webp"
-  ]
- },
- {
-  "title": "Mig27",
-  "author": "manilov.ap",
-  "url": "https://sketchfab.com/3d-models/mig27-a9d22acdb582444a91c2adc8b123d674",
-  "license": "CC-BY-4.0",
-  "files": [
-   "shots/mig27-kh29t-sunset.webp"
-  ]
- },
- {
   "title": "Tu16",
   "author": "manilov.ap",
   "url": "https://sketchfab.com/3d-models/tu16-9c4ee54ca28e44d7a4604be112acab9f",
@@ -173,15 +155,6 @@ export const CREDITS = [
   "license": "CC-BY-4.0",
   "files": [
    "e_harrier"
-  ]
- },
- {
-  "title": "Tu95",
-  "author": "manilov.ap",
-  "url": "https://sketchfab.com/3d-models/tu95-1eac97ec49ed4f1da8b7deb1e1b2cc7a",
-  "license": "CC-BY-4.0",
-  "files": [
-   "shots/tu95-far.webp"
   ]
  },
  {
@@ -245,26 +218,6 @@ export const CREDITS = [
   "license": "CC-BY-4.0",
   "files": [
    "e_su35"
-  ]
- },
- {
-  "title": "Su-25",
-  "author": "mamont nikita",
-  "url": "https://sketchfab.com/3d-models/su-25-88b71eb848cf4418a95dff497c07cefc",
-  "license": "CC-BY-4.0",
-  "files": [
-   "shots/su25-fog.webp",
-   "shots/su25-kh29.webp"
-  ]
- },
- {
-  "title": "Su34",
-  "author": "manilov.ap",
-  "url": "https://sketchfab.com/3d-models/su34-1c94f436be51453fa598e9eab50eb0a7",
-  "license": "CC-BY-4.0",
-  "files": [
-   "shots/su34-kh59m-sunset.webp",
-   "shots/su34-umpk-clear.webp"
   ]
  },
  {
@@ -937,26 +890,6 @@ export const CREDITS = [
   "license": "CC-BY-4.0",
   "files": [
    "e_rafale"
-  ]
- },
- {
-  "title": "B1",
-  "author": "manilov.ap",
-  "url": "https://sketchfab.com/3d-models/b1-59371234237e496da0f67cfcdc3acb20",
-  "license": "CC-BY-4.0",
-  "files": [
-   "shots/b1b-front-sunset.webp"
-  ]
- },
- {
-  "title": "Boeing B-52 Stratofortress",
-  "author": "bohmerang",
-  "url": "https://sketchfab.com/3d-models/boeing-b-52-stratofortress-38b0c64bd552431394efa8625d7f5144",
-  "license": "CC-BY-4.0",
-  "files": [
-   "shots/b52-side-morning.webp",
-   "shots/b52-below.webp",
-   "shots/b52-jassm-clear.webp"
   ]
  }
 ];

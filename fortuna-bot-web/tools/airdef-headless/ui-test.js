@@ -51,10 +51,8 @@ const check = (name, ok) => { console.log(`${ok ? 'OK  ' : 'FAIL'} ${name}`); if
 
 // 1. меню и живой фон
 check('меню открыто', C.state === 'menu');
-{ const { SHOTS } = await import('../../games/airdef/shots/shots.js?v=20261118a');
-  check(`меню: фон - готовые кадры (${SHOTS.length}), без 3D и боя`, SHOTS.length > 0 && C.ctrl && C.ctrl.idle && C.ctrl.idle() && C.ctrl.sim === false);
-  frames(30 * 3);
-  C.ctrl.stop(); C.ctrl = C.ctrls.director; C.ctrl.start(); } // запасной фон (кадров нет) - живой бой: проверяем и его
+{ check('меню: фон - ангар или живой бой (готовых кадров больше нет)', !!C.ctrl && (C.ctrl === C.ctrls.hangar || C.ctrl === C.ctrls.director));
+  if (C.ctrl !== C.ctrls.director) { frames(30 * 3); C.ctrl.stop(); C.ctrl = C.ctrls.director; C.ctrl.start(); } } // запасной фон (ангар не загрузился) - живой бой: проверяем и его
 frames(30 * 40);
 check('фон: идёт бой (есть ИИ-самолёты и ЗРК)', !!C.raid && C.raid.planes.length > 0 && C.S.units.length > 0);
 console.log(`     фон за 40 с: пусков ЗУР ${C.S.sams.length}, самолётов ${C.raid.planes.filter((a) => !a.dead && !a.out).length}`);
