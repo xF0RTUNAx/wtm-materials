@@ -5,7 +5,7 @@
 // прогресс сайта можно один раз перенести в аккаунт игры (функция airdef-account, sql/022). Чистый модуль: хранилище, запросы, заглушка ?rmock=1.
 /* global CONFIG */
 import { tr } from './i18n.js?v=20261118d';
-import { AVA_SHOP } from './arsenal.js?v=20261118d';
+import { AVA_SHOP, PAY } from './arsenal.js?v=20261118d';
 
 const KEY_GAME = 'fortuna_airdef_acc', KEY_SITE = 'fortuna_web_player', KEY_SST = 'fortuna_airdef_site_st';
 // ?rmock=1 - заглушка: airdef-account и get-airdef-rating отвечают локально (сервер ещё не применён в боевой базе); ?rmock=empty - у «вас» нет боёв,
@@ -195,13 +195,37 @@ function mockSupport(b) {
 // магазин (shop-ui.js): 340 кристаллов; ?shop=token - окраска на выбор, owned - обе окраски куплены и «Инферно» надета, две аватарки куплены и одна надета, poor - не хватает на окраску, broke - и на аватарку
 const SHOP0 = { token: { crystals: 60, camos: [], picks: 1, worn: {} }, owned: { crystals: 190, camos: ['e_f15e:inferno', 'e_mig31:dragon', 'ava:a13', 'ava:a16'], picks: 0, worn: { e_f15e: 'inferno', ava: 'a16' } },
   poor: { crystals: 120, camos: [], picks: 0, worn: {} }, broke: { crystals: 8, camos: [], picks: 0, worn: {} } };
-let MSHOP = null;
+let MSHOP = null, MORD = { n: 0, o: {} };
+// премиум в заглушке (Mark 2026-11-19): ?prem=1 - активен 6 д 14 ч, ?prem=hour - меньше суток (13:42:05), ?prem=end - только что кончился, без параметра - нет; &gift=1 - «+1 кристалл за вход»
+const qs = (k) => { try { return new URLSearchParams(location.search).get(k) || ''; } catch (_) { return ''; } };
+function premStart() {
+  const p = qs('prem'), now = Date.now(), H = 3600000;
+  return p === '1' ? new Date(now + 6 * 24 * H + 14 * H + 20 * 60000).toISOString() : p === 'hour' ? new Date(now + 13 * H + 42 * 60000 + 5000).toISOString() : p === 'end' ? new Date(now - 60000).toISOString() : null;
+}
+const shopW = () => { if (!MSHOP) { MSHOP = JSON.parse(JSON.stringify(SHOP0[qs('shop')] || { crystals: 340, camos: [], picks: 0, worn: {} })); MSHOP.premium_until = premStart(); } return MSHOP; };
+let giftGiven = false;
+// ответ airdef-progress в заглушке: prem: { until (null, если не активен), gift }
+export function mockPremState() {
+  const u = shopW().premium_until, on = !!u && Date.parse(u) > Date.now(), gift = on && qs('gift') === '1' && !giftGiven ? 1 : 0; if (gift) giftGiven = true;
+  return { until: on ? u : null, gift };
+}
 function mockShop(b) {
-  if (!MSHOP) { let st = ''; try { st = new URLSearchParams(location.search).get('shop') || ''; } catch (_) { /* нет адреса */ } MSHOP = JSON.parse(JSON.stringify(SHOP0[st] || { crystals: 340, camos: [], picks: 0, worn: {} })); }
-  const W = MSHOP, PRICE = String(b.key || '').startsWith('ava:') ? 20 : 150; // как AVA_PRICE и CAMO_PRICE (arsenal.js)
+  const W = shopW(), PRICE = String(b.key || '').startsWith('ava:') ? 20 : 150; // как AVA_PRICE и CAMO_PRICE (arsenal.js)
   if (b.action === 'buy') { if (W.camos.includes(b.key)) throw mockErr(409, tr('Эта окраска уже ваша')); if (W.crystals < PRICE) throw mockErr(409, tr('Не хватает кристаллов')); W.crystals -= PRICE; W.camos.push(b.key); }
   else if (b.action === 'pick') { if (W.picks < 1) throw mockErr(409, tr('Окраски на выбор нет')); W.picks -= 1; W.camos.push(b.key); }
   else if (b.action === 'wear') { if (b.key) { const [pl, id] = b.key.split(':'); W.worn[pl] = id; } else delete W.worn[b.plane]; }
+  else if (b.action === 'invoice') { // счёт Telegram Stars: ссылка-пустышка; оплата «проходит» на втором опросе заказа
+    if (!PAY[b.key]) throw mockErr(400, 'Такого товара нет', 'bad_sku');
+    const id = 'mock-' + ++MORD.n; MORD.o[id] = { key: b.key, polls: 0, paid: false }; return { link: 'https://t.me/$mock', order: id };
+  }
+  else if (b.action === 'order') {
+    const o = MORD.o[b.order]; if (!o) throw mockErr(404, 'Заказ не найден');
+    if (!o.paid && ++o.polls >= 2) {
+      o.paid = true; const P = PAY[o.key];
+      if (P.prem) { const now = Date.now(), u = Date.parse(W.premium_until || 0) || 0; W.premium_until = new Date(Math.max(now, u) + P.prem * 86400000).toISOString(); } else W.crystals += P.gems;
+    }
+    return { status: o.paid ? 'paid' : 'new', season: 1, wallet: JSON.parse(JSON.stringify(W)) };
+  }
   else if (b.action !== 'state') throw mockErr(400, tr('Неизвестное действие'));
   return { season: 1, wallet: JSON.parse(JSON.stringify(W)) };
 }

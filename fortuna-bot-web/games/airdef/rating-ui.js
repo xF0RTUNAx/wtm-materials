@@ -345,7 +345,7 @@ export function createRating(C) {
     const per = S.per === 'all' ? 'all' : 'season', g = P.place && P.place <= 3 ? ' g' + P.place : '';
     const hero = `<div class="hero${g}"><span class="ava"><img src="${avaSrc(own ? ownAva(C, P.ava) : P.ava)}" alt=""></span><span class="nick">${esc(P.nick)}</span>
       <span class="place"><span class="lb">${tr('место')}</span><span class="pn">${P.place && P.place <= 3 ? ico('rating') : ''}${P.place || '-'}</span><span class="pts">${nf(P.points || 0)}</span><span class="slots">${Array.from({ length: SLOTS }, (_, i) => `<i${i < (P.n || 0) ? ' class="on"' : ''}></i>`).join('')}</span></span>
-      <span class="since">${tr('в игре с {0}', [ddmm(P.since, true)])}<br>${tr('онлайн-боёв: {0}', [nf(P.games || 0)])}</span>
+      <span class="since">${own && C.prem ? C.prem.ribbon() : ''}${tr('в игре с {0}', [ddmm(P.since, true)])}<br>${tr('онлайн-боёв: {0}', [nf(P.games || 0)])}</span>
       ${own ? `<span class="mine"><button class="btnm" data-a="mine">${tr('Мои бои')}</button></span>` : ''}</div>`;
     const M = (P.modes && P.modes[per]) || {}, tot = [0, 0, 0, null];
     const mrow = ([k, ic, name]) => {

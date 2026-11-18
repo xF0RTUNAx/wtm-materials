@@ -6,7 +6,7 @@ import { NODE, newProgress, owned, loadoutMissing, samOk, strikeOk, strikeId, RA
 import { LOADOUTS } from './arsenal.js?v=20261118d';
 import { ico } from './icons.js?v=20261118d';
 import { tr, trIf, LANG, XL, LOCALE } from './i18n.js?v=20261118d';
-import { activeAcc, isMock, siteNoProgress, withSess, refreshSession } from './account.js?v=20261118d';
+import { activeAcc, isMock, siteNoProgress, withSess, refreshSession, mockPremState } from './account.js?v=20261118d';
 import { DAILY, WEEKLY, mskDay, questApply, questClaim, questRoll, questSwap, questView } from './quests-data.js?v=20261118d';
 
 const TEST = new URLSearchParams(location.search).get('pgtest'); // ?pgtest=1 - тестовый прогресс в памяти (без сервера)
@@ -34,7 +34,7 @@ export function trLine(t) {
 export const XP = (v) => `${ico('xp')}${n2(v)}`, SV = (v) => `${ico('silver')}${n2(v)}`;
 
 export function createProgress(C) {
-  const G = { P: null, info: null, err: '', busy: false, run: null, guest: false, listeners: [], crystals: null, lq: {}, lshift: 0 };
+  const G = { P: null, info: null, err: '', busy: false, run: null, guest: false, listeners: [], crystals: null, lq: {}, lshift: 0, premUntil: null, premLast: null };
   // задания в тестовом режиме: те же правила (quests-data.js), состояние в памяти; lshift - сдвиг дней для кнопок «следующий день» и «неделя»
   const lDay = () => mskDay(Date.now() + G.lshift * 864e5);
   const lPay = (pay) => { G.P.xp += pay.xp || 0; G.P.silver += pay.silver || 0; G.crystals = (G.crystals || 0) + (pay.gem || 0); };
@@ -59,6 +59,17 @@ export function createProgress(C) {
   // сервер: 403 need_game - у аккаунта сайта нет прогресса игры, играть можно только с аккаунтом игры. Клиент считал его «старым» - записать в кэш
   // «прогресса нет»: account.js оповестит, и игра обновится как гость (кнопки входа вместо сырой ошибки)
   const needGame = (e) => { if (!e || !e.need_game) return false; const a = account(); if (a && a.kind === 'site') siteNoProgress(); return true; };
+  // премиум (Mark 2026-11-19): одно место на клиенте. until - ISO до конца срока, null - нет премиума; premLast - последний известный срок (и истёкший: по нему окно «Премиум закончился»).
+  // Источники: prem из ответов airdef-progress (state / quests / quest / swap; gift === 1 - сейчас начислен +1 кристалл за вход) и premium_until кошелька магазина (shop-ui.js)
+  const premOn = (u) => !!u && Date.parse(u) > Date.now();
+  function setPrem(until, gift) {
+    const was = G.premUntil, on = premOn(until) ? until : null;
+    if (until && (!G.premLast || Date.parse(until) > Date.parse(G.premLast))) G.premLast = until;
+    G.premUntil = on;
+    if (on !== was) try { dispatchEvent(new CustomEvent('airdef-prem', { detail: { until: on } })); } catch (_) { /* без DOM (проверки) */ }
+    if (gift === 1 && C.prem && C.prem.gift) C.prem.gift();
+  }
+  const fromState = (d) => { if (d && d.prem) setPrem(d.prem.until || null, d.prem.gift); };
   const set = (v) => { G.guest = false; G.P = { xp: v.xp, silver: v.silver, res: v.res || [], own: v.own || [], goal: v.goal || {} }; G.info = v; G.err = ''; changed(); };
 
   // ── тестовый режим (без сервера): правила те же, состояние - в памяти ──
@@ -77,10 +88,10 @@ export function createProgress(C) {
     // прогресс известен (с сервера или гостевой стартовый); пока не ответил - замков нет
     ready: () => !!G.P,
     async refresh() {
-      if (LOCAL()) { const lid = (account() || {}).id || ''; if (!G.P || G.guest || G.lid !== lid) { G.P = null; G.lid = lid; await local('goal', null, 'air'); } G.guest = false; return G.P; }
-      const acc = account(); if (!acc || acc.id !== G.qAcc) { G.crystals = null; G.qAcc = acc && acc.id; } // кристаллы - свои у каждого аккаунта
+      if (LOCAL()) { const lid = (account() || {}).id || ''; if (!G.P || G.guest || G.lid !== lid) { G.P = null; G.lid = lid; await local('goal', null, 'air'); } G.guest = false; const m = mockPremState(); setPrem(m.until, m.gift); return G.P; }
+      const acc = account(); if (!acc || acc.id !== G.qAcc) { G.crystals = null; G.qAcc = acc && acc.id; G.premLast = null; setPrem(null); } // кристаллы и премиум - свои у каждого аккаунта
       if (!acc) { G.P = newProgress(); G.guest = true; G.err = ''; changed(); return G.P; } // гость: стартовый набор
-      try { const d = await call('airdef-progress', { player_id: acc.id, action: 'state' }); set(d.progress); }
+      try { const d = await call('airdef-progress', { player_id: acc.id, action: 'state' }); set(d.progress); fromState(d); }
       catch (e) { if (needGame(e) && !account()) return G.P; G.err = e.message; changed(); }
       return G.P;
     },
@@ -97,26 +108,28 @@ export function createProgress(C) {
     },
 
     // ── задания: вид приходит вместе с прогрессом (quests в ответах функций); тратит и начисляет только сервер ──
+    // премиум: срок (ISO или null), активен ли, последний известный срок; setPrem - из кошелька магазина (premium_until, может быть прошлым)
+    get premUntil() { return premOn(G.premUntil) ? G.premUntil : null; }, get premLast() { return G.premLast; }, get premOn() { return premOn(G.premUntil); }, setPrem: (u) => setPrem(u || null),
     get test() { return LOCAL(); }, // тестовый режим: на экране заданий есть кнопки «ДЕМО»
     get crystals() { return G.crystals; },
     get quests() { if (LOCAL()) return questView(G.lq, lDay()); const q = !G.guest && G.info && G.info.quests; return q || questView({}, mskDay()); },
     async questsRefresh() {
       if (LOCAL()) { if (!G.P) await local('goal', null, 'air'); if (G.crystals === null) { G.crystals = 46; G.lq = questRoll({}, lDay()).q; api.questTest('adv', 'd'); api.questTest('adv', 'd'); api.questTest('adv', 'w'); } const r = questRoll(G.lq, lDay()); G.lq = r.q; lPay(r.pay); changed(); return { ok: true }; }
       const acc = account(); if (!acc) return { ok: true };
-      try { const d = await call('airdef-progress', { player_id: acc.id, action: 'quests' }); G.crystals = d.crystals ?? G.crystals; set(d.progress); return { ok: true }; }
+      try { const d = await call('airdef-progress', { player_id: acc.id, action: 'quests' }); G.crystals = d.crystals ?? G.crystals; set(d.progress); fromState(d); return { ok: true }; }
       catch (e) { needGame(e); return { ok: false, why: trMsg(e.message) }; }
     },
     async questClaim(key) {
       if (LOCAL()) { const r = questClaim(G.lq, lDay(), key); if (!r.ok) return { ok: false, why: r.why }; G.lq = r.q; lPay(r.pay); changed(); return { ok: true }; }
       const acc = account(); if (!acc) return { ok: false, why: tr('Войдите в аккаунт игры') };
-      try { const d = await call('airdef-progress', { player_id: acc.id, action: 'quest', key }); G.crystals = d.crystals ?? G.crystals; set(d.progress); return { ok: true }; }
+      try { const d = await call('airdef-progress', { player_id: acc.id, action: 'quest', key }); G.crystals = d.crystals ?? G.crystals; set(d.progress); fromState(d); return { ok: true }; }
       catch (e) { needGame(e); return { ok: false, why: trMsg(e.message) }; }
     },
     // «Заменить» невыполненное задание (key - 'd:id' | 'w:id'); замену выбирает сервер, в тестовом режиме - те же правила здесь
     async questSwap(key) {
       if (LOCAL()) { const r = questSwap(G.lq, lDay(), key, false, Math.random()); if (!r.ok) return { ok: false, why: trMsg(r.why) }; G.lq = r.q; lPay(r.pay); changed(); return { ok: true, from: r.from, to: r.to }; }
       const acc = account(); if (!acc) return { ok: false, why: tr('Войдите в аккаунт игры') };
-      try { const d = await call('airdef-progress', { player_id: acc.id, action: 'swap', key }); G.crystals = d.crystals ?? G.crystals; set(d.progress); return { ok: true, from: d.from, to: d.to }; }
+      try { const d = await call('airdef-progress', { player_id: acc.id, action: 'swap', key }); G.crystals = d.crystals ?? G.crystals; set(d.progress); fromState(d); return { ok: true, from: d.from, to: d.to }; }
       catch (e) { needGame(e); return { ok: false, why: trMsg(e.message) }; }
     },
     // кнопки «ДЕМО» (только тестовый режим): бой, новый день, новая неделя, сначала

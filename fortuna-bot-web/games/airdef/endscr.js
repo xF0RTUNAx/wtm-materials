@@ -8,6 +8,8 @@ import { tr, LOCALE } from './i18n.js?v=20261118d';
 import { ico } from './icons.js?v=20261118d';
 import { WIN_K } from './sim/online.js?v=20261118d';
 import { activeAcc } from './account.js?v=20261118d';
+import { PREM_K } from './arsenal.js?v=20261118d';
+import { wings } from './prem.js?v=20261118d';
 
 const LOC = LOCALE;
 const fmt = (v) => Math.round(v).toLocaleString(LOC);
@@ -50,6 +52,12 @@ body.endCine #c, body.endCine #tmap, body.endCine #map { transform-origin: 60% 5
 .cine .plate b { font-family: 'Oswald', 'Golos Text', sans-serif; font-variant-numeric: tabular-nums; font-weight: 600; font-size: ${F(2.6, 15)}; color: #fff; white-space: nowrap; } .cine .plate span { font-size: ${F(1.3, 10)}; color: #cfd3c3; text-align: right; }
 .cine .rwd { position: absolute; right: calc(var(--sa-r, 0px) + 4u); top: 2.6u; display: none; gap: 2u; font-family: 'Oswald', 'Golos Text', sans-serif; font-variant-numeric: tabular-nums; font-weight: 600; font-size: ${F(1.8, 13)}; color: #fff; } .cine .rwd.on { display: flex; }
 .cine .rwd span { display: inline-flex; gap: .5u; align-items: center; } .cine .rwd .xp { color: #9fd3ff; }
+/* премиум в награде (Mark 2026-11-19): плашка «+75 %» и строка «премиум: +X серебра, +Y опыта»; без премиума - одна приглушённая строка */
+.pb { white-space: nowrap; display: inline-flex; align-items: center; gap: .8u; padding: .5u 1.1u; border-radius: .5u; border: .1u solid rgba(226, 180, 90, .55); background: rgba(214, 176, 106, .1); color: #f6dc9a; font-family: 'Oswald', 'Golos Text', sans-serif; font-weight: 600; font-size: ${F(1.5, 12)}; letter-spacing: .03em; }
+.pb .pemb { height: max(13px, 1.7u) !important; } .pb small { font: 500 ${F(.95, 9)} 'Golos Text', sans-serif; color: #c9b58c; white-space: normal; max-width: 17u; line-height: 1.25; letter-spacing: 0; }
+.cine .rwd .pb { gap: .8u; margin-right: .6u; } .rate .pb small { max-width: 26u; }
+.pnot { font: 500 ${F(1.1, 9.5)} 'Golos Text', sans-serif; color: #9d9688; line-height: 1.25; }
+.cine .rwd .pnot { position: absolute; right: 0; top: 100%; margin-top: .4u; white-space: nowrap; } .rate .pnot { max-width: 24u; }
 .cine .tl { position: absolute; left: calc(var(--sa-l, 0px) + 5u); right: calc(var(--sa-r, 0px) + 5u); bottom: 3.4u; height: 3u; }
 .cine .tl .ln { position: absolute; left: 0; right: 0; top: 50%; height: .2u; background: #4d5546; } .cine .tl .run { position: absolute; left: 0; top: 50%; height: .2u; background: #f3c96f; width: 0; }
 .cine .tl .ev { position: absolute; top: 50%; width: .9u; height: .9u; margin: -.45u 0 0 -.45u; background: #cfd3c3; transform: rotate(45deg); opacity: .25; }
@@ -201,11 +209,19 @@ export function createEndScreen(C) {
   }
 
   // ═════════════ Награда и рейтинг (приходят после показа) ═════════════
+  // премиум в награде: d.prem - бонус премиума (серебро = опыт; 0 без премиума). С премиумом - плашка «+75 %» со строкой цифр; без - одна строка «с премиумом было бы …»
+  function premHtml(d) {
+    const pr = Math.round(+d.prem || 0);
+    if (pr > 0) return { on: true, html: `<span class="pb">${wings(13)}<b class="num">+${Math.round((PREM_K - 1) * 100)} %</b><small>${tr('премиум: +{0} серебра, +{1} опыта', [fmt(pr), fmt(pr)])}</small></span>` };
+    const would = Math.round(d.xp * PREM_K) - d.xp;
+    return would > 0 ? { on: false, html: `<span class="pnot">${tr('с премиумом было бы +{0} серебра и опыта', [fmt(would)])}</span>` } : null;
+  }
   function paintReward() {
     const d = E.reward; if (!d || !d.xp || !E.on) return;
-    if (E.mode === 'cine') { const w = view.querySelector('.rwd'); if (!w || w.classList.contains('on')) return; w.classList.add('on'); anim(w, [{ opacity: 0, transform: 'translateY(-1vmin)' }, { opacity: 1, transform: 'none' }], { duration: 300 }); count(w.querySelector('[data-c="xp"]'), d.xp, 1500, '+'); count(w.querySelector('[data-c="sv"]'), d.silver || 0, 1500, '+'); return; }
+    if (E.mode === 'cine') { const w = view.querySelector('.rwd'); if (!w || w.classList.contains('on')) return; w.classList.add('on'); const pr = premHtml(d); if (pr) w.insertAdjacentHTML(pr.on ? 'afterbegin' : 'beforeend', pr.html); anim(w, [{ opacity: 0, transform: 'translateY(-1vmin)' }, { opacity: 1, transform: 'none' }], { duration: 300 }); count(w.querySelector('[data-c="xp"]'), d.xp, 1500, '+'); count(w.querySelector('[data-c="sv"]'), d.silver || 0, 1500, '+'); return; }
     const rw = Q(view, 'rw'); if (!rw || rw.dataset.done) return; rw.dataset.done = '1';
     rw.innerHTML = `<span class="xp">${ico('xp')}<b data-c="xp">0</b></span><span>${ico('silver')}<b data-c="sv">0</b></span>`;
+    const pr = premHtml(d); if (pr && rw.insertAdjacentHTML) rw.insertAdjacentHTML('afterend', pr.html);
     count(rw.querySelector('[data-c="xp"]'), d.xp, 1000, '+'); count(rw.querySelector('[data-c="sv"]'), d.silver || 0, 1000, '+');
   }
   // claim: { rating: { points, parts }, acc, note, board: { place, prev, n, counted } | null, off - межсезонье (рейтинга нет) }
@@ -255,6 +271,8 @@ export function createEndScreen(C) {
   };
 
   // ═════════════ Заглушка ?endmock=solo-win | solo-lose | ol-win | ol-lose | mw-win | mw-lose ═════════════
+  // награда для заглушки: с премиумом (?prem=1) - xp уже с ×1,75 и бонус prem; без - prem 0
+  const mockReward = (win) => { const base = win ? 708 : 177, on = !!(C.progress && C.progress.premOn), xp = on ? Math.round(base * PREM_K) : base; return { xp, silver: xp, prem: on ? xp - base : 0 }; };
   function mock(name) {
     const [kind, res] = String(name).split('-'), win = res !== 'lose';
     C.setup.game = 'air'; C.start('air'); // фон - настоящий вылет
@@ -267,7 +285,7 @@ export function createEndScreen(C) {
         api.show({ title: win ? tr('Задание выполнено') : tr('Самолёт потерян'), reason: win ? tr('Торфяные карьеры разбиты, «Шилка» у дамбы подавлена. Вертолёт вернулся на площадку.') : tr('Попадание ПЗРК «Игла» после пуска по второй цели.'),
           stats: win ? [['3/3', tr('целей уничтожено')], ['2', tr('комплексов ПВО')], ['4 820', tr('очков')], [tr('Реализм'), tr('ранг III')]] : [['1/3', tr('целей уничтожено')], ['0', tr('комплексов ПВО')], ['1 150', tr('очков')]],
           note: win ? tr('Задание выполнено.') : '', win, events: ev.map(([t, c, l]) => ({ t, c, l })), dur: win ? 402 : 134 });
-        setTimeout(() => api.reward(win ? { xp: 1240, silver: 620 } : { xp: 310, silver: 150 }), 2200);
+        setTimeout(() => api.reward(mockReward(win)), 2200);
         return;
       }
       const P = (id, name, team, bot, kills, score, extra) => ({ id, name, team, bot, kills, deaths: 0, score, ...extra });
@@ -283,7 +301,7 @@ export function createEndScreen(C) {
       }
       setTimeout(() => {
         api.claimed({ rating: { points: win ? 882 : 236, parts: {} }, acc: { kind: 'airdef' }, note: win ? tr('Награда: {0}', [`${tr('+{0} деталей', [12])}, +1 ${ico('key', 'ii')}`]) : tr('Результат засчитан'), board: win ? { place: 31, prev: 37, n: 6, counted: true } : { place: 37, prev: 37, n: 5, counted: false } });
-        api.reward(win ? { xp: 1240, silver: 620 } : { xp: 310, silver: 150 });
+        api.reward(mockReward(win));
       }, 1200);
     }, 2500);
   }

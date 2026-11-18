@@ -47,6 +47,8 @@ import { createAccount } from './account-ui.js?v=20261118d';
 import { createRating } from './rating-ui.js?v=20261118d';
 import { createSupport } from './support-ui.js?v=20261118d';
 import { createShop } from './shop-ui.js?v=20261118d';
+import { createPrem } from './prem.js?v=20261118d';
+import { createPay } from './pay.js?v=20261118d';
 import { createQuests } from './quests.js?v=20261118d';
 import { createEndScreen } from './endscr.js?v=20261118d';
 import { createHints } from './hints.js?v=20261118d';
@@ -1485,6 +1487,7 @@ setInterval(() => {
   $('wNext').onclick = () => C.watchNext(); $('wMap').onclick = () => C.watchMap(); $('wSpeed').onclick = () => C.watchSpeed();
   ctrls.director = createDirector(C); ctrls.menuBg = createMenuBg(C); ctrls.hangar = C.hangar = createHangar(C, renderer); C.texQ = () => { const v = ls.get('fortuna_airdef_texq'); return ['opt', 'hangar', 'battle', 'both'].includes(v) ? v : 'hangar'; }; C.setTexQ = (v) => ls.set('fortuna_airdef_texq', v); C.texMax = (where) => { const v = C.texQ(); return v === 'both' || v === where; }; /* «Текстуры самолётов»: по умолчанию максимальные в ангаре (Mark) */ C.hangarFail = () => { if (C.ctrl === ctrls.hangar) { ctrls.hangar.stop(); C.ctrl = ctrls.menuBg.has() ? ctrls.menuBg : ctrls.director; C.ctrl.start(); C.menu.show(); } }; /* зал не загрузился - прежний фон */ ctrls.training = createTraining(C, ctrls); ctrls.photo = createPhoto(C, ctrls);
   C.diff = createDifficulty(ls); // сложность: режим + скрытая подстройка под игрока (difficulty.js)
+  C.prem = createPrem(C); C.pay = createPay(C); // премиум и оплата Telegram Stars: знак и срок в ангаре, окно окончания, уведомление за вход (prem.js); счёт и ожидание оплаты (pay.js)
   C.progress = createProgress(C); C.research = createResearch(C, C.progress); // прокачка: состояние с сайта, экран «Исследования»
   createHints(C, ctrls); // подсказки клавиш в бою (ПК): «Настройки» или F1
   C.event = createEvent(C); // событие «Туманная топь»: экран вертолётов (кнопка в меню - #evtBtn)
