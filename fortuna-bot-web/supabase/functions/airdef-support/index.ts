@@ -12,6 +12,7 @@
 // 2) Telegram (заголовок X-Telegram-Bot-Api-Secret-Token = HMAC от токена бота): бот поддержки. Посторонним - подсказка на их языке,
 //   ничего не сохраняется; только SUPPORT_ADMIN_ID: ответ (reply) на сообщение бота об обращении - ответ игроку; кнопки «Ответить», «Закрыть», «Игрок».
 //   Вебхук бот ставит себе сам при первом запросе (support_state 'webhook'). Уведомления - у каждого сообщения флаг notified; несланные досылаются.
+// Покупки за Telegram Stars - тот же бот, пока не вписан отдельный TG_PAY_TOKEN (_shared/airdef-pay.ts; счёт выдаёт airdef-shop).
 // Удалил аккаунт - копии в Telegram стираются (очередь support_tg_purge, sql/036; _shared/support-tg-purge.ts, разбор при каждом вызове).
 // Секреты: TG_SUPPORT_TOKEN, SUPPORT_ADMIN_ID (Mark вписывает сам в панели Supabase), SUPPORT_FILE_KEY, SUPPORT_FILES_URL.
 // Текст игрока нигде не идёт как разметка: в Telegram - без parse_mode, в игре - textContent. Таблицы - sql/033_support.sql, sql/034_support_fixes.sql.
@@ -20,6 +21,7 @@ import { supabaseAdmin } from "../_shared/supabase-admin.ts";
 import { sessionPlayer } from "../_shared/airdef-session.ts";
 import { MAX_FILE, TYPES, filesReady, signedUrl } from "../_shared/support-files.ts";
 import { drainTg } from "../_shared/support-tg-purge.ts";
+import { PAY_TOKEN, payUpdate } from "../_shared/airdef-pay.ts";
 
 // deno-lint-ignore no-explicit-any
 type Db = any;
@@ -63,10 +65,10 @@ async function sha(s: string) { return Array.from(new Uint8Array(await crypto.su
 async function ensureWebhook(db: Db) {
   if (hookOk || !TG()) return;
   const url = `${Deno.env.get("SUPABASE_URL")}/functions/v1/airdef-support`, sec = await hookSecret();
-  const want = (await sha(url + "|" + sec)).slice(0, 16);
+  const want = (await sha(url + "|" + sec + "|pay")).slice(0, 16); // «|pay» - вебхук с pre_checkout_query (покупки): старая запись не совпадёт - поставится заново
   const { data } = await db.from("support_state").select("v").eq("k", "webhook").maybeSingle();
   if (data?.v === want) { hookOk = true; return; }
-  const ok = await tg("setWebhook", { url, secret_token: sec, allowed_updates: ["message", "callback_query"], drop_pending_updates: false });
+  const ok = await tg("setWebhook", { url, secret_token: sec, allowed_updates: ["message", "callback_query", "pre_checkout_query"], drop_pending_updates: false });
   if (ok) { await db.from("support_state").upsert({ k: "webhook", v: want, updated_at: now() }); hookOk = true; }
 }
 const KB = (id: number) => ({ inline_keyboard: [[{ text: "✉ Ответить", callback_data: `r:${id}` }, { text: "✓ Закрыть", callback_data: `c:${id}` }, { text: "👤 Игрок", callback_data: `p:${id}` }]] });
@@ -138,6 +140,8 @@ const GUEST: Record<string, string> = {
 async function onTelegram(db: Db, u: any): Promise<Response> {
   const ok = () => new Response("ok");
   const admin = ADMIN();
+  // покупки за звёзды (_shared/airdef-pay.ts), если платёжный бот - этот же (TG_PAY_TOKEN не вписан): счёт, оплата, возврат, /paysupport, /terms
+  if (PAY_TOKEN() === TG() && await payUpdate(db, u)) return ok();
   if (u.callback_query) {
     const q = u.callback_query, from = q.from?.id;
     if (!admin || from !== admin) { await tg("answerCallbackQuery", { callback_query_id: q.id }); return ok(); }

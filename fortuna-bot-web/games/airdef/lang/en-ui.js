@@ -1335,4 +1335,11 @@ export default {
   "Сервер онлайна сейчас недоступен - проверяем…": "The online server is unavailable right now - checking…",
   "Сервер онлайна сейчас недоступен. Проверим снова сами через {0} с.": "The online server is unavailable right now. We'll check again automatically in {0} s.",
   "Проверить сейчас": "Check now",
+  // ── документы: ссылки в «Об игре» и согласие при создании аккаунта (2026-11-19) ──
+  "Документы": "Documents",
+  "Правила пользования": "Terms of Use",
+  "Политика конфиденциальности": "Privacy Policy",
+  "Политику конфиденциальности": "Privacy Policy",
+  "Удаление аккаунта и данных": "Deleting your account and data",
+  "Создавая аккаунт, вы принимаете {0} и {1}.": "By creating an account, you accept the {0} and the {1}.",
 };

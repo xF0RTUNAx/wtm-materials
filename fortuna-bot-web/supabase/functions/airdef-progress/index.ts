@@ -5,12 +5,13 @@
 //   { player_id, action: 'goal', branch, id | null }     → { ok, progress }
 //   { player_id, action: 'quests' }                      → { progress, crystals } (задания: progress.quests; новый день начисляет незабранное)
 //   { player_id, action: 'quest', key }                  → { ok, progress, crystals, auto } | { error } («Забрать»: 'd:id', 'w:id', 'crate', 'chest')
+//   Премиум (sql/037): в ответах state / quests / quest / swap - prem: { until, gift } (gift - +1 кристалл за первый вход дня, начислен сейчас)
 //   { player_id, action: 'swap', key }                   → { ok, progress, crystals, from, to } | { error } («Заменить» невыполненное: 'd:id', 'w:id'; 1 в день и 1 в неделю, с премиумом по 2 - quests-data.js SWAP)
 // Правила - _shared/airdef/progress.js (копия games/airdef/progress.js). Тратит только сервер.
 import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
 import { supabaseAdmin } from "../_shared/supabase-admin.ts";
 import { mskToday } from "../_shared/msk.ts";
-import { act, extraOf, load, mutate, questsPending, questsRolled, questSwapDo, questTake, toProgress, view, NEED_GAME, NOT_FOUND, type Extra } from "../_shared/airdef-progress.ts";
+import { act, extraOf, load, mutate, questsPending, questsRolled, questSwapDo, questTake, toProgress, view, isPrem, premUntil, NEED_GAME, NOT_FOUND, type Extra } from "../_shared/airdef-progress.ts";
 import { settleSeasons } from "../_shared/airdef-season.ts";
 import { sessionPlayer } from "../_shared/airdef-session.ts";
 
@@ -23,6 +24,9 @@ Deno.serve(async (req) => {
     const db = supabaseAdmin(), today = mskToday();
     const who = await sessionPlayer(db, body); if (who.err) return who.err; // аккаунт игры - по ключу сессии (sess), сайта - по номеру
     const player_id = who.id!;
+    const until = await premUntil(db, player_id), prem = isPrem(until);
+    // премиум: +1 кристалл за первый вход дня (по Москве, как задания); дважды за день не начислит - проверка в SQL
+    const gift = async () => { if (!prem) return 0; try { const g = await db.rpc("airdef_prem_daily", { p_player: player_id, p_day: today }); return Number(g.data) || 0; } catch (_) { return 0; } };
     const crystals = async () => { try { const w = await db.rpc("airdef_wallet_view", { p_player: player_id }); return w.error ? null : Number((w.data as { crystals?: number })?.crystals) || 0; } catch (_) { return null; } }; // кошелёк не прочитался - null, награда уже сохранена
     if (action === "state" || action === undefined || action === "quests") {
       // награды закончившегося сезона (sql/024) - молча; сбой не мешает загрузке прокачки
@@ -39,7 +43,8 @@ Deno.serve(async (req) => {
           if (out.ok && x1) { P = out.P!; x = x1; }
         } catch (e) { console.error("airdef-progress quests roll", e); } // сбой записи не мешает загрузке прогресса: начислится при следующем обращении
       }
-      return jsonResponse({ progress: view(P, x, today), ...(action === "quests" ? { crystals: await crystals() } : {}) });
+      const g = action === "quests" ? 0 : await gift();
+      return jsonResponse({ progress: view(P, x, today, prem), prem: { until: prem ? until : null, gift: g }, ...(action === "quests" ? { crystals: await crystals() } : {}) });
     }
     if (action === "quest") {
       let x1 = null as Extra | null;
@@ -47,17 +52,17 @@ Deno.serve(async (req) => {
       if (out.notFound) return jsonResponse(NOT_FOUND, 404);
       if (out.needGame) return jsonResponse(NEED_GAME, 403);
       if (!out.ok) return jsonResponse({ error: (out as { why?: string }).why || "Нельзя" }, 409);
-      return jsonResponse({ ok: true, progress: view(out.P!, x1!, today), crystals: await crystals(), auto: (out as { auto?: string[] }).auto || [] });
+      return jsonResponse({ ok: true, progress: view(out.P!, x1!, today, prem), crystals: await crystals(), auto: (out as { auto?: string[] }).auto || [] });
     }
     if (action === "swap") {
       let x1 = null as Extra | null;
       const rnd = crypto.getRandomValues(new Uint32Array(1))[0] / 2 ** 32; // замена случайная, выбирает сервер
-      const out = await mutate(db, player_id, (P, x) => { const r = questSwapDo(P, x, key, today, rnd); if (r.ok) x1 = r.extra; return r; });
+      const out = await mutate(db, player_id, (P, x) => { const r = questSwapDo(P, x, key, today, rnd, prem); if (r.ok) x1 = r.extra; return r; });
       if (out.notFound) return jsonResponse(NOT_FOUND, 404);
       if (out.needGame) return jsonResponse(NEED_GAME, 403);
       if (!out.ok) return jsonResponse({ error: (out as { why?: string }).why || "Нельзя" }, 409);
       const o = out as { from?: string; to?: string };
-      return jsonResponse({ ok: true, progress: view(out.P!, x1!, today), crystals: await crystals(), from: o.from, to: o.to });
+      return jsonResponse({ ok: true, progress: view(out.P!, x1!, today, prem), crystals: await crystals(), from: o.from, to: o.to });
     }
     if (!ACTIONS.has(action)) return jsonResponse({ error: "Неизвестное действие" }, 400);
     let x0 = null as ReturnType<typeof extraOf> | null;
@@ -65,7 +70,7 @@ Deno.serve(async (req) => {
     if (out.notFound) return jsonResponse(NOT_FOUND, 404);
     if (out.needGame) return jsonResponse(NEED_GAME, 403);
     if (!out.ok) return jsonResponse({ error: out.why || "Нельзя" }, 409);
-    return jsonResponse({ ok: true, progress: view(out.P!, x0!, today) });
+    return jsonResponse({ ok: true, progress: view(out.P!, x0!, today, prem) });
   } catch (e) {
     console.error("airdef-progress", e);
     return jsonResponse({ error: "Внутренняя ошибка сервера" }, 500);

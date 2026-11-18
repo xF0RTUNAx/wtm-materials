@@ -279,5 +279,7 @@ export function battleReward(ev, o = {}) {
   const today = o.dayXp ?? o.soloToday ?? 0, over = Math.max(0, today + xp - DAY_FULL);
   if (over > 0) { const full = xp - Math.min(xp, over); xp = full + Math.min(over, xp) * DAY_OVER; K.push([`После ${DAY_FULL} за день`, DAY_OVER]); }
   xp = Math.round(xp);
-  return { xp, silver: xp, lines: L, mult: K };
+  // премиум (o.prem - множитель, arsenal.js PREM_K): поверх всего, дневной предел считается по опыту без него (base)
+  if (o.prem > 1 && xp > 0) { const base = xp; xp = Math.round(base * o.prem); K.push(['Премиум', o.prem]); return { xp, silver: xp, base, prem: xp - base, lines: L, mult: K }; }
+  return { xp, silver: xp, base: xp, prem: 0, lines: L, mult: K };
 }

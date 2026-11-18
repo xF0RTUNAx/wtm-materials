@@ -6,6 +6,7 @@ import {
   NODE, BRANCHES, newProgress, research, buy, canResearch, owned, battleReward, SOLO_DAY,
 } from "./airdef/progress.js";
 import { questApply, questClaim, questRoll, questSwap, questView } from "./airdef/quests-data.js";
+import { PREM_K, premOn } from "./airdef/arsenal.js";
 
 export type Progress = { xp: number; silver: number; res: string[]; own: string[]; goal: Record<string, string> };
 export type Row = {
@@ -65,16 +66,16 @@ export function cleanEvents(ev: unknown, minutes: number): BattleEvents {
 // на которые теперь хватает опыта, исследуются сами. used - узлы, на которых играли (в «Реализме» все должны быть куплены,
 // иначе - как в «Аркаде»: без множителя). Возвращает новое состояние и строки для экрана итогов.
 // o.quest - счётчики для заданий (онлайн: onlineCounters, «Оборона»: волны и победа); опыт боя добавляется здесь.
-export function credit(P: Progress, x: Extra, ev: BattleEvents, o: { real: boolean; online: boolean; today: string; used?: unknown; training?: boolean; quest?: Record<string, number> | null }) {
+export function credit(P: Progress, x: Extra, ev: BattleEvents, o: { real: boolean; online: boolean; today: string; used?: unknown; training?: boolean; quest?: Record<string, number> | null; prem?: boolean }) {
   const used = Array.isArray(o.used) ? o.used.filter((id): id is string => typeof id === "string" && !!NODE[id]).slice(0, 40) : [];
   const realOk = o.real && used.every((id) => owned(P, id));
   const firstWin = x.first_win_day !== o.today;
   const soloToday = x.solo_day === o.today ? x.solo_xp : 0;
-  const r = battleReward(ev, { training: o.training, real: realOk, arcade: !realOk, firstWin, online: o.online, dayXp: soloToday }); // solo_xp - опыт за день по всем боям (дневной предел - и для онлайна)
+  const r = battleReward(ev, { training: o.training, real: realOk, arcade: !realOk, firstWin, online: o.online, dayXp: soloToday, prem: o.prem ? PREM_K : 0 }); // solo_xp - опыт за день по всем боям (дневной предел - и для онлайна)
   P.xp += r.xp; P.silver += r.silver;
   let nx: Extra = { ...x };
   if (firstWin && ev.win && r.xp > 0) nx.first_win_day = o.today;
-  nx.solo_day = o.today; nx.solo_xp = soloToday + r.xp;
+  nx.solo_day = o.today; nx.solo_xp = soloToday + (r.base ?? r.xp); // дневной предел - по опыту без премиума
   if (o.quest) nx = payQuest(P, nx, questApply(x.quests, o.today, o.online ? { ...o.quest, xp: r.xp } : o.quest));
   const auto = autoResearch(P);
   return { reward: r, P, extra: nx, auto, realOk, realAsked: o.real, soloLeft: Math.max(0, SOLO_DAY - (nx.solo_day === o.today ? nx.solo_xp : 0)) };
@@ -104,7 +105,7 @@ export function questTake(P: Progress, x: Extra, key: unknown, today: string) {
   const extra = payQuest(P, x, out);
   return { ok: true as const, extra, auto: autoResearch(P) };
 }
-// «Заменить»: key - 'd:id' | 'w:id'; rnd - число [0,1) (сервер: crypto, тест: своё); prem - премиум-аккаунт (пока в игре его нет - false).
+// «Заменить»: key - 'd:id' | 'w:id'; rnd - число [0,1) (сервер: crypto, тест: своё); prem - премиум-аккаунт (+1 замена в день и в неделю).
 // Замена не двигает опыт и серебро; начисление за прошедший день (первое обращение за сутки) уходит в сохранение вместе с ней
 export function questSwapDo(P: Progress, x: Extra, key: unknown, today: string, rnd: number, prem = false) {
   if (typeof key !== "string" || key.length > 32) return { ok: false as const, why: "Такого задания сейчас нет" };
@@ -113,6 +114,12 @@ export function questSwapDo(P: Progress, x: Extra, key: unknown, today: string, 
   const extra = payQuest(P, x, out);
   return { ok: true as const, extra, auto: autoResearch(P), from: out.from as string, to: out.to as string };
 }
+
+// премиум игрока (sql/037: airdef_wallet.premium_until); не прочитался - без премиума (бой всё равно начисляется)
+export async function premUntil(db: DB, player_id: string): Promise<string | null> {
+  try { const r = await db.from("airdef_wallet").select("premium_until").eq("player_id", player_id).maybeSingle(); return r.error ? null : (r.data?.premium_until ?? null); } catch (_) { return null; }
+}
+export const isPrem = (until: string | null) => premOn(until);
 
 // ── база ──
 // Правило Mark 2026-10-25: новым игрокам - только аккаунт игры (kind = 'airdef'). Аккаунт сайта (kind = 'site') играет, только если у него

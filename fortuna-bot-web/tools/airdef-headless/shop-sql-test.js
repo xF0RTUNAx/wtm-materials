@@ -47,7 +47,7 @@ await db.query('update airdef_wallet set picks = 1 where player_id = $1', [p]);
 ok((await pick(A)).error === 'owned', '«на выбор» - свою не взять, выбор не сгорает');
 r = await pick(B);
 ok(r.wallet && r.wallet.picks === 0 && r.wallet.camos.includes(B) && r.wallet.crystals === 150, 'взять на выбор: picks 1 → 0, кристаллы те же');
-ok((await pick('e_tu22:milk')).error === 'not_sold', '«на выбор» - только из магазина');
+ok((await pick('e_f35:sakura')).error === 'not_sold', '«на выбор» - только из магазина');
 // надеть / снять
 ok((await wear('e_f35', 'sakura')).error === 'not_owned', 'чужую окраску не надеть');
 r = await wear('e_f15e', 'inferno');

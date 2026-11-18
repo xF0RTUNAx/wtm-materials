@@ -4,7 +4,7 @@
 // новичку аккаунт сайта в игре не нужен (только аккаунт игры), «старому» игроку с прогрессом он работает до переноса, но без рейтинга.
 // В комнате и в бою аккаунт сменить нельзя; вне их смена закрывает соединение онлайна (net.js accChanged).
 import { ico } from './icons.js?v=20261118d';
-import { tr, trIf, L10N } from './i18n.js?v=20261118d';
+import { tr, trIf, L10N, LANG } from './i18n.js?v=20261118d';
 import { avaSrc, ownAva } from './avatar.js?v=20261118d';
 import { gameAcc, siteAcc, setGameAcc, clearGameAcc, logoutGame, ensureSession, reloginNeeded, accountApi, siteStatus, siteStatusDone, transferOk, siteNewbie, legacySite, onAccChange } from './account.js?v=20261118d';
 const CONFIRM_WORD = L10N.confirm; // удаление аккаунта - набрать это слово (Mark 2026-11-17)
@@ -39,6 +39,7 @@ button[data-accopen] { margin: 0 0 0 6px; border: 1px solid #4a5443; border-radi
 #accWin .lock { color: #f0b86f; } #accWin button:disabled { cursor: default; opacity: .55; }
 #accWin .seg { display: flex; } #accWin .seg button { flex: 1 1 0; border: 1px solid #4a5443; border-radius: 0; background: none; color: var(--dim); padding: 7px 8px; font: 500 14px 'Golos Text', sans-serif; cursor: pointer; } #accWin .seg button + button { border-left: 0; }
 #accWin .seg button.on { background: #2c3426; color: #e9e6dc; box-shadow: inset 0 -2px 0 var(--amber); } #accWin .seg button:hover:not(.on) { color: #e9e6dc; }
+#accWin .cons { color: var(--dim); font-size: 12.5px; } #accWin .cons a { color: var(--amber2); text-decoration: underline; text-underline-offset: 2px; }
 #accWin .ginfo { color: var(--dim); } #accWin .ginfo b { color: #e9e6dc; font-weight: 500; } #accWin p b { color: #e9e6dc; font-weight: 600; word-break: break-word; }
 #accWin .me { display: grid; gap: 2px; } #accWin .me b { font: 500 22px 'Oswald', sans-serif; word-break: break-word; } #accWin .me span { color: var(--dim); font-size: 13px; }
 @media (max-height: 460px) { #accWin .whead { padding: 6px 10px; } #accWin .tabs button { padding: 6px 12px; } #accWin .body { padding: 8px 10px; gap: 8px; } #accWin .frm { grid-template-columns: 1fr 1fr; gap: 8px; } #accWin .frm .full { grid-column: 1 / -1; } }
@@ -102,6 +103,9 @@ export function createAccount(C) {
   }
   const fld = (k, label, type, auto, hint, cls = '') => `<label class="fld ${cls}"><span>${label}</span><input data-f="${k}" type="${type}" autocomplete="${auto}" autocapitalize="off" autocorrect="off" spellcheck="false" value="${fv(k)}">${hint ? `<small>${hint}</small>` : ''}</label>`;
   const msg = () => `<div class="amsg${S.err ? ' err' : S.ok ? ' ok' : ''}" role="alert">${esc(S.err || S.ok)}</div>`;
+  // согласие с документами (Правила, Политика) - под формой создания аккаунта: регистрация и перенос в один шаг (он тоже создаёт аккаунт)
+  const doc = (f, t) => `<a href="legal/${f}.html?lang=${LANG}" target="_blank" rel="noopener">${t}</a>`;
+  const consent = () => `<p class="cons full">${tr('Создавая аккаунт, вы принимаете {0} и {1}.', [doc('terms', tr('Правила пользования')), doc('privacy', tr('Политику конфиденциальности'))])}</p>`;
   const newbie = () => (siteNewbie() ? `<p>${tr('У игры свой аккаунт - аккаунт сайта здесь не используется.')}</p>` : '');
   const siteLogin = () => (siteAcc() ? siteAcc().login : (S.f.slogin || '').trim());
   // «В игре: …» - какие логин и ник получит аккаунт игры при переносе в один шаг (логин сайта, пока сервер не попросил другой)
@@ -124,7 +128,7 @@ export function createAccount(C) {
         + (M.pwNew ? fld('npw', tr('Новый пароль для игры'), 'password', 'new-password', tr('от 6 символов'), 'full') : '')
         + (M.needLogin ? fld('glogin', tr('Логин для игры'), 'text', 'off', tr('3-24: латиница, цифры, _'), 'full') : '')
         + (M.needNick ? fld('gnick', tr('Ник для рейтинга'), 'text', 'nickname', tr('3-16: буквы, цифры, пробел, _ и -'), 'full') : '')
-        + `<p class="ginfo full">${migInfo()}</p><button class="btn full" type="submit">${tr('Перенести прогресс')}</button></form>`;
+        + `<p class="ginfo full">${migInfo()}</p>${consent()}<button class="btn full" type="submit">${tr('Перенести прогресс')}</button></form>`;
     }
     // уже вошёл в аккаунт игры: прогресс сайта - в него
     return `<p>${tr('Перенести прогресс сайта в этот аккаунт ({0})', [`<b>${esc(g.nick || g.login)}</b>`])}</p><p>${tr('Перенесутся опыт, серебро, исследования, покупки и онлайн-бои «Воздушного превосходства». Мини-игры сайта останутся на аккаунте сайта. Перенос - один раз.')}</p>`
@@ -133,7 +137,7 @@ export function createAccount(C) {
   function body() {
     const g = gameAcc();
     if (S.tab === 'login') return `<form class="frm" data-form="login" novalidate>${fld('login', tr('Логин'), 'text', 'username', '', 'full')}${fld('pass', tr('Пароль'), 'password', 'current-password', '', 'full')}<button class="btn full" type="submit">${tr('Войти')}</button></form>${msg()}`;
-    if (S.tab === 'reg') return `${newbie()}<form class="frm" data-form="reg" novalidate>${fld('login', tr('Логин'), 'text', 'username', tr('3-24: латиница, цифры, _'))}${fld('pass', tr('Пароль'), 'password', 'new-password', tr('от 6 символов'))}${fld('nick', tr('Ник для рейтинга'), 'text', 'nickname', tr('3-16: буквы, цифры, пробел, _ и -'), 'full')}<button class="btn full" type="submit">${tr('Создать аккаунт')}</button></form>${msg()}${nickSiteBtn() ? `<div class="row"><button class="btn alt" data-a="goxfer">${legacySite() || !siteAcc() ? tr('Перенести прогресс') : tr('Взять ник - войти паролем сайта')}</button></div>` : ''}`;
+    if (S.tab === 'reg') return `${newbie()}<form class="frm" data-form="reg" novalidate>${fld('login', tr('Логин'), 'text', 'username', tr('3-24: латиница, цифры, _'))}${fld('pass', tr('Пароль'), 'password', 'new-password', tr('от 6 символов'))}${fld('nick', tr('Ник для рейтинга'), 'text', 'nickname', tr('3-16: буквы, цифры, пробел, _ и -'), 'full')}${consent()}<button class="btn full" type="submit">${tr('Создать аккаунт')}</button></form>${msg()}${nickSiteBtn() ? `<div class="row"><button class="btn alt" data-a="goxfer">${legacySite() || !siteAcc() ? tr('Перенести прогресс') : tr('Взять ник - войти паролем сайта')}</button></div>` : ''}`;
     if (S.tab === 'xfer') return xferBody(g);
     // acc: вошёл
     const me = `<div class="me"><b>${esc(g.nick || g.login)}</b><span>${tr('Логин: {0}', [esc(g.login)])}</span></div>`;

@@ -8,7 +8,7 @@
 import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
 import { supabaseAdmin } from "../_shared/supabase-admin.ts";
 import { mskToday } from "../_shared/msk.ts";
-import { cleanEvents, credit, load, mutate, view, NEED_GAME, NOT_FOUND, type Extra } from "../_shared/airdef-progress.ts";
+import { cleanEvents, credit, load, mutate, view, NEED_GAME, NOT_FOUND, type Extra, isPrem, premUntil } from "../_shared/airdef-progress.ts";
 import { defenseCounters } from "../_shared/airdef/quests-data.js";
 import { sessionPlayer } from "../_shared/airdef-session.ts";
 
@@ -49,9 +49,10 @@ Deno.serve(async (req) => {
       if (!run) return jsonResponse({ error: "Бой уже засчитан или устарел" }, 409);
       const today = mskToday(), ev = cleanEvents(body.ev, run.seconds / 60);
       let res: ReturnType<typeof credit> | null = null, x1: Extra | null = null;
+      const prem = isPrem(await premUntil(db, player_id)); // премиум: ×PREM_K к опыту и серебру
       try {
         const out = await mutate(db, player_id, (P, x) => {
-          res = credit(P, x, ev, { real: run.mode === "real", online: false, today, used: body.used, quest: run.game === "defense" ? defenseCounters(ev, run.seconds, Date.now() / 1000) : undefined }); // задания: из одиночной игры - только «Оборона»
+          res = credit(P, x, ev, { real: run.mode === "real", online: false, today, used: body.used, quest: run.game === "defense" ? defenseCounters(ev, run.seconds, Date.now() / 1000) : undefined, prem }); // задания: из одиночной игры - только «Оборона»
           x1 = res.extra; return { ok: true, extra: res.extra };
         });
         if (out.notFound || out.needGame) {
@@ -62,7 +63,7 @@ Deno.serve(async (req) => {
         const r = res!;
         return jsonResponse({
           xp: r.reward.xp, silver: r.reward.silver, lines: r.reward.lines, mult: r.reward.mult, auto: r.auto, real: r.realOk, real_asked: r.realAsked,
-          minutes: Math.round(ev.min! * 10) / 10, solo_left: r.soloLeft, progress: view(out.P!, x1!, today),
+          minutes: Math.round(ev.min! * 10) / 10, solo_left: r.soloLeft, prem: r.reward.prem, progress: view(out.P!, x1!, today, prem),
         });
       } catch (e) {
         await db.rpc("airdef_run_unclaim", { p_run: run_id }); // опыт не сохранился - бой можно засчитать повторно

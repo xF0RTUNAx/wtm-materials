@@ -235,6 +235,15 @@ export const AVA_DEFAULT = 'a01';
 export const AVA_SHOP = ['a02', 'a04', 'a13', 'a15', 'a16', 'a20', 'a29', 'a07', 'a18', 'a26'];
 export const avaKey = (id) => `ava:${id}`;
 export const avaCatalog = () => AVA_SHOP.map(avaKey);
+// Премиум и кристаллы за Telegram Stars (Mark 2026-11-18). Премиум: ×PREM_K к опыту и серебру за бой, +1 кристалл за первый вход дня,
+// ещё 1 бесплатная замена ежедневного и еженедельного задания (quests-data.js SWAP_PREM). Срок считается от покупки (или продлевается от конца текущего).
+// stars - цена в Telegram Stars (XTR), usd - цена для будущих магазинов и карт. Начисление - только сервер (sql/037, _shared/airdef-pay.ts).
+export const PREM_K = 1.75;
+export const PAY = {
+  prem_1d: { prem: 1, stars: 25, usd: 0.49 }, prem_7d: { prem: 7, stars: 125, usd: 2.49 }, prem_30d: { prem: 30, stars: 350, usd: 6.99 },
+  gems_100: { gems: 100, stars: 100, usd: 1.99 }, gems_550: { gems: 550, stars: 500, usd: 9.99 }, gems_1200: { gems: 1200, stars: 1000, usd: 19.99 },
+};
+export const premOn = (until, now = Date.now()) => !!until && Date.parse(until) > now;
 // самолёты ИИ-налёта (только вид): сторона → эпоха → роль; нет роли - bomber
 export const RAID_PLANES = {
   east: { 1: { bomber: 'e_tu22m3', sead: 'e_su24', low: 'e_su17' }, 2: { bomber: 'e_su24', tv: 'e_su25', sead: 'e_su17', low: 'e_su25' },

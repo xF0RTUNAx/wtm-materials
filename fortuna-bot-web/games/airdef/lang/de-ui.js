@@ -1310,4 +1310,10 @@ export default {
   "Сервер онлайна сейчас недоступен - проверяем…": "Der Online-Server ist gerade nicht erreichbar - wir prüfen…",
   "Сервер онлайна сейчас недоступен. Проверим снова сами через {0} с.": "Der Online-Server ist gerade nicht erreichbar. Wir prüfen in {0} s automatisch erneut.",
   "Проверить сейчас": "Jetzt prüfen",
+  "Документы": "Dokumente",
+  "Правила пользования": "Nutzungsbedingungen",
+  "Политика конфиденциальности": "Datenschutzerklärung",
+  "Политику конфиденциальности": "Datenschutzerklärung",
+  "Удаление аккаунта и данных": "Konto und Daten löschen",
+  "Создавая аккаунт, вы принимаете {0} и {1}.": "Mit dem Erstellen eines Kontos akzeptierst du die {0} und bestätigst, die {1} gelesen zu haben.",
 };
