@@ -143,8 +143,11 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
       const seadOk = sead.filter(can), strikeOk = strike.filter(can);
       const canOp = seadOk.length > 0 && strikeOk.length > 0; if (!canOp) setup.op = false;
       const opRow = canOp ? `<div class="prow"><span>${tr('Вылеты')}</span>${seg('op', setup.op ? 'op' : 'one', [['one', tr('Один вылет')], ['op', tr('Операция: 2 вылета')]])}</div>` : '';
-      if (hg) h = `<button class="hgTop${hgSet ? ' open' : ''}" data-hgset="1"><b class="hgRank">${tr('Ранг')} ${ERAS[setup.era - 1].short}</b><span class="hgSum">${trIf(MODES[setup.diff].name)} · ${setup.side === 'east' ? tr('Запад') : tr('Восток')}</span></button>${hgSet ? `<div class="hgSet">${segs}${setRow}${opRow}</div>` : ''}${noneHint}`;
-      else h += opRow;
+      // ангар (Mark 2026-11-18, макет «Свёрнуто», вариант Б): плашка ранга и строка «звезда · режим · вылеты»; раскрыто - режим и ранги, звёзды своей авиации, плитки «Один вылет / Операция» с самолётами выбранной стороны; без тёмной подложки
+      if (hg) { const own = setup.side === 'east' ? 'west' : 'east', sp = sead[0] || mine[0], st = strike[0] || mine[0], cur = (LOADOUTS[setup.era][setup.lo] || st[0]).plane;
+        const opT = canOp ? `<div class="seg otiles o2" data-seg="op">${ptile('one', setup.op ? 'op' : 'one', thumb('air_' + cur, 'left:12%;top:4%;width:76%;height:92%'), tr('Один вылет'))}${ptile('op', setup.op ? 'op' : 'one', thumb('air_' + sp[0].plane, 'left:0;top:2%;width:58%;height:70%') + thumb('air_' + st[0].plane, 'right:0;top:26%;width:58%;height:70%'), tr('Операция: 2 вылета'))}</div>` : '';
+        h = `<button class="hgTop${hgSet ? ' open' : ''}" data-hgset="1"><b class="hgRank">${tr('Ранг')} ${ERAS[setup.era - 1].short}</b><span class="hgSum hgSf"><i class="hgSt">${STAR_SEG[own]}</i><span class="hgTx">${trIf(MODES[setup.diff].name)} · ${setup.op ? tr('Операция') : tr('Один вылет')}</span></span></button>${hgSet ? `<div class="dset hgd"><div class="drow">${seg('diff', setup.diff, Object.entries(MODES).map(([k, m]) => [k, trIf(m.name)]))}${seg('era', setup.era, ERAS.filter((e) => LOADOUTS[e.id]).map((e) => [e.id, e.short]))}</div><div class="drow">${seg('aside', own, [['east', STAR_SEG.east], ['west', STAR_SEG.west]])}</div>${opT}</div>` : ''}${noneHint}`;
+      } else h += opRow;
       if (setup.op) {
         if (!seadOk.some(([, i]) => i === setup.lo1)) setup.lo1 = seadOk[0][1];
         if (!strikeOk.some(([, i]) => i === setup.lo2)) setup.lo2 = strikeOk[0][1];

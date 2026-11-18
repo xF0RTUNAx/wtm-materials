@@ -97,6 +97,7 @@ export default {
   "В «Реализме» ранга {0} нет подвески за эту сторону. Купите самолёт и оружие в «Исследованиях» или играйте в «Аркаде».": "No rank {0} loadout for this side in Realistic mode. Buy an aircraft and weapons in Research, or play Arcade.",
   "Вылеты": "Sorties",
   "Один вылет": "Single sortie",
+  "Операция": "Operation",
   "Операция: 2 вылета": "Operation: 2 sorties",
   "Сначала подавить ПВО, потом бить по городу. Разбитое в первом вылете остаётся разбитым, уцелевшие комплексы перезарядятся. Очки считаются за оба вылета, +300 за два возвращения.": "Suppress air defenses first, then hit the city. What you destroy in sortie 1 stays destroyed; surviving sites reload. Points from both sorties count, +300 for returning twice.",
   "Вылет 1 - охота за ПВО": "Sortie 1: SEAD hunt",

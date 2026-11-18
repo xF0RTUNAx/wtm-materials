@@ -95,6 +95,7 @@ export default {
   "В «Реализме» ранга {0} нет подвески за эту сторону. Купите самолёт и оружие в «Исследованиях» или играйте в «Аркаде».": "Aucun emport de rang {0} pour ce camp en mode « Réaliste ». Achetez un avion et des armes dans « Recherche » ou jouez en « Arcade ».",
   "Вылеты": "Sorties",
   "Один вылет": "Sortie unique",
+  "Операция": "Opération",
   "Операция: 2 вылета": "Opération : 2 sorties",
   "Сначала подавить ПВО, потом бить по городу. Разбитое в первом вылете остаётся разбитым, уцелевшие комплексы перезарядятся. Очки считаются за оба вылета, +300 за два возвращения.": "D'abord neutraliser la défense aérienne, puis frapper la ville. Ce qui est détruit lors de la première sortie le reste, les sites survivants se rechargent. Les points des deux sorties s'additionnent, +300 si vous rentrez deux fois.",
   "Вылет 1 - охота за ПВО": "Sortie 1 - chasse à la DCA",
