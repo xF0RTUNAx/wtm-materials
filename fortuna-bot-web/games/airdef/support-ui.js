@@ -6,9 +6,9 @@
 // Снимок экрана боя - только если окно открыто из паузы в бою. Сведения об устройстве и версии уходят сами (поле meta, не показываются игроку).
 // Тексты игрока и ответы поддержки - только через esc() / textContent. Без аккаунта игры - «Поддержка - только с аккаунтом игры» и вход.
 // Входы: профиль (rating-ui.js), «Настройки» (menu.js), пауза в бою (main.js); число непрочитанных - красной отметкой на кнопках (.supn).
-import { ico } from './icons.js?v=20261118c';
-import { tr, trIf, LANG, LOCALE } from './i18n.js?v=20261118c';
-import { gameAcc, callFn } from './account.js?v=20261118c';
+import { ico } from './icons.js?v=20261118d';
+import { tr, trIf, LANG, LOCALE } from './i18n.js?v=20261118d';
+import { gameAcc, callFn } from './account.js?v=20261118d';
 
 const VER = (() => { try { return new URL(import.meta.url).searchParams.get('v') || ''; } catch (_) { return ''; } })();
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
