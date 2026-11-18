@@ -10,15 +10,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "Boeing F/A-18E/F \"Super Hornet\"",
-  "author": "andertan",
-  "url": "https://sketchfab.com/3d-models/boeing-fa-18ef-super-hornet-f71e9fea01e24fea9b1b380161d21d38",
-  "license": "CC-BY-4.0",
-  "files": [
-   "msl_aim120"
-  ]
- },
- {
   "title": "Low Poly GBU-24 laser guided bomb (окраска и запекание)",
   "author": "AnirudhRao",
   "url": "https://sketchfab.com/3d-models/low-poly-gbu-24-laser-guided-bomb-8dcd4a634e924a52ab05d4e90b3e3e82",
@@ -28,44 +19,12 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "US Weapon Pack",
-  "author": "Rhine_Lab_Muelsyse",
-  "url": "https://sketchfab.com/3d-models/us-weapon-pack-c0783151b0024554a97d8ed6e5082745",
-  "license": "CC-BY-4.0",
-  "files": [
-   "aam_aim7",
-   "aam_aim9x"
-  ]
- },
- {
-  "title": "Russian weapon pack",
-  "author": "Rhine_Lab_Muelsyse",
-  "url": "https://sketchfab.com/3d-models/russian-weapon-pack-af00b7135a184ecfb2812a0e54458a8a",
-  "license": "CC-BY-4.0",
-  "files": [
-   "aam_r73",
-   "aam_r77",
-   "aam_r27",
-   "aam_r33"
-  ]
- },
- {
   "title": "KH-58/U Anti-Radiation Missile",
   "author": "Narni_Tchereskov",
   "url": "https://sketchfab.com/3d-models/kh-58u-anti-radiation-missile-765d0250b6a0434b97d6e0434032f4da",
   "license": "CC-BY-4.0",
   "files": [
    "w_kh58"
-  ]
- },
- {
-  "title": "300 followers - free aircraft missile set",
-  "author": "NETRUNNER_pl",
-  "url": "https://sketchfab.com/3d-models/300-followers-free-aircraft-missile-set-2e70bc2ea0824897b2ccaea378809c9e",
-  "license": "CC-BY-4.0",
-  "files": [
-   "aam_aim9",
-   "aam_aim54"
   ]
  },
  {
@@ -125,62 +84,12 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "Generic passenger car pack",
-  "author": "Comrade1280",
-  "url": "https://sketchfab.com/3d-models/generic-passenger-car-pack-20f9af9b8a404d5cb022ac6fe87f21f5",
-  "license": "CC-BY-4.0",
-  "files": [
-   "c_compact",
-   "c_coupe",
-   "c_hatch",
-   "c_van",
-   "c_offroad",
-   "c_pickup",
-   "c_sedan",
-   "c_sport",
-   "c_suv",
-   "c_wagon",
-   "c_compact_lo",
-   "c_coupe_lo",
-   "c_hatch_lo",
-   "c_van_lo",
-   "c_offroad_lo",
-   "c_pickup_lo",
-   "c_sedan_lo",
-   "c_sport_lo",
-   "c_suv_lo",
-   "c_wagon_lo"
-  ]
- },
- {
-  "title": "Low Poly Car",
-  "author": "Roma",
-  "url": "https://sketchfab.com/3d-models/low-poly-car-54c466359f8b459dbccea0168ea01c85",
-  "license": "CC-BY-4.0",
-  "files": [
-   "c_police",
-   "c_police_lo"
-  ]
- },
- {
   "title": "Saab JAS-39С Gripen fighter jet",
   "author": "Lanko Mykhailo",
   "url": "https://sketchfab.com/3d-models/saab-jas-39-gripen-fighter-jet-54b84f308145465187658b074baf3cb7",
   "license": "CC-BY-4.0",
   "files": [
-   "e_gripen_lo",
-   "shots/gripen-gbu12-snow.webp",
-   "ui/mm/air_e_gripen_climb.webp"
-  ]
- },
- {
-  "title": "MiG-21 Chibi",
-  "author": "Oleh",
-  "url": "https://sketchfab.com/3d-models/mig-21-chibi-8a46e5b9d03d41a6b7611c1b5d6aacb6",
-  "license": "CC-BY-4.0",
-  "files": [
-   "e_mig21",
-   "e_mig21_lo"
+   "shots/gripen-gbu12-snow.webp"
   ]
  },
  {
@@ -213,15 +122,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "Tu22",
-  "author": "manilov.ap",
-  "url": "https://sketchfab.com/3d-models/tu22-189799dc11b149a9a9d404904c97173d",
-  "license": "CC-BY-4.0",
-  "files": [
-   "ui/mm/air_e_tu22_head.webp"
-  ]
- },
- {
   "title": "Su24",
   "author": "manilov.ap",
   "url": "https://sketchfab.com/3d-models/su24-3439ae4000df438894a44127ebda538c",
@@ -231,31 +131,12 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "F111",
-  "author": "manilov.ap",
-  "url": "https://sketchfab.com/3d-models/f111-00e9e6b9dbc34dc1ae691529688ab000",
-  "license": "CC-BY-4.0",
-  "files": [
-   "ui/mm/air_e_f111_h3.webp"
-  ]
- },
- {
   "title": "Mig27",
   "author": "manilov.ap",
   "url": "https://sketchfab.com/3d-models/mig27-a9d22acdb582444a91c2adc8b123d674",
   "license": "CC-BY-4.0",
   "files": [
-   "ui/mm/air_e_mig27_h1.webp",
    "shots/mig27-kh29t-sunset.webp"
-  ]
- },
- {
-  "title": "Mig25",
-  "author": "manilov.ap",
-  "url": "https://sketchfab.com/3d-models/mig25-afe67617c5294dce9056106a22f640ff",
-  "license": "CC-BY-4.0",
-  "files": [
-   "ui/mm/air_e_mig25_dive.webp"
   ]
  },
  {
@@ -300,8 +181,7 @@ export const CREDITS = [
   "url": "https://sketchfab.com/3d-models/tu95-1eac97ec49ed4f1da8b7deb1e1b2cc7a",
   "license": "CC-BY-4.0",
   "files": [
-   "shots/tu95-far.webp",
-   "ui/mm/air_e_tu95_h3.webp"
+   "shots/tu95-far.webp"
   ]
  },
  {
@@ -385,15 +265,6 @@ export const CREDITS = [
   "files": [
    "shots/su34-kh59m-sunset.webp",
    "shots/su34-umpk-clear.webp"
-  ]
- },
- {
-  "title": "Su17",
-  "author": "manilov.ap",
-  "url": "https://sketchfab.com/3d-models/su17-a5dfc3d488c8441c8468a75ffad1ab75",
-  "license": "CC-BY-4.0",
-  "files": [
-   "ui/mm/air_e_su17_belly.webp"
   ]
  },
  {
@@ -488,96 +359,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "McClintic Marshall Products Co., Tender B",
-  "author": "statelibrarynsw",
-  "url": "https://sketchfab.com/3d-models/mcclintic-marshall-products-co-tender-b-34ccaa9abec244d999004055ffcd02c3",
-  "license": "CC-BY-4.0",
-  "files": [
-   "br_truss"
-  ]
- },
- {
-  "title": "High Voltage Transmission Line Tower (tileable)",
-  "author": "mednios",
-  "url": "https://sketchfab.com/3d-models/high-voltage-transmission-line-tower-tileable-cbeec33de6d64374b6d22de2749c1313",
-  "license": "CC-BY-4.0",
-  "files": [
-   "m_pylon"
-  ]
- },
- {
-  "title": "Wind Turbine [Demo]",
-  "author": "3Dexter",
-  "url": "https://sketchfab.com/3d-models/wind-turbine-demo-68669d1cfb3647ba9b1da47cbe580931",
-  "license": "CC-BY-4.0",
-  "files": [
-   "m_wind"
-  ]
- },
- {
-  "title": "Low Poly Cargo Ship",
-  "author": "Javier_Fernandez",
-  "url": "https://sketchfab.com/3d-models/low-poly-cargo-ship-4c22cbaf01c1427f8ab60b3a07b1b32c",
-  "license": "CC-BY-4.0",
-  "files": [
-   "m_ship"
-  ]
- },
- {
-  "title": "Sea ​​container - Low Poly",
-  "author": "Mozhet_Moroz",
-  "url": "https://sketchfab.com/3d-models/sea-container-low-poly-979114d6e1754f5591735ef3e5e203d4",
-  "license": "CC-BY-4.0",
-  "files": [
-   "m_cont"
-  ]
- },
- {
-  "title": "Port crane \"Sokol\"",
-  "author": "Vitaliy Kovalchuk",
-  "url": "https://sketchfab.com/3d-models/port-crane-sokol-4964eaa7634e47c9bac4c2a74fa91c20",
-  "license": "CC-BY-4.0",
-  "files": [
-   "m_crane"
-  ]
- },
- {
-  "title": "Lighthouse",
-  "author": "KarlDufresne",
-  "url": "https://sketchfab.com/3d-models/lighthouse-464af883421f4ac68ede2605f4f1407b",
-  "license": "CC-BY-4.0",
-  "files": [
-   "m_light"
-  ]
- },
- {
-  "title": "Train | Locomotive, Low-poly locomotive",
-  "author": "Nikcore",
-  "url": "https://sketchfab.com/3d-models/train-locomotive-low-poly-locomotive-0eea1fa85cfa40769ce8e0cbb98e1d05",
-  "license": "CC-BY-4.0",
-  "files": [
-   "m_loco"
-  ]
- },
- {
-  "title": "Train | Locomotive SD40-2",
-  "author": "Nikcore",
-  "url": "https://sketchfab.com/3d-models/train-locomotive-sd40-2-bdeadf60bf774adc9a39c744792c02c4",
-  "license": "CC-BY-4.0",
-  "files": [
-   "m_loco2"
-  ]
- },
- {
-  "title": "Il78",
-  "author": "manilov.ap",
-  "url": "https://sketchfab.com/3d-models/il78-0c0da2cc1b4c441dadc2510212c25fb7",
-  "license": "CC-BY-4.0",
-  "files": [
-   "t_il78"
-  ]
- },
- {
   "title": "McDonnell Douglas KC-10 Extender",
   "author": "Spark_Customs",
   "url": "https://sketchfab.com/3d-models/mcdonnell-douglas-kc-10-extender-b13585efd6814861970d1a61cf510308",
@@ -587,31 +368,12 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "Simple GameReady Weapons for Fighter Jet Games",
-  "author": "ekmekarasikodlamaytb",
-  "url": "https://sketchfab.com/3d-models/simple-gameready-weapons-for-fighter-jet-games-4c231dda5e8a4db39c2f53c3e16f57e9",
-  "license": "CC-BY-4.0",
-  "files": [
-   "aam_r60"
-  ]
- },
- {
   "title": "Low poly German IRIS-T AAM",
   "author": "Raptor9",
   "url": "https://sketchfab.com/3d-models/low-poly-german-iris-t-aam-f287bb3f4a7a4851b63d15673d9032c4",
   "license": "CC-BY-4.0",
   "files": [
-   "msl_aster",
-   "aam_iris"
-  ]
- },
- {
-  "title": "Low Poly Missiles and Torpedos",
-  "author": "sakigakefuruzawa",
-  "url": "https://sketchfab.com/3d-models/low-poly-missiles-and-torpedos-99783c90ce904951a3c71e851a527d35",
-  "license": "CC-BY-4.0",
-  "files": [
-   "aam_mica"
+   "msl_aster"
   ]
  },
  {
@@ -1194,8 +956,7 @@ export const CREDITS = [
   "files": [
    "shots/b52-side-morning.webp",
    "shots/b52-below.webp",
-   "shots/b52-jassm-clear.webp",
-   "ui/mm/air_e_b52_top.webp"
+   "shots/b52-jassm-clear.webp"
   ]
  }
 ];
