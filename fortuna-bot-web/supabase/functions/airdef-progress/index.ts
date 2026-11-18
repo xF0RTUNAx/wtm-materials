@@ -5,11 +5,12 @@
 //   { player_id, action: 'goal', branch, id | null }     → { ok, progress }
 //   { player_id, action: 'quests' }                      → { progress, crystals } (задания: progress.quests; новый день начисляет незабранное)
 //   { player_id, action: 'quest', key }                  → { ok, progress, crystals, auto } | { error } («Забрать»: 'd:id', 'w:id', 'crate', 'chest')
+//   { player_id, action: 'swap', key }                   → { ok, progress, crystals, from, to } | { error } («Заменить» невыполненное: 'd:id', 'w:id'; 1 в день и 1 в неделю, с премиумом по 2 - quests-data.js SWAP)
 // Правила - _shared/airdef/progress.js (копия games/airdef/progress.js). Тратит только сервер.
 import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
 import { supabaseAdmin } from "../_shared/supabase-admin.ts";
 import { mskToday } from "../_shared/msk.ts";
-import { act, extraOf, load, mutate, questsPending, questsRolled, questTake, toProgress, view, NEED_GAME, NOT_FOUND, type Extra } from "../_shared/airdef-progress.ts";
+import { act, extraOf, load, mutate, questsPending, questsRolled, questSwapDo, questTake, toProgress, view, NEED_GAME, NOT_FOUND, type Extra } from "../_shared/airdef-progress.ts";
 import { settleSeasons } from "../_shared/airdef-season.ts";
 import { sessionPlayer } from "../_shared/airdef-session.ts";
 
@@ -47,6 +48,16 @@ Deno.serve(async (req) => {
       if (out.needGame) return jsonResponse(NEED_GAME, 403);
       if (!out.ok) return jsonResponse({ error: (out as { why?: string }).why || "Нельзя" }, 409);
       return jsonResponse({ ok: true, progress: view(out.P!, x1!, today), crystals: await crystals(), auto: (out as { auto?: string[] }).auto || [] });
+    }
+    if (action === "swap") {
+      let x1 = null as Extra | null;
+      const rnd = crypto.getRandomValues(new Uint32Array(1))[0] / 2 ** 32; // замена случайная, выбирает сервер
+      const out = await mutate(db, player_id, (P, x) => { const r = questSwapDo(P, x, key, today, rnd); if (r.ok) x1 = r.extra; return r; });
+      if (out.notFound) return jsonResponse(NOT_FOUND, 404);
+      if (out.needGame) return jsonResponse(NEED_GAME, 403);
+      if (!out.ok) return jsonResponse({ error: (out as { why?: string }).why || "Нельзя" }, 409);
+      const o = out as { from?: string; to?: string };
+      return jsonResponse({ ok: true, progress: view(out.P!, x1!, today), crystals: await crystals(), from: o.from, to: o.to });
     }
     if (!ACTIONS.has(action)) return jsonResponse({ error: "Неизвестное действие" }, 400);
     let x0 = null as ReturnType<typeof extraOf> | null;

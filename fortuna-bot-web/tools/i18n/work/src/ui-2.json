@@ -2696,6 +2696,46 @@
   "Claim all the tasks first"
  ],
  [
+  "Заменить",
+  "Replace"
+ ],
+ [
+  "Заменить задание?",
+  "Replace this task?"
+ ],
+ [
+  "Прогресс по нему пропадёт. Осталось бесплатных замен: {0}",
+  "Its progress will be lost. Free replacements left: {0}"
+ ],
+ [
+  "Бесплатная замена: 1 ежедневное задание в день и 1 еженедельное в неделю, с премиумом - по 2.",
+  "Free replacement: 1 daily task per day and 1 weekly task per week, 2 of each with Premium."
+ ],
+ [
+  "Замен сегодня: {0}",
+  "Replacements today: {0}"
+ ],
+ [
+  "Замен на неделе: {0}",
+  "Replacements this week: {0}"
+ ],
+ [
+  "Выполненное задание заменить нельзя",
+  "A completed task cannot be replaced"
+ ],
+ [
+  "Бесплатные замены на сегодня закончились",
+  "No free replacements left for today"
+ ],
+ [
+  "Бесплатные замены на этой неделе закончились",
+  "No free replacements left this week"
+ ],
+ [
+  "Заменить не на что",
+  "Nothing to replace it with"
+ ],
+ [
   "Загружаем город",
   "Loading the city"
  ],

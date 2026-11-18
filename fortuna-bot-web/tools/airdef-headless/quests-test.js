@@ -1,8 +1,8 @@
 // Проверка «Заданий» без боевой базы: правила (games/airdef/quests-data.js), сервер (_shared/airdef-progress.ts на поддельной базе), SQL (sql/030 в PGlite).
 //   deno run -A tools/airdef-headless/quests-test.js
 import { PGlite } from 'npm:@electric-sql/pglite@0.2.17';
-import { DAILY, WEEKLY, ROUTE, ROUTE_MAX, CRATE, CASE, PTS_DAILY, PTS_WEEKLY, pickDaily, pickWeekly, mskDay, dayNo, weekNo, questRoll, questApply, questClaim, questView, onlineCounters, defenseCounters, weekTotals } from '../../games/airdef/quests-data.js';
-import { credit, extraOf, mutate, questsPending, questsRolled, questTake, toProgress, view } from '../../supabase/functions/_shared/airdef-progress.ts';
+import { DAILY, WEEKLY, ROUTE, ROUTE_MAX, CRATE, CASE, PTS_DAILY, PTS_WEEKLY, pickDaily, pickWeekly, mskDay, dayNo, weekNo, questRoll, questApply, questClaim, questSwap, questView, SWAP, SWAP_PREM, swapLimit, onlineCounters, defenseCounters, weekTotals } from '../../games/airdef/quests-data.js';
+import { credit, extraOf, mutate, questsPending, questsRolled, questSwapDo, questTake, toProgress, view } from '../../supabase/functions/_shared/airdef-progress.ts';
 let bad = 0; const ok = (c, t) => { console.log((c ? 'OK   ' : 'ОШИБКА ') + t); if (!c) bad++; };
 const MON = '2026-11-02', WED = '2026-11-04', THU = '2026-11-05', NEXT = '2026-11-09';
 
@@ -69,6 +69,53 @@ ok(!questClaim(q, WED, 'd:нет').ok && !questClaim(q, WED, 'w:нет').ok && !
   const un = questRoll(questRoll({}, WED).q, THU); ok(!Object.keys(un.pay).length && un.q.pts === 0, 'новый день: невыполненное сгорает без начислений');
   const wk = questRoll(a0, NEXT); ok(wk.q.pts === 0 && wk.q.paid === 0 && wk.q.chest === 0 && wk.pay.silver > 0 && wk.q.w.every((t) => !t.st), 'новая неделя: начислено, очки и маршрут с нуля');
   const st = questRoll(questRoll({}, WED).q, WED); ok(!Object.keys(st.pay).length && st.q.day === WED, 'тот же день - ничего не меняется'); }
+
+// ── замена задания (Mark 2026-11-18: 1 ежедневное в день и 1 еженедельное в неделю, с премиумом по 2) ──
+{ const gem = (L) => L.filter((t) => WEEKLY[t.id] && WEEKLY[t.id].r.gem).length;
+  ok(swapLimit('d', false) === 1 && swapLimit('w', false) === 1 && swapLimit('d', true) === 2 && swapLimit('w', true) === 2 && SWAP.d === 1 && SWAP_PREM.w === 1, 'лимиты замен: 1 и 1, с премиумом 2 и 2');
+  const q0 = questRoll({}, WED).q, id0 = q0.d[0].id, snap = JSON.stringify(q0);
+  const r = questSwap(q0, WED, 'd:' + id0, false, 0.3);
+  ok(r.ok && r.from === id0 && r.to !== id0 && DAILY[r.to].g === DAILY[id0].g && r.q.d[0].id === r.to && r.q.d[0].n === 0 && r.q.d[0].st === '' && new Set(r.q.d.map((t) => t.id)).size === 3, 'замена ежедневного: тот же g, на месте, без прогресса, без повторов');
+  ok(JSON.stringify(q0) === snap, 'замена не меняет исходное состояние');
+  ok(r.q.sd === 1 && r.q.dx.includes(id0) && !r.q.sw, 'счётчик и список «уже заменено»');
+  const r2 = questSwap(r.q, WED, 'd:' + r.q.d[1].id, false, 0.3); ok(!r2.ok && /сегодня закончились/.test(r2.why), 'вторая замена в тот же день - отказ');
+  const r3 = questSwap(r.q, THU, 'd:' + questRoll(r.q, THU).q.d[0].id, false, 0.3); ok(r3.ok && r3.q.sd === 1 && r3.q.dx.length === 1, 'на следующий день снова можно, список «заменено» начат заново');
+  ok(!questSwap(q0, WED, 'd:нет', false, 0.3).ok && !questSwap(q0, WED, 'x:' + id0, false, 0.3).ok && !questSwap(q0, WED, 'мусор', false, 0.3).ok && !questSwap(q0, WED, 'w:нет', false, 0.3).ok && !questSwap(q0, WED, 'crate', false, 0.3).ok, 'чужой ключ не проходит');
+  for (const st of ['done', 'taken']) { const z = structuredClone(q0); z.d[0].st = st; const rz = questSwap(z, WED, 'd:' + id0, true, 0.3); ok(!rz.ok && /Выполненное/.test(rz.why) && rz.why !== undefined, `задание «${st}» заменить нельзя`); }
+  // с премиумом - две; третья отказ; заменённое не возвращается
+  let back = 0, same = 0, bad2 = 0, tot = 0;
+  for (let day = 20000; day < 20400; day++) for (const [a, b] of [[0, 0.99], [0.5, 0.2], [0.99, 0]]) {
+    const dd = new Date(day * 864e5).toISOString().slice(0, 10), z = questRoll({}, dd).q, A = z.d[0].id, one = questSwap(z, dd, 'd:' + A, true, a); tot++;
+    if (!one.ok) { bad2++; continue; } const B = one.to, two = questSwap(one.q, dd, 'd:' + B, true, b);
+    if (!two.ok) { bad2++; continue; } if (two.to === A || two.to === B) back++; if (DAILY[two.to].g !== DAILY[A].g || new Set(two.q.d.map((t) => t.id)).size !== 3) same++;
+    if (questSwap(two.q, dd, 'd:' + two.q.d[1].id, true, 0.1).ok) bad2++; }
+  ok(bad2 === 0 && tot === 1200, `премиум: две замены в день, третья - отказ (${tot} проверок)`); ok(back === 0, 'заменённое задание не возвращается в тот же день'); ok(same === 0, 'замена остаётся в своей группе, повторов в списке нет');
+  { const z = structuredClone(q0); z.dx = DAILY[id0].g === 'any' ? Object.keys(DAILY).filter((k) => DAILY[k].g === 'any' && k !== id0) : Object.keys(DAILY).filter((k) => DAILY[k].g === DAILY[id0].g && k !== id0);
+    const rf = questSwap(z, WED, 'd:' + id0, false, 0.5); ok(rf.ok && DAILY[rf.to].g !== DAILY[id0].g && !z.dx.includes(rf.to) && !z.d.some((t) => t.id === rf.to), 'в группе пусто - берётся любая другая, без заменённых и без стоящих в списке');
+    z.dx = Object.keys(DAILY).filter((k) => k !== id0); const rn = questSwap(z, WED, 'd:' + id0, false, 0.5); ok(!rn.ok && /не на что/.test(rn.why), 'совсем нечем заменить - «Заменить не на что»'); }
+  // еженедельные: не больше двух с кристаллом, любая замена остаётся в рамках
+  let gemOk = 0, gemN = 0, wkBad = 0;
+  for (let w = 2800; w < 3000; w++) { const day = new Date((w * 7 - 3) * 864e5 + 864e5).toISOString().slice(0, 10), z = questRoll({}, day).q;
+    for (let i = 0; i < 5; i++) for (const rr of [0, 0.4, 0.99]) { const rs = questSwap(z, day, 'w:' + z.w[i].id, false, rr); if (!rs.ok) { wkBad++; continue; } gemN++; if (gem(rs.q.w) <= 2 && new Set(rs.q.w.map((t) => t.id)).size === 5 && rs.q.sw === 1) gemOk++; } }
+  ok(wkBad === 0 && gemN === 3000 && gemOk === gemN, `еженедельные: после замены не больше двух с кристаллом, без повторов (${gemN} проверок)`);
+  { const z = questRoll({}, WED).q, rw = questSwap(z, WED, 'w:' + z.w[0].id, false, 0.2); ok(rw.ok && rw.q.sw === 1 && !rw.q.sd, 'еженедельная замена не трогает дневной счётчик');
+    ok(!questSwap(rw.q, WED, 'w:' + rw.q.w[1].id, false, 0.2).ok && /на этой неделе закончились/.test(questSwap(rw.q, WED, 'w:' + rw.q.w[1].id, false, 0.2).why), 'вторая еженедельная - отказ');
+    ok(!questSwap(rw.q, THU, 'w:' + questRoll(rw.q, THU).q.w[1].id, false, 0.2).ok, 'на следующий день недели счётчик не сбрасывается');
+    const nx = questRoll(rw.q, NEXT).q; ok(nx.sw === 0 && nx.wx.length === 0 && questSwap(nx, NEXT, 'w:' + nx.w[1].id, false, 0.2).ok, 'новая неделя: счётчик и список заменённого с нуля');
+    ok(questSwap(rw.q, WED, 'w:' + rw.q.w[1].id, true, 0.2).ok, 'премиум: вторая еженедельная проходит'); }
+  // старое состояние (до замен) без sd / sw / dx / wx
+  { const o = structuredClone(q0); delete o.sd; delete o.sw; delete o.dx; delete o.wx; const vo = questView(o, WED), ro = questSwap(o, WED, 'd:' + id0, false, 0.7);
+    ok(vo.swap.d === 1 && vo.swap.w === 1 && ro.ok && ro.q.sd === 1, 'старое состояние без sd / sw / dx / wx работает');
+    ok(questView(r.q, WED).swap.d === 0 && questView(r.q, WED).swap.w === 1 && questView(r.q, WED, true).swap.d === 1, 'вид: сколько замен осталось (с премиумом - на 1 больше)');
+    ok(questView({}, WED).swap.d === 1 && questApply(r.q, WED, { online: 1, play: 1 }).q.sd === 1, 'новичок: замены есть; счёт боя счётчик не трогает'); }
+  // сервер: сохранение через questSwapDo; начисление за прошедший день не теряется
+  { const Pr = toProgress({ xp: 10, silver: 20 }), x = { ...extraOf(null), quests: structuredClone(q0) }, sw = questSwapDo(Pr, x, 'd:' + id0, WED, 0.3);
+    ok(sw.ok && sw.to !== id0 && sw.extra.quests.d[0].id === sw.to && sw.extra.crystals === 0 && Pr.xp === 10 && Pr.silver === 20, 'сервер: замена сохраняется, опыт и серебро не двигаются');
+    ok(!questSwapDo(Pr, x, 12, WED, 0.3).ok && !questSwapDo(Pr, x, 'x'.repeat(40), WED, 0.3).ok && !questSwapDo(Pr, sw.extra, 'd:' + sw.extra.quests.d[1].id, WED, 0.3).ok, 'сервер: мусор вместо ключа и вторая замена - отказ');
+    ok(view(Pr, sw.extra, WED).quests.swap.d === 0 && view(Pr, sw.extra, WED, true).quests.swap.d === 1, 'сервер: в состоянии для клиента - сколько замен осталось');
+    const yd = structuredClone(q0); yd.d = yd.d.map((t) => ({ ...t, st: 'done', n: DAILY[t.id].of })); const P5 = toProgress({ xp: 0, silver: 0 }), s5 = questSwapDo(P5, { ...extraOf(null), quests: yd }, 'w:' + yd.w[0].id, THU, 0.3);
+    ok(s5.ok && P5.silver > 0 && s5.extra.quests.day === THU, 'сервер: замена в первое обращение за сутки начисляет вчерашнее, а не теряет'); }
+}
 
 // ── сервер на поддельном прогрессе ──
 { const Pr = toProgress(null), x = extraOf(null), ev = { min: 10, targets: [1], sams: 1, win: true }; const c = onlineCounters({ rt: {}, team: 'air', mode: 'arcade', k: 1, ev: { min: 10, obj: 1 } });

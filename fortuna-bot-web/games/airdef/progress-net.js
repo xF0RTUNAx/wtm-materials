@@ -7,7 +7,7 @@ import { LOADOUTS } from './arsenal.js?v=20261118d';
 import { ico } from './icons.js?v=20261118d';
 import { tr, trIf, LANG, XL, LOCALE } from './i18n.js?v=20261118d';
 import { activeAcc, isMock, siteNoProgress, withSess, refreshSession } from './account.js?v=20261118d';
-import { DAILY, WEEKLY, mskDay, questApply, questClaim, questRoll, questView } from './quests-data.js?v=20261118d';
+import { DAILY, WEEKLY, mskDay, questApply, questClaim, questRoll, questSwap, questView } from './quests-data.js?v=20261118d';
 
 const TEST = new URLSearchParams(location.search).get('pgtest'); // ?pgtest=1 - тестовый прогресс в памяти (без сервера)
 export function account() { return activeAcc(); } // аккаунт игры, иначе «старый» аккаунт сайта с прогрессом (account.js)
@@ -110,6 +110,13 @@ export function createProgress(C) {
       if (LOCAL()) { const r = questClaim(G.lq, lDay(), key); if (!r.ok) return { ok: false, why: r.why }; G.lq = r.q; lPay(r.pay); changed(); return { ok: true }; }
       const acc = account(); if (!acc) return { ok: false, why: tr('Войдите в аккаунт игры') };
       try { const d = await call('airdef-progress', { player_id: acc.id, action: 'quest', key }); G.crystals = d.crystals ?? G.crystals; set(d.progress); return { ok: true }; }
+      catch (e) { needGame(e); return { ok: false, why: trMsg(e.message) }; }
+    },
+    // «Заменить» невыполненное задание (key - 'd:id' | 'w:id'); замену выбирает сервер, в тестовом режиме - те же правила здесь
+    async questSwap(key) {
+      if (LOCAL()) { const r = questSwap(G.lq, lDay(), key, false, Math.random()); if (!r.ok) return { ok: false, why: trMsg(r.why) }; G.lq = r.q; lPay(r.pay); changed(); return { ok: true, from: r.from, to: r.to }; }
+      const acc = account(); if (!acc) return { ok: false, why: tr('Войдите в аккаунт игры') };
+      try { const d = await call('airdef-progress', { player_id: acc.id, action: 'swap', key }); G.crystals = d.crystals ?? G.crystals; set(d.progress); return { ok: true, from: d.from, to: d.to }; }
       catch (e) { needGame(e); return { ok: false, why: trMsg(e.message) }; }
     },
     // кнопки «ДЕМО» (только тестовый режим): бой, новый день, новая неделя, сначала

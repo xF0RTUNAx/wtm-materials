@@ -58,6 +58,16 @@ const CSS = `
 #quests .stamp { display: block; width: 124px; height: 47px; margin-right: -6px; background: url(${UI}stamp.webp) center / contain no-repeat; filter: brightness(1.4) saturate(1.2); } #quests.en .stamp { background-image: url(${UI}stamp_en.webp); } #quests .stamp.fresh { animation: qStamp .28s cubic-bezier(.2,.9,.3,1.2); } @keyframes qStamp { from { transform: scale(1.9) rotate(-5deg); opacity: 0; } 70% { opacity: 1; } to { transform: scale(1) rotate(0); } }
 #quests .wait { font: 400 13.5px 'Oswald'; color: var(--dim2); white-space: nowrap; font-variant-numeric: tabular-nums; }
 #quests .row.taken .t, #quests .row.taken .d { opacity: .62; }
+#quests .act { gap: 8px; min-width: 0; } #quests .wait { min-width: 52px; overflow: hidden; text-overflow: ellipsis; text-align: right; }
+#quests .swp { flex: none; width: 30px; height: 30px; padding: 0; display: flex; align-items: center; justify-content: center; color: var(--dim); background: rgba(12,14,9,.6); border: 1px solid rgba(233,230,220,.28); border-radius: 2px; cursor: pointer; } #quests .swp svg { width: 18px; height: 18px; } #quests .swp:hover { color: var(--gold2); border-color: var(--gold); background: rgba(40,34,16,.8); }
+#quests .row.new { animation: qNew .7s ease-out; } @keyframes qNew { from { opacity: .15; transform: translateX(14px); filter: brightness(1.8); } to { opacity: 1; transform: none; filter: none; } }
+#quests .swh { margin-left: auto; align-self: center; padding: 0 6px 4px 12px; font: 400 13.5px 'Oswald'; color: var(--dim); white-space: nowrap; min-width: 0; overflow: hidden; text-overflow: ellipsis; } #quests .swh b { font-weight: 600; color: var(--gold2); }
+#quests .dlg { position: absolute; inset: 0; z-index: 9; display: flex; align-items: center; justify-content: center; padding: 12px; background: rgba(6,7,4,.66); }
+#quests .dlg .box { width: min(420px, 100%); max-height: 100%; overflow-y: auto; padding: 16px 18px 14px; background: rgba(14,16,10,.98); border: 1px solid rgba(232,176,74,.7); box-shadow: 0 10px 34px rgba(0,0,0,.7); }
+#quests .dlg .dt { font: 500 21px 'Oswald'; letter-spacing: .03em; color: var(--gold2); } #quests .dlg .dn { margin-top: 6px; font: 500 16px 'Oswald'; color: #ece8dc; }
+#quests .dlg p { margin: 8px 0 0; font-size: 13.5px; line-height: 1.4; color: var(--dim); } #quests .dlg p.dr { font-size: 12px; color: var(--dim2); }
+#quests .dlg .db { margin-top: 14px; display: flex; gap: 10px; justify-content: flex-end; align-items: center; } #quests .dlg .db .take { width: 130px; text-transform: uppercase; }
+#quests .dlg .db .nope { height: 36px; padding: 0 18px; font: 500 15px 'Oswald'; letter-spacing: .06em; color: #ece8dc; background: rgba(233,230,220,.08); border: 1px solid rgba(233,230,220,.3); cursor: pointer; } #quests .dlg .db .nope:hover { background: rgba(233,230,220,.18); }
 #quests .bon { position: relative; flex: none; height: 56px; display: flex; align-items: center; gap: 12px; padding: 0 12px 0 6px; border-style: solid; border-width: 12px; border-image: url(${UI}plate.webp) 28 fill / 12px stretch; } #quests .bon.done { border-image-source: url(${UI}plate_done.webp); }
 #quests .bon > * { margin: -12px 0; } #quests .bon img.cr { width: 52px; height: 52px; object-fit: contain; flex: none; } #quests .bon .bt { font: 500 15px 'Oswald'; white-space: nowrap; } #quests .bon .s3 { display: flex; gap: 2px; } #quests .bon .s3 i { width: 26px; height: 15px; background: url(${UI}seg_off.webp) center / 100% 100%; } #quests .bon .s3 i.on { background-image: url(${UI}seg_on.webp); } #quests .bon .s3 i.ok { background-image: url(${UI}seg_green.webp); } #quests .bon .rws { margin-left: auto; } #quests .bon .act { min-width: 124px; }
 #quests .cur u { text-decoration: none; }
@@ -74,11 +84,13 @@ const CSS = `
   #quests .list { padding-bottom: 8px; -webkit-mask-image: linear-gradient(#000 calc(100% - 10px), transparent); mask-image: linear-gradient(#000 calc(100% - 10px), transparent); gap: 4px; } #quests .tabs { height: 31px; } #quests .tab { height: 29px; padding: 0 4px 0 2px; gap: 8px; } #quests .mk { width: 76px; height: 23px; margin-top: -2px; font-size: 11px; } #quests .mk i { font-size: 12px; } #quests .tab b { font-size: 13.5px; }
   #quests .row { height: 45px; grid-template-columns: 26px minmax(0, 1fr) 112px 132px 88px; gap: 8px; padding: 0 2px 0 0; border-width: 10px; border-image-width: 10px; } #quests .row > * { margin: -10px 0; }
   #quests .no .ic { width: 21px; height: 21px; } #quests .t { font-size: 14.5px; } #quests .d { font-size: 10.5px; margin-top: 0; } #quests .wh { font-size: 9px; } #quests .sg i { height: 11px; } #quests .prog { gap: 6px; }
-  #quests .cnt { font-size: 11.5px; min-width: 36px; } #quests .ptc { font-size: 10.5px; padding-right: 3px; } #quests .ptc img { width: 13px; height: 13px; } #quests .rws { gap: 3px; } #quests .take { width: 86px; height: 28px; font-size: 12px; letter-spacing: .1em; } #quests .stamp { width: 86px; height: 33px; margin-right: 0; } #quests .wait { font-size: 11.5px; }
+  #quests .cnt { font-size: 11.5px; min-width: 36px; } #quests .ptc { font-size: 10.5px; padding-right: 3px; } #quests .ptc img { width: 13px; height: 13px; } #quests .rws { gap: 3px; } #quests .take { width: 86px; height: 28px; font-size: 12px; letter-spacing: .1em; } #quests .act { gap: 5px; } #quests .wait { min-width: 40px; } #quests .swp { width: 24px; height: 24px; } #quests .swp svg { width: 15px; height: 15px; } #quests .swh { font-size: 11.5px; padding: 0 4px 3px 8px; }
+  #quests .dlg .box { padding: 10px 14px; } #quests .dlg .dt { font-size: 17px; } #quests .dlg .dn { font-size: 14px; margin-top: 2px; } #quests .dlg p { font-size: 12px; margin-top: 4px; } #quests .dlg p.dr { font-size: 10.5px; } #quests .dlg .db { margin-top: 8px; } #quests .dlg .db .take { width: 104px; height: 30px; } #quests .dlg .db .nope { height: 30px; font-size: 13px; padding: 0 14px; } #quests .stamp { width: 86px; height: 33px; margin-right: 0; } #quests .wait { font-size: 11.5px; }
   #quests .bon { height: 40px; border-width: 9px; border-image-width: 9px; gap: 8px; } #quests .bon > * { margin: -9px 0; } #quests .bon img.cr { width: 34px; height: 34px; } #quests .bon .bt { font-size: 13px; } #quests .bon .s3 i { width: 20px; height: 11px; } #quests .bon .act { min-width: 88px; }
 }
-@media (max-width: 760px) { #quests .wh { display: none; } #quests .row { grid-template-columns: 26px minmax(0, 1fr) 42px 126px 86px; } #quests .sg { display: none; } #quests .prog { justify-content: flex-end; } #quests .sh .tm > span { display: none; } }`;
+@media (max-width: 760px) { #quests .swh { display: none; } #quests .wh { display: none; } #quests .row { grid-template-columns: 26px minmax(0, 1fr) 42px 126px 86px; } #quests .sg { display: none; } #quests .prog { justify-content: flex-end; } #quests .sh .tm > span { display: none; } }`;
 
+const SWAP_IC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.6-4.5L3 9"/><path d="M3 4v5h5"/><path d="M4 13a8 8 0 0 0 14.6 4.5L21 15"/><path d="M21 20v-5h-5"/></svg>'; // «обновить»: две круговые стрелки
 const qic = (n) => `<svg class="ic" viewBox="0 0 512 512" aria-hidden="true"><path fill="currentColor" d="${QI[n] || ''}"/></svg>`;
 const num = (v) => Math.round(v).toLocaleString(LOC);
 const dec = (v) => v.toLocaleString(LOC, { maximumFractionDigits: 1 });
@@ -103,7 +115,7 @@ export function createQuests(C) {
   const css = document.createElement('style'); css.textContent = CSS; (document.head || document.body).appendChild(css);
   const root = document.createElement('div'); root.id = 'quests'; if (XL) root.classList.add('en'); document.body.appendChild(root);
   // на экране - то, что показано (МиГ, числа): догоняет настоящее состояние во время полёта и анимации наград
-  const S = { tab: 'd', pop: false, shown: 0, paid: 0, disp: { xp: 0, silver: 0, gem: 0 }, raf: 0, fresh: null, msg: '', busy: false, flying: 0, mig: null };
+  const S = { tab: 'd', pop: false, ask: null, newRow: '', shown: 0, paid: 0, disp: { xp: 0, silver: 0, gem: 0 }, raf: 0, fresh: null, msg: '', busy: false, flying: 0, mig: null };
   const PG = () => C.progress;
   const V = () => PG().quests;
   const cur = () => { const P = PG().P || {}, w = C.shop && C.shop.wallet && C.shop.wallet(); return { xp: P.xp || 0, silver: P.silver || 0, gem: PG().crystals ?? (w ? w.crystals : 0) ?? 0 }; };
@@ -115,10 +127,12 @@ export function createQuests(C) {
   // МиГ на маршруте: серый; у кого есть окраска «Нефритовый дракон» - дракон
   const migKey = () => { if (S.mig) return S.mig; const w = C.shop && C.shop.wallet && C.shop.wallet(); return w && w.camos && w.camos.includes('e_mig31:dragon') ? 'dragon' : 'grey'; };
 
-  const row = (q, kind, i) => `<div class="row ${q.st || ''}"><span class="no">${qic(q.st === 'taken' ? 'done-check-mark' : q.ic)}</span>
+  // сколько бесплатных замен осталось (kind - 'd' | 'w'); у гостя и у старого сервера (без swap в ответе) - 0: кнопки нет
+  const swapLeft = (kind) => { const s = V().swap; return PG().guest || !s ? 0 : Number(s[kind]) || 0; };
+  const row = (q, kind, i) => `<div class="row ${q.st || ''}${S.newRow === `${kind}:${q.id}` ? ' new' : ''}"><span class="no">${qic(q.st === 'taken' ? 'done-check-mark' : q.ic)}</span>
     <div class="tx"><div class="t">${tr(q.t)}</div><div class="d"><span class="wh">${tr('засчитывается:')}</span>${tr(q.d)}</div></div>
     <span class="prog">${seg(q)}<span class="cnt">${cnt(q)}</span></span><span class="rws">${chips(q.r)}<span class="ptc"><img src="${TILE.star}" alt="">+${q.pts}</span></span>
-    <span class="act">${q.st === 'done' ? `<button class="take" data-take="${kind}:${q.id}">${tr('ЗАБРАТЬ')}</button>` : q.st === 'taken' ? `<span class="stamp${S.fresh === `${kind}:${q.id}` ? ' fresh' : ''}"></span>` : `<span class="wait">${leftOf(q)}</span>`}</span></div>`;
+    <span class="act">${q.st === 'done' ? `<button class="take" data-take="${kind}:${q.id}">${tr('ЗАБРАТЬ')}</button>` : q.st === 'taken' ? `<span class="stamp${S.fresh === `${kind}:${q.id}` ? ' fresh' : ''}"></span>` : `${swapLeft(kind) ? `<button class="swp" data-swap="${kind}:${q.id}" title="${tr('Заменить')}" aria-label="${tr('Заменить')}">${SWAP_IC}</button>` : ''}<span class="wait">${leftOf(q)}</span>`}</span></div>`;
   const bonus = (Q, d) => { const L = d ? Q.d : Q.w, st = d ? Q.crate : Q.chest, ready = allTaken(L), N = L.length, n = L.filter((q) => q.st === 'taken').length, key = d ? 'crate' : 'chest';
     return `<div class="bon ${ready && !st ? 'done' : ''}"><img class="cr" src="${d ? TILE.crate : TILE.case}" alt=""><span class="bt">${tr(d ? 'Ящик снабжения за все три сегодня' : 'Кейс недели за все пять')}</span><span class="s3">${Array.from({ length: N }, (_, i) => `<i class="${i < n ? (ready ? 'ok' : 'on') : ''}"></i>`).join('')}</span><span class="rws">${chips(d ? CRATE : CASE)}</span>
       <span class="act">${st ? `<span class="stamp${S.fresh === key ? ' fresh' : ''}"></span>` : ready ? `<button class="take" data-take="${key}">${tr('ЗАБРАТЬ')}</button>` : `<span class="wait">${tr('ещё {0}', [N - n])}</span>`}</span></div>`; };
@@ -172,6 +186,19 @@ export function createQuests(C) {
     snd(); S.fresh = key; draw(); give(r, a); touch(); fly(); setTimeout(() => { S.fresh = null; }, 400);
   }
 
+  // «Заменить»: сервер выбирает новое задание того же вида; прогресс по старому пропадает (на экране - после подтверждения)
+  async function swapDo(key) {
+    if (S.busy) return; S.busy = true; S.msg = ''; S.ask = null;
+    const res = await PG().questSwap(key); S.busy = false;
+    if (!res.ok) { S.msg = res.why || tr('Ошибка сервера'); draw(); PG().questsRefresh().then(() => { draw(); touch(); }); return; } // например, задание уже выполнено в другой вкладке
+    snd(); S.newRow = `${key.split(':')[0]}:${res.to}`; draw(); touch(); setTimeout(() => { S.newRow = ''; }, 800);
+  }
+  function askView() {
+    const [k, id] = S.ask.split(':'), d = k === 'd', def = (d ? DAILY : WEEKLY)[id], n = swapLeft(k);
+    return `<div class="dlg"><div class="box"><div class="dt">${tr('Заменить задание?')}</div><div class="dn">${def ? tr(def.t) : ''}</div>
+      <p>${tr('Прогресс по нему пропадёт. Осталось бесплатных замен: {0}', [n])}</p><p class="dr">${tr('Бесплатная замена: 1 ежедневное задание в день и 1 еженедельное в неделю, с премиумом - по 2.')}</p>
+      <div class="db"><button class="nope" data-sw="no">${tr('Отмена')}</button><button class="take" data-sw="ok">${tr('Заменить')}</button></div></div></div>`;
+  }
   function popView() {
     return `<div class="pop"><p>${tr('Тестовый режим: состояние в памяти этой вкладки, на сервер ничего не уходит.')}</p>
       <button data-d="adv">${tr('Продвинуть задания этой вкладки')}</button><button data-d="day">${tr('Следующий день')}</button><button data-d="week">${tr('Следующая неделя')}</button>
@@ -187,19 +214,21 @@ export function createQuests(C) {
     root.innerHTML = `<div class="topFill"></div><div class="top"><button class="back" data-close="1" aria-label="${tr('Назад')}">«</button><h2>${qic('menu-scroll-unfurled')}${tr('Задания')}</h2>${PG().test ? `<button class="demoB" data-pop="1">${tr('ДЕМО')}</button>` : ''}
         <div class="cur"><span class="xp" data-c="xp"><img src="${TILE.xp}" alt=""><u>${num(S.disp.xp)}</u></span><span data-c="silver"><img src="${TILE.silver}" alt=""><u>${num(S.disp.silver)}</u></span><span class="gem" data-c="gem"><img src="${TILE.gem}" alt=""><u>${num(S.disp.gem)}</u></span></div></div>
       <div class="gw"><div class="sum"><div class="sh"><b>${tr('Сводка недели')}</b><span class="pts"><img src="${TILE.star}" alt=""><span class="ptsT"></span></span><span class="tm">${qic('weekly-calendar')}<span>${tr('неделя закончится через')}</span> <b class="tmW"></b></span></div><div class="route">${routeHtml()}</div></div>
-        <div class="tabs"><button class="tab ${d ? 'on' : ''}" data-tab="d"><b>${tr('Ежедневно')}</b>${mark(nD, 'tmD')}</button><button class="tab ${d ? '' : 'on'}" data-tab="w"><b>${tr('Еженедельно')}</b>${mark(nW, 'tmW')}</button></div>
-        <div class="list">${note}${known(L, P).map((q) => row({ ...P[q.id], ...q, pts }, S.tab, 0)).join('')}${bonus(Q, d)}</div></div>${S.pop ? popView() : ''}`;
+        <div class="tabs"><button class="tab ${d ? 'on' : ''}" data-tab="d"><b>${tr('Ежедневно')}</b>${mark(nD, 'tmD')}</button><button class="tab ${d ? '' : 'on'}" data-tab="w"><b>${tr('Еженедельно')}</b>${mark(nW, 'tmW')}</button>${PG().guest || !Q.swap ? '' : `<span class="swh">${tr(d ? 'Замен сегодня: {0}' : 'Замен на неделе: {0}', [`<b>${swapLeft(S.tab)}</b>`])}</span>`}</div>
+        <div class="list">${note}${known(L, P).map((q) => row({ ...P[q.id], ...q, pts }, S.tab, 0)).join('')}${bonus(Q, d)}</div></div>${S.pop ? popView() : ''}${S.ask ? askView() : ''}`;
     const l2 = root.querySelector('.list'); if (l2) l2.scrollTop = sc;
     place(); tick();
   }
   function tick() { root.querySelectorAll('.tmD').forEach((e) => { e.textContent = hms(dayLeft()); }); root.querySelectorAll('.tmW').forEach((e) => { e.textContent = dh(weekLeft()); }); }
   root.addEventListener('click', (e) => {
-    const t = e.target.closest('[data-close],[data-pop],[data-tab],[data-take],[data-d],[data-acc]');
-    if (!t) { if (S.pop) { S.pop = false; draw(); } return; }
+    const t = e.target.closest('[data-close],[data-pop],[data-tab],[data-take],[data-d],[data-acc],[data-swap],[data-sw]');
+    if (!t) { if (S.ask) { if (e.target.classList.contains('dlg')) { S.ask = null; draw(); } return; } if (S.pop) { S.pop = false; draw(); } return; }
+    if (t.dataset.swap) { S.ask = t.dataset.swap; S.pop = false; S.msg = ''; snd(); draw(); return; }
+    if (t.dataset.sw) { const key = S.ask; S.ask = null; if (t.dataset.sw === 'ok' && key) swapDo(key); else draw(); return; }
     if (t.dataset.close) { api.close(); return; }
     if (t.dataset.acc) { if (C.account) C.account.open('login'); return; }
     if (t.dataset.pop) { S.pop = !S.pop; draw(); return; }
-    if (t.dataset.tab) { S.tab = t.dataset.tab; S.pop = false; S.msg = ''; snd(); const l = root.querySelector('.list'); if (l) l.scrollTop = 0; draw(); return; }
+    if (t.dataset.tab) { S.tab = t.dataset.tab; S.pop = false; S.ask = null; S.msg = ''; snd(); const l = root.querySelector('.list'); if (l) l.scrollTop = 0; draw(); return; }
     if (t.dataset.take) { take(t.dataset.take, t); return; }
     const a = t.dataset.d;
     if (a === 'grey' || a === 'dragon') S.mig = a;
@@ -223,7 +252,7 @@ export function createQuests(C) {
   }
   const api = {
     open() {
-      root.classList.add('on'); document.body.classList.add('researchOn'); S.pop = false; S.msg = ''; const sync = () => { const Q = V(); S.shown = Math.min(Q.pts, ROUTE_MAX); S.paid = Q.paid; S.disp = cur(); };
+      root.classList.add('on'); document.body.classList.add('researchOn'); S.pop = false; S.ask = null; S.msg = ''; const sync = () => { const Q = V(); S.shown = Math.min(Q.pts, ROUTE_MAX); S.paid = Q.paid; S.disp = cur(); };
       sync(); draw();
       PG().questsRefresh().then((r) => { if (!isOpen()) return; if (!r.ok) S.msg = r.why; if (!S.flying && !S.raf) sync(); draw(); touch(); });
     },

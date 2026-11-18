@@ -5,7 +5,7 @@
 import {
   NODE, BRANCHES, newProgress, research, buy, canResearch, owned, battleReward, SOLO_DAY,
 } from "./airdef/progress.js";
-import { questApply, questClaim, questRoll, questView } from "./airdef/quests-data.js";
+import { questApply, questClaim, questRoll, questSwap, questView } from "./airdef/quests-data.js";
 
 export type Progress = { xp: number; silver: number; res: string[]; own: string[]; goal: Record<string, string> };
 export type Row = {
@@ -104,6 +104,15 @@ export function questTake(P: Progress, x: Extra, key: unknown, today: string) {
   const extra = payQuest(P, x, out);
   return { ok: true as const, extra, auto: autoResearch(P) };
 }
+// «Заменить»: key - 'd:id' | 'w:id'; rnd - число [0,1) (сервер: crypto, тест: своё); prem - премиум-аккаунт (пока в игре его нет - false).
+// Замена не двигает опыт и серебро; начисление за прошедший день (первое обращение за сутки) уходит в сохранение вместе с ней
+export function questSwapDo(P: Progress, x: Extra, key: unknown, today: string, rnd: number, prem = false) {
+  if (typeof key !== "string" || key.length > 32) return { ok: false as const, why: "Такого задания сейчас нет" };
+  const out = questSwap(x.quests, today, key, prem, rnd);
+  if (!out.ok) return { ok: false as const, why: out.why as string };
+  const extra = payQuest(P, x, out);
+  return { ok: true as const, extra, auto: autoResearch(P), from: out.from as string, to: out.to as string };
+}
 
 // ── база ──
 // Правило Mark 2026-10-25: новым игрокам - только аккаунт игры (kind = 'airdef'). Аккаунт сайта (kind = 'site') играет, только если у него
@@ -148,7 +157,7 @@ export async function mutate<T extends { ok: boolean }>(db: DB, player_id: strin
   throw new Error("airdef_progress: не удалось сохранить (конфликт версий)");
 }
 // состояние для клиента
-export const view = (P: Progress, x: Extra, today: string) => ({
+export const view = (P: Progress, x: Extra, today: string, prem = false) => ({
   xp: P.xp, silver: P.silver, res: P.res, own: P.own, goal: P.goal,
-  first_win_today: x.first_win_day === today, solo_xp_today: x.solo_day === today ? x.solo_xp : 0, solo_day_cap: SOLO_DAY, quests: questView(x.quests, today),
+  first_win_today: x.first_win_day === today, solo_xp_today: x.solo_day === today ? x.solo_xp : 0, solo_day_cap: SOLO_DAY, quests: questView(x.quests, today, prem),
 });

@@ -8,6 +8,10 @@ export const CRATE = { silver: 150 }, CASE = { gem: 1, silver: 300 }; // за в
 // маршрут недели: неделя целиком - 21 × 10 + 5 × 20 = 310 очков, конец маршрута - 250: запас 60 очков (2 дня или 3 еженедельных)
 export const ROUTE = [{ p: 0 }, { p: 50, r: { silver: 150 } }, { p: 100, r: { gem: 1 } }, { p: 150, r: { silver: 300 } }, { p: 200, r: { silver: 200, xp: 100 } }, { p: 250, r: { gem: 2, silver: 400 } }];
 export const ROUTE_MAX = ROUTE[ROUTE.length - 1].p;
+// Mark 2026-11-18: бесплатные замены невыполненного задания - 1 ежедневное в день и 1 еженедельное в неделю, с премиумом - на 1 больше каждого (премиума в игре пока нет: prem = false).
+// При смене чисел поправить фразу «Бесплатная замена: …» в quests.js и её переводы.
+export const SWAP = { d: 1, w: 1 }, SWAP_PREM = { d: 1, w: 1 };
+export const swapLimit = (kind, prem) => SWAP[kind] + (prem ? SWAP_PREM[kind] : 0);
 
 export const DAILY = {
   play3: { g: 'any', c: 'play', ic: 'menu-checklist', t: 'Сыграть 3 боя', d: 'Онлайн, любая сторона', of: 3, r: { silver: 90, xp: 50 } },
@@ -93,13 +97,13 @@ export function questRoll(q0, today) {
   if (q.day !== today) {
     takeAll(q.d, DAILY, PTS_DAILY, q, pay);
     if (allTaken(q.d, DAILY) && !q.crate) addTo(pay, CRATE);
-    q.day = today; q.d = fresh(pickDaily(dayNo(today))); q.crate = 0;
+    q.day = today; q.d = fresh(pickDaily(dayNo(today))); q.crate = 0; q.sd = 0; q.dx = [];
   }
   if (q.wk !== wk) {
     takeAll(q.w, WEEKLY, PTS_WEEKLY, q, pay);
     if (allTaken(q.w, WEEKLY) && !q.chest) addTo(pay, CASE);
     payRoute(q, pay);
-    q.wk = wk; q.w = fresh(pickWeekly(wk)); q.pts = 0; q.paid = 0; q.chest = 0;
+    q.wk = wk; q.w = fresh(pickWeekly(wk)); q.pts = 0; q.paid = 0; q.chest = 0; q.sw = 0; q.wx = [];
   } else payRoute(q, pay);
   return { q, pay };
 }
@@ -130,11 +134,27 @@ export function questClaim(q0, today, key) {
   t.st = 'taken'; addTo(pay, def.r); q.pts += d ? PTS_DAILY : PTS_WEEKLY; payRoute(q, pay);
   return { ok: true, q, pay };
 }
+// «Заменить»: невыполненное задание меняется на другое из того же пула и той же группы (g); key - 'd:id' | 'w:id'; rnd - число [0,1) (сервер: crypto, тест: своё).
+// sd / sw - сколько замен сделано сегодня / на этой неделе, dx / wx - что уже заменили (не возвращается); у старых состояний полей нет - считаются нулём.
+// Возвращает { ok, q, pay, from, to } - pay: начисление за прошедший день (questRoll), как у questClaim
+export function questSwap(q0, today, key, prem, rnd) {
+  const { q, pay } = questRoll(q0, today), [k, id] = String(key).split(':'), d = k === 'd', P = d ? DAILY : WEEKLY, L = d ? q.d : k === 'w' ? q.w : [], i = L.findIndex((x) => x.id === id), def = i >= 0 && P[id];
+  if (!def) return { ok: false, why: 'Такого задания сейчас нет' };
+  if (L[i].st !== '') return { ok: false, why: 'Выполненное задание заменить нельзя' };
+  if (((d ? q.sd : q.sw) || 0) >= swapLimit(k, prem)) return { ok: false, why: d ? 'Бесплатные замены на сегодня закончились' : 'Бесплатные замены на этой неделе закончились' };
+  const ex = (d ? q.dx : q.wx) || [], cur = L.map((x) => x.id), gems = L.filter((x, j) => j !== i && P[x.id] && P[x.id].r.gem).length;
+  const free = Object.keys(P).filter((c) => !cur.includes(c) && !ex.includes(c) && (d || !P[c].r.gem || gems < 2)), same = free.filter((c) => P[c].g === def.g), from = same.length ? same : free;
+  if (!from.length) return { ok: false, why: 'Заменить не на что' };
+  const to = from[Math.min(from.length - 1, Math.floor((Number(rnd) || 0) * from.length))];
+  L[i] = { id: to, n: 0, st: '' };
+  if (d) { q.dx = [...ex, id]; q.sd = (q.sd || 0) + 1; } else { q.wx = [...ex, id]; q.sw = (q.sw || 0) + 1; }
+  return { ok: true, q, pay, from: id, to };
+}
 export const questStale = (q, today) => !q || q.day !== today || q.wk !== weekNo(today);
 // что показать: сегодняшнее состояние без записи (задания, снятые из пула, не показываются)
-export function questView(q0, today) {
-  const { q } = questRoll(q0, today);
-  return { day: q.day, d: q.d.filter((t) => DAILY[t.id]), w: q.w.filter((t) => WEEKLY[t.id]), pts: q.pts, paid: q.paid, crate: q.crate, chest: q.chest };
+export function questView(q0, today, prem = false) {
+  const { q } = questRoll(q0, today), left = (n, used) => Math.max(0, swapLimit(n, prem) - (used || 0));
+  return { day: q.day, d: q.d.filter((t) => DAILY[t.id]), w: q.w.filter((t) => WEEKLY[t.id]), pts: q.pts, paid: q.paid, crate: q.crate, chest: q.chest, swap: { d: left('d', q.sd), w: left('w', q.sw) } };
 }
 const int = (v, hi = 999) => Math.max(0, Math.min(hi, Math.floor(Number(v) || 0)));
 // «Оборона» (итог присылает браузер): волн не больше, чем успело пройти по времени сервера (минимум 20 с на волну: время боя можно ускорить); «до конца» - все волны и победа

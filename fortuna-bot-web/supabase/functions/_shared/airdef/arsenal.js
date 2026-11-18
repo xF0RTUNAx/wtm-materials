@@ -227,7 +227,7 @@ export const PLANES = { h_mi24: 'Ми-24В', h_mi28: 'Ми-28Н', h_ka52: 'Ка-
 // «Космонавтика», «Арлекин» - на будущие сезоны (Mark 2026-10-26: «в игру визуально пока не добавляй»).
 // Цена - в кристаллах. Магазин - shop-ui.js; награды сезона (rating.js SEASON, sql/024) - только из вышедших к концу сезона (camosOut)
 export const CAMO_PRICE = 150;
-export const CAMOS = [['e_f15e:inferno', 1], ['e_mig31:dragon', 1], ['e_f35:sakura', 0], ['e_tu22:milk', 0], ['f16:digital', 0], ['e_su34:cosmos', 0], ['e_typhoon:harlequin', 0]].map(([key, season]) => ({ key, season }));
+export const CAMOS = [['e_f15e:inferno', 1], ['e_mig31:dragon', 1], ['e_f35:sakura', 0], ['e_tu22:milk', 1], ['f16:digital', 0], ['e_su34:cosmos', 0], ['e_typhoon:harlequin', 1]].map(([key, season]) => ({ key, season }));
 export const camosOut = (season) => CAMOS.filter((c) => c.season && c.season <= season).map((c) => c.key);
 // Аватарки игрока (Mark 2026-11-04). Номера - по листу, с которого выбирал Mark (файлы - tools/airdef-ui/avatars-import.js). У всех по умолчанию AVA_DEFAULT, в магазине - AVA_SHOP за
 // AVA_PRICE кристаллов, остальные готовы и лежат у сборщика. Кошелёк - те же поля, что у окрасок (sql/028): купленная - 'ava:a02' в camos, надетая - worn.ava = 'a02'; новых таблиц нет.
