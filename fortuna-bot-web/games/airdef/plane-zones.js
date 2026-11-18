@@ -14,12 +14,12 @@ const SCARS = ['scarL', 'scarR', 'cutL', 'cutR'];
 // delta - у крыла нет стабилизаторов позади (хвост - только киль выше фюзеляжа); canard - ПГО перед крылом (это фюзеляж)
 export const ZCUT = {
   e_gripen: { delta: true, canard: true }, e_typhoon: { delta: true, canard: true }, e_mirage: { delta: true }, e_viggen: { delta: true, canard: true },
-  su30: { canard: true, tailK: 0.75 }, e_su34: { canard: true }, // su30 (своя, 2026-11-18): стабилизаторы начинаются на 75 % длины
+  su30: { canard: true, tailK: 0.75 }, e_su34: { canard: true }, e_su33: { canard: true, tailK: 0.77 }, // su30 (своя, 2026-11-18): стабилизаторы начинаются на 75 % длины; e_su33 (своя, 2026-11-18) - на 78 % (с ПВД)
   e_f18c: { tailK: 0.77 }, // F/A-18C (своя модель): стабилизаторы начинаются на 76 % длины сразу за кромкой крыла - без поправки хвост выходил только с 91 %
   e_f22: { tailK: 0.8 }, e_tu160: { tailK: 0.82 }, // стабилизаторы вплотную к крылу - «перетяжки» нет
 };
 // два киля на мотогондолах (корни - ниже гаргрота): киль - любая стоячая поверхность над обшивкой в задней части
-const TWIN = new Set(['su30', 'mig29', 'e_su34', 'e_su57', 'e_mig31', 'f18', 'e_f18c', 'e_f22', 'e_f35', 'e_f15e']);
+const TWIN = new Set(['su30', 'e_su33', 'mig29', 'e_su34', 'e_su57', 'e_mig31', 'f18', 'e_f18c', 'e_f22', 'e_f35', 'e_f15e']);
 const CACHE = new Map();
 // опалённая рваная кромка: тёмный налёт поверх обшивки у линии разрыва
 const SCAR_MAT = new THREE.MeshBasicMaterial({ color: 0x15110d, transparent: true, opacity: 0.82, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2, depthWrite: false });

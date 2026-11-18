@@ -95,15 +95,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "Sukhoi Su-33 Сухой Су-33",
-  "author": "andertan",
-  "url": "https://sketchfab.com/3d-models/sukhoi-su-33-33-d80603a8a13b49bda90f19d80cac61d4",
-  "license": "CC-BY-4.0",
-  "files": [
-   "e_su33"
-  ]
- },
- {
   "title": "Mig-29K",
   "author": "Art Blender (KoreanNavy)",
   "url": "https://sketchfab.com/3d-models/mig-29k-23a0d3531b8f4f58b428835754a9fbdb",

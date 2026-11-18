@@ -13,7 +13,6 @@
 - "Wooden Military Crate" (https://polyhaven.com/a/wooden_military_crate) by Prabhjinder Singh - CC0 - `crew_e.glb`, `crew_w.glb`
 - "Миг - 31" (https://sketchfab.com/3d-models/31-b168fbca1f6c4ad0ad4e45b7a22f52bc) by mamont nikita - CC-BY-4.0 - `e_mig31.glb`, `e_mig31_lo.glb`
 - "Sukhoi Su-57 "Felon"" (https://sketchfab.com/3d-models/sukhoi-su-57-felon-09d546b4355c4fa6882ca46e05069bee) by andertan - CC-BY-4.0 - `e_su57.glb`, `e_su57_lo.glb`
-- "Sukhoi Su-33 Сухой Су-33" (https://sketchfab.com/3d-models/sukhoi-su-33-33-d80603a8a13b49bda90f19d80cac61d4) by andertan - CC-BY-4.0 - `e_su33.glb`
 - "Mig-29K" (https://sketchfab.com/3d-models/mig-29k-23a0d3531b8f4f58b428835754a9fbdb) by Art Blender (KoreanNavy) - CC-BY-4.0 - `e_mig29k.glb`
 - "Sukhoi Su-27 "Flanker"" (https://sketchfab.com/3d-models/sukhoi-su-27-flanker-2541c1dbc6c1499cb7b38b5bf1314750) by andertan - CC-BY-4.0 - `e_su27.glb`
 - "Sukhoi Su-35 Flanker-E (Сухой Су-35)" (https://sketchfab.com/3d-models/sukhoi-su-35-flanker-e-35-c98cf9b3b3e04017a04732798a31888a) by andertan - CC-BY-4.0 - `e_su35.glb`
