@@ -303,15 +303,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "McDonnell Douglas KC-10 Extender",
-  "author": "Spark_Customs",
-  "url": "https://sketchfab.com/3d-models/mcdonnell-douglas-kc-10-extender-b13585efd6814861970d1a61cf510308",
-  "license": "CC-BY-4.0",
-  "files": [
-   "t_kc10"
-  ]
- },
- {
   "title": "Low poly German IRIS-T AAM",
   "author": "Raptor9",
   "url": "https://sketchfab.com/3d-models/low-poly-german-iris-t-aam-f287bb3f4a7a4851b63d15673d9032c4",
@@ -477,33 +468,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "Large Industrial Storage Tanks",
-  "author": "Duane's Mind",
-  "url": "https://sketchfab.com/3d-models/large-industrial-storage-tanks-bd3ac97071104b64bc388a155b64f79e",
-  "license": "CC-BY-4.0",
-  "files": [
-   "obj_tanks"
-  ]
- },
- {
-  "title": "Rusty airbase fuel tank",
-  "author": "LuddePudde",
-  "url": "https://sketchfab.com/3d-models/rusty-airbase-fuel-tank-5ac257aee23e47e0a0f91a4e07a40692",
-  "license": "CC-BY-4.0",
-  "files": [
-   "obj_rtank"
-  ]
- },
- {
-  "title": "j type hanger",
-  "author": "ElectricLeo",
-  "url": "https://sketchfab.com/3d-models/j-type-hanger-d86713d61b4941378a6ad21569e0cbac",
-  "license": "CC-BY-4.0",
-  "files": [
-   "obj_jhangar"
-  ]
- },
- {
   "title": "Factory Low-Poly",
   "author": "KIFIR",
   "url": "https://sketchfab.com/3d-models/factory-low-poly-7d3bc4d7ce6d48d9986a664d48f3cca1",
@@ -513,57 +477,12 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "Soviet Panelki — Voxel Style Apartment Buildings",
-  "author": "My Name Is This",
-  "url": "https://sketchfab.com/3d-models/soviet-panelki-voxel-style-apartment-buildings-632517fa9977439895f8953f2e541ee5",
-  "license": "CC-BY-4.0",
-  "files": [
-   "bld_p5"
-  ]
- },
- {
-  "title": "Soviet panel house built in the 1970s",
-  "author": "Unka II",
-  "url": "https://sketchfab.com/3d-models/soviet-panel-house-built-in-the-1970s-94996e8cf4a8452d91ec1e206b5b4137",
-  "license": "CC-BY-4.0",
-  "files": [
-   "bld_p9"
-  ]
- },
- {
-  "title": "LOW POLY - SOVIET  APARTMENT BUILDING 8K",
-  "author": "Colin.Greenall",
-  "url": "https://sketchfab.com/3d-models/low-poly-soviet-apartment-building-8k-05229ac1d1f94e6c8cacaad91110c602",
-  "license": "CC-BY-4.0",
-  "files": [
-   "bld_b12"
-  ]
- },
- {
   "title": "Old Soviet Apartment Building",
   "author": "dimmeyster",
   "url": "https://sketchfab.com/3d-models/old-soviet-apartment-building-a546c0af8c184b1da4de1b547097f7a3",
   "license": "CC-BY-4.0",
   "files": [
    "bld_st"
-  ]
- },
- {
-  "title": "9 storey residential building (updated)",
-  "author": "bean(alwayshasbean)",
-  "url": "https://sketchfab.com/3d-models/9-storey-residential-building-updated-4407c6bd0d944a9c8ad0b9c08e65a1da",
-  "license": "CC-BY-4.0",
-  "files": [
-   "bld_t9"
-  ]
- },
- {
-  "title": "Apartment building House GameReady",
-  "author": "Xvoer",
-  "url": "https://sketchfab.com/3d-models/apartment-building-house-gameready-9356c589d74e4e029366d0c6410f33ba",
-  "license": "CC-BY-4.0",
-  "files": [
-   "bld_a16"
   ]
  },
  {
