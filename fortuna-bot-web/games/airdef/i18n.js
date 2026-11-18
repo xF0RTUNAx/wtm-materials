@@ -46,9 +46,9 @@ export const XL = LANG !== 'ru'; // язык не русский - строки 
 export const LOCALE = { ru: 'ru-RU', uk: 'uk-UA', en: 'en-US', de: 'de-DE', es: 'es-ES', fr: 'fr-FR' }[LANG] || 'ru-RU'; // числа: разделитель тысяч
 async function loadDict(l) {
   if (l === 'ru') return {};
-  const en = (await import('./lang/en.js?v=20261118a')).default;
+  const en = (await import('./lang/en.js?v=20261118b')).default;
   if (l === 'en') return en;
-  let d = {}; try { d = (await import(`./lang/${l}.js?v=20261118a`)).default; } catch (_) { /* словаря ещё нет - английский */ }
+  let d = {}; try { d = (await import(`./lang/${l}.js?v=20261118b`)).default; } catch (_) { /* словаря ещё нет - английский */ }
   return { ...en, ...d };
 }
 export const DICT = await loadDict(LANG);
