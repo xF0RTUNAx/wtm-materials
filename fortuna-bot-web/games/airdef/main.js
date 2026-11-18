@@ -469,7 +469,8 @@ C.syncUnits = function () {
           });
         }
         // Patriot: рвущиеся крышки - на пакете; prepare.js кладёт lid* в оси башни (от tp), пакет стоит в cp от неё - сдвиг на −cp (у С-300 cp = 0)
-        if (gm && gm.lids.length && md.LN.blowLids) g.userData.blow = gm.lids.map((lid) => { if (!lid) return null; lid.position.set(-Ld.cp[0], -Ld.cp[1], -Ld.cp[2]); return obj(lid, cg); });
+        // SAMP/T (blowLids 'tur'): пакет в модели уже стоит и не качается - крышки на башне, как их положил prepare.js
+        if (gm && gm.lids.length && md.LN.blowLids) g.userData.blow = gm.lids.map((lid) => { if (!lid) return null; const onT = md.LN.blowLids === 'tur'; if (onT) lid.position.set(0, 0, 0); else lid.position.set(-Ld.cp[0], -Ld.cp[1], -Ld.cp[2]); return obj(lid, onT ? tg : cg); });
       }
       // С-300: штоки домкратов (вниз до земли) и гидроцилиндр подъёма - корпус на шарнире cylA смотрит на проушину стрелы, штоки выдвигаются (erectView)
       if (md.LN && md.LN.erect && md.LN.mode === 'cold' && C.fx && C.fx.wantLaunch) C.fx.wantLaunch(); // листы старта С-300 / С-400 - только в бою с ними

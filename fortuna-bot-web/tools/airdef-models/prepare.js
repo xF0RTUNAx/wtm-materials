@@ -315,8 +315,8 @@ const CONFIG = {
   aam_aim9x: { src: `${DL}/us_weapon_pack.glb`, scale: 1, nose: '-z', tex: () => 256, pickMesh: /us_aim-9x/ }, // AIM-9X
   aam_r60: { src: `${DL}/simple_gameready_weapons_for_fighter_jet_games.glb`, scale: 2.09 / 4.53, nose: '+z', tex: () => 256, pickMesh: /R-60_6/ }, // Р-60М (в наборе ×2,2)
   // Aster 30 для SAMP/T — по модели IRIS-T (Raptor9): увеличена до 4,9 м; голубые и сиреневые детали — в серые тона Aster
-  msl_aster: { src: `${DL}/low_poly_german_iris-t_aam.glb`, scale: 4.9 / 924.74, nose: '-x', tex: () => 256, pickMesh: /./,
-    colors: { '^ff18aef9$': [0.35, 0.35, 0.35], '^ff9(06680|55f8d)$': [0.5, 0.5, 0.5] } },
+  // Aster 30 - своя ракета (сборщик С-300, Свои/SAMP-T/Aster30, 2026-11-18) вместо IRIS-T Raptor9: 4,9 м, нос −Z, начало посередине длины; летит одним куском
+  msl_aster: { src: `${DL}/Свои/SAMP-T/Aster30/msl_aster.glb`, scale: 1, nose: '-z', own: true, tex: () => 1024, nTex: () => 512, pickMesh: /./ },
   aam_iris: { src: `${DL}/low_poly_german_iris-t_aam.glb`, scale: 2.936 / 924.74, nose: '-x', tex: () => 256, pickMesh: /./ }, // IRIS-T
   aam_mica: { src: `${DL}/low_poly_missiles_and_torpedos.glb`, scale: 1, nose: '+z', tex: () => 256, pickMesh: /VL MICA/ }, // MICA (EM и IR — один корпус)
   msl_aim120: { src: `${DL}/boeing_fa-18ef_super_hornet.glb`, scale: 1, nose: '+x', tex: () => 256, pick: [-6, -0.5, 4.5, -1, -0.02, 4.9] }, // AIM-120 с F/A-18 — для NASAMS
@@ -410,8 +410,12 @@ const CONFIG = {
   msl_9m311: { src: `${DL}/Свои/Тунгуска/msl_9m311_game.glb`, scale: 1, nose: '-z', tex: () => 512, nTex: () => 512, pickMesh: /./, credit: 'окраска и запекание текстур' },
   // SAMP/T — Chenzoss: скан, вся машина — одна сетка; пакет из 8 контейнеров Aster лежит по-походному — делим по треугольникам,
   // в игре он поднимается вертикально (u.lel = 90°) вокруг оси у кормы
-  sampt: { src: `${DL}/samp-t_air_defense_system.glb`, scale: 5.5, nose: '+z', rulesIn: 'game', unit: true, perTri: true, tex: () => 1024, target: 60000, hinge: [0, 0.45, 4.3],
-    groups: (c) => (c.ctr[1] > 0.4 && c.ctr[2] > -0.8 && c.ctr[2] < 4.35 && Math.abs(c.ctr[0]) < 1.7 ? 'cradle' : 'body') }, // пакет: два ряда контейнеров, y 0,5–1,75 (под ним — пустой промежуток до рамы)
+  // SAMP/T - своя пусковая на Renault Kerax 8×8 (сборщик С-300, Свои/SAMP-T, ревизия 1, 2026-11-18; Mark: «модель SAMP/T готова») вместо скана Chenzoss.
+  // В файле уже боевое положение: стрела с 8 ТПК стоит вертикально, домкраты и мачта выдвинуты - в игре пусковая неподвижна (vhot, slewY 0).
+  // Оси сборщика без центровки (axisX / axisZ / ground 0): точки пуска паспорта = оси игры. Крышки ТПК cap_0…7 → lid0…7 (рвутся при пуске,
+  // launchers.js blowLids 'tur' - в осях башни от tpFix); остальное - корпус. Сетка 74,6 тыс. треугольников без упрощения (правило Mark)
+  sampt: { src: `${DL}/Свои/SAMP-T/sampt.glb`, scale: 1, nose: '-z', rulesIn: 'game', unit: true, own: true, tex: () => 1024, nTex: () => 512, pickMesh: /./,
+    axisX: 0, axisZ: 0, ground: 0, tpFix: [0, 0, 4.75], groups: (c) => { const m = c.path.match(/(^|\/)cap_(\d)/); return m ? 'lid' + m[2] : 'body'; } },
   // Oerlikon GDF 35 мм — из сцены Skyguard (lm9241221): одна из двух пушек (сцена в мм, пушка — в половину размера → ×0,002);
   // станок поворачивается, спарка со стволами и коробами — качается на цапфах; подложка, кабели, радар и вторая пушка — долой
   skyguard: { src: `${DL}/oerlikon_35mm_skyguard_radar.glb`, scale: 0.002, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, target: 80000, simpErr: 0.002, minPart: 0.06, hinge: [19.62, 1.45, -8.1],

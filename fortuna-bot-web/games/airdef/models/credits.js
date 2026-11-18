@@ -194,15 +194,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "Low poly German IRIS-T AAM",
-  "author": "Raptor9",
-  "url": "https://sketchfab.com/3d-models/low-poly-german-iris-t-aam-f287bb3f4a7a4851b63d15673d9032c4",
-  "license": "CC-BY-4.0",
-  "files": [
-   "msl_aster"
-  ]
- },
- {
   "title": "MiG 29",
   "author": "Uxman",
   "url": "https://sketchfab.com/3d-models/mig-29-f04c8e99765c4d7e875476998ec5c2f3",
@@ -249,16 +240,6 @@ export const CREDITS = [
    "tunguska",
    "tunguska_lo",
    "msl_9m311"
-  ]
- },
- {
-  "title": "samp-t air defense system",
-  "author": "Chenzoss",
-  "url": "https://sketchfab.com/3d-models/samp-t-air-defense-system-096f1bd31fc646b9908d5f1d9b7e0d34",
-  "license": "CC-BY-4.0",
-  "files": [
-   "sampt",
-   "sampt_lo"
   ]
  },
  {

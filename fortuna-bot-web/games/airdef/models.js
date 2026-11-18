@@ -347,8 +347,8 @@ const META = {
   skyguard: { units: ['skyguard'], stations: [] },
   rapier: { units: ['rapier'], matte: true, stations: [] }, // Tracked Rapier - свой (сборщик, Свои/Rapier; раньше - stealth86 с шейдерным камуфляжем); маск-сети - вырез по альфе // Oerlikon GDF 35 мм - из сцены Skyguard (lm9241221) // 2К22 «Тунгуска» - usedm
   msl_rapier: { samMissile: ['rapier'], lazy: true, onRail: true, matte: true, stations: [] }, // ракета Rapier - своя (Свои/Rapier), на балках
-  sampt: { units: ['sampt'], stations: [] }, // SAMP/T - Chenzoss
-  msl_aster: { samMissile: ['sampt'], stations: [] }, // Aster 30 - по IRIS-T (Raptor9), увеличена и перекрашена // Roland 2 на Marder - ScurvyWoof (перекрашен) // Flakpanzer Gepard (не «War Thunder»)
+  sampt: { units: ['sampt'], matte: true, stations: [] }, // SAMP/T - своя пусковая на Renault Kerax (Свои/SAMP-T, 2026-11-18) вместо скана Chenzoss: боевое положение в файле, 8 ТПК, крышки lid0…7 рвутся при пуске
+  msl_aster: { samMissile: ['sampt'], lazy: true, matte: true, stations: [] }, // Aster 30 - своя (Свои/SAMP-T/Aster30, 2026-11-18), 4,9 м, нос −Z, одним куском // Roland 2 на Marder - ScurvyWoof (перекрашен) // Flakpanzer Gepard (не «War Thunder»)
   nasams: { units: ['nasams'], matte: true, stations: [] }, // NASAMS - своя пусковая (Свои/NASAMS, 2026-10-25): крышки контейнеров lid0…5 откидываются к пуску, мачта поднята
   ew_e: { units: ['gpsjam'], matte: true, stations: [] }, // станция РЭБ (восток) - РЛС П-18 «Терек», своя (Свои/П-18): «Урал-4320» Brout (CC BY 4.0) + будка, мачта, балка с 16 антеннами (radar - крутится)
   ew_w: { units: ['gpsjamw'], matte: true, stations: [] }, // станция РЭБ (запад) - AN/MPQ-64 Sentinel, своя (Свои/Sentinel): «Хамви» karmy2k (CC BY 4.0) + прицеп с антенной (radar - крутится); камуфляж запечён
@@ -529,6 +529,7 @@ const GLB_V_OWN = {
   patriot_lo: '20261102b',
   msl_pac2: '20261102a',
   pac3: '20261102a', // своя PAC-3 вместо M901 Muhamad Mirza Arrafi
+  sampt: '20261118a', sampt_lo: '20261118a', msl_aster: '20261118a', // свои SAMP/T и Aster 30 вместо Chenzoss и IRIS-T Raptor9
   pac3_lo: '20261102a',
   msl_pac3: '20261102a',
   buk: '20261103a', // «Бук-М1» - своя СОУ 9А310М1 (Свои/Бук-М1) вместо колёсного «Бука» azlan; ракета 9М38М1 - своя (Свои/9М38М1)
