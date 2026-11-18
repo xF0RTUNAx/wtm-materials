@@ -4,7 +4,7 @@
 // выбранном языке (перевода нет - исходная); tr('Сбито: {0}/{1}', [a, b]) - с подстановкой. trDom(root) - статичный HTML страницы.
 // Выбор - «Настройки» → «Язык» (localStorage), для проверки - ?lang=de. Первый вход - язык устройства / Telegram и вопрос (askLang).
 // Без DOM при импорте: модуль годится для стендов Deno (там язык - русский, словарь не грузится).
-export const LANGS = [['ru', 'Русский'], ['uk', 'Українська'], ['en', 'English'], ['de', 'Deutsch'], ['es', 'Español'], ['fr', 'Français']];
+export const LANGS = [['en', 'English'], ['ru', 'Русский'], ['uk', 'Українська'], ['de', 'Deutsch'], ['es', 'Español'], ['fr', 'Français']];
 const CODES = LANGS.map(([k]) => k);
 
 const LS_KEY = 'fortuna_airdef_lang';
@@ -46,9 +46,9 @@ export const XL = LANG !== 'ru'; // язык не русский - строки 
 export const LOCALE = { ru: 'ru-RU', uk: 'uk-UA', en: 'en-US', de: 'de-DE', es: 'es-ES', fr: 'fr-FR' }[LANG] || 'ru-RU'; // числа: разделитель тысяч
 async function loadDict(l) {
   if (l === 'ru') return {};
-  const en = (await import('./lang/en.js?v=20261117d')).default;
+  const en = (await import('./lang/en.js?v=20261118a')).default;
   if (l === 'en') return en;
-  let d = {}; try { d = (await import(`./lang/${l}.js?v=20261117d`)).default; } catch (_) { /* словаря ещё нет - английский */ }
+  let d = {}; try { d = (await import(`./lang/${l}.js?v=20261118a`)).default; } catch (_) { /* словаря ещё нет - английский */ }
   return { ...en, ...d };
 }
 export const DICT = await loadDict(LANG);

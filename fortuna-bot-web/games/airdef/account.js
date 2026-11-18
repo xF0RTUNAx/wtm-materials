@@ -4,8 +4,8 @@
 // иначе «старый» аккаунт сайта, иначе гость: от него идут прогресс, онлайн-билет и итог боя. Рейтинг - только у аккаунта игры;
 // прогресс сайта можно один раз перенести в аккаунт игры (функция airdef-account, sql/022). Чистый модуль: хранилище, запросы, заглушка ?rmock=1.
 /* global CONFIG */
-import { tr } from './i18n.js?v=20261117d';
-import { AVA_SHOP } from './arsenal.js?v=20261117d';
+import { tr } from './i18n.js?v=20261118a';
+import { AVA_SHOP } from './arsenal.js?v=20261118a';
 
 const KEY_GAME = 'fortuna_airdef_acc', KEY_SITE = 'fortuna_web_player', KEY_SST = 'fortuna_airdef_site_st';
 // ?rmock=1 - заглушка: airdef-account и get-airdef-rating отвечают локально (сервер ещё не применён в боевой базе); ?rmock=empty - у «вас» нет боёв,
@@ -154,7 +154,43 @@ async function mockFn(fn, b) {
   if (fn === 'get-airdef-rating') return mockRating(b.player_id);
   if (fn === 'get-airdef-profile') return mockProfile(b.nick, b.season);
   if (fn === 'airdef-shop') return mockShop(b);
+  if (fn === 'airdef-support') return mockSupport(b);
   throw mockErr(404, 'Not found');
+}
+// поддержка (support-ui.js): три обращения как в макете (tools/airdef-mockups/support); create / reply отдают uploads с адресом mock:// - загрузки нет, сразу успех
+// (?rmock=empty - обращений нет; ?rmock=err - любое действие отвечает 429 limit, чтобы увидеть ошибку)
+let MSUP = null;
+function mockSupport(b) {
+  const ago = (d, h, m) => new Date(Date.now() - d * 86400000 - h * 3600000 - m * 60000).toISOString(), lim = { maxFiles: 3, maxFileMB: 15, maxText: 2000 };
+  if (!MSUP) {
+    const e = RMOCK === 'empty';
+    MSUP = { n: 45, tickets: e ? [] : [
+      { id: 45, topic: 'idea', title: 'Ночной бой в «Мульти-волне»', status: 'new', unread: false, created_at: ago(0, 2, 0), updated_at: ago(0, 2, 0), files: 0 },
+      { id: 42, topic: 'bug', title: 'Пропал звук ракет', status: 'answered', unread: true, created_at: ago(1, 14, 0), updated_at: ago(0, 11, 30), files: 2 },
+      { id: 39, topic: 'purchase', title: 'Не пришли кристаллы за задание', status: 'closed', unread: false, created_at: ago(6, 3, 0), updated_at: ago(6, 1, 0), files: 0 }],
+      msgs: { 45: [{ id: 'm1', author: 'player', body: 'Хочется ночной бой в «Мульти-волне»: прожекторы, трассеры, меньше видимость.', files: [], created_at: ago(0, 2, 0) }],
+        42: [{ id: 'm2', author: 'player', body: 'После второй волны на «Речном узле» пропал звук ракет - вернулся только после перезапуска игры.\nПовторилось два раза.', files: [{ name: 'screenshot.webp', size: 420000, type: 'image/webp' }, { name: 'видео.mp4', size: 14900000, type: 'video/mp4' }], created_at: ago(1, 14, 0) },
+          { id: 'm3', author: 'support', body: 'Спасибо! Нашли причину: звук не возвращался после паузы на второй волне. Исправим в ближайшем обновлении.', files: [], created_at: ago(0, 11, 30) }],
+        39: [{ id: 'm4', author: 'player', body: 'За задание «Три сбитых» не пришли кристаллы.', files: [], created_at: ago(6, 3, 0) }, { id: 'm5', author: 'support', body: 'Начислили вручную, приятной игры. Закрываю обращение.', files: [], created_at: ago(6, 1, 0) }] } };
+  }
+  if (RMOCK === 'err' && b.action !== 'list') throw mockErr(429, 'Слишком много обращений: следующее можно отправить через час', 'limit');
+  const T = (id) => (typeof id === 'number' ? MSUP.tickets.find((t) => t.id === id) : null) /* номер - числом, как ждёт сервер (строка - «не найдено») */, ups = (fs) => (fs || []).map((_, i) => ({ url: 'mock://upload/' + i, method: 'PUT', headers: { 'Content-Type': 'application/octet-stream' } }));
+  if (b.action === 'list') return { tickets: MSUP.tickets.map((t) => ({ ...t })), unread: MSUP.tickets.filter((t) => t.unread).length, limits: lim };
+  if (b.action === 'thread') { const t = T(b.id); if (!t) throw mockErr(404, 'Обращение не найдено'); t.unread = false; return { ticket: { id: t.id, topic: t.topic, title: t.title, status: t.status, created_at: t.created_at }, messages: MSUP.msgs[t.id] || [] }; }
+  if (b.action === 'create') {
+    if (!String(b.body || '').trim()) throw mockErr(400, 'Пустой текст'); const id = ++MSUP.n, now = new Date().toISOString();
+    MSUP.tickets.unshift({ id, topic: b.topic, title: String(b.body).split('\n')[0].slice(0, 60), status: 'new', unread: false, created_at: now, updated_at: now, files: (b.files || []).length });
+    MSUP.msgs[id] = [{ id: 'm' + id, author: 'player', body: b.body, files: b.files || [], created_at: now }]; MSUP.last = { id, mid: 'm' + id };
+    return { id, msg_id: id * 100, uploads: ups(b.files) };
+  }
+  if (b.action === 'reply') {
+    const t = T(b.id); if (!t) throw mockErr(404, 'Обращение не найдено'); if (t.status === 'closed') throw mockErr(400, 'Обращение закрыто');
+    const mid = Date.now() % 1e9; (MSUP.msgs[t.id] ||= []).push({ id: mid, author: 'player', body: b.body, files: b.files || [], created_at: new Date().toISOString() }); t.status = 'new'; t.updated_at = new Date().toISOString();
+    return { msg_id: mid, uploads: ups(b.files) };
+  }
+  if (b.action === 'sent' || b.action === 'cancel') return { ok: true };
+  if (b.action === 'close') { const t = T(b.id); if (t) t.status = 'closed'; return { ok: true }; }
+  throw mockErr(400, 'Неизвестное действие');
 }
 // магазин (shop-ui.js): 340 кристаллов; ?shop=token - окраска на выбор, owned - обе окраски куплены и «Инферно» надета, две аватарки куплены и одна надета, poor - не хватает на окраску, broke - и на аватарку
 const SHOP0 = { token: { crystals: 60, camos: [], picks: 1, worn: {} }, owned: { crystals: 190, camos: ['e_f15e:inferno', 'e_mig31:dragon', 'ava:a13', 'ava:a16'], picks: 0, worn: { e_f15e: 'inferno', ava: 'a16' } },

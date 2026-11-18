@@ -8,11 +8,11 @@
 // Свой профиль (Mark 2026-10-29: «через профиль главного меню - то же окно, что в рейтинге, чтобы не нажимать сто раз»): ник в меню (account-ui.js)
 // открывает его сразу (openMe), «Назад» - к таблице рейтинга; в нём же «Аккаунт» - логин, смена ника, выход (что было в окне аккаунта).
 /* global CONFIG */
-import { ico } from './icons.js?v=20261117d';
-import { tr, trIf, LANG, LOCALE } from './i18n.js?v=20261117d';
-import { activeAcc, gameAcc, rating as fetchRating, profile as fetchProfile, transferOk } from './account.js?v=20261117d';
-import { avaSrc, ownAva } from './avatar.js?v=20261117d';
-import { NODE } from './progress.js?v=20261117d';
+import { ico } from './icons.js?v=20261118a';
+import { tr, trIf, LANG, LOCALE } from './i18n.js?v=20261118a';
+import { activeAcc, gameAcc, rating as fetchRating, profile as fetchProfile, transferOk } from './account.js?v=20261118a';
+import { avaSrc, ownAva } from './avatar.js?v=20261118a';
+import { NODE } from './progress.js?v=20261118a';
 
 const LOC = LOCALE;
 const nf = (v) => Math.round(v).toLocaleString(LOC);
@@ -326,6 +326,7 @@ export function createRating(C) {
   async function openProfile(nick, own, menu = false) { // menu - открыт ником в меню: «Назад» ведёт в таблицу и подписан «Рейтинг»
     const season = S.data ? S.data.season : 0;
     S.view = 'prof'; S.p = { nick, own: !!own, menu, season, data: null, err: '', busy: true };
+    if (own && C.support) C.support.touch(); // непрочитанные ответы поддержки - на кнопку «Поддержка» в профиле (не чаще раза в минуту)
     const c = PROF.get(pkey(nick, season));
     if (c && Date.now() - c.at < FRESH) { S.p.data = c.data; S.p.busy = false; draw(); return; }
     draw();
@@ -336,7 +337,7 @@ export function createRating(C) {
     if (S.p === p && S.view === 'prof' && root.classList.contains('on')) draw();
   }
   const MODE_ROWS = [['air', 'fire', tr('Вылет')], ['pvo', 'radar', tr('Оборона')], ['multi', 'players', tr('Мульти-волна')]];
-  const thumbOf = (branch, key) => (NODE[branch + ':' + key] ? `airdef/thumbs/${branch}_${key}.webp?v=20261117d` : '');
+  const thumbOf = (branch, key) => (NODE[branch + ':' + key] ? `airdef/thumbs/${branch}_${key}.webp?v=20261118a` : '');
   const unitName = (branch, key) => { const n = NODE[branch + ':' + key]; return n ? trIf(n.name) : key; };
   const ddmm = (at, year) => { const d = new Date(at); return isNaN(d) ? '' : `${pad2(d.getDate())}.${pad2(d.getMonth() + 1)}${year ? '.' + d.getFullYear() : ''}`; };
   const hhmm = (at) => { const d = new Date(at); return isNaN(d) ? '' : `${pad2(d.getHours())}:${pad2(d.getMinutes())}`; };
@@ -374,7 +375,7 @@ export function createRating(C) {
   function accSec() {
     const g = gameAcc(); if (!g) return '';
     return `<div class="sec"><div class="sh"><b>${tr('Аккаунт')}</b><small>${tr('Логин: {0}', [esc(g.login)])}</small></div>
-      <span class="acts"><button class="btnm alt" data-a="rename">${tr('Сменить ник')}</button><button class="btnm alt" data-a="logout">${tr('Выйти из аккаунта')}</button><button class="btnm alt danger" data-a="delacc">${tr('Удалить аккаунт')}</button></span>
+      <span class="acts"><button class="btnm alt" data-a="support">${tr('Поддержка')}${C.support ? C.support.badge() : ''}</button><button class="btnm alt" data-a="rename">${tr('Сменить ник')}</button><button class="btnm alt" data-a="logout">${tr('Выйти из аккаунта')}</button><button class="btnm alt danger" data-a="delacc">${tr('Удалить аккаунт')}</button></span>
       <span class="empty">${tr('Ник можно сменить один раз в сезон.')}</span></div>`;
   }
   function viewProfile() {
@@ -414,11 +415,12 @@ export function createRating(C) {
     else if (a === 'profme') { const m = mine(), acc = activeAcc(), nk = (m && m.nick) || (acc && acc.nick); if (nk) openProfile(nk, true); }
     else if (a === 'per') { S.per = t.dataset.per === 'all' ? 'all' : 'season'; draw(); }
     else if (a === 'pretry') { if (S.p) openProfile(S.p.nick, S.p.own, S.p.menu); }
+    else if (a === 'support') { if (C.support) C.support.open(); } // окно «Поддержка» - поверх профиля (support-ui.js)
     else if (a === 'rename') { if (C.account) C.account.open('rename'); } // окно аккаунта - поверх профиля
     else if (a === 'delacc') { if (C.account) C.account.open('delete'); } // окно аккаунта: предупреждение, пароль, слово-подтверждение
     else if (a === 'logout') { if (C.account && C.account.logout()) api.close(); } // в комнате и в бою выйти нельзя - откроется окно аккаунта с причиной
   });
-  addEventListener('keydown', (e) => { if (e.code === 'Escape' && root.classList.contains('on') && !(C.account && C.account.isOpen())) { if (S.q) { S.q = false; draw(); } else api.close(); } });
+  addEventListener('keydown', (e) => { if (e.code === 'Escape' && root.classList.contains('on') && !(C.account && C.account.isOpen()) && !(C.support && C.support.isOpen && C.support.isOpen())) { if (S.q) { S.q = false; draw(); } else api.close(); } });
 
   const api = {
     open() {

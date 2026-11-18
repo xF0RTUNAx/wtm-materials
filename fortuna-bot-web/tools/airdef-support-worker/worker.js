@@ -37,7 +37,7 @@ export default {
     if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors(req) });
     const url = new URL(req.url);
     if (!url.pathname.startsWith('/f/')) return txt(req, 404, 'not found');
-    const key = url.pathname.slice(3).split('/').map(decodeURIComponent).join('/');
+    let key; try { key = url.pathname.slice(3).split('/').map(decodeURIComponent).join('/'); } catch (_) { return txt(req, 400, 'bad key'); }
     if (!/^p\/[0-9a-f-]{36}\/(\d+\/[A-Za-z0-9._-]{1,80})?$/.test(key)) return txt(req, 400, 'bad key');
     const q = url.searchParams, op = q.get('op') || '', exp = q.get('exp') || '', sig = q.get('sig') || '';
     if (!env.SUPPORT_FILE_KEY) return txt(req, 503, 'not configured');
@@ -50,7 +50,8 @@ export default {
       if (!TYPES[type] || !(n > 0 && n <= MAX) || key.endsWith('/')) return txt(req, 400, 'bad file');
       if ((req.headers.get('Content-Type') || '').split(';')[0].trim() !== type) return txt(req, 415, 'type mismatch');
       if (+(req.headers.get('Content-Length') || -1) !== n) return txt(req, 411, 'length mismatch');
-      if (await env.B.head(key)) return txt(req, 409, 'exists');
+      const was = await env.B.head(key);
+      if (was) return was.size === n ? txt(req, 200, 'ok') : txt(req, 409, 'exists'); // повтор после потерянного ответа - файл уже на месте
       const fixed = new FixedLengthStream(n); // R2 знает длину заранее; больше n байт не пропустит
       const put = env.B.put(key, fixed.readable, { httpMetadata: { contentType: type } });
       await req.body.pipeTo(fixed.writable).catch(() => {});
