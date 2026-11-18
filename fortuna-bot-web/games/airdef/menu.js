@@ -72,7 +72,8 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
   { const q = new URLSearchParams(location.search), must = q.get('mp') === '1' || q.has('ad'); let on = q.get('oldbg') !== '1'; /* ангар: подвеска на виду, «›» - убрать */ try { const st = sessionStorage.getItem(mpKey); on = st === '1' || (on && st !== '0'); } catch (_) { /* как есть */ } panel(on || must); }
   $('mpClose').onclick = () => { snd.click(); panel(false); };
   // Арсенал, Справка, Настройки, Об игре (Mark): свёрнуты в кнопку, как табличка разделов
-  $('mtFold').innerHTML = ico('cog');
+  $('mtFold').innerHTML = ico('cog') + '<span class="supn"></span>'; // отметка непрочитанного ответа поддержки (support-ui.js paintBadges)
+  $('mtSup').onclick = (e) => { e.stopPropagation(); snd.click(); $('mtabs').classList.remove('open'); if (C.support) C.support.open(); }; // «Поддержка» в ряду шестерёнки (Mark 2026-11-18)
   $('mtFold').onclick = (e) => { e.stopPropagation(); snd.click(); $('mtabs').classList.toggle('open'); };
   $('hgStrip').onclick = (e) => {
     const ol = e.target.closest('[data-ol]'), nd = e.target.closest('[data-need]'), sm = e.target.closest('[data-sam]');
