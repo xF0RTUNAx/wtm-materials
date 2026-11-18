@@ -18,7 +18,7 @@
 <p>Здесь простыми словами написано, какие данные собирает игра, зачем, где они хранятся, кому передаются и как их удалить. Мы собираем только то, без чего игра не работает. Рекламы, аналитики и трекеров в игре нет, cookies игра не ставит.</p>
 
 <h2>1. Кто отвечает за данные</h2>
-<p>Игру делает и обслуживает [ИМЯ ВЛАДЕЛЬЦА] (xFORTUNAx), [СТРАНА]. Он же отвечает за обработку ваших данных. Связаться: <a href="mailto:[EMAIL]">[EMAIL]</a> или окно «Поддержка» в игре.</p>
+<p>Игру делает и обслуживает [ИМЯ ВЛАДЕЛЬЦА], [СТРАНА]. Он же отвечает за обработку ваших данных. Связаться: <a href="mailto:[EMAIL]">[EMAIL]</a> или окно «Поддержка» в игре.</p>
 
 <h2>2. Без аккаунта</h2>
 <p>Играть можно без регистрации: «Аркада», обучение, одиночные бои. В этом случае на наш сервер ничего не уходит, кроме отчёта о сбое, если вы сами нажмёте «Отправить» (п. 3.6). Настройки, язык и ваши рекорды хранятся только на вашем устройстве.</p>
@@ -26,12 +26,12 @@
 <h2>3. Что мы собираем</h2>
 <h3>3.1. Аккаунт игры</h3>
 <ul>
-<li><b>Логин и пароль.</b> Пароль мы не храним: сервер сохраняет только его необратимый хеш (PBKDF2-SHA256 со случайной солью).</li>
+<li><b>Логин и пароль.</b> Пароль хранится только в защищённом виде, прочитать его не может никто, в том числе мы.</li>
 <li><b>Ник</b> и сезон его последней смены.</li>
 <li><b>Даты</b> создания аккаунта и последнего входа.</li>
-<li><b>Ключи входа на устройствах</b> (не больше 10): на устройстве лежит сам ключ, у нас - только его хеш. Ключ действует 90 дней.</li>
+<li><b>Данные входа на ваших устройствах</b>, чтобы не вводить пароль каждый раз.</li>
 <li>Если вы перенесли прогресс с аккаунта сайта fortunawtm.com - связь между аккаунтами.</li>
-<li>Для защиты от подбора пароля - счётчик неудачных входов по логину (блокировка на 15 минут после 10 ошибок).</li>
+<li>Сведения о неудачных попытках входа - для защиты аккаунта от подбора пароля.</li>
 </ul>
 <h3>3.2. Игровые данные</h3>
 <ul>
@@ -53,15 +53,13 @@
 <h3>3.8. Telegram</h3>
 <p>Если вы открываете игру в Telegram, она берёт только язык вашего аккаунта Telegram, чтобы сразу показать игру на нём, и никуда его не отправляет. Ваш Telegram ID, имя и номер телефона игра не получает. Для работы в Telegram страница загружает скрипт telegram.org, поэтому Telegram видит факт открытия игры (как любой сайт, с которого загружается файл).</p>
 
-<h2>4. Зачем и на каком основании</h2>
-<div class="tbl"><table>
-<tr><th>Цель</th><th>Данные</th><th>Основание</th></tr>
-<tr><td>Аккаунт, прогресс, сохранение покупок</td><td>3.1, 3.2, 3.3</td><td>исполнение договора (правил игры)</td></tr>
-<tr><td>Онлайн-бои, рейтинг, профиль</td><td>ник, аватарка, итоги боёв</td><td>исполнение договора</td></tr>
-<tr><td>Защита аккаунтов, борьба с читами и нарушениями</td><td>счётчик входов, журнал сервера, чат</td><td>законный интерес</td></tr>
-<tr><td>Ответы поддержки, поиск ошибок</td><td>3.5, 3.6</td><td>ваш запрос; законный интерес</td></tr>
-<tr><td>Учёт платежей и возвратов</td><td>3.3</td><td>исполнение договора; требования закона</td></tr>
-</table></div>
+<h2>4. Зачем мы используем данные</h2>
+<ul>
+<li><b>Чтобы игра работала:</b> аккаунт, сохранение прогресса и покупок, онлайн-бои, рейтинг и профиль. Без этого мы не можем дать вам игру, которую вы выбрали (основание - договор, то есть <a href="terms.html">Правила</a>).</li>
+<li><b>Чтобы защищать игроков и игру:</b> охрана аккаунтов, борьба с читами, оскорблениями и мошенничеством. Основание - законный интерес: наш и честных игроков.</li>
+<li><b>Чтобы отвечать вам и чинить ошибки:</b> обращения в поддержку и отчёты о сбоях (основание - ваш запрос и законный интерес в исправной игре).</li>
+<li><b>Чтобы вести учёт платежей и возвратов</b> (основание - договор и требования закона).</li>
+</ul>
 <p>Мы не продаём данные, не показываем рекламу, не строим профили для рекламы и не принимаем автоматических решений, которые юридически на вас влияют.</p>
 
 <h2>5. Что видят другие</h2>
@@ -70,14 +68,14 @@
 <h2>6. Где хранятся данные и кому передаются</h2>
 <p>Мы пользуемся сервисами, которые хранят данные по нашему поручению:</p>
 <ul>
-<li><b>Supabase</b> - база данных и серверные функции (аккаунт, прогресс, покупки, поддержка).</li>
-<li><b>Cloudflare</b> - хранилище файлов поддержки (закрытое, удаление через 60 дней), загрузка моделей игры, соединение с игровым сервером.</li>
-<li><b>GitHub Pages</b> - размещение страниц игры.</li>
+<li><b>Supabase</b> - база данных и серверные функции (аккаунт, прогресс, покупки, поддержка); серверы в Ирландии (ЕС).</li>
+<li><b>Cloudflare</b> - хранилище файлов поддержки, загрузка файлов игры, соединение с игровым сервером; работает через собственную сеть по всему миру.</li>
+<li><b>GitHub Pages</b> - размещение страниц игры (США).</li>
 <li><b>Telegram</b> - бот поддержки (копии обращений), оплата Stars, работа игры внутри Telegram.</li>
 <li><b>Google Play, App Store</b> - если вы покупаете в приложении.</li>
 <li><b>Игровой сервер</b> онлайн-боёв, который работает у разработчика.</li>
 </ul>
-<p>Эти компании могут обрабатывать данные за пределами вашей страны (в том числе в ЕС и США) по своим правилам защиты данных. Хостинги, как и любой сайт, видят IP-адрес и браузер при запросах. Данные раскрываются органам власти только по требованию закона.</p>
+<p>Эти компании могут обрабатывать данные за пределами вашей страны, в том числе в США. Такая передача идёт на условиях, которые предусматривает закон о защите данных (например, стандартные договорные положения ЕС у этих компаний). Хостинги, как и любой сайт, видят IP-адрес и браузер при запросах. Данные раскрываются органам власти только по требованию закона.</p>
 
 <h2>7. Сколько хранятся</h2>
 <ul>
@@ -96,7 +94,7 @@
 <p>Игра не предназначена для детей младше 13 лет, и мы сознательно не собираем их данные. Если вам меньше 16 лет (или меньше возраста согласия в вашей стране), создавайте аккаунт с разрешения родителей. Если вы родитель и узнали, что ребёнок младше 13 лет создал аккаунт, напишите нам - мы его удалим.</p>
 
 <h2>10. Безопасность</h2>
-<p>Все соединения идут по HTTPS, пароли хранятся только в виде хеша, ключи входа - в виде хеша, доступ к базе закрыт правилами на сервере, файлы поддержки лежат в закрытом хранилище и выдаются по временным подписанным ссылкам. Абсолютной защиты не бывает: если мы узнаем об утечке, которая касается вас, мы сообщим об этом.</p>
+<p>Мы применяем технические и организационные меры, принятые в отрасли: шифрованные соединения, защищённое хранение паролей, ограниченный доступ к данным. Абсолютной защиты не бывает: если мы узнаем об утечке, которая касается вас, мы сообщим об этом.</p>
 
 <h2>11. Изменения</h2>
 <p>Если политика изменится, мы обновим дату вверху страницы, а о заметных изменениях сообщим в игре.</p>
@@ -110,7 +108,7 @@
 <p>This page explains in plain words what data the game collects, why, where it is stored, who it is shared with and how to delete it. We collect only what the game needs to work. There are no ads, analytics or trackers in the game, and the game sets no cookies.</p>
 
 <h2>1. Who is responsible</h2>
-<p>The game is developed and run by [OWNER NAME] (xFORTUNAx), [COUNTRY], who is the controller of your data. Contact: <a href="mailto:[EMAIL]">[EMAIL]</a> or the in-game Support window.</p>
+<p>The game is developed and run by [OWNER NAME], [COUNTRY], who is the controller of your data. Contact: <a href="mailto:[EMAIL]">[EMAIL]</a> or the in-game Support window.</p>
 
 <h2>2. Playing without an account</h2>
 <p>You can play without signing up: Arcade, training and solo battles. In that case nothing is sent to our servers except a crash report, and only if you tap “Send” yourself (section 3.6). Your settings, language and personal bests stay on your device.</p>
@@ -118,12 +116,12 @@
 <h2>3. What we collect</h2>
 <h3>3.1. Game account</h3>
 <ul>
-<li><b>Login and password.</b> We never store your password: the server keeps only a one-way hash (PBKDF2-SHA256 with a random salt).</li>
+<li><b>Login and password.</b> Your password is stored only in protected form; no one, including us, can read it.</li>
 <li><b>Nickname</b> and the season it was last changed.</li>
 <li><b>Dates</b> the account was created and last used.</li>
-<li><b>Sign-in keys for your devices</b> (up to 10): the key itself stays on the device, we keep only its hash. A key lasts 90 days.</li>
+<li><b>Sign-in data for your devices</b>, so you do not have to enter your password every time.</li>
 <li>If you moved your progress from a fortunawtm.com site account, the link between the two accounts.</li>
-<li>To stop password guessing, a count of failed sign-ins per login (15-minute lock after 10 failures).</li>
+<li>Records of failed sign-in attempts, to protect your account from password guessing.</li>
 </ul>
 <h3>3.2. Game data</h3>
 <ul>
@@ -145,15 +143,13 @@
 <h3>3.8. Telegram</h3>
 <p>If you open the game in Telegram, it reads only your Telegram language to show the game in it, and does not send it anywhere. The game does not receive your Telegram ID, name or phone number. To work in Telegram the page loads a script from telegram.org, so Telegram can see that the game was opened (as with any site a file is loaded from).</p>
 
-<h2>4. Why we use data and on what basis</h2>
-<div class="tbl"><table>
-<tr><th>Purpose</th><th>Data</th><th>Legal basis</th></tr>
-<tr><td>Account, progress, keeping your purchases</td><td>3.1, 3.2, 3.3</td><td>performance of a contract (the Terms)</td></tr>
-<tr><td>Online battles, rating, profile</td><td>nickname, avatar, battle results</td><td>performance of a contract</td></tr>
-<tr><td>Account security, fighting cheating and abuse</td><td>sign-in counter, server log, chat</td><td>legitimate interest</td></tr>
-<tr><td>Support replies, finding bugs</td><td>3.5, 3.6</td><td>your request; legitimate interest</td></tr>
-<tr><td>Payment and refund records</td><td>3.3</td><td>performance of a contract; legal obligation</td></tr>
-</table></div>
+<h2>4. Why we use data</h2>
+<ul>
+<li><b>To run the game:</b> your account, saving progress and purchases, online battles, rating and profile. Without this we cannot provide the game you chose (basis: contract, i.e. the <a href="terms.html">Terms</a>).</li>
+<li><b>To protect players and the game:</b> account security and fighting cheating, abuse and fraud. Basis: legitimate interest, ours and that of fair players.</li>
+<li><b>To answer you and fix bugs:</b> support requests and crash reports (basis: your request and our legitimate interest in a working game).</li>
+<li><b>To keep payment and refund records</b> (basis: contract and legal obligation).</li>
+</ul>
 <p>We do not sell data, show ads, build advertising profiles or make automated decisions with legal effects on you.</p>
 
 <h2>5. What others can see</h2>
@@ -162,14 +158,14 @@
 <h2>6. Where data is stored and who receives it</h2>
 <p>We use service providers that store data on our behalf:</p>
 <ul>
-<li><b>Supabase</b> - database and server functions (account, progress, purchases, support).</li>
-<li><b>Cloudflare</b> - private storage for support files (deleted after 60 days), game model downloads, connection to the game server.</li>
-<li><b>GitHub Pages</b> - hosting of the game pages.</li>
+<li><b>Supabase</b> - database and server functions (account, progress, purchases, support); servers in Ireland (EU).</li>
+<li><b>Cloudflare</b> - storage for support files, game file downloads and the connection to the game server, through its worldwide network.</li>
+<li><b>GitHub Pages</b> - hosting of the game pages (USA).</li>
 <li><b>Telegram</b> - support bot (copies of requests), Stars payments, running the game inside Telegram.</li>
 <li><b>Google Play, App Store</b> - if you buy in the app.</li>
 <li>The <b>game server</b> for online battles, run by the developer.</li>
 </ul>
-<p>These companies may process data outside your country (including in the EU and the US) under their own data protection terms. Like any website, hosting providers see your IP address and browser when you make a request. We disclose data to authorities only where the law requires it.</p>
+<p>These companies may process data outside your country, including in the US. Such transfers rely on the safeguards data protection law provides for (for example, these companies' EU Standard Contractual Clauses). Like any website, hosting providers see your IP address and browser when you make a request. We disclose data to authorities only where the law requires it.</p>
 
 <h2>7. How long we keep data</h2>
 <ul>
@@ -188,7 +184,7 @@
 <p>The game is not meant for children under 13, and we do not knowingly collect their data. If you are under 16 (or under the age of consent in your country), create an account only with a parent’s permission. If you are a parent and learn that a child under 13 has an account, contact us and we will delete it.</p>
 
 <h2>10. Security</h2>
-<p>All connections use HTTPS; passwords and sign-in keys are stored only as hashes; database access is restricted by server-side rules; support files are kept in private storage and served through short-lived signed links. No protection is absolute: if we learn of a breach that affects you, we will tell you.</p>
+<p>We use industry-standard technical and organisational measures: encrypted connections, protected password storage and restricted access to data. No protection is absolute: if we learn of a breach that affects you, we will tell you.</p>
 
 <h2>11. Changes</h2>
 <p>If this policy changes, we will update the date at the top of the page and announce notable changes in the game.</p>
