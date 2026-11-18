@@ -11,7 +11,7 @@ import { ico, drawIco } from './icons.js?v=20261118b';
 import { applyLayout } from './layout.js?v=20261118b';
 import { clamp, makeCraft, pilotStep, fwdOf, D2R, angleBetween } from '../drone/sim/core.js?v=20261118b';
 import { DRONE } from '../drone/sim/modes.js?v=20261118b';
-import { AG, SAM, ERAS, LOADOUTS, HELI_LOADOUTS, loadoutsOf, loadoutRole, loadoutTargets } from './arsenal.js?v=20261118b';
+import { AG, SAM, ERAS, LOADOUTS, HELI_LOADOUTS, loadoutsOf, loadoutRole, loadoutTargets, RETIRED_PLANES } from './arsenal.js?v=20261118b';
 import { predictBomb, predictRocket } from './sim/strike.js?v=20261118b';
 import { flightModel, loadOf } from './sim/flight.js?v=20261118b';
 import { heliModel, heliStep, heliInit, heliLand, touchVerdict, tmaxAcc, isHeli } from './sim/heli.js?v=20261118b';
@@ -1384,7 +1384,7 @@ export function createAir(C) {
     loadout.length = 0;
     // подвеска своей стороны (выбранная - чужой: первая своя); самолёт - из подвески
     const att = opts.side || (setup.side === 'east' ? 'west' : 'east');
-    if (!opts.items && LOADOUTS[setup.era][setup.lo].side !== att) setup.lo = loadoutsOf(setup.era, att)[0][1];
+    if (!opts.items && (LOADOUTS[setup.era][setup.lo].side !== att || RETIRED_PLANES.has(LOADOUTS[setup.era][setup.lo].plane))) setup.lo = loadoutsOf(setup.era, att)[0][1]; // выведенный самолёт в сохранённых настройках - первый доступный
     const L0 = opts.items ? { items: opts.items, pod: opts.pod, side: att, plane: opts.plane } : LOADOUTS[setup.era][setup.lo];
     const L = !opts.items && isHeli(HELI_Q) ? HELI_LOADOUTS.find((q) => q.plane === HELI_Q) || { ...L0, plane: HELI_Q, side: heliModel(HELI_Q).s.side } : L0;
     // вертолёт (sim/heli.js): своя лётная модель; «Реализм» - честное управление, остальное - «Аркада»

@@ -104,84 +104,12 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "Tornado",
-  "author": "manilov.ap",
-  "url": "https://sketchfab.com/3d-models/tornado-9fd925dabddc4c1998b7c3df5ac47bf8",
-  "license": "CC-BY-4.0",
-  "files": [
-   "e_tornado"
-  ]
- },
- {
-  "title": "Tu16",
-  "author": "manilov.ap",
-  "url": "https://sketchfab.com/3d-models/tu16-9c4ee54ca28e44d7a4604be112acab9f",
-  "license": "CC-BY-4.0",
-  "files": [
-   "e_tu16"
-  ]
- },
- {
-  "title": "Jaguar",
-  "author": "manilov.ap",
-  "url": "https://sketchfab.com/3d-models/jaguar-b09a0ee965bb424aaf14ebd06b698f96",
-  "license": "CC-BY-4.0",
-  "files": [
-   "e_jaguar"
-  ]
- },
- {
-  "title": "Buccaneer",
-  "author": "manilov.ap",
-  "url": "https://sketchfab.com/3d-models/buccaneer-db82ad0e1f5644ccaee1b25b77566dc7",
-  "license": "CC-BY-4.0",
-  "files": [
-   "e_buccaneer"
-  ]
- },
- {
-  "title": "Harrier",
-  "author": "manilov.ap",
-  "url": "https://sketchfab.com/3d-models/harrier-9ccfd6758680413bb19d656db4f46185",
-  "license": "CC-BY-4.0",
-  "files": [
-   "e_harrier"
-  ]
- },
- {
   "title": "Sukhoi Su-33 Сухой Су-33",
   "author": "andertan",
   "url": "https://sketchfab.com/3d-models/sukhoi-su-33-33-d80603a8a13b49bda90f19d80cac61d4",
   "license": "CC-BY-4.0",
   "files": [
    "e_su33"
-  ]
- },
- {
-  "title": "M4",
-  "author": "manilov.ap",
-  "url": "https://sketchfab.com/3d-models/m4-65059c25184c48c5b6a1b9ac27d34db6",
-  "license": "CC-BY-4.0",
-  "files": [
-   "e_m4"
-  ]
- },
- {
-  "title": "Mikoyan-Gurevich MiG-19",
-  "author": "Tom Zimmermann",
-  "url": "https://sketchfab.com/3d-models/mikoyan-gurevich-mig-19-9204188bf7114b90904c35f64a110ed3",
-  "license": "CC-BY-4.0",
-  "files": [
-   "e_mig19"
-  ]
- },
- {
-  "title": "Mig17",
-  "author": "manilov.ap",
-  "url": "https://sketchfab.com/3d-models/mig17-672ef502523b4cbe9aced1e4252c0cca",
-  "license": "CC-BY-4.0",
-  "files": [
-   "e_mig17"
   ]
  },
  {

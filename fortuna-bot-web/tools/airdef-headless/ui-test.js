@@ -116,6 +116,7 @@ air.finish('тест', true); frames(5);
   const planes = new Set(); let used = 0, total = 0;
   for (const era of [1, 2, 3, 4]) for (const [lo, L] of LOADOUTS[era].entries()) {
     if (L.heli) continue; // вертолёты - на своей карте (перезагрузка страницы): их проверяют heli-stand.js и heli-raid-test.js
+    if (['e_tu16', 'e_m4', 'e_mig19', 'e_mig17', 'e_jaguar', 'e_buccaneer', 'e_tornado', 'e_harrier'].includes(L.plane)) continue; // выведены из игры (arsenal.js RETIRED_PLANES): вместо них - первый доступный самолёт стороны
     C.toMenu(); frames(3); C.setup.era = era; C.setup.side = L.side === 'east' ? 'west' : 'east'; C.setup.lo = lo; C.setup.game = 'air'; C.start('air'); C.setAuto(true);
     const a4 = C.ctrl, n0 = a4.loadout.reduce((s2, l) => s2 + l.n, 0);
     for (let i = 0; i < 40 && a4.plane !== L.plane; i++) { await new Promise((r) => setTimeout(r, 100)); frames(1); } // своя модель подвески грузится по требованию

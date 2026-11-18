@@ -638,8 +638,8 @@
   #menu .seg.otiles { display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px; margin: 0 0 6px; background: none; padding: 0; } #menu .seg.otiles.orole { grid-template-columns: repeat(3, 1fr); margin: 6px 0 0; }
   #menu .seg.otiles button { position: relative; height: 84px; padding: 0; background: none; border: 10px solid transparent; border-image: url(airdef/ui/hangar/b_card_n.webp) 30 fill / 10px stretch; color: #ece8dc; }
   #menu .seg.otiles button.on { border-image-source: url(airdef/ui/hangar/b_card_on.webp); background: none; color: #ece8dc; } #menu .seg.otiles.orole button { height: 64px; }
-  .otiles .opics { position: absolute; left: -6px; right: -6px; top: -6px; bottom: 12px; } .otiles .opics img { position: absolute; object-fit: contain; }
-  .otiles em { position: absolute; left: -6px; right: -6px; bottom: -6px; text-align: center; font: 500 13px/1 'Oswald', sans-serif; font-style: normal; letter-spacing: .02em; color: #ece8dc; text-shadow: 0 1px 2px #000; }
+  .otiles .opics { position: absolute; left: 1px; right: 1px; top: 1px; bottom: 17px; overflow: hidden; } /* внутри рамки: раньше картинки уходили под край плитки и резались (Mark 2026-11-18) */ .otiles .opics img { position: absolute; object-fit: contain; }
+  .otiles em { position: absolute; left: 0; right: 0; bottom: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center; font: 500 13px/1 'Oswald', sans-serif; font-style: normal; letter-spacing: .02em; color: #ece8dc; text-shadow: 0 1px 2px #000; }
   .oq { padding: 6px; background: rgba(16,19,15,.86); border: 1px solid rgba(110,104,80,.55); } #menu .oq .cat-h { margin: 0 0 5px; font: 500 13.5px 'Oswald', sans-serif; letter-spacing: .03em; color: #ece8dc; } #menu .oq .cat-h .dim { font: inherit; color: #8d9580; } .oq .seg { margin: 0; }
   #menu .oq .seg[data-oseg="mode"] { display: flex; gap: 3px; } #menu .oq .seg[data-oseg="mode"] button { flex: 1; height: 26px; padding: 0; font: 500 13px 'Oswald', sans-serif; color: #c2c7b2; background: rgba(10,12,9,.8); border: 1px solid #3c3a2c; }
   #menu .oq .seg[data-oseg="mode"] button.on { background: #e8b04a; color: #1c1708; border-color: #e8b04a; }
@@ -677,7 +677,7 @@
   #menu .seg.otiles.o3 { grid-template-columns: repeat(3, 1fr); } #menu .seg.otiles.o3 button { height: 64px; }
   .mwst { margin-top: 6px; padding: 6px; background: rgba(16,19,15,.86); border: 1px solid rgba(110,104,80,.55); }
   .mwst .stages { display: flex; align-items: flex-start; gap: 2px; } .mwst .stg { flex: 1; min-width: 0; text-align: center; }
-  .mwst .stg .im { position: relative; display: block; height: 36px; background: rgba(8,10,7,.7); border: 1px solid #3c3a2c; } .mwst .stg .im img { width: 100%; height: 100%; object-fit: contain; }
+  .mwst .stg .im { position: relative; display: block; height: 36px; background: rgba(8,10,7,.7); border: 1px solid #3c3a2c; } .mwst .stg .im img { width: 100%; height: 100%; object-fit: contain; box-sizing: border-box; padding: 2px 2px 2px 12px; } /* слева - место под номер этапа */
   .mwst .stg .im b { position: absolute; left: 3px; top: 1px; font: 600 11px 'Oswald', sans-serif; color: #f3c96f; } .mwst .stg em { display: block; margin-top: 2px; font: 500 10px/1.1 'Oswald', sans-serif; font-style: normal; color: #c2c7b2; }
   .mwst .arr { color: #e8b04a; font: 600 13px 'Oswald', sans-serif; padding-top: 10px; }
   #menu .seg.pmaps { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin: 0; } #menu .seg.pmaps button { position: relative; height: 54px; padding: 0; overflow: hidden; border: 1px solid #3c3a2c; background: #111; }

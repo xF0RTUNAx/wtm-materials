@@ -5,7 +5,7 @@
 // для «Реализма». Ветки: air - самолёты вылета, wpn - оружие подвесок, pvo - комплексы, strike - удары «Мульти-волны».
 // «Удары» - без рангов (Mark 2026-10-25): ветки по нации (баллистика, крылатые…) от начальной до самой современной, первый в ветке - стартовый;
 // ступень (3-е поле MULTI.items) задаёт только цену и опыт, напрямую не показывается; рангов и паритета сторон у этой ветки нет.
-import { AG, SAM, LOADOUTS, MULTI, MULTI_LINES, SAM_COST, CARRIERS, PLANES, AG_KIND, SAM_TYPE, THREAT, loadoutRole, eqOf } from './arsenal.js';
+import { AG, SAM, LOADOUTS, MULTI, MULTI_LINES, SAM_COST, CARRIERS, PLANES, AG_KIND, SAM_TYPE, THREAT, loadoutRole, eqOf, RETIRED_PLANES } from './arsenal.js';
 import { SPECS, SPEED_K } from './flight.js';
 import { HSPECS } from './heli.js';
 
@@ -92,9 +92,9 @@ export const PARENT = {
 };
 // сняты с продажи (Mark 2026-11-05): чтобы дерево стало чище, по 25 самолётов у сторон (6/7/7/5 по рангам). Новому игроку не видны, исследовать нельзя. Кто исследовал - может купить, кто купил - летает
 // как прежде, и покупка идёт в счёт открытия ранга: ни опыт, ни серебро, ни открытые ранги не пропадают. В бою они остаются врагами-ботами
-export const RETIRED = new Set(['e_tu16', 'e_m4', 'e_mig19', 'e_mig17', 'e_jaguar', 'e_buccaneer', 'e_tornado', 'e_harrier']);
+export const RETIRED = RETIRED_PLANES; // arsenal.js: выведены из игры совсем (Mark 2026-11-18)
 const isRetired = (n) => n.branch === 'air' && RETIRED.has(n.key);
-export const retiredHidden = (P, key) => RETIRED.has(key) && !(P && (P.res.includes('air:' + key) || P.own.includes('air:' + key)));
+export const retiredHidden = (P, key) => RETIRED.has(key); // раньше купившим оставались - теперь не видны никому (чужие модели, Mark 2026-11-18)
 // цена (опыт на исследование = серебро на покупку): «крупное» - самолёт, дальний/средний комплекс; остальное - «малое».
 // У «Ударов» вместо ранга - ступень 1-4 (сила импакта), цена по ней же
 export const COST = { big: [600, 2500, 6000, 12000], small: [300, 1000, 2500, 5000] };

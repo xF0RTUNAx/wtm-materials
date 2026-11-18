@@ -1075,7 +1075,7 @@ export function wantCamo(name, skin) { const k = `${name}@${skin}`; if (skin && 
 const modelUrl = (base, name) => (CAMO_R[name] ? `${base}../../tools/airdef-shots/camo/${name}.${CAMO_R[name]}.glb` : name.includes('@') ? `${base}models/camo/${name.replace('@', '.')}.glb?v=${CAMO_V[name]}` : `${base}models/${name}.glb?v=${glbVer(name)}`);
 // все модели игры - для «Скачать всё заранее» (Настройки, offline.js prefetchAll): самолёты, оружие, техника и её дальние копии, постройки
 // чужие модели, которые в игре больше не показываются (заменены своими на всех картах или нужны только «Летке») - не скачиваются «Скачать всё заранее» (Mark 2026-11-18: титры только за то, что в игре)
-const NO_PREFETCH = new Set(['bld_p5', 'bld_p9', 'bld_b12', 'bld_t9', 'bld_a16', 't_kc10', 'obj_tanks', 'obj_rtank', 'obj_jhangar']);
+const NO_PREFETCH = new Set(['bld_p5', 'bld_p9', 'bld_b12', 'bld_t9', 'bld_a16', 't_kc10', 'obj_tanks', 'obj_rtank', 'obj_jhangar', 'e_tu16', 'e_m4', 'e_mig19', 'e_mig17', 'e_jaguar', 'e_buccaneer', 'e_tornado', 'e_harrier']);
 export function modelUrls(base = BASE) { const N = new Set([...Object.keys(META), ...Object.keys(GLB_V)].filter((n) => !NO_PREFETCH.has(n))); for (const n of UNIT_LO) N.add(n + '_lo'); return [...N].map((n) => modelUrl(base, n)); }
 export function loadModels(base, onReady) {
   BASE = base; READY = onReady;

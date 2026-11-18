@@ -772,7 +772,10 @@ export function loadoutEq(L) {
 }
 export const loadoutTargets = (L) => Math.max(1, Math.min(3, Math.round(loadoutEq(L) / STRIKE_TGT_EU)));
 // индексы подвесок стороны и первая подходящая (если выбранная - чужой стороны)
-export const loadoutsOf = (era, side) => LOADOUTS[era].map((L, i) => [L, i]).filter(([L]) => L.side === side);Object.assign(SAM_COST, { s300: 420, buk: 300, tor: 230, iglas: 65, patriot: 420, avenger: 120, s400: 480, bukm3: 340, torm2: 260, pantsir: 280, verba: 75, pac3: 460, nasams: 320, iris: 330, skynex: 180, gpsjam: 150, gpsjamw: 150 , tunguska: 230, sampt: 470, hawk21: 370 /* 8 ракет вместо 3: +16 % по замеру силы (было 320) */, skyguard: 120, rapier: 170 });
+// самолёты, выведенные из игры (2026-11-05 сняты с продажи; Mark 2026-11-18 «убрать из боёв»: чужие модели - ни в бою, ни в ангаре, ни у ботов).
+// Подвески остаются в LOADOUTS (номера подвесок сохранены в настройках и онлайне), но их нигде не выбрать
+export const RETIRED_PLANES = new Set(['e_tu16', 'e_m4', 'e_mig19', 'e_mig17', 'e_jaguar', 'e_buccaneer', 'e_tornado', 'e_harrier']);
+export const loadoutsOf = (era, side) => LOADOUTS[era].map((L, i) => [L, i]).filter(([L]) => L.side === side && !RETIRED_PLANES.has(L.plane));Object.assign(SAM_COST, { s300: 420, buk: 300, tor: 230, iglas: 65, patriot: 420, avenger: 120, s400: 480, bukm3: 340, torm2: 260, pantsir: 280, verba: 75, pac3: 460, nasams: 320, iris: 330, skynex: 180, gpsjam: 150, gpsjamw: 150 , tunguska: 230, sampt: 470, hawk21: 370 /* 8 ракет вместо 3: +16 % по замеру силы (было 320) */, skyguard: 120, rapier: 170 });
 // комплексы без готовых моделей - выведены из игры (вернутся, если найдутся модели; их описание и пусковые остались)
 // MIM-72 Chaparral (модель TankLord, 2026-10-19): Sidewinder на гусеничном M730 - запад, эпоха I
 Object.assign(SAM, { chaparral: { name: 'MIM-72 Chaparral', short: 'Chaparral', side: 'west', era: 1, type: 'ir', rwr: null, hp: 28, optical: 8000,

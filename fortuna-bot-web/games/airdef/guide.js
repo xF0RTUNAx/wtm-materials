@@ -3,7 +3,7 @@
 // чтобы не расходиться с игрой; описание каждого - guide из арсенала + общие советы по типу.
 // Язык (2026-10-21): текст - в tr() пофразно (словарь lang/en-guide.js), названия и описания юнитов из arsenal.js приходят уже
 // переведёнными (lang/data.js подменяет их при импорте).
-import { AG, SAM, ERAS, LOADOUTS, PLANES, CARRIERS, MULTI, SAM_TYPE, eqOf } from './arsenal.js?v=20261118b';
+import { AG, SAM, ERAS, LOADOUTS, PLANES, CARRIERS, MULTI, SAM_TYPE, eqOf, RETIRED_PLANES } from './arsenal.js?v=20261118b';
 import { ico, ICON_LEGEND, capsHtml } from './icons.js?v=20261118b';
 import { tr } from './i18n.js?v=20261118b';
 
@@ -97,7 +97,7 @@ export function guideChapters(C) {
   const codes = Object.values(SAM).filter((S) => S.rwr).map((S) => `<tr><td><b>${S.rwr}</b></td><td>${S.name}</td></tr>`).join('');
   out.push([tr('Обозначения комплексов на СПО и картах'), `<p>${tr('На СПО, экране и картах комплексы подписаны коротким кодом. Комплексы без кода (ПЗРК, «Стрела-1», станции РЭБ) на СПО не видны, а на карте обороны подписаны коротким названием.')}</p>` + `<table class="tt">${codes}</table>`]);
   // ── самолёты и подвески ──
-  const pl = Object.keys(PLANE_TXT).map((k) => {
+  const pl = Object.keys(PLANE_TXT).filter((k) => !RETIRED_PLANES.has(k)).map((k) => { // выведенные из игры - не в справке
     const L = Object.entries(LOADOUTS).flatMap(([e, list]) => list.filter((q) => q.plane === k).map((q) => tr('{0} (ранг {1})', [q.name, era(+e)])));
     return L.length ? `<p><b>${PLANES[k]}</b> - ${PLANE_TXT[k]} ${tr('Подвески: {0}.', [L.join('; ')])}</p>` : '';
   }).join('');

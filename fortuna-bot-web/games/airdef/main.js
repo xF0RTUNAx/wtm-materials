@@ -22,7 +22,7 @@ import { mergeLocal } from './merge.js?v=20261118b';
 import { createPipeline } from '../drone/post.js?v=20261118b';
 import { setGround, D2R, clamp, fwdOf } from '../drone/sim/core.js?v=20261118b';
 import { WEATHERS, FXU, FX_LAYER, FX_ADD_LAYER } from '../drone/world.js?v=20261118b';
-import { AG, SAM, LOADOUTS, DEFENSE, raidPlane } from './arsenal.js?v=20261118b';
+import { AG, SAM, LOADOUTS, DEFENSE, raidPlane, RETIRED_PLANES } from './arsenal.js?v=20261118b';
 import { createStrike, MODES } from './sim/strike.js?v=20261118b';
 import { createRaid } from './sim/raid.js?v=20261118b';
 import { POD, RAIL, podLift } from './sim/combined.js?v=20261118b';
@@ -235,7 +235,7 @@ const setup = { game: 'air', diff: 'arcade', era: 2, side: 'east', lo: 0, op: fa
 try { Object.assign(setup, JSON.parse(ls.get('fortuna_airdef_setup') || '{}')); } catch (_) { /* по умолчанию */ }
 if (!MODES[setup.diff]) setup.diff = 'arcade';
 if (!LOADOUTS[setup.era]) setup.era = 2;
-if (!LOADOUTS[setup.era][setup.lo]) setup.lo = 0;
+if (!LOADOUTS[setup.era][setup.lo] || RETIRED_PLANES.has(LOADOUTS[setup.era][setup.lo].plane)) { const f = LOADOUTS[setup.era].findIndex((L) => !L.heli && !RETIRED_PLANES.has(L.plane) && (!LOADOUTS[setup.era][setup.lo] || L.side === LOADOUTS[setup.era][setup.lo].side)); setup.lo = f >= 0 ? f : 0; } // выведенный самолёт (Mark 2026-11-18) - первый доступный той же стороны
 if (!DEFENSE[setup.side]) setup.side = 'east';
 if (!['air', 'defense', 'multi', 'training', 'online', 'photo'].includes(setup.game)) setup.game = 'air';
 
