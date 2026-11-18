@@ -1277,6 +1277,7 @@ function stillMoved() {
   if (stillCam[32] !== VW || stillCam[33] !== VH) { stillCam[32] = VW; stillCam[33] = VH; m = true; }
   return m;
 }
+const CAM_FLOOR = !/[?&]camfloor=0/.test(location.search), CAM_FW = new THREE.Vector3();
 function frame(now) {
   requestAnimationFrame(frame);
   // меню и пауза - 30 к/с (фон не должен греть телефон), бой на телефоне - не больше 60
@@ -1320,6 +1321,14 @@ function frame(now) {
   }
   if (view) { camera.position.set(view[0], view[1], view[2]); camera.rotation.set((view[4] || 0) * D2R, (view[3] || 0) * D2R, 0); }
   else if (ctrl && ctrl.camera) ctrl.camera(dt, t);
+  // камера не уходит под землю (Mark 2026-11-18): любой вид - не ниже рельефа (и воды болота) под собой и чуть впереди, с запасом на ближнюю
+  // плоскость отсечения (иначе склон перед камерой просвечивает). ?camfloor=0 - как было
+  if (!view && CAM_FLOOR && C.state === 'play') {
+    const cp = camera.position; camera.getWorldDirection(CAM_FW); const ax = cp.x + CAM_FW.x * 4, az = cp.z + CAM_FW.z * 4;
+    let g = Math.max(city.groundH(cp.x, cp.z), city.groundH(ax, az)); if (city.autumn && city.autumn.WY != null) g = Math.max(g, city.autumn.WY);
+    const floor = g + Math.max(1.6, Math.min(camera.near, 4) * 1.15);
+    if (cp.y < floor) { cp.y = floor; camera.updateMatrixWorld(); }
+  }
   // ближняя плоскость отсечения растёт с высотой камеры: с 10 км точности глубины иначе не хватает (крыши «мерцают»)
   { let nearW = clamp((camera.position.y - city.groundH(camera.position.x, camera.position.z)) * 0.006, 3, 20);
     if (ctrl && ctrl.near && ctrl.near()) nearW = Math.min(nearW, ctrl.near()); // крупный план у самолёта - ближе
