@@ -3,6 +3,7 @@
 // { items, pod, targets: [ключи], defense(S, rnd), invuln, spawn: {x,y,z,yaw}, noEnd, onTick(dt) }.
 /* global THREE */
 import { makeBay } from './bay.js?v=20261118d';
+import { premById, drawWings, wingsW } from './prem.js?v=20261118d';
 import { tr } from './i18n.js?v=20261118d';
 import { CITY, ZONE_NAME, mulberry32, riverX, objAimXZ, objDist } from './city.js?v=20261118d';
 import { strikerGeo, attachFlames } from './units-render.js?v=20261118d';
@@ -1858,6 +1859,7 @@ export function createAir(C) {
         const p = C.proj(fw.copy(a.pos).setY(a.pos.y + 12)); if (!p) continue;
         hx.strokeStyle = '#4ade80'; hx.lineWidth = 2; hx.beginPath(); hx.moveTo(p[0] - 7, p[1] - 6); hx.lineTo(p[0], p[1] + 2); hx.lineTo(p[0] + 7, p[1] - 6); hx.stroke();
         hx.fillStyle = '#bbf7d0'; hx.shadowColor = 'rgba(0,0,0,.8)'; hx.shadowBlur = 3; hx.fillText(tr('{0} · {1} км', [allyName(a), (d / 1000).toFixed(1)]), p[0], p[1] - 10); hx.shadowBlur = 0;
+        if (premById(game.net, a.owner || a.id)) { const w = wingsW(12); if (w) drawWings(hx, p[0] - w / 2, p[1] - 28, 12); } // союзник с премиумом: знак «Крылья» 12 px над ником
       }
     }
     if (camMode === 3) {

@@ -8,11 +8,12 @@ import { trFmt } from './i18n-fmt.js?v=20261118d';
 import { createNet } from './net.js?v=20261118d';
 import * as O from './sim/online.js?v=20261118d';
 import * as MW from './sim/online-multi.js?v=20261118d';
-import { AG, SAM, CARRIERS, LOADOUTS, PLANES, ERAS, loadoutRole } from './arsenal.js?v=20261118d';
+import { AG, SAM, CARRIERS, LOADOUTS, PLANES, ERAS, loadoutRole, AVA_SHOP } from './arsenal.js?v=20261118d';
 import { retiredHidden } from './progress.js?v=20261118d';
 import { MODES } from './sim/strike.js?v=20261118d';
 import { ICON, ico } from './icons.js?v=20261118d';
-import { activeAcc, siteAcc, siteNoProgress, authBody } from './account.js?v=20261118d';
+import { activeAcc, siteAcc, siteNoProgress, authBody, RMOCK } from './account.js?v=20261118d';
+import { lobbyMark, nickMark, premById, premByName, drawWings, wingsW } from './prem.js?v=20261118d';
 import { avaSrc } from './avatar.js?v=20261118d';
 import { boardOl, boardMw } from './endscr.js?v=20261118d';
 import { createMM } from './mm.js?v=20261118d';
@@ -87,7 +88,7 @@ export function createOnline(C, ctrls) {
     const me = N.myPlayer(), host = r.host === (N.me && N.me.id);
     const TN = r.kind === 'multi' ? MW.TEAM_NAME : O.ROLE_NAMES, TT = r.kind === 'multi' ? MW.TEAMS : ['air', 'pvo'];
     // команда - табличка (Mark 2026-11-17, макет «Ангарные таблички»): места аватарками, лампа - готов; пустое место - «+ бот» у хоста или «сюда»
-    const seat = (p) => `<div class="rseat${p.id === (me && me.id) ? ' me' : ''}${p.ready ? ' ready' : ''}">${p.bot ? `<span class="rava bot">${BOT}</span>` : `<img class="rava" src="${avaSrc(p.ava)}" alt="">`}<i class="rlamp${p.ready ? ' on' : ''}"></i><em>${pnm(p)}</em>${host && p.bot ? `<button class="rkick" data-kick="${p.id}">×</button>` : ''}</div>`;
+    const seat = (p) => `<div class="rseat${p.id === (me && me.id) ? ' me' : ''}${p.ready ? ' ready' : ''}${p.prem && !p.bot ? ' prem' : ''}">${p.bot ? `<span class="rava bot">${BOT}</span>` : `<img class="rava" src="${avaSrc(p.ava)}" alt="">`}${lobbyMark(p.prem && !p.bot)}<i class="rlamp${p.ready ? ' on' : ''}"></i><em>${pnm(p)}</em>${host && p.bot ? `<button class="rkick" data-kick="${p.id}">×</button>` : ''}</div>`;
     const team = (t) => { const ps = r.players.filter((p) => p.team === t), free = Math.max(0, r.size - ps.length), mine = me && me.team === t;
       const empty = host ? `<button class="rseat empty" data-bot="${t}"><span class="rava">+</span><em>${tr('бот')}</em></button>` : !mine && me ? `<button class="rseat empty" data-oa="team" data-t="${t}"><span class="rava">↔</span><em>${tr('сюда')}</em></button>` : `<div class="rseat empty"><span class="rava"></span><em>&nbsp;</em></div>`;
       return `<div class="rteam t-${t}${mine ? ' on' : ''}"><div class="hd">${TEAM_PIC[t] ? `<img src="airdef/thumbs/${TEAM_PIC[t]}.webp?v=20261118d" alt="">` : ''}<b>${TN[t]}</b><i>${ps.length}/${r.size}</i></div><div class="rseats">${ps.map(seat).join('')}${free ? empty : ''}</div></div>`; };
@@ -254,7 +255,8 @@ export function createOnline(C, ctrls) {
   N.on('meAI', () => { N.clog('to_ai', { hidden: document.visibilityState }); ctrls.air.netAI(); });
   // журнал сбитий: своя команда - синим, противник - красным; под ником - техника, которой он управлял в этот момент
   const vehName = (v) => { const [k, key] = String(v || '').split(':'); return !key ? '' : k === 'p' ? (PLANES[key] || (CARRIERS[key] && CARRIERS[key].name) || key) : k === 'u' ? (SAM[key] ? SAM[key].short : key) : (AG[key] ? AG[key].short : key); };
-  N.on('kill', (who, whom, by, wt, mt, wv, mv) => { feed.push({ t: performance.now(), who: trIf(who), whom: trIf(whom), by: trIf(by), wt, mt, wv: vehName(wv), mv: vehName(mv) }); if (feed.length > 6) feed.shift(); });
+  const pushKill = (who, whom, by, wt, mt, wv, mv) => { feed.push({ t: performance.now(), who: trIf(who), whom: trIf(whom), by: trIf(by), wt, mt, wv: vehName(wv), mv: vehName(mv), pw: premByName(N, who), pm: premByName(N, whom) }); if (feed.length > 6) feed.shift(); };
+  N.on('kill', pushKill);
   N.on('help', (m) => { feed.push({ t: performance.now(), s: tr('{0}: Мне нужна помощь!', [m.name]), help: true }); helps.push({ t: performance.now(), name: m.name, p: m.p }); if (snd.help) snd.help(); else snd.alarm(); });
   // «Нужна помощь»: не чаще раза в HELP_CD с; p - [x, z] (самолёт, свой комплекс или место на карте)
   let helpAt = -1e9;
@@ -280,7 +282,7 @@ export function createOnline(C, ctrls) {
     const ph = { plan: multi ? tr('подготовка') : tr('расстановка'), play: tr('бой'), debrief: tr('итоги'), end: tr('итоги боя') }[r.state] || '', ready = r.state === 'plan';
     plEl.innerHTML = `<div class="plh">${tr('<b>Комната {0}</b> · {1} · {2}{3}', [r.code, MODES[r.mode].name, ph, r.left != null ? tr(' · {0} с', [r.left]) : ''])}<button data-pl="x" aria-label="${tr('Закрыть')}">${ico('close')}</button></div>` +
       TT.map((t) => `<div class="plt" style="color:${t === myT ? '#93c5fd' : '#fca5a5'}">${TN[t]}${multi && r.atk ? (r.atk === t ? tr(' · волна') : tr(' · ПВО')) : ''}</div>` + r.players.filter((p) => p.team === t).map((p) =>
-        `<div class="plr${p.id === me ? ' me' : ''}"><i class="pld ${p.bot ? 'bot' : p.away ? 'off' : 'on'}"></i><b>${pnm(p)}</b>${p.bot ? ` <span class="dim">${tr('бот')}</span>` : p.away ? ` <span class="dim">${tr('нет связи')}</span>` : ''}<span class="plx">${tr('{0}{1} · {2} оч.{3}', [p.lives != null ? tr('вылетов {0} · ', [p.lives]) : '', p.kills || 0, p.score || 0, ready ? (p.ready ? ` <b class="okc">${ico('ok', 'ii')}</b>` : ' <span class="dim">…</span>') : ''])}</span></div>`).join('')).join('') +
+        `<div class="plr${p.id === me ? ' me' : ''}${p.prem && !p.bot ? ' prem' : ''}"><i class="pld ${p.bot ? 'bot' : p.away ? 'off' : 'on'}"></i><b>${pnm(p)}${nickMark(p.prem && !p.bot)}</b>${p.bot ? ` <span class="dim">${tr('бот')}</span>` : p.away ? ` <span class="dim">${tr('нет связи')}</span>` : ''}<span class="plx">${tr('{0}{1} · {2} оч.{3}', [p.lives != null ? tr('вылетов {0} · ', [p.lives]) : '', p.kills || 0, p.score || 0, ready ? (p.ready ? ` <b class="okc">${ico('ok', 'ii')}</b>` : ' <span class="dim">…</span>') : ''])}</span></div>`).join('')).join('') +
       `<div class="dim pll">${tr('{0} в сети · {1} нет связи · {2} бот{3} · число - сбито / уничтожено', ['<i class="pld on"></i>', '<i class="pld off"></i>', '<i class="pld bot"></i>', ready ? ' · ' + ico('ok', 'ii') + tr('готов') : ''])}</div>`;
   }
   plBtn.onclick = (e) => { e.stopPropagation(); document.body.classList.toggle('plOpen'); snd.click(); renderPl(); };
@@ -301,6 +303,7 @@ export function createOnline(C, ctrls) {
   N.on('end', (m) => {
     endQuick = !!(N.room && N.room.quick); // сервер через 25 с переводит комнату в лобби и снимает quick - кнопка помнит, каким был бой
     const me = N.myPlayer(), again = endQuick ? tr('Найти бой') : tr('В комнату');
+    for (const p of m.players || []) if (p.prem == null) p.prem = premById(N, p.id); // сервер список итогов без премиума шлёт - знак по комнате (там флаг из билета)
     if (m.kind === 'multi') {
       const b = boardMw(m, me, pnm);
       C.showEnd({ again, title: b.title, win: b.win, online: b });
@@ -392,6 +395,8 @@ export function createOnline(C, ctrls) {
       `<small class="${!on || N.pl >= 10 || p >= 300 ? 'bad' : N.pl > 0 || p >= 150 ? 'mid' : ''}">${on ? tr('{0} мс · PL {1}%', [p, N.pl]) : tr('связь…')}</small>`;
     if (s !== chipS) { chipS = s; chip.innerHTML = s; }
   }
+  wingsW(1); // знак для ленты сбитий - грузим заранее
+  const PH = 13; // высота знака премиума в ленте сбитий - строка 12 px; картинку грузит drawWings при первом показе, wingsW до этого 0
   C.extraHud = () => {
     if (!N.battle || C.state !== 'play') return;
     fr++; netChip();
@@ -406,8 +411,10 @@ export function createOnline(C, ctrls) {
       // справа налево: « · оружие», ник цели, « → », ник стрелка; под никами - техника мелко
       let x = C.VW - 60; hx.font = '600 12px "Golos Text", -apple-system, Segoe UI, sans-serif';
       const tail = f.by ? ` · ${f.by}` : '', wTail = hx.measureText(tail).width; hx.fillStyle = `rgba(226,232,240,${a})`; hx.fillText(tail, x, y); x -= wTail;
+      if (f.pm) { const w = wingsW(PH); if (w) { drawWings(hx, x - w, y - 4, PH, a); x -= w + 4; } } // знак премиума после ника цели (рисуем справа налево: сначала знак, левее - ник)
       const wWhom = hx.measureText(f.whom).width; hx.fillStyle = col(f.mt, a); hx.fillText(f.whom, x, y); const cWhom = x - wWhom / 2; x -= wWhom;
       const arr = ' → ', wArr = hx.measureText(arr).width; hx.fillStyle = `rgba(226,232,240,${a})`; hx.fillText(arr, x, y); x -= wArr;
+      if (f.pw) { const w = wingsW(PH); if (w) { drawWings(hx, x - w, y - 4, PH, a); x -= w + 4; } } // то же у стрелка
       const wWho = hx.measureText(f.who).width; hx.fillStyle = col(f.wt, a); hx.fillText(f.who, x, y); const cWho = x - wWho / 2;
       if (f.wv || f.mv) {
         hx.font = '500 10px "Golos Text", -apple-system, Segoe UI, sans-serif'; hx.textAlign = 'center';
@@ -469,7 +476,29 @@ export function createOnline(C, ctrls) {
   const inv = new URLSearchParams(location.search).get('ad');
   if (inv) { C.setup.game = 'online'; let done = false; N.on('conn', () => { if (N.conn === 'on' && !done && !N.room) { done = true; N.join(O.cleanCode(inv)); } }); N.connect(); }
   else if (new URLSearchParams(location.search).get('mp') === '1' || C.LIVE) { C.setup.game = 'online'; N.connect(); } // сайт: кнопка «Онлайн-бой» - сразу раздел онлайна; C.LIVE - возвращение в бой после вылета
-  return { N, panel, primary, primaryText, onClick, again() {
+  // Заглушка ?omock=lobby | battle (только вместе с ?rmock=1 на своём компьютере; main.js после меню): комната из шести игроков, у части премиум (prem: 1).
+  // lobby - раздел «Онлайн» с лобби комнаты; battle - вылет с панелью «Игроки», лентой сбитий и итогом онлайна (в нём же знак у ников по комнате)
+  function mock(name) {
+    if (!RMOCK) return;
+    const myP = /^(1|hour)$/.test(new URLSearchParams(location.search).get('prem') || ''), P =  /* свой премиум - как в заглушке ?prem (account.js); прогресс к этому часу мог ещё не прийти */ (id, nm, team, x) => ({ id, name: nm, team, ready: id !== 1, bot: false, ...x });
+    const players = [P(1, 'xFORTUNAx', 'air', { prem: myP ? 1 : undefined, ava: AVA_SHOP[0] }), P(2, 'Sokol_77', 'air', { prem: 1, ava: AVA_SHOP[1] }), P(3, 'Viper', 'air', { ava: AVA_SHOP[2] }),
+      P(4, 'Беркут-7', 'pvo', { bot: true }), P(5, 'Ракетчик', 'pvo', { prem: 1, ava: AVA_SHOP[3] }), P(6, 'Тайга', 'pvo', { bot: true })];
+    N.conn = 'on'; N.me = { id: 1, name: 'xFORTUNAx' }; N.ping = 42; N.pl = 0;
+    N.room = { code: 'K7QF', host: 1, kind: 'air', size: 3, era: 2, mode: 'arcade', sideAir: 'east', map: 'city', state: 'lobby', players };
+    if (name === 'battle') {
+      C.setup.game = 'air'; C.start('air');
+      setTimeout(() => {
+        Object.assign(N.room, { state: 'play', left: 372 }); N.battle = { kind: 'air', era: 2, mode: 'arcade', map: 'city', targets: [], waves: 3, wave: 1, state: 'play', valueK: 0.2, T: 0 }; N.myCraft = true;
+        document.body.classList.add('netOn', 'plOpen'); renderPl();
+        N.room.players[0].kills = 3; N.room.players[0].score = 420; N.room.players[4].kills = 2; N.room.players[4].score = 300; renderPl();
+        const kl = () => { for (const k of [['xFORTUNAx', 'Бук-М1', 'Х-58У', 'air', 'pvo', 'p:e_su24m', 'u:buk'], ['Ракетчик', 'Viper', '9М317', 'pvo', 'air', 'u:s300', 'p:f16'], ['Sokol_77', 'Беркут-7', 'КАБ-500Л', 'air', 'pvo', 'p:su25', 'u:buk']]) pushKill(...k); };
+        kl(); setInterval(kl, 5000); // лента живёт 6 с - обновляем, чтобы кадр можно было снять в любой момент
+      }, 2500);
+      return;
+    }
+    C.setup.game = 'online'; C.menu.panel(true); C.menu.render();
+  }
+  return { N, panel, primary, primaryText, onClick, mock, again() {
     const quick = endQuick; endQuick = false;
     if (N.room && !quick && N.room.state === 'lobby' && mapFix(N.room.kind, N.room.map || 'city')) return; // в лобби - уже новая карта комнаты
     if (N.room && !quick && (N.room.state === 'end' || N.room.state === 'lobby')) { keepRoom = true; C.toMenu(); C.setup.game = 'online'; C.menu.panel(true); C.menu.render(); if (N.room.state === 'end') { backWait = true; N.back(); renderBack(); } return; } // в ту же комнату

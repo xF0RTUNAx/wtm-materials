@@ -10,6 +10,7 @@
 //   noEnd, hold (волна не кончается сама - урок подаёт цели), onTick(dt), on: { place, waveStart, waveEnd, designate, track, launch, planeDown, arm, radar } }.
 /* global THREE */
 import { tr, trIf } from './i18n.js?v=20261118d';
+import { premById, drawWings, wingsW } from './prem.js?v=20261118d';
 import { trFmt } from './i18n-fmt.js?v=20261118d';
 import { CITY, mulberry32 } from './city.js?v=20261118d';
 import { weaponHasModel } from './models.js?v=20261118d';
@@ -1152,6 +1153,7 @@ export function createDefense(C) {
       const p = C.proj(TMP.copy(q.pos).setY(q.pos.y + 7)); if (!p) continue;
       hx.strokeStyle = '#38bdf8'; hx.fillStyle = '#7dd3fc'; hx.beginPath(); hx.moveTo(p[0], p[1] + 8); hx.lineTo(p[0] - 7, p[1] - 4); hx.lineTo(p[0] + 7, p[1] - 4); hx.closePath(); hx.stroke();
       hx.fillText(tr('{0} · {1} · {2} км', [allyName(q.owner), q.S.short, (q.pos.distanceTo(u.pos) / 1000).toFixed(1)]), p[0], p[1] - 10);
+      if (premById(st.net, q.owner)) { const w = wingsW(12); if (w) drawWings(hx, p[0] - w / 2, p[1] - 28, 12); } // союзник с премиумом: знак 12 px над ником
     }
     // свои ракеты
     for (const m of C.S.sams) { if (m.dead || m.unit !== u) continue; const p = C.proj(m.pos); if (p) { hx.fillStyle = '#fff'; hx.beginPath(); hx.arc(p[0], p[1], 3, 0, 7); hx.fill(); } }

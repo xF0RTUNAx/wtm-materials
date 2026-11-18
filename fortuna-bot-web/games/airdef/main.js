@@ -1509,6 +1509,7 @@ setInterval(() => {
   // go / hlo / weather - одноразовые (старт события, перезагрузка под карту): убрать из адреса, иначе следующая перезагрузка из меню
   // (смена режима, карты) снова запустит вылет на вертолёте или не тот режим
   { const u = new URL(location.href); let ch = false; for (const k of ['go', 'hlo', 'weather']) if (u.searchParams.has(k)) { u.searchParams.delete(k); ch = true; } if (ch) try { history.replaceState(history.state, '', u.href); } catch (_) { /* нет */ } }
+  const om = Q.get('omock'); if (om) C.online.mock(om); // ?omock=lobby | battle (с ?rmock=1) - онлайн без сервера: лобби комнаты / бой с лентой сбитий и панелью «Игроки», у части игроков премиум (online.js mock)
   const em = Q.get('endmock'); if (em) { C.endScr.mock(em); } // ?endmock=solo-win | solo-lose | ol-win | ol-lose | mw-win | mw-lose - показать экран итога с примерными данными
   const go = Q.get('go'); if (go && ctrls[go]) { setup.game = go === 'training' ? 'training' : go; if (go === 'air' && HLO >= 0) setup.lo = HLO; /* меню при показе подменило вертолётную подвеску самолётной */ C.lastGame = go; C.doors.run(() => C.start(go)); }
   else C.doors.release(); // створки с прошлой страницы (выход в меню после потери контекста) - открыть; онлайн их откроет сам - вход в бой или лобби

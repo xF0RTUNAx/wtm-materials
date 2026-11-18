@@ -13,6 +13,7 @@ import { tr, trIf, LANG, LOCALE } from './i18n.js?v=20261118d';
 import { activeAcc, gameAcc, rating as fetchRating, profile as fetchProfile, transferOk } from './account.js?v=20261118d';
 import { avaSrc, ownAva } from './avatar.js?v=20261118d';
 import { NODE } from './progress.js?v=20261118d';
+import { nickMark } from './prem.js?v=20261118d';
 
 const LOC = LOCALE;
 const nf = (v) => Math.round(v).toLocaleString(LOC);
@@ -288,12 +289,12 @@ export function createRating(C) {
     const title = `${ico('rating')}${tr('Рейтинг')}<button class="qbtn${seen() ? ' seen' : ''}" data-a="help" aria-expanded="${S.q}" title="${tr('Как начисляются очки')}">?</button>`;
     const pop = S.q ? `<div class="qpop"><div class="qh"><b>${tr('Как начисляются очки')}</b><button class="rx" data-a="helpx" aria-label="${tr('Закрыть')}">${ico('close')}</button></div><ul>${HELP.map((h) => `<li>${h}</li>`).join('')}</ul></div>` : '';
     const isMe = (r) => !!(m && m.nick) && String(m.nick).toLowerCase() === String(r.nick).toLowerCase(); // не по месту: при равных очках места совпадают
-    const rows = d.top.map((r, i) => `<button type="button" class="row${r.place <= 3 ? ' g' + r.place : ''}${isMe(r) ? ' me' : ''}" data-a="prof" data-i="${i}"><span class="p">${r.place}</span><span class="who"><span class="av"><img src="${avaSrc(isMe(r) ? ownAva(C, r.ava) : r.ava)}" alt="" loading="lazy"></span><span>${esc(r.nick)}</span></span><span class="v">${nf(r.points)}</span>${ico('tri', 'go')}</button>`).join('')
+    const rows = d.top.map((r, i) => `<button type="button" class="row${r.place <= 3 ? ' g' + r.place : ''}${isMe(r) ? ' me' : ''}" data-a="prof" data-i="${i}"><span class="p">${r.place}</span><span class="who"><span class="av"><img src="${avaSrc(isMe(r) ? ownAva(C, r.ava) : r.ava)}" alt="" loading="lazy"></span><span>${esc(r.nick)}${nickMark(r.prem)}</span></span><span class="v">${nf(r.points)}</span>${ico('tri', 'go')}</button>`).join('')
       + (d.total > d.top.length ? '<div class="row gap">…</div>' : '') + (d.top.length ? '' : `<div class="msg"><span>${tr('В этом сезоне ещё нет результатов.')}</span></div>`);
     let card;
     if (acc && acc.kind === 'airdef') {
       const me = d.me || { nick: acc.nick, place: null, points: 0, n: 0 };
-      card = `<div class="mecard"><span class="big">${me.place || '-'}</span><button type="button" class="nk lnk" data-a="profme" title="${tr('Профиль')}"><span class="av"><img src="${avaSrc(ownAva(C, me.ava))}" alt=""></span><u>${esc(me.nick || acc.nick)}</u> · <b class="num">${nf(me.points || 0)}</b></button><button class="btnm" data-a="mine">${tr('Мои бои')}</button>
+      card = `<div class="mecard"><span class="big">${me.place || '-'}</span><button type="button" class="nk lnk" data-a="profme" title="${tr('Профиль')}"><span class="av"><img src="${avaSrc(ownAva(C, me.ava))}" alt=""></span><u>${esc(me.nick || acc.nick)}</u>${nickMark(me.prem)} · <b class="num">${nf(me.points || 0)}</b></button><button class="btnm" data-a="mine">${tr('Мои бои')}</button>
         <small>${tr('засчитано {0} из {1}', [me.n || 0, SLOTS])}</small><span class="slots">${Array.from({ length: SLOTS }, (_, i) => `<i${i < (me.n || 0) ? ' class="on"' : ''}></i>`).join('')}</span></div>`;
     } else {
       card = `<div class="mecard no"><span>${tr('В рейтинге - только аккаунты игры')}</span><span class="acts"><button class="btnm" data-a="login">${tr('Войти')}</button>${transferOk() ? `<button class="btnm alt" data-a="xfer">${tr('Перенести прогресс')}</button>` : ''}</span></div>`;
@@ -345,7 +346,7 @@ export function createRating(C) {
     const per = S.per === 'all' ? 'all' : 'season', g = P.place && P.place <= 3 ? ' g' + P.place : '';
     const hero = `<div class="hero${g}"><span class="ava"><img src="${avaSrc(own ? ownAva(C, P.ava) : P.ava)}" alt=""></span><span class="nick">${esc(P.nick)}</span>
       <span class="place"><span class="lb">${tr('место')}</span><span class="pn">${P.place && P.place <= 3 ? ico('rating') : ''}${P.place || '-'}</span><span class="pts">${nf(P.points || 0)}</span><span class="slots">${Array.from({ length: SLOTS }, (_, i) => `<i${i < (P.n || 0) ? ' class="on"' : ''}></i>`).join('')}</span></span>
-      <span class="since">${own && C.prem ? C.prem.ribbon() : ''}${tr('в игре с {0}', [ddmm(P.since, true)])}<br>${tr('онлайн-боёв: {0}', [nf(P.games || 0)])}</span>
+      <span class="since">${own ? (C.prem ? C.prem.ribbon() : '') : (C.prem && P.prem_until && Date.parse(P.prem_until) > Date.now() ? C.prem.ribbon(P.prem_until) : '')}${tr('в игре с {0}', [ddmm(P.since, true)])}<br>${tr('онлайн-боёв: {0}', [nf(P.games || 0)])}</span>
       ${own ? `<span class="mine"><button class="btnm" data-a="mine">${tr('Мои бои')}</button></span>` : ''}</div>`;
     const M = (P.modes && P.modes[per]) || {}, tot = [0, 0, 0, null];
     const mrow = ([k, ic, name]) => {

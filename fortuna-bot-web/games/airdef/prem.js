@@ -7,7 +7,24 @@ import { activeAcc } from './account.js?v=20261118d';
 
 const WS = 'airdef/shop/prem/prem_wings_';
 // знак высотой h px (CSS): 64 px шириной - обычный экран, 120 - плотный (srcset)
-export const wings = (h = 13, cls = 'pemb') => `<img class="${cls}" src="${WS}64.webp" srcset="${WS}120.webp 2x" alt="" style="height:${h}px" draggable="false">`;
+export const wings = (h = 13, cls = 'pemb') => `<img class="${cls}" src="${WS}64.webp" srcset="${WS}120.webp 2x" alt="" style="height:${typeof h === 'number' ? h + 'px' : h}" draggable="false">`;
+// знак у ника другого игрока (лобби, табло боя, итоги, рейтинг): 0,95 em от шрифта ника; пусто, если у игрока нет премиума
+export const nickMark = (on, h = '.95em') => (on ? wings(h, 'pemb pnk') : '');
+// знак над аватаркой в лобби онлайна: 9 px, по центру, на 5 px выше верхнего края (CSS .pmk - ниже)
+export const lobbyMark = (on) => (on ? wings(9, 'pemb pmk') : '');
+// премиум игрока комнаты онлайна (N.room.players[].prem - флаг из билета mp-ticket): по id или по нику (лента сбитий знает только ник)
+export const premById = (N, id) => { const r = N && N.room, p = r && (r.players || []).find((q) => q.id === id); return !!(p && p.prem); };
+export const premByName = (N, name) => { const r = N && N.room, p = r && (r.players || []).find((q) => !q.bot && q.name === name); return !!(p && p.prem); };
+// знак на холсте (лента сбитий, метки над техникой): картинка грузится один раз; пока не пришла (или нет Image - стенды без браузера) - ничего не рисуем
+let WIMG = null;
+function wingsImg() { if (!WIMG && typeof Image === 'function') { WIMG = new Image(); WIMG.decoding = 'async'; WIMG.src = WS + '120.webp'; } return WIMG && WIMG.complete && WIMG.naturalWidth ? WIMG : null; }
+// знак высотой h px, левый край x, центр по вертикали y; a - прозрачность; возвращает ширину (0 - не нарисован)
+export function drawWings(g, x, y, h, a = 1) {
+  const im = wingsImg(); if (!im) return 0;
+  const w = Math.round(h * im.naturalWidth / im.naturalHeight);
+  g.save(); g.shadowColor = 'rgba(0,0,0,.7)'; g.shadowBlur = 3; g.shadowOffsetY = 1; g.globalAlpha *= a; g.drawImage(im, x, y - h / 2, w, h); g.restore(); return w;
+}
+export const wingsW = (h) => { const im = wingsImg(); return im ? Math.round(h * im.naturalWidth / im.naturalHeight) : 0; };
 const p2 = (n) => String(n).padStart(2, '0');
 export const ddmm = (iso) => { const d = new Date(iso); return `${p2(d.getDate())}.${p2(d.getMonth() + 1)}`; };
 export const ddmmHm = (iso) => { const d = new Date(iso); return `${p2(d.getDate())}.${p2(d.getMonth() + 1)}, ${p2(d.getHours())}:${p2(d.getMinutes())}`; };
@@ -20,7 +37,9 @@ export function left(iso, now = Date.now()) {
 }
 
 const CSS = `
-.pemb { display: inline-block; width: auto; vertical-align: middle; filter: drop-shadow(0 1px 2px rgba(0,0,0,.7)); }
+.pemb { display: inline-block; width: auto; vertical-align: middle; filter: drop-shadow(0 1px 2px rgba(0,0,0,.7)); } .pemb.pnk { margin: -.2em 0 0 .3em; }
+.rseat .pemb.pmk { position: absolute; z-index: 2; left: 50%; top: -5px; transform: translateX(-50%); margin: 0; pointer-events: none; } .rseat.prem .rava { box-shadow: 0 0 0 2px #d6b06a, 0 0 8px rgba(214,176,106,.6); }
+#plPanel .plr { padding-left: 5px; } #plPanel .plr.prem, .pr.prem { box-shadow: inset 2px 0 0 #d6b06a, inset 60px 0 40px -40px rgba(214,176,106,.18); }
 #premChip { position: fixed; z-index: 32; display: none; align-items: center; gap: 5px; height: 26px; padding: 0 9px 0 7px; border-radius: 13px; cursor: pointer; white-space: nowrap;
   font: 600 11px/1 'Golos Text', Golos, sans-serif; color: #f4e3bb; letter-spacing: .2px; background: linear-gradient(180deg, rgba(30,24,14,.86), rgba(16,13,8,.86)); border: 1px solid rgba(226,180,90,.55); box-shadow: 0 2px 8px rgba(0,0,0,.45); }
 #premChip.on { display: flex; } #premChip:focus-visible { outline: 2px solid #f3c96f; outline-offset: 2px; }
@@ -117,7 +136,7 @@ export function createPrem(C) {
     // +1 кристалл за первый вход дня начислен сервером: показать, когда на экране ангар
     gift() { S.gift = true; setTimeout(tick, 0); },
     // лента под ником в своём профиле (rating-ui.js), только пока премиум активен
-    ribbon() { const u = until(); return u ? `<span class="pribbon">${wings(11)}${tr('Премиум до {0}', [ddmm(u)])}</span>` : ''; },
+    ribbon(iso) { const u = iso || until(); return u ? `<span class="pribbon">${wings(11)}${tr('Премиум до {0}', [ddmm(u)])}</span>` : ''; },
     until, on: () => !!until(),
     tick,
   };

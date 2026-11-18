@@ -232,12 +232,14 @@ function mockShop(b) {
 const MOCK_TOP = [['Гром_52', 6480], ['SkyKeeper', 6215], ['Волхов', 6090], ['Tanker_Alpha', 5870], ['Беркут-7', 5655], ['Орлан', 5410], ['Strela_21', 5330], ['Ястреб', 5260], ['Nord_Fox', 5190], ['Кречет', 5120], ['Zenit', 5040], ['Дозор-3', 4980],
   ['Ghost_Rider', 4900], ['Сокол', 4860], ['Radar_K', 4790], ['Пересвет', 4720], ['MiG_Man', 4660], ['Бурый', 4590], ['Фортуна', 4530], ['Delta_9', 4470], ['Лис', 4400], ['Vector', 4350], ['Ермак', 4290], ['Patriot_7', 4230],
   ['Север', 4180], ['Hawk_Eye', 4130], ['Тополь', 4080], ['Raptor', 4040], ['Грач', 4000], ['Pilot_Q', 3990], ['Мираж', 3985], ['Alfa_Z', 3975], ['Шторм', 3970], ['Бекас', 3960], ['Iron_Sky', 3955], ['Лунь', 3950]];
+const MOCK_PREM = new Set(['SkyKeeper', 'Беркут-7', 'Strela_21', 'Кречет']); // у них в заглушке премиум: знак в рейтинге, лента в профиле
 function mockRating(pid) {
   const day = 86400000, t0 = Date.parse('2026-10-25T00:00:00+03:00'), t1 = Date.parse('2027-01-01T00:00:00+03:00') /* сезон 1 - до 01.01.2027, sql/026 */, now = Date.now();
   const ago = (d, h, m) => new Date(now - d * day - h * 3600000 - m * 60000).toISOString();
   const g = gameAcc(), nick = g ? g.nick || g.login : 'xFORTUNAx';
-  const top = MOCK_TOP.map(([n, p], i) => ({ place: i + 1, nick: n, points: p, n: 7, ava: AVA_SHOP[i % 13] })); // часть - без аватарки: у них та, что у всех
-  top.push({ place: 37, nick, points: 3940, n: 5 }); // «вы» - 37-е место; остальные ниже
+  const top = MOCK_TOP.map(([n, p], i) => ({ place: i + 1, nick: n, points: p, n: 7, ava: AVA_SHOP[i % 13], ...(MOCK_PREM.has(n) ? { prem: 1 } : {}) })); // часть - без аватарки: у них та, что у всех; prem - премиум («Крылья» у ника)
+  const pu = shopW().premium_until, myPrem = !!pu && Date.parse(pu) > Date.now(); // свой премиум - ?prem=1: знак в таблице и в карточке «вы»
+  top.push({ place: 37, nick, points: 3940, n: 5, ...(myPrem ? { prem: 1 } : {}) }); // «вы» - 37-е место; остальные ниже
   for (let i = 0; i < 12; i++) top.push({ place: 38 + i, nick: ['Кедр', 'Rook', 'Ветер', 'Bravo_4', 'Лайка', 'Orbit', 'Гюрза', 'Sparrow', 'Ратник', 'Echo_2', 'Витязь', 'Nimbus'][i], points: 3930 - i * 90, n: 4 });
   const base = { season: 1, current: 1, live: true, starts_at: new Date(t0).toISOString(), ends_at: new Date(t1).toISOString(), next: null, total: 214, top };
   if (RMOCK === 'break') Object.assign(base, { current: 2, live: false, ends_at: ago(2, 0, 0), next: { season: 2, starts_at: new Date(now + 5 * day).toISOString() } }); // ?rmock=break - межсезонье
@@ -254,7 +256,7 @@ function mockRating(pid) {
     B(ago(6, 4, 45), false, 'real', 'air', true, false, 996, 400, 460, 62, 1, 1, 1.08, true),
   ];
   if (RMOCK === 'idle') battles.push({ at: ago(7, 9, 10), multi: false, mode: 'real', team: 'air', win: false, draw: false, rating: 0, rp: { r: 0, c: 0, s: 0, b: 1, m: 1, k: 1, idle: 1 }, counted: false }); // бой без действий
-  return { ...base, me: { kind: 'airdef', nick, place: empty ? null : 37, points: empty ? 0 : 3940, n: empty ? 0 : 5, battles } };
+  return { ...base, me: { kind: 'airdef', nick, place: empty ? null : 37, points: empty ? 0 : 3940, n: empty ? 0 : 5, battles, ...(myPrem ? { prem: 1 } : {}) } };
 }
 // профиль (заглушка get-airdef-profile): игроки - из таблицы mockRating, числа - от ника (одни и те же при каждом открытии); свой ник при
 // ?rmock=empty - профиль без боёв; места за сезоны - у первых 12 (чтобы видеть значки, хотя сезон 1 ещё идёт)
@@ -274,7 +276,7 @@ function mockProfile(nick, season) {
   const modes = empty ? { season: {}, all: {} } : { season: { air: md(1), pvo: md(1), multi: md(1) }, all: { air: md(2), pvo: md(2), multi: md(2) } };
   const games = Object.values(modes.all).reduce((a, x) => a + x.n, 0);
   return { season: season || R.season, live: R.live, profile: { nick: row.nick, ava: row.ava, since: '2026-10-25T12:00:00+03:00', games, place: empty ? null : row.place, points: empty ? 0 : row.points, n,
-    modes, fav: { season: fav(1), all: fav(2) }, best, awards: row.place <= 12 && !empty ? [{ season: 1, place: row.place }] : [] } };
+    modes, fav: { season: fav(1), all: fav(2) }, best, awards: row.place <= 12 && !empty ? [{ season: 1, place: row.place }] : [], ...(row.prem && !own ? { prem_until: new Date(now + 9 * day + 5 * 3600000).toISOString() } : {}) } };
 }
 
 if (siteAcc()) siteStatus(); // при старте: статуса для этого аккаунта сайта нет - спросить (в кэше есть - ничего не делает); в конце файла: заглушка использует const ниже

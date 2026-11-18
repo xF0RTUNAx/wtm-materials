@@ -9,7 +9,7 @@ import { ico } from './icons.js?v=20261118d';
 import { WIN_K } from './sim/online.js?v=20261118d';
 import { activeAcc } from './account.js?v=20261118d';
 import { PREM_K } from './arsenal.js?v=20261118d';
-import { wings } from './prem.js?v=20261118d';
+import { wings, nickMark } from './prem.js?v=20261118d';
 
 const LOC = LOCALE;
 const fmt = (v) => Math.round(v).toLocaleString(LOC);
@@ -170,7 +170,7 @@ export function createEndScreen(C) {
 
   // ═════════════ Онлайн: «Табло команд» и «Два раунда» ═════════════
   const rateHtml = () => (activeAcc() ? `<div class="rate" data-k="rate"><span class="rp">${ico('rating')}<span class="num" data-k="rp">+0</span></span><span class="txt" data-k="rtxt">${tr('Считаем рейтинг…')}</span><span class="rw" data-k="rw"></span><span class="slots" data-k="slots"></span></div>` : '');
-  const row = (r, cols) => `<div class="pr${cols.length === 3 ? ' pr3' : ''}${r.me ? ' me' : ''}"><b>${esc(r.name)}${r.bot ? ` <span class="bot">${tr('бот')}</span>` : ''}</b>${cols.map((c) => `<span class="num">${esc(c(r))}</span>`).join('')}</div>`;
+  const row = (r, cols) => `<div class="pr${cols.length === 3 ? ' pr3' : ''}${r.me ? ' me' : ''}${r.prem ? ' prem' : ''}"><b>${esc(r.name)}${nickMark(r.prem)}${r.bot ? ` <span class="bot">${tr('бот')}</span>` : ''}</b>${cols.map((c) => `<span class="num">${esc(c(r))}</span>`).join('')}</div>`;
   const hd = (...h) => `<div class="pr${h.length === 3 ? ' pr3' : ''} hd"><span></span>${h.map((x) => `<span>${x}</span>`).join('')}</div>`;
   function olHtml(b) {
     return `<div class="verdict" data-k="verdict">${esc(b.title)}</div>
@@ -289,14 +289,14 @@ export function createEndScreen(C) {
         return;
       }
       const P = (id, name, team, bot, kills, score, extra) => ({ id, name, team, bot, kills, deaths: 0, score, ...extra });
-      const me = { id: 'me', team: kind === 'ol' ? 'air' : 'east' };
+      const myPrem = !!(C.progress && C.progress.premOn) /* свой премиум - ?prem=1 */, me = { id: 'me', team: kind === 'ol' ? 'air' : 'east' };
       if (kind === 'ol') {
-        const m = { winner: win ? 'air' : 'pvo', valueK: win ? 0.84 : 0.52, players: win ? [P('me', 'xFORTUNAx', 'air', false, 2, 1840), P('a2', 'Беркут-7', 'air', true, 1, 1120), P('a3', 'Орлан', 'air', false, 0, 640), P('p1', 'SkyKeeper', 'pvo', false, 4, 1300), P('p2', 'Гранит', 'pvo', true, 2, 860), P('p3', 'Волхов', 'pvo', false, 1, 540)]
-          : [P('me', 'xFORTUNAx', 'air', false, 1, 920), P('a2', 'Беркут-7', 'air', true, 0, 410), P('a3', 'Орлан', 'air', false, 0, 300), P('p1', 'SkyKeeper', 'pvo', false, 6, 2100), P('p2', 'Гранит', 'pvo', true, 3, 1240), P('p3', 'Волхов', 'pvo', false, 2, 900)] };
+        const m = { winner: win ? 'air' : 'pvo', valueK: win ? 0.84 : 0.52, players: win ? [P('me', 'xFORTUNAx', 'air', false, 2, 1840, { prem: myPrem }), P('a2', 'Беркут-7', 'air', true, 1, 1120), P('a3', 'Орлан', 'air', false, 0, 640, { prem: 1 }), P('p1', 'SkyKeeper', 'pvo', false, 4, 1300, { prem: 1 }), P('p2', 'Гранит', 'pvo', true, 2, 860), P('p3', 'Волхов', 'pvo', false, 1, 540)]
+          : [P('me', 'xFORTUNAx', 'air', false, 1, 920, { prem: myPrem }), P('a2', 'Беркут-7', 'air', true, 0, 410), P('a3', 'Орлан', 'air', false, 0, 300, { prem: 1 }), P('p1', 'SkyKeeper', 'pvo', false, 6, 2100, { prem: 1 }), P('p2', 'Гранит', 'pvo', true, 3, 1240), P('p3', 'Волхов', 'pvo', false, 2, 900)] };
         api.show({ title: '', win, online: boardOl(m, me, nm) });
       } else {
-        const m = { winner: win ? 'east' : 'west', scores: { east: win ? 580 : 360, west: win ? 410 : 520 }, v0: 1000, first: 'east', players: win ? [P('me', 'xFORTUNAx', 'east', false, 9, 2840, { icp: 9, samk: 3, dmg: 31 }), P('e2', 'Гранит', 'east', true, 6, 1900, { icp: 6, samk: 2, dmg: 27 }), P('w1', 'SkyKeeper', 'west', false, 7, 2210, { icp: 7, samk: 1, dmg: 22 }), P('w2', 'Tanker_Alpha', 'west', false, 5, 1760, { icp: 5, samk: 0, dmg: 19 })]
-          : [P('me', 'xFORTUNAx', 'east', false, 4, 1420, { icp: 4, samk: 1, dmg: 20 }), P('e2', 'Гранит', 'east', true, 2, 980, { icp: 2, samk: 0, dmg: 16 }), P('w1', 'SkyKeeper', 'west', false, 11, 2650, { icp: 11, samk: 2, dmg: 29 }), P('w2', 'Tanker_Alpha', 'west', false, 8, 2010, { icp: 8, samk: 1, dmg: 23 })] };
+        const m = { winner: win ? 'east' : 'west', scores: { east: win ? 580 : 360, west: win ? 410 : 520 }, v0: 1000, first: 'east', players: win ? [P('me', 'xFORTUNAx', 'east', false, 9, 2840, { icp: 9, samk: 3, dmg: 31, prem: myPrem }), P('e2', 'Гранит', 'east', true, 6, 1900, { icp: 6, samk: 2, dmg: 27 }), P('w1', 'SkyKeeper', 'west', false, 7, 2210, { icp: 7, samk: 1, dmg: 22, prem: 1 }), P('w2', 'Tanker_Alpha', 'west', false, 5, 1760, { icp: 5, samk: 0, dmg: 19 })]
+          : [P('me', 'xFORTUNAx', 'east', false, 4, 1420, { icp: 4, samk: 1, dmg: 20, prem: myPrem }), P('e2', 'Гранит', 'east', true, 2, 980, { icp: 2, samk: 0, dmg: 16 }), P('w1', 'SkyKeeper', 'west', false, 11, 2650, { icp: 11, samk: 2, dmg: 29, prem: 1 }), P('w2', 'Tanker_Alpha', 'west', false, 8, 2010, { icp: 8, samk: 1, dmg: 23 })] };
         api.show({ title: '', win, online: boardMw(m, me, nm) });
       }
       setTimeout(() => {
@@ -311,14 +311,14 @@ export function createEndScreen(C) {
 // ── данные табло из сообщения сервера 'end' (online.js) ──
 // «Вылет и оборона»: m = { winner: 'air' | 'pvo', valueK, players: [{ id, name, team, bot, kills, score }] }; me - свой игрок; nm - как показать ник
 export function boardOl(m, me, nm = (p) => p.name) {
-  const mk = (p) => ({ name: nm(p), bot: !!p.bot, k: p.kills || 0, s: Math.round(p.score || 0), me: !!(me && p.id === me.id) }), by = (t) => m.players.filter((p) => p.team === t).sort((a, b) => (b.score || 0) - (a.score || 0)).map(mk);
+  const mk = (p) => ({ name: nm(p), bot: !!p.bot, prem: !!p.prem && !p.bot, k: p.kills || 0, s: Math.round(p.score || 0), me: !!(me && p.id === me.id) }), by = (t) => m.players.filter((p) => p.team === t).sort((a, b) => (b.score || 0) - (a.score || 0)).map(mk);
   const win = me ? m.winner === me.team : null;
   return { kind: 'ol', win, title: win === true ? tr('Победа') : win === false ? tr('Поражение') : m.winner === 'air' ? tr('Победа авиации') : tr('Победа ПВО'), pct: Math.round((m.valueK || 0) * 100), wk: Math.round(WIN_K * 100), won: m.winner, air: by('air'), pvo: by('pvo') };
 }
 // «Мульти-волна»: m = { winner: 'east' | 'west' | null, scores: { east, west }, v0, first, players: [{ …, icp, samk, dmg }] }
 export function boardMw(m, me, nm = (p) => p.name) {
   const v0 = m.v0 || 1, pe = Math.round(100 * m.scores.east / v0), pw = Math.round(100 * m.scores.west / v0), first = m.first === 'west' ? 'west' : 'east';
-  const mk = (p) => ({ name: nm(p), bot: !!p.bot, icp: p.icp, dmg: p.dmg, s: Math.round(p.score || 0), me: !!(me && p.id === me.id) }), by = (t) => m.players.filter((p) => p.team === t).sort((a, b) => (b.score || 0) - (a.score || 0)).map(mk);
+  const mk = (p) => ({ name: nm(p), bot: !!p.bot, prem: !!p.prem && !p.bot, icp: p.icp, dmg: p.dmg, s: Math.round(p.score || 0), me: !!(me && p.id === me.id) }), by = (t) => m.players.filter((p) => p.team === t).sort((a, b) => (b.score || 0) - (a.score || 0)).map(mk);
   const R = (side, n) => ({ side: side === 'east' ? 'e' : 'w', n, pct: side === 'east' ? pe : pw });
   const win = m.winner ? (me ? m.winner === me.team : null) : null;
   return { kind: 'mw', win: m.winner ? win : null, won: m.winner, title: !m.winner ? tr('Ничья') : win === true ? tr('Победа') : win === false ? tr('Поражение') : m.winner === 'east' ? tr('Победа Востока') : tr('Победа Запада'),
