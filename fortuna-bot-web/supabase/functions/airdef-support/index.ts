@@ -12,12 +12,14 @@
 // 2) Telegram (заголовок X-Telegram-Bot-Api-Secret-Token = HMAC от токена бота): бот поддержки. Посторонним - подсказка на их языке,
 //   ничего не сохраняется; только SUPPORT_ADMIN_ID: ответ (reply) на сообщение бота об обращении - ответ игроку; кнопки «Ответить», «Закрыть», «Игрок».
 //   Вебхук бот ставит себе сам при первом запросе (support_state 'webhook'). Уведомления - у каждого сообщения флаг notified; несланные досылаются.
+// Удалил аккаунт - копии в Telegram стираются (очередь support_tg_purge, sql/036; _shared/support-tg-purge.ts, разбор при каждом вызове).
 // Секреты: TG_SUPPORT_TOKEN, SUPPORT_ADMIN_ID (Mark вписывает сам в панели Supabase), SUPPORT_FILE_KEY, SUPPORT_FILES_URL.
 // Текст игрока нигде не идёт как разметка: в Telegram - без parse_mode, в игре - textContent. Таблицы - sql/033_support.sql, sql/034_support_fixes.sql.
 import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
 import { supabaseAdmin } from "../_shared/supabase-admin.ts";
 import { sessionPlayer } from "../_shared/airdef-session.ts";
 import { MAX_FILE, TYPES, filesReady, signedUrl } from "../_shared/support-files.ts";
+import { drainTg } from "../_shared/support-tg-purge.ts";
 
 // deno-lint-ignore no-explicit-any
 type Db = any;
@@ -154,7 +156,8 @@ async function onTelegram(db: Db, u: any): Promise<Response> {
       const { data: acc } = await db.from("airdef_accounts").select("nick, created_at").eq("player_id", t.player_id).maybeSingle();
       const { count } = await db.from("support_tickets").select("id", { count: "exact", head: true }).eq("player_id", t.player_id).neq("status", "draft");
       await tg("answerCallbackQuery", { callback_query_id: q.id });
-      await tg("sendMessage", { chat_id: admin, text: `👤 ${acc?.nick || "без ника"}\nАккаунт игры с ${String(acc?.created_at || "").slice(0, 10)}\nОбращений всего: ${count ?? "?"}\nID: ${t.player_id}` });
+      const card = await tg("sendMessage", { chat_id: admin, text: `👤 ${acc?.nick || "без ника"}\nАккаунт игры с ${String(acc?.created_at || "").slice(0, 10)}\nОбращений всего: ${count ?? "?"}\nID: ${t.player_id}` });
+      if (card) await mapMsg(db, card.message_id, t.id); // в карточке ник и ID - стереть вместе с обращением, если игрок удалит аккаунт
     } else await tg("answerCallbackQuery", { callback_query_id: q.id });
     return ok();
   }
@@ -215,6 +218,7 @@ async function finish(db: Db, ticketId: number, msgId: number) {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   const db = supabaseAdmin();
+  later(drainTg(db, 10)); // копии обращений удалённых аккаунтов в Telegram - стереть (очередь sql/036, _shared/support-tg-purge.ts)
   try {
     const tgSecret = req.headers.get("x-telegram-bot-api-secret-token");
     if (tgSecret !== null) { // запрос от Telegram

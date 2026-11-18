@@ -18,6 +18,7 @@ import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
 import { supabaseAdmin } from "../_shared/supabase-admin.ts";
 import { newSession, dropSession, sessionPlayer } from "../_shared/airdef-session.ts";
 import { dropPlayerFiles } from "../_shared/support-files.ts";
+import { drainTg, queuePlayerTg } from "../_shared/support-tg-purge.ts";
 // обмен «номер + логин → ключ» для устройств, вошедших до ключей, - до этой даты (дальше - вход паролем)
 const EXCHANGE_UNTIL = "2027-01-15T00:00:00Z";
 import { hashPassword, verifyPassword } from "../_shared/password.ts";
@@ -188,14 +189,18 @@ Deno.serve(async (req) => {
       return jsonResponse({ account: await view(me.id, me.login) });
     }
 
-    // удаление аккаунта игры (Mark 2026-11-17): без пароля (вдруг забыт), по ключу сессии этого устройства + явное «да» из окна со словом-подтверждением.
+    // удаление аккаунта игры (Mark 2026-11-17; 2026-11-18 - ещё копии обращений в Telegram и счётчик входов по логину): без пароля (вдруг забыт), по ключу сессии этого устройства + явное «да» из окна со словом-подтверждением.
     // Всё по игроку (airdef_progress, airdef_accounts, airdef_mp_results, награды, задания, сессии) - каскадом (sql/020-032)
     if (action === "delete") {
       if (body.confirm !== true || typeof body.sess !== "string") return jsonResponse({ error: "Нет подтверждения" }, 400);
       const who = await sessionPlayer(db, body); if (who.err) return who.err;
+      const { data: me } = await db.from("players").select("login").eq("id", who.id!).maybeSingle();
+      await queuePlayerTg(db, who.id!); // копии обращений в Telegram - в очередь на стирание ДО удаления (support_tg уйдёт каскадом)
       const d = await db.from("players").delete().eq("id", who.id!).eq("kind", "airdef");
       if (d.error) throw d.error;
       await dropPlayerFiles(who.id!); // файлы обращений в поддержку (R2); сами обращения ушли каскадом (sql/033)
+      if (me?.login) await failClear("login:" + String(me.login).replace(/^ad:/, "").toLowerCase()); // счётчик неудачных входов по логину
+      await drainTg(db, 30).catch((e) => console.error("airdef-account tg purge", e instanceof Error ? e.message : e)); // не вышло - доделает airdef-support
       return jsonResponse({ deleted: true });
     }
 
