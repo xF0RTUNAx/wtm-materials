@@ -411,11 +411,12 @@ const CONFIG = {
   // SAMP/T — Chenzoss: скан, вся машина — одна сетка; пакет из 8 контейнеров Aster лежит по-походному — делим по треугольникам,
   // в игре он поднимается вертикально (u.lel = 90°) вокруг оси у кормы
   // SAMP/T - своя пусковая на Renault Kerax 8×8 (сборщик С-300, Свои/SAMP-T, ревизия 1, 2026-11-18; Mark: «модель SAMP/T готова») вместо скана Chenzoss.
-  // В файле уже боевое положение: стрела с 8 ТПК стоит вертикально, домкраты и мачта выдвинуты - в игре пусковая неподвижна (vhot, slewY 0).
-  // Оси сборщика без центровки (axisX / axisZ / ground 0): точки пуска паспорта = оси игры. Крышки ТПК cap_0…7 → lid0…7 (рвутся при пуске,
-  // launchers.js blowLids 'tur' - в осях башни от tpFix); остальное - корпус. Сетка 74,6 тыс. треугольников без упрощения (правило Mark)
-  sampt: { src: `${DL}/Свои/SAMP-T/sampt.glb`, scale: 1, nose: '-z', rulesIn: 'game', unit: true, own: true, tex: () => 1024, nTex: () => 512, pickMesh: /./,
-    axisX: 0, axisZ: 0, ground: 0, tpFix: [0, 0, 4.75], groups: (c) => { const m = c.path.match(/(^|\/)cap_(\d)/); return m ? 'lid' + m[2] : 'body'; } },
+  // Игровой файл sampt_game.glb - в ПОХОДЕ (Mark: «реализовать… механику выключения и включения радара»): РЛС включили - балки опор
+  // разворачиваются, лапы и пятка опускаются, пакет 8 ТПК поднимается до вертикали телескопическим цилиндром, мачта выдвигается (launchers.js
+  // SAMPT, main.js erectView). Оси сборщика без центровки (axisX / axisZ / ground 0): числа ПАСПОРТ.json game_erect = оси игры. Части - samptPart.
+  // Сетка 74,6 тыс. треугольников без упрощения (правило Mark)
+  sampt: { src: `${DL}/Свои/SAMP-T/sampt_game.glb`, scale: 1, nose: '-z', rulesIn: 'game', unit: true, own: true, tex: () => 1024, nTex: () => 512, pickMesh: /./,
+    axisX: 0, axisZ: 0, ground: 0, hinge: [0, 2.55, 3.8], tpFix: [0, 2.55, 3.8], pack0: 0, groups: (c) => samptPart(c, true) },
   // Oerlikon GDF 35 мм — из сцены Skyguard (lm9241221): одна из двух пушек (сцена в мм, пушка — в половину размера → ×0,002);
   // станок поворачивается, спарка со стволами и коробами — качается на цапфах; подложка, кабели, радар и вторая пушка — долой
   skyguard: { src: `${DL}/oerlikon_35mm_skyguard_radar.glb`, scale: 0.002, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, target: 80000, simpErr: 0.002, minPart: 0.06, hinge: [19.62, 1.45, -8.1],
@@ -765,6 +766,17 @@ function nasamsPart(c, near) {
   return /(^|\/)turret_/.test(p) ? 'turret' : 'body';
 }
 // С-300: части по первому слову имени узла; крышки lid_c<ряд><столбец> → lid0…3 (вблизи; в дальней копии — закрытые, в пакете)
+// SAMP/T (game_erect сборщика): pack_* → cradle; lid_0…7 → lid0…7 (рвутся при пуске, на пакете); cyl_barrel / cyl_rod1…3 → cyl0…3 (4 ступени, доли
+// выдвижения - launchers.js rodFrac); arm_0…3 → arm0…3 (балки опор), их дети jack_0…3 → jack0…3; heel_legs → heel, heel_plate → heelp; mast_0…2 → mast0…2
+function samptPart(c, near) {
+  const p = c.path, L = p.match(/(^|\/)lid_(\d)/); if (L) return near ? 'lid' + L[2] : 'cradle';
+  const J = p.match(/(^|\/)jack_(\d)/); if (J) return 'jack' + J[2];
+  const A = p.match(/(^|\/)arm_(\d)/); if (A) return 'arm' + A[2];
+  const Y = [...p.matchAll(/(?:^|\/)cyl_(barrel|rod1|rod2|rod3)/g)].pop(); if (Y) return 'cyl' + ['barrel', 'rod1', 'rod2', 'rod3'].indexOf(Y[1]);
+  if (/(^|\/)heel_plate/.test(p)) return 'heelp'; if (/(^|\/)heel_legs/.test(p)) return 'heel';
+  const M = p.match(/(^|\/)mast_(\d)/); if (M) return 'mast' + M[2];
+  return /(^|\/)pack_/.test(p) ? 'cradle' : 'body';
+}
 function s300Part(c, near) {
   const p = c.path, L = p.match(/(^|\/)lid_c([12])([12])/);
   if (L) return near ? 'lid' + ((+L[2] - 1) * 2 + (+L[3] - 1)) : 'cradle';

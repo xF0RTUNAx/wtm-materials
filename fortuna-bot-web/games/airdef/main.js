@@ -479,9 +479,15 @@ C.syncUnits = function () {
       // «Бук-М1» - только цилиндр подъёма на башне (lift: без домкратов, угол пакета - наведение)
       if (gm && md.LN && (md.LN.erect || md.LN.lift)) {
         const E = md.LN.erect || md.LN.lift, onT = E.onTur && tur.length, host = onT ? tur[0].tg : g, T0 = onT ? md.LN.L[0].tp : [0, 0, 0];
-        g.userData.jacks = gm.jacks.filter(Boolean).map((j) => obj(j, g));
+        // SAMP/T: балки опор (E.arms) крутятся вокруг вертикали у своих шарниров, лапа - в группе своей балки (опускается в ней)
+        if (E.arms && gm.arms.length) {
+          g.userData.arms = E.arms.map((a, i) => { const pv = new THREE.Group(), o = a.o; pv.position.fromArray(o); g.add(pv); if (gm.arms[i]) { obj(gm.arms[i], pv); gm.arms[i].position.set(-o[0], -o[1], -o[2]); } return pv; });
+          g.userData.jacks = gm.jacks.map((j, i) => { const q = new THREE.Group(), o = E.arms[i] ? E.arms[i].o : [0, 0, 0]; (g.userData.arms[i] || g).add(q); if (j) { obj(j, q); j.position.set(-o[0], -o[1], -o[2]); } return q; });
+        } else g.userData.jacks = gm.jacks.filter(Boolean).map((j) => obj(j, g));
+        // SAMP/T: пятка - ноги опускаются на heel.move, плита на шарнире heel.plate (низ ног) поворачивается на heel.a вокруг X
+        if (E.heel && gm.heel) { const H = E.heel, legs = new THREE.Group(), pv = new THREE.Group(); g.add(legs); obj(gm.heel, legs); legs.add(pv); pv.position.fromArray(H.plate); if (gm.heelp) { obj(gm.heelp, pv); gm.heelp.position.set(-H.plate[0], -H.plate[1], -H.plate[2]); } g.userData.heel = { legs, pv }; }
         g.userData.cyl = [E, E.cyl2].filter(Boolean).map((c, k) => {
-          const ps = gm.cyl.slice(k * 3, k * 3 + 3), A = c.cylA; if (ps.length < 3 || !ps.every(Boolean)) return null;
+          const n = 1 + (c.rodFrac ? c.rodFrac.length : 2), ps = gm.cyl.slice(k * n, k * n + n), A = c.cylA; if (ps.length < n || !ps.every(Boolean)) return null; // SAMP/T - корпус и 3 штока (rodFrac)
           const pv = new THREE.Group(); pv.position.set(A[0] - T0[0], A[1] - T0[1], A[2] - T0[2]); host.add(pv);
           return { c, pv, parts: ps.map((p) => { const q = new THREE.Group(); obj(p, q); p.position.set(-A[0], -A[1], -A[2]); pv.add(q); return q; }) };
         }).filter(Boolean);
@@ -532,7 +538,11 @@ function torLids(u, g, dt) {
 function erectView(u, g, dt) {
   const LN = LNCH[u.key], E = LN.erect;
   u.jkV = clamp((u.jkV ?? (u.emit ? 1 : 0)) + ((u.emit && !u.dead) || u.lel > 0.001 ? dt : -dt) / E.jk, 0, 1);
-  const s = E.jack * sstep(u.jkV); for (const j of g.userData.jacks) j.position.y = -s;
+  // SAMP/T: сначала балки опор (armT с из jk), потом лапы и пятка; выключили - в обратном порядке
+  const tA = u.jkV * E.jk, kA = E.arms ? sstep(clamp(tA / E.armT, 0, 1)) : 1, kJ = E.arms ? sstep(clamp((tA - E.armT) / (E.jk - E.armT), 0, 1)) : sstep(u.jkV);
+  const s = E.jack * kJ; for (const j of g.userData.jacks) j.position.y = -s;
+  if (g.userData.arms) g.userData.arms.forEach((pv, i) => { pv.rotation.y = E.arms[i].a * kA; });
+  if (g.userData.heel) { g.userData.heel.legs.position.y = -E.heel.move * kJ; g.userData.heel.pv.rotation.x = E.heel.a * kJ; }
   const M = g.userData.mast; // Patriot: мачта поднимается за mastT с, пока РЛС включена; выключили - опускается
   if (M) { u.mV = clamp((u.mV ?? (u.emit ? 1 : 0)) + (u.emit && !u.dead ? dt : -dt) / E.mastT, 0, 1); const k = sstep(u.mV); M.forEach((m, i) => { if (m) m.position.y = E.mast[i] * k; }); }
 }
@@ -541,7 +551,7 @@ function cylView(u, g) {
   const LN = LNCH[u.key];
   for (const C of g.userData.cyl) {
     const q = cylPose(LN, u.lel, C.c); C.pv.rotation.x = q.rot;
-    C.parts[1].position.fromArray(q.dir).multiplyScalar(q.ext / 2); C.parts[2].position.fromArray(q.dir).multiplyScalar(q.ext);
+    const F = C.c.rodFrac || [0.5, 1]; for (let i = 1; i < C.parts.length; i++) C.parts[i].position.fromArray(q.dir).multiplyScalar(q.ext * F[i - 1]); // штоки: С-300 - половина и всё удлинение, SAMP/T - rodFrac
   }
 }
 // «Тор-М2»: антенна обнаружения поднимается за fold.up с, пока РЛС включена (крутится - уже поднятая); выключили - стакан доворачивает на 0°

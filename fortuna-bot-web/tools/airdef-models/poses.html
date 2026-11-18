@@ -50,10 +50,13 @@ async function unitObj(key) {
   if (gm && gm.radar) (tur.length ? tur[0] : g).add(gm.radar.clone()); // без башни (Sentinel) — антенна на машине
   const F = md.LN && md.LN.fold; if (gm && F && gm.rfold && tur.length) { const H = F.hinge, fp = new THREE.Group(); gm.rfold.position.set(-H[0], -H[1], -H[2]); fp.add(gm.rfold); fp.position.fromArray(H); fp.rotation.x = F.angle; tur[0].add(fp); } // «Тор-М2», «Тор-М1»: антенна обнаружения поднята
   if (gm && md.LN && (md.LN.erect || md.LN.lift)) { // С-300: как в бою — домкраты на земле, цилиндр выдвинут к поднятому пакету; «Бук-М1» — цилиндр к пакету под углом кадра
-    const E = md.LN.erect || md.LN.lift; for (const j of gm.jacks) if (j) { j.position.y = -E.jack; g.add(j); }
+    const E = md.LN.erect || md.LN.lift;
+    if (E.arms && gm.arms) E.arms.forEach((a, i) => { const pv = new THREE.Group(), o = a.o; pv.position.fromArray(o); pv.rotation.y = a.a; g.add(pv); for (const m of [gm.arms[i], gm.jacks[i]]) if (m) { m.position.set(-o[0], -o[1] - (m === gm.jacks[i] ? E.jack : 0), -o[2]); pv.add(m); } }); // SAMP/T: балки развёрнуты, лапы на земле
+    else for (const j of gm.jacks) if (j) { j.position.y = -E.jack; g.add(j); }
+    if (E.heel && gm.heel) { const H = E.heel, legs = new THREE.Group(), pv = new THREE.Group(); legs.position.y = -H.move; legs.add(gm.heel); g.add(legs); pv.position.fromArray(H.plate); pv.rotation.x = H.a; legs.add(pv); if (gm.heelp) { gm.heelp.position.set(-H.plate[0], -H.plate[1], -H.plate[2]); pv.add(gm.heelp); } } // SAMP/T: пятка опущена
     [E, E.cyl2].filter(Boolean).forEach((cy, k) => { // Patriot — ещё подкос (cyl3…5)
       const A = cy.cylA, q = cylPose(md.LN, md.LN.el ?? 0.35, cy), pv = new THREE.Group(); pv.position.fromArray(A); pv.rotation.x = q.rot; g.add(pv);
-      gm.cyl.slice(k * 3, k * 3 + 3).forEach((c, i) => { if (!c) return; c.position.set(-A[0], -A[1], -A[2]); const w = new THREE.Group(); w.add(c); w.position.fromArray(q.dir).multiplyScalar(q.ext * i / 2); pv.add(w); });
+      const FR = [0, ...(cy.rodFrac || [0.5, 1])], n = FR.length; gm.cyl.slice(k * n, k * n + n).forEach((c, i) => { if (!c) return; c.position.set(-A[0], -A[1], -A[2]); const w = new THREE.Group(); w.add(c); w.position.fromArray(q.dir).multiplyScalar(q.ext * FR[i]); pv.add(w); }); // SAMP/T - 4 ступени (rodFrac)
     });
     if (E.mast && gm.mast) gm.mast.forEach((m, i) => { if (m) { m.position.y = E.mast[i]; g.add(m); } }); // Patriot: мачта поднята
   }
