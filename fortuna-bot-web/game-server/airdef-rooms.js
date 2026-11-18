@@ -73,7 +73,7 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, s
     t: 'room', code: r.code, mode: r.mode, size: r.size, era: r.era, sideAir: r.sideAir, host: r.host, quick: !!r.quick, state: r.state, wave: r.wave, map: r.kind === 'multi' ? 'winter' : r.map,
     left: r.phaseT ? Math.max(0, Math.round(r.phaseT - (r.kind === 'multi' && r.state === 'play' ? r.wt : r.t))) : null, valueK: r.valueK || 0, fill: !!r.fill, lead: r.lead || null, // left: раунд «Мульти-волны» кончается по времени боя (в затишье ×3)
     ...(r.kind === 'multi' && MU ? MU.viewExtra(r, me) : {}),
-    players: [...r.players.values()].map((p) => ({ id: p.id, name: p.name, ava: (p.worn && p.worn.ava) || undefined, /* надетая аватарка (билет mp-ticket), Mark 2026-11-04 */ team: p.team, bot: !!p.bot, ready: !!p.ready, away: !p.bot && !p.ws, spent: !me || p.team === me.team ? p.spent || 0 : null,
+    players: [...r.players.values()].map((p) => ({ id: p.id, name: p.name, ava: (p.worn && p.worn.ava) || undefined, prem: p.prem ? 1 : undefined /* премиум (билет: pr) - знак у ника */, /* надетая аватарка (билет mp-ticket), Mark 2026-11-04 */ team: p.team, bot: !!p.bot, ready: !!p.ready, away: !p.bot && !p.ws, spent: !me || p.team === me.team ? p.spent || 0 : null,
       budget: !me || p.team === me.team ? p.budget : null, choice: (!me || p.team === me.team) && p.choice !== null && p.choice !== undefined ? p.choice : null,
       kills: p.kills || 0, deaths: p.deaths || 0, score: Math.round(p.score || 0), lives: p.lives ?? null })),
   });
@@ -136,7 +136,7 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, s
     const ws = c.ws, ows = old.ws, msgN = c.msgN, msgT = c.msgT;
     clients.delete(old); old.ws = null; old.room = null;
     if (ows && ows !== ws) try { ows.close(); } catch (_) { /* уже */ }
-    Object.assign(c, old, { ws, msgN, msgT, lastMsg: clock(), back: false, goneT: 0, worn: c.worn || old.worn, maps: c.maps }); c.room = r; r.players.set(c.id, c); clients.add(c); // прежний id - комплексы и счёт остаются за игроком
+    Object.assign(c, old, { ws, msgN, msgT, lastMsg: clock(), back: false, goneT: 0, worn: c.worn || old.worn, prem: c.prem ?? old.prem, maps: c.maps }); c.room = r; r.players.set(c.id, c); clients.add(c); // прежний id - комплексы и счёт остаются за игроком
     send(c, { t: 'welcome', id: c.id, name: c.name, resumed: 1 });
     if (r.state !== 'lobby' && r.state !== 'end') { if (r.kind === 'multi') MU.resume(r, c); else { sendStart(r, c); sendState(r, c); } }
     send(c, view(r, c)); sendRoom(r);
@@ -606,7 +606,7 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, s
     if (m.t === 'hello') {
       const who = await auth(m); if (!who) return send(c, { t: 'err', msg: 'Не удалось войти: обновите страницу' });
       if (who.needGame) return send(c, { t: 'err', msg: 'Создайте аккаунт игры - новым игрокам прогресс копится только на нём', need_game: true }); // аккаунт сайта без прогресса игры (билет с ng)
-      Object.assign(c, { name: who.name, pid: who.pid, adP: adProgress(who.ad), worn: who.worn || {}, maps: m.maps === 1 }); clients.add(c); // adP - купленное в прокачке (замки «Реализма»)
+      Object.assign(c, { name: who.name, pid: who.pid, adP: adProgress(who.ad), worn: who.worn || {}, prem: who.prem === true, maps: m.maps === 1 }); clients.add(c); // adP - купленное в прокачке (замки «Реализма»)
       // возвращение в идущий бой тем же аккаунтом
       for (const r of rooms.values()) { const old = [...r.players.values()].find((p) => !p.bot && p.pid && p.pid === c.pid && p !== c); if (old) { takeSeat(r, old, c); return; } } // и когда старое соединение ещё не закрылось
       return send(c, { t: 'welcome', id: c.id, name: c.name, search: searching() });

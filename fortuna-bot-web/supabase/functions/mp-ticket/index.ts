@@ -55,9 +55,11 @@ Deno.serve(async (req) => {
     // имя в онлайне: у аккаунта «Воздушного превосходства» (sql/022, kind = airdef) - ник, у аккаунта сайта - логин
     const name = player.kind === "airdef" ? (player.full_name || String(player.login).replace(/^ad:/, "")) : player.login;
     // надетые окраски (магазин «Воздушного превосходства», sql/028): игровой сервер показывает их другим игрокам; нет колонки или кошелька - без них
-    const wl = await db.from("airdef_wallet").select("worn").eq("player_id", player.id).maybeSingle();
+    const wl = await db.from("airdef_wallet").select("worn, premium_until").eq("player_id", player.id).maybeSingle();
     const w = !wl.error && wl.data?.worn && typeof wl.data.worn === "object" ? wl.data.worn as Record<string, string> : {};
-    const body = b64u(enc.encode(JSON.stringify({ pid: player.id, login: name, u, a, ...(Object.keys(w).length ? { w } : {}), ...(ng ? { ng: 1 } : {}), exp: Math.floor(Date.now() / 1000) + TTL })));
+    // премиум (sql/037): другим игрокам - знак «Крылья» у ника в лобби, табло и ленте сбитий (только пока активен на момент билета)
+    const pr = !wl.error && wl.data?.premium_until && Date.parse(wl.data.premium_until) > Date.now();
+    const body = b64u(enc.encode(JSON.stringify({ pid: player.id, login: name, u, a, ...(Object.keys(w).length ? { w } : {}), ...(pr ? { pr: 1 } : {}), ...(ng ? { ng: 1 } : {}), exp: Math.floor(Date.now() / 1000) + TTL })));
     const key = await crypto.subtle.importKey("raw", enc.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
     const sig = b64u(new Uint8Array(await crypto.subtle.sign("HMAC", key, enc.encode(body))));
     return jsonResponse({ ticket: `${body}.${sig}` });
