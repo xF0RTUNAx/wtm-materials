@@ -10,9 +10,11 @@ import { serveDir } from 'jsr:@std/http@1.0.9/file-server';
 
 const ROOT = new URL('../../../', import.meta.url).pathname; // папка wtm-materials
 //   … --set3 [--par=N] [номер или имя …] — третий набор (SET3 ниже) → review3/ (как --review, максимальная графика, 2560×1440)
-const REVIEW_MODE = Deno.args.includes('--review') || Deno.args.includes('--set3');
+//   … --site [--par=N] [номер или имя …] — кадры для сайта airsuperiorityonline.com (SITE ниже, только свои модели) → review_site/ (как --set3)
+const SITE_MODE = Deno.args.includes('--site');
+const REVIEW_MODE = Deno.args.includes('--review') || Deno.args.includes('--set3') || SITE_MODE;
 const PAR = Math.max(1, +((Deno.args.find((a) => a.startsWith('--par=')) || '--par=1').slice(6)) || 1);
-const OUT = Deno.env.get('SHOT_OUT') || new URL(REVIEW_MODE ? (Deno.args.includes('--set3') ? './review3/' : './review/') : '../../games/airdef/shots/', import.meta.url).pathname;
+const OUT = Deno.env.get('SHOT_OUT') || new URL(REVIEW_MODE ? (SITE_MODE ? './review_site/' : Deno.args.includes('--set3') ? './review3/' : './review/') : '../../games/airdef/shots/', import.meta.url).pathname;
 const PORT = 8943, W = 1600, H = 900; // графика — «cinema» (предел «Ультра»: дома и деревья моделями на километры, MSAA, без динамического разрешения)
 // setup — настройки «Съёмки» (как в меню), w — погода, shot — объект (s), ракурс (a), az/el/k, поле зрения f, ждать t с (max — предел)
 const SHOTS = [
@@ -194,12 +196,68 @@ const SET3 = [
   { f: 'mig31-dragon-clear', m: 'winter', w: 'w_clear', t: ['air'], cap: 'МиГ-31БМ «Нефритовый дракон» сверху (камера в осях самолёта)', q: '&camo=e_mig31:dragon', setup: A(4, 'west', 2, 'mid'), shot: { s: 'ship', a: 'lock', az: 0, el: 0.95, k: 0.6, t: 30 }, seed: 3 }, // «Центр» в осях самолёта: верх (дракон) виден при любом крене // сверху — весь дракон (Mark: «снять нефритового дракона сверху»)
   { f: 'mig31-dragon-frost', m: 'winter', w: 'w_frost', t: ['air'], cap: 'МиГ-31БМ «Нефритовый дракон» сбоку, мороз', q: '&camo=e_mig31:dragon', setup: A(4, 'west', 2), shot: { s: 'ship', a: 'side', az: 0.35, el: 0.08, k: 0.55, t: 30 } },
 ];
-const SET3_MODE = Deno.args.includes('--set3'), HQ = SET3_MODE;
+
+// ── кадры для сайта (--site, Mark 2026-11-18: «кадры нужно будет отснять новые и со своими моделями») - только своя техника (prepare.js own) ──
+// P(эпоха, самолёт, высота) - подвеска этого самолёта (первая в эпохе), сторона обороны - противоположная
+const { LOADOUTS: LO_ } = await import('../../games/airdef/arsenal.js');
+const P = (era, plane, palt = 'low') => { for (const e of [era, 4, 3, 2, 1]) { const i = (LO_[e] || []).findIndex((L) => L.plane === plane); if (i >= 0) { const L = LO_[e][i]; return { pside: 'air', era: e, side: L.side === 'east' ? 'west' : 'east', lo: i, palt }; } } throw new Error('нет подвески ' + plane); };
+const SITE = [
+  { f: 'su34-side-sunset', m: 'city', w: 'sunset', cap: 'Су-34 сбоку, закат', setup: P(3, 'e_su34'), shot: { s: 'ship', a: 'side', az: 0.3, el: -0.1, k: 0.55, t: 40 } },
+  { f: 'su30-front-morning', m: 'city', w: 'morning', cap: 'Су-30СМ спереди, утро', setup: P(3, 'su30'), shot: { s: 'ship', a: 'front', az: 0.5, el: -0.1, k: 0.5, t: 40 } },
+  { f: 'su33-side-day', m: 'city', w: 'day', cap: 'Су-33 с ФАБ-500, день', setup: P(3, 'e_su33'), shot: { s: 'ship', a: 'side', az: 0.35, el: -0.1, k: 0.55, t: 40 } },
+  { f: 'f35-below-evening', m: 'city', w: 'evening', cap: 'F-35A снизу, вечер', setup: P(4, 'e_f35', 'mid'), shot: { s: 'ship', a: 'below', az: 0.3, el: -0.2, k: 0.8, t: 40 } },
+  { f: 'rafale-chase-morning', m: 'city', w: 'morning', cap: 'Rafale сзади низко над городом', setup: P(4, 'e_rafale'), shot: { s: 'ship', a: 'chase', az: 0.3, el: -0.1, k: 0.6, t: 45 } },
+  { f: 'f15e-front-sunset', m: 'city', w: 'sunset', cap: 'F-15E спереди, закат', setup: P(3, 'e_f15e'), shot: { s: 'ship', a: 'front', az: 0.55, el: -0.1, k: 0.5, t: 40 } },
+  { f: 'typhoon-side-evening', m: 'city', w: 'evening', cap: 'Typhoon сбоку, вечер', setup: P(4, 'e_typhoon'), shot: { s: 'ship', a: 'side', az: 0.3, el: -0.1, k: 0.55, t: 40 } },
+  { f: 'b2-below-overcast', m: 'city', w: 'overcast', cap: 'B-2A над городом, пасмурно', setup: P(4, 'e_b2', 'mid'), shot: { s: 'ship', a: 'below', az: 0.3, el: -0.25, k: 0.8, t: 50 } },
+  { f: 'b1b-front-sunset', m: 'city', w: 'sunset', cap: 'B-1B спереди, закат', setup: P(3, 'e_b1b'), shot: { s: 'ship', a: 'front', az: 0.5, el: -0.1, k: 0.6, t: 45 } },
+  { f: 'tu22m3-side-evening', m: 'city', w: 'evening', cap: 'Ту-22М3 сбоку, вечер', setup: P(3, 'e_tu22m3'), shot: { s: 'ship', a: 'side', az: 0.35, el: -0.1, k: 0.6, t: 45 } },
+  { f: 'sampt-launch-day', m: 'city', w: 'day', cap: 'Пуск SAMP/T', setup: D(4, 'west', 'sampt'), shot: LAUNCH(1.6) },
+  { f: 's400-launch-evening', m: 'city', w: 'evening', cap: 'Пуск С-400, вечер', setup: D(4, 'east', 's400'), shot: LAUNCH(1.6) },
+  { f: 'patriot-launch-morning', m: 'city', w: 'morning', cap: 'Пуск Patriot, утро', setup: D(3, 'west', 'patriot'), shot: LAUNCH(1.6) },
+  { f: 'torm2-launch-evening', m: 'city', w: 'evening', cap: 'Пуск Тор-М2, вечер', setup: D(4, 'east', 'torm2', 'multi'), shot: LAUNCH(1.6, 0.2) },
+  { f: 'nasams-launch-morning', m: 'city', w: 'morning', cap: 'Пуск NASAMS, утро', setup: D(4, 'west', 'nasams'), shot: LAUNCH() },
+  { f: 'sampt-unit-sunset', m: 'city', w: 'sunset', cap: 'SAMP/T на позиции, закат', setup: D(4, 'west', 'sampt'), shot: { s: 'unit', a: 'front', az: 0.4, el: 0.06, k: 1.3, t: 20 } },
+  { f: 'iskander-evening', m: 'city', w: 'evening', cap: 'Пусковая «Искандер-М», вечер', setup: M(4, 'west', 'iskander'), shot: { s: 'src', a: 'side', az: 0.6, el: 0.1, k: 0.75, t: 14 } },
+  { f: 'tomahawk-day', m: 'city', w: 'day', cap: 'Tomahawk над городом', setup: M(3, 'east', 'tomahawk'), shot: { s: 'mun', a: 'side', az: 0.3, el: 0.05, k: 1.3, t: 8, max: 160 } },
+  { f: 'su34-umpk-clear', m: 'winter', w: 'w_clear', cap: 'Су-34: ФАБ-500 с УМПК над горами', setup: P(4, 'e_su34', 'mid'), shot: { s: 'ship', a: 'side', az: 0.3, el: -0.1, k: 0.55, t: 40 } },
+  { f: 'f35-below-clear', m: 'winter', w: 'w_clear', cap: 'F-35A снизу, ясно', setup: P(4, 'e_f35', 'mid'), shot: { s: 'ship', a: 'below', az: 0.3, el: -0.2, k: 0.8, t: 40 } },
+  { f: 'gripen-snow', m: 'winter', w: 'w_snow', cap: 'Gripen, снегопад', setup: P(3, 'e_gripen'), shot: { s: 'ship', a: 'side', az: 0.3, el: -0.1, k: 0.55, t: 40 } },
+  { f: 's300-snow', m: 'winter', w: 'w_snow', cap: 'Пуск С-300, снегопад', setup: D(3, 'east', 's300'), shot: LAUNCH() },
+  { f: 'hawk21-clear', m: 'winter', w: 'w_clear', cap: 'Пуск Hawk XXI', setup: D(4, 'west', 'hawk21', 'multi'), shot: LAUNCH() },
+  { f: 'buk-frost', m: 'winter', w: 'w_frost', cap: 'Пуск Бук-М1, мороз', setup: D(3, 'east', 'buk'), shot: LAUNCH() },
+  { f: 'a10-eve', m: 'autumn', w: 'a_eve', cap: 'A-10A над топью, вечер', setup: P(2, 'e_a10'), shot: { s: 'ship', a: 'side', az: 0.4, el: -0.1, k: 0.5, t: 40 } },
+  { f: 'gepard-fog', m: 'autumn', w: 'a_fog', cap: 'Gepard в тумане', setup: D(2, 'west', 'gepard'), shot: { s: 'unit', a: 'front', az: 0.4, el: 0.06, k: 1.2, t: 3 } },
+  { f: 'su25-fog', m: 'autumn', w: 'a_fog', cap: 'Су-25 над топью, туман', setup: P(2, 'e_su25'), shot: { s: 'ship', a: 'side', az: 0.4, el: -0.1, k: 0.5, t: 40 } },
+  { f: 'tor-dusk', m: 'autumn', w: 'a_dusk', cap: 'Пуск Тор-М1, сумерки', setup: D(3, 'east', 'tor'), shot: LAUNCH(1.6, 0.2) },
+  { f: 'sampt-close-morning', m: 'city', w: 'morning', cap: 'SAMP/T развёрнут, утро, крупно', setup: D(4, 'west', 'sampt'), shot: { s: 'unit', a: 'side', az: 0.55, el: 0.04, k: 0.75, t: 25 } },
+  { f: 's400-close-evening', m: 'city', w: 'evening', cap: 'С-400 на позиции, вечер, крупно', setup: D(4, 'east', 's400'), shot: { s: 'unit', a: 'front', az: 0.45, el: 0.04, k: 0.75, t: 25 } },
+  { f: 'patriot-close-day', m: 'city', w: 'day', cap: 'Patriot, пакет поднят, крупно', setup: D(3, 'west', 'patriot'), shot: { s: 'unit', a: 'side', az: 0.5, el: 0.05, k: 0.75, t: 25 } },
+  { f: 'pac3-close-sunset', m: 'city', w: 'sunset', cap: 'PAC-3 на закате, крупно', setup: D(4, 'west', 'pac3'), shot: { s: 'unit', a: 'front', az: 0.6, el: 0.04, k: 0.8, t: 25 } },
+  { f: 'torm2-close-morning', m: 'city', w: 'morning', cap: 'Тор-М2, утро, крупно', setup: D(4, 'east', 'torm2', 'multi'), shot: { s: 'unit', a: 'front', az: 0.5, el: 0.05, k: 0.8, t: 15 } },
+  { f: 's300-close-clear', m: 'winter', w: 'w_clear', cap: 'С-300 на позиции в горах', setup: D(3, 'east', 's300'), shot: { s: 'unit', a: 'side', az: 0.5, el: 0.05, k: 0.75, t: 25 } },
+  { f: 'nasams-close-clear', m: 'winter', w: 'w_clear', cap: 'NASAMS в снегу, крупно', setup: D(4, 'west', 'nasams'), shot: { s: 'unit', a: 'front', az: 0.5, el: 0.05, k: 0.8, t: 15 } },
+  { f: 'buk-close-clear', m: 'winter', w: 'w_clear', cap: 'Бук-М1 в горах, крупно', setup: D(3, 'east', 'buk'), shot: { s: 'unit', a: 'front', az: 0.5, el: 0.05, k: 0.8, t: 15 } },
+  { f: 'hawk21-close-clear', m: 'winter', w: 'w_clear', cap: 'Hawk XXI, крупно', setup: D(4, 'west', 'hawk21', 'multi'), shot: { s: 'unit', a: 'side', az: 0.5, el: 0.05, k: 0.8, t: 15 } },
+  { f: 'gepard-close-eve', m: 'autumn', w: 'a_eve', cap: 'Gepard, вечер, крупно', setup: D(2, 'west', 'gepard'), shot: { s: 'unit', a: 'front', az: 0.5, el: 0.05, k: 0.8, t: 6 } },
+  { f: 'sampt-launch-close', m: 'city', w: 'evening', cap: 'Пуск SAMP/T вблизи', setup: D(4, 'west', 'sampt'), shot: LAUNCH(0.9, 0.4) },
+  { f: 's400-launch-close', m: 'winter', w: 'w_clear', cap: 'Пуск С-400 вблизи, горы', setup: D(4, 'east', 's400'), shot: LAUNCH(0.9, 0.4) },
+  { f: 'sampt-cam-morning', m: 'city', w: 'morning', cap: 'SAMP/T развёрнут, утро (камера рядом)', seed: 7, setup: D(4, 'west', 'sampt', 'air'), shot: { s: 'unit', t: 25, max: 200, cam: [3813.13, 1.7, 4267.64, 3816.34, 3.0, 4283.31], cg: true, f: 40 } },
+  { f: 'sampt-cam-sunset-rear', m: 'city', w: 'sunset', cap: 'SAMP/T сзади, закат (камера рядом)', seed: 7, setup: D(4, 'west', 'sampt', 'air'), shot: { s: 'unit', t: 25, max: 200, cam: [3802.71, 1.7, 4286.52, 3816.34, 3.0, 4283.31], cg: true, f: 40 } },
+  { f: 's400-cam-evening', m: 'city', w: 'evening', cap: 'С-400, вечер (камера рядом)', seed: 7, setup: D(4, 'east', 's400', 'air'), shot: { s: 'unit', t: 25, max: 200, cam: [-3808.53, 1.7, -817.98, -3795.81, 3.0, -808.28], cg: true, f: 40 } },
+  { f: 'patriot-cam-day', m: 'city', w: 'day', cap: 'Patriot, пакет поднят (камера рядом)', seed: 7, setup: D(3, 'west', 'patriot', 'air'), shot: { s: 'unit', t: 25, max: 200, cam: [-3807.27, 1.7, -817.96, -3795.81, 3.0, -808.28], cg: true, f: 40 } },
+  { f: 'pac3-cam-sunset', m: 'city', w: 'sunset', cap: 'PAC-3, закат (камера рядом)', seed: 7, setup: D(4, 'west', 'pac3', 'air'), shot: { s: 'unit', t: 25, max: 200, cam: [-3810.29, 1.7, -817.19, -3795.81, 3.0, -808.28], cg: true, f: 40 } },
+  { f: 'torm2-cam-morning', m: 'city', w: 'morning', cap: 'Тор-М2, утро (камера рядом)', seed: 7, setup: D(4, 'east', 'torm2', 'multi'), shot: { s: 'unit', t: 25, max: 200, cam: [2208.14, 1.7, 1941.35, 2196.42, 3.0, 1938.79], cg: true, f: 40 } },
+  { f: 's300-cam-clear', m: 'winter', w: 'w_clear', cap: 'С-300 в горах (камера рядом)', seed: 7, setup: D(3, 'east', 's300', 'air'), shot: { s: 'unit', t: 25, max: 200, cam: [-1389.71, 1.7, -846.86, -1376.21, 3.0, -838.28], cg: true, f: 40 } },
+  { f: 'buk-cam-clear', m: 'winter', w: 'w_clear', cap: 'Бук-М1 в горах (камера рядом)', seed: 7, setup: D(3, 'east', 'buk', 'air'), shot: { s: 'unit', t: 25, max: 200, cam: [2375.14, 1.7, -1434.09, 2384.59, 3.0, -1426.7], cg: true, f: 40 } },
+  { f: 'nasams-cam-clear', m: 'winter', w: 'w_clear', cap: 'NASAMS в снегу (камера рядом)', seed: 7, setup: D(4, 'west', 'nasams', 'air'), shot: { s: 'unit', t: 25, max: 200, cam: [5498.4, 1.7, 3528.13, 5495.61, 3.0, 3516.46], cg: true, f: 40 } },
+];
+const SET3_MODE = Deno.args.includes('--set3') || SITE_MODE, HQ = SET3_MODE;
 
 const args = Deno.args.filter((a) => !a.startsWith('--'));
 const want = new Set(args);
 const num = (r, i) => ({ ...r, n: i + 1, f: `${String(i + 1).padStart(2, '0')}-${r.f}` });
-const LIST = SET3_MODE ? SET3.map(num) : REVIEW_MODE ? [...REVIEW.map(num), ...REVIEW2.map((r) => ({ ...r, f: `${String(r.n).padStart(2, '0')}-${r.f}` }))] : SHOTS;
+const LIST = SITE_MODE ? SITE.map(num) : SET3_MODE ? SET3.map(num) : REVIEW_MODE ? [...REVIEW.map(num), ...REVIEW2.map((r) => ({ ...r, f: `${String(r.n).padStart(2, '0')}-${r.f}` }))] : SHOTS;
 const pick = (s) => !want.size || want.has(s.f) || (REVIEW_MODE && (want.has(String(s.n)) || want.has(s.f.slice(3))));
 const server = Deno.serve({ port: PORT, hostname: '127.0.0.1', onListen() {} }, (req) => serveDir(req, { fsRoot: ROOT, quiet: true }));
 // каждой странице — свой Chrome: фоновая вкладка засыпает (игра ставит паузу, кадры по 1 в секунду) — так нельзя снимать по несколько сразу
