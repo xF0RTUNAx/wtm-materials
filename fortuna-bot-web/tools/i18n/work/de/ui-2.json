@@ -737,5 +737,8 @@
  "Обращение не найдено": "Anfrage nicht gefunden",
  "Обращение закрыто - создайте новое": "Anfrage geschlossen - erstell eine neue",
  "Файл не подошёл: только картинки и видео": "Dateityp nicht unterstützt: nur Bilder und Videos",
- "Время на загрузку вышло - отправьте ещё раз": "Zeitlimit beim Hochladen überschritten - sende noch einmal"
+ "Время на загрузку вышло - отправьте ещё раз": "Zeitlimit beim Hochladen überschritten - sende noch einmal",
+ "Сервер онлайна сейчас недоступен - проверяем…": "Der Online-Server ist gerade nicht erreichbar - wir prüfen…",
+ "Сервер онлайна сейчас недоступен. Проверим снова сами через {0} с.": "Der Online-Server ist gerade nicht erreichbar. Wir prüfen in {0} s automatisch erneut.",
+ "Проверить сейчас": "Jetzt prüfen"
 }

@@ -737,5 +737,8 @@
  "Обращение не найдено": "Solicitud no encontrada",
  "Обращение закрыто - создайте новое": "Solicitud cerrada: crea una nueva",
  "Файл не подошёл: только картинки и видео": "Archivo no válido: solo imágenes y videos",
- "Время на загрузку вышло - отправьте ещё раз": "Se acabó el tiempo de subida: envía de nuevo"
+ "Время на загрузку вышло - отправьте ещё раз": "Se acabó el tiempo de subida: envía de nuevo",
+ "Сервер онлайна сейчас недоступен - проверяем…": "El servidor en línea no está disponible ahora mismo: comprobando…",
+ "Сервер онлайна сейчас недоступен. Проверим снова сами через {0} с.": "El servidor en línea no está disponible ahora mismo. Volveremos a comprobarlo automáticamente en {0} s.",
+ "Проверить сейчас": "Comprobar ahora"
 }

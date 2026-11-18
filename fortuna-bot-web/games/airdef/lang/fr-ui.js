@@ -1294,4 +1294,7 @@ export default {
   "Обращение закрыто - создайте новое": "Demande fermée - créez-en une nouvelle",
   "Файл не подошёл: только картинки и видео": "Fichier refusé : images et vidéos uniquement",
   "Время на загрузку вышло - отправьте ещё раз": "Délai d'envoi dépassé - réessayez",
+  "Сервер онлайна сейчас недоступен - проверяем…": "Le serveur en ligne est indisponible pour le moment - vérification…",
+  "Сервер онлайна сейчас недоступен. Проверим снова сами через {0} с.": "Le serveur en ligne est indisponible pour le moment. Nouvelle vérification automatique dans {0} s.",
+  "Проверить сейчас": "Vérifier maintenant",
 };

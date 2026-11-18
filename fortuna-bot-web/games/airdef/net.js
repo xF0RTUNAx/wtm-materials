@@ -51,19 +51,35 @@ export function createNet(C) {
   N.send = (m) => { try { if (ws && ws.readyState === 1) ws.send(JSON.stringify(m)); } catch (_) { /* закрылась */ } };
 
   // ═════════════ Связь ═════════════
-  N.connect = async () => {
+  // Сервер недоступен (ноутбук выключен, Mark 2026-11-18: «все время пишется игроку о попытке подключиться»): после неудачи - пауза
+  // DOWN_S (5 с, 15 с, 30 с, 1 мин, дальше раз в 2 мин), проверка - тихо и только пока игрок в разделе «Онлайн» (N.wanted, online.js);
+  // панель всё это время пишет «сервер недоступен», а не мигает «подключаемся». force - игрок сам нажал «Проверить сейчас» / «Онлайн».
+  const DOWN_S = [5, 15, 30, 60, 120], OPEN_MS = 8000; let downTimer = 0;
+  N.down = null; // { n, until } - сервер не ответил n+1 раз подряд; раньше until сами не пробуем
+  N.downLeft = () => (N.down ? Math.max(0, Math.ceil((N.down.until - Date.now()) / 1000)) : 0);
+  function failed() {
+    const n = N.down ? N.down.n + 1 : 0, d = DOWN_S[Math.min(n, DOWN_S.length - 1)] * 1000;
+    N.down = { n, until: Date.now() + d }; N.probing = false; N.conn = 'error'; emit('conn');
+    clearTimeout(downTimer); downTimer = setTimeout(() => { if (N.conn === 'error' && N.wanted && N.wanted()) N.connect(); }, d);
+  }
+  N.connect = async (force) => {
     if (ws && ws.readyState <= 1) return;
     const acc = account();
     if (!acc) { N.conn = 'noacc'; emit('conn'); return; }
-    N.conn = 'connecting'; emit('conn');
-    try { ws = new WebSocket(adServerUrl()); } catch (_) { N.conn = 'error'; emit('conn'); return; }
-    const me = ws; lastPong = performance.now();
+    if (!force && !N.re && N.down && Date.now() < N.down.until) { if (N.conn !== 'error') { N.conn = 'error'; emit('conn'); } return; } // пауза после неудачи - не долбим
+    clearTimeout(downTimer);
+    if (N.down && !N.re) { N.probing = true; N.conn = 'error'; emit('conn'); } else { N.conn = 'connecting'; emit('conn'); } // повторная проверка - тихо, без «подключаемся»
+    try { ws = new WebSocket(adServerUrl()); } catch (_) { ws = null; if (N.re) { N.conn = 'error'; emit('conn'); } else failed(); return; }
+    const me = ws; lastPong = performance.now(); let opened = false;
+    const openT = setTimeout(() => { if (ws === me && !opened) { try { me.close(); } catch (_) { /* уже */ } } }, OPEN_MS); // туннель висит без ответа - не ждём вечно
+    me.addEventListener('open', () => { opened = true; clearTimeout(openT); });
+    me.addEventListener('close', () => { clearTimeout(openT); if (ws === me && !opened && !N.re && !N.room && !N.battle) { ws = null; failed(); } }, { once: true });
     ws.onopen = async () => {
       const ticket = await fetchTicket(acc); if (ws !== me) return; // пока шёл запрос, аккаунт сменили и соединение закрыли
       if (ticket === 'need_game') { needGame(acc); return; }
       N.send({ t: 'hello', ticket, name: acc.nick || acc.login, pid: String(acc.id), maps: 1 }); // maps - понимает карту комнаты (r.map): старой вкладке сервер даёт только город
     };
-    ws.onerror = () => { if (!N.re) { N.conn = 'error'; emit('conn'); } };
+    ws.onerror = () => { if (!N.re && opened) { N.conn = 'error'; emit('conn'); } }; // до открытия - решает close (failed: пауза и тихий повтор)
     ws.onclose = () => { if (ws === me) dropped(); };
     ws.onmessage = (e) => { if (ws !== me) return; lastPong = performance.now(); let m; try { m = JSON.parse(e.data); } catch (_) { return; } handle(m); };
   };
@@ -143,7 +159,7 @@ export function createNet(C) {
   function handle(m) {
     switch (m.t) {
       case 'welcome': {
-        N.me = { id: m.id, name: m.name }; N.conn = 'on'; N.search = m.search || null; N.resumed = !!m.resumed;
+        N.me = { id: m.id, name: m.name }; N.down = null; N.probing = false; clearTimeout(downTimer); N.conn = 'on'; N.search = m.search || null; N.resumed = !!m.resumed;
         if (m.resumed) N.retakeT = performance.now(); // вернулись на место (и после перезагрузки страницы, где N.re нет): самолёт, который вёл ИИ, - просим назад (ревью 2026-10-27)
         const re = N.re; N.re = null; clearTimeout(reTimer);
         if (re) {

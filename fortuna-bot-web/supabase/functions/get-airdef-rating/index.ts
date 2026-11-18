@@ -8,6 +8,13 @@ import { supabaseAdmin } from "../_shared/supabase-admin.ts";
 import { sessionPlayer } from "../_shared/airdef-session.ts";
 
 const TOP = 100, BATTLES = 60;
+// запрос к базе с одним повтором: первые запросы после простоя функции (холодный старт) изредка падают - игрок видел 500 (2026-11-18)
+// deno-lint-ignore no-explicit-any
+async function again<T extends { error: any }>(f: () => PromiseLike<T>): Promise<T> {
+  try { const r = await f(); if (!r.error) return r; console.error("get-airdef-rating retry", r.error?.message || r.error); } catch (e) { console.error("get-airdef-rating retry", e instanceof Error ? e.message : e); }
+  await new Promise((r) => setTimeout(r, 400));
+  return await f();
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -15,13 +22,13 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const db = supabaseAdmin();
     const now = new Date().toISOString();
-    const [cur, lv] = await Promise.all([db.rpc("airdef_season_at", { ts: now }), db.rpc("airdef_season_live", { ts: now })]);
+    const [cur, lv] = await Promise.all([again(() => db.rpc("airdef_season_at", { ts: now })), again(() => db.rpc("airdef_season_live", { ts: now }))]);
     if (cur.error) throw cur.error;
     if (lv.error) throw lv.error;
     const at = Number(cur.data) || 0, live = Number(lv.data) || 0; // at - идущий или (в межсезонье) следующий сезон; live - идущий, 0 - межсезонье
     const season = Number.isInteger(body.season) && body.season > 0 && body.season <= at ? body.season : live || Math.max(1, at - 1);
-    const [b, board, nb] = await Promise.all([db.rpc("airdef_season_bounds", { p: season }), db.rpc("airdef_rating_board", { p_season: season }),
-      !live && at > season ? db.rpc("airdef_season_bounds", { p: at }) : Promise.resolve({ data: null, error: null })]);
+    const [b, board, nb] = await Promise.all([again(() => db.rpc("airdef_season_bounds", { p: season })), again(() => db.rpc("airdef_rating_board", { p_season: season })),
+      !live && at > season ? again(() => db.rpc("airdef_season_bounds", { p: at })) : Promise.resolve({ data: null, error: null })]);
     if (b.error) throw b.error;
     if (board.error) throw board.error;
     if (nb.error) throw nb.error;
@@ -29,7 +36,7 @@ Deno.serve(async (req) => {
     const rows = (board.data || []) as { player_id: string; nick: string; points: number; n: number; place: number }[];
     const topRows = rows.slice(0, TOP);
     let me: Record<string, unknown> | null = null;
-    const id = (await sessionPlayer(db, body, false)).id || ""; // своё место: аккаунт игры - по ключу сессии, сайта - по номеру; иначе - без «своего»
+    const id = (await sessionPlayer(db, body, false).catch((e) => { console.error("get-airdef-rating who", e instanceof Error ? e.message : e); return { id: "" }; })).id || ""; // не узнали игрока - таблица всё равно нужна // своё место: аккаунт игры - по ключу сессии, сайта - по номеру; иначе - без «своего»
     if (typeof id === "string" && id.length >= 8 && id.length <= 64) {
       const { data: pl } = await db.from("players").select("kind").eq("id", id).maybeSingle();
       if (pl) {
@@ -63,7 +70,7 @@ Deno.serve(async (req) => {
     const bd = (b.data || [])[0] || {};
     return jsonResponse({ season, current: at, live: live === season, starts_at: bd.starts_at ?? null, ends_at: bd.ends_at ?? null, next: nx ? { season: at, starts_at: nx.starts_at } : null, total: rows.length, top, me });
   } catch (e) {
-    console.error("get-airdef-rating", e);
+    console.error("get-airdef-rating", e instanceof Error ? e.message : JSON.stringify(e));
     return jsonResponse({ error: "Внутренняя ошибка сервера" }, 500);
   }
 });

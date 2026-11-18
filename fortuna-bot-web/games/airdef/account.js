@@ -116,7 +116,7 @@ export function siteStatus() {
 export const siteStatusDone = () => { if (siteAcc()) stStore({ progress: true, transferred: true }); };
 // «Перенести прогресс» уместно: вошёл на сайте, у аккаунта сайта есть прогресс игры, ещё не перенесён, и в аккаунт игры его ещё не переносили
 export function transferOk() { const g = gameAcc(); return legacySite() && !(g && g.transferred); }
-export const rating = (playerId) => callFn('get-airdef-rating', playerId ? { player_id: playerId } : {}); // свой аккаунт игры - с ключом (callFn)
+export const rating = (playerId) => { const b = playerId ? { player_id: playerId } : {}; return callFn('get-airdef-rating', b).catch((e) => (e && e.status >= 500 ? new Promise((r) => setTimeout(r, 1200)).then(() => callFn('get-airdef-rating', b)) : Promise.reject(e))); }; // свой аккаунт игры - с ключом (callFn); 500 (функция только проснулась) - один тихий повтор
 // профиль игрока по нику (get-airdef-profile, sql/029; Mark 2026-10-28): season - сезон, который сейчас в окне рейтинга
 export const profile = (nick, season) => callFn('get-airdef-profile', { nick, ...(season ? { season } : {}) });
 

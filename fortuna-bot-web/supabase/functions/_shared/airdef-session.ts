@@ -45,7 +45,7 @@ export async function sessionPlayer(db: Db, body: Record<string, unknown> | null
     return { id: data.player_id, kind: "airdef" };
   }
   const id = body?.player_id;
-  if (typeof id !== "string" || id.length < 8 || id.length > 64) return strict ? { err: jsonResponse({ error: "Некорректные параметры" }, 400) } : {};
+  if (typeof id !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) return strict ? { err: jsonResponse({ error: "Некорректные параметры" }, 400) } : {}; // не uuid - не номер игрока (раньше база падала на разборе - 500)
   const { data: p, error } = await db.from("players").select("kind").eq("id", id).maybeSingle();
   if (error) throw error;
   if (p && p.kind === "airdef") return strict ? { err: jsonResponse(SESSION_ERR, 401) } : {}; // аккаунт игры по одному номеру - нельзя

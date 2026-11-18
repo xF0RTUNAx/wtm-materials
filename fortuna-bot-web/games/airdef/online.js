@@ -32,6 +32,13 @@ const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<
 export function createOnline(C, ctrls) {
   const { $, ls, snd } = C;
   const N = createNet(C); C.netc = N;
+  // проверять сервер после неудачи - только пока игрок в разделе «Онлайн» на экране (net.js failed); раз в секунду - обратный отсчёт в панели
+  N.wanted = () => C.state === 'menu' && C.setup && C.setup.game === 'online' && !document.hidden;
+  setInterval(() => {
+    if (N.conn !== 'error' || !N.down) return;
+    const el = document.querySelector('#menu .odl'); if (el) el.textContent = String(N.downLeft());
+    if (!N.probing && Date.now() >= N.down.until && N.wanted()) N.connect(); // пауза вышла, пока панели не было на экране
+  }, 1000);
   const ui = { kind: ls.get('fortuna_ad_kind') || 'air', mode: ls.get('fortuna_ad_mode') || 'arcade', role: ls.get('fortuna_ad_role') || 'any', size: +(ls.get('fortuna_ad_size') || 2), era: +(ls.get('fortuna_ad_era') || 2), sideAir: ls.get('fortuna_ad_side') || 'random', fill: ls.get('fortuna_ad_fill') !== '0', code: '' };
   const saveUi = () => { ls.set('fortuna_ad_kind', ui.kind); ls.set('fortuna_ad_mode', ui.mode); ls.set('fortuna_ad_role', ui.role); ls.set('fortuna_ad_size', String(ui.size)); ls.set('fortuna_ad_era', String(ui.era)); ls.set('fortuna_ad_side', ui.sideAir); ls.set('fortuna_ad_fill', ui.fill ? '1' : '0'); };
   const seg = (id, cur, items) => `<div class="seg" data-oseg="${id}">${items.map(([v, l]) => `<button data-v="${v}" class="${String(v) === String(cur) ? 'on' : ''}">${l}</button>`).join('')}</div>`;
@@ -42,11 +49,11 @@ export function createOnline(C, ctrls) {
   // ═════════════ Меню: вкладка «Бой» в режиме «Онлайн» ═════════════
   function panel(el) {
     if (N.conn !== 'on') {
-      if (N.conn === 'off' || N.conn === 'error' || (N.conn === 'noacc' && N.account())) N.connect(); // 'noacc' - аккаунт появился (вошли, пришёл статус сайта): подключаемся с ним
+      if (N.conn === 'off' || (N.conn === 'error' && (!N.down || Date.now() >= N.down.until) && !N.probing) || (N.conn === 'noacc' && N.account())) N.connect(); // сервер не отвечал (N.down) - перерисовка не подключается, проверку ведёт net.js по паузам // 'noacc' - аккаунт появился (вошли, пришёл статус сайта): подключаемся с ним
       const guest = N.conn === 'noacc' || N.conn === 'needgame'; // гость: онлайн только с аккаунтом игры
       el.innerHTML = `<div class="cat-h">${tr('Онлайн')}</div><p class="hint">${N.conn === 'noacc' ? tr('Онлайн - только с аккаунтом игры. Войдите или создайте его.')
         : N.conn === 'needgame' ? tr('Создайте аккаунт игры - онлайн только с ним.')
-        : N.conn === 'error' ? tr('Сервер онлайна сейчас недоступен. Попробуйте позже.') : tr('Подключаемся к серверу…')}</p>${N.conn === 'error' ? `<button class="btn alt" data-oa="retry">${tr('Повторить')}</button>` : ''}${guest ? `<button class="btn alt" data-oa="acc">${tr('Войти или создать аккаунт')}</button>` : ''}`;
+        : N.conn === 'error' ? (N.probing ? tr('Сервер онлайна сейчас недоступен - проверяем…') : N.down ? tr('Сервер онлайна сейчас недоступен. Проверим снова сами через {0} с.', [`<b class="odl">${N.downLeft()}</b>`]) : tr('Сервер онлайна сейчас недоступен. Попробуйте позже.')) : tr('Подключаемся к серверу…')}</p>${N.conn === 'error' && !N.probing ? `<button class="btn alt" data-oa="retry">${tr('Проверить сейчас')}</button>` : ''}${guest ? `<button class="btn alt" data-oa="acc">${tr('Войти или создать аккаунт')}</button>` : ''}`;
       return;
     }
     const r = N.room;
@@ -102,7 +109,7 @@ export function createOnline(C, ctrls) {
   }
   function primary() {
     if (N.conn === 'noacc' && !N.account() || N.conn === 'needgame') { openAcc(); return; }
-    if (N.conn !== 'on') { N.connect(); return; }
+    if (N.conn !== 'on') { N.connect(true); return; }
     if (N.room && N.room.state === 'lobby') { const me = N.myPlayer(); N.ready(!(me && me.ready)); return; }
     if (ui.sub === 'room' && !N.queued) { createRoom(); return; }
     if (N.queued) N.unqueue(); else N.queue(ui.mode, ui.role, ui.kind === 'multi' ? 'multi' : undefined);
@@ -123,7 +130,7 @@ export function createOnline(C, ctrls) {
     if (!a) return;
     snd.click();
     switch (a.dataset.oa) {
-      case 'retry': N.conn = 'off'; N.connect(); break;
+      case 'retry': N.connect(true); break;
       case 'acc': openAcc(); break;
       case 'create': createRoom(); break;
       case 'rset': ui.rset = !ui.rset; rerender(); break;

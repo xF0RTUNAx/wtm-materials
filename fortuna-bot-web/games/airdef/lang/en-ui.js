@@ -1318,4 +1318,8 @@ export default {
   "Обращение закрыто - создайте новое": "This request is closed - create a new one",
   "Файл не подошёл: только картинки и видео": "The file doesn't fit: images and videos only",
   "Время на загрузку вышло - отправьте ещё раз": "Upload time ran out - send it again",
+  // ── online.js: сервер онлайна недоступен (2026-11-18) ──
+  "Сервер онлайна сейчас недоступен - проверяем…": "The online server is unavailable right now - checking…",
+  "Сервер онлайна сейчас недоступен. Проверим снова сами через {0} с.": "The online server is unavailable right now. We'll check again automatically in {0} s.",
+  "Проверить сейчас": "Check now",
 };
