@@ -40,8 +40,8 @@ const CAMO_BASE = { nato: [0.095, 0.118, 0.056], soviet: [0.092, 0.125, 0.046], 
 const F35_GEAR = (c) => { const ax = Math.abs(c.ctr[0]), y = c.ctr[1], z = c.ctr[2];
   return (ax > 1.6 && ax < 2.8 && z > 4.4 && z < 6.2 && y < 3.3 && Math.max(...c.size) < 2.5) || (ax < 0.6 && z > -2.5 && z < -0.5 && y < 2.4); };
 const CONFIG = {
-  su30: { src: `${DL}/sukhoi_su-30_flanker_c.glb`, scale: 21.94 / 14.94, nose: '+x', rulesIn: 'game', tex: () => 1024, centerX: true,
-    groups: (c) => (c.mat === 16 ? null : LS(c)) }, // Су-30МКИ — andertan (CC BY 4.0; прежняя модель Immersive3D): у автора чистый планер, без шасси и подвесок (пилоны рисует игра: station py); «Plumes» — диски выхлопа в соплах — долой (пламя рисует игра)
+  su30: { src: new URL('./own/su30.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 2048, nTex: () => 2048, pickMesh: /./, own: true, centerX: true }, // Су-30СМ: своя модель (Свои/Су-30СМ, hawk21-builder, 2026-11-18; прежняя - andertan); стойки и створки ниш - только в файле стоек
+  su30_gear: { src: new URL('./own/su30_gear.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 2048, nTex: () => 2048, pickMesh: /./, own: true, centerX: true }, // стойки своего Су-30СМ для ангара (метки по 1 мм - тот же центр)
   f18: { src: new URL('./own/f18.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 2048, nTex: () => 2048, pickMesh: /./, own: true, centerX: true }, // F/A-18E: своя модель (Blender, own/f18-build)
   f18_gear: { src: new URL('./own/f18_gear.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 2048, nTex: () => 2048, pickMesh: /./, own: true, centerX: true }, // стойки F/A-18E для ангара: две метки по 1 мм дают тот же центр, что у самолёта, не удалять
   f16: { src: new URL('./own/f16.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 2048, nTex: () => 2048, pickMesh: /./, own: true, centerX: true }, // F-16D: своя модель (Blender, own/f16-build)

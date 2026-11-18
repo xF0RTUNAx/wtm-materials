@@ -1,15 +1,6 @@
 // Создано tools/airdef-models/prepare.js --credits — не править руками
 export const CREDITS = [
  {
-  "title": "Sukhoi Su-30 flanker c",
-  "author": "andertan",
-  "url": "https://sketchfab.com/3d-models/sukhoi-su-30-flanker-c-92ca062c90fd45ffb6ce8144dc46004a",
-  "license": "CC-BY-4.0",
-  "files": [
-   "su30"
-  ]
- },
- {
   "title": "Low Poly GBU-24 laser guided bomb (окраска и запекание)",
   "author": "AnirudhRao",
   "url": "https://sketchfab.com/3d-models/low-poly-gbu-24-laser-guided-bomb-8dcd4a634e924a52ab05d4e90b3e3e82",

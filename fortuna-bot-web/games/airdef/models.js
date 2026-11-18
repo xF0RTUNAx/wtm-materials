@@ -22,9 +22,9 @@ const ST_ORDER8 = [3, 4, 2, 5, 1, 6, 0, 7];
 export const stOrder = (n, heli = false) => { if (heli || !(n > 0) || n >= 8) return ST_ORDER8; const o = []; if (n % 2) o.push(n >> 1); for (let a = (n >> 1) - 1, b = (n + 1) >> 1; a >= 0; a--, b++) o.push(a, b); return o; };
 const mirror = (L) => [...L, ...L.slice().reverse().map((p) => V(-p.x, p.y, p.z, p.py))]; // L3 L2 L1 Ф1 → … Ф2 R1 R2 R3
 const META = {
-  // Sukhoi Su-30МКИ - andertan (CC BY 4.0; с 2026-10-24, прежняя - Immersive3D): восток, ударные загрузки; у автора чистый планер - пилоны дорисованы (py), подвески - по низу крыла и мотогондол
-  su30: { side: 'east', cls: 'strike', stations: mirror([V(-5.0, -1.34, 3.3, 0.3), V(-3.95, -1.34, 2.5, 0.3), V(-2.95, -1.34, 1.6, 0.3), V(-1.28, -2.5, 2.0, 0.2)]),
-    nozzles: [V(-1.28, -1.62, 9.75), V(1.28, -1.62, 9.75)], nr: 0.45, pod: V(0, -2.0, 1.5) },
+  // Су-30СМ: своя модель (Свои/Су-30СМ, 2026-11-18; прежняя - andertan): восток, ударные загрузки; порядок [внешний, средний, внутренний подкрыльевые, под гондолой]; прицельный контейнер - на переднем пилоне между гондолами, «Сорбция» - на обычной точке
+  su30: { side: 'east', cls: 'strike', stations: mirror([V(-5.35, -1.526, 4.175), V(-4.15, -1.612, 3.275), V(-3.0, -1.639, 2.425), V(-1.16, -2.699, 1.375)]),
+    nozzles: [V(-1.27, -1.633, 9.275), V(1.27, -1.633, 9.275)], nr: 0.472, pod: V(0, -2.146, 1.575), clearGlass: true, ...(paintOn ? { gearModel: 'su30_gear' } : {}) }, // стоек в файле самолёта нет
   // MiG 29 - Usman Zia: восток, ракетные загрузки
   mig29: { side: 'east', cls: 'fighter', stations: mirror([V(-4.06, -1.25, 3.41), V(-3.17, -1.24, 2.68), V(-2.23, -1.21, 1.96), V(-0.45, -1.4, 2.0, 0.26)]),
     nozzles: [V(-0.97, -1.35, 7.6), V(0.97, -1.35, 7.6)], nr: 0.45, pod: V(0, -1.55, 2.0) },
@@ -414,6 +414,7 @@ const GLB_V_OWN = {
   e_mig27: '20261113d', e_mig27_gear: '20261113d', // свой МиГ-27К
   e_mig25: '20261114a', e_mig25_gear: '20261114a', // свой МиГ-25БМ
   e_tu22m2: '20261114b', e_tu22m2_gear: '20261114b', e_t4: '20261114b', e_t4_gear: '20261114b', // свои Ту-22М2 и Т-4 «Сотка»
+  su30: '20261118a', su30_gear: '20261118a', // свой Су-30СМ
   e_su34: '20261115a', e_su34_gear: '20261115a', e_tu22m3: '20261115a', e_tu22m3_gear: '20261115a', e_tu22m3_lo: '20261115a', // свои Су-34 и Ту-22М3 (дальняя копия e_tu22m3_lo - «Летка»)
   e_tu95: '20261115c', e_tu95_gear: '20261115c', // свой Ту-95МС (ревизия 2)
   gc: '20261115d', // покров земли (свои gc_*)
@@ -498,7 +499,7 @@ const GLB_V_OWN = {
   site_air_lo: '20261029b',
   site_tv_city: '20261029b', // «Узел связи» (город, своя сцена, набор КП, башня падает, 2026-10-29)
   site_tv_city_lo: '20261029b',
-  pk_su30: '20261029b', // лёгкие копии на стоянках объектов-сцен (prepare.js pk_*, ~4 тыс. треугольников)
+  pk_su30: '20261118a', // лёгкие копии на стоянках объектов-сцен (prepare.js pk_*, ~4 тыс. треугольников)
   pk_mig29: '20261029b',
   pk_e_su24: '20261113c', // своя модель Су-24М
   pk_e_su25: '20261114a',
@@ -605,7 +606,6 @@ GLB_V.h_ka52 = '20261024i'; // Ка-52 maddex88 (CC BY 4.0), переделан 
 // «Тунгуска» (SIpriv) и «Панцирь-С1» (SanderWolf) - свои перекрашенные и запечённые модели вместо usedm / 42manako, ракета 9М311, Storm Shadow (Viktor_) без декалей вместо вырезанной из Су-24 (2026-10-22): новые файлы
 Object.assign(GLB_V, Object.fromEntries(['tunguska', 'tunguska_lo', 'pantsir', 'pantsir_lo', 'msl_9m311'].map((n) => [n, '20261024j'])));
 GLB_V.w_storm = '20261024k'; // Storm Shadow: консоли крыла - свои части (сложены на подвеске)
-Object.assign(GLB_V, { su30: '20261024p' }); // Су-30МКИ и F-16E/F - andertan (CC BY 4.0) вместо Immersive3D и Muhamad Mirza Arrafi (сомнительные права: F-16 помечен на Sketchfab как сгенерированный нейросетью, у Immersive3D - рипы Unreal) (2026-10-24)
 Object.assign(GLB_V, { e_b1b: '20261024q' }); // прежний B-1B - manilov.ap, теперь свой (GLB_V_OWN перекрывает) (Су-25 - своя модель с 2026-11-13, GLB_V_OWN; прежде mamont nikita) (все CC BY 4.0) вместо моделей Muhamad Mirza Arrafi, Rhine_Lab_Muelsyse и Immersive3D (сомнительные права) (2026-10-24)
 // «Искандер-М» и ложная цель - свои с 2026-11-18 (GLB_V_OWN); прежние dofash_76 убраны
 Object.assign(GLB_V, { hawk: '20261024m', w_gbu24: '20261024m' }); // Hawk: ракета без деталей пусковой (absorb 0); GBU-24 - AnirudhRao, своя окраска
@@ -626,6 +626,7 @@ if (paintOn) META.e_mig25_gear = { lazy: true, matte: true, paint: true, station
 if (paintOn) META.e_yak38_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего Як-38М для ангара
 if (paintOn) META.e_tu22m2_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего Ту-22М2 для ангара
 if (paintOn) META.e_t4_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своей Т-4 для ангара
+if (paintOn) META.su30_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего Су-30СМ для ангара
 if (paintOn) META.e_su34_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего Су-34 для ангара
 if (paintOn) META.e_tu22m3_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего Ту-22М3 для ангара
 if (paintOn) META.e_tu95_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего Ту-95МС для ангара
