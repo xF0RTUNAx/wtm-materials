@@ -149,15 +149,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "Sizzler SS-N-27 Kalibr 3M-54",
-  "author": "mmickel",
-  "url": "https://sketchfab.com/3d-models/sizzler-ss-n-27-kalibr-3m-54-63fc0ac8032c42e3bfd3e548192d5a9c",
-  "license": "CC-BY-4.0",
-  "files": [
-   "w_kalibr"
-  ]
- },
- {
   "title": "AGM-86",
   "author": "mahmadsaleem11111",
   "url": "https://sketchfab.com/3d-models/agm-86-de64a3d9282249e39760a5fee425e7ae",

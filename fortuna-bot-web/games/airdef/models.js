@@ -180,7 +180,7 @@ const META = {
   w_tomahawk: { weapon: 'tomahawk', lazy: true, matte: true, wings: 'deploy', wingAx: { wing1: [0, 0.045, -0.07, -90], wing2: [0, 0.075, -0.07, 90] }, hinge: { fin1: [0, 0.2053, 2.59, 0, -0.2784, 0.9605, -90], fin2: [0.2053, 0, 2.59, -0.2784, 0, 0.9605, -90], fin3: [0, -0.2053, 2.59, 0, 0.2784, 0.9605, -90], fin4: [-0.2053, 0, 2.59, 0.2784, 0, 0.9605, -90], intake: [0, -0.264, 1.674, 1, 0, 0, -13] }, stations: [] }, // BGM-109 Tomahawk - собственная модель (Свои/Tomahawk, 2026-11-09): после пуска крыло из щели, рули и заборник раскрываются (паспорт)
   w_kh555: { weapon: ['kh555'], lazy: true, stations: [] }, // Х-555 - собственная модель (tools/airdef-models/own/kh555; прежняя - перезалив CC BY-NC модели, 2026-10-24)
   w_kh55: { weapon: ['kh55', 'kh55d'], lazy: true, stations: [] }, // Х-55 и ложная Х-55 (макетная часть - тот же корпус) - собственная модель (tools/airdef-models/own/kh55)
-  w_kalibr: { weapon: 'kalibr', lazy: true, stations: [] }, // «Калибр» - mmickel
+  w_kalibr: { weapon: 'kalibr', lazy: true, stations: [] }, // 3М14 «Калибр» — собственная модель (tools/airdef-models/own/w_kalibr)
   w_agm86: { weapon: 'agm86', lazy: true, stations: [] }, // AGM-86 ALCM - mahmadsaleem11111
   w_storm: { weapon: 'storm', lazy: true, wings: 'fold', stations: [] }, // Storm Shadow - Viktor_ (CC BY 4.0), декали в текстуре стёрты (Свои/Storm Shadow); 5,1 м; у модели крылья раскрыты - на подвеске складываются вдоль корпуса, раскрываются после сброса
   w_atacms: { weapon: 'atacms', lazy: true, matte: true, wings: 'deploy', hinge: { fin1: [0.2281, 0.2281, 0, 0, 0, -1, -90], fin2: [0.2281, -0.2281, 0, 0, 0, -1, -90], fin3: [-0.2281, -0.2281, 0, 0, 0, -1, -90], fin4: [-0.2281, 0.2281, 0, 0, 0, -1, -90] }, stations: [] }, // MGM-140 ATACMS - своя модель (Свои/ATACMS, 2026-11-10): в файле рули сложены (как в трубе), после пуска раскрываются
@@ -237,6 +237,7 @@ const META = {
   w_ecm: { weapon: ['ecm_w', 'ecm_e'], matte: true, stations: [] }, // станция помех ELTA 8222 - Original_linny (Thingiverse); у востока пока она же // Х-101 - HappyBattleSheep (Thingiverse)
   w_ecm_w: { weapon: [], lazy: true, matte: true, stations: [] }, // AN/ALQ-131 - собственная модель (tools/airdef-models/own/alq131); как «Сорбция» ниже - только значок в «Исследованиях» (Mark 2026-10-24: в бою остаётся ELTA - она с разрешённой лицензией, лишней работы не делаем)
   w_ecm_e: { weapon: [], lazy: true, matte: true, stations: [] }, // «Сорбция» (контейнер Су-27) - собственная модель (tools/airdef-models/own/sorbtsiya); пока только значок в «Исследованиях» (thumbs.html, ICON), поэтому weapon: [] - материал как у оружия, но ключу ecm_e не назначена: в бою у него по-прежнему w_ecm. Физически (на законцовки, 4,2 м) - отдельной задачей, AIRDEF_STATE «Открытые задачи»
+  l_iskander_k: { ev: true, lazy: true, matte: true, stations: [] }, // 9П78-1 «Искандер-К» - своя (сборщик, Свои/Искандер-К, 2026-11-18): боевое положение, два контейнера 3М14 «Калибр» вертикально
   l_iskander: { ev: true, lazy: true, matte: true, stations: [] }, // 9П78-1 «Искандер-М» - своя (сборщик, Свои/Искандер-М, 2026-11-18): боевое положение, ракеты 9М723 стоят вертикально - tbm, tbm2
   l_tochka: { ev: true, lazy: true, matte: true, stations: [] }, // 9П129 «Точка-У» - своя (сборщик, Свои/Точка-У), боевое положение: ракета 9М79 вертикально (tbm)
   l_scud: { ev: true, lazy: true, matte: true, stations: [] }, // Р-17 на МАЗ-543 - AlexDang (tbm)
@@ -391,7 +392,7 @@ const GLB_V = Object.fromEntries(['w_gbu10', 'w_ecm', 'gepard', 'gepard_lo', 'ro
   ['zsu234', 'zsu234_lo', 'zu23', 'buk', 'phalanx', 'w_fab100', 'w_ofab250', 'w_fab250', 'w_fab1000', 'w_gbu24', 'w_gbu57', 'w_umpk', 'e_hunter', 'e_su27', 'e_su35', 'e_etendard', 'e_mirage_f1', 'e_f18c'].map((n) => [n, '20261022k'])).concat([['w_agm65b', '20261022l'], ['w_decoy_e', '20261022l']].concat(['h_mi24', 'h_mi28', 'h_ka52', 'h_ah64', 'h_ah1', 'h_uh1', 'w_shturm', 'w_b8', 'w_hellfire', 'aam_stinger'].map((n) => [n, '20261022m'])).concat([['w_shturm', '20261022n']])).concat(['h_ah64', 'h_mi28'].map((n) => [n, '20261022p'])).concat([['h_uh1', '20261022r']]).concat(['w_lau61', 'obj_mill', 'pr_hay', 'pr_well', 'pr_pumpkin', 'pr_grave1', 'pr_grave2', 'pr_grave3', 'pr_grave4', 'pr_fence', 'pr_fpost', 'pr_deadtree', 'pr_oldtree', 'c_vaz'].map((n) => [n, '20261022o'])).concat(['e_vulcan', 'e_draken', 'e_viggen', 'w_bomb1000'].map((n) => [n, '20261023b'])).concat(['h_ka50', 'h_mi8', 'h_uh60', 'h_rah66'].map((n) => [n, '20261023c'])).concat([['w_nar_hydra', '20261024a'], ['w_nar_s8', '20261024a'], ['e_draken', '20261023d'], ['w_bomb1000', '20261023d'], ['h_ka50', '20261023d']]).concat(['e_su33', 'e_m4', 'e_mig19', 'e_mig17', 'e_mig29k'].map((n) => [n, '20261023e']))); // 20261023e - шестая партия: Су-33, М-4, МиГ-19, МиГ-17 (2026-10-21; Т-4 - своя, GLB_V_OWN) // 20261023c - четыре вертолёта manilov.ap (2026-10-21) // 20261023b - Vulcan, Draken, Viggen, бомба 1000 lb (2026-10-21) // l - 2026-10-20: Ту-95 без нарисованных дисков, Maverick и Harpy без сильного упрощения // l - Ту-95 без нарисованных дисков винтов (2026-10-20) // j - четвёртая партия, новая «Шилка», УМПК без сжатия // i - ЗРК без упрощения, камуфляж шейдером, третья партия самолётов (2026-10-19); c - замены моделей 2026-10-19; остальные пересобраны 2026-10-18 (затенение в стыках) - общая версия ниже
 // версии файлов собственных моделей (Blender, tools/airdef-models/own): по строке на ключ; поднимает tools/airdef-models/integrate-own.js при каждом встраивании
 const GLB_V_OWN = {
-  l_iskander: '20261118a', w_tbmdec: '20261118a', // свой «Искандер-М» 9П78-1 в боевом положении и ложная цель - ГЧ своей 9М723 (Свои/Искандер-М)
+  l_iskander: '20261118a', w_tbmdec: '20261118a', l_iskander_k: '20261118a', // свой «Искандер-М» 9П78-1 в боевом положении и ложная цель - ГЧ своей 9М723 (Свои/Искандер-М)
   bld_ii49: '20261117c', bld_hr_a: '20261117c', bld_hr_c: '20261117c', // свои дома: модули II-49, хрущёвки
   bld_d12_b: '20261117c', bld_d12_g: '20261117c', bld_d12_t: '20261117c', // 12-этажка (кондиционеры на стене)
   bld_of: '20261117c', bld_gl: '20261117c', // офисы, стекло
@@ -581,6 +582,7 @@ const GLB_V_OWN = {
   d_shahed: '20261115f',
   d_uav: '20261115g',
   w_kh59mk2: '20261115h',
+  w_kalibr: '20261115i',
 };
 GLB_V.hg_jack = '20261104b'; // подъёмник, ревизия 2: матовый, с износом
 GLB_V.w_pod = '20261104b'; // серый корпус контейнера, без комьев от упрощения

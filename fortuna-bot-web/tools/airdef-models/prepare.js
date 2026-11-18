@@ -242,7 +242,7 @@ const CONFIG = {
   w_ecm: { src: `${DL}/stl-glb/elta8222.glb`, scale: 0.048, axes: (x, y, z) => [x, z, -y], tex: () => 256, pickMesh: /./, crease: 35, colors: { '': [0.2, 0.21, 0.2] } },
   w_kh101: { src: new URL('./own/kh101.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 1024, nTex: () => 512, pickMesh: /./, own: true, groups: (c) => (/(^|\/)wing1/.test(c.path) ? 'wing1' : /(^|\/)wing2/.test(c.path) ? 'wing2' : 'body') }, // Х-101: своя модель (Blender, own/kh101.glb)
   w_kh555: { src: new URL('./own/kh555.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 512, nTex: () => 512, pickMesh: /./, own: true }, // Х-555: своя модель (Blender, own/kh555.glb)
-  w_kalibr: { src: `${DL}/sizzler_ss-n-27_kalibr_3m-54.glb`, scale: 1, nose: '+z', rulesIn: 'game', tex: () => 256, groups: LS }, // «Калибр» — 6,2 м
+  w_kalibr: { src: new URL('./own/w_kalibr.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 1024, nTex: () => 512, pickMesh: /./, own: true }, // 3М14 «Калибр»: своя модель (Blender, own/w_kalibr.glb)
   w_agm86: { src: `${DL}/agm-86.glb`, scale: 0.1454, nose: '-z', rulesIn: 'game', tex: () => 256, centerX: true, groups: LS }, // AGM-86 ALCM — 6,32 м
   w_storm: { src: `${DL}/Свои/Storm Shadow/storm_shadow_game.glb`, scale: 5.1 / 5.185, nose: '+x', tex: () => 512, pickMesh: /./, credit: 'декали убраны',
     groups: (c) => (c.size[2] > 1 && c.size[1] < 0.05 ? (c.ctr[2] > 0 ? 'wingA' : 'wingB') : 'body') }, // консоли крыла (0,96 × 1,14 м, на спине) — свои части: на подвеске сложены (META wings: 'fold'); Storm Shadow — Viktor_ (CC BY 4.0, Storm Shadow Ukraine; декали убраны в текстуре — Свои/Storm Shadow, README.md; storm_shadow_game.glb = storm_shadow_clean.glb + asset.extras оригинала), 5,1 м, 12,5 тыс. треугольников без упрощения
@@ -268,6 +268,9 @@ const CONFIG = {
   // (у автора), вторая — её копия рядом (на настоящей 9П78 их две; пуск — по одной, tbm и tbm2 прячутся по очереди); ракета выходит из закрытого кузова
   // 9П78-1 «Искандер-М» - своя модель (сборщик: Свои/Искандер-М, ревизия 1, 2026-11-18) в боевом положении: стрелы подняты, крышки открыты, опоры на
   // грунте; ракеты 9М723 (tbm - правая, уходит первой; tbm2) - отдельные части, пуск из центра вдоль оси (sim/combined.js RAIL). Метры, нос −Z, 13,0 м
+  // 9П78-1 «Искандер-К» - своя модель (сборщик: Свои/Искандер-К, ревизия 1, 2026-11-18): та же машина, что l_iskander, на стрелах - два контейнера 3М14
+  // (tpk_r, tpk_l) вертикально, крышки откинуты; ракета выходит из верхнего торца [±0.58, 9.49, 7.072] (sim/combined.js RAIL.l_iskander_k). Метры, нос −Z
+  l_iskander_k: { src: new URL('./own/l_iskander_k.glb', import.meta.url).pathname, scale: 1, nose: '-z', rulesIn: 'game', unit: true, own: true, tex: () => 1024, nTex: () => 512, pickMesh: /./ },
   l_iskander: { src: new URL('./own/l_iskander.glb', import.meta.url).pathname, scale: 1, nose: '-z', rulesIn: 'game', unit: true, own: true, tex: () => 1024, nTex: () => 512, pickMesh: /./,
     groups: (c) => (/(^|\/)tbm2(\/|$)/.test(c.path) ? 'tbm2' : /(^|\/)tbm(\/|$)/.test(c.path) ? 'tbm' : 'body') },
   // M752 (пусковая MGM-52 Lance) — своя модель (сборщик: Свои/M752, ревизия 2, 2026-10-25; ракета — w_lance, Свои/MGM-52). Походное положение; подвижные части —

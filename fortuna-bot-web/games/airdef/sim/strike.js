@@ -707,6 +707,7 @@ export function createStrike(ctx) {
     } else {
       // o.dir - пуск с самолёта: ракета сначала идёт по курсу носителя и разворачивается к цели сама
       w.speed = W.speed; if (o.dir) TMP.copy(o.dir).setY(0).normalize(); else TMP.copy(w.aim || TMP2.set(0, 0, 0)).sub(from).setY(0).normalize(); w.dir.copy(TMP); w.vel.copy(w.dir).multiplyScalar(w.speed);
+      if (o.podDir && W.kind === 'cruise') { w.dir.copy(o.podDir); w.speed = 25; w.vel.copy(w.dir).multiplyScalar(w.speed); } // из контейнера наземной пусковой («Калибр» - «Искандер-К»): старт по оси
     }
     wpns.push(w); fx.wpnRelease(w);
     return w;
@@ -861,7 +862,13 @@ export function createStrike(ctx) {
     w.speed += (want - w.speed) * Math.min(1, dt * 0.5);
   }
   function updateCruise(w, dt) {
-    const W = w.W, alt = w.alt ?? W.alt; climbSpeed(w, W, dt);
+    const W = w.W, alt = w.alt ?? W.alt;
+    if (w.podDir && w.t < 1.6) { // стартовый ускоритель: 1,6 с прямо по оси контейнера с разгоном, дальше - доворот на курс обычным порядком
+      w.speed = Math.min(W.speed, w.speed + 70 * dt); PREV.copy(w.pos); w.pos.addScaledVector(w.dir, w.speed * dt); w.vel.copy(w.dir).multiplyScalar(w.speed);
+      w.trailT -= dt; if (w.trailT <= 0) { w.trailT = 0.05; fx.wpnTrail(w); }
+      return;
+    }
+    climbSpeed(w, W, dt);
     if (w.route && w.route.length && Math.hypot(w.route[0].x - w.pos.x, w.route[0].z - w.pos.z) < 700) w.route.shift();
     const wp = w.route && w.route.length ? w.route[0] : null, aim = wp || w.aim;
     TMP.copy(aim || w.pos.clone().addScaledVector(w.dir, 1000)).sub(w.pos); const dh = Math.hypot(TMP.x, TMP.z);

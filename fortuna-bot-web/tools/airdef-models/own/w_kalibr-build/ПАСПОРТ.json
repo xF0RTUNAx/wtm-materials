@@ -1,0 +1,20 @@
+{
+ "key": "w_kalibr",
+ "weapon": "kalibr",
+ "name": "3М14 «Калибр»",
+ "rev": 1,
+ "files": {
+  "glb": "w_kalibr.glb",
+  "blend": "kalibr.blend",
+  "build": [
+   "k14kit.py",
+   "build.py",
+   "_paint.py",
+   "make_decals.py",
+   "bake2.py",
+   "deliver.py",
+   "_views.py",
+   "_trial.py"
+  ]
+ }
+}

@@ -691,7 +691,7 @@ export default {
   "<b>«☰ Ход волны»</b> слева - что летит и когда. <b>«Ждать»</b> - время ×4 до события, за 4 с камера переключится к нему. <b>«Смотреть»</b> - камера сразу.": "<b>\"☰ Wave timeline\"</b> on the left: what's flying and when. <b>\"Wait\"</b>: time ×4 until the event, with the camera jumping to it 4 s before. <b>\"Watch\"</b>: camera there at once.",
   "Растянуть пуски одного носителя дольше 90 с - игра не даст.": "Spreading one carrier's launches over more than 90 s: the game won't allow it.",
   "Пустить крылатые раньше дронов: ПВО ещё не отвлечена.": "Launching cruise missiles before the drones: air defense isn't distracted yet.",
-  "Наряд готов: 4 «Калибра» с Ту-160 на одну цель. Нажмите «<b>Пуск</b>».": "The package is ready: 4 Kalibrs from a Tu-160 on one target. Press \"<b>Launch</b>\".",
+  "Наряд готов: 4 Х-555 с Ту-160 на одну цель. Нажмите «<b>Пуск</b>».": "The package is ready: 4 Kh-555s from a Tu-160 on one target. Press \"<b>Launch</b>\".",
   "Откройте «<b>☰ Ход волны</b>» слева вверху: там Ту-160 и время до его прилёта.": "Open \"<b>☰ Wave timeline</b>\" at the top left: it shows the Tu-160 and the time until it arrives.",
   "У строки Ту-160 нажмите «<b>Ждать</b>»: время ускорится, к пуску камера покажет носитель.": "Press \"<b>Wait</b>\" on the Tu-160 row: time speeds up, and the camera shows the carrier at launch.",
   "Носитель идёт к рубежу. Пуски - друг за другом, раз в 2 с; ракета сначала идёт по курсу самолёта и разворачивается к цели.": "The carrier is heading for the launch line. It launches one missile every 2 s; each first follows the aircraft's heading, then turns toward the target.",

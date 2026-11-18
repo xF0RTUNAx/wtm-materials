@@ -59,7 +59,9 @@ export function podPose(L, pos, dir) {
 // «Точка-У» (своя, боевое положение): ракета 9М79 стоит вертикально в корме (центр - по готовому l_tochka.glb: prepare.js центрует машину по длине); раньше - 6 м над центром машины
 // Р-17 (l_scud): ракета на поднятой стреле в корме - центр части tbm готового l_scud.glb; без записи стартовала из «центра машины + 6 м» - посреди
 // пусковой, в стороне от стоящей ракеты (Mark 2026-10-27: «телепортируется уже пущенной где-то по центру пусковой»)
-export const RAIL = { l_iskander: { c: [[0.58, 5.61, 7.074], [-0.58, 5.61, 7.074]], a: [0, 1, 0] }, l_tochka: { c: [[0, 5.753, 4.464]], a: [0, 1, 0] }, l_scud: { c: [[0, 7.213, 5.963]], a: [0, 1, 0] } };
+// «Искандер-К» (свой, Свои/Искандер-К): два контейнера 3М14 стоят вертикально, верхние торцы [±0.58, 9.49, 7.072]; ракета 6,2 м появляется центром на 3,1 м ниже
+// среза (нос - у среза) и выходит вверх по оси контейнера, потом доворачивает на свой курс (sim/strike.js updateCruise, w.podDir)
+export const RAIL = { l_iskander: { c: [[0.58, 5.61, 7.074], [-0.58, 5.61, 7.074]], a: [0, 1, 0] }, l_iskander_k: { c: [[0.58, 6.39, 7.072], [-0.58, 6.39, 7.072]], a: [0, 1, 0] }, l_tochka: { c: [[0, 5.753, 4.464]], a: [0, 1, 0] }, l_scud: { c: [[0, 7.213, 5.963]], a: [0, 1, 0] } };
 export function railPose(L, j, pos, dir) {
   const R = RAIL[L.key], c = R.c[Math.min(j, R.c.length - 1)], cy = Math.cos(L.yaw), sy = Math.sin(L.yaw);
   pos.set(L.pos.x + c[0] * cy + c[2] * sy, L.pos.y + c[1], L.pos.z - c[0] * sy + c[2] * cy);
@@ -124,6 +126,10 @@ export function createCombined(S, city, rnd, opts = {}) {
   const V = (x, y, z) => new THREE.Vector3(x, y, z);
   const edge = (b, R) => V(Math.sin(b) * R, 0, Math.cos(b) * R);
   const ground = (p) => { p.y = city.groundH(p.x, p.z); return p; };
+  // место пусковой: ровнее рядом с выбранной точкой (на склоне 30° машина стояла боком, а ракета уходила не из контейнера - Mark 2026-11-18, «Искандер-К»):
+  // до 16 соседних точек по дуге и радиусу, без случайных чисел; уклон - перепад высоты на ±8 м
+  const slope = (p) => { const h = (dx, dz) => city.groundH(p.x + dx, p.z + dz); return Math.max(Math.abs(h(8, 0) - h(-8, 0)), Math.abs(h(0, 8) - h(0, -8))) / 16; };
+  const flatSpot = (b, R) => { let best = ground(edge(b, R)), bs = slope(best); for (let s = 1; s <= 16 && bs > 0.06; s++) { const p = ground(edge(b + (s % 2 ? 1 : -1) * Math.ceil(s / 2) * 0.025, R + ((s % 3) - 1) * 250)), sl = slope(p); if (sl < bs) { bs = sl; best = p; } } return best; };
   const vecs = (pts) => (pts ? pts.map(([x, z]) => V(x, 0, z)) : null);
   // по ПВО: у игрока - по выбору (у единицы или типа); у ИИ - ложные цели все, дроны половина, крылатые треть, баллистика половина
   const aiFrac = (k) => (AG[k].decoyMun ? 1 : AG[k].uav ? 0.5 : AG[k].kind === 'tbm' ? 0.5 : 0.34);
@@ -169,15 +175,15 @@ export function createCombined(S, city, rnd, opts = {}) {
     const bTgt = (u) => { const o = u.tgt != null && objs.find((q) => q.id === u.tgt); return o && Math.hypot(o.x, o.z) > 300 ? Math.atan2(o.x, o.z) : null; };
     const U = (i) => { const u = unitCfg(plan, k, i); return { ...u, tL: Math.max(tFloor, D[k].units[i].t), toSam: mine ? u.sam : toSamN(i, aiFrac(k)), route: vecs(u.pts), b: u.pts ? Math.atan2(u.pts[0][0], u.pts[0][1]) : mine ? bTgt(u) : null }; };
     const m = i1 - i0;
-    if (W.kind === 'tbm' && !W.air) { // воздушного пуска («Кинжал») - с носителя, ниже
-      // пусковые оперативно-тактических ракет: у края района (12,2-13,4 км от центра), за городом; у каждой ракеты - своё время
-      const per = k === 'iskander' ? 2 : 1, nL = Math.ceil(m / per);
+    if ((W.kind === 'tbm' && !W.air) || (W.launcher && W.kind === 'cruise')) { // воздушного пуска («Кинжал») - с носителя, ниже
+      // пусковые оперативно-тактических ракет и наземных крылатых («Калибр» - «Искандер-К»): у края района (12,2-13,4 км от центра), за городом; у каждой ракеты - своё время
+      const per = k === 'iskander' || k === 'kalibr' ? 2 : 1, nL = Math.ceil(m / per), cr = W.kind === 'cruise';
       for (let l = 0; l < nL; l++) {
-        const b = dirs[(ci + l) % 2] + (rnd() - 0.5) * 0.5, p = ground(edge(b, CITY.HALF - 3800 + rnd() * 1200)), c = Math.min(per, m - l * per);
+        const b = dirs[(ci + l) % 2] + (rnd() - 0.5) * 0.5, p = flatSpot(b, CITY.HALF - 3800 + rnd() * 1200), c = Math.min(per, m - l * per);
         // HIMARS - кабиной к городу (пакет стреляет поверх кабины); остальные - кормой с ракетой к городу
         const L = { id: launchers.length + 1, key: W.launcher, wkey: k, pos: p, yaw: Math.atan2(p.x, p.z) + (POD[W.launcher] ? 0 : Math.PI), left: c, n0: c, fired: 0, isLauncher: true, name: tr('{0}: пусковая {1}', [W.short, launchers.length + 1]), podEl: 0, lastFire: -1e9 };
         launchers.push(L);
-        for (let j = 0; j < c; j++) { const i = i0 + l * per + j, u = U(i); queue.push({ t: u.tL + (mine ? 0 : rnd() * 4), key: k, k, i, oi, L, aimFn: aimFn(u.toSam, oi++, u.tgt, u.sid) }); }
+        for (let j = 0; j < c; j++) { const i = i0 + l * per + j, u = U(i); queue.push({ t: u.tL + (mine ? 0 : rnd() * 4), key: k, k, i, oi, L, aimFn: aimFn(u.toSam, oi++, u.tgt, u.sid), ...(cr ? { route: u.route, alt: u.alt } : {}) }); }
       }
       ci++; return;
     }
@@ -300,6 +306,10 @@ export function createCombined(S, city, rnd, opts = {}) {
         const blind = aim.u ? !aim.u.spotted : false; // по комплексу, которого не видел разведчик, - тройной промах
         L.fired++; L.lastFire = t; S.spawnMun(q.key, from, aim.p, { blind, launcher: L, podDir: pod || rail ? PD.clone() : null, owner: OWN }); // из пакета и с направляющей - по их оси
         log.push({ t, key: q.key, kind: 'tbm' });
+      } else if (q.L) { // крылатая с наземной пусковой: из контейнера вверх по его оси, потом на свой курс
+        const L = q.L, from = railPose(L, L.fired, V(0, 0, 0), PD);
+        L.fired++; L.lastFire = t; S.spawnMun(q.key, from, aim.p, { route: q.route ? q.route.map((v) => v.clone()) : null, alt: q.alt, launcher: L, podDir: PD.clone(), owner: OWN });
+        log.push({ t, key: q.key, kind: W.kind });
       } else {
         S.spawnMun(q.key, q.from, aim.p, { ...(q.o || {}), route: q.o && q.o.route ? q.o.route : q.route ? q.route.map((v) => v.clone()) : null, alt: q.alt, owner: OWN });
         log.push({ t, key: q.key, kind: W.kind });
