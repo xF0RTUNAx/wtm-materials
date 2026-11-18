@@ -1326,8 +1326,23 @@ function frame(now) {
   if (!view && CAM_FLOOR && C.state === 'play') {
     const cp = camera.position; camera.getWorldDirection(CAM_FW); const ax = cp.x + CAM_FW.x * 4, az = cp.z + CAM_FW.z * 4;
     let g = Math.max(city.groundH(cp.x, cp.z), city.groundH(ax, az)); if (city.autumn && city.autumn.WY != null) g = Math.max(g, city.autumn.WY);
-    const floor = g + Math.max(1.6, Math.min(camera.near, 4) * 1.15);
-    if (cp.y < floor) { cp.y = floor; camera.updateMatrixWorld(); }
+    const pad = Math.max(1.6, Math.min(camera.near, 4) * 1.15), floor = g + pad;
+    if (cp.y < floor) {
+      // камера смотрит на модель (ctrl.focus: свой самолёт, комплекс за пультом) - подъезжает к ней по той же линии, пока не окажется над землёй,
+      // и смотрит на неё (как камера «на штанге»); иначе - просто вверх
+      const f = ctrl && ctrl.focus ? ctrl.focus() : null, fy = f ? Math.max(f.y, city.groundH(f.x, f.z) + pad + 1) : 0;
+      const dx = f ? f.x - cp.x : 0, dy = f ? fy - cp.y : 0, dz = f ? f.z - cp.z : 0, d = Math.hypot(dx, dy, dz);
+      let moved = false;
+      if (f && f !== cp && d > 1 && d < 3000 && (dx * CAM_FW.x + dy * CAM_FW.y + dz * CAM_FW.z) / d > 0.7) {
+        for (let i = 1; i <= 24; i++) {
+          const k = i / 24, x = cp.x + dx * k, y = cp.y + dy * k, z = cp.z + dz * k;
+          let gk = city.groundH(x, z); if (city.autumn && city.autumn.WY != null) gk = Math.max(gk, city.autumn.WY);
+          if (y >= gk + pad && k < 0.97) { cp.set(x, y, z); camera.lookAt(f.x, f.y, f.z); moved = true; break; }
+        }
+      }
+      if (!moved) cp.y = floor;
+      camera.updateMatrixWorld();
+    }
   }
   // ближняя плоскость отсечения растёт с высотой камеры: с 10 км точности глубины иначе не хватает (крыши «мерцают»)
   { let nearW = clamp((camera.position.y - city.groundH(camera.position.x, camera.position.z)) * 0.006, 3, 20);
