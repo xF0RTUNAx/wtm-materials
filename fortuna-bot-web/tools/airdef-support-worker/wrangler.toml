@@ -1,0 +1,12 @@
+# Файлы поддержки «Воздушного превосходства» (2026-11-18): Worker перед закрытым хранилищем R2 airdef-support.
+# Выложить: cd tools/airdef-support-worker && npx wrangler deploy ; секрет: npx wrangler secret put SUPPORT_FILE_KEY (тот же, что в Supabase)
+name = "airdef-support-files"
+main = "worker.js"
+compatibility_date = "2024-09-23"
+# свой адрес (адрес workers.dev содержит имя аккаунта Cloudflare - не показываем его игрокам), Mark 2026-11-18
+workers_dev = false
+routes = [{ pattern = "files.fortunawtm.com", custom_domain = true }]
+
+[[r2_buckets]]
+binding = "B"
+bucket_name = "airdef-support"

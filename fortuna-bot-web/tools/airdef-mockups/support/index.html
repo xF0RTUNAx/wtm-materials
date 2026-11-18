@@ -1,0 +1,235 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Поддержка: варианты</title>
+<!-- Макеты (Mark 2026-11-18): поддержка в игре - новое обращение, список обращений, переписка; три набора; и вид сообщения в Telegram.
+     Телефон в горизонтали 844×390, фон - ангар (lobby-panels/bg_online.jpg). Сервер 8935: /fortuna-bot-web/tools/airdef-mockups/support/  ?f=a1 - один кадр. -->
+<style>
+@font-face { font-family: 'Oswald'; font-weight: 300 700; src: url(../../../games/airdef/fonts/oswald-cyrillic.woff2) format('woff2'); unicode-range: U+0400-045F, U+2116; }
+@font-face { font-family: 'Oswald'; font-weight: 300 700; src: url(../../../games/airdef/fonts/oswald-latin.woff2) format('woff2'); unicode-range: U+0000-00FF, U+2000-206F, U+2191, U+2193; }
+@font-face { font-family: 'Golos Text'; font-weight: 400 800; src: url(../../../games/airdef/fonts/golos-text-cyrillic.woff2) format('woff2'); unicode-range: U+0400-045F; }
+@font-face { font-family: 'Golos Text'; font-weight: 400 800; src: url(../../../games/airdef/fonts/golos-text-latin.woff2) format('woff2'); unicode-range: U+0000-00FF, U+2000-206F; }
+:root { --gold: #e8b04a; --gold2: #f3c96f; --ink: #ece8dc; --dim: #c2c7b2; --mute: #8d9580; --ok: #7fd18b; }
+* { box-sizing: border-box; } html, body { margin: 0; background: #0d100c; color: var(--ink); font: 14px 'Golos Text', sans-serif; }
+h1 { font: 500 22px 'Oswald'; margin: 18px 20px 4px; } h2 { font: 500 18px 'Oswald'; margin: 26px 20px 2px; color: var(--gold2); } p.d { margin: 0 20px 10px; max-width: 1280px; color: var(--dim); line-height: 1.45; font-size: 13.5px; }
+.rowf { display: flex; flex-wrap: wrap; gap: 16px; padding: 0 20px; } .cap { font: 500 15px 'Oswald'; color: var(--gold2); margin: 6px 0 2px; }
+body.one h1, body.one h2, body.one p.d, body.one .cap { display: none; } body.one .rowf { padding: 0; gap: 0; }
+.ph { position: relative; flex: none; width: 844px; height: 390px; overflow: hidden; background: #111 url(../lobby-panels/bg_online.jpg) left top / 844px 390px no-repeat; }
+.ph::before { content: ''; position: absolute; inset: 0; background: rgba(5,7,5,.62); }
+img { display: block; } .ic { width: 14px; height: 14px; fill: currentColor; flex: none; }
+.thumb { width: 74px; height: 46px; object-fit: cover; }
+.clip { display: inline-flex; align-items: center; gap: 4px; font: 500 11px 'Oswald'; }
+
+/* ── А «Табло» (элементы профиля и рейтинга) ── */
+.A .win { position: absolute; left: 92px; right: 92px; top: 16px; bottom: 14px; border-style: solid; border-width: 22px; border-image: url(../../../games/airdef/ui/rating/r_win.webp) 66 fill / 22px stretch; padding: 0; display: flex; flex-direction: column; }
+.A .hd { display: flex; align-items: center; gap: 8px; margin: -8px -6px 6px; } .A .hd b { font: 500 19px 'Oswald'; letter-spacing: .04em; }
+.A .hd .x { margin-left: auto; width: 30px; height: 30px; display: grid; place-items: center; border-style: solid; border-width: 10px; border-image: url(../../../games/airdef/ui/rating/r_ibtn.webp) 30 fill / 10px stretch; color: var(--gold2); font: 600 14px/1 'Oswald'; }
+.A .tabs { display: flex; gap: 4px; } .A .tab { height: 28px; padding: 0 12px; display: grid; place-items: center; border-style: solid; border-width: 10px; border-image: url(../../../games/airdef/ui/rating/r_seg_off.webp) 30 fill / 10px stretch; font: 500 13px/1 'Oswald'; color: var(--dim); white-space: nowrap; }
+.A .tab.on { border-image-source: url(../../../games/airdef/ui/rating/r_seg_on.webp); color: #1c1708; } .A .tab, .B .tab { position: relative; } .n { position: absolute; top: -14px; right: -14px; min-width: 18px; height: 18px; display: grid; place-items: center; padding: 0 5px; background: #c0392b; color: #fff; border-radius: 9px; font: 600 11px/1 'Golos Text'; box-shadow: 0 0 0 2px #1a1c16; }
+.A .body { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 210px; gap: 8px; margin-top: 6px; }
+.A .well { border-style: solid; border-width: 12px; border-image: url(../../../games/airdef/ui/rating/r_well.webp) 36 fill / 12px stretch; padding: 0; }
+.A .lbl { font: 500 10px 'Oswald'; letter-spacing: .14em; text-transform: uppercase; color: var(--mute); margin: 0 0 4px; }
+.A .topics { display: flex; flex-wrap: wrap; gap: 3px; margin-bottom: 6px; } .A .topics span { height: 24px; padding: 0 9px; display: grid; place-items: center; border-style: solid; border-width: 8px; border-image: url(../../../games/airdef/ui/rating/r_seg_off.webp) 30 fill / 8px stretch; font: 500 12px/1 'Oswald'; color: var(--dim); }
+.A .topics span.on { border-image-source: url(../../../games/airdef/ui/rating/r_seg_on.webp); color: #1c1708; }
+.A .txt { height: 92px; padding: 0; font: 13px/1.4 'Golos Text'; color: var(--ink); }
+.A .att { display: flex; gap: 5px; margin-top: 6px; align-items: stretch; } .A .att .f { position: relative; } .A .att .f small { position: absolute; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.7); font: 500 9.5px 'Oswald'; text-align: center; padding: 1px; }
+.A .att .vid { width: 74px; height: 46px; display: grid; place-items: center; background: #1b1e18; border: 1px solid #4a4636; text-align: center; font: 500 10px/1.1 'Oswald'; color: var(--dim); } .A .att .vid b { color: var(--gold2); font-weight: 500; }
+.A .att .add { width: 64px; display: grid; place-items: center; border: 1px dashed #6c6650; color: var(--gold2); font: 500 11px/1.15 'Oswald'; text-align: center; }
+.A .hint { font: 11px 'Golos Text'; color: var(--mute); margin-top: 4px; }
+.A .side .sec { border-style: solid; border-width: 12px; border-image: url(../../../games/airdef/ui/rating/r_sec.webp) 36 fill / 12px stretch; padding: 0; font: 11px/1.45 'Golos Text'; color: var(--dim); }
+.A .side .sec b { color: var(--ink); font-weight: 600; }
+.A .chk { display: flex; align-items: center; gap: 6px; margin-top: 6px; font: 500 12px 'Oswald'; color: var(--ink); } .A .chk i { width: 16px; height: 16px; background: var(--gold); color: #1c1708; display: grid; place-items: center; font: 700 11px/1 'Golos Text'; font-style: normal; }
+.A .btn { height: 38px; display: grid; place-items: center; border-style: solid; border-width: 12px; border-image: url(../../../games/airdef/ui/rating/r_btn.webp) 36 fill / 12px stretch; font: 600 15px/1 'Oswald'; letter-spacing: .06em; color: #1c1708; text-transform: uppercase; margin-top: 8px; }
+.A .btn.alt { border-image-source: url(../../../games/airdef/ui/rating/r_btn_alt.webp); color: var(--gold2); }
+.A .list { display: flex; flex-direction: column; gap: 4px; }
+.A .row { display: grid; grid-template-columns: 54px 1fr auto 62px; align-items: center; gap: 8px; height: 46px; padding: 0 4px; border-style: solid; border-width: 12px; border-image: url(../../../games/airdef/ui/rating/r_sec.webp) 36 fill / 12px stretch; }
+.A .row.me { border-image-source: url(../../../games/airdef/ui/rating/r_row_me.webp); }
+.A .row .no { font: 500 13px 'Oswald'; color: var(--mute); } .A .row .t b { display: block; font: 500 14px/1.1 'Oswald'; } .A .row .t small { font: 11px 'Golos Text'; color: var(--mute); } .A .row .dt { font: 11px 'Golos Text'; color: var(--mute); text-align: right; }
+.st { display: inline-grid; place-items: center; height: 20px; padding: 0 7px; font: 600 10px/1 'Oswald'; letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; }
+.st.ans { background: var(--gold); color: #1c1708; } .st.new { background: #2f4f6a; color: #cfe6ff; } .st.cl { background: #3a3a32; color: #a8a894; }
+.A .thread { display: flex; flex-direction: column; gap: 6px; overflow: hidden; }
+.A .msg { max-width: 82%; padding: 0; border-style: solid; border-width: 12px; border-image: url(../../../games/airdef/ui/rating/r_sec.webp) 36 fill / 12px stretch; font: 12.5px/1.4 'Golos Text'; }
+.A .msg.sup { align-self: flex-start; border-image-source: url(../../../games/airdef/ui/rating/r_row_me.webp); } .A .msg.me { align-self: flex-end; }
+.A .msg .who { font: 500 10.5px 'Oswald'; letter-spacing: .12em; text-transform: uppercase; color: #5a4a1e; margin-bottom: 2px; } .A .msg.sup { color: #1c1708; } .A .msg.me .who { color: var(--mute); } .A .row.me .t small, .A .row.me .no, .A .row.me .dt { color: #5a4a1e; } .A .row.me .st.ans { background: #1c1708; color: var(--gold2); }
+.A .reply { display: flex; gap: 6px; align-items: center; margin-top: auto; } .A .reply .well { flex: 1; height: 38px; font: 12.5px 'Golos Text'; color: var(--mute); display: flex; align-items: center; } .A .reply .btn { margin: 0; width: 120px; }
+
+/* ── Б «Учебный класс» (доска и эмаль набора обучения) ── */
+.B .win { position: absolute; left: 84px; right: 84px; top: 12px; bottom: 12px; border-style: solid; border-width: 24px; border-image: url(../../../games/airdef/ui/training/b_panel.webp) 72 fill / 24px stretch; padding: 0 4px; display: flex; flex-direction: column; }
+.B .hd { display: flex; align-items: center; gap: 8px; margin: -6px 0 6px; } .B .hd b { font: 500 20px 'Oswald'; letter-spacing: .06em; text-transform: uppercase; color: #e9e4d3; }
+.B .hd .x { margin-left: auto; font: 600 18px/1 'Oswald'; color: #d8d2bd; }
+.B .tabs { display: flex; gap: 0; } .B .tab { height: 30px; padding: 0 14px; display: grid; place-items: center; border-style: solid; border-width: 13px; border-image: url(../../../games/airdef/ui/training/b_tab_n.webp) 39 fill / 13px stretch; font: 500 13px/1 'Oswald'; color: #d8d2bd; white-space: nowrap; }
+.B .tab.on { border-image-source: url(../../../games/airdef/ui/training/b_tab_on.webp); color: #1d1a12; }
+.B .body { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 200px; gap: 10px; margin-top: 8px; }
+.B .lbl { font: 500 10px 'Oswald'; letter-spacing: .14em; text-transform: uppercase; color: #a9a58f; margin: 0 0 4px; }
+.B .topics { display: flex; flex-wrap: wrap; gap: 3px; margin-bottom: 6px; } .B .topics span { height: 26px; padding: 0 8px; display: grid; place-items: center; border-style: solid; border-width: 10px; border-image: url(../../../games/airdef/ui/training/b_sw_n.webp) 30 fill / 10px stretch; font: 500 12px/1 'Oswald'; color: #d8d2bd; }
+.B .topics span.on { border-image-source: url(../../../games/airdef/ui/training/b_sw_on.webp); color: #1d1a12; }
+.B .paper { border-style: solid; border-width: 20px; border-image: url(../../../games/airdef/ui/training/b_card_n.webp) 60 fill / 20px stretch; padding: 0; color: #24211a; font: 13px/1.4 'Golos Text'; }
+.B .txt { height: 88px; margin: -8px -6px; }
+.B .att { display: flex; gap: 6px; margin-top: 8px; } .B .att .f { position: relative; border: 3px solid #e9e4d3; box-shadow: 0 2px 4px rgba(0,0,0,.5); } .B .att .f small { position: absolute; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.65); font: 500 9.5px 'Oswald'; text-align: center; }
+.B .att .vid { width: 74px; height: 46px; display: grid; place-items: center; background: #2b2a22; text-align: center; font: 500 10px/1.1 'Oswald'; color: #e9e4d3; } .B .att .add { width: 64px; display: grid; place-items: center; border: 2px dashed #a9a58f; color: #e9e4d3; font: 500 11px/1.15 'Oswald'; text-align: center; }
+.B .hint { font: 11px 'Golos Text'; color: #a9a58f; margin-top: 4px; }
+.B .note { border-style: solid; border-width: 20px; border-image: url(../../../games/airdef/ui/training/b_note.webp) 60 fill / 20px stretch; padding: 0; margin: -6px -4px 0; font: 11px/1.45 'Golos Text'; color: #e9e4d3; } .B .note b { color: #f3c96f; font-weight: 600; }
+.B .chk { display: flex; align-items: center; gap: 6px; margin-top: 8px; font: 500 12px 'Oswald'; color: #e9e4d3; } .B .chk i { width: 16px; height: 16px; background: #e9e4d3; color: #1d1a12; display: grid; place-items: center; font: 700 11px/1 'Golos Text'; font-style: normal; }
+.B .btn { height: 40px; display: grid; place-items: center; border-style: solid; border-width: 12px; border-image: url(../../../games/airdef/ui/training/b_btn_n.webp) 36 fill / 12px stretch; font: 600 15px/1 'Oswald'; letter-spacing: .06em; color: #f3c96f; text-transform: uppercase; margin-top: 8px; }
+.B .list { display: flex; flex-direction: column; gap: 4px; }
+.B .row { display: grid; grid-template-columns: 50px 1fr auto 60px; align-items: center; gap: 8px; height: 62px; border-style: solid; border-width: 15px; border-image: url(../../../games/airdef/ui/training/b_card_n.webp) 60 fill / 15px stretch; padding: 0; color: #24211a; }
+.B .row.on { border-image-source: url(../../../games/airdef/ui/training/b_card_on.webp); }
+.B .row .no { font: 600 13px 'Oswald'; color: #6b6656; } .B .row .t b { display: block; font: 500 14px/1.1 'Oswald'; } .B .row .t small { font: 11px 'Golos Text'; color: #6b6656; } .B .row .dt { font: 11px 'Golos Text'; color: #6b6656; text-align: right; }
+.B .thread { display: flex; flex-direction: column; gap: 4px; overflow: hidden; }
+.B .msg { max-width: 80%; font: 12.5px/1.4 'Golos Text'; }
+.B .msg.me { align-self: flex-end; border-style: solid; border-width: 20px; border-image: url(../../../games/airdef/ui/training/b_card_n.webp) 60 fill / 20px stretch; padding: 0; color: #24211a; }
+.B .msg.sup { align-self: flex-start; border-style: solid; border-width: 20px; border-image: url(../../../games/airdef/ui/training/b_note.webp) 60 fill / 20px stretch; padding: 0; color: #e9e4d3; }
+.B .msg .who { font: 500 10.5px 'Oswald'; letter-spacing: .12em; text-transform: uppercase; color: #f3c96f; } .B .msg.me .who { color: #6b6656; }
+.B .reply { display: flex; gap: 8px; align-items: center; margin-top: auto; } .B .reply .paper { flex: 1; height: 44px; display: flex; align-items: center; color: #6b6656; } .B .reply .btn { margin: 0; width: 120px; }
+
+/* ── В «Планшет в ангаре» (боковая колонка, как лобби; элементы ангара) ── */
+.C.ph::before { background: linear-gradient(90deg, rgba(5,7,5,0) 0, rgba(5,7,5,0) 38%, rgba(5,7,5,.55) 55%, rgba(5,7,5,.8) 100%); }
+.C .col { position: absolute; right: 22px; top: 46px; bottom: 12px; width: 420px; display: flex; flex-direction: column; gap: 5px; }
+.C .hd { display: flex; align-items: center; gap: 8px; } .C .label { display: inline-grid; place-items: center; height: 30px; padding: 0 12px; border-style: solid; border-width: 7px; border-image: url(../../../games/airdef/ui/hangar/b_label.webp) 24 fill / 7px stretch; font: 600 15px/1 'Oswald'; letter-spacing: .1em; text-transform: uppercase; color: #1c1708; }
+.C .hd .tabs { display: flex; gap: 3px; margin-left: auto; } .C .hd .tab { height: 26px; padding: 0 9px; display: grid; place-items: center; background: rgba(10,12,9,.8); border: 1px solid #5f5a45; font: 500 12.5px/1 'Oswald'; color: var(--dim); white-space: nowrap; } .C .hd .tab.on { background: var(--gold); border-color: var(--gold); color: #1c1708; }
+.C .hd .tab { position: relative; } .C .hd .tab .n { top: -9px; right: -9px; }
+.C .plate { border-style: solid; border-width: 9px; border-image: url(../../../games/airdef/ui/hangar/b_plate_n.webp) 30 fill / 9px stretch; padding: 0 3px; }
+.C .plate.on { border-image-source: url(../../../games/airdef/ui/hangar/b_plate_on.webp); }
+.C .lbl { font: 500 9.5px 'Oswald'; letter-spacing: .14em; text-transform: uppercase; color: var(--mute); }
+.C .topics { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; } .C .topics .t { height: 46px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border-style: solid; border-width: 7px; border-image: url(../../../games/airdef/ui/hangar/b_card_n.webp) 26 fill / 7px stretch; font: 500 10.5px/1.05 'Oswald'; color: var(--dim); text-align: center; }
+.C .topics .t.on { border-image-source: url(../../../games/airdef/ui/hangar/b_card_on.webp); color: #1c1708; } .C .topics .t svg { width: 16px; height: 16px; }
+.C .txt { height: 74px; font: 12.5px/1.4 'Golos Text'; color: var(--ink); }
+.C .att { display: flex; gap: 4px; align-items: center; } .C .att .f { position: relative; } .C .att .thumb { width: 64px; height: 40px; } .C .att .f small { position: absolute; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.7); font: 500 9px 'Oswald'; text-align: center; }
+.C .att .vid { width: 64px; height: 40px; display: grid; place-items: center; background: #1b1e18; border: 1px solid #4a4636; font: 500 9.5px/1.1 'Oswald'; color: var(--dim); text-align: center; } .C .att .add { height: 40px; padding: 0 10px; display: grid; place-items: center; border: 1px dashed #6c6650; color: var(--gold2); font: 500 11px/1.1 'Oswald'; text-align: center; }
+.C .att .hint { margin-left: auto; font: 10.5px/1.3 'Golos Text'; color: var(--mute); text-align: right; }
+.C .auto { display: flex; align-items: center; gap: 6px; font: 11px 'Golos Text'; color: var(--dim); } .C .auto .lamp { width: 13px; height: 13px; flex: none; background: url(../../../games/airdef/ui/hangar/b_lamp_on.webp) center / contain no-repeat; }
+.C .start { margin-top: auto; align-self: flex-end; width: 190px; height: 46px; display: grid; place-items: center; border-style: solid; border-width: 14px; border-image: url(../../../games/airdef/ui/hangar/b_start.webp) 60 fill / 14px stretch; font: 600 17px/1 'Oswald'; letter-spacing: .08em; color: #1c1708; text-transform: uppercase; }
+.C .row { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px; min-height: 48px; } .C .row b { display: block; font: 500 14px/1.1 'Oswald'; } .C .row small { font: 11px 'Golos Text'; color: var(--mute); } .C .row .r { text-align: right; } .C .row .r small { display: block; margin-top: 3px; }
+.C .row .lamp { display: inline-block; width: 11px; height: 11px; vertical-align: -1px; margin-right: 4px; background: url(../../../games/airdef/ui/hangar/b_lamp_off.webp) center / contain no-repeat; } .C .row .lamp.on { background-image: url(../../../games/airdef/ui/hangar/b_lamp_ready.webp); }
+.C .msg { font: 12px/1.4 'Golos Text'; } .C .msg .who { font: 500 10px 'Oswald'; letter-spacing: .12em; text-transform: uppercase; color: var(--mute); margin-bottom: 1px; } .C .plate.on .who { color: var(--gold2) !important; } 
+.C .reply { display: flex; gap: 5px; margin-top: auto; } .C .reply .plate { flex: 1; height: 40px; display: flex; align-items: center; font: 12px 'Golos Text'; color: var(--mute); } .C .reply .start { margin: 0; width: 150px; height: 40px; font-size: 14px; }
+
+/* ── Telegram ── */
+.tg { flex: none; width: 400px; height: 780px; background: #0e1621; position: relative; overflow: hidden; font: 14px/1.38 -apple-system, 'Golos Text', sans-serif; color: #f5f5f5; }
+.tg .bar { height: 56px; display: flex; align-items: center; gap: 10px; padding: 0 12px; background: #17212b; } .tg .bar .av { width: 38px; height: 38px; border-radius: 50%; background: #e8b04a url(../../../games/airdef/ui/hangar/b_rank.webp) center / 70% no-repeat; } .tg .bar b { display: block; font-weight: 600; } .tg .bar small { color: #6d7f8f; }
+.tg .chat { padding: 10px 10px; display: flex; flex-direction: column; gap: 8px; background: #0e1621; }
+.tg .m { max-width: 86%; background: #182533; border-radius: 12px 12px 12px 4px; padding: 7px 10px 6px; align-self: flex-start; } .tg .m.out { align-self: flex-end; background: #2b5278; border-radius: 12px 12px 4px 12px; }
+.tg .m .tm { float: right; margin: 6px 0 -2px 10px; font-size: 11.5px; color: #6d8aa3; } .tg .m b { font-weight: 600; } .tg .m .q { border-left: 2px solid #6ab3f3; padding-left: 8px; margin: 4px 0; color: #e6e6e6; } .tg .m .mut { color: #8da4b8; font-size: 12.5px; }
+.tg .m img { width: 100%; height: 132px; object-fit: cover; border-radius: 8px; margin: 6px 0 4px; } .tg .m a { color: #6ab3f3; text-decoration: none; }
+.tg .kb { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; max-width: 86%; align-self: flex-start; width: 86%; margin-top: -4px; } .tg .kb span { background: rgba(43,82,120,.55); border-radius: 8px; text-align: center; padding: 7px 4px; font-size: 13px; font-weight: 500; }
+.tg .rep { border-left: 2px solid #e8b04a; padding-left: 7px; margin-bottom: 4px; font-size: 12.5px; } .tg .rep b { color: #e8b04a; display: block; }
+</style></head><body>
+<h1>Поддержка: три варианта окна в игре и сообщение в Telegram</h1>
+<p class="d">Открывается из профиля, из настроек и из паузы в бою. В каждом варианте три экрана: новое обращение, мои обращения, переписка. Тексты - пример. Внизу - как это приходит тебе в Telegram.</p>
+
+<h2>А «Табло» - окно в стиле профиля и рейтинга</h2>
+<div class="rowf">
+ <div><div class="cap">Новое обращение</div><div class="ph A" id="f_a1"><div class="win">
+  <div class="hd"><b>Поддержка</b><div class="tabs" style="margin-left:14px"><span class="tab on">Новое обращение</span><span class="tab">Мои обращения<span class="n">1</span></span></div><span class="x">✕</span></div>
+  <div class="body"><div>
+   <div class="lbl">Тема</div><div class="topics"><span class="on">Ошибка</span><span>Аккаунт и прогресс</span><span>Покупки</span><span>Жалоба на игрока</span><span>Идея</span></div>
+   <div class="well txt">После второй волны на «Речном узле» пропал звук ракет - вернулся только после перезапуска игры. Повторилось два раза.</div>
+   <div class="att"><div class="f"><img class="thumb" src="../../../games/airdef/shots/drone-city-evening.webp"><small>снимок · 410 КБ</small></div><div class="vid"><span>▶ видео.mp4<br><b>14,2 МБ</b></span></div><div class="add">+ Файл<br>фото / видео</div></div>
+   <div class="hint">До 3 файлов, каждый до 20 МБ · видео по мобильной сети тратит трафик</div>
+  </div><div class="side">
+   <div class="lbl">Приложится само</div>
+   <div class="sec"><b>Версия</b> 20261117d<br><b>Устройство</b> iPhone · Safari<br><b>Графика</b> Высокая · 60 к/с<br><b>Бой</b> Оборона · Речной узел<br><b>Ошибки страницы</b> нет</div>
+   <div class="chk"><i>✓</i>Снимок экрана боя</div>
+   <div class="btn">Отправить</div>
+  </div></div>
+ </div></div></div>
+ <div><div class="cap">Мои обращения</div><div class="ph A" id="f_a2"><div class="win">
+  <div class="hd"><b>Поддержка</b><div class="tabs" style="margin-left:14px"><span class="tab">Новое обращение</span><span class="tab on">Мои обращения<span class="n">1</span></span></div><span class="x">✕</span></div>
+  <div class="list" style="margin-top:6px">
+   <div class="row me"><span class="no">№ 42</span><div class="t"><b>Пропал звук ракет</b><small>Ошибка · 2 файла</small></div><span class="st ans">Есть ответ</span><span class="dt">18 ноя</span></div>
+   <div class="row"><span class="no">№ 45</span><div class="t"><b>Ночной бой в «Мульти-волне»</b><small>Идея</small></div><span class="st new">Отправлено</span><span class="dt">сегодня</span></div>
+   <div class="row"><span class="no">№ 39</span><div class="t"><b>Не пришли кристаллы за задание</b><small>Покупки · решено</small></div><span class="st cl">Закрыто</span><span class="dt">12 ноя</span></div>
+  </div>
+  <div class="hint" style="margin-top:auto;font:11px 'Golos Text';color:var(--mute)">Ответ придёт сюда - на кнопке профиля загорится отметка.</div>
+ </div></div></div>
+ <div><div class="cap">Переписка</div><div class="ph A" id="f_a3"><div class="win">
+  <div class="hd"><b>№ 42 · Пропал звук ракет</b><span class="st ans" style="margin-left:8px">Есть ответ</span><span class="x">✕</span></div>
+  <div class="thread">
+   <div class="msg me"><div class="who">Вы · 18 ноя, 21:40</div>После второй волны на «Речном узле» пропал звук ракет - вернулся только после перезапуска игры.<div class="clip" style="margin-top:4px;color:var(--gold2)">📎 снимок · видео 14,2 МБ</div></div>
+   <div class="msg sup"><div class="who">Поддержка · 19 ноя, 10:12</div>Спасибо! Нашли причину: звук не возвращался после паузы на второй волне. Исправим в ближайшем обновлении.</div>
+  </div>
+  <div class="reply"><div class="well">Написать ответ…</div><div class="btn alt" style="width:110px">+ Файл</div><div class="btn">Ответить</div></div>
+ </div></div></div>
+</div>
+
+<h2>Б «Учебный класс» - доска и эмалевые таблички, как новое обучение</h2>
+<div class="rowf">
+ <div><div class="cap">Новое обращение</div><div class="ph B" id="f_b1"><div class="win">
+  <div class="hd"><b>Поддержка</b><div class="tabs" style="margin-left:12px"><span class="tab on">Новое обращение</span><span class="tab">Мои обращения<span class="n">1</span></span></div><span class="x">✕</span></div>
+  <div class="body"><div>
+   <div class="lbl">Тема</div><div class="topics"><span class="on">Ошибка</span><span>Аккаунт и прогресс</span><span>Покупки</span><span>Жалоба на игрока</span><span>Идея</span></div>
+   <div class="paper"><div class="txt">После второй волны на «Речном узле» пропал звук ракет - вернулся только после перезапуска игры. Повторилось два раза.</div></div>
+   <div class="att"><div class="f"><img class="thumb" src="../../../games/airdef/shots/drone-city-evening.webp"><small>снимок · 410 КБ</small></div><div class="f vid">▶ видео.mp4<br>14,2 МБ</div><div class="add">+ Файл<br>фото / видео</div></div>
+   <div class="hint">До 3 файлов, каждый до 20 МБ · видео по мобильной сети тратит трафик</div>
+  </div><div>
+   <div class="note"><b>Приложится само</b><br>версия 20261117d · iPhone · Safari · Высокая графика · Оборона · Речной узел · ошибок страницы нет</div>
+   <div class="chk"><i>✓</i>Снимок экрана боя</div>
+   <div class="btn">Отправить</div>
+  </div></div>
+ </div></div></div>
+ <div><div class="cap">Мои обращения</div><div class="ph B" id="f_b2"><div class="win">
+  <div class="hd"><b>Поддержка</b><div class="tabs" style="margin-left:12px"><span class="tab">Новое обращение</span><span class="tab on">Мои обращения<span class="n">1</span></span></div><span class="x">✕</span></div>
+  <div class="list">
+   <div class="row on"><span class="no">№ 42</span><div class="t"><b>Пропал звук ракет</b><small>Ошибка · 2 файла</small></div><span class="st ans">Есть ответ</span><span class="dt">18 ноя</span></div>
+   <div class="row"><span class="no">№ 45</span><div class="t"><b>Ночной бой в «Мульти-волне»</b><small>Идея</small></div><span class="st new">Отправлено</span><span class="dt">сегодня</span></div>
+   <div class="row"><span class="no">№ 39</span><div class="t"><b>Не пришли кристаллы за задание</b><small>Покупки · решено</small></div><span class="st cl">Закрыто</span><span class="dt">12 ноя</span></div>
+  </div>
+ </div></div></div>
+ <div><div class="cap">Переписка</div><div class="ph B" id="f_b3"><div class="win">
+  <div class="hd"><b>№ 42 · Пропал звук ракет</b><span class="st ans" style="margin-left:8px">Есть ответ</span><span class="x">✕</span></div>
+  <div class="thread">
+   <div class="msg me"><div class="who">Вы · 18 ноя, 21:40</div>После второй волны на «Речном узле» пропал звук ракет - вернулся только после перезапуска.<br><span class="clip">📎 снимок · видео 14,2 МБ</span></div>
+   <div class="msg sup"><div class="who">Поддержка · 19 ноя, 10:12</div>Спасибо! Нашли причину: звук не возвращался после паузы на второй волне. Исправим в ближайшем обновлении.</div>
+  </div>
+  <div class="reply"><div class="paper">Написать ответ…</div><div class="btn">Ответить</div></div>
+ </div></div></div>
+</div>
+
+<h2>В «Планшет в ангаре» - колонка справа, как панели лобби; самолёт в ангаре виден</h2>
+<div class="rowf">
+ <div><div class="cap">Новое обращение</div><div class="ph C" id="f_c1"><div class="col">
+  <div class="hd"><span class="label">Поддержка</span><div class="tabs"><span class="tab on">Новое</span><span class="tab">Мои<span class="n">1</span></span><span class="tab">✕</span></div></div>
+  <div class="topics">
+   <div class="t on"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a4 4 0 0 1 4 4v1h2v2h-2v1.1A6 6 0 0 1 18 12h2v2h-2a6 6 0 0 1-12 0H4v-2h2a6 6 0 0 1 2-1.9V9H6V7h2V6a4 4 0 0 1 4-4z"/></svg>Ошибка</div>
+   <div class="t"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10zm0 2c-5 0-9 2.5-9 5v3h18v-3c0-2.5-4-5-9-5z"/></svg>Аккаунт</div>
+   <div class="t"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M6 3l-3 6 9 12 9-12-3-6z"/></svg>Покупки</div>
+   <div class="t"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 2L1 21h22L12 2zm1 15h-2v-2h2v2zm0-4h-2V9h2v4z"/></svg>Жалоба</div>
+   <div class="t"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M9 21h6v-1H9v1zm3-19a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></svg>Идея</div>
+  </div>
+  <div class="plate txt">После второй волны на «Речном узле» пропал звук ракет - вернулся только после перезапуска игры. Повторилось два раза.</div>
+  <div class="att"><div class="f"><img class="thumb" src="../../../games/airdef/shots/drone-city-evening.webp"><small>410 КБ</small></div><div class="vid">▶ видео<br>14,2 МБ</div><div class="add">+ Файл</div><div class="hint">до 3 файлов<br>каждый до 20 МБ</div></div>
+  <div class="auto"><span class="lamp"></span>Приложится само: версия, устройство, графика, бой, ошибки страницы · снимок экрана боя</div>
+  <div class="start">Отправить</div>
+ </div></div></div>
+ <div><div class="cap">Мои обращения</div><div class="ph C" id="f_c2"><div class="col">
+  <div class="hd"><span class="label">Поддержка</span><div class="tabs"><span class="tab">Новое</span><span class="tab on">Мои<span class="n">1</span></span><span class="tab">✕</span></div></div>
+  <div class="plate on row"><div><b>№ 42 · Пропал звук ракет</b><small>Ошибка · 2 файла</small></div><div class="r"><span class="st ans">Есть ответ</span><small>18 ноя</small></div></div>
+  <div class="plate row"><div><b>№ 45 · Ночной бой в «Мульти-волне»</b><small>Идея</small></div><div class="r"><span class="st new">Отправлено</span><small>сегодня</small></div></div>
+  <div class="plate row"><div><b>№ 39 · Не пришли кристаллы</b><small>Покупки · решено</small></div><div class="r"><span class="st cl">Закрыто</span><small>12 ноя</small></div></div>
+ </div></div></div>
+ <div><div class="cap">Переписка</div><div class="ph C" id="f_c3"><div class="col">
+  <div class="hd"><span class="label">№ 42</span><b style="font:500 14px 'Oswald'">Пропал звук ракет</b><div class="tabs"><span class="tab">‹ Мои</span><span class="tab">✕</span></div></div>
+  <div class="plate msg"><div class="who">Вы · 18 ноя, 21:40</div>После второй волны на «Речном узле» пропал звук ракет - вернулся только после перезапуска. <span class="clip" style="color:var(--gold2)">📎 2 файла</span></div>
+  <div class="plate on msg"><div class="who">Поддержка · 19 ноя, 10:12</div>Спасибо! Нашли причину: звук не возвращался после паузы на второй волне. Исправим в ближайшем обновлении.</div>
+  <div class="reply"><div class="plate">Написать ответ…</div><div class="start">Ответить</div></div>
+ </div></div></div>
+</div>
+
+<h2>Как это приходит тебе - бот поддержки в Telegram</h2>
+<div class="rowf"><div><div class="tg" id="f_tg">
+ <div class="bar"><div class="av"></div><div><b>Поддержка Air Superiority</b><small>бот</small></div></div>
+ <div class="chat">
+  <div class="m"><b>🆕 Обращение № 42 · Ошибка</b><br>Falcon_77 · аккаунт игры · язык: ru
+   <div class="q">После второй волны на «Речном узле» пропал звук ракет - вернулся только после перезапуска игры. Повторилось два раза.</div>
+   <img src="../../../games/airdef/shots/drone-city-evening.webp">
+   <span class="mut">🎬 видео.mp4 · 14,2 МБ - <a>скачать</a> (ссылка 7 дней)<br>20261117d · iPhone · Safari 18 · Высокая · 60 к/с<br>Оборона · Речной узел · запад · ошибок страницы нет</span><span class="tm">21:40</span></div>
+  <div class="kb"><span>✉ Ответить</span><span>✓ Закрыть</span><span>👤 Игрок</span></div>
+  <div class="m out"><div class="rep"><b>Обращение № 42</b>После второй волны на «Речном узле»…</div>Спасибо! Нашли причину: звук не возвращался после паузы на второй волне. Исправим в ближайшем обновлении.<span class="tm">10:12 ✓✓</span></div>
+  <div class="m"><span class="mut">✓ Ответ доставлен игроку Falcon_77 (№ 42)</span><span class="tm">10:12</span></div>
+  <div class="m"><b>💬 № 42 · Falcon_77 ответил</b><div class="q">Отлично, спасибо!</div><span class="tm">10:20</span></div>
+  <div class="kb"><span>✉ Ответить</span><span>✓ Закрыть</span><span>👤 Игрок</span></div>
+ </div>
+</div></div></div>
+<script>
+const f = new URLSearchParams(location.search).get('f');
+if (f) { document.body.classList.add('one'); document.querySelectorAll('.ph, .tg').forEach((e) => { if (e.id !== 'f_' + f) e.parentElement.style.display = 'none'; }); }
+Promise.all([document.fonts.ready, ...[...document.images].map((i) => i.complete ? 0 : new Promise((r) => { i.onload = i.onerror = r; }))]).then(() => { window.__ready = true; });
+</script>
+</body></html>

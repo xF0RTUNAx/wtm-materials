@@ -17,6 +17,7 @@
 import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
 import { supabaseAdmin } from "../_shared/supabase-admin.ts";
 import { newSession, dropSession, sessionPlayer } from "../_shared/airdef-session.ts";
+import { dropPlayerFiles } from "../_shared/support-files.ts";
 // обмен «номер + логин → ключ» для устройств, вошедших до ключей, - до этой даты (дальше - вход паролем)
 const EXCHANGE_UNTIL = "2027-01-15T00:00:00Z";
 import { hashPassword, verifyPassword } from "../_shared/password.ts";
@@ -194,6 +195,7 @@ Deno.serve(async (req) => {
       const who = await sessionPlayer(db, body); if (who.err) return who.err;
       const d = await db.from("players").delete().eq("id", who.id!).eq("kind", "airdef");
       if (d.error) throw d.error;
+      await dropPlayerFiles(who.id!); // файлы обращений в поддержку (R2); сами обращения ушли каскадом (sql/033)
       return jsonResponse({ deleted: true });
     }
 

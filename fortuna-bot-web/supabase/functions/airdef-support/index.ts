@@ -1,0 +1,301 @@
+// airdef-support - поддержка игроков «Воздушного превосходства» (Mark 2026-11-18). Две двери:
+// 1) Игра (только аккаунт игры, только по ключу сессии { sess } - _shared/airdef-session.ts):
+//   { action: 'list' }                                     → { tickets: [...], unread, limits }
+//   { action: 'thread', id }                               → { ticket, messages } (снимает «непрочитано»)
+//   { action: 'create', topic, body, meta, files: [{name,size,type}] } → { id, msg_id, uploads: [{ url, method, headers }] }
+//   { action: 'reply', id, body, files }                   → { msg_id, uploads }
+//   { action: 'sent', id, msg_id }                         → { ok } - файлы загружены: сообщение видно, уведомление в Telegram
+//   { action: 'close', id }                                → { ok }
+//   Файлы грузятся браузером прямо в Cloudflare R2 по подписанной ссылке (_shared/support-files.ts, tools/airdef-support-worker).
+// 2) Telegram (заголовок X-Telegram-Bot-Api-Secret-Token = HMAC от токена бота): бот поддержки. /start - любому отвечает его ID;
+//   остальное - только SUPPORT_ADMIN_ID: ответ (reply) на сообщение бота об обращении - ответ игроку; кнопки «Ответить», «Закрыть», «Игрок».
+//   Вебхук бот ставит себе сам при первом запросе (support_state 'webhook').
+// Секреты: TG_SUPPORT_TOKEN, SUPPORT_ADMIN_ID (Mark вписывает сам в панели Supabase), SUPPORT_FILE_KEY, SUPPORT_FILES_URL.
+// Текст игрока нигде не идёт как разметка: в Telegram - без parse_mode, в игре - textContent. Таблицы - sql/033_support.sql.
+import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
+import { supabaseAdmin } from "../_shared/supabase-admin.ts";
+import { sessionPlayer } from "../_shared/airdef-session.ts";
+import { MAX_FILE, TYPES, filesReady, signedUrl } from "../_shared/support-files.ts";
+
+// deno-lint-ignore no-explicit-any
+type Db = any;
+const TOPICS: Record<string, string> = { bug: "Ошибка", account: "Аккаунт и прогресс", purchase: "Покупки", player: "Жалоба на игрока", idea: "Идея" };
+const LIM = { maxFiles: 3, maxFileMB: 15, maxText: 2000, ticketsDay: 5, msgsDay: 40, mbDay: 60, open: 5 };
+const DAY = 864e5, DL_TTL = 7 * 86400;
+const enc = new TextEncoder();
+const bad = (m = "Проверьте текст и файлы") => jsonResponse({ error: m }, 400);
+const limit = (m: string) => jsonResponse({ error: m, code: "limit" }, 429);
+const clean = (s: unknown, n: number) => (typeof s === "string" ? s.replace(/\r\n?/g, "\n").replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f‪-‮⁦-⁩]/g, "").replace(/[—–]/g, "-").trim().slice(0, n) : "");
+const fmtMB = (b: number) => (b >= 1048576 ? (b / 1048576).toFixed(1).replace(".", ",") + " МБ" : Math.max(1, Math.round(b / 1024)) + " КБ");
+
+// ── Telegram ──
+const TG = () => Deno.env.get("TG_SUPPORT_TOKEN") || "";
+const ADMIN = () => Number(Deno.env.get("SUPPORT_ADMIN_ID") || 0);
+async function hookSecret(): Promise<string> {
+  const k = await crypto.subtle.importKey("raw", enc.encode(TG()), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const h = new Uint8Array(await crypto.subtle.sign("HMAC", k, enc.encode("airdef-support-webhook")));
+  return Array.from(h.slice(0, 24), (b) => b.toString(16).padStart(2, "0")).join("");
+}
+// deno-lint-ignore no-explicit-any
+async function tg(method: string, payload: Record<string, unknown>): Promise<any> {
+  if (!TG()) return null;
+  const r = await fetch(`https://api.telegram.org/bot${TG()}/${method}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+  const d = await r.json().catch(() => ({}));
+  if (!d.ok) console.error("tg", method, r.status, d.description);
+  return d.ok ? d.result : null;
+}
+let hookOk = false;
+async function ensureWebhook(db: Db) {
+  if (hookOk || !TG()) return;
+  const url = `${Deno.env.get("SUPABASE_URL")}/functions/v1/airdef-support`, sec = await hookSecret();
+  const want = (await sha(url + "|" + sec)).slice(0, 16);
+  const { data } = await db.from("support_state").select("v").eq("k", "webhook").maybeSingle();
+  if (data?.v === want) { hookOk = true; return; }
+  const ok = await tg("setWebhook", { url, secret_token: sec, allowed_updates: ["message", "callback_query"], drop_pending_updates: false });
+  if (ok) { await db.from("support_state").upsert({ k: "webhook", v: want, updated_at: new Date().toISOString() }); hookOk = true; }
+}
+async function sha(s: string) { return Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", enc.encode(s))), (b) => b.toString(16).padStart(2, "0")).join(""); }
+const KB = (id: number) => ({ inline_keyboard: [[{ text: "✉ Ответить", callback_data: `r:${id}` }, { text: "✓ Закрыть", callback_data: `c:${id}` }, { text: "👤 Игрок", callback_data: `p:${id}` }]] });
+async function mapMsg(db: Db, msgId: number | undefined, ticketId: number) { if (msgId) await db.from("support_tg").upsert({ tg_msg_id: msgId, ticket_id: ticketId }); }
+
+// deno-lint-ignore no-explicit-any
+function metaLines(m: any): string {
+  if (!m || typeof m !== "object") return "";
+  const s = (v: unknown, n = 80) => clean(String(v ?? ""), n);
+  const a = [s(m.v, 20), s(m.ua, 120), m.gfx ? s(m.gfx, 20) : "", m.fps ? s(m.fps, 10) + " к/с" : "", m.screen ? s(m.screen, 30) : ""].filter(Boolean).join(" · ");
+  const b = [m.mode, m.map, m.side, m.room ? "комната " + s(m.room, 10) : ""].map((x) => s(x, 30)).filter(Boolean).join(" · ");
+  const errs = Array.isArray(m.errs) && m.errs.length ? "Ошибки страницы:\n" + m.errs.slice(-5).map((e: unknown) => "• " + s(e, 160)).join("\n") : "Ошибок страницы нет";
+  return [a, b, errs].filter(Boolean).join("\n");
+}
+async function fileLines(files: { key: string; name: string; size: number; type: string }[]) {
+  const out: string[] = [];
+  for (const f of files) out.push(`${f.type.startsWith("video/") ? "🎬" : "🖼"} ${f.name} · ${fmtMB(f.size)} - ${await signedUrl("get", f.key, DL_TTL)}`);
+  return out.length ? "📎 Файлы (ссылки - 7 дней):\n" + out.join("\n") : "";
+}
+// уведомление в Telegram о сообщении игрока (первом - с данными об устройстве); фото - отдельно ответом на него
+async function notify(db: Db, ticketId: number, msgId: number): Promise<boolean> {
+  if (!TG() || !ADMIN()) return false;
+  const { data: t } = await db.from("support_tickets").select("id, player_id, topic, lang, meta").eq("id", ticketId).maybeSingle();
+  const { data: m } = await db.from("support_messages").select("id, body, files").eq("id", msgId).maybeSingle();
+  if (!t || !m) return false;
+  const { data: acc } = await db.from("airdef_accounts").select("nick").eq("player_id", t.player_id).maybeSingle();
+  const { count } = await db.from("support_messages").select("id", { count: "exact", head: true }).eq("ticket_id", ticketId).eq("author", "player").lt("id", msgId);
+  const first = !count, nick = acc?.nick || "без ника";
+  const head = first ? `🆕 Обращение № ${t.id} · ${TOPICS[t.topic] || t.topic}\n${nick} · язык: ${t.lang || "?"}` : `💬 № ${t.id} · ${nick} ответил`;
+  const text = [head, m.body, filesReady() ? await fileLines(m.files || []) : "", first ? metaLines(t.meta) : ""].filter(Boolean).join("\n\n").slice(0, 4000);
+  const sent = await tg("sendMessage", { chat_id: ADMIN(), text, reply_markup: KB(t.id), link_preview_options: { is_disabled: true } });
+  if (!sent) return false;
+  await mapMsg(db, sent.message_id, t.id);
+  for (const f of (m.files || []).filter((x: { type: string }) => x.type.startsWith("image/"))) {
+    const ph = await tg("sendPhoto", { chat_id: ADMIN(), photo: await signedUrl("get", f.key, 3600), reply_parameters: { message_id: sent.message_id, allow_sending_without_reply: true } });
+    if (ph) await mapMsg(db, ph.message_id, t.id);
+  }
+  return true;
+}
+// несланные уведомления (бот был не настроен или Telegram не ответил) - досылаются при следующей возможности
+async function flush(db: Db, max = 10) {
+  if (!TG() || !ADMIN()) return;
+  const { data } = await db.from("support_tickets").select("id").eq("notified", false).neq("status", "draft").order("id").limit(max);
+  for (const t of data || []) {
+    const { data: ms } = await db.from("support_messages").select("id").eq("ticket_id", t.id).eq("author", "player").eq("sent", true).order("id").limit(1);
+    if (ms?.[0] && (await notify(db, t.id, ms[0].id))) await db.from("support_tickets").update({ notified: true }).eq("id", t.id);
+  }
+}
+
+// ответ всем, кроме поддержки: здесь писать некуда - только из игры
+const GUEST: Record<string, string> = {
+  ru: "Это служебный бот поддержки Air Superiority - сообщения здесь не принимаются.\nНапишите нам из игры: Профиль → Поддержка (нужен аккаунт игры). Ответ придёт туда же.",
+  uk: "Це службовий бот підтримки Air Superiority - повідомлення тут не приймаються.\nНапишіть нам із гри: Профіль → Підтримка (потрібен акаунт гри). Відповідь прийде туди ж.",
+  en: "This is the Air Superiority support desk bot - it doesn't accept messages here.\nContact us from the game: Profile → Support (a game account is required). The reply will appear there.",
+  de: "Das ist der Support-Bot von Air Superiority - hier werden keine Nachrichten angenommen.\nSchreib uns im Spiel: Profil → Support (Spielkonto nötig). Die Antwort kommt dort an.",
+  es: "Este es el bot de soporte de Air Superiority: aquí no se aceptan mensajes.\nEscríbenos desde el juego: Perfil → Soporte (se necesita cuenta de juego). La respuesta llegará allí.",
+  fr: "Ceci est le bot de support d'Air Superiority : les messages ne sont pas acceptés ici.\nÉcrivez-nous depuis le jeu : Profil → Support (compte de jeu requis). La réponse arrivera là-bas.",
+};
+// deno-lint-ignore no-explicit-any
+async function onTelegram(db: Db, u: any): Promise<Response> {
+  const ok = () => new Response("ok");
+  const admin = ADMIN();
+  if (u.callback_query) {
+    const q = u.callback_query, from = q.from?.id;
+    if (!admin || from !== admin) { await tg("answerCallbackQuery", { callback_query_id: q.id }); return ok(); }
+    const [k, idS] = String(q.data || "").split(":"), id = Number(idS);
+    const { data: t } = await db.from("support_tickets").select("id, player_id, status, created_at").eq("id", id).maybeSingle();
+    if (!t) { await tg("answerCallbackQuery", { callback_query_id: q.id, text: "Обращение не найдено (аккаунт удалён?)" }); return ok(); }
+    if (k === "r") {
+      await tg("answerCallbackQuery", { callback_query_id: q.id });
+      const m = await tg("sendMessage", { chat_id: admin, text: `Ответ на № ${id} - напишите его ответом на это сообщение:`, reply_markup: { force_reply: true, input_field_placeholder: `Ответ на № ${id}` } });
+      await mapMsg(db, m?.message_id, id);
+    } else if (k === "c") {
+      await db.from("support_tickets").update({ status: "closed", updated_at: new Date().toISOString() }).eq("id", id);
+      await tg("answerCallbackQuery", { callback_query_id: q.id, text: `№ ${id} закрыто` });
+      await tg("sendMessage", { chat_id: admin, text: `✓ № ${id} закрыто` });
+    } else if (k === "p") {
+      const { data: acc } = await db.from("airdef_accounts").select("nick, created_at").eq("player_id", t.player_id).maybeSingle();
+      const { count } = await db.from("support_tickets").select("id", { count: "exact", head: true }).eq("player_id", t.player_id);
+      await tg("answerCallbackQuery", { callback_query_id: q.id });
+      await tg("sendMessage", { chat_id: admin, text: `👤 ${acc?.nick || "без ника"}\nАккаунт игры с ${String(acc?.created_at || "").slice(0, 10)}\nОбращений всего: ${count ?? "?"}\nID: ${t.player_id}` });
+    } else await tg("answerCallbackQuery", { callback_query_id: q.id });
+    return ok();
+  }
+  const m = u.message;
+  if (!m || !m.chat || m.chat.type !== "private") return ok();
+  const from = m.from?.id;
+  if (!admin || from !== admin) { // не поддержка: бот ничего не принимает и не пересылает - одна подсказка на языке человека, ничего не сохраняется
+    const isStart = typeof m.text === "string" && m.text.startsWith("/start");
+    if (!admin && isStart) { await tg("sendMessage", { chat_id: m.chat.id, text: `Ваш Telegram ID: ${from}` }); return ok(); } // настройка: пока SUPPORT_ADMIN_ID не вписан
+    const lc = String(m.from?.language_code || "").slice(0, 2);
+    await tg("sendMessage", { chat_id: m.chat.id, text: GUEST[lc] || GUEST.en });
+    return ok();
+  }
+  if (typeof m.text === "string" && m.text.startsWith("/start")) {
+    await tg("sendMessage", { chat_id: admin, text: "Вы - поддержка Air Superiority. Обращения игроков приходят сюда; чтобы ответить - ответьте на сообщение бота или нажмите «Ответить»." });
+    await flush(db, 20);
+    return ok();
+  }
+  const rid = m.reply_to_message?.message_id;
+  if (!rid) { await tg("sendMessage", { chat_id: admin, text: "Чтобы ответить игроку - ответьте (Reply) на сообщение бота об обращении или нажмите «Ответить»." }); return ok(); }
+  const { data: map } = await db.from("support_tg").select("ticket_id").eq("tg_msg_id", rid).maybeSingle();
+  if (!map) { await tg("sendMessage", { chat_id: admin, text: "Не понял, к какому обращению ответ: ответьте на сообщение бота об обращении." }); return ok(); }
+  const body = clean(m.text ?? m.caption ?? "", LIM.maxText);
+  if (!body) { await tg("sendMessage", { chat_id: admin, text: "Ответ игроку - только текстом." }); return ok(); }
+  const id = map.ticket_id;
+  const ins = await db.from("support_messages").insert({ ticket_id: id, author: "support", body, sent: true }).select("id").single();
+  if (ins.error) throw ins.error;
+  await db.from("support_tickets").update({ status: "answered", unread_player: true, updated_at: new Date().toISOString() }).eq("id", id);
+  await mapMsg(db, m.message_id, id);
+  await tg("sendMessage", { chat_id: admin, text: `✓ Ответ доставлен в игру (№ ${id})`, reply_parameters: { message_id: m.message_id, allow_sending_without_reply: true } });
+  return ok();
+}
+
+// ── игра ──
+// deno-lint-ignore no-explicit-any
+function checkFiles(files: any): { name: string; size: number; type: string }[] | null {
+  if (files == null) return [];
+  if (!Array.isArray(files) || files.length > LIM.maxFiles) return null;
+  const out = [];
+  for (const f of files) {
+    if (!f || typeof f !== "object" || !TYPES[f.type] || !Number.isInteger(f.size) || f.size <= 0 || f.size > MAX_FILE) return null;
+    out.push({ name: clean(f.name, 60).replace(/[^\p{L}\p{N}._ -]/gu, "_") || "file", size: f.size, type: f.type });
+  }
+  return out;
+}
+async function dayUse(db: Db, playerId: string) {
+  const since = new Date(Date.now() - DAY).toISOString();
+  const { data: ts } = await db.from("support_tickets").select("id, created_at, status").eq("player_id", playerId);
+  const ids = (ts || []).map((t: { id: number }) => t.id);
+  const tickets = (ts || []).filter((t: { created_at: string }) => t.created_at >= since).length;
+  const open = (ts || []).filter((t: { status: string }) => t.status === "new" || t.status === "answered").length;
+  let msgs = 0, bytes = 0;
+  if (ids.length) {
+    const { data: ms } = await db.from("support_messages").select("bytes").in("ticket_id", ids).eq("author", "player").gte("created_at", since);
+    msgs = (ms || []).length; bytes = (ms || []).reduce((a: number, x: { bytes: number }) => a + Number(x.bytes || 0), 0);
+  }
+  return { tickets, open, msgs, bytes };
+}
+async function addMessage(db: Db, ticketId: number, playerId: string, body: string, files: { name: string; size: number; type: string }[]) {
+  const bytes = files.reduce((a, f) => a + f.size, 0);
+  const ins = await db.from("support_messages").insert({ ticket_id: ticketId, author: "player", body, sent: !files.length, bytes }).select("id").single();
+  if (ins.error) throw ins.error;
+  const msgId = ins.data.id;
+  const keyed = files.map((f, i) => ({ ...f, key: `p/${playerId}/${ticketId}/${msgId}-${i}-${crypto.randomUUID().slice(0, 8)}.${TYPES[f.type]}` }));
+  if (keyed.length) { const u = await db.from("support_messages").update({ files: keyed }).eq("id", msgId); if (u.error) throw u.error; }
+  const uploads = [];
+  for (const f of keyed) uploads.push({ url: await signedUrl("put", f.key, 3600, f.size, f.type), method: "PUT", headers: { "Content-Type": f.type } });
+  return { msgId, uploads };
+}
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  const db = supabaseAdmin();
+  try {
+    const tgSecret = req.headers.get("x-telegram-bot-api-secret-token");
+    if (tgSecret !== null) { // запрос от Telegram
+      if (!TG() || tgSecret !== (await hookSecret())) return new Response("forbidden", { status: 403 });
+      return await onTelegram(db, await req.json().catch(() => ({})));
+    }
+    await ensureWebhook(db).catch((e) => console.error("webhook", e)); // вебхук бота - при первом же запросе после выкладки
+    const body = await req.json().catch(() => ({}));
+    const { action } = body;
+    const who = await sessionPlayer(db, body);
+    if (who.err) return who.err;
+    if (who.kind !== "airdef") return jsonResponse({ error: "Поддержка - только с аккаунтом игры", code: "need_game_account" }, 403);
+    const pid = who.id!;
+    const own = async (id: unknown) => {
+      if (!Number.isInteger(id)) return null;
+      const { data } = await db.from("support_tickets").select("id, topic, title, status, created_at, updated_at, unread_player").eq("id", id).eq("player_id", pid).maybeSingle();
+      return data;
+    };
+
+    if (action === "list") {
+      const { data, error } = await db.from("support_tickets").select("id, topic, title, status, unread_player, created_at, updated_at").eq("player_id", pid).neq("status", "draft").order("updated_at", { ascending: false }).limit(50);
+      if (error) throw error;
+      const ids = (data || []).map((t: { id: number }) => t.id), nf: Record<number, number> = {};
+      if (ids.length) { const { data: ms } = await db.from("support_messages").select("ticket_id, files").in("ticket_id", ids).eq("sent", true); for (const m of ms || []) nf[m.ticket_id] = (nf[m.ticket_id] || 0) + (m.files || []).length; }
+      const tickets = (data || []).map((t: { id: number; unread_player: boolean }) => ({ ...t, unread: t.unread_player, unread_player: undefined, files: nf[t.id] || 0 }));
+      return jsonResponse({ tickets, unread: tickets.filter((t: { unread: boolean }) => t.unread).length, limits: { maxFiles: LIM.maxFiles, maxFileMB: LIM.maxFileMB, maxText: LIM.maxText } });
+    }
+    if (action === "thread") {
+      const t = await own(body.id); if (!t || t.status === "draft") return jsonResponse({ error: "Обращение не найдено" }, 404);
+      const { data: ms, error } = await db.from("support_messages").select("id, author, body, files, created_at").eq("ticket_id", t.id).eq("sent", true).order("id");
+      if (error) throw error;
+      if (t.unread_player) await db.from("support_tickets").update({ unread_player: false }).eq("id", t.id);
+      const messages = (ms || []).map((m: { files: { name: string; size: number; type: string }[] }) => ({ ...m, files: (m.files || []).map((f) => ({ name: f.name, size: f.size, type: f.type })) }));
+      return jsonResponse({ ticket: { id: t.id, topic: t.topic, title: t.title, status: t.status, created_at: t.created_at }, messages });
+    }
+    if (action === "create" || action === "reply") {
+      const text = clean(body.body, LIM.maxText), files = checkFiles(body.files);
+      if (!text || files === null) return bad();
+      if (files.length && !filesReady()) return jsonResponse({ error: "Файлы сейчас не принимаются - отправьте без них" }, 503);
+      const use = await dayUse(db, pid), bytes = files.reduce((a, f) => a + f.size, 0);
+      if (use.msgs >= LIM.msgsDay) return limit("Слишком много сообщений за сутки - попробуйте завтра");
+      if (use.bytes + bytes > LIM.mbDay * 1048576) return limit(`Больше ${LIM.mbDay} МБ файлов за сутки нельзя - попробуйте завтра`);
+      if (action === "create") {
+        if (!TOPICS[body.topic]) return bad();
+        if (use.tickets >= LIM.ticketsDay) return limit("Не больше 5 обращений за сутки - попробуйте завтра");
+        if (use.open >= LIM.open) return limit("Открыто уже 5 обращений - дождитесь ответа или закройте старые");
+        const m0 = body.meta && typeof body.meta === "object" ? body.meta : {}, meta: Record<string, unknown> = {}; // только известные поля, строки обрезаны
+        for (const k of ["v", "ua", "lang", "gfx", "fps", "screen", "mode", "map", "side", "room"]) if (m0[k] != null) meta[k] = clean(String(m0[k]), k === "ua" ? 200 : 40);
+        if (Array.isArray(m0.errs)) meta.errs = m0.errs.slice(-15).map((e: unknown) => clean(String(e), 200).replace(/[A-Za-z0-9_\-]{24,}/g, "…"));
+        const lang = clean(body.meta?.lang, 5) || null;
+        const ins = await db.from("support_tickets").insert({ player_id: pid, topic: body.topic, title: clean(text.split("\n")[0], 60), status: "draft", lang, meta }).select("id").single();
+        if (ins.error) throw ins.error;
+        const { msgId, uploads } = await addMessage(db, ins.data.id, pid, text, files);
+        if (!files.length) await finish(db, ins.data.id, msgId);
+        return jsonResponse({ id: ins.data.id, msg_id: msgId, uploads });
+      }
+      const t = await own(body.id); if (!t || t.status === "draft") return jsonResponse({ error: "Обращение не найдено" }, 404);
+      if (t.status === "closed") return jsonResponse({ error: "Обращение закрыто - создайте новое" }, 409);
+      const { msgId, uploads } = await addMessage(db, t.id, pid, text, files);
+      if (!files.length) await finish(db, t.id, msgId);
+      return jsonResponse({ msg_id: msgId, uploads });
+    }
+    if (action === "sent") {
+      const t = await db.from("support_tickets").select("id").eq("id", body.id).eq("player_id", pid).maybeSingle();
+      if (!t.data || !Number.isInteger(body.msg_id)) return jsonResponse({ error: "Обращение не найдено" }, 404);
+      const { data: m } = await db.from("support_messages").select("id, sent").eq("id", body.msg_id).eq("ticket_id", t.data.id).eq("author", "player").maybeSingle();
+      if (!m) return jsonResponse({ error: "Обращение не найдено" }, 404);
+      if (!m.sent) await finish(db, t.data.id, m.id);
+      return jsonResponse({ ok: true });
+    }
+    if (action === "close") {
+      const t = await own(body.id); if (!t) return jsonResponse({ error: "Обращение не найдено" }, 404);
+      await db.from("support_tickets").update({ status: "closed", updated_at: new Date().toISOString() }).eq("id", t.id);
+      if (TG() && ADMIN()) await tg("sendMessage", { chat_id: ADMIN(), text: `№ ${t.id} игрок закрыл сам` });
+      return jsonResponse({ ok: true });
+    }
+    return bad("Неизвестное действие");
+  } catch (e) {
+    console.error("airdef-support", e);
+    return jsonResponse({ error: "Ошибка сервера" }, 500);
+  }
+});
+
+// сообщение готово (файлы загружены): видно в переписке, обращение ждёт ответа, уведомление в Telegram
+async function finish(db: Db, ticketId: number, msgId: number) {
+  await db.from("support_messages").update({ sent: true }).eq("id", msgId);
+  const { data: t } = await db.from("support_tickets").select("status, notified").eq("id", ticketId).maybeSingle();
+  await db.from("support_tickets").update({ status: "new", updated_at: new Date().toISOString() }).eq("id", ticketId);
+  const ok = await notify(db, ticketId, msgId).catch((e) => { console.error("notify", e); return false; });
+  if (t?.status === "draft" || !t?.notified) await db.from("support_tickets").update({ notified: ok }).eq("id", ticketId);
+  if (ok) await flush(db, 5).catch(() => {});
+}
