@@ -104,15 +104,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "Sukhoi Su-27 \"Flanker\"",
-  "author": "andertan",
-  "url": "https://sketchfab.com/3d-models/sukhoi-su-27-flanker-2541c1dbc6c1499cb7b38b5bf1314750",
-  "license": "CC-BY-4.0",
-  "files": [
-   "e_su27"
-  ]
- },
- {
   "title": "Sukhoi Su-35 Flanker-E (Сухой Су-35)",
   "author": "andertan",
   "url": "https://sketchfab.com/3d-models/sukhoi-su-35-flanker-e-35-c98cf9b3b3e04017a04732798a31888a",
