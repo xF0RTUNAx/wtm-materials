@@ -280,6 +280,9 @@ const SITE = [
   { f: 'g-tu22m3-bombs', m: 'winter', w: 'w_frost', cap: 'Ту-22М3 над горами', setup: P(3, 'e_tu22m3', 'mid'), shot: { s: 'ship', a: 'below', az: 0.3, el: -0.2, k: 0.8, t: 45 } },
   { f: 'g-b52-side', m: 'city', w: 'evening', cap: 'B-52H над городом, вечер', setup: P(3, 'e_b52', 'mid'), shot: { s: 'ship', a: 'side', az: 0.35, el: -0.1, k: 0.6, t: 45 } },
   { f: 'g-su25-hud', m: 'autumn', w: 'a_dusk', cap: 'Су-25 с интерфейсом, сумерки', setup: P(2, 'e_su25'), shot: { s: 'ship', a: 'chase', az: 0.2, el: 0.08, k: 1.0, t: 40, hud: true } },
+  // фон финала сайта (Mark 2026-11-19: «пересними кадр… где он по итогу встанет в конце»): закатное небо над городом без техники - туда садится 3D F-15E
+  { f: 'bg-sunset-sky', m: 'city', w: 'sunset', cap: 'Закатное небо над городом (фон финала)', seed: 7, setup: D(4, 'west', 'sampt', 'air'), shot: { s: 'unit', t: 25, max: 200, cam: [3802.71, 60, 4286.52, 3816.34, 61.5, 4283.31], cg: true, f: 42 } },
+  { f: 'bg-sunset-sky-low', m: 'city', w: 'sunset', cap: 'Закат над крышами (фон финала, ниже)', seed: 7, setup: D(4, 'west', 'sampt', 'air'), shot: { s: 'unit', t: 25, max: 200, cam: [3770.0, 28, 4294.0, 3816.34, 29.5, 4283.31], cg: true, f: 42 } },
 ];
 const SET3_MODE = Deno.args.includes('--set3') || SITE_MODE, HQ = SET3_MODE;
 
