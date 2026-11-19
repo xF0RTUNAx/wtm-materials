@@ -3,21 +3,21 @@
 // переход в бой (лётчик - air.js, ПВО - defense.js в режиме онлайна), итоги волн и боя, журнал сбитий (6 с) и
 // «Мне нужна помощь!» союзникам (метка в кадре и на карте). Связь и зеркало боя - net.js.
 /* global THREE, CONFIG */
-import { tr, trIf, XL, LOCALE, L10N } from './i18n.js?v=20261119a';
-import { trFmt } from './i18n-fmt.js?v=20261119a';
-import { createNet } from './net.js?v=20261119a';
-import * as O from './sim/online.js?v=20261119a';
-import * as MW from './sim/online-multi.js?v=20261119a';
-import { AG, SAM, CARRIERS, LOADOUTS, PLANES, ERAS, loadoutRole, AVA_SHOP } from './arsenal.js?v=20261119a';
-import { retiredHidden } from './progress.js?v=20261119a';
-import { MODES } from './sim/strike.js?v=20261119a';
-import { ICON, ico } from './icons.js?v=20261119a';
-import { activeAcc, siteAcc, siteNoProgress, authBody, RMOCK } from './account.js?v=20261119a';
-import { lobbyMark, nickMark, premById, premByName, drawWings, wingsW } from './prem.js?v=20261119a';
-import { avaSrc } from './avatar.js?v=20261119a';
-import { boardOl, boardMw } from './endscr.js?v=20261119a';
-import { createMM } from './mm.js?v=20261119a';
-import { podBuiltIn } from './models.js?v=20261119a';
+import { tr, trIf, XL, LOCALE, L10N } from './i18n.js?v=20261119b';
+import { trFmt } from './i18n-fmt.js?v=20261119b';
+import { createNet } from './net.js?v=20261119b';
+import * as O from './sim/online.js?v=20261119b';
+import * as MW from './sim/online-multi.js?v=20261119b';
+import { AG, SAM, CARRIERS, LOADOUTS, PLANES, ERAS, loadoutRole, AVA_SHOP } from './arsenal.js?v=20261119b';
+import { retiredHidden } from './progress.js?v=20261119b';
+import { MODES } from './sim/strike.js?v=20261119b';
+import { ICON, ico } from './icons.js?v=20261119b';
+import { activeAcc, siteAcc, siteNoProgress, authBody, RMOCK } from './account.js?v=20261119b';
+import { lobbyMark, nickMark, premById, premByName, drawWings, wingsW } from './prem.js?v=20261119b';
+import { avaSrc } from './avatar.js?v=20261119b';
+import { boardOl, boardMw } from './endscr.js?v=20261119b';
+import { createMM } from './mm.js?v=20261119b';
+import { podBuiltIn } from './models.js?v=20261119b';
 
 // значки «Своей комнаты» (Mark 2026-11-17, макет «Ангарные таблички»): сторона авиации звездой, бот - робот
 const STAR_E = '<svg class="ic star" viewBox="0 0 24 24"><path fill="#d8332a" stroke="#f3e7c8" stroke-width="1.2" d="M12 1.8l2.9 7.2 7.6.4-5.9 4.9 2 7.5L12 17.6l-6.6 4.2 2-7.5-5.9-4.9 7.6-.4z"/></svg>';
@@ -62,7 +62,7 @@ export function createOnline(C, ctrls) {
     if (N.queued) { el.innerHTML = `<div class="cat-h">${tr('Поиск боя')}</div><p class="hint">${waitText()}</p>`; return; }
     const mw = ui.kind === 'multi';
     // макет «Плитки» (Mark 2026-11-17): игра и роль - картинками, меньше текста; своя комната и вход по коду - под кнопками
-    const pic = (n, st) => `<img src="airdef/thumbs/${n}.webp?v=20261119a" alt="" style="${st}" onerror="this.style.visibility='hidden'">`;
+    const pic = (n, st) => `<img src="airdef/thumbs/${n}.webp?v=20261119b" alt="" style="${st}" onerror="this.style.visibility='hidden'">`;
     const tile = (v, cur, pics, l) => `<button data-v="${v}" class="${String(v) === String(cur) ? 'on' : ''}"><span class="opics">${pics}</span><em>${l}</em></button>`;
     const RP = { air: pic('air_e_mig27', 'left:8%;top:4%;width:84%;height:92%'), pvo: pic('pvo_buk', 'left:8%;top:4%;width:84%;height:92%'), any: pic('air_e_mig27', 'left:-4%;top:-6%;width:70%;height:80%') + pic('pvo_buk', 'right:-4%;top:22%;width:66%;height:80%') };
     if (ui.sub === 'room') { // своя комната: настройки клетками на табличке, «Создать» - большая кнопка внизу
@@ -91,7 +91,7 @@ export function createOnline(C, ctrls) {
     const seat = (p) => `<div class="rseat${p.id === (me && me.id) ? ' me' : ''}${p.ready ? ' ready' : ''}${p.prem && !p.bot ? ' prem' : ''}">${p.bot ? `<span class="rava bot">${BOT}</span>` : `<img class="rava" src="${avaSrc(p.ava)}" alt="">`}${lobbyMark(p.prem && !p.bot)}<i class="rlamp${p.ready ? ' on' : ''}"></i><em>${pnm(p)}</em>${host && p.bot ? `<button class="rkick" data-kick="${p.id}">×</button>` : ''}</div>`;
     const team = (t) => { const ps = r.players.filter((p) => p.team === t), free = Math.max(0, r.size - ps.length), mine = me && me.team === t;
       const empty = host ? `<button class="rseat empty" data-bot="${t}"><span class="rava">+</span><em>${tr('бот')}</em></button>` : !mine && me ? `<button class="rseat empty" data-oa="team" data-t="${t}"><span class="rava">↔</span><em>${tr('сюда')}</em></button>` : `<div class="rseat empty"><span class="rava"></span><em>&nbsp;</em></div>`;
-      return `<div class="rteam t-${t}${mine ? ' on' : ''}"><div class="hd">${TEAM_PIC[t] ? `<img src="airdef/thumbs/${TEAM_PIC[t]}.webp?v=20261119a" alt="">` : ''}<b>${TN[t]}</b><i>${ps.length}/${r.size}</i></div><div class="rseats">${ps.map(seat).join('')}${free ? empty : ''}</div></div>`; };
+      return `<div class="rteam t-${t}${mine ? ' on' : ''}"><div class="hd">${TEAM_PIC[t] ? `<img src="airdef/thumbs/${TEAM_PIC[t]}.webp?v=20261119b" alt="">` : ''}<b>${TN[t]}</b><i>${ps.length}/${r.size}</i></div><div class="rseats">${ps.map(seat).join('')}${free ? empty : ''}</div></div>`; };
     const sum = r.kind === 'multi' ? tr('Мульти-волна · {0} · {1}×{2}', [MODES[r.mode].name, r.size, r.size]) : tr('{0}×{1} · ранг {2} · {3}', [r.size, r.size, ERAS[r.era - 1].short || r.era, MODES[r.mode].name]);
     el.innerHTML = `<div class="rcode"><span class="rlabel">${r.code}</span><button class="rbtn" data-oa="invite">${ico('send')} ${tr('Позвать')}</button><button class="rbtn" data-oa="leave">${tr('Выйти')}</button></div>
       ${afterBattle ? `<p class="hint">${tr('<b>Бой окончен, вы снова в комнате.</b> Хост может сменить игру, режим, формат, ранг и сторону; затем все нажимают «Готов».')}</p>` : ''}
