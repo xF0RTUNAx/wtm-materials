@@ -397,6 +397,7 @@ export function createOnline(C, ctrls) {
   }
   wingsW(1); // знак для ленты сбитий - грузим заранее
   const PH = 13; // высота знака премиума в ленте сбитий - строка 12 px; картинку грузит drawWings при первом показе, wingsW до этого 0
+  let feedY0 = 70, feedAt = 0; // верх ленты сбитий (см. extraHud)
   C.extraHud = () => {
     if (!N.battle || C.state !== 'play') return;
     fr++; netChip();
@@ -404,7 +405,13 @@ export function createOnline(C, ctrls) {
     feed = feed.filter((f) => now - f.t < 6000); helps = helps.filter((h) => now - h.t < O.HELP_T * 1000);
     hx.textAlign = 'right'; hx.font = '600 12px "Golos Text", -apple-system, Segoe UI, sans-serif'; hx.shadowColor = 'rgba(0,0,0,.85)'; hx.shadowBlur = 4;
     const myT = N.myTeam(), col = (t, a) => (!t ? `rgba(255,255,255,${a})` : t === myT ? `rgba(96,165,250,${a})` : `rgba(248,113,113,${a})`);
-    let y = 70;
+    // верх ленты - под кнопками справа сверху (Игроки, связь, полный экран, звук, пауза): с отступом Telegram они ниже 70 px; пересчёт раз в 30 кадров
+    if (!feedAt || fr - feedAt > 30) {
+      feedAt = fr; let b = 0;
+      for (const id of ['plBtn', 'netChip', 'fsBtn', 'mute', 'pause']) { const e = document.getElementById(id), r = e && e.getBoundingClientRect ? e.getBoundingClientRect() : null; if (r && r.height > 0 && r.right > C.VW - 320 && r.top < 160) b = Math.max(b, r.bottom); }
+      feedY0 = Math.max(70, Math.round(b) + 16);
+    }
+    let y = feedY0;
     for (const f of feed) {
       const a = Math.min(1, (6000 - (now - f.t)) / 800);
       if (f.help) { hx.fillStyle = `rgba(253,186,116,${a})`; hx.fillText(f.s, C.VW - 60, y); y += 17; continue; }

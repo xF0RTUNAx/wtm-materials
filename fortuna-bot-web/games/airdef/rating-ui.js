@@ -148,6 +148,8 @@ const CSS = `
 #ratWin .mecard .av { display: inline-block; vertical-align: middle; margin-right: 7px; }
 #ratWin .mecard { flex: none; margin: 12px; padding: 10px 12px; background: #1a2014; border: 1px solid #4b5640; display: grid; grid-template-columns: auto 1fr auto; gap: 4px 12px; align-items: center; }
 #ratWin .mecard .big { font: 600 28px 'Oswald', sans-serif; color: var(--amber2); grid-row: span 2; } #ratWin .mecard .nk { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* длинный ник со знаком премиума: сокращается ник, очки видны всегда */
+#ratWin .mecard .nk.lnk { display: flex; align-items: center; gap: 0 .3em; } #ratWin .mecard .nk.lnk > * { flex: none; } #ratWin .mecard .nk.lnk > u { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 #ratWin .mecard small { color: var(--dim); font-size: 12.5px; }
 #ratWin .mecard.no { grid-template-columns: 1fr; gap: 8px; } #ratWin .mecard.no .acts { display: flex; gap: 8px; flex-wrap: wrap; }
 #ratWin .slots { display: flex; gap: 3px; } #ratWin .slots i { width: 18px; height: 6px; background: #3a4433; } #ratWin .slots i.on { background: var(--amber); }
