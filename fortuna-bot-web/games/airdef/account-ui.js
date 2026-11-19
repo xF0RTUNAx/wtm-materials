@@ -6,7 +6,7 @@
 import { ico } from './icons.js?v=20261118d';
 import { tr, trIf, L10N, LANG } from './i18n.js?v=20261118d';
 import { avaSrc, ownAva } from './avatar.js?v=20261118d';
-import { gameAcc, siteAcc, setGameAcc, clearGameAcc, logoutGame, ensureSession, reloginNeeded, accountApi, siteStatus, siteStatusDone, transferOk, siteNewbie, legacySite, onAccChange } from './account.js?v=20261118d';
+import { gameAcc, siteAcc, setGameAcc, clearGameAcc, logoutGame, ensureSession, reloginNeeded, accountApi, siteStatus, siteStatusDone, transferOk, legacySite, onAccChange } from './account.js?v=20261118d';
 const CONFIRM_WORD = L10N.confirm; // удаление аккаунта - набрать это слово (Mark 2026-11-17)
 
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -106,7 +106,6 @@ export function createAccount(C) {
   // согласие с документами (Правила, Политика) - под формой создания аккаунта: регистрация и перенос в один шаг (он тоже создаёт аккаунт)
   const doc = (f, t) => `<a href="legal/${f}.html?lang=${LANG}" target="_blank" rel="noopener">${t}</a>`;
   const consent = () => `<p class="cons full">${tr('Создавая аккаунт, вы принимаете {0} и {1}.', [doc('terms', tr('Правила пользования')), doc('privacy', tr('Политику конфиденциальности'))])}</p>`;
-  const newbie = () => (siteNewbie() ? `<p>${tr('У игры свой аккаунт - аккаунт сайта здесь не используется.')}</p>` : '');
   const siteLogin = () => (siteAcc() ? siteAcc().login : (S.f.slogin || '').trim());
   // «В игре: …» - какие логин и ник получит аккаунт игры при переносе в один шаг (логин сайта, пока сервер не попросил другой)
   function migInfo() {
@@ -127,7 +126,7 @@ export function createAccount(C) {
       return `<p>${intro}</p>${msg()}<form class="frm" data-form="mig" novalidate>${s ? '' : fld('slogin', tr('Логин сайта'), 'text', 'username', '', 'full')}${fld('spass', tr('Пароль сайта'), 'password', 'current-password', '', 'full')}${seg}`
         + (M.pwNew ? fld('npw', tr('Новый пароль для игры'), 'password', 'new-password', tr('от 6 символов'), 'full') : '')
         + (M.needLogin ? fld('glogin', tr('Логин для игры'), 'text', 'off', tr('3-24: латиница, цифры, _'), 'full') : '')
-        + (M.needNick ? fld('gnick', tr('Ник для рейтинга'), 'text', 'nickname', tr('3-16: буквы, цифры, пробел, _ и -'), 'full') : '')
+        + (M.needNick ? fld('gnick', tr('Ник'), 'text', 'nickname', tr('3-16: буквы, цифры, пробел, _ и -'), 'full') : '')
         + `<p class="ginfo full">${migInfo()}</p>${consent()}<button class="btn full" type="submit">${tr('Перенести прогресс')}</button></form>`;
     }
     // уже вошёл в аккаунт игры: прогресс сайта - в него
@@ -137,7 +136,7 @@ export function createAccount(C) {
   function body() {
     const g = gameAcc();
     if (S.tab === 'login') return `<form class="frm" data-form="login" novalidate>${fld('login', tr('Логин'), 'text', 'username', '', 'full')}${fld('pass', tr('Пароль'), 'password', 'current-password', '', 'full')}<button class="btn full" type="submit">${tr('Войти')}</button></form>${msg()}`;
-    if (S.tab === 'reg') return `${newbie()}<form class="frm" data-form="reg" novalidate>${fld('login', tr('Логин'), 'text', 'username', tr('3-24: латиница, цифры, _'))}${fld('pass', tr('Пароль'), 'password', 'new-password', tr('от 6 символов'))}${fld('nick', tr('Ник для рейтинга'), 'text', 'nickname', tr('3-16: буквы, цифры, пробел, _ и -'), 'full')}${consent()}<button class="btn full" type="submit">${tr('Создать аккаунт')}</button></form>${msg()}${nickSiteBtn() ? `<div class="row"><button class="btn alt" data-a="goxfer">${legacySite() || !siteAcc() ? tr('Перенести прогресс') : tr('Взять ник - войти паролем сайта')}</button></div>` : ''}`;
+    if (S.tab === 'reg') return `<form class="frm" data-form="reg" novalidate>${fld('login', tr('Логин'), 'text', 'username', tr('3-24: латиница, цифры, _'))}${fld('pass', tr('Пароль'), 'password', 'new-password', tr('от 6 символов'))}${fld('nick', tr('Ник'), 'text', 'nickname', tr('3-16: буквы, цифры, пробел, _ и -'), 'full')}${consent()}<button class="btn full" type="submit">${tr('Создать аккаунт')}</button></form>${msg()}${nickSiteBtn() ? `<div class="row"><button class="btn alt" data-a="goxfer">${legacySite() || !siteAcc() ? tr('Перенести прогресс') : tr('Взять ник - войти паролем сайта')}</button></div>` : ''}`;
     if (S.tab === 'xfer') return xferBody(g);
     // acc: вошёл
     const me = `<div class="me"><b>${esc(g.nick || g.login)}</b><span>${tr('Логин: {0}', [esc(g.login)])}</span></div>`;

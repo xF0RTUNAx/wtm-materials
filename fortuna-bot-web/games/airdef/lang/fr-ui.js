@@ -1358,4 +1358,5 @@ export default {
   "+1 бесплатная замена задания в день и в неделю": "+1 remplacement de mission gratuit par jour et par semaine",
   "Премиум начнёт действовать сразу после оплаты. Принимаю это и понимаю, что отказаться от покупки потом нельзя.": "Premium s'active dès le paiement. J'accepte et je comprends que je ne pourrai plus annuler l'achat ensuite.",
   "Отметьте согласие: премиум начнёт действовать сразу после оплаты": "Cochez la case de consentement : le Premium démarre dès le paiement",
+  "Ник": "Pseudo",
 };
