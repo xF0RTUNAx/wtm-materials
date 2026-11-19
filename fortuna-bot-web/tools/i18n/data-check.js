@@ -12,15 +12,15 @@ globalThis.location = { search: RU ? '?lang=ru' : '?lang=en' };
 globalThis.document = globalThis.document || {}; // i18n.js без document считает себя онлайн-сервером и держит русский - изображаем страницу
 const A = '../../games/airdef/';
 const LATE = Deno.args.includes('--late'); // дерево прокачки построено ДО локализации (проверка localizeTree)
-if (LATE) await import(A + 'progress.js?v=20261119b');
-await import(A + 'lang/data.js?v=20261119b'); // первым, как в main.js
-const ARS = await import(A + 'arsenal.js?v=20261119b');
-const { SPECS } = await import(A + 'sim/flight.js?v=20261119b');
-const { HSPECS } = await import(A + 'sim/heli.js?v=20261119b');
-const { MODES } = await import(A + 'sim/strike.js?v=20261119b');
-const PR = await import(A + 'progress.js?v=20261119b');
-const { localizeTree } = await import(A + 'lang/data.js?v=20261119b');
-const { guideChapters } = await import(A + 'guide.js?v=20261119b');
+if (LATE) await import(A + 'progress.js?v=20261119c');
+await import(A + 'lang/data.js?v=20261119c'); // первым, как в main.js
+const ARS = await import(A + 'arsenal.js?v=20261119c');
+const { SPECS } = await import(A + 'sim/flight.js?v=20261119c');
+const { HSPECS } = await import(A + 'sim/heli.js?v=20261119c');
+const { MODES } = await import(A + 'sim/strike.js?v=20261119c');
+const PR = await import(A + 'progress.js?v=20261119c');
+const { localizeTree } = await import(A + 'lang/data.js?v=20261119c');
+const { guideChapters } = await import(A + 'guide.js?v=20261119c');
 localizeTree(PR.TREE, PR.BRANCHES);
 
 const cyr = /[А-Яа-яЁё]/;

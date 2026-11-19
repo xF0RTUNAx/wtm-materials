@@ -2,12 +2,12 @@
 // подвеска пополняется). На каждом шаге - подсказка; кнопка «?» ставит игру на паузу и объясняет комплекс или оружие.
 // Урок сам запускает режим air.js или defense.js со своими опциями и следит за шагами через tick(T).
 /* global THREE */
-import { SAM, AG, SAM_TYPE, AG_KIND, THREAT, HELI_LOADOUTS, multiSamCost, eqOf } from './arsenal.js?v=20261119b';
-import { samKnown } from './sim/combined.js?v=20261119b';
-import { spotNear, freeGround } from './mission.js?v=20261119b';
-import { riverX } from './city.js?v=20261119b';
-import { iconize } from './icons.js?v=20261119b';
-import { tr } from './i18n.js?v=20261119b';
+import { SAM, AG, SAM_TYPE, AG_KIND, THREAT, HELI_LOADOUTS, multiSamCost, eqOf } from './arsenal.js?v=20261119c';
+import { samKnown } from './sim/combined.js?v=20261119c';
+import { spotNear, freeGround } from './mission.js?v=20261119c';
+import { riverX } from './city.js?v=20261119c';
+import { iconize } from './icons.js?v=20261119c';
+import { tr } from './i18n.js?v=20261119c';
 
 const K = (k) => `<kbd>${k}</kbd>`;
 // подписи управления: ПК или телефон

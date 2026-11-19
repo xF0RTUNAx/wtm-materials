@@ -3,10 +3,10 @@
 // (раз в сезон), «Выйти». Запросы и хранилище - account.js (функция airdef-account). Без аккаунта игры в рейтинг не попасть;
 // новичку аккаунт сайта в игре не нужен (только аккаунт игры), «старому» игроку с прогрессом он работает до переноса, но без рейтинга.
 // В комнате и в бою аккаунт сменить нельзя; вне их смена закрывает соединение онлайна (net.js accChanged).
-import { ico } from './icons.js?v=20261119b';
-import { tr, trIf, L10N, LANG } from './i18n.js?v=20261119b';
-import { avaSrc, ownAva } from './avatar.js?v=20261119b';
-import { gameAcc, siteAcc, setGameAcc, clearGameAcc, logoutGame, ensureSession, reloginNeeded, accountApi, siteStatus, siteStatusDone, transferOk, legacySite, onAccChange } from './account.js?v=20261119b';
+import { ico } from './icons.js?v=20261119c';
+import { tr, trIf, L10N, LANG } from './i18n.js?v=20261119c';
+import { avaSrc, ownAva } from './avatar.js?v=20261119c';
+import { gameAcc, siteAcc, setGameAcc, clearGameAcc, logoutGame, ensureSession, reloginNeeded, accountApi, siteStatus, siteStatusDone, transferOk, legacySite, onAccChange } from './account.js?v=20261119c';
 const CONFIRM_WORD = L10N.confirm; // удаление аккаунта - набрать это слово (Mark 2026-11-17)
 
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
