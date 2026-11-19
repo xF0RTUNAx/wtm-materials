@@ -152,7 +152,7 @@ export async function payUpdate(db: Db, u: any): Promise<boolean> {
     if (d.ok) {
       const s = skuOf(d.sku);
       await payTg("sendMessage", { chat_id: m.chat.id, text: fmt(T.thanks[l], { w: s ? what(s, l) : d.sku }) + (s?.prem ? "\n" + T.premNow[l] : "") }); // премиум: подтверждение согласия на немедленный старт - в сообщении (остаётся у игрока)
-      await alarm(`⭐ Покупка: ${s ? what(s, "ru") : d.sku} - ${sp.total_amount} ⭐`);
+      await alarm(`⭐ Покупка: ${s ? what(s, "ru") : d.sku} - ${sp.total_amount} ⭐\nВозврат: /refund ${sp.telegram_payment_charge_id}`);
     }
     return true;
   }

@@ -150,8 +150,12 @@ const CSS = `
 #shopWin .plead { margin-top: calc(8px * var(--ps)); font: 400 max(9.5px, calc(10.5px * var(--ps)))/1.45 'Golos Text', sans-serif; color: #b9b0a0; text-shadow: 0 1px 6px rgba(0,0,0,.6); }
 #shopWin .pact { margin-top: calc(7px * var(--ps)); display: flex; align-items: center; gap: 7px; flex-wrap: wrap; font: 600 max(10px, calc(11px * var(--ps)))/1.2 'Golos Text', sans-serif; color: var(--c2); text-shadow: 0 1px 6px rgba(0,0,0,.6); }
 #shopWin .pact[hidden] { display: none; } #shopWin .pact small { font-weight: 500; color: #b9b0a0; }
-#shopWin .pcards { display: none; grid-template-columns: repeat(3, 1fr); gap: calc(9px * var(--ps)); margin-top: calc(12px * var(--ps)); padding-top: 3px; width: calc(330px * var(--ps)); }
-#shopWin.cat-prem .pcards[data-g="prem"], #shopWin.cat-gems .pcards[data-g="gems"] { display: grid; }
+/* обе группы талонов всегда в разметке, одна поверх другой; неактивная - прозрачная (не display: none): иначе телефон выбрасывает
+   распакованные подложки и при каждой смене вкладки карточки секунду стоят пустыми (Mark 2026-11-19, запись экрана iPhone) */
+#shopWin .pcwrap { display: none; grid-template-columns: 1fr; margin-top: calc(12px * var(--ps)); padding-top: 3px; width: calc(330px * var(--ps)); }
+#shopWin.cat-prem .pcwrap, #shopWin.cat-gems .pcwrap { display: grid; }
+#shopWin .pcards { grid-area: 1 / 1; display: grid; grid-template-columns: repeat(3, 1fr); gap: calc(9px * var(--ps)); opacity: 0; pointer-events: none; will-change: opacity; }
+#shopWin.cat-prem .pcards[data-g="prem"], #shopWin.cat-gems .pcards[data-g="gems"] { opacity: 1; pointer-events: auto; z-index: 1; }
 #shopWin .talon { position: relative; aspect-ratio: 600 / 780; display: block; width: 100%; background: var(--mk) center / 100% 100% no-repeat; filter: drop-shadow(0 calc(6px * var(--ps)) calc(10px * var(--ps)) rgba(0,0,0,.45)); transition: transform 1.6s cubic-bezier(.45,0,.55,1); color: #1f2635; text-align: center; }
 #shopWin .talon.on { transform: translateY(-3px); }
 #shopWin.pload .pcards .talon { visibility: hidden; } /* подложки и иконки талонов ещё не пришли - не показывать пустые чёрные карточки */
@@ -324,7 +328,7 @@ export function createShop(C) {
         <div class="ppane" data-g="prem"><h2 class="pttl">${tr('Премиум')}</h2><div class="pact" hidden></div>
           <div class="perks"><div><i></i>${tr('×1,75 серебра и опыта за каждый бой')}</div><div><i></i>${tr('+1 кристалл за ежедневный вход')}</div><div><i></i>${tr('+1 бесплатная замена задания в день и в неделю')}</div></div></div>
         <div class="ppane" data-g="gems"><h2 class="pttl">${tr('Кристаллы')}</h2><div class="plead">${tr('Для окрасок и аватарок в магазине.')}<br>${tr('Остаются на аккаунте навсегда.')}</div></div>
-        <div class="pcards" data-g="prem">${talons('prem')}</div><div class="pcards" data-g="gems">${talons('gems')}</div>
+        <div class="pcwrap"><div class="pcards" data-g="prem">${talons('prem')}</div><div class="pcards" data-g="gems">${talons('gems')}</div></div>
         <div class="pcta"><div class="pbtn"></div>
           <label class="pcons"><input type="checkbox" data-a="pcons"><span>${tr('Премиум начнёт действовать сразу после оплаты. Принимаю это и понимаю, что отказаться от покупки потом нельзя.')}</span></label>
           <div class="pmeta"><a class="pterms" href="legal/terms.html?lang=${LANG}" target="_blank" rel="noopener">${tr('Условия покупок')}</a><div class="pnote" role="status"></div></div></div></div>
@@ -417,6 +421,7 @@ export function createShop(C) {
     if (S.shown !== 'pay:' + g) { S.shown = 'pay:' + g; videos(g); if (!RM) { root.classList.remove('pin'); void root.offsetWidth; root.classList.add('pin'); setTimeout(() => root.classList.remove('pin'), 2200); } }
     q('.balN').textContent = w ? nf(w.crystals) : '-';
     root.querySelectorAll(`.pcards[data-g="${g}"] .talon`).forEach((t) => t.classList.toggle('on', +t.dataset.i === i));
+    root.querySelectorAll('.pcards').forEach((c) => { const off = c.dataset.g !== g; if (c.inert !== off) c.inert = off; if (c.setAttribute) c.setAttribute('aria-hidden', off ? 'true' : 'false'); }); // прозрачная группа - не нажимается и не читается
     const pact = q('.pact'); pact.hidden = !(g === 'prem' && uu);
     if (g === 'prem' && uu) pact.innerHTML = `${wings(12)}<span>${tr('Премиум до {0}', [ddmmHm(uu)])}</span>`;
     const price = `<em>${P.stars}${STAR}</em>`, st = pay.st, busy = st !== 'idle';

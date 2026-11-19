@@ -53,7 +53,7 @@ const cr = rpcs.at(-1);
 ok(cr[0] === 'airdef_pay_credit' && cr[1].p_charge === 'stxABC' && cr[1].p_stars === 125 && cr[1].p_tg === 900, 'начисление: charge id, сумма, плательщик');
 const msgs = calls.filter((c) => c[0] === 'sendMessage');
 ok(msgs.some((c) => c[1].chat_id === 900 && /Дякуємо/.test(c[1].text) && /7 днів/.test(c[1].text) && /відмовитися/.test(c[1].text)), 'плательщику - спасибо по-украински и подтверждение немедленного старта премиума');
-ok(msgs.some((c) => c[1].chat_id === 42 && /Покупка/.test(c[1].text)), 'Mark - уведомление о покупке');
+ok(msgs.some((c) => c[1].chat_id === 42 && /Покупка/.test(c[1].text) && /\/refund stxABC/.test(c[1].text)), 'Mark - уведомление о покупке с командой возврата');
 next.airdef_pay_credit = { error: 'no_player' }; calls.length = 0;
 await payUpdate(db, pay());
 ok(calls.some((c) => c[0] === 'sendMessage' && c[1].chat_id === 42 && /\/refund stxABC/.test(c[1].text)), 'не зачислено - Mark получает команду возврата');
