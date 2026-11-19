@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Air Superiority Online - Воздушное превосходство</title>
+<meta name="description" content="Вылеты на современной авиации, управление разными ЗРК и комбинированные режимы - прямо на твоём смартфоне. Играется в браузере и в Telegram.">
+<link rel="preload" href="../img/60-g-su34-tgt.webp" as="image">
+<link rel="stylesheet" href="site.css">
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+
+<header class="top">
+  <a class="mark" href="index.html" data-i-aria="home" aria-label="Air Superiority Online - на главную"><img src="../../../../img/airdef-logo-alpha.webp" alt="Air Superiority" width="700" height="402"></a>
+  <div class="top-r">
+    <nav>
+      <a href="#sortie" data-i="nav_modes">Режимы</a>
+      <a href="#online" data-i="nav_online">Онлайн</a>
+      <a href="#clips" data-i="nav_clips">Кадры</a>
+      <a href="#play" data-i="nav_play">Как играть</a>
+    </nav>
+    <label class="lang"><span class="vh" data-i="lang">Язык</span><select class="lang-sel" data-i-aria="lang" aria-label="Язык"><option value="ru">Русский</option></select></label>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="par hero-par">
+    <img class="hero-img" data-i-alt="hero_alt" src="../img/60-g-su34-tgt.webp" alt="Промышленный район на закате, сверху тянется след зенитной ракеты" width="2560" height="1440">
+  </div>
+  <div class="hero-text">
+    <h1 data-i="h1">Воздушное превосходство</h1>
+    <p data-i="hero_p">Вылеты на современной авиации, управление разными ЗРК и комбинированные режимы - прямо на твоём смартфоне!</p>
+    <a class="play" href="https://fortunawtm.com/fortuna-bot-web/games/airdef.html" data-lang-link="https://fortunawtm.com/fortuna-bot-web/games/airdef.html"><span data-i="play">Играть в браузере</span></a>
+  </div>
+</section>
+
+<main>
+
+<div id="statement" class="wrap"><p class="statement" data-i="statement">Готов освоить воздушное превосходство?</p></div>
+
+<section id="sortie" class="feature-wide">
+  <div class="frame frame-wide reveal"><img data-par data-i-alt="sortie_alt" src="../img/50-g-su34-kab500s.webp" alt="Промышленный район города с высоты, вдали падает бомба" width="2560" height="1440" loading="lazy"></div>
+  <div class="wrap feature-wide-text">
+    <h2 data-i="sortie_h">Вылет</h2>
+    <div>
+      <p data-i="sortie_p1"></p>
+      <p data-i="sortie_p2"></p>
+    </div>
+  </div>
+</section>
+
+<section id="defense" class="wrap feature-pair">
+  <div class="frame"><img data-i-alt="def_alt" src="../img/29-sampt-close-morning.webp" alt="Поле утром, вдали развёрнутый комплекс SAMP/T" width="2560" height="1440" loading="lazy"></div>
+  <div class="feature-text">
+    <h2 data-i="def_h">Оборона</h2>
+    <p data-i="def_p1"></p>
+    <p data-i="def_p2"></p>
+  </div>
+</section>
+
+<section id="waves" class="wrap feature-tall">
+  <div class="feature-text">
+    <h2 data-i="waves_h">Мульти-волна</h2>
+    <p data-i="waves_p"></p>
+  </div>
+  <div class="frame"><img data-i-alt="waves_alt" src="../img/17-iskander-evening.webp" alt="Пусковая «Искандер-М» вечером в поле" width="2560" height="1440" loading="lazy"></div>
+</section>
+
+<section id="online" class="wrap online">
+  <div class="online-head">
+    <h2 data-i="online_h">Онлайн</h2>
+    <p data-i="online_p"></p>
+  </div>
+  <figure class="ol-main tilt">
+    <div class="ol-stage">
+      <img class="on" data-k="hangar" data-i-alt="ol_hangar_alt" data-lsrc="online/hangar-rating" alt="" width="1920" height="1080" loading="lazy">
+    </div>
+  </figure>
+  <div class="ol-thumbs" role="list">
+    <button type="button" role="listitem" data-k="camo"><img data-lsrc="online/shop-camo" alt="" loading="lazy"><span data-i="ol_camo">Камуфляжи</span></button>
+    <button type="button" role="listitem" data-k="research"><img data-lsrc="online/research" alt="" loading="lazy"><span data-i="ol_research">Исследования</span></button>
+    <button type="button" role="listitem" data-k="gems"><video muted playsinline loop preload="metadata" poster="../img/online/shop-gems.webp" aria-hidden="true"><source src="../video/gems-loop.webm" type="video/webm"><source src="../video/gems-loop.mp4" type="video/mp4"></video><span data-i="ol_gems">Кристаллы</span></button>
+    <button type="button" role="listitem" data-k="quests"><img data-lsrc="online/quests" alt="" loading="lazy"><span data-i="ol_quests">Задания</span></button>
+  </div>
+</section>
+
+<section id="clips" class="wrap clips">
+  <h2 data-i="clips_h">Кадры из игры</h2>
+  <div class="clip-grid">
+    <figure class="clip clip-a">
+      <video src="../video/s400-launch.mp4" poster="../video/s400-launch.jpg" muted playsinline loop preload="none" data-i-aria="clip_s400"></video>
+      <figcaption data-i="clip_s400"></figcaption>
+    </figure>
+    <figure class="clip clip-b">
+      <video src="../video/himars-launch.mp4" poster="../video/himars-launch.jpg" muted playsinline loop preload="none" data-i-aria="clip_himars"></video>
+      <figcaption data-i="clip_himars"></figcaption>
+    </figure>
+    <figure class="clip clip-c">
+      <video src="../video/pac3-launch.mp4" poster="../video/pac3-launch.jpg" muted playsinline loop preload="none" data-i-aria="clip_pac3"></video>
+      <figcaption data-i="clip_pac3"></figcaption>
+    </figure>
+  </div>
+</section>
+
+<section id="gallery" class="wrap gallery">
+  <div class="gallery-head">
+    <h2 data-i="gallery_h">Галерея</h2>
+    <div class="gallery-nav">
+      <button type="button" class="g-prev" data-i-aria="g_prev_aria" aria-label="Предыдущий кадр"><span data-i="g_prev">Назад</span></button>
+      <button type="button" class="g-next" data-i-aria="g_next_aria" aria-label="Следующий кадр"><span data-i="g_next">Дальше</span></button>
+    </div>
+  </div>
+  <figure class="g-main tilt">
+    <img data-i-alt="g06" src="../img/06-f15e-front-sunset.webp" alt="F-15E на закате" width="2560" height="1440" loading="lazy">
+  </figure>
+  <div class="g-thumbs" role="list">
+    <button type="button" role="listitem" aria-current="true" data-src="../img/06-f15e-front-sunset.webp" data-i-cap="g06" data-cap="F-15E на закате"><img src="../img/06-f15e-front-sunset.webp" alt="" loading="lazy"></button>
+    <button type="button" role="listitem" data-src="../img/08-b2-below-overcast.webp" data-i-cap="g08" data-cap="B-2A над облаками"><img src="../img/08-b2-below-overcast.webp" alt="" loading="lazy"></button>
+    <button type="button" role="listitem" data-src="../img/12-s400-launch-evening.webp" data-i-cap="g12" data-cap="Пуск С-400 над городом вечером"><img src="../img/12-s400-launch-evening.webp" alt="" loading="lazy"></button>
+    <button type="button" role="listitem" data-src="../img/65-g-s300-plane.webp" data-i-cap="g65" data-cap="Истребитель над позицией С-300"><img src="../img/65-g-s300-plane.webp" alt="" loading="lazy"></button>
+    <button type="button" role="listitem" data-src="../img/10-tu22m3-side-evening.webp" data-i-cap="g10" data-cap="Ту-22М3 после пуска ракеты"><img src="../img/10-tu22m3-side-evening.webp" alt="" loading="lazy"></button>
+    <button type="button" role="listitem" data-src="../img/51-g-su34-kh31p.webp" data-i-cap="g51" data-cap="Су-34 пускает Х-31П"><img src="../img/51-g-su34-kh31p.webp" alt="" loading="lazy"></button>
+    <button type="button" role="listitem" data-src="../img/41-sampt-cam-morning.webp" data-i-cap="g41" data-cap="SAMP/T утром у дороги"><img src="../img/41-sampt-cam-morning.webp" alt="" loading="lazy"></button>
+    <button type="button" role="listitem" data-src="../img/76-g-b52-side.webp" data-i-cap="g76" data-cap="B-52H над городом"><img src="../img/76-g-b52-side.webp" alt="" loading="lazy"></button>
+    <button type="button" role="listitem" data-src="../img/01-su34-side-sunset.webp" data-i-cap="g01" data-cap="Су-34 над городом на закате"><img src="../img/01-su34-side-sunset.webp" alt="" loading="lazy"></button>
+    <button type="button" role="listitem" data-src="../img/40-s400-launch-close.webp" data-i-cap="g40" data-cap="Пуск С-400 в горах"><img src="../img/40-s400-launch-close.webp" alt="" loading="lazy"></button>
+    <button type="button" role="listitem" data-src="../img/52-g-su30-kab500l.webp" data-i-cap="g52" data-cap="КАБ-500Л под Су-30СМ"><img src="../img/52-g-su30-kab500l.webp" alt="" loading="lazy"></button>
+    <button type="button" role="listitem" data-src="../img/44-patriot-cam-day.webp" data-i-cap="g44" data-cap="Patriot на перекрёстке"><img src="../img/44-patriot-cam-day.webp" alt="" loading="lazy"></button>
+    <button type="button" role="listitem" data-lbase="57-g-f35-hud" data-i-cap="g57" data-cap="F-35A с интерфейсом боя"><img data-lsrc="57-g-f35-hud" alt="" loading="lazy"></button>
+    <button type="button" role="listitem" data-src="../img/67-g-patriot-launch-close.webp" data-i-cap="g67" data-cap="Пуск Patriot вечером"><img src="../img/67-g-patriot-launch-close.webp" alt="" loading="lazy"></button>
+    <button type="button" role="listitem" data-src="../img/19-su34-umpk-clear.webp" data-i-cap="g19" data-cap="Су-34 с ФАБ-500 и УМПК"><img src="../img/19-su34-umpk-clear.webp" alt="" loading="lazy"></button>
+    <button type="button" role="listitem" data-src="../img/36-buk-close-clear.webp" data-i-cap="g36" data-cap="«Бук-М1» в горах"><img src="../img/36-buk-close-clear.webp" alt="" loading="lazy"></button>
+  </div>
+</section>
+
+<section id="play" class="closing">
+  <div class="frame frame-closing reveal"><img data-par data-i-alt="play_alt" src="../img/78-bg-sunset-sky.webp" alt="Закатное небо над городом" width="2560" height="1440" loading="lazy"></div>
+  <div class="wrap closing-text">
+    <div class="closing-box">
+      <h2 data-i="play_h">Как играть?</h2>
+      <p data-i="play_p"></p>
+      <a class="play" href="https://fortunawtm.com/fortuna-bot-web/games/airdef.html" data-lang-link="https://fortunawtm.com/fortuna-bot-web/games/airdef.html"><span data-i="play">Играть в браузере</span></a>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="foot">
+  <div class="wrap foot-grid">
+    <div class="foot-brand">
+      <a class="foot-logo" href="index.html"><img src="../../../../img/airdef-logo-alpha.webp" alt="" width="700" height="402" loading="lazy"></a>
+      <p class="foot-mark">Air Superiority Online</p>
+    </div>
+    <ul class="foot-links">
+      <li><a href="../../../../games/legal/privacy.html" data-lang-link="../../../../games/legal/privacy.html" data-i="f_privacy">Политика конфиденциальности</a></li>
+      <li><a href="../../../../games/legal/terms.html" data-lang-link="../../../../games/legal/terms.html" data-i="f_terms">Правила</a></li>
+      <li><a href="../../../../games/legal/account-deletion.html" data-lang-link="../../../../games/legal/account-deletion.html" data-i="f_delete">Удаление аккаунта</a></li>
+      <li><a href="../../../../games/legal/support.html" data-lang-link="../../../../games/legal/support.html" data-i="f_support">Поддержка</a></li>
+    </ul>
+    <p class="foot-mail"><a href="mailto:support@airsuperiorityonline.com">support@airsuperiorityonline.com</a></p>
+    <p class="foot-small" data-i="f_note"></p>
+    <p class="foot-small">© 2026 Air Superiority Online</p>
+  </div>
+</footer>
+
+<script src="i18n.js"></script>
+<script src="site.js"></script>
+<script src="fly.js"></script>
+</body>
+</html>

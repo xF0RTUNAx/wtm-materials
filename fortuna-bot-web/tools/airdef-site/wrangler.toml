@@ -1,0 +1,12 @@
+# Сайт игры airsuperiorityonline.com - статические файлы (Cloudflare Workers Assets). Собрать и выложить:
+#   deno run -A tools/airdef-site/build.js tools/airdef-site/dist && cd tools/airdef-site && npx --yes wrangler@4 deploy
+name = "airsuperiorityonline"
+compatibility_date = "2026-11-01"
+workers_dev = false
+routes = [
+  { pattern = "airsuperiorityonline.com", custom_domain = true },
+  { pattern = "www.airsuperiorityonline.com", custom_domain = true },
+]
+
+[assets]
+directory = "./dist"
