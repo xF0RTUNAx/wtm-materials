@@ -26,8 +26,10 @@ create table if not exists airdef_orders (
   paid_at     timestamptz,
   refunded_at timestamptz,
   prem_from   timestamptz,          -- премиум: с какого момента продлён (для возврата)
-  prem_to     timestamptz
+  prem_to     timestamptz,
+  consent_at  timestamptz           -- премиум: когда игрок согласился на немедленный старт (без этого право отказа в ЕС не снимается)
 );
+alter table airdef_orders add column if not exists consent_at timestamptz;
 create index if not exists airdef_orders_player on airdef_orders (player_id, created_at desc);
 alter table airdef_orders enable row level security;
 
@@ -39,15 +41,19 @@ create or replace function airdef_wallet_view(p_player uuid) returns jsonb langu
 $$;
 
 -- новый заказ; не больше 20 неоплаченных за час на игрока (кнопку «Купить» жмут много раз - счета не плодятся без меры)
-create or replace function airdef_order_new(p_player uuid, p_sku text, p_stars int, p_days int, p_gems int) returns jsonb language plpgsql security definer set search_path = public as $$
+-- p_consent - галочка «премиум начнётся сразу» (для премиума обязательна, без неё - { error: 'consent' })
+drop function if exists airdef_order_new(uuid, text, int, int, int);
+create or replace function airdef_order_new(p_player uuid, p_sku text, p_stars int, p_days int, p_gems int, p_consent boolean default false) returns jsonb language plpgsql security definer set search_path = public as $$
 declare oid uuid;
 begin
   if p_stars is null or p_stars <= 0 or coalesce(p_days, 0) < 0 or coalesce(p_gems, 0) < 0 or (coalesce(p_days, 0) = 0) = (coalesce(p_gems, 0) = 0) then raise exception 'bad_order'; end if;
+  if coalesce(p_days, 0) > 0 and not coalesce(p_consent, false) then return jsonb_build_object('error', 'consent'); end if;
   perform pg_advisory_xact_lock(hashtext('airdef_order:' || p_player::text));
   if (select count(*) from airdef_orders where player_id = p_player and status = 'new' and created_at > now() - interval '1 hour') >= 20 then
     return jsonb_build_object('error', 'too_many');
   end if;
-  insert into airdef_orders (player_id, sku, stars, prem_days, gems) values (p_player, p_sku, p_stars, coalesce(p_days, 0), coalesce(p_gems, 0)) returning id into oid;
+  insert into airdef_orders (player_id, sku, stars, prem_days, gems, consent_at) values (p_player, p_sku, p_stars, coalesce(p_days, 0), coalesce(p_gems, 0),
+    case when coalesce(p_days, 0) > 0 then now() end) returning id into oid;
   return jsonb_build_object('id', oid);
 end $$;
 
@@ -125,10 +131,10 @@ end $$;
 revoke all on airdef_orders from public, anon, authenticated;
 grant select, insert, update on airdef_orders to service_role;
 revoke execute on function airdef_wallet_view(uuid) from public, anon, authenticated;
-revoke execute on function airdef_order_new(uuid, text, int, int, int) from public, anon, authenticated;
+revoke execute on function airdef_order_new(uuid, text, int, int, int, boolean) from public, anon, authenticated;
 revoke execute on function airdef_pay_check(uuid, int) from public, anon, authenticated;
 revoke execute on function airdef_pay_credit(uuid, text, int, bigint) from public, anon, authenticated;
 revoke execute on function airdef_pay_refund(text) from public, anon, authenticated;
 revoke execute on function airdef_prem_daily(uuid, date) from public, anon, authenticated;
-grant execute on function airdef_wallet_view(uuid), airdef_order_new(uuid, text, int, int, int), airdef_pay_check(uuid, int),
+grant execute on function airdef_wallet_view(uuid), airdef_order_new(uuid, text, int, int, int, boolean), airdef_pay_check(uuid, int),
   airdef_pay_credit(uuid, text, int, bigint), airdef_pay_refund(text), airdef_prem_daily(uuid, date) to service_role;

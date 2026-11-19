@@ -5,7 +5,8 @@
 //   { player_id, action: 'goal', branch, id | null }     → { ok, progress }
 //   { player_id, action: 'quests' }                      → { progress, crystals } (задания: progress.quests; новый день начисляет незабранное)
 //   { player_id, action: 'quest', key }                  → { ok, progress, crystals, auto } | { error } («Забрать»: 'd:id', 'w:id', 'crate', 'chest')
-//   Премиум (sql/037): в ответах state / quests / quest / swap - prem: { until, gift } (gift - +1 кристалл за первый вход дня, начислен сейчас)
+//   Премиум (sql/037): в ответе state - prem: { until, last, gift } (until - пока активен; last - срок и после окончания, для окна «закончился»;
+//   gift - +1 кристалл за первый вход дня, начислен сейчас; тогда же crystals - новый баланс). quest / swap - progress с учётом премиума
 //   { player_id, action: 'swap', key }                   → { ok, progress, crystals, from, to } | { error } («Заменить» невыполненное: 'd:id', 'w:id'; 1 в день и 1 в неделю, с премиумом по 2 - quests-data.js SWAP)
 // Правила - _shared/airdef/progress.js (копия games/airdef/progress.js). Тратит только сервер.
 import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
@@ -44,7 +45,7 @@ Deno.serve(async (req) => {
         } catch (e) { console.error("airdef-progress quests roll", e); } // сбой записи не мешает загрузке прогресса: начислится при следующем обращении
       }
       const g = action === "quests" ? 0 : await gift();
-      return jsonResponse({ progress: view(P, x, today, prem), prem: { until: prem ? until : null, gift: g }, ...(action === "quests" ? { crystals: await crystals() } : {}) });
+      return jsonResponse({ progress: view(P, x, today, prem), prem: { until: prem ? until : null, last: until, gift: g }, ...(action === "quests" || g ? { crystals: await crystals() } : {}) });
     }
     if (action === "quest") {
       let x1 = null as Extra | null;

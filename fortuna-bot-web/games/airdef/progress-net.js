@@ -69,7 +69,10 @@ export function createProgress(C) {
     if (on !== was) try { dispatchEvent(new CustomEvent('airdef-prem', { detail: { until: on } })); } catch (_) { /* без DOM (проверки) */ }
     if (gift === 1 && C.prem && C.prem.gift) C.prem.gift();
   }
-  const fromState = (d) => { if (d && d.prem) setPrem(d.prem.until || null, d.prem.gift); };
+  const fromState = (d) => { // prem.last - срок и после окончания (окно «Премиум закончился» после перезагрузки); crystals - после +1 за вход
+    if (d && d.prem) setPrem(d.prem.until || d.prem.last || null, d.prem.gift);
+    if (d && typeof d.crystals === 'number') G.crystals = d.crystals;
+  };
   const set = (v) => { G.guest = false; G.P = { xp: v.xp, silver: v.silver, res: v.res || [], own: v.own || [], goal: v.goal || {} }; G.info = v; G.err = ''; changed(); };
 
   // ── тестовый режим (без сервера): правила те же, состояние - в памяти ──

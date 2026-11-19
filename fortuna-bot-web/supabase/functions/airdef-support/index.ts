@@ -21,7 +21,7 @@ import { supabaseAdmin } from "../_shared/supabase-admin.ts";
 import { sessionPlayer } from "../_shared/airdef-session.ts";
 import { MAX_FILE, TYPES, filesReady, signedUrl } from "../_shared/support-files.ts";
 import { drainTg } from "../_shared/support-tg-purge.ts";
-import { PAY_TOKEN, payUpdate } from "../_shared/airdef-pay.ts";
+import { payUpdate, separatePayBot } from "../_shared/airdef-pay.ts";
 
 // deno-lint-ignore no-explicit-any
 type Db = any;
@@ -141,7 +141,7 @@ async function onTelegram(db: Db, u: any): Promise<Response> {
   const ok = () => new Response("ok");
   const admin = ADMIN();
   // покупки за звёзды (_shared/airdef-pay.ts), если платёжный бот - этот же (TG_PAY_TOKEN не вписан): счёт, оплата, возврат, /paysupport, /terms
-  if (PAY_TOKEN() === TG() && await payUpdate(db, u)) return ok();
+  if (!separatePayBot() && await payUpdate(db, u)) return ok();
   if (u.callback_query) {
     const q = u.callback_query, from = q.from?.id;
     if (!admin || from !== admin) { await tg("answerCallbackQuery", { callback_query_id: q.id }); return ok(); }

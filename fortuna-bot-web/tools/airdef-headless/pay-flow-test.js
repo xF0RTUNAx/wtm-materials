@@ -18,10 +18,10 @@ const last = (m) => [...calls].reverse().find((c) => c[0] === m)?.[1];
 
 // счёт
 next.airdef_order_new = { id: OID };
-let r = await makeInvoice(db, 'p1', 'prem_7d', 'de');
+let r = await makeInvoice(db, 'p1', 'prem_7d', 'de', true);
 const inv = last('createInvoiceLink'), on = rpcs.at(-1);
 ok(r.link === 'https://t.me/$abc' && r.order === OID, 'счёт: ссылка и номер заказа');
-ok(on[0] === 'airdef_order_new' && on[1].p_stars === PAY.prem_7d.stars && on[1].p_days === 7 && on[1].p_gems === 0, 'заказ: цена и дни - из каталога сервера');
+ok(on[0] === 'airdef_order_new' && on[1].p_consent === true && on[1].p_stars === PAY.prem_7d.stars && on[1].p_days === 7 && on[1].p_gems === 0, 'заказ: цена и дни - из каталога сервера');
 ok(inv.currency === 'XTR' && inv.payload === OID && inv.prices[0].amount === PAY.prem_7d.stars && /Premium für 7 Tage/.test(inv.title), `счёт Telegram: XTR, payload - заказ, название по-немецки («${inv.title}»)`);
 ok(!('provider_token' in inv) || inv.provider_token === '', 'Stars: без платёжного провайдера');
 ok((await makeInvoice(db, 'p1', 'free_stuff', 'ru')).code === 'bad_sku', 'неизвестный товар - отказ, без заказа');
@@ -51,7 +51,7 @@ ok(await payUpdate(db, pay()), 'successful_payment обработан');
 const cr = rpcs.at(-1);
 ok(cr[0] === 'airdef_pay_credit' && cr[1].p_charge === 'stxABC' && cr[1].p_stars === 125 && cr[1].p_tg === 900, 'начисление: charge id, сумма, плательщик');
 const msgs = calls.filter((c) => c[0] === 'sendMessage');
-ok(msgs.some((c) => c[1].chat_id === 900 && /Дякуємо/.test(c[1].text) && /7 днів/.test(c[1].text)), 'плательщику - спасибо по-украински');
+ok(msgs.some((c) => c[1].chat_id === 900 && /Дякуємо/.test(c[1].text) && /7 днів/.test(c[1].text) && /відмовитися/.test(c[1].text)), 'плательщику - спасибо по-украински и подтверждение немедленного старта премиума');
 ok(msgs.some((c) => c[1].chat_id === 42 && /Покупка/.test(c[1].text)), 'Mark - уведомление о покупке');
 next.airdef_pay_credit = { error: 'no_player' }; calls.length = 0;
 await payUpdate(db, pay());
@@ -67,10 +67,12 @@ next.row = { tg_user: 900, stars: 125, sku: 'prem_7d', status: 'paid' }; calls.l
 const nR = rpcs.length;
 ok(await payUpdate(db, { message: { chat: { id: 900 }, from: { id: 900 }, text: '/refund stxABC' } }) === false && !calls.length && rpcs.length === nR, '/refund от игрока - не команда');
 await payUpdate(db, { message: { chat: { id: 42 }, from: { id: 42 }, text: '/refund stxABC' } });
+ok(!last('refundStarPayment') && /Подтвердить: \/refund stxABC ok/.test(last('sendMessage').text), '/refund без ok - только сводка и команда подтверждения');
+await payUpdate(db, { message: { chat: { id: 42 }, from: { id: 42 }, text: '/refund stxABC ok' } });
 const rs = last('refundStarPayment');
 ok(rs && rs.user_id === 900 && rs.telegram_payment_charge_id === 'stxABC' && rpcs.at(-1)[0] === 'airdef_pay_refund', '/refund от Mark: звёзды назад плательщику, покупка снята');
 next.row = { tg_user: 900, stars: 125, sku: 'prem_7d', status: 'refunded' }; calls.length = 0;
-await payUpdate(db, { message: { chat: { id: 42 }, from: { id: 42 }, text: '/refund stxABC' } });
+await payUpdate(db, { message: { chat: { id: 42 }, from: { id: 42 }, text: '/refund stxABC ok' } });
 ok(!last('refundStarPayment') && /уже возвращён/.test(last('sendMessage').text), 'второй /refund - «уже возвращён», без запроса к Telegram');
 
 // команды

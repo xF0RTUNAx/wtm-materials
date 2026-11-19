@@ -14,7 +14,7 @@ import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
 import { supabaseAdmin } from "../_shared/supabase-admin.ts";
 import { avaCatalog, AVA_PRICE, camosOut, CAMO_PRICE } from "../_shared/airdef/arsenal.js";
 import { sessionPlayer } from "../_shared/airdef-session.ts";
-import { makeInvoice, orderState, payTg, payUpdate, PAY_TOKEN } from "../_shared/airdef-pay.ts";
+import { makeInvoice, orderState, payTg, payUpdate, PAY_TOKEN, separatePayBot } from "../_shared/airdef-pay.ts";
 
 // отдельный платёжный бот: секрет вебхука - HMAC от его токена; вебхук ставится при первом запросе игры (pay_state в support_state)
 const enc = new TextEncoder();
@@ -25,7 +25,7 @@ async function paySecret(): Promise<string> {
 let payHook = false;
 // deno-lint-ignore no-explicit-any
 async function ensurePayHook(db: any) {
-  if (payHook || !Deno.env.get("TG_PAY_TOKEN")) return;
+  if (payHook || !separatePayBot()) return; // платежи ведёт бот поддержки - его вебхук ставит airdef-support
   const url = `${Deno.env.get("SUPABASE_URL")}/functions/v1/airdef-shop`, sec = await paySecret();
   const want = Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", enc.encode(url + "|" + sec))).slice(0, 8), (b) => b.toString(16).padStart(2, "0")).join("");
   const { data } = await db.from("support_state").select("v").eq("k", "pay_webhook").maybeSingle();
@@ -34,7 +34,7 @@ async function ensurePayHook(db: any) {
     await db.from("support_state").upsert({ k: "pay_webhook", v: want, updated_at: new Date().toISOString() }); payHook = true;
   }
 }
-const PAY_WHY: Record<string, string> = { bad_sku: "Такого товара нет", off: "Покупки пока выключены", too_many: "Слишком много неоплаченных счетов - подождите час", tg: "Telegram не выдал счёт - попробуйте ещё раз" };
+const PAY_WHY: Record<string, string> = { consent: "Отметьте согласие: премиум начнёт действовать сразу после оплаты", bad_sku: "Такого товара нет", off: "Покупки пока выключены", too_many: "Слишком много неоплаченных счетов - подождите час", tg: "Telegram не выдал счёт - попробуйте ещё раз" };
 
 const WHY: Record<string, string> = {
   not_sold: "Этой окраски сейчас нет в магазине",
@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
     const db = supabaseAdmin();
     const hook = req.headers.get("x-telegram-bot-api-secret-token");
     if (hook !== null) { // отдельный платёжный бот (TG_PAY_TOKEN)
-      if (!Deno.env.get("TG_PAY_TOKEN") || hook !== (await paySecret())) return new Response("forbidden", { status: 403 });
+      if (!separatePayBot() || hook !== (await paySecret())) return new Response("forbidden", { status: 403 });
       await payUpdate(db, await req.json().catch(() => ({})));
       return new Response("ok");
     }
@@ -74,7 +74,7 @@ Deno.serve(async (req) => {
       return jsonResponse({ season, wallet: w.data });
     }
     if (action === "invoice") {
-      const r = await makeInvoice(db, player_id, key, body.lang);
+      const r = await makeInvoice(db, player_id, key, body.lang, body.consent === true);
       if (!r.link) return jsonResponse({ error: PAY_WHY[r.code || ""] || "Нельзя", code: r.code }, r.code === "bad_sku" ? 400 : 409);
       return jsonResponse({ link: r.link, order: r.order });
     }

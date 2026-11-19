@@ -17,7 +17,7 @@ await db.exec(Deno.readTextFileSync(SQL + '037_airdef_premium_pay.sql')); // п�
 ok(true, 'миграции 020…028 и 037 (037 повторно) применились');
 
 const p = (await one(`insert into players (login, password_hash, kind) values ('pilot', 'x', 'airdef') returning id`)).id;
-const order = async (sku, pl = p) => { const s = PAY[sku]; return (await one('select airdef_order_new($1, $2, $3, $4, $5) r', [pl, sku, s.stars, s.prem || 0, s.gems || 0])).r; };
+const order = async (sku, pl = p, cons = true) => { const s = PAY[sku]; return (await one('select airdef_order_new($1, $2, $3, $4, $5, $6) r', [pl, sku, s.stars, s.prem || 0, s.gems || 0, cons])).r; };
 const check = (o, st) => one('select airdef_pay_check($1, $2) r', [o, st]).then((x) => x.r);
 const credit = (o, ch, st, tg = 777) => one('select airdef_pay_credit($1, $2, $3, $4) r', [o, ch, st, tg]).then((x) => x.r);
 const refund = (ch) => one('select airdef_pay_refund($1) r', [ch]).then((x) => x.r);
@@ -53,6 +53,11 @@ r = await refund('ch-1');
 ok(r.ok && r.gems === 30 && (await view()).crystals === 0 && Number(r.tg_user) === 777, 'возврат: снято сколько было (30 из 100), кошелёк 0, известен плательщик');
 ok((await refund('ch-1')).error === 'not_paid', 'второй возврат того же - отказ');
 ok((await refund('nope')).error === 'no_order', 'возврат неизвестного платежа - отказ');
+
+// согласие на немедленный старт: без него заказ премиума не создаётся, с ним - время записано; кристаллам не нужно
+ok((await order('prem_7d', p, false)).error === 'consent', 'премиум без галочки согласия - заказа нет');
+ok(!!(await order('gems_100', p, false)).id, 'кристаллы - без галочки');
+{ const c = await order('prem_1d'); ok(!!(await one('select consent_at from airdef_orders where id = $1', [c.id])).consent_at, 'согласие записано в заказ (consent_at)'); }
 
 // премиум: от покупки, следующий - от конца текущего
 const p1 = await order('prem_7d');
@@ -98,7 +103,7 @@ r = await credit(dNew.id, 'ch-d1', PAY.gems_100.stars);
 ok(r.error === 'no_player' && (await one('select status from airdef_orders where id = $1', [dNew.id])).status === 'paid', 'оплата после удаления - заказ «paid» для возврата');
 
 // права
-for (const f of ['airdef_order_new(uuid,text,int,int,int)', 'airdef_pay_check(uuid,int)', 'airdef_pay_credit(uuid,text,int,bigint)', 'airdef_pay_refund(text)', 'airdef_prem_daily(uuid,date)', 'airdef_wallet_view(uuid)']) {
+for (const f of ['airdef_order_new(uuid,text,int,int,int,boolean)', 'airdef_pay_check(uuid,int)', 'airdef_pay_credit(uuid,text,int,bigint)', 'airdef_pay_refund(text)', 'airdef_prem_daily(uuid,date)', 'airdef_wallet_view(uuid)']) {
   const g = await one(`select has_function_privilege('anon', '${f}', 'execute') a, has_function_privilege('authenticated', '${f}', 'execute') u, has_function_privilege('service_role', '${f}', 'execute') s`);
   ok(!g.a && !g.u && g.s, `${f}: только service_role`);
 }

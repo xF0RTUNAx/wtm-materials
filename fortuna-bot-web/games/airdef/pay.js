@@ -19,6 +19,7 @@ export function createPay(C) {
   const fail = (text) => { S.err = text; emit({ type: 'error', text }); set('idle', { order: null, link: '', blocked: false }); };
 
   // опрос заказа: every мс, до deadline мс; true - заказ оплачен (кошелёк уже у слушателей)
+  // every - шаг первую минуту; дальше (ждём оплату в Telegram, игрок мог отвлечься) - не чаще раза в 12 с: зря не нагружать сервер
   async function poll(g, every, deadline) {
     const t0 = Date.now();
     while (g === S.gen && Date.now() - t0 < deadline) {
@@ -28,7 +29,7 @@ export function createPay(C) {
         if (d.status === 'paid') { const key = S.key; set('done', { order: null }); if (d.wallet && C.progress) C.progress.setPrem(d.wallet.premium_until); emit({ type: 'paid', key, wallet: d.wallet, season: d.season }); set('idle', { key: null, link: '', blocked: false }); return true; }
         if (d.status === 'refunded') { fail(tr('Платёж возвращён')); return false; }
       } catch (e) { if (e && e.status === 404) { fail(trIf(e.message)); return false; } /* сеть моргнула - ждём дальше */ }
-      await sleep(every);
+      await sleep(Date.now() - t0 > 60000 ? Math.max(every, 12000) : every);
     }
     return false;
   }
@@ -42,7 +43,7 @@ export function createPay(C) {
       const pid = player(); if (!pid) return false;
       const g = ++S.gen; S.err = ''; set('creating', { key, order: null, link: '', blocked: false });
       let d;
-      try { d = await callFn('airdef-shop', { player_id: pid, action: 'invoice', key, lang: LANG }); }
+      try { d = await callFn('airdef-shop', { player_id: pid, action: 'invoice', key, lang: LANG, ...(String(key).startsWith('prem_') ? { consent: true } : {}) }); }
       catch (e) { if (g === S.gen) fail(trIf(e.message) || tr('Нет связи с сайтом')); return false; }
       if (g !== S.gen) return false; // отменили, пока ждали счёт
       S.order = d.order; S.link = d.link;
@@ -60,7 +61,7 @@ export function createPay(C) {
       }
       // браузер (или Telegram старше 6.1): счёт - ссылкой, ждём оплату, пока окно открыто
       let w = null;
-      try { if (T && typeof T.openTelegramLink === 'function') { T.openTelegramLink(d.link); w = {}; } else w = window.open(d.link, '_blank', 'noopener'); } catch (_) { w = null; }
+      try { if (T && typeof T.openTelegramLink === 'function') { T.openTelegramLink(d.link); w = {}; } else { w = window.open(d.link, '_blank'); if (w) try { w.opener = null; } catch (_) { /* другой домен */ } } } catch (_) { w = null; }
       set('wait', { blocked: !w });
       const ok = await poll(g, 3000, 600000);
       if (!ok && g === S.gen && S.st === 'wait') set('idle', { order: null, link: '', blocked: false }); // 10 минут вышли

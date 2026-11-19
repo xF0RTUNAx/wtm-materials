@@ -7,7 +7,9 @@ import { PAY } from "./airdef/arsenal.js";
 
 // deno-lint-ignore no-explicit-any
 type Db = any;
-export const PAY_TOKEN = () => Deno.env.get("TG_PAY_TOKEN") || Deno.env.get("TG_SUPPORT_TOKEN") || "";
+// отдельный платёжный бот - только если TG_PAY_TOKEN вписан и это НЕ бот поддержки (иначе два вебхука одного бота перебивали бы друг друга)
+export const separatePayBot = () => { const p = Deno.env.get("TG_PAY_TOKEN") || ""; return !!p && p !== (Deno.env.get("TG_SUPPORT_TOKEN") || ""); };
+export const PAY_TOKEN = () => (separatePayBot() ? Deno.env.get("TG_PAY_TOKEN")! : Deno.env.get("TG_SUPPORT_TOKEN") || "");
 const ADMIN = () => Number(Deno.env.get("SUPPORT_ADMIN_ID") || 0);
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const SITE = "https://fortunawtm.com/fortuna-bot-web/games/legal/";
@@ -54,6 +56,22 @@ const T = {
     es: "¡Gracias! Tu compra ya está acreditada: {w}. Vuelve al juego, ya lo tienes todo.",
     fr: "Merci ! Votre achat est crédité : {w}. Revenez dans le jeu, tout y est déjà.",
   },
+  premNow: {
+    ru: "Премиум уже действует: вы согласились начать его сразу, поэтому отказаться от этой покупки нельзя.",
+    uk: "Преміум уже діє: ви погодилися почати його одразу, тому відмовитися від цієї покупки не можна.",
+    en: "Premium is already active: you agreed to start it right away, so this purchase can't be withdrawn.",
+    de: "Premium ist schon aktiv: Du hast dem sofortigen Start zugestimmt, deshalb kann dieser Kauf nicht widerrufen werden.",
+    es: "El Premium ya está activo: aceptaste que empezara de inmediato, así que ya no puedes desistir de esta compra.",
+    fr: "Le Premium est déjà actif : vous avez accepté qu'il démarre immédiatement, vous ne pouvez donc plus vous rétracter de cet achat.",
+  },
+  later: {
+    ru: "Не получилось проверить счёт. Подождите минуту и попробуйте оплатить ещё раз.",
+    uk: "Не вдалося перевірити рахунок. Зачекайте хвилину й спробуйте оплатити ще раз.",
+    en: "We couldn't check the invoice. Please wait a minute and try paying again.",
+    de: "Die Rechnung konnte nicht geprüft werden. Warte kurz und versuch es noch einmal.",
+    es: "No pudimos comprobar la factura. Espera un minuto y vuelve a intentar el pago.",
+    fr: "Impossible de vérifier la facture. Patientez une minute et réessayez le paiement.",
+  },
   paysupport: {
     ru: "Вопросы по покупкам: напишите из игры (Профиль → Поддержка, тема «Покупки») или на {mail}. Укажите дату покупки и ник. Условия покупок и возвратов: {terms}",
     uk: "Питання щодо покупок: напишіть із гри (Профіль → Підтримка, тема «Покупки») або на {mail}. Вкажіть дату покупки й нік. Умови покупок і повернень: {terms}",
@@ -82,10 +100,10 @@ export const skuOf = (k: unknown): Sku | null => (typeof k === "string" && Objec
 const what = (s: Sku, l: L) => (s.prem ? fmt(T.prem[l], { n: DAYS[l](s.prem) }) : fmt(T.gems[l], { n: s.gems! }));
 
 // ── счёт для игры: заказ в базе → ссылка Telegram (t.me/$…). Ответ { link, order } | { error, code } ──
-export async function makeInvoice(db: Db, player: string, sku: string, lang: unknown): Promise<{ link?: string; order?: string; code?: string }> {
+export async function makeInvoice(db: Db, player: string, sku: string, lang: unknown, consent = false): Promise<{ link?: string; order?: string; code?: string }> {
   const s = skuOf(sku); if (!s) return { code: "bad_sku" };
   if (!PAY_TOKEN()) return { code: "off" };
-  const o = await db.rpc("airdef_order_new", { p_player: player, p_sku: sku, p_stars: s.stars, p_days: s.prem || 0, p_gems: s.gems || 0 });
+  const o = await db.rpc("airdef_order_new", { p_player: player, p_sku: sku, p_stars: s.stars, p_days: s.prem || 0, p_gems: s.gems || 0, p_consent: consent === true });
   if (o.error) throw o.error;
   if (o.data?.error) return { code: o.data.error };
   const l = lng(lang), title = what(s, l);
@@ -109,13 +127,14 @@ export async function payUpdate(db: Db, u: any): Promise<boolean> {
   const q = u?.pre_checkout_query;
   if (q) { // перед списанием: ответить за 10 с, иначе Telegram отменит оплату
     const l = lng(String(q.from?.language_code || "").slice(0, 2));
-    let good = false;
+    let good = false, why: string = T.bad[l];
     if (q.currency === "XTR" && UUID.test(String(q.invoice_payload || ""))) {
-      const c = await db.rpc("airdef_pay_check", { p_order: q.invoice_payload, p_stars: Number(q.total_amount) });
+      const c = await db.rpc("airdef_pay_check", { p_order: q.invoice_payload, p_stars: Number(q.total_amount) }).catch((e: unknown) => ({ error: e, data: null }));
       good = !c.error && c.data === "ok";
+      if (c.error) why = T.later[l]; // сбой базы - не «счёт недействителен», а «попробуйте позже»
       if (!good) console.error("pay check", c.error?.message || c.data);
     }
-    await payTg("answerPreCheckoutQuery", good ? { pre_checkout_query_id: q.id, ok: true } : { pre_checkout_query_id: q.id, ok: false, error_message: T.bad[l] });
+    await payTg("answerPreCheckoutQuery", good ? { pre_checkout_query_id: q.id, ok: true } : { pre_checkout_query_id: q.id, ok: false, error_message: why });
     return true;
   }
   const m = u?.message;
@@ -130,7 +149,7 @@ export async function payUpdate(db: Db, u: any): Promise<boolean> {
     if (d.error) { await alarm(`⚠ Оплата не зачислена (${d.error}): ${sp.total_amount} ⭐, charge ${sp.telegram_payment_charge_id}. Вернуть: /refund ${sp.telegram_payment_charge_id}`); return true; }
     if (d.ok) {
       const s = skuOf(d.sku);
-      await payTg("sendMessage", { chat_id: m.chat.id, text: fmt(T.thanks[l], { w: s ? what(s, l) : d.sku }) });
+      await payTg("sendMessage", { chat_id: m.chat.id, text: fmt(T.thanks[l], { w: s ? what(s, l) : d.sku }) + (s?.prem ? "\n" + T.premNow[l] : "") }); // премиум: подтверждение согласия на немедленный старт - в сообщении (остаётся у игрока)
       await alarm(`⭐ Покупка: ${s ? what(s, "ru") : d.sku} - ${sp.total_amount} ⭐`);
     }
     return true;
@@ -145,15 +164,24 @@ export async function payUpdate(db: Db, u: any): Promise<boolean> {
   const txt = typeof m.text === "string" ? m.text.trim() : "";
   if (/^\/paysupport(@\w+)?$/.test(txt)) { await payTg("sendMessage", { chat_id: m.chat.id, text: fmt(T.paysupport[l], { mail: MAIL, terms: `${SITE}terms.html?lang=${l}` }), link_preview_options: { is_disabled: true } }); return true; }
   if (/^\/terms(@\w+)?$/.test(txt)) { await payTg("sendMessage", { chat_id: m.chat.id, text: fmt(T.terms[l], { terms: `${SITE}terms.html?lang=${l}` }), link_preview_options: { is_disabled: true } }); return true; }
-  const rf = txt.match(/^\/refund\s+(\S{1,200})$/);
-  if (rf && ADMIN() && m.from?.id === ADMIN()) { await refundCmd(db, rf[1]); return true; }
+  const rf = txt.match(/^\/refund\s+(\S{1,200})(\s+ok)?$/);
+  if (rf && ADMIN() && m.from?.id === ADMIN()) { await refundCmd(db, rf[1], !!rf[2]); return true; }
   return false;
 }
-// /refund <charge id> - только Mark: звёзды назад плательщику, покупка снимается
-async function refundCmd(db: Db, charge: string) {
-  const { data: o } = await db.from("airdef_orders").select("tg_user, stars, sku, status").eq("charge_id", charge).maybeSingle();
+// /refund <charge id> - только Mark: сначала сводка (что куплено, сколько кристаллов осталось на счету), возврат - «/refund <charge id> ok»:
+// звёзды назад плательщику, покупка снимается (кристаллы - сколько осталось, премиум - срок этой покупки)
+async function refundCmd(db: Db, charge: string, go: boolean) {
+  const { data: o } = await db.from("airdef_orders").select("tg_user, stars, sku, status, player_id, gems, paid_at").eq("charge_id", charge).maybeSingle();
   if (!o) { await alarm("Платёж не найден: " + charge); return; }
   if (o.status !== "paid") { await alarm(`Этот платёж уже ${o.status === "refunded" ? "возвращён" : "не оплачен"}.`); return; }
+  if (!go) {
+    const { data: w } = o.player_id ? await db.from("airdef_wallet").select("crystals, premium_until").eq("player_id", o.player_id).maybeSingle() : { data: null };
+    const s = skuOf(o.sku), left = w ? Number(w.crystals) : 0;
+    const lines = [`Возврат ${o.stars} ⭐ - ${s ? what(s, "ru") : o.sku}, оплачено ${String(o.paid_at || "").slice(0, 16).replace("T", " ")}`,
+      !o.player_id ? "Аккаунт удалён: снимать нечего, звёзды вернутся целиком." : o.gems ? `Кристаллов на счету: ${left} из ${o.gems} купленных${left < o.gems ? " - часть потрачена, снимется только остаток" : ""}.` : `Премиум до ${String(w?.premium_until || "-").slice(0, 16).replace("T", " ")} (UTC), срок этой покупки снимется.`,
+      `Подтвердить: /refund ${charge} ok`];
+    await alarm(lines.join("\n")); return;
+  }
   const ok = await payTg("refundStarPayment", { user_id: Number(o.tg_user), telegram_payment_charge_id: charge });
   if (!ok) { await alarm("Telegram не принял возврат (подробности - в журнале функции)."); return; }
   const r = await db.rpc("airdef_pay_refund", { p_charge: charge });
