@@ -120,7 +120,9 @@ ok(!questClaim(q, WED, 'd:нет').ok && !questClaim(q, WED, 'w:нет').ok && !
 // ── сервер на поддельном прогрессе ──
 { const Pr = toProgress(null), x = extraOf(null), ev = { min: 10, targets: [1], sams: 1, win: true }; const c = onlineCounters({ rt: {}, team: 'air', mode: 'arcade', k: 1, ev: { min: 10, obj: 1 } });
   const r = credit(Pr, x, ev, { real: false, online: true, today: WED, quest: c }); const q1 = r.extra.quests;
-  ok(q1.day === WED && r.extra.solo_day === WED && r.extra.solo_xp === r.reward.xp, 'бой сохраняет и дневной опыт, и задания');
+  ok(q1.day === WED && r.extra.solo_day === WED && r.extra.solo_xp === 0 && r.reward.xp > 0, 'онлайн-бой сохраняет задания, но не тратит дневной предел (онлайн без предела, Mark 2026-11-19)');
+  const rs = credit(toProgress(null), extraOf(null), ev, { real: false, online: false, today: WED }); ok(rs.extra.solo_xp === rs.reward.xp, 'одиночный бой тратит дневной предел');
+  const big = credit(toProgress(null), { ...extraOf(null), solo_day: WED, solo_xp: 50000 }, ev, { real: false, online: true, today: WED }); ok(!big.reward.mult.some(([t]) => /за день/.test(t)), 'онлайн после 50 000 опыта за день - без понижения');
   const xpT = q1.d.find((t) => t.id === 'xp') || q1.w.find((t) => t.id === 'xp'); ok(!xpT || xpT.n === Math.min(r.reward.xp, xpT.n), 'опыт боя идёт в задание на опыт');
   const r2 = credit(toProgress(null), extraOf(null), ev, { real: false, online: false, today: WED, used: [] }); ok(!r2.extra.quests.day, 'одиночный бой без счётчиков заданий не трогает');
   const vw = view(Pr, r.extra, WED); ok(vw.quests.d.length === 3 && vw.quests.w.length === 5, 'состояние для клиента');

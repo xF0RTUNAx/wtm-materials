@@ -277,7 +277,8 @@ export function battleReward(ev, o = {}) {
   const K = []; if (o.real) K.push(['Реализм', REAL_K]); else if (o.arcade) K.push(['Аркада', ARCADE_K]); if (o.firstWin && ev.win) K.push(['Первая победа дня', FIRST_WIN_K]);
   for (const [, k] of K) xp *= k;
   if (!o.online) xp = Math.min(xp, SOLO_BATTLE_CAP, SOLO_MIN_CAP * Math.max(1, min) * (o.real ? REAL_K : 1) * (o.firstWin ? FIRST_WIN_K : 1)); // одиночная: браузеру верим в пределах разумного
-  const today = o.dayXp ?? o.soloToday ?? 0, over = Math.max(0, today + xp - DAY_FULL);
+  // дневной предел - только одиночные бои (Mark 2026-11-19: «убери ежедневный лимит по серебру и опыту в онлайне»): онлайн считает сервер боя
+  const today = o.dayXp ?? o.soloToday ?? 0, over = o.online ? 0 : Math.max(0, today + xp - DAY_FULL);
   if (over > 0) { const full = xp - Math.min(xp, over); xp = full + Math.min(over, xp) * DAY_OVER; K.push([`После ${DAY_FULL} за день`, DAY_OVER]); }
   xp = Math.round(xp);
   // премиум (o.prem - множитель, arsenal.js PREM_K): поверх всего, дневной предел считается по опыту без него (base)

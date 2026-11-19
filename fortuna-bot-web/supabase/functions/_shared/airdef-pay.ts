@@ -129,7 +129,9 @@ export async function payUpdate(db: Db, u: any): Promise<boolean> {
     const l = lng(String(q.from?.language_code || "").slice(0, 2));
     let good = false, why: string = T.bad[l];
     if (q.currency === "XTR" && UUID.test(String(q.invoice_payload || ""))) {
-      const c = await db.rpc("airdef_pay_check", { p_order: q.invoice_payload, p_stars: Number(q.total_amount) }).catch((e: unknown) => ({ error: e, data: null }));
+      // rpc Supabase - не настоящий Promise (у него нет .catch): ошибку сети ловим try, иначе функция падает и Telegram не получает ответа
+      let c: { data: unknown; error: { message?: string } | null };
+      try { c = await db.rpc("airdef_pay_check", { p_order: q.invoice_payload, p_stars: Number(q.total_amount) }); } catch (e) { c = { data: null, error: { message: e instanceof Error ? e.message : String(e) } }; }
       good = !c.error && c.data === "ok";
       if (c.error) why = T.later[l]; // сбой базы - не «счёт недействителен», а «попробуйте позже»
       if (!good) console.error("pay check", c.error?.message || c.data);

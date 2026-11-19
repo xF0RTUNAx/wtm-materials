@@ -154,6 +154,7 @@ const CSS = `
 #shopWin.cat-prem .pcards[data-g="prem"], #shopWin.cat-gems .pcards[data-g="gems"] { display: grid; }
 #shopWin .talon { position: relative; aspect-ratio: 600 / 780; display: block; width: 100%; background: var(--mk) center / 100% 100% no-repeat; filter: drop-shadow(0 calc(6px * var(--ps)) calc(10px * var(--ps)) rgba(0,0,0,.45)); transition: transform 1.6s cubic-bezier(.45,0,.55,1); color: #1f2635; text-align: center; }
 #shopWin .talon.on { transform: translateY(-3px); }
+#shopWin.pload .pcards .talon { visibility: hidden; } /* подложки и иконки талонов ещё не пришли - не показывать пустые чёрные карточки */
 #shopWin .talon > * { position: absolute; z-index: 2; }
 #shopWin .talon .ic2 { left: 0; right: 0; top: 14%; height: 33%; display: flex; align-items: center; justify-content: center; }
 #shopWin .talon .ic2 img { max-height: 100%; max-width: 74%; object-fit: contain; filter: drop-shadow(0 4px 6px rgba(0,0,0,.35)); transition: transform 1.6s cubic-bezier(.45,0,.55,1); }
@@ -401,8 +402,18 @@ export function createShop(C) {
     S.pvOn = on || '';
   }
   document.addEventListener && document.addEventListener('visibilitychange', () => { if (!api.isOpen()) return; if (document.hidden) root.querySelectorAll('.pv').forEach((v) => v.pause && v.pause()); else if (isPay(S.cat)) videos(S.cat); });
+  // подложки талонов, иконки и постеры витрины: качаются заранее (при открытии магазина и в простое после загрузки игры),
+  // иначе после смены вкладки карточки секунду-две стоят пустыми (Mark 2026-11-19); пока не пришли - карточки скрыты (.pload)
+  const PRE_IMG = ['talon_bronze', 'talon_silver', 'talon_gold', 'prem_1d', 'prem_7d', 'prem_30d', 'gems_100', 'gems_550', 'gems_1200', 'shop_prem_poster', 'shop_gems_poster'].map((n) => `airdef/shop/prem/${n}.webp`);
+  let preP = null, preDone = false; const preIms = []; // ссылки держим: декодированные картинки не выгружаются, смена вкладки - без задержки
+  // ждём загрузку (onload), не decode(): decode в части браузеров не завершается; страховка - 4 с, потом карточки показываются в любом случае
+  const preload = () => preP || (preP = (typeof Image === 'undefined' ? Promise.resolve() : Promise.race([
+    Promise.all(PRE_IMG.map((src) => new Promise((r) => { const im = new Image(); preIms.push(im); im.onload = im.onerror = () => r(); im.src = src; }))),
+    new Promise((r) => setTimeout(r, 4000))])).then(() => { preDone = true; if (root.classList) root.classList.remove('pload'); }));
+  try { if (typeof Image !== 'undefined') setTimeout(() => preload(), 5000); } catch (_) { /* без окна (проверки) */ } // через 5 с после загрузки: не мешает первому кадру
   function drawPay(anim) {
     const g = S.cat, keys = PK[g], i = S.ps[g], key = keys[i], P = PAY[key], a = acc(), w = S.w, uu = premUntil(), ok = !!a && a.kind === 'airdef';
+    if (!preDone && root.classList) { root.classList.add('pload'); preload(); }
     if (S.shown !== 'pay:' + g) { S.shown = 'pay:' + g; videos(g); if (!RM) { root.classList.remove('pin'); void root.offsetWidth; root.classList.add('pin'); setTimeout(() => root.classList.remove('pin'), 2200); } }
     q('.balN').textContent = w ? nf(w.crystals) : '-';
     root.querySelectorAll(`.pcards[data-g="${g}"] .talon`).forEach((t) => t.classList.toggle('on', +t.dataset.i === i));

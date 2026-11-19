@@ -75,7 +75,7 @@ export function credit(P: Progress, x: Extra, ev: BattleEvents, o: { real: boole
   P.xp += r.xp; P.silver += r.silver;
   let nx: Extra = { ...x };
   if (firstWin && ev.win && r.xp > 0) nx.first_win_day = o.today;
-  nx.solo_day = o.today; nx.solo_xp = soloToday + (r.base ?? r.xp); // дневной предел - по опыту без премиума
+  nx.solo_day = o.today; nx.solo_xp = soloToday + (o.online ? 0 : (r.base ?? r.xp)); // дневной предел - по опыту без премиума и только одиночные бои (онлайн без предела, Mark 2026-11-19)
   if (o.quest) nx = payQuest(P, nx, questApply(x.quests, o.today, o.online ? { ...o.quest, xp: r.xp } : o.quest));
   const auto = autoResearch(P);
   return { reward: r, P, extra: nx, auto, realOk, realAsked: o.real, soloLeft: Math.max(0, SOLO_DAY - (nx.solo_day === o.today ? nx.solo_xp : 0)) };

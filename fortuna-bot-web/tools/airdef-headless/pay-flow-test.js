@@ -11,7 +11,8 @@ globalThis.fetch = async (url, init) => { const m = String(url).split('/').pop()
 const OID = '11111111-2222-3333-4444-555555555555';
 const rpcs = []; let next = {};
 const db = {
-  rpc: async (fn, a) => { rpcs.push([fn, a]); return { data: next[fn] !== undefined ? next[fn] : null, error: null }; },
+  // как в supabase-js: rpc отдаёт «thenable» без .catch / .finally (настоящий Promise в заглушке прятал ошибку 2026-11-19)
+  rpc: (fn, a) => { rpcs.push([fn, a]); const r = { data: next[fn] !== undefined ? next[fn] : null, error: null }; return { then: (ok, bad) => Promise.resolve(r).then(ok, bad) }; },
   from: () => { const q = { select: () => q, eq: () => q, maybeSingle: async () => ({ data: next.row ?? null, error: null }) }; return q; },
 };
 const last = (m) => [...calls].reverse().find((c) => c[0] === m)?.[1];
