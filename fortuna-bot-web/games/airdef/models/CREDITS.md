@@ -14,7 +14,6 @@
 - "Миг - 31" (https://sketchfab.com/3d-models/31-b168fbca1f6c4ad0ad4e45b7a22f52bc) by mamont nikita - CC-BY-4.0 - `e_mig31.glb`, `e_mig31_lo.glb`
 - "Sukhoi Su-57 "Felon"" (https://sketchfab.com/3d-models/sukhoi-su-57-felon-09d546b4355c4fa6882ca46e05069bee) by andertan - CC-BY-4.0 - `e_su57.glb`, `e_su57_lo.glb`
 - "Mig-29K" (https://sketchfab.com/3d-models/mig-29k-23a0d3531b8f4f58b428835754a9fbdb) by Art Blender (KoreanNavy) - CC-BY-4.0 - `e_mig29k.glb`
-- "Sukhoi Su-35 Flanker-E (Сухой Су-35)" (https://sketchfab.com/3d-models/sukhoi-su-35-flanker-e-35-c98cf9b3b3e04017a04732798a31888a) by andertan - CC-BY-4.0 - `e_su35.glb`
 - "ELTA 8222 ECM POD 1/48" (https://www.thingiverse.com/thing:5360259) by Original_linny - CC-BY-4.0 - `w_ecm.glb`
 - "AGM-86" (https://sketchfab.com/3d-models/agm-86-de64a3d9282249e39760a5fee425e7ae) by mahmadsaleem11111 - CC-BY-4.0 - `w_agm86.glb`
 - "Storm Shadow Ukraine (декали убраны)" (https://sketchfab.com/3d-models/storm-shadow-ukraine-d1ad04ce964f46dd9cbac6a64cd19b1b) by Viktor_ - CC-BY-4.0 - `w_storm.glb`

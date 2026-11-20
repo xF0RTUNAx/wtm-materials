@@ -104,15 +104,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "Sukhoi Su-35 Flanker-E (Сухой Су-35)",
-  "author": "andertan",
-  "url": "https://sketchfab.com/3d-models/sukhoi-su-35-flanker-e-35-c98cf9b3b3e04017a04732798a31888a",
-  "license": "CC-BY-4.0",
-  "files": [
-   "e_su35"
-  ]
- },
- {
   "title": "ELTA 8222 ECM POD 1/48",
   "author": "Original_linny",
   "url": "https://www.thingiverse.com/thing:5360259",
