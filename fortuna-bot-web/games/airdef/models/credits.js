@@ -131,15 +131,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "Tupolev TU-160",
-  "author": "KOG_THORNS",
-  "url": "https://sketchfab.com/3d-models/tupolev-tu-160-d3af9e67f8024dcc9b23a3e91d492e40",
-  "license": "CC-BY-4.0",
-  "files": [
-   "e_tu160"
-  ]
- },
- {
   "title": "UGM-84 Harpoon (FREE)",
   "author": "FeriseCAT",
   "url": "https://sketchfab.com/3d-models/ugm-84-harpoon-free-d62d60fac04f4d6b86e24ad06a1f99c6",
@@ -173,15 +164,6 @@ export const CREDITS = [
   "license": "CC-BY-4.0",
   "files": [
    "br_seg"
-  ]
- },
- {
-  "title": "MiG 29",
-  "author": "Uxman",
-  "url": "https://sketchfab.com/3d-models/mig-29-f04c8e99765c4d7e875476998ec5c2f3",
-  "license": "CC-BY-4.0",
-  "files": [
-   "mig29"
   ]
  },
  {

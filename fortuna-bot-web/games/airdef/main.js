@@ -1019,7 +1019,7 @@ function syncWorld(dt, t) {
     const L = g.userData.lod, near = !L || camera.position.distanceToSquared(a.pos) < LOD_D * LOD_D;
     if (L) { L.hi.visible = near; L.lo.visible = !near; }
     const hb = g.userData.bay; if (hb) hb.update(dt); // в отсеке: оружие видно только в открытом
-    if (g.userData.hung) for (const h of g.userData.hung) h.m.visible = near && h.l.n > h.k && (!hb || h.out || hb.open(h.m.position.x) > 0.02);
+    if (g.userData.hung) for (const h of g.userData.hung) h.m.visible = near && h.l.n > h.k && (!hb || h.out || hb.open(h.m.position) > 0.02);
   }
   // дым подбитых самолётов (ИИ и игрок): ветер - лёгкий, постоянный для боя. После того как модели встали на место этого кадра
   // (2026-10-25: раньше - до них, след выходил из прошлого положения: на 30 к/с в 6-10 м позади, в вираже - вбок)

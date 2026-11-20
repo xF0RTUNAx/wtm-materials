@@ -1244,7 +1244,7 @@ export function createAir(C) {
     if (game.net && craft.dead) { spectate(dt, t); return; } // за союзниками - только когда сбит (решение Mark)
     // модель самолёта - до отрисовки кадра, в ту же точку, по которой ставится камера (иначе самолёт «прыгает» на кадр)
     ship.position.copy(craft.pos); ship.rotation.set(craft.pitch, craft.yaw, craft.roll, 'YXZ');
-    if (shipBay) { shipBay.update(dt); for (const m of pylonMeshes) if (m.userData.st !== undefined && !shipOut.has(m.userData.st)) m.visible = shipBay.open(m.position.x) > 0.02 && loadout.some((l) => l.st.includes(m.userData.st)); } // в отсеке оружие видно, только пока створки открыты
+    if (shipBay) { shipBay.update(dt); for (const m of pylonMeshes) if (m.userData.st !== undefined && !shipOut.has(m.userData.st)) m.visible = shipBay.open(m.position) > 0.02 && loadout.some((l) => l.st.includes(m.userData.st)); } // в отсеке оружие видно, только пока створки открыты
     // дым и огонь из повреждённых зон - от модели в положении этого кадра (2026-10-25: был в systems() до шага полёта - след отставал на кадр);
     // время - шагов полёта с прошлого кадра (камера идёт и на паузе, и в замедлении - по ним дым не копится)
     if (craft.dmgVis && dmgDt > 0 && !craft.dead) craft.dmgVis.update(dmgDt, craft, C.windV || (C.windV = new THREE.Vector3(3.9, 0, 1.1)));
