@@ -2,8 +2,8 @@
 // запрос счёта, показ и ожидание. Внутри Telegram - WebApp.openInvoice (итог 'paid' → опрос заказа раз в 1,5 с до ~60 с); в обычном браузере - ссылка на счёт в новой
 // вкладке и опрос раз в 3 с до 10 минут, пока окно ждёт. Состояния для окна магазина: idle, creating, tg (счёт открыт в Telegram), polling (оплачено, зачисляем),
 // wait (ждём оплату в Telegram), done. Итог - слушатели on(f): { type: 'paid', key, wallet, season } | { type: 'state' } (смена состояния) | { type: 'error', text }.
-import { tr, trIf, LANG } from './i18n.js?v=20261119c';
-import { activeAcc, callFn } from './account.js?v=20261119c';
+import { tr, trIf, LANG } from './i18n.js?v=20261120a';
+import { activeAcc, callFn } from './account.js?v=20261120a';
 
 const TG = () => { // Telegram.WebApp - в окне или у страницы-родителя (как shell.js); null - обычный браузер
   try { const w = window.parent !== window ? window.parent : window, T = (w.Telegram && w.Telegram.WebApp) || (window.Telegram && window.Telegram.WebApp); return T && T.platform && T.platform !== 'unknown' ? T : null; } catch (_) { return null; }

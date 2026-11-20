@@ -4,11 +4,11 @@
 // оружия, комплексов, самолётов, вертолётов, подвесок, эпох, ролей, носителей, режимов, подписи и значения таблиц ТТХ, метки СПО.
 // Ключи и идентификаторы не трогаются - только значения-строки с кириллицей. Модуль надо импортировать ПЕРВЫМ в main.js (до
 // progress.js, чьё дерево копирует названия при импорте); localizeTree(TREE, BRANCHES) - страховка для уже построенного дерева.
-import { XL, DICT, numLoc, L10N } from '../i18n.js?v=20261119c';
-import * as ARS from '../arsenal.js?v=20261119c';
-import { SPECS } from '../sim/flight.js?v=20261119c';
-import { HSPECS } from '../sim/heli.js?v=20261119c';
-import { MODES } from '../sim/strike.js?v=20261119c';
+import { XL, DICT, numLoc, L10N } from '../i18n.js?v=20261120a';
+import * as ARS from '../arsenal.js?v=20261120a';
+import { SPECS } from '../sim/flight.js?v=20261120a';
+import { HSPECS } from '../sim/heli.js?v=20261120a';
+import { MODES } from '../sim/strike.js?v=20261120a';
 
 const CYR = /[А-Яа-яЁё]/;
 const tx = (s) => (DICT[s] !== undefined ? DICT[s] : numLoc(s));
