@@ -750,6 +750,9 @@ void main() {
     Object.assign(sh.uniforms, ENV, TEX, GT, XU, bake ? bake.U : {});
     sh.vertexShader = 'varying vec3 vWp;\n' + sh.vertexShader.replace('#include <project_vertex>', '#include <project_vertex>\n vWp = (modelMatrix * vec4(transformed, 1.0)).xyz;');
     sh.fragmentShader = HEAD + GLUE + sh.fragmentShader.replace('#include <shadowmap_pars_fragment>', groundShadowChunk()).replace('#include <map_fragment>', '#include <map_fragment>\n' + MAIN);
+     // ?alt=1: даль дальше 6 км уходит в цвет дымки (= небо у горизонта, см. scene.fog): холмы на краю карты поднимаются в редкий воздух
+     // (дымка с высотой реже) и на «Среднем» стояли сплошной полосой своего цвета; теперь растворяются силуэтом
+     if (ALT) sh.fragmentShader = sh.fragmentShader.replace('#include <fog_fragment>', '#ifdef USE_FOG\n gl_FragColor.rgb = mix(gl_FragColor.rgb, fogColor, 0.8 * smoothstep(6000.0, 15000.0, length(vFogW)));\n#endif\n#include <fog_fragment>');
   };
   return m;
 }
@@ -2460,14 +2463,15 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
   const SU = { sunDir: { value: sunDir }, zenith: { value: lin(W.zenith) }, horizon: { value: lin(W.horizon) }, ground: { value: lin(W.fog).multiplyScalar(0.75) },
     glow: { value: lin(W.glow).multiplyScalar(W.glowK || 0) }, haze: { value: lin(W.haze) }, sunCol: { value: lin(W.sun).lerp(new THREE.Color(1, 0.95, 0.85), W.el < 20 ? 0.25 : 0.5) },
     hazeK: { value: W.hazeK }, halo: { value: W.halo }, discK: { value: W.disc }, flash: { value: 0 }, ...skyUniforms() };
-  SKY.hi = !P.skyOnly && renderer.capabilities.maxTextureSize >= 8192; skyPano(SU, W); setPaintSky(SU); // панорама неба (Poly Haven); 8K - не на телефонных пресетах
+  SKY.hi = !P.skyOnly && renderer.capabilities.maxTextureSize >= 8192; skyPano(SU, W); if (ALT && !HILLS && SU.skyH0) SU.skyH0.value = Math.max(SU.skyH0.value, 0.075); setPaintSky(SU); // панорама неба (Poly Haven); 8K - не на телефонных пресетах. ?alt=1: снятые у горизонта горы панорамы (плоская синяя полоса на «Среднем», где земля кончается раньше) - ниже ~4° градиент неба
   const sky = new THREE.Mesh(new THREE.SphereGeometry(42000, 48, 24), skyMaterial(SU, 1));
   // небо - после земли (renderOrder 1), последним из непрозрачного (2026-10-26): закрытое землёй, домами и техникой не считается; кадр ГП −1…−4 %
   // (frame-ab.js, 3 карты × «Средний»/«Высокий»), снимки те же. ?sko=0 - первым, как раньше
   sky.renderOrder = typeof location !== 'undefined' && /[?&]sko=0/.test(location.search) ? -2 : 2; sky.frustumCulled = false; scene.add(sky); G.sky = sky;
   // дымка: не реже, чем нужно, чтобы дальние плитки растворялись до того, как пропадут
   const LT = !HILLS && LIGHTS[LIGHT] && !W.night ? LIGHTS[LIGHT] : null; // проба света (?light=)
-  scene.fog = new THREE.FogExp2(lin(LT ? LT.fog : W.fog), Math.max(W.fogD * (LT ? LT.fogD : LOOK && !HILLS ? 0.6 : 1), 1.15 / P.draw));
+  scene.fog = new THREE.FogExp2(lin(LT ? LT.fog : W.fog), Math.max(W.fogD * (LT ? LT.fogD : LOOK && !HILLS ? 0.6 : 1) * (ALT && !HILLS ? 0.8 : 1), 1.15 / P.draw));
+  if (ALT && !HILLS && !W.night) scene.fog.color.copy(lin(W.horizon)).multiplyScalar(0.93); // ?alt=1: цвет дымки - небо у горизонта чуть темнее: дальний рельеф (холмы на краю карты) растворяется в небе силуэтом, а не стоит сплошной полосой своего цвета
   ATMO.sunDir.x = sunDir.x; ATMO.sunDir.y = sunDir.y; ATMO.sunDir.z = sunDir.z;
   const sc = lin(W.sun), fc = lin(LT ? LT.fog : W.fog), lowSun = 1 - THREE.MathUtils.smoothstep(sunDir.y, 0.1, 0.6);
   ATMO.sunCol.x = fc.r * 0.4 + sc.r * 0.9; ATMO.sunCol.y = fc.g * 0.4 + sc.g * 0.9; ATMO.sunCol.z = fc.b * 0.4 + sc.b * 0.9;
