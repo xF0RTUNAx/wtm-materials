@@ -75,8 +75,16 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, s
     ...(r.kind === 'multi' && MU ? MU.viewExtra(r, me) : {}),
     players: [...r.players.values()].map((p) => ({ id: p.id, name: p.name, ava: (p.worn && p.worn.ava) || undefined, prem: p.prem ? 1 : undefined /* премиум (билет: pr) - знак у ника */, /* надетая аватарка (билет mp-ticket), Mark 2026-11-04 */ team: p.team, bot: !!p.bot, ready: !!p.ready, away: !p.bot && !p.ws, spent: !me || p.team === me.team ? p.spent || 0 : null,
       budget: !me || p.team === me.team ? p.budget : null, choice: (!me || p.team === me.team) && p.choice !== null && p.choice !== undefined ? p.choice : null,
-      kills: p.kills || 0, deaths: p.deaths || 0, score: Math.round(p.score || 0), lives: p.lives ?? null })),
+      kills: p.kills || 0, deaths: p.deaths || 0, score: Math.round(p.score || 0), lives: p.lives ?? null,
+      // табло боя (2026-11-20): самолёт игрока (картинка thumbs/air_*) и сбит ли - секунды до нового вылета (true - вылетов не осталось); ПВО - техника у клиента по комплексам
+      ...(p.team === 'air' ? airTab(r, p) : {}) })),
   });
+  function airTab(r, p) {
+    const pl = (p.craft && p.craft.plane) || (p.plane && p.plane.plane) || null; if (pl) p.tabTech = 'air_' + pl;
+    const play = r.state === 'play' && r.kind !== 'multi', dead = play && !!p.tabTech && !p.craft && !p.plane; // ещё не взлетал - не «сбит»
+    const down = !dead ? 0 : p.out || !(p.lives > 0) ? true : p.respT > r.t ? Math.ceil(p.respT - r.t) : true;
+    return { tech: p.tabTech || undefined, down };
+  }
   const sendRoom = (r) => { for (const p of r.players.values()) if (p.ws) send(p, view(r, p)); };
 
   // ═════════════ Комната ═════════════
@@ -198,7 +206,7 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, s
   function nextWave(r) {
     r.wave++; r.state = 'plan'; r.t = 0; r.phaseT = PLAN_T; r.waveRes = { downs: 0, downsSead: 0, unitKills: 0, radarKills: 0, value0K: r.valueK };
     for (const p of r.players.values()) {
-      p.ready = !!p.bot; p.choice = null; p.paid = null; p.craft = null; p.plane = null; p.lives = p.team === 'air' ? O.RESPAWNS[r.wave - 1] + 1 + (r.lead === 'pvo' ? 1 : 0) : null; p.out = false; p.respT = 0; // отстающей авиации - +1 вылет; out/respT - заново каждую волну (комментарий раньше съедал этот код: ушедший за край не возрождался)
+      p.ready = !!p.bot; p.choice = null; p.paid = null; p.craft = null; p.plane = null; p.tabTech = null; p.lives = p.team === 'air' ? O.RESPAWNS[r.wave - 1] + 1 + (r.lead === 'pvo' ? 1 : 0) : null; p.out = false; p.respT = 0; // отстающей авиации - +1 вылет; out/respT - заново каждую волну (комментарий раньше съедал этот код: ушедший за край не возрождался)
       p.limit = r.wave === 1 && p.team === 'pvo' ? { top: O.LIMIT1.top, mid: O.LIMIT1.mid } : null;
     }
     // ПВО между волнами: уничтоженные комплексы убираем, живые перезаряжаются

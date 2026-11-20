@@ -207,7 +207,7 @@ export function createDefense(C) {
   }
   function drawMsg() {
     if (st.alertT > 0) drawAlert(tx); // воздушная тревога: красная плашка под строкой сверху слева
-    if (st.msgT > 0) { tx.font = '700 14px "Golos Text", -apple-system, Segoe UI, sans-serif'; tx.fillStyle = '#fde68a'; tx.strokeStyle = 'rgba(0,0,0,.8)'; tx.lineWidth = 4; const yy = C.VH - (IS_TOUCH ? 16 : 30), xx = ($('mapNav').getBoundingClientRect().right || 0) + 12; tx.textAlign = 'left'; tx.strokeText(st.msg, xx, yy); tx.fillText(st.msg, xx, yy); } // правее панели перемещения
+    if (st.msgT > 0) { tx.font = '700 14px "Golos Text", -apple-system, Segoe UI, sans-serif'; tx.fillStyle = '#fde68a'; tx.strokeStyle = 'rgba(0,0,0,.8)'; tx.lineWidth = 4; let yy = C.VH - (IS_TOUCH ? 16 : 30), xx = ($('mapNav').getBoundingClientRect().right || 0) + 12; if (shelfOn && $('dtop').getBoundingClientRect) { const r = $('dtop').getBoundingClientRect(); yy = Math.round(r.bottom) + 22; xx = r.left; } /* при полке расстановки внизу - под ячейкой очков слева вверху */ tx.textAlign = 'left'; tx.strokeText(st.msg, xx, yy); tx.fillText(st.msg, xx, yy); } // правее панели перемещения
   }
   // баллистическая цель: ромб, высота, до падения; район падения - в аркаде точно, в реализме - круг ±1,5 км (оценка СПРН)
   function drawTbmDot(w, px, py, left) { tx.fillStyle = '#ef4444'; tx.beginPath(); tx.moveTo(px, py - 7); tx.lineTo(px + 6, py); tx.lineTo(px, py + 7); tx.lineTo(px - 6, py); tx.closePath(); tx.fill(); }
@@ -469,12 +469,14 @@ export function createDefense(C) {
     plOk.style.transform = `translate(${Math.round(left)}px, ${Math.round(top)}px)`; if (plOk.hidden) plOk.hidden = false;
   }
   function cancelDraft() { if (st.moving) st.sel = null; st.placing = null; st.moving = false; st.draft = null; snd.click(); renderSide(); }
-  // карточка размещения / выбранного своего комплекса в расстановке
-  function placeCard() {
+  // блок размещения в правой панели (Mark 2026-11-20, макет «Табло и расстановка»): выбранный комплекс (рендер, название, дальность и высота, что сбивает),
+  // подсказка «зелёный - можно, красный - нельзя» и кнопки «Отмена» / «Поставить · цена»; сами карточки комплексов - на полке внизу (shelfSync)
+  function placeBlock() {
     if (!st.placing) return '';
-    const S = SAM[st.placing], c = priceOf(st.placing);
-    return `<div class="dcard on"><div class="nm"><b>${tr('{0} - размещение', [S.name])}</b><span>${st.draft ? tr('место выбрано - коснитесь карты, чтобы сдвинуть') : tr('коснитесь карты - место')}${S.hp <= 15 ? tr(' · можно на плоскую крышу') : ''}${IS_TOUCH ? '' : tr(' · Enter - подтвердить, Esc или правая кнопка - отмена')}</span></div><span class="pr">${c}</span></div>
-      <div class="dact"><button class="btn" data-a="pok" ${st.draft ? '' : 'disabled'}>${tr('Подтвердить −{0}', [c])}</button><button class="btn alt" data-a="pno">${tr('Отмена')}</button></div>`;
+    const k = st.placing, S = SAM[k], c = priceOf(k);
+    return `<div class="dph"><img class="dsi" src="airdef/thumbs/pvo_${k}.webp?v=20261119c" alt="" draggable="false" onerror="this.style.visibility='hidden'"><div class="dpn"><b>${S.name}</b><div class="dst">${raHtml(S)}${capsHtml(S, tmode())}</div></div></div>
+      <div class="dpb"><div class="dtx">${st.draft ? tr('место выбрано - коснитесь карты, чтобы сдвинуть') : tr(IS_TOUCH ? '<b>{0}:</b> коснитесь карты. <i class="gr">Зелёный</i> - можно, <i class="rd">красный</i> - нельзя.' : '<b>{0}:</b> щёлкните по карте. <i class="gr">Зелёный</i> - можно, <i class="rd">красный</i> - нельзя.', [S.short])}${S.hp <= 15 ? tr(' · можно на плоскую крышу') : ''}${IS_TOUCH ? '' : tr(' · Enter - подтвердить, Esc или правая кнопка - отмена')}</div>
+        <div class="dpa"><button class="dsb alt" data-a="pno">${tr('Отмена')}</button><button class="dsb" data-a="pok" ${st.draft ? '' : 'disabled'}>${tr('Поставить · {0}', [c])}</button></div></div>`;
   }
   // фильтр целей комплекса (Mark 2026-10-25): k - вид из строки «Цели»; 'all' - все. Выключить все виды нельзя (последний остаётся).
   // Онлайн: команда серверу (t: 'tgt', c - список включённых видов; пустой - все), сервер проверяет сам
@@ -500,7 +502,7 @@ export function createDefense(C) {
   let sideHold = false, sideHtml = '';
   const holdOn = () => { sideHold = true; }, holdOff = () => { setTimeout(() => { sideHold = false; }, 60); };
   side.addEventListener('pointerdown', holdOn); addEventListener('pointerup', holdOff, true); addEventListener('pointercancel', holdOff, true);
-  const setSide = (h) => { if (h !== sideHtml) { sideHtml = h; side.innerHTML = h; } };
+  const setSide = (h) => { if (h !== sideHtml) { const sp = side.querySelector ? side.querySelector('.dsp') : null, y = sp ? sp.scrollTop : 0; sideHtml = h; side.innerHTML = h; if (y) { const n = side.querySelector('.dsp'); if (n) n.scrollTop = y; } } }; // панель расстановки (.dsp) листается - перерисовка не сбрасывает прокрутку
   function unitStatus(u) {
     if (u.dead) return tr('уничтожен');
     if (u.S.type === 'jammer') return tr('подавляет спутниковую навигацию в радиусе {0} км', [(u.S.jamR / 1000).toFixed(0)]);
@@ -519,26 +521,80 @@ export function createDefense(C) {
     if (!st.net || st.multi || st.wave !== 1) return null; const cls = samClass(k); if (cls === 'near') return null;
     return LIMIT1[cls] - C.S.units.filter((u) => mine(u) && !u.dead && samClass(u.key) === cls).length;
   }
+  // ═════════════ Полка расстановки внизу (Mark 2026-11-20, макет «Табло и расстановка»: рамки ангара, острые углы, на компьютере ×1,2) ═════════════
+  // Карточки комплексов - рендер, название, класс цветом (дальний синий, средний жёлтый, ближний зелёный), цена, дальность и высота значками, «что сбивает»
+  // (capsHtml с режимом: оборона - 'def', «Мульти-волна» - 'multi'), состояния: выбран, нельзя (причина красным), поставлен (×N). Полка начинается правее панели
+  // перемещения карты и листается; справа вверху - ячейка очков (hud), справа - панель выбранного (.dsp) и «Готов к бою» под ней
+  const shelf = $('dshelf'), shs = $('dshs');
+  const fmtKm = (m) => { const v = m / 1000; return String(v >= 10 ? Math.round(v) : Math.round(v * 10) / 10); };
+  const ICO_R = '<svg viewBox="0 0 16 16"><path d="M1.5 8h13M4.5 5 1.5 8l3 3M11.5 5l3 3-3 3" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="square"/></svg>';
+  const ICO_H = '<svg viewBox="0 0 16 16"><path d="M8 13.5V1.8M4.6 5.2 8 1.8l3.4 3.4M3 13.5h10" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="square"/></svg>';
+  const raHtml = (S) => `<span class="ra"><span class="ri" title="${tr('дальность')}"><i>${ICO_R}</i>${fmtKm(S.rmax)}<small>${tr('км')}</small></span><span class="ri" title="${tr('высота')}"><i>${ICO_H}</i>${fmtKm(S.hmax)}<small>${tr('км')}</small></span></span>`;
+  const mineN = (k) => C.S.units.filter((u) => mine(u) && !u.dead && u.key === k).length;
+  // что можно купить в этой расстановке и почему нельзя (причина - красным в карточке): { k, s, c, why }
+  function shelfList() {
+    const out = [], al = st.opts.allow, B = st.net && st.net.battle, cat = Object.entries(SAM);
+    if (al) cat.sort(([a], [b]) => al.has(b) - al.has(a)); // урок: нужное - сверху
+    for (const [k, s] of cat) {
+      let c, lim = null, sl = null, shut = false;
+      if (st.net && !st.multi) { if (s.side !== (B.sideAir === 'east' ? 'west' : 'east') || s.era > B.era) continue; c = costOf(k); lim = netLeft(k); } // онлайн «Оборона»: сторона и эпоха боя, лимит первой волны
+      else { if (s.side !== dside() || (!st.multi && s.era > C.setup.era) || (st.multi && !multiSamOk(k))) continue; c = priceOf(k); sl = samLeft(k); shut = !!al && !al.has(k); } // «Мульти-волна» - все комплексы своей стороны, кроме бесполезных в режиме; «Оборона» - по эпохе; урок: только своё
+      const why = lockedSam(k) ? tr('нужно исследование') : shut ? tr('не в этом уроке') : lim !== null && lim <= 0 ? tr('волна 1: {0} уже стоит', [CLS_NAME[samClass(k)]]) : sl !== null && sl <= 0 ? tr('не больше {0}', [multiSamCap(k)]) : c > st.budget ? tr('не хватает очков') : '';
+      out.push({ k, s, c, why });
+    }
+    return out;
+  }
+  // короткие названия классов для карточек (ключи с пробелом в конце - отдельные от «дальний» и т. д. из предложений: там перевод длиннее, на карточке не влезает; в русском пробел не виден)
+  const CLS_SHORT = { top: tr('дальний '), mid: tr('средний '), near: tr('ближний ') };
+  let shelfH = '', shelfOn = false;
+  function shelfArrows() { const m = shs.scrollWidth - shs.clientWidth; shelf.classList.toggle('mr', m - shs.scrollLeft > 6); shelf.classList.toggle('ml', shs.scrollLeft > 6); }
+  // место полки: правее панели перемещения карты (+10 px) до правой панели, снизу вровень с ней; сверху от неё считается высота правой панели (--dshT)
+  function shelfLayout() {
+    if (!shelf.getBoundingClientRect || typeof getComputedStyle !== 'function') return;
+    const ds = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ds')) || 1, nr = $('mapNav').getBoundingClientRect(), sr = side.offsetParent ? side.getBoundingClientRect() : null;
+    const left = nr.width ? Math.round(nr.right + 10) : 12, right = sr && sr.width ? sr.right : C.VW - 10;
+    shelf.style.left = left + 'px'; shelf.style.width = Math.max(120, Math.round((right - left) / ds)) + 'px';
+    document.documentElement.style.setProperty('--dshT', Math.round(shelf.getBoundingClientRect().top) + 'px');
+    shelfArrows();
+  }
+  function shelfSync() {
+    const on = !!C.S && st.phase === 'plan' && st.view === 'map' && !atk() && !st.over;
+    if (on !== shelfOn) { shelfOn = on; document.body.classList.toggle('dshOn', on); if (!on) { shelfH = ''; shs.innerHTML = ''; if (document.documentElement.style.removeProperty) document.documentElement.style.removeProperty('--dshT'); } }
+    if (!on) return;
+    const mode = tmode(), list = shelfList(), anyCaps = list.some(({ s }) => capsHtml(s, mode)); // строка «что сбивает» нужна, только если она есть хоть у одной карточки (в «Обороне» у большинства комплексов её нет)
+    const h = list.map(({ k, s, c, why }) => { const n = mineN(k), cl = samClass(k);
+      return `<div class="dsc${st.placing === k ? ' on' : ''}${why ? ' no' : ''}" data-buy="${k}"><img class="dsi" src="airdef/thumbs/pvo_${k}.webp?v=20261119c" alt="" draggable="false" onerror="this.style.visibility='hidden'"><div class="dsn">${s.short}</div><div class="dsr"><span class="dcl ${cl}">${CLS_SHORT[cl]}</span><span class="dpc">${c}</span></div><div class="dsm">${why ? `<span class="dsw">${ico('lock')}${why}</span>` : raHtml(s)}</div>${anyCaps ? `<div class="dsg">${capsHtml(s, mode)}</div>` : ''}${n ? `<span class="dsx">×${n}</span>` : ''}</div>`; }).join('');
+    if (h !== shelfH) { const x = shs.scrollLeft; shelfH = h; shs.innerHTML = h; shs.scrollLeft = x; }
+    shelfLayout();
+  }
+  shs.addEventListener('scroll', shelfArrows, { passive: true });
+  shelf.addEventListener('pointerdown', holdOn);
+  shelf.addEventListener('wheel', (e) => { if (e.deltaY && !e.deltaX) { shs.scrollLeft += e.deltaY; e.preventDefault(); } }, { passive: false }); // колесо мыши листает полку
+  shelf.onclick = (e) => { const a = e.target.closest('[data-sc]'); if (a) { shs.scrollBy({ left: +a.dataset.sc * shs.clientWidth * 0.7, behavior: 'smooth' }); return; } side.onclick(e); };
+  addEventListener('resize', () => { if (shelfOn) shelfLayout(); });
+  // правая панель расстановки: рамка с выбранным комплексом или подсказкой, под ней - «Готов к бою» (на телефоне при размещении кнопка скрыта, вместо неё «Отмена» и «Поставить»)
+  const dsPlan = (inner, go) => { side.classList.add('dpl'); side.classList.toggle('plc', !!st.placing); return `<div class="dsp">${inner}</div>${go}`; };
+  const goBtn = (a, label, off, alt) => `<button class="dgo${alt ? ' alt' : ''}" data-a="${a}" ${off ? 'disabled' : ''}>${label}</button>`;
+  // подсказка, когда ничего не выбрано: что делать и что значат цифры и значки на карточках (дальность и высота - км; что сбивает - плашки, как в справке)
+  function idleHint(extra) {
+    const m = tmode(), LG = { drone: [tr('дроны'), 'capDrone'], bomb: [tr('бомбы'), 'capBomb'], cruise: [tr('крылатые'), 'capCruise'], tbm: [tr('баллистика'), 'capTbm'] };
+    return `<div class="dtx">${tr('Выберите комплекс внизу, затем коснитесь карты. Свой комплекс на карте: перенос или продажа.')}</div>
+      <div class="dlg"><span class="ri"><i>${ICO_R}</i>${tr('дальность')}</span><span class="ri"><i>${ICO_H}</i>${tr('высота')}</span><span>${tr('км')}</span></div>
+      <div class="dlg">${tr('сбивает')}: ${['drone', 'bomb', 'cruise', 'tbm'].filter((q) => (m === 'multi' ? q !== 'bomb' : q === 'bomb' || q === 'tbm')).map((q) => `<span class="caps"><span class="${q}">${ico(LG[q][1])}</span></span>${LG[q][0]}`).join(' ')}</div>${extra || ''}`;
+  }
   function renderNet() {
     const S = C.S, N = st.net, B = N.battle; let h = '';
     const left = N.room && N.room.left !== null ? tr(' · {0} с', [N.room.left]) : '';
     if (st.phase === 'plan') {
-      h += `<h3>${tr('Расстановка · волна {0}/{1}{2}', [st.wave, st.waves, left])}</h3><div>${tr('Очки обороны: <b style="color:#fde68a">{0}</b>', [st.budget])}</div>`;
-      if (st.wave === 1) h += `<p class="hint">${tr('Первая волна: не больше 1 дальнего и 1 среднего комплекса, ближние - за очки.')}</p>`;
+      let p = '';
       if (st.sel && !st.sel.dead && mine(st.sel)) {
         const u = st.sel;
-        h += `<div class="dcard on"><div class="nm"><b>${u.S.name}${capsHtml(u.S, 'def')}</b><span>${tr('{0} · до {1} км', [SAM_TYPE[u.S.type], (u.S.rmax / 1000).toFixed(1)])}</span></div></div>${tgtRowHtml(u, 'def')}
+        p += `<div class="dcard on"><div class="nm"><b>${u.S.name}${capsHtml(u.S, 'def')}</b><span>${tr('{0} · до {1} км', [SAM_TYPE[u.S.type], (u.S.rmax / 1000).toFixed(1)])}</span></div></div>${tgtRowHtml(u, 'def')}
           <div class="dact">${moveBtns(u)}<button class="btn alt" data-a="sell">${tr('Продать +{0}', [Math.round(samCost(u.key) * 0.7)])}</button>${st.moving ? '' : `<button class="btn alt" data-a="desel">${tr('Готово')}</button>`}</div>${moveHint()}`;
-      } else if (st.sel && !st.sel.dead) h += `<div class="dcard"><div class="nm"><b>${st.sel.S.name}</b><span>${tr('союзника')}</span></div></div>`;
-      h += placeCard() + `<div class="cat-h">${tr('Купить')}</div>`;
-      const side = B.sideAir === 'east' ? 'west' : 'east';
-      for (const [k, s] of Object.entries(SAM)) {
-        if (s.side !== side || s.era > B.era) continue;
-        const c = costOf(k), lim = netLeft(k), lk = lockedSam(k), no = c > st.budget || (lim !== null && lim <= 0) || lk;
-        h += `<div class="dcard ${st.placing === k ? 'on' : ''} ${no ? 'no' : ''}" data-buy="${k}"><div class="nm"><b>${lk ? ico('lock') + ' ' : ''}${s.short}${capsHtml(s, 'def')}</b><span>${tr('{0} · {1} · {2} км{3}', [CLS_NAME[samClass(k)], SAM_TYPE[s.type], (s.rmax / 1000).toFixed(1), lim !== null ? tr(' · можно ещё {0}', [Math.max(0, lim)]) : ''])}</span></div><span class="pr">${c}</span></div>`;
-      }
-      h += `<p class="hint">${st.placing ? (IS_TOUCH ? tr('Касайтесь карты, пока место не устроит, затем «Подтвердить». Зелёная тень - зона комплекса на высоте 300 м, просветы - то, что закрывают дома. «Отмена» - не покупать.') : tr('Ведите мышь по карте: зелёная тень - зона комплекса на высоте 300 м, просветы - то, что закрывают дома. Щелчок выбирает место (можно менять), затем «Подтвердить» или Enter. «Отмена», Esc или правая кнопка - не покупать.')) : tr('Выберите комплекс в каталоге и коснитесь карты. Коснитесь своего комплекса: перенос (новое место и «Подтвердить») или продажа.')}</p>`;
-      h += `<button class="btn ${st.ready ? 'alt' : ''}" data-a="ready">${st.ready ? ico('ok', 'ii') + tr('Готов (снять)') : tr('Готов')}</button>`;
+      } else if (st.sel && !st.sel.dead) p += `<div class="dcard"><div class="nm"><b>${st.sel.S.name}</b><span>${tr('союзника')}</span></div></div>`;
+      if (st.placing) p += placeBlock();
+      else if (!(st.sel && !st.sel.dead)) p += idleHint(st.wave === 1 ? `<p class="hint">${tr('Первая волна: не больше 1 дальнего и 1 среднего комплекса, ближние - за очки.')}</p>` : '');
+      h = dsPlan(p, goBtn('ready', st.ready ? ico('ok', 'ii') + tr('Готов (снять)') : tr('Готов к бою'), false, st.ready));
     } else if (st.phase === 'wave') {
       const air = C.raid.planes.filter((a) => !a.dead && !a.out && a.role !== 'decoy').length;
       h += `<h3>${tr('Волна {0}/{1}{2}', [st.wave, st.waves, left])}</h3><div>${tr('В воздухе: <b>{0}</b> · объекты целы <b>{1}%</b>', [air, Math.round((1 - (B.valueK || 0)) * 100)])}</div>`;
@@ -554,7 +610,7 @@ export function createDefense(C) {
       h += `<h3>${tr('Волна {0} - итоги', [st.wave])}</h3><div class="stats" style="margin:6px 0"><div class="stt"><b>${r.downs ?? '-'}</b><span>${tr('сбито')}</span></div><div class="stt"><b>${r.unitKills ?? '-'}</b><span>${tr('потеряно ЗРК')}</span></div>
         <div class="stt"><b>${Math.round((1 - (r.totalK || 0)) * 100)}%</b><span>${tr('объекты целы')}</span></div></div><p class="hint">${r.last ? tr('Бой окончен - итоги…') : tr('Скоро расстановка следующей волны.')}</p>`;
     }
-    side.innerHTML = h;
+    setSide(h);
   }
   // ── «Мульти-волна» за удар: состав за очки угрозы; у каждого типа - свой маршрут, высота, время пуска и цели ──
   const planCost = () => Object.entries(st.plan.n).reduce((s, [k, n]) => s + (THREAT[k] ?? 3) * n, 0);
@@ -714,7 +770,8 @@ export function createDefense(C) {
       (atk() ? '' : `<p class="hint">${abm.length ? abm.map((u) => `${u.S.short}: ${!u.emit ? tr('РЛС выключена!') : u.reloadT > 0 ? tr('перезарядка {0} с', [Math.ceil(u.reloadT)]) : tr('ракет {0}', [u.ammo])}`).join(' · ') : tr('Противоракетных комплексов нет - баллистику не сбить.')}</p>`);
   }
   function watchBtns() { return `<div class="dact"><button class="btn alt" data-a="watch">${tr('Смотреть')}${ico('tri', 'ii')}</button>${st.net ? '' : `<button class="btn alt" data-a="speed">${ico('speed', 'ii')}${tr('Время ×{0}', [st.timeK === 1 ? 4 : 1])}</button>`}</div>`; }
-  function renderSide() {
+  function renderSide() { side.classList.remove('dpl', 'plc'); renderSide0(); shelfSync(); } // панель расстановки (.dpl) включает dsPlan; полка внизу - shelfSync
+  function renderSide0() {
     const S = C.S; if (!S) return;
     if (st.net && st.multi && st.phase === 'debrief') return renderNetRes();
     if (st.net && st.multi === 'def') return renderNetDef();
@@ -732,24 +789,16 @@ export function createDefense(C) {
       setSide(h); return;
     }
     if (st.phase === 'plan') {
-      h += `<h3>${tr('Расстановка · {0}', [st.multi ? tr('Мульти-волна') : tr('волна {0}/{1}', [st.wave + 1, st.waves])])}</h3><div>${tr('Очки обороны: <b style="color:#fde68a">{0}</b>', [st.budget])}</div>`;
-      if (st.multi) h += multiDefHint();
+      let p = '';
       if (st.sel && !st.sel.dead) {
         const u = st.sel;
-        h += `<div class="dcard on"><div class="nm"><b>${u.S.name}${capsHtml(u.S, tmode())}</b><span>${tr('{0} · до {1} км · {2}', [SAM_TYPE[u.S.type], (u.S.rmax / 1000).toFixed(1), unitStatus(u)])}</span></div></div>${tgtRowHtml(u, tmode())}
+        p += `<div class="dcard on"><div class="nm"><b>${u.S.name}${capsHtml(u.S, tmode())}</b><span>${tr('{0} · до {1} км · {2}', [SAM_TYPE[u.S.type], (u.S.rmax / 1000).toFixed(1), unitStatus(u)])}</span></div></div>${tgtRowHtml(u, tmode())}
           <div class="dact">${moveBtns(u)}<button class="btn alt" data-a="sell">${tr('Продать +{0}', [Math.round((u.paid || priceOf(u.key)) * 0.7)])}</button>
           ${u.S.radar && u.S.type !== 'guns' ? `<button class="btn alt" data-a="amb">${u.ambush ? tr('Засада: вкл') : tr('Засада: выкл')}</button>` : ''}${st.moving ? '' : `<button class="btn alt" data-a="desel">${tr('Готово')}</button>`}</div>${moveHint()}`;
       }
-      h += placeCard() + `<div class="cat-h">${tr('Купить')}</div>`;
-      const al = st.opts.allow, cat = Object.entries(SAM);
-      if (al) cat.sort(([a], [b]) => al.has(b) - al.has(a)); // урок: нужное - сверху
-      for (const [k, s] of cat) {
-        if (s.side !== dside() || (!st.multi && s.era > C.setup.era) || (st.multi && !multiSamOk(k))) continue; // «Мульти-волна» - все комплексы своей стороны, кроме бесполезных в режиме (замки «Реализма» - lockedSam ниже); «Оборона» - по эпохе (ревью)
-        const c = priceOf(k), shut = st.opts.allow && !st.opts.allow.has(k), lk = lockedSam(k), sl = samLeft(k); // урок: покупать только то, о чём он
-        h += `<div class="dcard ${st.placing === k ? 'on' : ''} ${c > st.budget || shut || lk || (sl !== null && sl <= 0) ? 'no' : ''}" data-buy="${k}"><div class="nm"><b>${lk ? ico('lock') + ' ' : ''}${s.short}${capsHtml(s, tmode())}</b><span>${shut ? tr('не в этом уроке') : tr('{0} · {1} км / {2} км', [SAM_TYPE[s.type], (s.rmax / 1000).toFixed(1), (s.hmax / 1000).toFixed(1)])}${sl !== null ? tr(' · не больше {0}', [multiSamCap(k)]) : ''}</span></div><span class="pr">${c}</span></div>`;
-      }
-      h += `<p class="hint">${st.placing ? (IS_TOUCH ? tr('Касайтесь карты, пока место не устроит, затем «Подтвердить». Зелёная тень - зона комплекса на высоте 300 м, просветы - то, что закрывают дома. «Отмена» - не покупать.') : tr('Ведите мышь по карте: зелёная тень - зона комплекса на высоте 300 м, просветы - то, что закрывают дома. Щелчок выбирает место (можно менять), затем «Подтвердить» или Enter. «Отмена», Esc или правая кнопка - не покупать.')) : tr('Выберите комплекс в каталоге и коснитесь карты. Коснитесь своего комплекса: тень его зоны на высоте 300 м, перенос (новое место и «Подтвердить») или продажа.')}</p>`;
-      h += `<button class="btn" data-a="go" ${S.units.filter((u) => !u.dead).length ? '' : 'disabled'}>${tr('В бой - {0}', [st.multi ? tr('Мульти-волна') : tr('волна {0}', [st.wave + 1])])}</button>`;
+      if (st.placing) p += placeBlock();
+      else if (!(st.sel && !st.sel.dead)) p += idleHint(st.multi ? multiDefHint() : '');
+      h = dsPlan(p, goBtn('go', tr('В бой - {0}', [st.multi ? tr('Мульти-волна') : tr('волна {0}', [st.wave + 1])]), !S.units.filter((u) => !u.dead).length));
     } else if (st.phase === 'wave') {
       const air = C.raid.planes.filter((a) => !a.dead && !a.out).length + C.S.wpns.filter((w) => w.ev && !w.dead && (C.MODE().markers || seen.has(w))).length; // и ракеты / дроны Мульти-волны, которые видит сеть
       h += `<h3>${tr('Волна {0}/{1}', [st.wave, st.waves])}</h3><div>${tr('В воздухе: <b>{0}</b> · сбито: <b>{1}</b>', [air, st.waveDowns])}</div>`;
@@ -1411,7 +1460,7 @@ export function createDefense(C) {
   function start(opts = {}) {
     st.opts = opts; st.aiPlace = null; C.ended = false; C.lastGame = opts.lastGame || 'defense';
     st.rnd = mulberry32((Date.now() & 0xffffff) ^ 0x2468);
-    topH = ''; st.multi = opts.multi || null; st.defSide = null; st.flash = new Map(); st.watch = null; st.timeK = 1; st.cue = null; st.watchNextAt = null; st.edKey = null; st.edUnit = null; st.addQ = {}; st.addT = 0; st.alertT = 0;
+    topH = ''; st.bud0K = null; st.multi = opts.multi || null; st.defSide = null; st.flash = new Map(); st.watch = null; st.timeK = 1; st.cue = null; st.watchNextAt = null; st.edKey = null; st.edUnit = null; st.addQ = {}; st.addT = 0; st.alertT = 0;
     if (st.multi) { st.defSide = st.multi === 'atk' ? (C.setup.side === 'east' ? 'west' : 'east') : C.setup.side; opts.waves = 1; }
     C.newBattle({ defSide: dside(), era: C.setup.era, rnd: st.rnd, game: st.multi ? 'multi' : null });
     C.hooks = atk() ? atkHooks() : defHooks();
@@ -1439,7 +1488,7 @@ export function createDefense(C) {
   // ═════════════ Онлайн ═════════════
   // зеркало боя уже собрано (net.js); фазы, бюджет и «Готов» - от сервера (netSync на каждое обновление комнаты)
   function startNet(N) {
-    st.net = N; st.opts = { noEnd: true }; C.ended = false; C.lastGame = 'online';
+    st.net = N; st.opts = { noEnd: true }; C.ended = false; C.lastGame = 'online'; st.bud0K = null;
     C.hooks = {
       planeDown(a) { if (a.role === 'decoy') { say(tr('Сбита ложная цель'), 2); return; } say(tr('Самолёт сбит!'), 2); snd.good(); },
       wpnEnd(w, res) { if (res.intercepted) say(tr('Перехвачено: {0}', [w.W.short]), 2); },
@@ -1475,7 +1524,7 @@ export function createDefense(C) {
   function startNetMulti(N) {
     if (st.op) leaveOp(); if (st.view === 'watch') unwatch();
     const B = N.battle, role = N.myRole();
-    st.net = N; st.multi = role; st.defSide = B.atk === 'east' ? 'west' : 'east'; st.opts = { noEnd: true }; C.ended = false; C.lastGame = 'online';
+    st.net = N; st.multi = role; st.defSide = B.atk === 'east' ? 'west' : 'east'; st.opts = { noEnd: true }; C.ended = false; C.lastGame = 'online'; st.bud0K = null;
     if (!st.setupSave) st.setupSave = { era: C.setup.era, diff: C.setup.diff }; C.setup.era = B.era; C.setup.diff = B.mode === 'real' ? 'real' : 'arcade'; // эпоха и режим - матча (после боя - свои)
     st.rnd = mulberry32((Date.now() & 0xffffff) ^ 0x1357);
     C.hooks = role === 'atk' ? atkHooks() : defHooks();
@@ -1505,29 +1554,28 @@ export function createDefense(C) {
   }
   function renderNetDef() {
     const N = st.net, B = N.battle; let h = '';
-    const left = N.room && N.room.left != null ? tr(' · {0} с', [N.room.left]) : '', who = TEAM_NAME[B.atk];
+    const who = TEAM_NAME[B.atk];
     if (st.phase === 'plan') {
-      h += `<h3>${tr('Раунд {0}/{1} · расстановка ПВО{2}', [B.round, B.rounds, left])}</h3><div>${tr('Очки обороны: <b style="color:#fde68a">{0}</b>', [st.budget])}</div>
-        <p class="hint">${tr('Волну собирает {0}: дроны, крылатые ракеты, баллистика. Что и по каким объектам, неизвестно. Пушки и ПЗРК ставьте у объектов, противоракетные - у самых ценных.', [who])}</p>`;
-      if (st.sel && !st.sel.dead && mine(st.sel)) { const u = st.sel; h += `<div class="dcard on"><div class="nm"><b>${u.S.name}${capsHtml(u.S, 'multi')}</b><span>${tr('{0} · до {1} км', [SAM_TYPE[u.S.type], (u.S.rmax / 1000).toFixed(1)])}</span></div></div>${tgtRowHtml(u, 'multi')}<div class="dact">${moveBtns(u)}<button class="btn alt" data-a="sell">${tr('Продать +{0}', [Math.round(priceOf(u.key) * 0.7)])}</button>${st.moving ? '' : `<button class="btn alt" data-a="desel">${tr('Готово')}</button>`}</div>${moveHint()}`; }
-      else if (st.sel && !st.sel.dead) h += `<div class="dcard"><div class="nm"><b>${st.sel.S.name}</b><span>${tr('союзника')}</span></div></div>`;
-      h += placeCard() + `<div class="cat-h">${tr('Купить')}</div>`;
-      for (const [k, sm] of Object.entries(SAM)) { if (sm.side !== dside() || !multiSamOk(k)) continue; /* без эпохи: все комплексы своей стороны, кроме бесполезных в режиме (сервер проверяет, что куплено - samIds) */ const c = priceOf(k), lk = lockedSam(k), sl = samLeft(k); h += `<div class="dcard ${st.placing === k ? 'on' : ''} ${c > st.budget || lk || sl <= 0 ? 'no' : ''}" data-buy="${k}"><div class="nm"><b>${sm.short}${capsHtml(sm, 'multi')}</b><span>${tr('{0} · {1} км{2}', [SAM_TYPE[sm.type], (sm.rmax / 1000).toFixed(1), sm.abm ? tr(' · сбивает баллистику') : ''])}${tr(' · не больше {0}', [multiSamCap(k)])}</span></div><span class="pr">${c}</span></div>`; }
-      h += `<button class="btn ${st.ready ? 'alt' : ''}" data-a="ready">${st.ready ? ico('ok', 'ii') + tr('Готов (снять)') : tr('Готов')}</button>`;
+      let p = '';
+      if (st.sel && !st.sel.dead && mine(st.sel)) { const u = st.sel; p += `<div class="dcard on"><div class="nm"><b>${u.S.name}${capsHtml(u.S, 'multi')}</b><span>${tr('{0} · до {1} км', [SAM_TYPE[u.S.type], (u.S.rmax / 1000).toFixed(1)])}</span></div></div>${tgtRowHtml(u, 'multi')}<div class="dact">${moveBtns(u)}<button class="btn alt" data-a="sell">${tr('Продать +{0}', [Math.round(priceOf(u.key) * 0.7)])}</button>${st.moving ? '' : `<button class="btn alt" data-a="desel">${tr('Готово')}</button>`}</div>${moveHint()}`; }
+      else if (st.sel && !st.sel.dead) p += `<div class="dcard"><div class="nm"><b>${st.sel.S.name}</b><span>${tr('союзника')}</span></div></div>`;
+      if (st.placing) p += placeBlock();
+      else if (!(st.sel && !st.sel.dead)) p += idleHint(`<p class="hint">${tr('Волну собирает {0}: дроны, крылатые ракеты, баллистика. Что и по каким объектам, неизвестно. Пушки и ПЗРК ставьте у объектов, противоракетные - у самых ценных.', [who])}</p>`);
+      h = dsPlan(p, goBtn('ready', st.ready ? ico('ok', 'ii') + tr('Готов (снять)') : tr('Готов к бою'), false, st.ready));
     } else if (st.phase === 'wave') {
       h += `<h3>${tr('Раунд {0}/{1} · оборона', [B.round, B.rounds])}</h3><div>${tr('Разрушено: <b>{0}%</b> ценности объектов', [Math.round(100 * (B.V || 0) / (B.v0 || 1))])}</div>`;
       if (st.sel && !st.sel.dead && mine(st.sel)) { const u = st.sel; h += `<div class="dcard on"><div class="nm"><b>${u.S.name}${capsHtml(u.S, 'multi')}</b><span>${unitStatus(u)}</span></div></div>${tgtRowHtml(u, 'multi')}<div class="dact">${u.S.type === 'jammer' ? '' : `<button class="btn" data-a="op">${tr('Управлять')}</button>`}${u.S.radar ? `<button class="btn alt" data-a="emit">${u.emit ? tr('РЛС: выключить') : tr('РЛС: включить')}</button>` : ''}<button class="btn alt" data-a="desel">${tr('Снять выбор')}</button></div>`; }
       else h += `<p class="hint">${tr('Коснитесь своего комплекса: «Управлять» - сесть оператором, «Цели» - по каким видам стрелять (дальним - только баллистика, чтобы беречь ракеты). Остальными стреляют расчёты.')}</p>`;
       h += tbmPanel() + watchBtns() + `<button class="btn alt" data-a="help">${tr('Нужна помощь - метка союзникам')}</button>`;
     }
-    side.innerHTML = h;
+    setSide(h);
   }
   // итоги раунда (и боя): кто сколько разрушил
   function renderNetRes() {
     const N = st.net, B = N.battle, r = st.netRes || B.res || {}, sc = r.scores || B.scores || { east: 0, west: 0 }, v0 = r.v0 || B.v0 || 1;
-    side.innerHTML = `<h3>${tr('Раунд {0} - итоги', [r.round || B.round])}</h3><div>${tr('{0} в атаке: разрушено <b>{1}%</b> ценности', [TEAM_NAME[r.atk || B.atk], Math.round(100 * (r.k || 0))])}</div>
+    setSide(`<h3>${tr('Раунд {0} - итоги', [r.round || B.round])}</h3><div>${tr('{0} в атаке: разрушено <b>{1}%</b> ценности', [TEAM_NAME[r.atk || B.atk], Math.round(100 * (r.k || 0))])}</div>
       <div class="stats" style="margin:6px 0"><div class="stt"><b>${Math.round(100 * sc.east / v0)}%</b><span>${tr('Восток')}</span></div><div class="stt"><b>${Math.round(100 * sc.west / v0)}%</b><span>${tr('Запад')}</span></div><div class="stt"><b>${r.downs ?? '-'}</b><span>${tr('сбито ПВО')}</span></div></div>
-      <p class="hint">${r.last ? tr('Бой окончен - итоги…') : tr('Следующий раунд - стороны меняются: кто атаковал, теперь обороняется.')}</p>`;
+      <p class="hint">${r.last ? tr('Бой окончен - итоги…') : tr('Следующий раунд - стороны меняются: кто атаковал, теперь обороняется.')}</p>`);
   }
   // чат команды на подготовке: отдельное окно (не перерисовывается с панелью); касание имени - заглушить
   let chatEl = null;
@@ -1552,7 +1600,8 @@ export function createDefense(C) {
     for (const c of ['defense', 'dmap', 'oper', 'watch', 'matk', 'evon', 'evopen']) document.body.classList.remove(c);
     evOpen = false; evHtml = ''; sideHtml = '';
     st.watch = null; st.timeK = 1;
-    side.innerHTML = ''; $('dtop').innerHTML = ''; snd.growl(0, 400);
+    side.innerHTML = ''; side.classList.remove('dpl', 'plc'); $('dtop').innerHTML = ''; snd.growl(0, 400);
+    shelfOn = false; shelfH = ''; shs.innerHTML = ''; document.body.classList.remove('dshOn'); if (document.documentElement.style.removeProperty) document.documentElement.style.removeProperty('--dshT');
   }
   let sideT = 0;
   function update(dt) {
@@ -1623,15 +1672,19 @@ export function createDefense(C) {
   }
   // часы волны: с начала боя (мульти-волна - и за удар, и за оборону; видны и на карте, и в 3D, и за пультом)
   const clock = () => { if (!st.multi || st.phase !== 'wave' || !C.ev) return ''; const t = Math.max(0, C.ev.t); return `<b>${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}</b> · `; };
+  // ячейка очков обороны слева вверху в расстановке (рамка ангара b_cell): «ОЧКИ ОБОРОНЫ 1110 из 1200», под ней - волна / раунд и время
+  // (заменила строку «Расстановка · очки обороны N»). «из» - очки на начало этой расстановки (растут, если продан комплекс прошлых волн)
+  const budCell = (sub) => { const K = `${st.net ? 'n' : ''}${st.wave}|${st.net && st.net.battle ? st.net.battle.round || 0 : 0}`; if (st.bud0K !== K) { st.bud0K = K; st.bud0 = st.budget; } else if (st.budget > st.bud0) st.bud0 = st.budget;
+    return `<div class="dbud"><div class="r"><span class="l">${tr('Очки обороны')}</span><b>${st.budget}</b><span class="of">${tr('из {0}', [st.bud0])}</span></div>${sub ? `<div class="s">${sub}</div>` : ''}</div>`; };
   function hud(dt, t) {
     if (st.net && st.multi) { const N = st.net, B = N.battle, left = N.room && N.room.left != null ? ` ${tr('· <b>{0} с</b>', [N.room.left])}` : '', rr = tr('Раунд {0}/{1}', [B.round, B.rounds]);
-      $('dtop').innerHTML = st.phase === 'plan' ? tr('{0} · {1}{2} · очки <b>{3}</b>', [rr, atk() ? tr('план волны') : tr('расстановка ПВО'), left, atk() ? st.budget - planCost() : st.budget])
-        : st.phase === 'wave' ? tr('{0}{1} · {2} · разрушено <b>{3}%</b>{4}', ['', rr, atk() ? tr('ваша волна') : tr('оборона'), Math.round(100 * (B.V || 0) / (B.v0 || 1)), B.k > 1 ? ` ${tr('· <b>время ×3</b>')}` : '']) : tr('{0} · итоги', [rr]);
+      setTop(st.phase === 'plan' ? (atk() ? tr('{0} · {1}{2} · очки <b>{3}</b>', [rr, tr('план волны'), left, st.budget - planCost()]) : budCell(`${rr} · ${tr('расстановка ПВО')}${N.room && N.room.left != null ? tr(' · {0} с', [N.room.left]) : ''}`))
+        : st.phase === 'wave' ? tr('{0}{1} · {2} · разрушено <b>{3}%</b>{4}', ['', rr, atk() ? tr('ваша волна') : tr('оборона'), Math.round(100 * (B.V || 0) / (B.v0 || 1)), B.k > 1 ? ` ${tr('· <b>время ×3</b>')}` : '']) : tr('{0} · итоги', [rr]));
     } else if (st.net) { const N = st.net, left = N.room && N.room.left !== null ? tr(' · {0} с', [N.room.left]) : '';
-      $('dtop').innerHTML = st.phase === 'plan' ? tr('Расстановка · волна {0}/{1}{2} · очки <b>{3}</b>', [st.wave, st.waves, left, st.budget]) : tr('Волна <b>{0}/{1}</b>{2} · объекты целы <b>{3}%</b>', [st.wave, st.waves, left, Math.round((1 - ((N.battle && N.battle.valueK) || 0)) * 100)]); }
-    else if (atk()) $('dtop').innerHTML = st.phase === 'plan' ? tr('План волны · очки угрозы <b>{0}</b>', [st.budget - planCost()]) : tr('{0}Волна · цели разрушены <b>{1}%</b>{2}', [clock(), Math.round((1 - targetsValue()) * 100), st.timeK > 1 ? tr(' · время ×{0}', [st.timeK]) : '']);
-    else if (st.multi && st.phase === 'wave') $('dtop').innerHTML = tr('{0}Мульти-волна · сбито <b>{1}</b> · цели целы <b>{2}%</b>{3}', [clock(), st.downs, Math.round(targetsValue() * 100), st.timeK > 1 ? tr(' · время ×{0}', [st.timeK]) : '']);
-    else setTop(st.phase === 'plan' ? tr('Расстановка · очки обороны <b>{0}</b>', [st.budget]) : wavePanel());
+      setTop(st.phase === 'plan' ? budCell(tr('Расстановка · волна {0}/{1}{2}', [st.wave, st.waves, left])) : tr('Волна <b>{0}/{1}</b>{2} · объекты целы <b>{3}%</b>', [st.wave, st.waves, left, Math.round((1 - ((N.battle && N.battle.valueK) || 0)) * 100)])); }
+    else if (atk()) setTop(st.phase === 'plan' ? tr('План волны · очки угрозы <b>{0}</b>', [st.budget - planCost()]) : tr('{0}Волна · цели разрушены <b>{1}%</b>{2}', [clock(), Math.round((1 - targetsValue()) * 100), st.timeK > 1 ? tr(' · время ×{0}', [st.timeK]) : '']));
+    else if (st.multi && st.phase === 'wave') setTop(tr('{0}Мульти-волна · сбито <b>{1}</b> · цели целы <b>{2}%</b>{3}', [clock(), st.downs, Math.round(targetsValue() * 100), st.timeK > 1 ? tr(' · время ×{0}', [st.timeK]) : '']));
+    else setTop(st.phase === 'plan' ? budCell(tr('Расстановка · {0}', [st.multi ? tr('Мульти-волна') : tr('волна {0}/{1}', [st.wave + 1, st.waves])])) : wavePanel());
     if (st.view === 'op' && st.op) opHud(dt, t); else if (st.view === 'watch') watchHud(); else drawMap(t);
     if (st.view !== 'map' && st.alertT > 0) drawAlert(C.hx); // плашка тревоги - и в 3D
   }

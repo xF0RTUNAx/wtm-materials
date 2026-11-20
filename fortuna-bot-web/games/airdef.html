@@ -894,6 +894,75 @@
   #dtop .dpan .ah { display: flex; align-items: center; gap: 12px; padding: 4px 10px; border-top: 1px solid rgba(232,176,74,.35); background: rgba(232,176,74,.1); font-size: 12px; white-space: nowrap; }
   #dtop .dpan .ah > span { display: inline-flex; align-items: center; gap: 5px; } #dtop .dpan .ah > i { width: 1px; height: 12px; background: rgba(233,230,220,.25); }
   #dtop .dpan .ah svg { width: 16px; height: 16px; color: #f3c96f; flex: none; } #dtop .dpan .ah b { font-weight: 600; color: #f3c96f; }
+  /* ═════ Расстановка обороны и табло «Игроки» (Mark 2026-11-20, макет «Табло и расстановка»): рамки ангара (ui/hangar) и рейтинга (ui/rating), острые углы;
+     на компьютере (экран от 1100×640) всё крупнее на 20 % (--ds); телефон в горизонтали - главный (844×390, отступ Telegram --tg-t: 46px) ═════ */
+  :root { --ds: 1; --dw: 250px; --plw: 290px; --plw2: 560px; }
+  @media (min-width: 1100px) and (min-height: 640px) { :root { --ds: 1.2; --dw: 320px; --plw: 340px; --plw2: 640px; } }
+  /* ячейка очков слева вверху (defense.js budCell): «ОЧКИ ОБОРОНЫ 1110 из 1200», под ней - волна и время */
+  #dtop .dbud { display: inline-block; zoom: var(--ds); box-sizing: border-box; border: 0 solid transparent; border-image: url(airdef/ui/hangar/b_cell.webp) 24 fill / 8px stretch; padding: 6px 10px; text-shadow: none; white-space: nowrap; }
+  #dtop .dbud .r { display: flex; align-items: baseline; gap: 8px; }
+  #dtop .dbud .l { font: 600 10px/1 'Oswald', sans-serif; letter-spacing: .1em; text-transform: uppercase; color: var(--th-dim); }
+  #dtop .dbud b { font: 600 22px/1 'Oswald', sans-serif; letter-spacing: .03em; color: #e8b04a; } body.short #dtop .dbud b { font-size: 19px; }
+  #dtop .dbud .of { font-size: 10px; color: var(--th-dim); } #dtop .dbud .s { margin-top: 3px; font: 500 10px/1.2 'Golos Text', sans-serif; color: var(--th-dim); }
+  /* правая панель: рамка с выбранным комплексом или подсказкой (.dsp), под ней «Готов к бою» (.dgo); на телефоне при размещении кнопка скрыта */
+  body.defense.dmap #dside.dpl { display: flex; flex-direction: column; box-sizing: border-box; width: var(--dw); padding: 0; background: none; border: 0; overflow: visible; font-size: 11px;
+    transform: scale(var(--ds)); transform-origin: top right; max-height: calc((var(--dshT, calc(100% - 12px)) - var(--top) - 44px - 8px) / var(--ds)); }
+  #dside .dsp { flex: 1 1 auto; min-height: 0; overflow-y: auto; box-sizing: border-box; border: 10px solid transparent; border-image: url(airdef/ui/hangar/b_plate_n.webp) 36 fill / 10px stretch; padding: 0 2px 4px;
+    font: 500 11px/1.4 'Golos Text', -apple-system, sans-serif; color: var(--th-tx); scrollbar-width: none; -webkit-overflow-scrolling: touch; } #dside .dsp::-webkit-scrollbar { display: none; }
+  #dside .dsp p.hint { margin: 0 4px 6px; font-size: 10.5px; line-height: 1.4; opacity: .8; } #dside .dsp .dcard { margin: 0 2px 4px; } #dside .dsp .dact { margin: 6px 2px 0; } #dside .dsp .tgtrow { margin: 2px 4px 6px; }
+  #dside .dsp .btn { margin-top: 0; } #dside .dsp .dact .btn { padding: 8px 4px; font-size: 11.5px; }
+  .dtx { margin: 0; padding: 4px 6px; font: 500 11px/1.4 'Golos Text', sans-serif; } .dtx b { color: #e8b04a; font-weight: 700; } .dtx i.gr { font-style: normal; color: #8fcf74; } .dtx i.rd { font-style: normal; color: #e48a6c; }
+  .dlg { display: flex; flex-wrap: wrap; align-items: center; gap: 3px 9px; margin: 3px 6px 2px; font: 500 9.5px/1.2 'Golos Text', sans-serif; color: var(--th-dim); } .dlg .caps { margin: 0 3px 0 0; font-size: 11px; vertical-align: middle; } .dlg .ri { font-size: 9.5px; color: var(--th-dim); font-weight: 500; }
+  .ra { display: flex; justify-content: space-between; gap: 3px; } .ri { display: inline-flex; align-items: center; gap: 3px; font: 600 11px/1 'Golos Text', sans-serif; color: #f2eee2; white-space: nowrap; } .ri small { font-size: 8px; color: #a9b09b; font-weight: 500; }
+  .ri i { display: inline-grid; place-items: center; flex: none; width: 16px; height: 16px; background: #3a4232; color: #f2eee2; } .ri i svg { width: 13px; height: 13px; display: block; }
+  .dph { display: flex; align-items: center; gap: 8px; padding: 4px 6px 2px; } .dph .dsi { flex: none; width: 56px; height: 30px; object-fit: contain; } .dpn { min-width: 0; }
+  .dpn b { display: block; font: 600 14px/1.1 'Oswald', sans-serif; letter-spacing: .08em; text-transform: uppercase; color: #e8b04a; } .dpn .dst { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; margin-top: 5px; } .dpn .dst .caps { margin: 0; font-size: 12px; vertical-align: middle; }
+  .dpb { margin: 6px 4px 2px; padding: 7px 9px; border: 0 solid transparent; border-image: url(airdef/ui/hangar/b_cell.webp) 24 fill / 8px stretch; } .dpb .dtx { padding: 0; }
+  .dpa { display: grid; grid-template-columns: 1fr 1.4fr; gap: 6px; margin-top: 7px; }
+  .dsb { height: 28px; padding: 0; border: 0 solid transparent; border-image: url(airdef/ui/rating/r_btn.webp) 36 fill / 9px stretch; background: none; color: #1b1408; font: 600 12px/1 'Oswald', sans-serif; letter-spacing: .08em; text-transform: uppercase; cursor: pointer; }
+  .dsb:active { border-image-source: url(airdef/ui/rating/r_btn_down.webp); } .dsb.alt { border-image-source: url(airdef/ui/rating/r_btn_alt.webp); color: #ece8dc; } .dsb.alt:active { border-image-source: url(airdef/ui/rating/r_btn_alt_down.webp); }
+  .dsb:disabled { opacity: .45; cursor: default; }
+  .dgo { flex: none; display: block; width: 100%; height: 34px; margin-top: 6px; padding: 0; border: 0; background: url(airdef/ui/hangar/b_start.webp) center / 100% 100% no-repeat; color: #1b1408; font: 600 14px/1 'Oswald', sans-serif; letter-spacing: .1em; text-transform: uppercase; cursor: pointer; }
+  .dgo:active { background-image: url(airdef/ui/hangar/b_start_down.webp); } .dgo:disabled { background-image: url(airdef/ui/hangar/b_start_off.webp); color: #7d8572; cursor: default; }
+  .dgo.alt { background: none; border: 0 solid transparent; border-image: url(airdef/ui/rating/r_btn_alt.webp) 36 fill / 12px stretch; color: #ece8dc; } .dgo .ic { width: 1em; height: 1em; vertical-align: -.12em; margin-right: 4px; }
+  body.short #dside.plc .dgo { display: none; } body.short #dside .dsp .dtx { font-size: 10px; line-height: 1.3; padding: 3px 6px; } body.short .dlg { margin: 2px 6px 1px; gap: 2px 8px; } body.short #dside .dsp p.hint { font-size: 10px; margin-bottom: 4px; } body.short .dph { display: none; } /* телефон: имя - в подсказке ниже, подробности - в выбранной карточке на полке; иначе панель налезает на полку */ body.short .dpb { margin: 4px 4px 2px; padding: 5px 8px; } body.short .dpa { margin-top: 5px; }
+  /* полка комплексов внизу: левый край и ширина - defense.js shelfLayout (правее панели перемещения карты, до правой панели), листается */
+  #dshelf { position: fixed; z-index: 15; left: 12px; bottom: max(8px, var(--sa-b)); display: none; transform: scale(var(--ds)); transform-origin: bottom left; }
+  body.defense.dmap.dshOn #dshelf { display: block; }
+  #dshs { display: flex; gap: 5px; padding: 6px; overflow-x: auto; overflow-y: hidden; box-sizing: border-box; border: 0 solid transparent; border-image: url(airdef/ui/hangar/b_sum.webp) 36 fill / 9px stretch; scrollbar-width: none; touch-action: pan-x; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; } #dshs::-webkit-scrollbar { display: none; }
+  #dshelf .dsa { position: absolute; top: 4px; bottom: 4px; width: 26px; display: none; align-items: center; z-index: 1; color: #e8b04a; font: 600 18px 'Oswald', sans-serif; cursor: pointer; left: 4px; justify-content: flex-start; padding-left: 5px; background: linear-gradient(270deg, rgba(16,20,15,0), rgba(16,20,15,.95)); }
+  #dshelf .dsa.r { left: auto; right: 4px; justify-content: flex-end; padding: 0 5px 0 0; background: linear-gradient(90deg, rgba(16,20,15,0), rgba(16,20,15,.95)); } #dshelf.ml .dsa:not(.r), #dshelf.mr .dsa.r { display: flex; }
+  .dsc { position: relative; flex: none; width: 114px; box-sizing: border-box; padding: 5px 7px 6px; border: 0 solid transparent; border-image: url(airdef/ui/hangar/b_card_n.webp) 30 fill / 8px stretch; cursor: pointer; color: var(--th-tx); }
+  .dsc.on { border-image-source: url(airdef/ui/hangar/b_card_on.webp); } .dsc.no { border-image-source: url(airdef/ui/hangar/b_card_lock.webp); } .dsc.no .dsi, .dsc.no .dsn { opacity: .45; }
+  .dsc .dsi { display: block; width: 100%; height: 32px; object-fit: contain; } .dsn { margin-top: 3px; font: 600 12.5px/1.2 'Oswald', sans-serif; letter-spacing: .03em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .dsr { display: flex; justify-content: space-between; align-items: baseline; margin-top: 3px; } .dcl { font: 600 9px/1 'Golos Text', sans-serif; letter-spacing: .08em; text-transform: uppercase; } .dcl.top { color: #7fb2e6; } .dcl.mid { color: #e8b04a; } .dcl.near { color: #8fcf74; }
+  .dpc { font: 600 13px/1 'Oswald', sans-serif; letter-spacing: .03em; color: #e8b04a; } .dsc.no .dpc { color: #7d8572; }
+  .dsm { display: flex; align-items: center; margin-top: 5px; min-height: 22px; } .dsw { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; font: 600 9px/1.2 'Golos Text', sans-serif; color: #e48a6c; } .dsw .ic { display: inline-block; width: 1em; height: 1em; vertical-align: -.12em; margin-right: 3px; }
+  .dsg { margin-top: 3px; min-height: 15px; font-size: 11px; } #dshelf .caps { margin: 0; vertical-align: top; }
+  .dsx { position: absolute; top: 3px; right: 3px; height: 16px; padding: 0 5px; background: #4f8f3a; color: #f2f8ea; font: 700 10px/16px 'Golos Text', sans-serif; }
+  @media (min-width: 1100px) and (min-height: 640px) { .dsc { width: 142px; padding: 7px 9px 8px; border-image-width: 10px; } .dsc .dsi { height: 54px; } .dph .dsi { width: 96px; height: 54px; } .dsb { height: 32px; } .dgo { height: 42px; font-size: 17px; } .dsm { min-height: 24px; } }
+  #netChat { top: calc(var(--top) + 46px * var(--ds) + 8px); } /* чат команды в расстановке - под ячейкой очков */
+  /* табло «Игроки» сбоку (online.js renderPl): до 4 на команду - одна колонка, больше - шире, команды в две колонки, строки плотнее; открывается кнопкой «Игроки» и закрывается ею же */
+  body.playing.netOn.plOpen #plPanel { box-sizing: border-box; width: var(--plw); max-width: calc((100vw - 20px) / var(--ds)); max-height: calc((100% - var(--top) - 56px) / var(--ds)); padding: 2px 2px 4px; background: none; border: 10px solid transparent;
+    border-image: url(airdef/ui/hangar/b_plate_n.webp) 36 fill / 10px stretch; border-radius: 0; transform: scale(var(--ds)); transform-origin: top right; font: 500 11px/1.3 'Golos Text', sans-serif; color: var(--th-tx); scrollbar-width: none; }
+  #plPanel::-webkit-scrollbar { display: none; } body.playing.netOn.plOpen #plPanel.two { width: var(--plw2); }
+  body.plOpen #plBtn { background: rgba(232,176,74,.42); border-color: var(--th-ac); }
+  #plPanel .O { font-family: 'Oswald', sans-serif; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; } #plPanel .tA { color: #7fb2e6; } #plPanel .tP { color: #e48a6c; } #plPanel .am { color: #e8b04a; } #plPanel .dim { color: #a9b09b; }
+  #plPanel .phd { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 2px 4px 6px; } body.short #plPanel .phd { padding-bottom: 4px; } #plPanel .phd .O { font-size: 13px; } #plPanel .phd .am { font-size: 14px; }
+  #plPanel .pgoal { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; padding: 0 4px 8px; } body.short #plPanel .pgoal { padding-bottom: 6px; } #plPanel .pgoal .O { font-size: 12px; white-space: nowrap; } #plPanel .pgoal .O.am { font-size: 10px; }
+  #plPanel .qbar { position: relative; height: 6px; background: #262b22; outline: 1px solid #39422f; } #plPanel .qbar i { position: absolute; left: 0; top: 0; bottom: 0; background: #7fb2e6; } #plPanel .qbar b { position: absolute; top: -4px; bottom: -4px; width: 2px; background: #e8b04a; }
+  #plPanel .pgrid { display: grid; grid-template-columns: 1fr; gap: 6px; } #plPanel.two .pgrid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  #plPanel .gs { display: flex; align-items: center; justify-content: space-between; gap: 6px; border: 0 solid transparent; border-image: url(airdef/ui/rating/r_sec.webp) 36 fill / 9px stretch; padding: 4px 8px; font-size: 11px; } body.short #plPanel .gs { padding: 2px 8px; }
+  #plPanel .gs .qch { display: flex; justify-content: flex-end; margin-left: auto; font: 500 9px/1 'Golos Text', sans-serif; color: #7d8572; letter-spacing: 0; text-transform: none; white-space: nowrap; } /* длинная подпись уходит влево, не на соседнюю колонку */
+  #plPanel .qrow { display: grid; align-items: center; gap: 6px; grid-template-columns: 6px 38px 1fr auto 20px 32px; padding: 4px 8px; font: 600 12px/1 'Golos Text', sans-serif; border-bottom: 1px solid rgba(57,66,47,.6); }
+  #plPanel.two .qrow, body.short #plPanel .qrow { grid-template-columns: 6px 32px 1fr auto 20px 32px; padding: 2px 6px; font-size: 11px; }
+  #plPanel .qrow.me { border: 0 solid transparent; border-image: url(airdef/ui/rating/r_row_me.webp) 36 fill / 9px stretch; color: #1b1408; } #plPanel .qrow.me .dim { color: #3b2f14; } #plPanel .qrow.dn { color: #8a8f80; }
+  #plPanel .qrow .qth { display: block; width: 38px; height: 20px; object-fit: contain; } #plPanel.two .qrow .qth, body.short #plPanel .qrow .qth { width: 32px; height: 17px; }
+  #plPanel .qrow .qnk { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; } #plPanel .qrow .qn { text-align: right; font-variant-numeric: tabular-nums; } #plPanel .qrow .qbig { font: 600 13px/1 'Oswald', sans-serif; letter-spacing: .03em; }
+  #plPanel .qdot { width: 6px; height: 6px; display: inline-block; } #plPanel .qdot.on { background: #7ccf6a; } #plPanel .qdot.off { background: none; outline: 1.5px solid #e8b04a; outline-offset: -1.5px; } #plPanel .qdot.bot { background: #6b7563; }
+  #plPanel .qtg { font: 600 9px/1 'Golos Text', sans-serif; padding: 2px 5px; letter-spacing: .03em; white-space: nowrap; } #plPanel .qtg.me { background: #1b1408; color: #e8b04a; } #plPanel .qtg.bot { background: #2c3327; color: #a9b09b; } #plPanel .qtg.dn { background: #4a201a; color: #f0a48e; } #plPanel .qtg.off { background: #3a3220; color: #e8c06a; } #plPanel .qtg.rd { background: #2c3327; color: #a9b09b; }
+  #plPanel .pll { margin: 4px 4px 0; font: 500 9.5px/1.35 'Golos Text', sans-serif; color: #a9b09b; } #plPanel .pld { width: 7px; height: 7px; display: inline-block; margin: 0 3px 0 1px; border-radius: 0; transform: none; } #plPanel .pld.on { background: #7ccf6a; } #plPanel .pld.off { background: none; border: 1.5px solid #e8b04a; box-sizing: border-box; } #plPanel .pld.bot { background: #6b7563; }
+  #plPanel .pw { height: .78em; vertical-align: -.02em; margin-left: .3em; } #plPanel .pemb { height: .95em !important; }
   #opInfo { color: var(--th-tx); } #opInfo b { color: #f3c96f; }
   #opBtns .tb { border-radius: 0; } #mnFit, #mnZ, #evBtn, #wBar button { border-radius: 0 !important; }
   #wBar .wb, #wInfo { border-radius: 0; }
@@ -1101,7 +1170,7 @@ body.lsnOpen.playing.training #lsnBtn { background-image: var(--tr-q-on); color:
 <!-- оборона -->
 <canvas id="tmap"></canvas>
 <div id="dtop"></div>
-<div id="dside"></div>
+<div id="dside"></div><div id="dshelf"><div id="dshs"></div><b class="dsa" data-sc="-1">‹</b><b class="dsa r" data-sc="1">›</b></div>
 <div id="mapNav"><div id="mnPad" title="Сдвиг карты"><div id="mnKnob"></div></div>
   <div class="mnCol"><div class="mnZoom"><button id="mnOut" aria-label="Мельче">−</button><input type="range" id="mnZ" min="0" max="100" step="0.5" aria-label="Масштаб"><button id="mnIn" aria-label="Крупнее">+</button></div>
   <button id="mnFit">⌖ вся карта</button></div></div>
