@@ -227,6 +227,11 @@ export const PLANES = { h_mi24: 'Ми-24В', h_mi28: 'Ми-28Н', h_ka52: 'Ка-
 // «Космонавтика», «Арлекин» - на будущие сезоны (Mark 2026-10-26: «в игру визуально пока не добавляй»).
 // Цена - в кристаллах. Магазин - shop-ui.js; награды сезона (rating.js SEASON, sql/024) - только из вышедших к концу сезона (camosOut)
 export const CAMO_PRICE = 150;
+// Малозаметность (Mark 2026-11-23): РЛС берёт цель на acq секунд дольше и видит её на range от обычной дальности (не меньше 0,75);
+// после пуска оружия самолёт на REVEAL_T секунд «засвечен» (открытые створки, факел) - как обычный. ИК и оптика (ПЗРК, «Стрела-10») - без поправки.
+// cost - надбавка к цене связки в онлайне (sim/online.js loadoutCost)
+export const STEALTH = { e_f22: { acq: 2, range: 0.8, cost: 30 }, e_f35: { acq: 2, range: 0.8, cost: 30 }, e_f117: { acq: 3, range: 0.8, cost: 30 }, e_b2: { acq: 5, range: 0.75, cost: 50 }, e_su57: { acq: 3, range: 0.85, cost: 30 } };
+export const REVEAL_T = 4;
 export const CAMOS = [['e_f15e:inferno', 1], ['e_mig31:dragon', 1], ['e_f35:sakura', 0], ['e_tu22:milk', 1], ['f16:digital', 0], ['e_su34:cosmos', 0], ['e_typhoon:harlequin', 1]].map(([key, season]) => ({ key, season }));
 export const camosOut = (season) => CAMOS.filter((c) => c.season && c.season <= season).map((c) => c.key);
 // Аватарки игрока (Mark 2026-11-04). Номера - по листу, с которого выбирал Mark (файлы - tools/airdef-ui/avatars-import.js). У всех по умолчанию AVA_DEFAULT, в магазине - AVA_SHOP за
@@ -469,7 +474,7 @@ Object.assign(AG, {
     guide: 'Корректируемая бомба со спутниковой навигацией ГЛОНАСС: «сбросил и забыл» по координатам, ночью и в облаках.',
     specs: [['Страна', 'Россия'], ['Масса', '≈ 560 кг'], ['Точность', '≈ 5-10 м'], ['Высота сброса', '0,5-10 км']],
     vis: { L: 3.0, r: 0.2, kind: 'tvb', color: 0x63675a } },
-  kh31p: { name: 'Х-31П', short: 'Х-31П', side: 'east', era: 3, kind: 'arm', mass: 600, acc: 160, burn: 10, kd: 0.8, g: 15, life: 60, fov: 35, rmax: 40000, mem: true, dmg: 70, blast: 27, rcs: 0.3,
+  kh31p: { name: 'Х-31П', short: 'Х-31П', side: 'east', era: 3, kind: 'arm', sat: true, mass: 600, acc: 160, burn: 10, kd: 0.8, g: 15, life: 60, fov: 35, rmax: 40000, mem: true, dmg: 70, blast: 27, rcs: 0.3,
     guide: 'Скоростная (≈ 3,5 М) противорадиолокационная ракета с прямоточным двигателем и памятью координат РЛС.',
     specs: [['Страна', 'Россия'], ['Масса', '≈ 600 кг'], ['Скорость', '≈ 3,5 М'], ['Дальность', 'до ≈ 110 км (в игре меньше)']],
     vis: { L: 4.7, r: 0.18, kind: 'missile', color: 0xd8d8d0 } },
@@ -501,7 +506,7 @@ Object.assign(AG, {
     guide: 'Крылатая ракета с малой заметностью: малая высота, огибание рельефа и застройки, оптическая ГСН на конце.',
     specs: [['Страна', 'Россия'], ['Масса', '≈ 900 кг'], ['Дальность', '≈ 290 км (в игре меньше)']],
     vis: { L: 5.7, r: 0.3, kind: 'cruise', color: 0xb0b4b0, nz: [0, -0.015, 2.85] /* своя модель (Свои/Х-59МК2, 2026-11-16): 5,70 м, крыло на спине раскрывается после пуска; сопло в торце */ } },
-  aargm: { name: 'AARGM-ER', short: 'AARGM-ER', side: 'west', era: 4, kind: 'arm', mass: 360, acc: 150, burn: 6, kd: 1.0, g: 18, life: 70, fov: 45, rmax: 38000, mem: true, mmw: true, dmg: 60, blast: 23, rcs: 0.3,
+  aargm: { name: 'AARGM-ER', short: 'AARGM-ER', side: 'west', era: 4, kind: 'arm', sat: true, mass: 360, acc: 150, burn: 6, kd: 1.0, g: 18, life: 70, fov: 45, rmax: 38000, mem: true, mmw: true, dmg: 60, blast: 23, rcs: 0.3,
     guide: 'Развитие HARM: помнит место РЛС, а на конечном участке миллиметровая ГСН находит саму машину - выключение не спасает, нужен переезд.',
     specs: [['Страна', 'США / Италия'], ['Масса', '≈ 360 кг'], ['ГСН', 'пассивная РЛ + активная ММВ + GPS']],
     vis: { L: 4.1, r: 0.127, kind: 'missile', color: 0xdedede } },
@@ -586,7 +591,7 @@ Object.assign(AG, {
   // glide - планирующее оружие без двигателя: с высоты сброса снижается по прямой к цели (sim/strike.js updateCruise), без следа
   slam: { name: 'AGM-84E SLAM', short: 'SLAM', side: 'west', era: 3, kind: 'cruise', ev: true, mass: 630, speed: 240, alt: 40, life: 400, rmax: 90000, dmg: 160, blast: 32, rcs: 0.1,
     guide: 'Ракета на основе противокорабельной Harpoon для ударов по земле: малая высота, тепловизионная ГСН на конце. Носитель - F/A-18.',
-    specs: [['Страна', 'США'], ['Дальность', '≈ 110 км'], ['БЧ', '≈ 220 кг']], vis: { L: 4.5, r: 0.17, kind: 'cruise', color: 0xb9bdbf } },
+    specs: [['Страна', 'США'], ['Дальность', '≈ 110 км'], ['БЧ', '≈ 220 кг']], vis: { L: 4.55, r: 0.17, kind: 'cruise', color: 0xd8dadb, nz: [0, 0, 2.32] /* своя модель (Свои/AGM-84E SLAM, 2026-11-23): сопло на оси - рули у торца сбивают авторасчёт */ } },
   jsow: { name: 'AGM-154 JSOW', short: 'JSOW', side: 'west', era: 3, kind: 'cruise', ev: true, glide: true, wings: true, mass: 483, speed: 260, alt: 60, life: 400, rmax: 90000, dmg: 150, blast: 30, rcs: 0.02,
     guide: 'Планирующая бомба: сбрасывается с большой высоты, раскрывает крылья и сама идёт к цели по GPS. Двигателя нет - нет и теплового следа, но и снижается она заметно для РЛС.',
     specs: [['Страна', 'США'], ['Дальность', '≈ 130 км с высоты'], ['Носитель', 'F/A-18, B-52']], vis: { L: 4.1, r: 0.2, kind: 'cruise', color: 0x8a8f86 } },

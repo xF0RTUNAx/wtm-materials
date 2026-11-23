@@ -3,7 +3,7 @@
 // Бой целиком считает сервер той же логикой, что одиночная игра (sim/strike.js, sim/raid.js); клиенты рисуют по снимкам.
 /* global THREE */
 import { tr } from '../i18n.js?v=20261120a';
-import { AG, SAM, SAM_COST, LOADOUTS, PLANES, loadoutRole, ROLE_NAME, RETIRED_PLANES } from '../arsenal.js?v=20261120a';
+import { AG, SAM, SAM_COST, LOADOUTS, PLANES, loadoutRole, ROLE_NAME, RETIRED_PLANES, STEALTH } from '../arsenal.js?v=20261120a';
 
 export const AD_PATH = '/ad';             // адрес WebSocket на том же сервере, что «Летка» (/ws - её)
 export const AD_MODES = ['arcade', 'real'];
@@ -32,7 +32,7 @@ export const samCost = (k) => SAM_COST[k] || 100;
 // связка авиации - самолёт и подвеска из LOADOUTS эпохи: цена по самолёту и оружию
 const KIND_COST = { bomb: 12, lgb: 35, tvb: 40, gps: 45, agm: 45, arm: 55, cruise: 110, decoy: 35, ecm: 30 };
 export const PLANE_COST = 120;
-export const loadoutCost = (L) => PLANE_COST + L.items.reduce((s, [k, n]) => s + (KIND_COST[(AG[k] || {}).kind] || 40) * n, 0) + (L.pod ? 20 : 0);
+export const loadoutCost = (L) => PLANE_COST + L.items.reduce((s, [k, n]) => s + (KIND_COST[(AG[k] || {}).kind] || 40) * n, 0) + (L.pod ? 20 : 0) + ((STEALTH[L.plane] || {}).cost || 0); // малозаметные - дороже
 // роль связки в лобби: «охота за ПВО» (ПРР) или «штурмовка» (бомбы, ракеты по объектам) - arsenal.js loadoutRole
 export const approachOf = (L) => ROLE_NAME[loadoutRole(L)];
 // ── баланс онлайна (решения Mark, 2026-10-13) ──

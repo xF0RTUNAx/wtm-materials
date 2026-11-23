@@ -14,7 +14,7 @@
 // }
 /* global THREE */
 import { tr } from '../i18n.js?v=20261120a';
-import { AG, SAM, eqOf } from '../arsenal.js?v=20261120a';
+import { AG, SAM, eqOf, STEALTH, REVEAL_T } from '../arsenal.js?v=20261120a';
 import { LNCH, lnchToWorld, lnchDir, slotOf, trainable, yawGoal, elMaxOf } from '../launchers.js?v=20261120a';
 import { clamp, D2R, G0, rhoAt, angleBetween, seekerHeat, offTailDeg, turnToward } from '../../drone/sim/core.js?v=20261120a';
 import { cmOf, cmKey, cmBoost, cmWorld } from './cm.js?v=20261120a';
@@ -108,9 +108,12 @@ export function createStrike(ctx) {
   const aglOf = (a) => a.pos.y - city.groundH(a.pos.x, a.pos.z);
   // РЛС видит цель: дальность по ЭПР, радиогоризонт, земля под целью (у некогерентных - «низкую» цель не видно),
   // доплеровский провал у когерентных, здания и рельеф между антенной и целью
+  // малозаметный самолёт (arsenal.js STEALTH): ключ машины - model (ИИ, игрок в одиночной), plane (игрок онлайн); после пуска - засвечен
+  const stealthOf = (t) => { if (!t || t.isMun || t.heli) return null; const S = STEALTH[t.model || t.plane]; return S && !(t.revealT > 0) ? S : null; };
   function radarSees(u, t) {
     const R = u.S.radar, d = u.ant.distanceTo(t.pos);
     let range = R.range * Math.min(1.4, Math.pow((t.rcs || 5) / 5, 0.25));
+    const stl = stealthOf(t); if (stl) range *= stl.range; // малозаметный: дальность обнаружения ниже (до 25 %)
     if (t.W && t.W.kind === 'tbm' && u.S.abm) range = R.range * 1.2; // противоракетный режим РЛС: баллистическую цель видно на полную дальность
     // станция помех цели: РЛС видит её ближе, пока не «прожжёт» помеху (помехозащищённые - почти не замечают)
     if (t.jam) range = Math.max(R.range * 0.3 * (1 + (u.S.eccm || 0)), range * (1 - t.jam * 0.6 * (1 - (u.S.eccm || 0))));
@@ -202,7 +205,7 @@ export function createStrike(ctx) {
       u.lostT = 0; u.seeT += dt; u.seeTgt = t; // кого видит (интерфейс: «вас видит» - только про игрока)
       // вертолёт у земли (ниже 60 м) берут на 3 с дольше (Mark 2026-10-22): выскочил из-за складки - успевает пустить ПТУР и уйти вниз
       // (пока не видно, seeT тает вдвое быстрее - подскок снова начинает отсчёт почти с нуля)
-      const acq = (S.radar ? S.radar.acq : 2) * (M.reactK || 1) + (t.heli && aglOf(t) < 60 ? 3 : 0);
+      const acq = (S.radar ? S.radar.acq : 2) * (M.reactK || 1) + (t.heli && aglOf(t) < 60 ? 3 : 0) + (S.radar && u.emit && stealthOf(t) ? stealthOf(t).acq : 0); // малозаметный - захват РЛС дольше
       // помехи цели иногда срывают сопровождение (у помехозащищённых - редко)
       if (u.track === t && t.jam && u.emit && rnd() < t.jam * (1 - (S.eccm || 0)) * 0.25 * dt) { u.track = null; u.seeT = -0.5; u.relock = t; fx.trackBroken(u, t); fx.radarState(u); }
       if (!u.track && u.seeT > (u.relock === t ? 0.8 : acq)) { u.track = t; u.relock = null; fx.radarState(u); }
@@ -307,7 +310,7 @@ export function createStrike(ctx) {
     const sees = (S.radar && u.emit && radarSees(u, t)) || ((S.type === 'saclos' || S.optTrack) && eyesSee(u, t));
     if (sees) {
       u.lostT = 0; u.seeT += dt; u.seeTgt = t; // кого видит (интерфейс: «вас видит» - только про игрока)
-      if (!u.track && u.seeT > (u.relock === t ? 0.8 : (S.radar ? S.radar.acq : 2) * (M.reactK || 1))) { u.track = t; u.relock = null; fx.radarState(u); } // перезахват той же цели после диполей - быстрее
+      if (!u.track && u.seeT > (u.relock === t ? 0.8 : (S.radar ? S.radar.acq : 2) * (M.reactK || 1) + (S.radar && u.emit && stealthOf(t) ? stealthOf(t).acq : 0))) { u.track = t; u.relock = null; fx.radarState(u); } // перезахват той же цели после диполей - быстрее; малозаметный - дольше
       if (u.track && u.emit) { net.alertT = 30; net.last.copy(t.pos); }
     } else {
       u.seeT = Math.max(0, u.seeT - dt * 2);
@@ -670,6 +673,7 @@ export function createStrike(ctx) {
     if (W.planeDmg && !a.heli) W = { ...W, dmg: W.planeDmg, blast: W.planeBlast || W.blast, eq: W.planeEq ?? eqOf(W) }; // НАР с самолёта - свой урон (усиление - только вертолётам)
     const w = { id: mid++, key, W, owner: a, pos: a.pos.clone().addScaledVector(TMP.set(0, -1, 0), 2.5), vel: a.vel.clone(), dir: a.vel.clone().normalize(),
       speed: a.speed, t: 0, flown: 0, dead: false, aim: opts.aim ? opts.aim.clone() : null, target: opts.target || null, mem: null, lost: false, homing: false, trailT: 0 };
+    if (STEALTH[a.model || a.plane]) a.revealT = REVEAL_T; // пуск выдаёт малозаметный самолёт
     if (W.kind === 'arm' && w.target) w.mem = w.target.pos.clone();
     if (W.kind === 'agm' && W.seeker === 'laser' && w.aim) { w.mem = w.aim.clone(); w.memT = 0; } // лазерная с точкой захвата: подсвет включается уже после пуска - до него летит туда
     // с вертолёта (скорость бывает и нулевой, нос - не по скорости) ракеты и НАР сходят по оси корпуса; бомбы - со скоростью
@@ -765,6 +769,22 @@ export function createStrike(ctx) {
     if (w.scanT <= 0) { w.scanT = 1; for (const u of units) if (!u.dead && !u.spotted && u.pos.distanceTo(w.pos) < 7000 && city.los(w.pos.x, w.pos.y, w.pos.z, u.pos.x, u.pos.y + 2, u.pos.z, 4)) { u.spotted = true; fx.unitSpotted && fx.unitSpotted(u, w); } }
     if (w.t > W.life) { w.dead = true; fx.wpnEnd(w, { objects: [], units: [], intercepted: false }); }
   }
+  // ПРР в режиме памяти (Mark 2026-11-23): РЛС цели молчит - ракета идёт по инерциальной системе, ошибка растёт ~4 м за секунду (до 150 м):
+  // выключил РЛС за 2 с до подлёта - всё равно накроет, за 20 с - промах. С поддержкой спутниковой навигации (sat: Х-31П, AARGM) - в зоне
+  // станции подавления навигации ещё один уход на 30-80 м (один раз). Направление ошибки - туда, где рядом нет других единиц: промах без урона
+  const ARM_DRIFT = 4, ARM_DRIFT_MAX = 150, MEMAIM = new THREE.Vector3();
+  function armMemAim(w, W, u, dt) {
+    w.darkT = (w.darkT || 0) + dt;
+    if (!w.memDir) { // направление ухода: из 12 - самое далёкое от других единиц
+      let best = 0, bd = -1; for (let i = 0; i < 12; i++) { const a2 = i / 12 * 6.283 + rnd() * 0.3, px = w.mem.x + Math.cos(a2) * 60, pz = w.mem.z + Math.sin(a2) * 60;
+        let md = 1e9; for (const o of units) if (!o.dead && o !== u) md = Math.min(md, Math.hypot(o.pos.x - px, o.pos.z - pz)); if (md > bd) { bd = md; best = a2; } }
+      w.memDir = best;
+    }
+    if (W.sat && !w.memJam) for (const o of units) if (!o.dead && o.S.type === 'jammer' && o.pos.distanceTo(w.pos) < o.S.jamR) { w.memJam = 30 + rnd() * 50; fx.wpnJammed(w); break; }
+    const e = Math.min(ARM_DRIFT_MAX, ARM_DRIFT * w.darkT) + (w.memJam || 0);
+    MEMAIM.set(w.mem.x + Math.cos(w.memDir) * e, 0, w.mem.z + Math.sin(w.memDir) * e); MEMAIM.y = e > 1 ? city.topAt(MEMAIM.x, MEMAIM.z) : w.mem.y;
+    return MEMAIM;
+  }
   function updateWpn(w, dt) {
     const W = w.W;
     if (W.kind === 'tbm') { updateTbm(w, dt); w.yaw = Math.atan2(-w.dir.x, -w.dir.z); w.pitch = Math.asin(clamp(w.dir.y, -1, 1)); return; }
@@ -823,9 +843,9 @@ export function createStrike(ctx) {
           else if (w.mem && (w.memT = (w.memT || 0) + dt) < 1.5) aim = w.mem;
         } else if (W.kind === 'arm' && w.target) {
           const u = w.target, emitting = !u.dead && u.emit;
-          if (emitting && angleBetween(w.dir, TMP.copy(u.ant).sub(w.pos)) < W.fov * D2R) { w.mem = w.mem || new THREE.Vector3(); w.mem.copy(u.ant); aim = u.ant; }
+          if (emitting && angleBetween(w.dir, TMP.copy(u.ant).sub(w.pos)) < W.fov * D2R) { w.mem = w.mem || new THREE.Vector3(); w.mem.copy(u.ant); aim = u.ant; w.darkT = 0; w.memJam = null; }
           else if (W.mmw && w.mem && !u.dead && w.pos.distanceTo(w.mem) < 3500 && u.pos.distanceTo(w.mem) < 60) aim = u.ant; // AARGM: миллиметровая ГСН находит молчащую машину
-          else if (W.mem && w.mem) aim = w.mem;   // HARM, Х-58: летит в запомненную точку
+          else if (W.mem && w.mem) aim = armMemAim(w, W, u, dt); // HARM, Х-58: летит в запомненную точку - с ошибкой, растущей со временем «в темноте»
           else w.lost = true;                     // Shrike, Х-28: потеряла цель
         }
       }
@@ -996,7 +1016,7 @@ export function createStrike(ctx) {
   function step(dt) {
     net.alertT = Math.max(0, net.alertT - dt);
     const targets = ctx.aircraft();
-    for (const a of targets) if (a.chaffT > 0) a.chaffT -= dt;
+    for (const a of targets) { if (a.chaffT > 0) a.chaffT -= dt; if (a.revealT > 0) a.revealT -= dt; }
     for (const u of units) { updateUnit(u, dt, targets); if (u.force) forceHold(u); aimLauncher(u, dt); if (u.force) forceStep(u, dt); }
     for (const m of sams) if (!m.dead) updateSam(m, dt);
     for (const w of wpns) if (!w.dead) updateWpn(w, dt);
