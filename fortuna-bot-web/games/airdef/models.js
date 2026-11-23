@@ -182,7 +182,7 @@ const META = {
   w_kh55: { weapon: ['kh55', 'kh55d'], lazy: true, stations: [] }, // Х-55 и ложная Х-55 (макетная часть - тот же корпус) - собственная модель (tools/airdef-models/own/kh55)
   w_kalibr: { weapon: 'kalibr', lazy: true, stations: [] }, // 3М14 «Калибр» — собственная модель (tools/airdef-models/own/w_kalibr)
   w_agm86: { weapon: 'agm86', lazy: true, stations: [] }, // AGM-86 ALCM - mahmadsaleem11111
-  w_storm: { weapon: 'storm', lazy: true, wings: 'fold', stations: [] }, // Storm Shadow - Viktor_ (CC BY 4.0), декали в текстуре стёрты (Свои/Storm Shadow); 5,1 м; у модели крылья раскрыты - на подвеске складываются вдоль корпуса, раскрываются после сброса
+  w_storm: { weapon: 'storm', lazy: true, wings: 'deploy', wingAx: { wing_r: [0, 0.244, 0.305, 85], wing_l: [0, 0.277, 0.305, -85] }, hinge: { intake: [0, -0.254, -0.349, 1, 0, 0, -45] }, stations: [] }, // Storm Shadow / SCALP EG: своя модель (Свои/Storm Shadow своя, 2026-11-23), 5,1 м; крылья в файле сложены назад над корпусом на общей оси - раскрываются после сброса, крышка заборника снизу открывается вместе с ними; рули раскрыты всегда
   w_atacms: { weapon: 'atacms', lazy: true, matte: true, wings: 'deploy', hinge: { fin1: [0.2281, 0.2281, 0, 0, 0, -1, -90], fin2: [0.2281, -0.2281, 0, 0, 0, -1, -90], fin3: [-0.2281, -0.2281, 0, 0, 0, -1, -90], fin4: [-0.2281, 0.2281, 0, 0, 0, -1, -90] }, stations: [] }, // MGM-140 ATACMS - своя модель (Свои/ATACMS, 2026-11-10): в файле рули сложены (как в трубе), после пуска раскрываются
   w_prsm: { weapon: 'prsm', lazy: true, stations: [] }, // PrSM - собственная модель (tools/airdef-models/own/prsm)
   w_lance: { weapon: 'lance', lazy: true, stations: [] }, // MGM-52 Lance в полёте - собственная модель (tools/airdef-models/own/msl_lance)
@@ -617,7 +617,7 @@ Object.assign(GLB_V, Object.fromEntries(['h_log', 'h_khata', 'h_mobile'].map((n)
 GLB_V.h_ka52 = '20261024i'; // Ка-52 maddex88 (CC BY 4.0), переделан и запечён вместо Immersive3D (2026-10-22)
 // «Тунгуска» (SIpriv) и «Панцирь-С1» (SanderWolf) - свои перекрашенные и запечённые модели вместо usedm / 42manako, ракета 9М311, Storm Shadow (Viktor_) без декалей вместо вырезанной из Су-24 (2026-10-22): новые файлы
 Object.assign(GLB_V, Object.fromEntries(['tunguska', 'tunguska_lo', 'pantsir', 'pantsir_lo', 'msl_9m311'].map((n) => [n, '20261024j'])));
-GLB_V.w_storm = '20261024k'; // Storm Shadow: консоли крыла - свои части (сложены на подвеске)
+GLB_V.w_storm = '20261123a'; // своя Storm Shadow
 Object.assign(GLB_V, { e_b1b: '20261024q' }); // прежний B-1B - manilov.ap, теперь свой (GLB_V_OWN перекрывает) (Су-25 - своя модель с 2026-11-13, GLB_V_OWN; прежде mamont nikita) (все CC BY 4.0) вместо моделей Muhamad Mirza Arrafi, Rhine_Lab_Muelsyse и Immersive3D (сомнительные права) (2026-10-24)
 // «Искандер-М» и ложная цель - свои с 2026-11-18 (GLB_V_OWN); прежние dofash_76 убраны
 Object.assign(GLB_V, { hawk: '20261024m', w_gbu24: '20261024m' }); // Hawk: ракета без деталей пусковой (absorb 0); GBU-24 - AnirudhRao, своя окраска

@@ -122,15 +122,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "Storm Shadow Ukraine (декали убраны)",
-  "author": "Viktor_",
-  "url": "https://sketchfab.com/3d-models/storm-shadow-ukraine-d1ad04ce964f46dd9cbac6a64cd19b1b",
-  "license": "CC-BY-4.0",
-  "files": [
-   "w_storm"
-  ]
- },
- {
   "title": "UGM-84 Harpoon (FREE)",
   "author": "FeriseCAT",
   "url": "https://sketchfab.com/3d-models/ugm-84-harpoon-free-d62d60fac04f4d6b86e24ad06a1f99c6",
