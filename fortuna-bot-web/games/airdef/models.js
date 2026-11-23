@@ -265,7 +265,7 @@ const META = {
   w_kh59m: { weapon: 'kh59m', lazy: true, stations: [] }, // Х-59М — собственная модель (tools/airdef-models/own/kh59m)
   w_kh59mk2: { weapon: 'kh59mk2', lazy: true, wings: 'deploy', wingAx: { wing: [0, 0.1855, -0.06, -90] }, stations: [] }, // Х-59МК2 — собственная модель (tools/airdef-models/own/kh59mk2)
   w_kh25ml: { weapon: 'kh25ml', stations: [] }, // Х-25МЛ — собственная модель (tools/airdef-models/own/kh25ml)
-  w_kh58: { weapon: 'kh58', stations: [] }, // Х-58У - Narni_Tchereskov
+  w_kh58: { weapon: 'kh58', stations: [] }, // Х-58У - своя модель (Свои/Х-58У, 2026-11-23), 4,8 м; крыло и рули неподвижны
   w_agm65b: { weapon: 'agm65b', stations: [] }, // AGM-65B - собственная модель (tools/airdef-models/own/agm65b)
   w_bomb1000: { weapon: 'bomb1000', stations: [], matte: true }, // AN-M65A1 - собственная модель (tools/airdef-models/own/bomb1000)
   w_agm45: { weapon: 'agm45', lazy: true, stations: [] }, // AGM-45 Shrike — собственная модель (tools/airdef-models/own/agm45)
@@ -618,6 +618,7 @@ GLB_V.h_ka52 = '20261024i'; // Ка-52 maddex88 (CC BY 4.0), переделан 
 // «Тунгуска» (SIpriv) и «Панцирь-С1» (SanderWolf) - свои перекрашенные и запечённые модели вместо usedm / 42manako, ракета 9М311, Storm Shadow (Viktor_) без декалей вместо вырезанной из Су-24 (2026-10-22): новые файлы
 Object.assign(GLB_V, Object.fromEntries(['tunguska', 'tunguska_lo', 'pantsir', 'pantsir_lo', 'msl_9m311'].map((n) => [n, '20261024j'])));
 GLB_V.w_storm = '20261123a'; // своя Storm Shadow
+GLB_V.w_kh58 = '20261123a'; // своя Х-58У
 Object.assign(GLB_V, { e_b1b: '20261024q' }); // прежний B-1B - manilov.ap, теперь свой (GLB_V_OWN перекрывает) (Су-25 - своя модель с 2026-11-13, GLB_V_OWN; прежде mamont nikita) (все CC BY 4.0) вместо моделей Muhamad Mirza Arrafi, Rhine_Lab_Muelsyse и Immersive3D (сомнительные права) (2026-10-24)
 // «Искандер-М» и ложная цель - свои с 2026-11-18 (GLB_V_OWN); прежние dofash_76 убраны
 Object.assign(GLB_V, { hawk: '20261024m', w_gbu24: '20261024m' }); // Hawk: ракета без деталей пусковой (absorb 0); GBU-24 - AnirudhRao, своя окраска

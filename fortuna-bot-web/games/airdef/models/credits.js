@@ -10,15 +10,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "KH-58/U Anti-Radiation Missile",
-  "author": "Narni_Tchereskov",
-  "url": "https://sketchfab.com/3d-models/kh-58u-anti-radiation-missile-765d0250b6a0434b97d6e0434032f4da",
-  "license": "CC-BY-4.0",
-  "files": [
-   "w_kh58"
-  ]
- },
- {
   "title": "RAFAEL AN/AAQ-28(V) Litening",
   "author": "Vlad.Mojaev",
   "url": "https://sketchfab.com/3d-models/rafael-anaaq-28v-litening-be90b1ca86bd46f4a87a86829d1e112c",
