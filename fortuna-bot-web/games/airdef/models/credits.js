@@ -86,15 +86,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "Mig-29K",
-  "author": "Art Blender (KoreanNavy)",
-  "url": "https://sketchfab.com/3d-models/mig-29k-23a0d3531b8f4f58b428835754a9fbdb",
-  "license": "CC-BY-4.0",
-  "files": [
-   "e_mig29k"
-  ]
- },
- {
   "title": "ELTA 8222 ECM POD 1/48",
   "author": "Original_linny",
   "url": "https://www.thingiverse.com/thing:5360259",
@@ -110,15 +101,6 @@ export const CREDITS = [
   "license": "CC-BY-4.0",
   "files": [
    "w_agm86"
-  ]
- },
- {
-  "title": "UGM-84 Harpoon (FREE)",
-  "author": "FeriseCAT",
-  "url": "https://sketchfab.com/3d-models/ugm-84-harpoon-free-d62d60fac04f4d6b86e24ad06a1f99c6",
-  "license": "CC-BY-4.0",
-  "files": [
-   "w_slam"
   ]
  },
  {

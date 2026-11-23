@@ -130,8 +130,8 @@ const META = {
     nozzles: [V(-0.34, -0.63, 4.4), V(0.34, -0.63, 4.4)], nr: 0.22, pod: null }, // МиГ-19
   e_mig17: { side: 'east', cls: 'strike', lazy: true, stations: mirror([V(-4.1, -1.25, 1.0, 0.1), V(-3.7, -1.23, 0.7, 0.15), V(-3.1, -1.2, 0.1, 0.2), V(-2.45, -1.16, -0.55, 0.2)]), // Ф1 / Ф2 - места подкрыльевых баков автора (первые две бомбы)
     nozzles: [V(0, -0.72, 3.45)], nr: 0.3, pod: null }, // МиГ-17Ф (ВК-1Ф)
-  e_mig29k: { side: 'east', cls: 'strike', lazy: true, stations: mirror([V(-5.0, -1.12, 2.9, 0.2), V(-4.2, -1.13, 2.3, 0.2), V(-3.3, -1.08, 1.8, 0.25), V(-2.4, -1.03, 1.5, 0.25)]), // все узлы - под крылом (Ф1 / Ф2 - внутренние)
-    nozzles: [V(-0.82, -0.87, 7.17), V(0.82, -0.87, 7.17)], nr: 0.3, pod: V(0, -1.45, 1.0), matte: true }, // МиГ-29К - KoreanNavy (matte: гладкая сетка после subdivision блестела волнами на скользящем свете)
+  e_mig29k: { side: 'east', cls: 'strike', lazy: true, stations: mirror([V(-4.85, -1.016, 3.897), V(-3.72, -1.041, 3.28), V(-2.98, -1.065, 2.77), V(-2.2, -1.07, 2.202)]), // МиГ-29К: своя модель (Свои/МиГ-29К, 2026-11-23), морская авиация ВМФ; все узлы под крылом; консоли складываются (паспорт), в игре не подключено
+    nozzles: [V(0.96, -1.14, 7.195), V(-0.96, -1.14, 7.195)], nr: 0.418, pod: V(0, -1.461, 0.705), clearGlass: true, ...(paintOn ? { gearModel: 'e_mig29k_gear' } : {}) },
   e_t4: { side: 'east', cls: 'strike', lazy: true, internal: true, stations: mirror([V(-0.4, -2.965, 3.59), V(-0.42, -2.965, 0.34)]), // Т-4 «Сотка»: своя модель (Свои/Т-4, 2026-11-14); отсек, порядок [ФАБ-500, ФАБ-1000] нарочно: stOrder(4) первыми заполняет точки 1 и 2 - ФАБ-1000 спереди, ФАБ-500 сзади
     nozzles: [V(0.8, -3.395, 15.74), V(-0.8, -3.395, 15.74), V(2.4, -3.395, 15.74), V(-2.4, -3.395, 15.74)], nr: 0.65, pod: null, clearGlass: true, ...(paintOn ? { gearModel: 'e_t4_gear' } : {}), gearHide: ['door_n_r', 'door_n_l', 'door_m_r', 'door_m_l'], // четыре РД-36-41 парами; со стойками закрытые створки ниш прячутся
     bay: { doors: { bay_l: [[-0.965, -4.394, 1.74], [0, 0, -1], 95], bay_r: [[0.965, -4.394, 1.74], [0, 0, 1], 95] }, sides: { L: ['bay_l'], R: ['bay_r'] } },
@@ -237,7 +237,7 @@ const META = {
   w_nar_s8: { lazy: true, stations: [], matte: true }, // НАР С-8КОМ в полёте - собственная модель (Blender, tools/airdef-models/own)
   w_tbmdec: { lazy: true, stations: [] }, // ложная цель «Искандера» - головная часть своей 9М723
   w_kinzhal: { weapon: 'kinzhal', lazy: true, stations: [] }, // Х-47М2 «Кинжал» - собственная модель (tools/airdef-models/own/kinzhal)
-  w_slam: { weapon: 'slam', lazy: true, stations: [] }, // AGM-84E SLAM - по UGM-84 Harpoon (FeriseCAT)
+  w_slam: { weapon: 'slam', lazy: true, stations: [] }, // AGM-84E SLAM - своя модель (Свои/AGM-84E SLAM, 2026-11-23), 4,55 м
   w_jsow: { weapon: 'jsow', lazy: true, wings: 'deploy', stations: [] }, // AGM-154 JSOW - RickSlash
   w_kh101: { weapon: 'kh101', lazy: true, wings: 'deploy', wingAx: { wing1: [0.3004, -0.3252, -0.8642, 58], wing2: [-0.3004, -0.3252, -0.8642, -58] }, stations: [] }, // Х-101 — собственная модель (tools/airdef-models/own/kh101)
   w_gbu10: { weapon: 'gbu10', stations: [] }, // GBU-10 Paveway — собственная модель (tools/airdef-models/own/gbu10)
@@ -427,6 +427,7 @@ const GLB_V_OWN = {
   e_su35: '20261120a', e_su35_gear: '20261120a', // свой Су-35С
   mig29: '20261120a', mig29_gear: '20261120a', // свой МиГ-29СМТ
   e_tu160: '20261120a', e_tu160_gear: '20261120a', // свой Ту-160
+  e_mig29k: '20261123a', e_mig29k_gear: '20261123a', // свой МиГ-29К
   e_su34: '20261115a', e_su34_gear: '20261115a', e_tu22m3: '20261115a', e_tu22m3_gear: '20261115a', e_tu22m3_lo: '20261115a', // свои Су-34 и Ту-22М3 (дальняя копия e_tu22m3_lo - «Летка»)
   e_tu95: '20261115c', e_tu95_gear: '20261115c', // свой Ту-95МС (ревизия 2)
   gc: '20261115d', // покров земли (свои gc_*)
@@ -619,6 +620,7 @@ GLB_V.h_ka52 = '20261024i'; // Ка-52 maddex88 (CC BY 4.0), переделан 
 Object.assign(GLB_V, Object.fromEntries(['tunguska', 'tunguska_lo', 'pantsir', 'pantsir_lo', 'msl_9m311'].map((n) => [n, '20261024j'])));
 GLB_V.w_storm = '20261123a'; // своя Storm Shadow
 GLB_V.w_kh58 = '20261123a'; // своя Х-58У
+GLB_V.w_slam = '20261123a'; // своя AGM-84E SLAM
 Object.assign(GLB_V, { e_b1b: '20261024q' }); // прежний B-1B - manilov.ap, теперь свой (GLB_V_OWN перекрывает) (Су-25 - своя модель с 2026-11-13, GLB_V_OWN; прежде mamont nikita) (все CC BY 4.0) вместо моделей Muhamad Mirza Arrafi, Rhine_Lab_Muelsyse и Immersive3D (сомнительные права) (2026-10-24)
 // «Искандер-М» и ложная цель - свои с 2026-11-18 (GLB_V_OWN); прежние dofash_76 убраны
 Object.assign(GLB_V, { hawk: '20261024m', w_gbu24: '20261024m' }); // Hawk: ракета без деталей пусковой (absorb 0); GBU-24 - AnirudhRao, своя окраска
@@ -645,6 +647,7 @@ if (paintOn) META.e_su27_gear = { lazy: true, matte: true, paint: true, stations
 if (paintOn) META.e_su35_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего Су-35С для ангара
 if (paintOn) META.mig29_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего МиГ-29 для ангара
 if (paintOn) META.e_tu160_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего Ту-160 для ангара
+if (paintOn) META.e_mig29k_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего МиГ-29К для ангара
 if (paintOn) META.e_su34_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего Су-34 для ангара
 if (paintOn) META.e_tu22m3_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего Ту-22М3 для ангара
 if (paintOn) META.e_tu95_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего Ту-95МС для ангара
