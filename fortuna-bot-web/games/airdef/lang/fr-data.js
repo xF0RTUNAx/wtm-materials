@@ -201,7 +201,7 @@ export default {
   "МиГ-23БН: ФАБ-500 ×4": "MiG-23BN : FAB-500 ×4",
   "Су-7БМК: ФАБ-500 ×2 + ФАБ-250 ×2": "Su-7BMK : FAB-500 ×2 + FAB-250 ×2",
   "Охота за ПВО: Shrike": "Chasse à la DCA : Shrike",
-  "Лазерные GBU-10 ×4 («Пэйв Найф»)": "GBU-10 laser ×4 (« Pave Knife »)",
+  "Лазерные GBU-10 ×4": "GBU-10 laser ×4",
   "МиГ-21бис: ФАБ-250 ×2 + ОФАБ-250 ×2": "MiG-21bis : FAB-250 ×2 + OFAB-250 ×2",
   "Су-7БМК: ФАБ-250 ×4 + ФАБ-100 ×2": "Su-7BMK : FAB-250 ×4 + FAB-100 ×2",
   "Ту-16: ФАБ-1000 ×4 + ФАБ-500 ×4": "Tu-16 : FAB-1000 ×4 + FAB-500 ×4",
@@ -454,4 +454,6 @@ export default {
   "Точный удар: SDB ×8": "Frappe de précision: SDB ×8",
   "Точный удар: GBU-12 ×4 + ALQ-131": "Frappe de précision: GBU-12 ×4 + ALQ-131",
   "Точный удар: JDAM ×8": "Frappe de précision: JDAM ×8",
+  "Штурмовка: С-8 ×6": "Attaque au sol: S-8 ×6",
+  "Штурмовка: Hydra ×8": "Attaque au sol: Hydra ×8",
 };

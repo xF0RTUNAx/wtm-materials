@@ -267,7 +267,7 @@ export const LOADOUTS = {
     { side: 'west', plane: 'e_mirage_f1', name: 'Mirage F1: Mk 82 ×6', items: [['mk82', 6]] }, // до 2026-10-19 - F-16D (F-16 - с ранга II)
     { side: 'west', plane: 'e_hunter', name: 'Hunter FGA.9: Mk 82 ×4', items: [['mk82', 4]] }, // до 2026-10-19 - F/A-18E
     { side: 'west', plane: 'e_f4', name: 'Охота за ПВО: Shrike', items: [['agm45', 4], ['mk82', 2]] },
-    { side: 'west', plane: 'e_f4', name: 'Лазерные GBU-10 ×4 («Пэйв Найф»)', items: [['gbu10', 4]], pod: true },
+    { side: 'west', plane: 'e_f4', name: 'Лазерные GBU-10 ×4', items: [['gbu10', 4]], pod: true },
     // третья партия (2026-10-19) - в конце списка: номера прежних подвесок не меняются
     { side: 'east', plane: 'e_mig21n', name: 'МиГ-21бис: ФАБ-250 ×2 + ОФАБ-250 ×2', items: [['fab250', 2], ['ofab250', 2]] },
     { side: 'east', plane: 'e_su7b', name: 'Су-7БМК: ФАБ-250 ×4 + ФАБ-100 ×2', items: [['fab250', 4], ['fab100', 2]] }, // 2026-11-13: своя модель - 6 точек (Mark)
@@ -375,6 +375,8 @@ export const LOADOUTS = {
   { side: 'west', plane: 'e_vulcan', name: 'Бомбы: Mk 82 ×8', items: [['mk82', 8]] },
   { side: 'west', plane: 'e_viggen', name: 'Точный удар: AGM-65B ×4', items: [['agm65b', 4]] },
   { side: 'west', plane: 'e_viggen', name: 'Бомбы: Mk 82 ×6', items: [['mk82', 6]] },
+  { side: 'east', plane: 'e_su25', name: 'Штурмовка: С-8 ×6', items: [['s8', 6]] },
+  { side: 'west', plane: 'e_a10', name: 'Штурмовка: Hydra ×8', items: [['hydra', 8]] },
   ],
 };
 
