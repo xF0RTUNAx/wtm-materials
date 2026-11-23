@@ -308,6 +308,7 @@ export const LOADOUTS = {
   { side: 'west', plane: 'e_f5', name: 'Штурмовка: Hydra ×4', items: [['hydra', 4]] },
   { side: 'west', plane: 'e_draken', name: 'Бомбы: Mk 82 ×6', items: [['mk82', 6]] },
   { side: 'west', plane: 'e_draken', name: 'Бомбы: 1000 lb ×2 + Mk 82 ×2', items: [['bomb1000', 2], ['mk82', 2]] },
+  { side: 'east', plane: 'e_tu22', name: 'Бомбы: ФАБ-500 ×4', items: [['fab500', 4]] },
   ],
   2: [
     { side: 'east', plane: 'e_su24', name: 'Лазерные: КАБ-500Л + Х-58', items: [['kab500l', 4], ['kh58', 2]], pod: true },
@@ -373,6 +374,8 @@ export const LOADOUTS = {
   { side: 'west', plane: 'e_viggen', name: 'Бомбы: Mk 82 ×6', items: [['mk82', 6]] },
   { side: 'east', plane: 'e_su25', name: 'Штурмовка: С-8 ×6', items: [['s8', 6]] },
   { side: 'west', plane: 'e_a10', name: 'Штурмовка: Hydra ×8', items: [['hydra', 8]] },
+  { side: 'east', plane: 'e_tu22m2', name: 'Бомбы: ФАБ-250 ×8', items: [['fab250', 8]] },
+  { side: 'east', plane: 'e_t4', name: 'Бомбы: ФАБ-500 ×4', items: [['fab500', 4]] },
   ],
 };
 
