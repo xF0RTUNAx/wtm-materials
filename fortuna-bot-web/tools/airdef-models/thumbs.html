@@ -25,7 +25,7 @@ async function unitObj(key) {
   wantUnit(key); const S = SAM[key], md = unitModel(key, S);
   // ПЗРК: только пусковая труба и ракета рядом (без расчёта и ящиков)
   if (await wait(() => launcherGlb(key), 30)) {
-    wantModel('msl_manpads'); await wait(() => unitMissileGlb(key), 60);
+    wantModel('msl_' + (key === 'avenger' ? 'stinger' : key)); await wait(() => unitMissileGlb(key), 60);
     const g = new THREE.Group(), lg = launcherGlb(key), m = unitMissileGlb(key); g.add(lg);
     if (m) { const b = new THREE.Box3().setFromObject(lg); m.missile.position.set(0, b.min.y - 0.12, 0); g.add(m.missile); }
     return g;

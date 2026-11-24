@@ -77,18 +77,16 @@ const CONFIG = {
   w_gbu31: { src: new URL('./own/gbu31.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 1024, nTex: () => 512, pickMesh: /./, own: true }, // GBU-31 JDAM: своя модель (Blender, own/gbu31.glb)
   // трубы ПЗРК — перекрашены по фото настоящих и с запечённым затенением (Свои/ПЗРК_трубы/paint.py, исходники авторов те же, CC BY):
   // Stinger развёрнут (nose '-x'): у настоящего ложа с прицелом спереди, раструб сзади; коробка прицела перенесена на левую сторону трубы
-  mp_stinger: { src: `${DL}/Свои/ПЗРК_трубы/mp_stinger_src.glb`, scale: 7.6 * 1.52 / 0.712, nose: '-x', tex: () => 512,   /* в настоящий размер: 1,52 м (было 0,71) */ pickMesh: /./, remove: (c) => c.ctr[0] < -0.05, credit: 'перекрашена, развёрнута',
-    orig: { title: 'FIM-92 Stinger', author: 'Pan_Ar4ik', source: 'https://sketchfab.com/3d-models/fim-92-stinger-925d78a613e847fcb2e7a60d54d3404c', license: 'CC-BY-4.0' } }, // труба Stinger (ракета — отдельно)
-  mp_verba: { src: `${DL}/Свои/ПЗРК_трубы/mp_verba_src.glb`, scale: 0.0774 * 1.63 / 2.826, nose: '+x', tex: (m) => (/PZRC|trigger/.test(m.name || '') ? 512 : 256), target: 7000,   /* 1,63 м (было 2,83); 512 — труба и спусковой блок */ pickMesh: /PZRC|battery|pen_|trigger|nab_|button|switch/ , credit: 'перекрашена',
-    orig: { title: 'MANPADS model 9K333 Verba', author: 's-k_2005', source: 'https://sketchfab.com/3d-models/manpads-model-9k333-verba-d7e05be0f5384e93a96ca47d84f1da07', license: 'CC-BY-4.0' } }, // труба «Вербы»
-  // расчёт ПЗРК (Mark 2026-10-27): наводчик с трубой на плече, второй номер показывает цель, ящик — своя сборка (Свои/Расчёт ПЗРК/build.py) на солдате buh,
-  // ящик — Wooden Military Crate, Prabhjinder Singh, Poly Haven (CC0). Части уже в осях игры (без центровки): turret — тело наводчика, th0…5 — его головы,
-  // ca0…5 — руки по позам угла места через 15°; turret1 и cs0…2 — второй номер и его рука. Оси — из build.py (оси_*.json); у запада форма песочная
-  ...Object.fromEntries(['e', 'w'].map((sd) => ['crew_' + sd, { src: `${DL}/Свои/Расчёт ПЗРК/crew_${sd}.glb`, scale: 1, nose: '-z', rulesIn: 'game', unit: true, tex: () => 1024, nTex: () => 512, pickMesh: /./,
-    axisX: 0, ground: 0, axisZ: 0, tpFix: [-0.5, 0.0, -0.0], hinge: [-0.393, 1.521, 0.201], pack0: 0, tp1: [1.4, 0.0, 0.9], hinge1: [1.177, 1.503, 1.001], credit: 'расчёт ПЗРК: позы — свои',
-    orig: { title: 'Forest soldier (outdated)', author: 'buh', source: 'https://sketchfab.com/3d-models/forest-soldier-outdated-b265975196394070837366de9a0ddb7c', license: 'CC-BY-4.0' },
-    groups: (c) => { const m = /(^|\/)(body|turret1|turret|th\d+|ca\d+|cs\d+)(\.\d+)?(\/|\||$)/.exec(c.path); return m ? m[2] : 'body'; } }])),
-  msl_manpads: { src: `${DL}/manpads_model_9k333_verba.glb`, scale: 0.0774, nose: '-x', tex: () => 256, pickMesh: /Rocket_low|_stab/ }, // ракета «Вербы» — для всех ПЗРК и Avenger
+  // ПЗРК (Mark 2026-11-24): свои пусковые, ракеты и стрелок (s300-builder; Свои/ПЗРК <название>, Свои/Стрелок ПЗРК/<ключ>). Стрелок - тело
+  // MakeHuman (CC0) + своё снаряжение, ткани ambientCG (CC0); у каждого ПЗРК свой файл: turret - тело на башне, th0…5 - головы, ca0…5 - руки
+  // по позам угла места 0…75° через 15° (оси качающейся части - hinge = cp из оси.json). Второго номера и ящика больше нет. Труба - начало
+  // на середине оси, нос −Z; крышки торцов (cap_f, cap_r) в игре не нужны: снимают перед пуском / разрушаются при пуске
+  ...Object.fromEntries(Object.entries({ igla: [0.106, 1.5057, 0.1213], iglas: [0.106, 1.5057, 0.1213], verba: [0.106, 1.5057, 0.1213], strela2: [0.106, 1.5057, 0.1213], stinger: [0.106, 1.5052, 0.1213], redeye: [0.106, 1.5027, 0.1213] }).flatMap(([k, cp]) => [
+    ['crew_' + k, { src: new URL(`./own/manpads/crew_${k}.glb`, import.meta.url).pathname, scale: 1, nose: '-z', rulesIn: 'game', unit: true, own: true, tex: () => 1024, nTex: () => 1024, pickMesh: /./,
+      axisX: 0, ground: 0, axisZ: 0, tpFix: [0, 0, 0], hinge: cp, pack0: 0, groups: (c) => { const m = /(^|\/)(body|turret|th\d+|ca\d+)(\.\d+)?(\/|\||$)/.exec(c.path); return m ? m[2] : 'body'; } }],
+    ['mp_' + k, { src: new URL(`./own/manpads/mp_${k}.glb`, import.meta.url).pathname, scale: 1, nose: '-z', own: true, axisX: 0, axisZ: 0, centerY: 0, tex: () => 1024, nTex: () => 512, pickMesh: /^(?!.*cap_)/ }],
+    ['msl_' + k, { src: new URL(`./own/manpads/msl_${k}.glb`, import.meta.url).pathname, scale: 1, nose: '-z', own: true, tex: () => 512, nTex: () => 512, pickMesh: /./ }],
+  ])),
   // ракеты «воздух–воздух» для «Симулятора Летки» (на пилонах самолётов и в полёте вместо процедурных)
   aam_r73: { src: `${DL}/russian_weapon_pack.glb`, scale: 1, nose: '+x', tex: () => 512, pickMesh: /ru_r-73/ }, // Р-73
   aam_r77: { src: `${DL}/russian_weapon_pack.glb`, scale: 1, nose: '+x', tex: () => 512, pickMesh: /ru_r-77\// }, // Р-77 (не Р-77М)

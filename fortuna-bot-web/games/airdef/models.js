@@ -317,17 +317,22 @@ const META = {
   br_seg: { obj: true, stations: [] }, // пролёт моста - VectorMan (city-render.js attachBridgeSegs)
   af_atc: { obj: true, stations: [] }, af_fuel: { obj: true, stations: [] }, af_appr: { obj: true, stations: [] }, // аэродром: вышка КДП, топливозаправщики, огни приближения (city-render.js attachAirfield)
     obj_jhangar: { obj: true, stations: [] }, obj_factory: { obj: true, stations: [] }, // цех - склады города вблизи; навес obj_hangar, база obj_milbase, цех obj_oldind и контейнеры obj_cont убраны (2026-10-29: цели - свои сцены)
-  // зенитные ракеты без своих пусковых: ракета «Вербы» - для всех ПЗРК и Avenger, AIM-120 (с F/A-18) - для NASAMS
-  msl_manpads: { samMissile: ['strela2', 'redeye', 'igla', 'stinger', 'iglas', 'verba', 'avenger'], stations: [] },
+  // ракеты ПЗРК - свои у каждого (Mark 2026-11-24, Свои/ПЗРК <название>); Avenger пускает Stinger
+  msl_igla: { samMissile: ['igla'], stations: [] },
+  msl_iglas: { samMissile: ['iglas'], stations: [] },
+  msl_verba: { samMissile: ['verba'], stations: [] },
+  msl_strela2: { samMissile: ['strela2'], stations: [] },
+  msl_stinger: { samMissile: ['stinger', 'avenger'], stations: [] },
+  msl_redeye: { samMissile: ['redeye'], stations: [] },
   msl_amraam: { samMissile: ['nasams', 'hawk21'], onRail: ['hawk21'], matte: true, stations: [] }, // AIM-120A - своя (Свои/AIM-120, 2026-10-25) вместо вырезки из F/A-18 (msl_aim120 - её грузит «Летка»), 3,863 м, нос −Z; onRail - 8 на направляющих Hawk XXI
-  // трубы ПЗРК на плече у расчёта
-  mp_verba: { launcher: ['strela2', 'igla', 'iglas', 'verba'], stations: [] },
-  mp_stinger: { launcher: ['redeye', 'stinger'], stations: [] },
-  // расчёт ПЗРК (Mark 2026-10-27) - наводчик с трубой на плече, второй номер показывает цель, ящик: солдат buh (CC BY 4.0), ящик Poly Haven (CC0),
-  // позы - свои (Свои/Расчёт ПЗРК/build.py). Наводчик: позы по углу места через 15° - головы th0…5 (на башне) и руки ca0…5 (на качающейся части);
-  // второй номер - своя башня turret1 и рука cs0…2 (main.js: вторая пусковая без ракет). Труба - по-прежнему mp_verba / mp_stinger
-  crew_e: { units: ['strela2', 'igla', 'iglas', 'verba'], matte: true, stations: [] },
-  crew_w: { units: ['redeye', 'stinger'], matte: true, stations: [] },
+  // ПЗРК (Mark 2026-11-24): свой стрелок под каждую пусковую (Свои/Стрелок ПЗРК/<ключ>, тело MakeHuman CC0), труба на качающейся части
+  // (Свои/ПЗРК <название>). Стрелок: turret - тело, th0…5 - головы, ca0…5 - руки по позам угла места через 15° (main.js crewPose). Второго номера и ящика нет
+  mp_igla: { launcher: ['igla'], stations: [] }, crew_igla: { units: ['igla'], matte: true, stations: [] },
+  mp_iglas: { launcher: ['iglas'], stations: [] }, crew_iglas: { units: ['iglas'], matte: true, stations: [] },
+  mp_verba: { launcher: ['verba'], stations: [] }, crew_verba: { units: ['verba'], matte: true, stations: [] },
+  mp_strela2: { launcher: ['strela2'], stations: [] }, crew_strela2: { units: ['strela2'], matte: true, stations: [] },
+  mp_stinger: { launcher: ['stinger'], stations: [] }, crew_stinger: { units: ['stinger'], matte: true, stations: [] },
+  mp_redeye: { launcher: ['redeye'], stations: [] }, crew_redeye: { units: ['redeye'], matte: true, stations: [] },
   // зенитные комплексы: корпус / башня / пакет (оси - LNCH в launchers.js, их печатает prepare.js)
   bukm3: { units: ['bukm3'], matte: true, stations: [], camo: { scheme: 'soviet', size: 1.5 } }, // «Бук-М3» - Valera121 (CC BY; без текстур - камуфляж шейдером, колёса и ракеты в ТПК - свои цвета; гусеницы звеньями - prepare.js tracks)
   msl_bukm3: { samMissile: ['bukm3'], matte: true, stations: [] }, // ракета 9М317М - из той же модели (Missile_1), светлая
@@ -613,7 +618,7 @@ GLB_V.e_f15e = '20261105a'; GLB_V.e_f15e_gear = '20261105a'; // своя мод�
 Object.assign(GLB_V, Object.fromEntries(['osa', 'osa_lo'].map((n) => [n, '20261024e'])));
 Object.assign(GLB_V, Object.fromEntries(['bukm3', 'bukm3_lo', 'msl_bukm3'].map((n) => [n, '20261024f'])));
 // трубы ПЗРК перекрашены, в настоящий размер, Stinger развёрнут; расчёты ПЗРК вместо процедурных солдат (2026-10-27)
-Object.assign(GLB_V, Object.fromEntries(['mp_verba', 'mp_stinger', 'crew_e', 'crew_w'].map((n) => [n, '20261027c'])));
+Object.assign(GLB_V, Object.fromEntries(['igla', 'iglas', 'verba', 'strela2', 'stinger', 'redeye'].flatMap((k) => ['mp_' + k, 'crew_' + k, 'msl_' + k]).map((n) => [n, '20261124a']))); // свои ПЗРК и стрелок
 Object.assign(GLB_V, Object.fromEntries(['h_log', 'h_khata', 'h_mobile'].map((n) => [n, '20261027b']))); // маленькие дома заново: упрощение без дыр в крыше и тёмных фасадов (prepare.js simpKeep, lockBorder; 2026-10-27)
 GLB_V.h_ka52 = '20261024i'; // Ка-52 maddex88 (CC BY 4.0), переделан и запечён вместо Immersive3D (2026-10-22)
 // «Тунгуска» (SIpriv) и «Панцирь-С1» (SanderWolf) - свои перекрашенные и запечённые модели вместо usedm / 42manako, ракета 9М311, Storm Shadow (Viktor_) без декалей вместо вырезанной из Су-24 (2026-10-22): новые файлы
@@ -1130,7 +1135,7 @@ export function releaseModel(name) {
 // и 31 МБ геометрии (в памяти дважды: массив и видеокарта), а в самолётном бою камера к машинам ПВО обычно не подлетает. Вблизи модель та же
 // расчёт ПЗРК - тяжёлый (6-7 МБ, ~50 тыс. треугольников на экране; ревью 2026-10-27): на телефоне - только когда камера близко (wantUnitNear),
 // издали - процедурные солдаты (ПЗРК там почти не видно)
-const NEAR_ONLY = new Set(['crew_e', 'crew_w']);
+const NEAR_ONLY = new Set(['igla', 'iglas', 'verba', 'strela2', 'stinger', 'redeye'].map((k) => 'crew_' + k));
 export function wantUnit(key) { const n = UMODEL[key], sm = SAMMSL[key]; if (sm && BASE && META[sm].lazy) start(sm); const oR = sm && META[sm].onRail; if (BASE && oR && (oR === true || oR.includes(key))) start(sm + '_lo'); /* дальняя копия ракеты на направляющих - только у тех, у кого она там видна (у NASAMS - в контейнерах) */ if (n && BASE) { if (UNIT_LO.has(n)) start(n + '_lo'); if (!TOUCH || !(UNIT_LO.has(n) || NEAR_ONLY.has(n))) start(n); } } // сначала лёгкая дальняя копия; lazy-ракета комплекса (9М83) - только в бою с ним
 export function wantUnitNear(key) { const n = UMODEL[key]; if (n && BASE && !LOADING.has(n)) start(n); }
 // дома города вблизи - по запросу (на слабом пресете не грузятся); bldModel - загруженная модель (общая, не копия)

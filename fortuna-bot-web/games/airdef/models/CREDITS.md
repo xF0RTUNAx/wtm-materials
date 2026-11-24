@@ -5,11 +5,6 @@
 
 - "Low Poly GBU-24 laser guided bomb (окраска и запекание)" (https://sketchfab.com/3d-models/low-poly-gbu-24-laser-guided-bomb-8dcd4a634e924a52ab05d4e90b3e3e82) by AnirudhRao - CC-BY-4.0 - `w_gbu24.glb`
 - "RAFAEL AN/AAQ-28(V) Litening" (https://sketchfab.com/3d-models/rafael-anaaq-28v-litening-be90b1ca86bd46f4a87a86829d1e112c) by Vlad.Mojaev - CC-BY-4.0 - `w_pod.glb`
-- "FIM-92 Stinger (перекрашена, развёрнута)" (https://sketchfab.com/3d-models/fim-92-stinger-925d78a613e847fcb2e7a60d54d3404c) by Pan_Ar4ik - CC-BY-4.0 - `mp_stinger.glb`
-- "MANPADS model 9K333 Verba (перекрашена)" (https://sketchfab.com/3d-models/manpads-model-9k333-verba-d7e05be0f5384e93a96ca47d84f1da07) by s-k_2005 - CC-BY-4.0 - `mp_verba.glb`
-- "MANPADS model 9K333 Verba" (https://sketchfab.com/3d-models/manpads-model-9k333-verba-d7e05be0f5384e93a96ca47d84f1da07) by s-k_2005 - CC-BY-4.0 - `msl_manpads.glb`
-- "Forest soldier (outdated) (расчёт ПЗРК: позы — свои)" (https://sketchfab.com/3d-models/forest-soldier-outdated-b265975196394070837366de9a0ddb7c) by buh - CC-BY-4.0 - `crew_e.glb`, `crew_w.glb`
-- "Wooden Military Crate" (https://polyhaven.com/a/wooden_military_crate) by Prabhjinder Singh - CC0 - `crew_e.glb`, `crew_w.glb`
 - "Миг - 31" (https://sketchfab.com/3d-models/31-b168fbca1f6c4ad0ad4e45b7a22f52bc) by mamont nikita - CC-BY-4.0 - `e_mig31.glb`, `e_mig31_lo.glb`
 - "Sukhoi Su-57 "Felon"" (https://sketchfab.com/3d-models/sukhoi-su-57-felon-09d546b4355c4fa6882ca46e05069bee) by andertan - CC-BY-4.0 - `e_su57.glb`, `e_su57_lo.glb`
 - "ELTA 8222 ECM POD 1/48" (https://www.thingiverse.com/thing:5360259) by Original_linny - CC-BY-4.0 - `w_ecm.glb`

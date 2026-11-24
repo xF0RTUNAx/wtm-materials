@@ -421,7 +421,7 @@ C.syncUnits = function () {
       const mesh = (geo, parent) => { const m = new THREE.Mesh(geo, unitMat); m.castShadow = !!P.shadows; parent.add(m); return m; };
       const obj = (o, parent) => { o.traverse((q) => { if (q.isMesh && !q.userData.glass) { q.castShadow = !!P.shadows; q.receiveShadow = !!P.shadows; } }); parent.add(o); return o; };
       // готовая модель (корпус, башня, пакет - РЛС на башне) или процедурная
-      if (gm) obj(gm.body, g); else if (md.body) mesh(md.body, g);
+      if (gm) { if (gm.body) obj(gm.body, g); } else if (md.body) mesh(md.body, g); // у стрелка ПЗРК корпуса нет (только тело на башне)
       // «Тор-М2»: броне-шторки окон кабины в бою открыты - поворот вокруг X на петлях shut.piv (в осях машины)
       if (gm && md.LN && md.LN.shut) gm.sh.forEach((s, i) => { const P = md.LN.shut.piv[i]; if (!s || !P) return; const pv = new THREE.Group(); obj(s, pv); pv.position.fromArray(P); s.position.set(-P[0], -P[1], -P[2]); pv.rotation.x = md.LN.shut.open; g.add(pv); });
       if (md.dish && !gm) { const d = mesh(md.dish, g); d.position.set(md.dishXZ[0], md.dishY, md.dishXZ[1]); g.userData.dish = d; }
