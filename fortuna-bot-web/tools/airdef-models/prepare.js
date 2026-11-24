@@ -117,7 +117,8 @@ const CONFIG = {
   e_mig21: { src: `${DL}/mig-21_chibi.glb`, scale: 0.07, rulesIn: 'game', tex: () => 512, opaque: /mig21/, // «чиби»: стоял на подставке с креном ~10° — выравниваем
     axes: (x, y, z) => { const c = Math.cos(-0.174), s = Math.sin(-0.174); return [-x * c - y * s, -x * s + y * c, -z]; },
     groups: (c) => (c.size[2] > 14 || c.mat !== 2 ? null : c.ctr[1] < 0.98 && Math.max(...c.size) < 4.9 ? null : LS(c)) }, // длина 14,5 м // подставка, шасси и бак
-  e_mig31: { src: `${DL}/b168fbca1f6c4ad0ad4e45b7a22f52bc.glb`, scale: 9.95, nose: '+x', rulesIn: 'game', tex: () => 512, glassColor: [0.3, 0.36, 0.42, 0.4], /* у автора почти чёрное и прозрачное на 90 % */ groups: (c) => (c.min[1] < -1.25 && Math.max(...c.size) < 2.5 ? null : 'body') }, // без шасси
+  e_mig31: { src: new URL('./own/e_mig31.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 2048, nTex: () => 2048, pickMesh: /./, own: true, centerX: true, groups: (c) => { const m = /(^|\/)(door_[nm]_[lr])(\/|\||$)/.exec(c.path); return m ? m[2] : 'body'; } }, // МиГ-31БМ: своя модель (Свои/МиГ-31БМ, hawk21-builder, 2026-11-24; прежняя - mamont nikita); створки ниш door_* - свои части (gearHide)
+  e_mig31_gear: { src: new URL('./own/e_mig31_gear.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 2048, nTex: () => 2048, pickMesh: /./, own: true, centerX: true }, // стойки своего МиГ-31БМ для ангара
   e_su57: { src: `${DL}/sukhoi_su-57_felon.glb`, scale: 7.42, nose: '-x', rulesIn: 'game', tex: () => 512, glass: /^Darkness\.001$/, groups: () => 'body' },
   e_tu22m3: { src: new URL('./own/tu22m3.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 2048, nTex: () => 2048, pickMesh: /./, own: true, centerX: true, groups: (c) => { const m = /(^|\/)(bay_[lr]|door_[nm]_[lr]|wing_[lr])(\/|\||$)/.exec(c.path); return m ? m[2] : 'body'; } }, // Ту-22М3: своя модель (Свои/Ту-22М3, 2026-11-15); створки отсека bay_*, створки ниш door_* (gearHide), консоли wing_* со своими детьми (sweep)
   e_tu22m3_gear: { src: new URL('./own/tu22m3_gear.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 2048, nTex: () => 2048, pickMesh: /./, own: true, centerX: true }, // стойки своего Ту-22М3 для ангара (метки по 1 мм - тот же центр)
@@ -474,16 +475,10 @@ const CONFIG = {
       if (c.min[1] > 1.55 && axis(c, [-0.19, 1.77], [-0.985, 0.175], 1.3, -3.2, 3.6)) return 'cradle';
       return c.min[1] > 1.15 && c.ctr[2] > -0.7 && c.ctr[2] < 0.5 ? 'turret' : 'body';
     } },
-  // M163 VADS — Gorgytz (CC BY; прежняя 42manako — из Lock On): сетка из STL без текстур и деталей — части по связности, краска своя
-  m163: { src: `${DL}/m163.glb`, scale: 4.86 / 136.9, nose: '+x', rulesIn: 'game', unit: true, tex: () => 256, target: 320000, simpErr: 0.005, perTri: true, crease: 35, camo: { scheme: 'nato' }, /* 616 тыс. → 320 тыс. (вдали — m163_lo) */
-    hinge: [-0.3, 2.3, -0.4 - 2.32], // цапфы пушки (оси игры, м; правила — до центровки: по длине −2,32): стволы — слева от оси башни, на высоте 2,3 м
-    colors: { '#track': [0.03, 0.03, 0.028], '#gun': [0.035, 0.036, 0.034] }, // олива; гусеницы и пушка — тёмные
-    groups: (c) => { // по треугольникам (сетка из STL — связных частей тысячи): пушка качается, башня с РЛС крутится, антенны — на корпусе
-      const x = c.ctr[0], y = c.ctr[1], z = c.ctr[2] + 2.32; // z — от середины корпуса
-      if (y > 2.02 && z < -0.3 && x < 0.5 && x > -1.0) return 'cradle#gun';
-      if (y > 2.02 && Math.hypot(x, z - 0.15) < 1.45 && !(z > 0.95 && Math.abs(x) < 0.45)) return 'turret';
-      return y < 0.75 && Math.abs(x) > 0.85 ? 'body#track' : 'body';
-    } },
+  // M163 VADS — своя модель, ревизия 2 (сборщик s300-builder, Свои/M163 Vulcan своя, 2026-11-24; прежняя — Gorgytz): 178 тыс., трёхцветка НАТО и ORM запечены (шейдерный узор снят).
+  // Оси сборщика без центровки: погон tp (0; 1,845; 0,207), качание пушки (0; 2,244; −0,138); barrels_cluster — блок стволов (крутится, ось в cradle), dish_radar — тарелка дальномера
+  m163: { src: new URL('./own/m163.glb', import.meta.url).pathname, scale: 1, nose: '-z', rulesIn: 'game', unit: true, own: true, tex: (m) => (m.name === 'VD_R' ? 1024 : 2048), nTex: (m) => (m.name === 'VD_R' ? 512 : 1024), pickMesh: /./,
+    axisX: 0, axisZ: 0, ground: 0, hinge: [0, 2.2443, -0.1381], tpFix: [0, 1.8449, 0.2071], pack0: 0, groups: (c) => m163Part(c, true) },
   m163_old: { src: `${DL}/m163_vads.glb`, scale: 0.393, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, hinge: [0, 3.44, -1.29],
     groups: (c) => {
       if (c.min[1] < 2.85 || c.ctr[2] > 0.15 || c.ctr[2] < -3.3) return 'body';
@@ -804,6 +799,12 @@ function gepardPart(c, near) {
   if (/(^|\/)dish/.test(p)) return near ? 'dish' : 'turret';
   return /(^|\/)cradle/.test(p) ? 'cradle' : /(^|\/)radar/.test(p) ? 'radar' : /(^|\/)turret/.test(p) ? 'turret' : 'body';
 }
+// M163: стволы — своя часть barrels, тарелка дальномера — dish (вблизи; вдали — в башне)
+function m163Part(c, near) {
+  const p = c.path;
+  if (/(^|\/)dish/.test(p)) return near ? 'dish' : 'turret';
+  return /(^|\/)barrels/.test(p) ? 'barrels' : /(^|\/)cradle/.test(p) ? 'cradle' : /(^|\/)turret/.test(p) ? 'turret' : 'body';
+}
 // «Бук-М1», Chaparral, Hawk XXI: пакет и цилиндр — дети башни (turret_main/cradle_*, turret_main/cyl_*): сначала они, потом башня; штоки — по последнему узлу пути
 function bukPart(c) {
   const p = c.path, Y = [...p.matchAll(/(?:^|\/)cyl_(barrel|rod1|rod2)/g)].pop(); if (Y) return 'cyl' + ['barrel', 'rod1', 'rod2'].indexOf(Y[1]);
@@ -832,7 +833,7 @@ function torm2Part(c, near, lidOrder) {
   return /(^|\/)turret/.test(p) ? 'turret' : 'body';
 }
 // ПВО: дальние копии (_lo) — main.js рисует их дальше 400 м (THREE.LOD по частям: корпус, башня, пакет)
-const SAM_LO = ['osa', 'bukm3', 's125', 'gepard', 'ew_e', 'pantsir', 'sampt', 'tunguska', 'skyguard', 'zsu234', 'm163'];
+const SAM_LO = ['osa', 'bukm3', 's125', 'gepard', 'ew_e', 'pantsir', 'sampt', 'tunguska', 'skyguard', 'zsu234'];
 for (const k of SAM_LO) CONFIG[k + '_lo'] = { ...CONFIG[k], target: k === 'pantsir' ? 15000 : 20000, simpErr: 0.05, tex: () => 256, nTex: null };
 CONFIG.bukm3_lo.tracks = { ...CONFIG.bukm3.tracks, links: false }; // дальняя копия: лента — гладкая, без звеньев
 // Гепард ревизии 2: дальняя копия сборщика (gepard_lo.glb, без мелочи), цвет 512, без нормалей; антенна сопровождения — в башне (вдали не качается).
@@ -841,6 +842,8 @@ CONFIG.bukm3_lo.tracks = { ...CONFIG.bukm3.tracks, links: false }; // дальн
 // пикселя (отличие — только угол крутящейся антенны обзора; Mark 2026-11-02: «облегчи, но так, чтобы не было визуальных артефактов»)
 CONFIG.gepard_lo = { ...CONFIG.gepard, src: `${DL}/Свои/Гепард_rev2/gepard_lo.glb`, tex: () => 512, nTex: null, groups: (c) => gepardPart(c, false),
   simplify: 0.2, simpErr: 0.006, simpKeep: /^GP_(T|H|glassF)$/ };
+// M163: дальняя копия сборщика (50 тыс.), ходовая упрощена, как у Гепарда; тарелка - в башне
+CONFIG.m163_lo = { ...CONFIG.m163, src: new URL('./own/m163_lo.glb', import.meta.url).pathname, tex: () => 512, nTex: null, groups: (c) => m163Part(c, false), simplify: 0.4, simpErr: 0.006, simpKeep: /^VD_(T|H|glassF)$/ };
 // «Стрела-1» (основа 130 тыс., почти всё — колёса): дальняя копия — 15 тыс., цвет 512, без нормалей
 CONFIG.strela1_lo = { ...CONFIG.strela1, target: 15000, simpErr: 0.05, tex: () => 512, nTex: null };
 // Sentinel (67 тыс., почти всё — «Хамви» основы): дальняя копия — 15 тыс., цвет 512, без нормалей
@@ -937,10 +940,10 @@ CONFIG.site_port_lo = { ...CONFIG.site_fuel_city_lo, src: `${DL}/Свои/Пор
 // машины: дальние копии (_lo, ~1000 треуг.) — для движения на дорогах дальше 250 м
 // самолёты, вертолёты и ЗУ-23 на стоянках объектов-сцен (SITES place, «Военный аэродром»): лёгкие копии pk_* ~4 тыс. треугольников (полные — 3–256 тыс.:
 // 16 самолётов, 2 вертолёта и 3 ЗУ-23 на аэродроме дали бы ~2 млн треугольников и сотни вызовов отрисовки вблизи)
-for (const k of ['su30', 'mig29', 'e_su24', 'e_su25', 'f16', 'f18', 'e_f15e', 'e_a10', 'e_su34', 'e_mig31', 'h_mi24', 'h_ah64', 'h_mi8', 'h_uh60', 'zu23']) CONFIG[`pk_${k}`] = { ...CONFIG[k], target: 4000, simpErr: 0.05, tex: () => 256, nTex: null };
+for (const k of ['su30', 'mig29', 'e_su24', 'e_su25', 'f16', 'f18', 'e_f15e', 'e_a10', 'e_su34', 'e_mig31', 'h_mi24', 'h_ah64', 'h_mi8', 'h_uh60', 'zu23']) CONFIG[`pk_${k}`] = { ...CONFIG[k], target: 4000, simpErr: 0.05, tex: () => 256, nTex: null, ...(k === 'e_mig31' ? { groups: undefined } : {}) };
 for (const k of ['compact', 'coupe', 'hatch', 'van', 'offroad', 'pickup', 'sedan', 'sport', 'suv', 'wagon', 'police']) CONFIG[`c_${k}_lo`] = { ...CONFIG[`c_${k}`], target: 1000, simpErr: 0.05, tex: () => 128 };
 // дальние копии противника «Летки» (_lo): вдали тонкие крылья можно упрощать сильнее — дефектов не видно, а треугольников в разы меньше
-for (const [k, t] of [['e_mig21', 3000], ['e_mig31', 9000], ['e_su57', 7000], ['e_tu22m3', 7000], ['e_gripen', 3000], ['e_f22', 4000], ['e_f35', 9000]]) CONFIG[k + '_lo'] = { ...CONFIG[k], target: t, simpErr: 0.05, tex: () => 256, nTex: null, ...(k === 'e_f35' || k === 'e_f22' || k === 'e_tu22m3' ? { groups: undefined } : {}) };
+for (const [k, t] of [['e_mig21', 3000], ['e_mig31', 9000], ['e_su57', 7000], ['e_tu22m3', 7000], ['e_gripen', 3000], ['e_f22', 4000], ['e_f35', 9000]]) CONFIG[k + '_lo'] = { ...CONFIG[k], target: t, simpErr: 0.05, tex: () => 256, nTex: null, ...(k === 'e_f35' || k === 'e_f22' || k === 'e_tu22m3' || k === 'e_mig31' ? { groups: undefined } : {}) };
 // часть лежит вдоль оси пакета: H — петля (z, y), A — направление оси (z, y), across — полутолщина, along — от и до
 function axis(c, H, A, across, a0, a1) { const dz = c.ctr[2] - H[0], dy = c.ctr[1] - H[1], al = dz * A[0] + dy * A[1]; return Math.abs(dz * A[1] - dy * A[0]) < across && al > a0 && al < a1; }
 // оси модели → оси игры (x вправо, y вверх, нос в −Z)
@@ -1345,7 +1348,7 @@ function articulate(cfg, byMat, shift, ax) {
   // расчёт ПЗРК: th0…5 — головы наводчика по позам угла места (части башни), ca0…5 — его руки (части пакета, уже в осях пакета при угле 0);
   // второй номер — своя башня turret1 (ось tp1) и рука cs0…2 (шарнир hinge1) — в осях модели, без центровки (axisX, ground, axisZ — 0)
   if (cfg.tp1) for (const m of byMat.values()) if (m.group === 'turret1' || /^cs\d+$/.test(m.group)) { const o = m.group === 'turret1' ? cfg.tp1 : cfg.hinge1; for (let i = 0; i < m.pos.length; i += 3) { m.pos[i] -= o[0]; m.pos[i + 1] -= o[1]; m.pos[i + 2] -= o[2]; } }
-  const T = [...byMat.values()].filter((m) => m.group === 'turret' || m.group === 'radar' || m.group === 'dish' || m.group === 'rfold' || /^lid\d/.test(m.group) || /^th\d+$/.test(m.group)), K = [...byMat.values()].filter((m) => m.group === 'cradle' || m.group === 'missile' || /^ca\d+$/.test(m.group));
+  const T = [...byMat.values()].filter((m) => m.group === 'turret' || m.group === 'radar' || m.group === 'dish' || m.group === 'barrels' || m.group === 'rfold' || /^lid\d/.test(m.group) || /^th\d+$/.test(m.group)), K = [...byMat.values()].filter((m) => m.group === 'cradle' || m.group === 'missile' || /^ca\d+$/.test(m.group));
   if (!T.length && !K.length) return; // машина целиком
   if (!K.length && T.every((m) => m.group === 'radar')) return; // только антенна обзора без башни (Sentinel): в осях модели, игра крутит её вокруг оси опоры
   // основание башни: нижние 0,5 м её вершин

@@ -38,7 +38,7 @@ async function unitObj(key) {
   const tur = [];
   if (md.LN) for (const Ld of md.LN.L) {
     const tg = new THREE.Group(), cg = new THREE.Group(); tg.position.fromArray(Ld.tp); cg.position.fromArray(Ld.cp);
-    if (gm) { if (gm.turret) tg.add(gm.turret.clone()); if (gm.cradle) cg.add(gm.cradle.clone()); }
+    if (gm) { if (gm.turret) tg.add(gm.turret.clone()); if (gm.cradle) cg.add(gm.cradle.clone()); if (gm.barrels) { const b = gm.barrels.clone(); b.position.set(-Ld.cp[0], -Ld.cp[1], -Ld.cp[2]); cg.add(b); } /* M163: блок стволов - в осях башни */ }
     else { if (md.turret) mesh(md.turret, tg); const lg = launcherGlb(key); if (lg) { cg.add(lg); lg.position.set(Ld.slots[0][0], Ld.slots[0][1] - 0.06, Ld.slots[0][2]); } else if (md.cradle) mesh(md.cradle, cg); }
     if (gm && gm.missile) for (const sp of Ld.slots) { const q = new THREE.Group(); q.add(gm.missile.clone()); if (gm.booster) q.add(gm.booster.clone()); q.position.fromArray(sp); cg.add(q); }
     if (gm && !gm.missile && md.LN.railMsl && await wait(() => unitMissileGlb(key, true), 60)) for (const sp of Ld.slots) { const q = unitMissileGlb(key, true).missile; q.position.fromArray(sp); cg.add(q); } // «Бук-М1»: своя ракета msl_buk на направляющих

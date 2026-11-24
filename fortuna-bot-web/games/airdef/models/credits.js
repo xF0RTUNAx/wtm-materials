@@ -19,16 +19,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "Миг - 31",
-  "author": "mamont nikita",
-  "url": "https://sketchfab.com/3d-models/31-b168fbca1f6c4ad0ad4e45b7a22f52bc",
-  "license": "CC-BY-4.0",
-  "files": [
-   "e_mig31",
-   "e_mig31_lo"
-  ]
- },
- {
   "title": "Sukhoi Su-57 \"Felon\"",
   "author": "andertan",
   "url": "https://sketchfab.com/3d-models/sukhoi-su-57-felon-09d546b4355c4fa6882ca46e05069bee",
@@ -178,16 +168,6 @@ export const CREDITS = [
   "license": "CC-BY-4.0",
   "files": [
    "hawk"
-  ]
- },
- {
-  "title": "M163",
-  "author": "Gorgytz",
-  "url": "https://sketchfab.com/3d-models/m163-54bf2317be68403d9b5a1d7e75e68d4d",
-  "license": "CC-BY-4.0",
-  "files": [
-   "m163",
-   "m163_lo"
   ]
  },
  {

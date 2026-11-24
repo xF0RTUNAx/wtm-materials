@@ -5,7 +5,6 @@
 
 - "Low Poly GBU-24 laser guided bomb (окраска и запекание)" (https://sketchfab.com/3d-models/low-poly-gbu-24-laser-guided-bomb-8dcd4a634e924a52ab05d4e90b3e3e82) by AnirudhRao - CC-BY-4.0 - `w_gbu24.glb`
 - "RAFAEL AN/AAQ-28(V) Litening" (https://sketchfab.com/3d-models/rafael-anaaq-28v-litening-be90b1ca86bd46f4a87a86829d1e112c) by Vlad.Mojaev - CC-BY-4.0 - `w_pod.glb`
-- "Миг - 31" (https://sketchfab.com/3d-models/31-b168fbca1f6c4ad0ad4e45b7a22f52bc) by mamont nikita - CC-BY-4.0 - `e_mig31.glb`, `e_mig31_lo.glb`
 - "Sukhoi Su-57 "Felon"" (https://sketchfab.com/3d-models/sukhoi-su-57-felon-09d546b4355c4fa6882ca46e05069bee) by andertan - CC-BY-4.0 - `e_su57.glb`, `e_su57_lo.glb`
 - "ELTA 8222 ECM POD 1/48" (https://www.thingiverse.com/thing:5360259) by Original_linny - CC-BY-4.0 - `w_ecm.glb`
 - "AGM-86" (https://sketchfab.com/3d-models/agm-86-de64a3d9282249e39760a5fee425e7ae) by mahmadsaleem11111 - CC-BY-4.0 - `w_agm86.glb`
@@ -22,7 +21,6 @@
 - "ЗРК С-125 «Нева / SAM S-125 "Neva"" (https://sketchfab.com/3d-models/125-sam-s-125-neva-4482f05be23b49099c2cf553a2f38dcd) by teanid - CC-BY-4.0 - `s125.glb`, `s125_lo.glb`
 - "2K12 Kub" (https://sketchfab.com/3d-models/2k12-kub-4e2e8506c9e546b3b7da1554db8185bc) by UltraKill - CC-BY-4.0 - `kub.glb`
 - "Mim-23 Hawk SAM air defence system (game-ready)" (https://sketchfab.com/3d-models/mim-23-hawk-sam-air-defence-system-game-ready-8728909b6ce24ef8baeffabbf5bae8f4) by Dominik Biały - CC-BY-4.0 - `hawk.glb`
-- "M163" (https://sketchfab.com/3d-models/m163-54bf2317be68403d9b5a1d7e75e68d4d) by Gorgytz - CC-BY-4.0 - `m163.glb`, `m163_lo.glb`
 - "ZSU-23-4M" (https://sketchfab.com/3d-models/zsu-23-4m-e9e3ca1a5ee7455f90886de220519e42) by voron - CC-BY-4.0 - `zsu234.glb`, `zsu234_lo.glb`
 - "Humvee Transport (кузов, прицеп и антенна AN/MPQ-64 — свои)" (https://sketchfab.com/3d-models/humvee-transport-48336bc41caf4fa1bdf147823a774111) by karmy2k - CC-BY-4.0 - `ew_w.glb`, `ew_w_lo.glb`
 - "Ural 4320 (будка, мачта и антенна П-18 — свои)" (https://sketchfab.com/3d-models/ural-4320-f953c51a5dbc4a15949f4dcc0905c4e8) by Brout - CC-BY-4.0 - `ew_e.glb`, `ew_e_lo.glb`

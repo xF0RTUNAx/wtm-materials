@@ -156,8 +156,9 @@ const META = {
     pivots: { wing_r: [[2.511, -1.585, 1.675], [0, 1, 0]], wing_l: [[-2.511, -1.585, 1.675], [0, 1, 0]] }, sweep: { wing_r: 33, wing_l: -33 } },
   e_su57: { side: 'east', cls: 'fighter', lazy: true, internal: true, stations: mirror([V(-1.9, -0.95, 1.5), V(-1.6, -1.0, 0.0), V(-0.35, -1.2, 0.5), V(-0.3, -1.2, 2.6)]),
     nozzles: [V(-1.37, -0.66, 8.25), V(1.37, -0.66, 8.25)], nr: 0.23, pod: null }, // Су-57
-  e_mig31: { side: 'east', cls: 'fighter', lazy: true, stations: mirror([V(-5.6, -0.95, 5.4, 0.3), V(-4.62, -1.24, 4.4), V(-1.55, -1.55, 7.5), V(-1.19, -1.92, -1.5)]),
-    nozzles: [V(-0.78, -1.09, 11.1), V(0.78, -1.09, 11.1)], nr: 0.37, pod: null }, // МиГ-31БМ
+  e_mig31: { side: 'east', cls: 'fighter', lazy: true, stations: mirror([V(-0.44, -2.155, 3.975), V(-0.44, -2.155, -0.525), V(-3.45, -0.687, 3.917), V(-2.55, -0.634, 3.455)]), // МиГ-31БМ: своя модель (Свои/МиГ-31БМ, 2026-11-24); порядок: задняя и передняя подфюзеляжные, внешний и внутренний подкрыльевые
+    ext: { keys: ['kinzhal'], stations: [V(0, -2.015, 0.975)] }, // МиГ-31К (Мульти-волна): «Кинжал» на центральной точке
+    nozzles: [V(0.76, -0.975, 10.415), V(-0.76, -0.975, 10.415)], nr: 0.62, pod: null, clearGlass: true, ...(paintOn ? { gearModel: 'e_mig31_gear' } : {}), gearHide: ['door_n_r', 'door_n_l', 'door_m_r', 'door_m_l'] },
   e_tu22m3: { side: 'east', cls: 'heavy', lazy: true, internal: true, stations: mirror([V(-1.975, -4.16, -1.63), V(-0.4, -3.492, 1.17), V(-0.4, -3.492, 5.27)]), // Ту-22М3: своя модель (Свои/Ту-22М3, 2026-11-15); ФАБ-1000 ×6 = 4 в отсеке (два ряда по две, низ замков) + 2 на МБД под заборниками; порядок: МБД первым - при mirror они точки 0 и 5 и сбрасываются первыми
     out: [0, 5], // точки вне отсека (МБД под заборниками): видны всегда, пуск без створок - читают air.js / main.js / hangar.js
     nozzles: [V(-0.79, -2.482, 19.7), V(0.79, -2.482, 19.7)], nr: 0.76, pod: null, clearGlass: true, ...(paintOn ? { gearModel: 'e_tu22m3_gear' } : {}), gearHide: ['door_n_r', 'door_n_l', 'door_m_r', 'door_m_l'], // со стойками закрытые створки ниш прячутся
@@ -346,7 +347,7 @@ const META = {
   kub: { units: ['kub'], stations: [] }, // 2К12 «Куб» - UltraKill
   hawk: { units: ['hawk'], stations: [] }, // MIM-23 Hawk - Dominik Biały
   hawk21: { units: ['hawk21'], matte: true, stations: [] }, // Hawk XXI - своя пусковая на прицепе M192 с восемью AIM-120 (сборщик, Свои/Hawk XXI, 2026-11-03); раньше - пусковая Hawk
-  m163: { units: ['m163'], stations: [], matte: true, camo: { scheme: 'nato', size: 1.3 } }, // M163 VADS - Gorgytz
+  m163: { units: ['m163'], stations: [], matte: true, paint: true }, // M163 VADS - своя модель, ревизия 2 (Свои/M163 Vulcan своя, 2026-11-24): трёхцветка НАТО запечена; paint - материал с картой ORM (paint.js), у наземных её иначе не читает никто
   zsu234: { units: ['zsu234'], matte: true, stations: [] }, // ЗСУ-23-4М «Шилка» - voron335
   strela10: { units: ['strela10'], matte: true, stations: [] }, // «Стрела-10» (9А35 на МТ-ЛБ) - своя (сборщик, Свои/Стрела-10; раньше - low-poly ScurvyWoof с шейдерным камуфляжем)
   avenger: { units: ['avenger'], matte: true, stations: [] }, // AN/TWQ-1 Avenger - свой (сборщик, Свои/Avenger; раньше - KillCaptureDestroy с шейдерным камуфляжем)
@@ -526,7 +527,8 @@ const GLB_V_OWN = {
   pk_e_f15e: '20261105a',
   pk_e_a10: '20261112c', // своя модель A-10A
   pk_e_su34: '20261115a', // своя модель Су-34
-  pk_e_mig31: '20261029b',
+  pk_e_mig31: '20261124a', e_mig31: '20261124a', e_mig31_gear: '20261124a', e_mig31_lo: '20261124a', m163: '20261124a', m163_lo: '20261124a', // свои МиГ-31БМ и M163
+
   pk_h_mi24: '20261029b',
   pk_h_ah64: '20261029b',
   pk_zu23: '20261029b',
@@ -652,6 +654,7 @@ if (paintOn) META.e_su27_gear = { lazy: true, matte: true, paint: true, stations
 if (paintOn) META.e_su35_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего Су-35С для ангара
 if (paintOn) META.mig29_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего МиГ-29 для ангара
 if (paintOn) META.e_tu160_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего Ту-160 для ангара
+if (paintOn) META.e_mig31_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего МиГ-31БМ для ангара
 if (paintOn) META.e_mig29k_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего МиГ-29К для ангара
 if (paintOn) META.e_su34_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего Су-34 для ангара
 if (paintOn) META.e_tu22m3_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего Ту-22М3 для ангара
@@ -992,7 +995,7 @@ export function unitModelGlb(key) {
   const lids = []; for (let i = 0; find(G, 'lid' + i); i++) lids.push(near('lid' + i));
   const seq = (p) => { const a = []; for (let i = 0; find(G, p + i); i++) a.push(get(p + i)); return a; };
   return { body: get('body'), turret: get('turret'), cradle: get('cradle'), missile: get('missile'), booster: get('booster'), radar: get('radar'), // radar - антенна обзора на башне (крутится)
-    tdish: near('dish'), lids, // «Тор»: антенна сопровождения (качается по углу места цели) и крышки ячеек (lid0…7, открываются к пуску)
+    tdish: near('dish'), barrels: get('barrels'), lids, // «Тор»: антенна сопровождения (качается по углу места цели) и крышки ячеек (lid0…7, открываются к пуску)
     th: seq('th'), ca: seq('ca'), turret1: get('turret1'), cs: seq('cs'), // расчёт ПЗРК: позы наводчика (головы, руки) и второй номер
     jacks: seq('jack'), cyl: seq('cyl'), mast: seq('mast'), // С-300: штоки домкратов и гидроцилиндр подъёма (корпус, два штока); Patriot - ещё подкос (cyl3…5) и секции мачты
     rfold: get('rfold'), sh: seq('sh'),
@@ -1098,7 +1101,7 @@ const CAMO_R = (() => { try { const q = new URLSearchParams(location.search); re
 // Модель сборщика с новой развёрткой и картинкой окраски (tools/airdef-shots/camo-glb.js --game → models/camo/<самолёт>.<окраска>.glb, JPEG) грузится,
 // только когда окраска надета и самолёт в бою; оси, масштаб и центр - как у обычной модели, описание (подвески, сопла, зоны) - её же (mOf).
 // В LOADED - под ключом '<самолёт>@<окраска>'; пока не пришла - обычная модель, потом самолёт пересобирается (modelsReady)
-const CAMO_V = { 'e_f15e@inferno': '20261105a', 'e_mig31@dragon': '20261028a', 'e_typhoon@harlequin': '20261106b', 'e_su34@cosmos': '20261115a', 'e_tu22@milk': '20261118a' }; // «Сгущёнка» на своём Ту-22 (Свои/Ту-22/окраски/milk, PREPARE_BASE=e_tu22)
+const CAMO_V = { 'e_f15e@inferno': '20261105a', 'e_mig31@dragon': '20261124a', 'e_typhoon@harlequin': '20261106b', 'e_su34@cosmos': '20261115a', 'e_tu22@milk': '20261118a' }; // «Сгущёнка» на своём Ту-22 (Свои/Ту-22/окраски/milk, PREPARE_BASE=e_tu22)
 // Максимальные текстуры (настройка «Текстуры», Mark 2026-11-04): та же модель с картинками исходного размера, models/camo/<самолёт>.hi.glb (tools/airdef-models/hi-textures.js), тот же механизм, что у окраски
 for (const n of HI_PLANES) CAMO_V[`${n}@hi`] = '20261104a';
 export const hiKnown = (name) => !!CAMO_V[`${name}@hi`];

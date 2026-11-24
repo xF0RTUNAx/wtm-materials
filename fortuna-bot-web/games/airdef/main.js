@@ -461,6 +461,8 @@ C.syncUnits = function () {
         tg.add(cg); g.add(tg); tur.push(T);
         // «Тор»: антенна сопровождения - на цапфе (tdish.p), крышки ячеек - на шарнирах по верхней кромке (lids.hinge; борт - по знаку x слота)
         if (gm && gm.tdish && md.LN.tdish) { const P = md.LN.tdish.p, pv = new THREE.Group(); obj(gm.tdish, pv); pv.position.fromArray(P); gm.tdish.position.set(-P[0], -P[1], -P[2]); tg.add(pv); g.userData.tdish = pv; }
+        // M163: блок стволов - в люльке, крутится вокруг своей оси (spin); prepare.js кладёт barrels в оси башни (от tp) - сдвиг на −cp и на ось
+        if (gm && gm.barrels && md.LN.spin) { const P = md.LN.spin.p, pv = new THREE.Group(); obj(gm.barrels, pv); pv.position.fromArray(P); gm.barrels.position.set(-Ld.cp[0] - P[0], -Ld.cp[1] - P[1], -Ld.cp[2] - P[2]); cg.add(pv); g.userData.spin = { o: pv, v: 0 }; }
         // NASAMS: у каждой крышки свой шарнир (lids.piv, в осях башни; ось вдоль X - откидывается вперёд-вниз); С-300 - в осях пакета (onPack), поднимаются с ним
         if (gm && gm.lids.length && md.LN.lids) {
           const LD = md.LN.lids, H = LD.hinge; g.userData.lids = gm.lids.map((lid, i) => {
@@ -574,8 +576,14 @@ function blowLids(u, g) {
 // «Тор»: антенна сопровождения - по углу места цели (от положения покоя el0, в пределах lo…hi, не быстрее w рад/с); без цели - в покой
 function torDish(u, g, dt) {
   const D = g.userData.tdish, DS = LNCH[u.key].tdish; let a = 0;
-  if (u.track && !u.track.dead && u.emit) { D.getWorldPosition(LP); const t = u.track.pos; a = clamp(Math.atan2(t.y - LP.y, Math.hypot(t.x - LP.x, t.z - LP.z)) - DS.el0, DS.lo, DS.hi); }
+  if (DS.gun) a = clamp(u.lel || 0, DS.lo, DS.hi); // дальномер M163 смотрит по линии огня
+  else if (u.track && !u.track.dead && u.emit) { D.getWorldPosition(LP); const t = u.track.pos; a = clamp(Math.atan2(t.y - LP.y, Math.hypot(t.x - LP.x, t.z - LP.z)) - DS.el0, DS.lo, DS.hi); }
   D.rotation.x += clamp(a - D.rotation.x, -DS.w * dt, DS.w * dt);
+}
+// блок стволов M163: раскрутка при стрельбе за 0,3 с, выбег ~1 с
+function gunSpin(u, g, dt) {
+  const s = g.userData.spin, w = LNCH[u.key].spin.w, on = u.gunOn && !u.dead; s.v = clamp(s.v + Math.max(0, dt) * (on ? w / 0.3 : -w), 0, w);
+  if (s.v > 0) s.o.rotation.z += s.v * dt;
 }
 // ось антенны обзора: центр (x, z) вершин её нижней части - опоры или мачты (тарелка бывает смещена от оси)
 const RADAR_W = { gepard: 6.3, tor: 6.3, torm2: 6.3, osa: 3.5, pantsir: 4.2, roland: 6.3, tunguska: 6.3, rapier: 4, gpsjamw: 3.1, gpsjam: 0.63 }; // рад/с: Gepard и «Тор» ≈ 60 об/мин, «Оса» и «Панцирь» - медленнее, Sentinel - 30, П-18 - 6
@@ -982,6 +990,7 @@ function syncWorld(dt, t) {
     if (g.userData.erect) erectView(u, g, dt);
     if (g.userData.cyl && g.userData.cyl.length) cylView(u, g);
     if (g.userData.tdish) torDish(u, g, dt);
+    if (g.userData.spin) gunSpin(u, g, dt);
     const d = g.userData.dish; if (!d) continue;
     if (u.track && u.emit) { LP.copy(u.track.pos).sub(u.pos); d.rotation.y = Math.atan2(-LP.x, -LP.z) - u.yaw; }
     else if (u.emit) d.rotation.y = t * 2.5 + u.id;
