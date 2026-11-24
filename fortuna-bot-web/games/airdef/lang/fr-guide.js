@@ -47,7 +47,7 @@ export default {
   "Лёгкий фронтовой истребитель.": "Chasseur léger de première ligne.",
   "Фронтовой бомбардировщик со встроенным прицельным комплексом.": "Bombardier tactique avec système de ciblage intégré.",
   "Перехватчик; в модернизации - охотник за ПВО.": "Intercepteur ; la version modernisée en fait un chasseur de DCA.",
-  "Малозаметный: оружие во внутренних отсеках, выходит при пуске.": "Furtif : armes dans les soutes internes, sorties au tir.",
+  "Малозаметный, пока всё оружие в отсеках; большие ракеты - на наружных пилонах и выдают его радарам.": "Furtif tant que toutes les armes sont en soute ; les gros missiles, sous pylônes externes, le trahissent au radar.",
   "Ветеран-«охотник за ПВО».": "Vétéran de la chasse à la DCA.",
   "Палубный многоцелевой.": "Multirôle embarqué.",
   "Лёгкий многоцелевой.": "Multirôle léger.",

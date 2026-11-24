@@ -16,7 +16,7 @@ export const ZCUT = {
   e_gripen: { delta: true, canard: true }, e_typhoon: { delta: true, canard: true }, e_mirage: { delta: true }, e_viggen: { delta: true, canard: true },
   su30: { canard: true, tailK: 0.75 }, e_su34: { canard: true }, e_su33: { canard: true, tailK: 0.77 }, e_su27: { tailK: 0.76 }, e_su35: { tailK: 0.76 }, mig29: { tailK: 0.81 }, e_mig29k: { tailK: 0.8 }, // su30 (своя, 2026-11-18): стабилизаторы начинаются на 75 % длины; e_su33 (своя, 2026-11-18) - на 78 % (с ПВД)
   e_f18c: { tailK: 0.77 }, // F/A-18C (своя модель): стабилизаторы начинаются на 76 % длины сразу за кромкой крыла - без поправки хвост выходил только с 91 %
-  e_f22: { tailK: 0.8 }, e_tu160: { tailK: 0.82 }, // стабилизаторы вплотную к крылу - «перетяжки» нет
+  e_su57: { tailK: 0.83 }, e_f22: { tailK: 0.8 }, e_tu160: { tailK: 0.82 }, // стабилизаторы вплотную к крылу - «перетяжки» нет
 };
 // два киля на мотогондолах (корни - ниже гаргрота): киль - любая стоячая поверхность над обшивкой в задней части
 const TWIN = new Set(['su30', 'e_su33', 'e_su27', 'e_su35', 'mig29', 'e_mig29k', 'e_su34', 'e_su57', 'e_mig31', 'f18', 'e_f18c', 'e_f22', 'e_f35', 'e_f15e']);

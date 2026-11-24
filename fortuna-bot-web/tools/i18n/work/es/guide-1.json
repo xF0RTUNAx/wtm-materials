@@ -178,5 +178,7 @@
  "цель - объект или ПВО.": "el objetivo: un edificio o la defensa antiaérea.",
  "Где стоит ПВО, заранее неизвестно - её засекает разведчик, выдают излучение и пуски; засечённые комплексы появляются на карте. В бою - «Ход волны»: что летит и что будет; «Смотреть» - камера к событию, «Ждать» и ×4 - ускорить время. Наряд можно докупать и менять прямо в бою.": "Dónde está la defensa antiaérea no se sabe de antemano: la detecta el dron de reconocimiento y la delatan las emisiones y los lanzamientos; los sistemas detectados aparecen en el mapa. En combate, «Cronología de la oleada»: qué vuela y qué viene; «Ver» lleva la cámara al suceso, «Esperar» y ×4 aceleran el tiempo. Puedes añadir y cambiar paquetes en pleno combate.",
  "<b>Баллистика ограничена:</b> её можно взять немного, а «Искандер» (из-за ложных целей), «Кинжал» и ARRW - только без другой баллистики. Онлайн это правило - на всю команду.": "<b>Los misiles balísticos están limitados:</b> puedes llevar pocos, y el Iskander (por sus señuelos), el Kinzhal y el ARRW solo sin otros misiles balísticos. En línea, esta regla vale para todo el equipo.",
- "Мульти-волна: за ПВО": "Multioleada: como defensa antiaérea"
+ "Мульти-волна: за ПВО": "Multioleada: como defensa antiaérea",
+ "Малозаметный, пока всё оружие в отсеках; большие ракеты - на наружных пилонах и выдают его радарам.": "Furtivo mientras todo el armamento va en las bodegas; los misiles grandes van en pilones externos y lo delatan al radar.",
+ "Россия · малозаметный, пока всё оружие в отсеках; большие ракеты - на наружных пилонах и выдают его радарам.": "Rusia · furtivo mientras todo el armamento va en las bodegas; los misiles grandes van en pilones externos y lo delatan al radar."
 }

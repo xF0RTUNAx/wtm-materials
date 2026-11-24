@@ -178,5 +178,7 @@
  "цель - объект или ПВО.": "la cible - installation ou défense aérienne.",
  "Где стоит ПВО, заранее неизвестно - её засекает разведчик, выдают излучение и пуски; засечённые комплексы появляются на карте. В бою - «Ход волны»: что летит и что будет; «Смотреть» - камера к событию, «Ждать» и ×4 - ускорить время. Наряд можно докупать и менять прямо в бою.": "L'emplacement de la défense aérienne est inconnu d'avance - le drone de reconnaissance la repère, les émissions et les tirs la trahissent ; les systèmes repérés apparaissent sur la carte. Au combat - « Déroulé de la vague » : ce qui vole et ce qui vient ; « Regarder » - caméra sur l'événement, « Attendre » et ×4 - accélérer le temps. Vous pouvez compléter et modifier le lot en plein combat.",
  "<b>Баллистика ограничена:</b> её можно взять немного, а «Искандер» (из-за ложных целей), «Кинжал» и ARRW - только без другой баллистики. Онлайн это правило - на всю команду.": "<b>Les missiles balistiques sont limités :</b> on n'en prend que quelques-uns, et l'Iskander (à cause des leurres), le Kinzhal et l'ARRW seulement sans autre missile balistique. En ligne, cette règle vaut pour toute l'équipe.",
- "Мульти-волна: за ПВО": "Multi-vague : en défense aérienne"
+ "Мульти-волна: за ПВО": "Multi-vague : en défense aérienne",
+ "Малозаметный, пока всё оружие в отсеках; большие ракеты - на наружных пилонах и выдают его радарам.": "Furtif tant que toutes les armes sont en soute ; les gros missiles, sous pylônes externes, le trahissent au radar.",
+ "Россия · малозаметный, пока всё оружие в отсеках; большие ракеты - на наружных пилонах и выдают его радарам.": "Russie · furtif tant que toutes les armes sont en soute ; les gros missiles, sous pylônes externes, le trahissent au radar."
 }

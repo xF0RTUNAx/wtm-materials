@@ -419,6 +419,7 @@ export default {
   "Охота за ПВО: Х-58У ×4 + «Сорбция»": "Jagd auf Flugabwehr: Kh-58U ×4 + Sorbtsiya",
   "Охота за ПВО: Х-58У ×2 + КАБ-500С ×2": "Jagd auf Flugabwehr: Kh-58U ×2 + KAB-500S ×2",
   "Точный удар: КАБ-500С ×4": "Präzisionsschlag: KAB-500S ×4",
+  "Скрытный удар: Х-29Т + КАБ-500С": "Tarnangriff: Kh-29T + KAB-500S",
   "Дальний удар: Х-59МК2 ×2 + Х-31П ×2": "Abstandsangriff: Kh-59MK2 ×2 + Kh-31P ×2",
   "Дальний удар: Х-55 ×6": "Abstandsangriff: Kh-55 ×6",
   "Охота за ПВО: Х-31П ×4": "Jagd auf Flugabwehr: Kh-31P ×4",

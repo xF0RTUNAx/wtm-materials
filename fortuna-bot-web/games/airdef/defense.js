@@ -9,21 +9,21 @@
 // start(opts) - для обучения: { budget, waves, units: [[ключ, x, z, roof]], op: индекс комплекса, plan: false, wave(raid, rnd, n),
 //   noEnd, hold (волна не кончается сама - урок подаёт цели), onTick(dt), on: { place, waveStart, waveEnd, designate, track, launch, planeDown, arm, radar } }.
 /* global THREE */
-import { tr, trIf } from './i18n.js?v=20261120a';
-import { premById, drawWings, wingsW } from './prem.js?v=20261120a';
-import { trFmt } from './i18n-fmt.js?v=20261120a';
-import { CITY, mulberry32 } from './city.js?v=20261120a';
-import { weaponHasModel } from './models.js?v=20261120a';
-import { LNCH, lnchToWorld, trainable, yawGoal } from './launchers.js?v=20261120a';
-import { ico, iconize, capsHtml, tgtRowHtml, tgtLabel, tgtChoices } from './icons.js?v=20261120a';
-import { SAM, SAM_COST, SAM_TYPE, AG, eqOf, MULTI, CARRIERS, THREAT, COMBINED, DEFENSE, multiBudget, multiItems, threatOf, multiCap, multiSamCost, multiSamCap, multiSamOk, multiSamFree } from './arsenal.js?v=20261120a';
-import { samClass, samCost, samCostFor, LIMIT1 } from './sim/online.js?v=20261120a';
-import { TEAM_NAME, TBM_RULE, TBM_EXCL, tbmOf, tbmCheck, sumN } from './sim/online-multi.js?v=20261120a';
+import { tr, trIf } from './i18n.js?v=20261124a';
+import { premById, drawWings, wingsW } from './prem.js?v=20261124a';
+import { trFmt } from './i18n-fmt.js?v=20261124a';
+import { CITY, mulberry32 } from './city.js?v=20261124a';
+import { weaponHasModel } from './models.js?v=20261124a';
+import { LNCH, lnchToWorld, trainable, yawGoal } from './launchers.js?v=20261124a';
+import { ico, iconize, capsHtml, tgtRowHtml, tgtLabel, tgtChoices } from './icons.js?v=20261124a';
+import { SAM, SAM_COST, SAM_TYPE, AG, eqOf, MULTI, CARRIERS, THREAT, COMBINED, DEFENSE, multiBudget, multiItems, threatOf, multiCap, multiSamCost, multiSamCap, multiSamOk, multiSamFree } from './arsenal.js?v=20261124a';
+import { samClass, samCost, samCostFor, LIMIT1 } from './sim/online.js?v=20261124a';
+import { TEAM_NAME, TBM_RULE, TBM_EXCL, tbmOf, tbmCheck, sumN } from './sim/online-multi.js?v=20261124a';
 const esc = (x) => String(x ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-import { clamp, D2R, angleBetween, fwdOf } from '../drone/sim/core.js?v=20261120a';
-import { TGT_CATS, tgtCat } from './sim/strike.js?v=20261120a';
-import { freeGround, buildingAt, roofOk, pickTargets, placeDefense } from './mission.js?v=20261120a';
-import { createCombined, combinedOk, COMBINED_NAME, levelIn, levelOfPlan, levelOfSams, samKnown, planDefaults, unitCfg, carrierOf, CARRIER_WAIT, LAUNCH_R, LIM_ON } from './sim/combined.js?v=20261120a';
+import { clamp, D2R, angleBetween, fwdOf } from '../drone/sim/core.js?v=20261124a';
+import { TGT_CATS, tgtCat } from './sim/strike.js?v=20261124a';
+import { freeGround, buildingAt, roofOk, pickTargets, placeDefense } from './mission.js?v=20261124a';
+import { createCombined, combinedOk, COMBINED_NAME, levelIn, levelOfPlan, levelOfSams, samKnown, planDefaults, unitCfg, carrierOf, CARRIER_WAIT, LAUNCH_R, LIM_ON } from './sim/combined.js?v=20261124a';
 
 export const WAVES = 6;
 const WAVE_N = [3, 4, 6, 7, 9, 11];
@@ -474,7 +474,7 @@ export function createDefense(C) {
   function placeBlock() {
     if (!st.placing) return '';
     const k = st.placing, S = SAM[k], c = priceOf(k);
-    return `<div class="dph"><img class="dsi" src="airdef/thumbs/pvo_${k}.webp?v=20261120a" alt="" draggable="false" onerror="this.style.visibility='hidden'"><div class="dpn"><b>${S.name}</b><div class="dst">${raHtml(S)}${capsHtml(S, tmode())}</div></div></div>
+    return `<div class="dph"><img class="dsi" src="airdef/thumbs/pvo_${k}.webp?v=20261124a" alt="" draggable="false" onerror="this.style.visibility='hidden'"><div class="dpn"><b>${S.name}</b><div class="dst">${raHtml(S)}${capsHtml(S, tmode())}</div></div></div>
       <div class="dpb"><div class="dtx">${st.draft ? tr('место выбрано - коснитесь карты, чтобы сдвинуть') : tr(IS_TOUCH ? '<b>{0}:</b> коснитесь карты. <i class="gr">Зелёный</i> - можно, <i class="rd">красный</i> - нельзя.' : '<b>{0}:</b> щёлкните по карте. <i class="gr">Зелёный</i> - можно, <i class="rd">красный</i> - нельзя.', [S.short])}${S.hp <= 15 ? tr(' · можно на плоскую крышу') : ''}${IS_TOUCH ? '' : tr(' · Enter - подтвердить, Esc или правая кнопка - отмена')}</div>
         <div class="dpa"><button class="dsb alt" data-a="pno">${tr('Отмена')}</button><button class="dsb" data-a="pok" ${st.draft ? '' : 'disabled'}>${tr('Поставить · {0}', [c])}</button></div></div>`;
   }
@@ -563,7 +563,7 @@ export function createDefense(C) {
     if (!on) return;
     const mode = tmode(), list = shelfList(), anyCaps = list.some(({ s }) => capsHtml(s, mode)); // строка «что сбивает» нужна, только если она есть хоть у одной карточки (в «Обороне» у большинства комплексов её нет)
     const h = list.map(({ k, s, c, why }) => { const n = mineN(k), cl = samClass(k);
-      return `<div class="dsc${st.placing === k ? ' on' : ''}${why ? ' no' : ''}" data-buy="${k}"><img class="dsi" src="airdef/thumbs/pvo_${k}.webp?v=20261120a" alt="" draggable="false" onerror="this.style.visibility='hidden'"><div class="dsn">${s.short}</div><div class="dsr"><span class="dcl ${cl}">${CLS_SHORT[cl]}</span><span class="dpc">${c}</span></div><div class="dsm">${why ? `<span class="dsw">${ico('lock')}${why}</span>` : raHtml(s)}</div>${anyCaps ? `<div class="dsg">${capsHtml(s, mode)}</div>` : ''}${n ? `<span class="dsx">×${n}</span>` : ''}</div>`; }).join('');
+      return `<div class="dsc${st.placing === k ? ' on' : ''}${why ? ' no' : ''}" data-buy="${k}"><img class="dsi" src="airdef/thumbs/pvo_${k}.webp?v=20261124a" alt="" draggable="false" onerror="this.style.visibility='hidden'"><div class="dsn">${s.short}</div><div class="dsr"><span class="dcl ${cl}">${CLS_SHORT[cl]}</span><span class="dpc">${c}</span></div><div class="dsm">${why ? `<span class="dsw">${ico('lock')}${why}</span>` : raHtml(s)}</div>${anyCaps ? `<div class="dsg">${capsHtml(s, mode)}</div>` : ''}${n ? `<span class="dsx">×${n}</span>` : ''}</div>`; }).join('');
     if (h !== shelfH) { const x = shs.scrollLeft; shelfH = h; shs.innerHTML = h; shs.scrollLeft = x; }
     shelfLayout();
   }

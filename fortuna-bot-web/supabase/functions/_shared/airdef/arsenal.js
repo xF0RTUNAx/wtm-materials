@@ -232,6 +232,10 @@ export const CAMO_PRICE = 150;
 // cost - надбавка к цене связки в онлайне (sim/online.js loadoutCost)
 export const STEALTH = { e_f22: { acq: 2, range: 0.8, cost: 30 }, e_f35: { acq: 2, range: 0.8, cost: 30 }, e_f117: { acq: 3, range: 0.8, cost: 30 }, e_b2: { acq: 5, range: 0.75, cost: 50 }, e_su57: { acq: 3, range: 0.85, cost: 30 } };
 export const REVEAL_T = 4;
+// Груз целиком в отсеках? Су-57 (Mark 2026-11-24): в отсеки встаёт не всё - с наружным грузом он заметен, как обычный. n - мест, остальное - сколько изделий каждого типа влезает
+const BAY_FIT = { e_su57: { n: 2, kab500s: 2, kh29t: 1 } };
+export const loadInBay = (plane, items) => { const F = BAY_FIT[plane]; if (!F) return true; let s = 0; for (const [k, q] of items) { if (!q) continue; if (k === 'n' || !(q <= (F[k] || 0))) return false; s += q; } return s <= F.n; };
+export const stealthLoad = (plane, items) => (STEALTH[plane] && loadInBay(plane, items) ? STEALTH[plane] : null);
 export const CAMOS = [['e_f15e:inferno', 1], ['e_mig31:dragon', 1], ['e_f35:sakura', 0], ['e_tu22:milk', 1], ['f16:digital', 0], ['e_su34:cosmos', 0], ['e_typhoon:harlequin', 1]].map(([key, season]) => ({ key, season }));
 export const camosOut = (season) => CAMOS.filter((c) => c.season && c.season <= season).map((c) => c.key);
 // Аватарки игрока (Mark 2026-11-04). Номера - по листу, с которого выбирал Mark (файлы - tools/airdef-ui/avatars-import.js). У всех по умолчанию AVA_DEFAULT, в магазине - AVA_SHOP за
@@ -870,6 +874,7 @@ LOADOUTS[4] = [
   { side: 'west', plane: 'e_b2', name: 'Дальний удар: JASSM ×4', items: [['jassm', 4]] },
   { side: 'west', plane: 'e_typhoon', name: 'Точный удар: GBU-12 ×4', items: [['gbu12', 4]], pod: true },
   { side: 'west', plane: 'e_typhoon', name: 'Бомбы: Mk 82 ×6', items: [['mk82', 6]] },
+  { side: 'east', plane: 'e_su57', name: 'Скрытный удар: Х-29Т + КАБ-500С', items: [['kh29t', 1], ['kab500s', 1]] },
 ];
 // вертолётные подвески всех эпох (era - эпоха = ранг в ветке «Вертолёты»): проверка ?heli=…, выбор в меню
 export const HELI_LOADOUTS = [1, 2, 3, 4].flatMap((e) => LOADOUTS[e].map((L, i) => ({ ...L, era: e, i })).filter((L) => L.heli));

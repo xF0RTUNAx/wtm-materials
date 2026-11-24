@@ -6,15 +6,15 @@
 // tools/airdef-models/planes-view.html?ortho=1; dry - двигатель без форсажа: только слабое свечение; нет сопел - пламени не видно: B-2, F-117) и место
 // контейнера. Авторы и лицензии - MODEL_CREDITS (показываются в «Настройках»).
 /* global THREE */
-import { SEATS } from './seats-data.js?v=20261120a';
-import { pylonTris, geoOf, seatOne } from './seat.js?v=20261120a';
-import { tr } from './i18n.js?v=20261120a';
-import { CREDITS } from './models/credits.js?v=20261120a';
-import { HI_PLANES } from './models/hi-list.js?v=20261120a';
-import { mergeLocal } from './merge.js?v=20261120a';
-import { cachedFetch } from './offline.js?v=20261120a';
-import { paintMat, paintOn } from './paint.js?v=20261120a';
-import { ktxOn, ktxParse, ktxFree, ktxIndexUrl, ktxUrlOf } from './ktx.js?v=20261120a';
+import { SEATS } from './seats-data.js?v=20261124a';
+import { pylonTris, geoOf, seatOne } from './seat.js?v=20261124a';
+import { tr } from './i18n.js?v=20261124a';
+import { CREDITS } from './models/credits.js?v=20261124a';
+import { HI_PLANES } from './models/hi-list.js?v=20261124a';
+import { mergeLocal } from './merge.js?v=20261124a';
+import { cachedFetch } from './offline.js?v=20261124a';
+import { paintMat, paintOn } from './paint.js?v=20261124a';
+import { ktxOn, ktxParse, ktxFree, ktxIndexUrl, ktxUrlOf } from './ktx.js?v=20261124a';
 const V = (x, y, z, py = 0) => Object.assign(new THREE.Vector3(x, y, z), { py });
 // порядок развески по точкам (самое тяжёлое - первым): восемь точек и больше - прежний [3, 4, 2, 5, 1, 6, 0, 7]; меньше восьми (МиГ-27,
 // F-100D - по три на сторону; МиГ-23БН - по две) - парами от оси к законцовкам, иначе пары рвались и груз висел несимметрично (или точки не находилось вовсе)
@@ -154,8 +154,13 @@ const META = {
     nozzles: [V(0, -1.105, 8.525)], nr: 0.48, pod: V(0, -1.886, -2.475), racks: true, clearGlass: true, ...(paintOn ? { gearModel: 'e_su17_gear' } : {}), // контейнер на 0,5 м позади прежней точки: там он задевал носовую стойку
     // консоли в файле сложены (63°), sweep - вперёд до 30° (setPose: ангар - вперёд, в полёте - по скорости); подвески на поворотных консолях нет
     pivots: { wing_r: [[2.511, -1.585, 1.675], [0, 1, 0]], wing_l: [[-2.511, -1.585, 1.675], [0, 1, 0]] }, sweep: { wing_r: 33, wing_l: -33 } },
-  e_su57: { side: 'east', cls: 'fighter', lazy: true, internal: true, stations: mirror([V(-1.9, -0.95, 1.5), V(-1.6, -1.0, 0.0), V(-0.35, -1.2, 0.5), V(-0.3, -1.2, 2.6)]),
-    nozzles: [V(-1.37, -0.66, 8.25), V(1.37, -0.66, 8.25)], nr: 0.23, pod: null }, // Су-57
+  e_su57: { side: 'east', cls: 'fighter', lazy: true, stations: mirror([V(-5.17, -1.009, 4.191), V(-3.6, -1.026, 2.881)]), pyl: ['pylon_o_l', 'pylon_o_r', 'pylon_i_l', 'pylon_i_r'], // Су-57: своя модель (Свои/Су-57 своя, 2026-11-24); обычный набор - четыре съёмных пилона под крылом (Х-59МК2, Х-29Т, Х-31П)
+    // наборы по загрузке (stationsFor): целиком в отсеках - малозаметен (arsenal.js BAY_FIT); смешанный - две бомбы в отсеках, остальное на внутренних пилонах (out); номера внутренних пилонов 1 и 2 - те же, что в обычном наборе (посадка seat.js)
+    sets: [{ keys: ['kh29t', 'kab500s'], all: true, stations: [V(0, -0.533, 1.766), V(0, -0.748, 5.601)], internal: true, pyl: [] },
+      { keys: ['kh58', 'kab500s'], need: ['kab500s'], stations: [V(0, -0.533, 1.766), V(-3.6, -1.026, 2.881), V(3.6, -1.026, 2.881), V(0, -0.748, 5.601)], internal: true, out: [1, 2], pyl: ['pylon_i_l', 'pylon_i_r'] }],
+    nozzles: [V(-1.41, -0.626, 8.58), V(1.41, -0.626, 8.58)], nr: 0.42, pod: null, clearGlass: true, ...(paintOn ? { gearModel: 'e_su57_gear' } : {}), gearHide: ['door_n_r', 'door_n_l', 'door_m_r', 'door_m_l'],
+    bay: { doors: { baydoor_bf_l: [[-0.452, -1.3696, 1.7655], [0, 0.0053, -1], 95], baydoor_bf_r: [[0.452, -1.3696, 1.7655], [0, -0.0053, 1], 95], baydoor_br_l: [[-0.452, -1.1934, 5.6005], [0, -0.1068, -0.9943], 95], baydoor_br_r: [[0.452, -1.1934, 5.6005], [0, 0.1068, 0.9943], 95] },
+      groups: [{ x0: -99, x1: 99, z1: 3.86, doors: ['baydoor_bf_l', 'baydoor_bf_r'] }, { x0: -99, x1: 99, z0: 3.86, doors: ['baydoor_br_l', 'baydoor_br_r'] }] } },
   e_mig31: { side: 'east', cls: 'fighter', lazy: true, stations: mirror([V(-0.44, -2.155, 3.975), V(-0.44, -2.155, -0.525), V(-3.45, -0.687, 3.917), V(-2.55, -0.634, 3.455)]), // МиГ-31БМ: своя модель (Свои/МиГ-31БМ, 2026-11-24); порядок: задняя и передняя подфюзеляжные, внешний и внутренний подкрыльевые
     ext: { keys: ['kinzhal'], stations: [V(0, -2.015, 0.975)] }, // МиГ-31К (Мульти-волна): «Кинжал» на центральной точке
     nozzles: [V(0.76, -0.975, 10.415), V(-0.76, -0.975, 10.415)], nr: 0.62, pod: null, clearGlass: true, ...(paintOn ? { gearModel: 'e_mig31_gear' } : {}), gearHide: ['door_n_r', 'door_n_l', 'door_m_r', 'door_m_l'] },
@@ -527,6 +532,7 @@ const GLB_V_OWN = {
   pk_e_f15e: '20261105a',
   pk_e_a10: '20261112c', // своя модель A-10A
   pk_e_su34: '20261115a', // своя модель Су-34
+  e_su57: '20261124a', e_su57_gear: '20261124a', e_su57_lo: '20261124a', // свой Су-57
   pk_e_mig31: '20261124a', e_mig31: '20261124a', e_mig31_gear: '20261124a', e_mig31_lo: '20261124a', m163: '20261124a', m163_lo: '20261124a', // свои МиГ-31БМ и M163
 
   pk_h_mi24: '20261029b',
@@ -654,6 +660,7 @@ if (paintOn) META.e_su27_gear = { lazy: true, matte: true, paint: true, stations
 if (paintOn) META.e_su35_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего Су-35С для ангара
 if (paintOn) META.mig29_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего МиГ-29 для ангара
 if (paintOn) META.e_tu160_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего Ту-160 для ангара
+if (paintOn) META.e_su57_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего Су-57 для ангара
 if (paintOn) META.e_mig31_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего МиГ-31БМ для ангара
 if (paintOn) META.e_mig29k_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего МиГ-29К для ангара
 if (paintOn) META.e_su34_gear = { lazy: true, matte: true, paint: true, stations: [] }; // стойки своего Су-34 для ангара
@@ -1303,15 +1310,19 @@ export function setPose(obj, name, pose, k) {
   return true;
 }
 const extOn = (e, keys) => !!(e && keys && keys.length && keys.every((k) => e.keys.includes(k)) && (!e.need || e.need.some((k) => keys.includes(k)))); // need - набор ext только при этом грузе (Су-17М4: одни ФАБ-500 - на обычные точки)
-export const stationsFor = (name, keys) => { const m = META[name] || {}, e = m.ext; return extOn(e, keys) ? { stations: e.stations, internal: false } : { stations: m.stations || [], internal: !!m.internal }; };
+// наборы точек по загрузке (META.sets, Су-57): подходит набор, если всё оружие из его списка (all - и список взят целиком, need - есть хоть одно из нужных); out - точки вне отсека, mixed - часть груза снаружи
+const setOf = (m, keys) => (m.sets || []).find((e) => extOn(e, keys) && (!e.all || e.keys.every((k) => keys.includes(k))));
+export const stationsFor = (name, keys) => { const m = META[name] || {}, e = m.ext, s = setOf(m, keys); if (s) return { stations: s.stations, internal: !!s.internal, out: s.out, mixed: !!(s.out && s.out.length) }; return extOn(e, keys) ? { stations: e.stations, internal: false } : { stations: m.stations || [], internal: !!m.internal, out: m.out }; };
+// съёмные пилоны (META.pyl): видны только те, на которых висит груз загрузки; без загрузки - сняты
+const pylShow = (obj, name, keys) => { const m = META[name]; if (!m || !m.pyl) return obj; const s = setOf(m, keys), on = keys && keys.length ? (s ? s.pyl || [] : m.pyl) : []; for (const n of m.pyl) { const o = obj.getObjectByName(n); if (o) o.visible = on.includes(n); } return obj; };
 export function planeModel(side, cls = 'strike', name = null, skin = null, keys = null) {
-  if (skin && name && META[name] && wantCamo(name, skin)) { const m = META[name]; return { obj: LOADED[`${name}@${skin}`].clone(), pods4: !!m.pods4, nozzles: m.nozzles, nr: m.nr, dry: !!m.dry, pod: m.pod, name, skin, cls: m.cls, ...stationsFor(name, keys) }; } // надета окраска и модель пришла
+  if (skin && name && META[name] && wantCamo(name, skin)) { const m = META[name]; return { obj: pylShow(LOADED[`${name}@${skin}`].clone(), name, keys), pods4: !!m.pods4, nozzles: m.nozzles, nr: m.nr, dry: !!m.dry, pod: m.pod, name, skin, cls: m.cls, ...stationsFor(name, keys) }; } // надета окраска и модель пришла
   if (name && META[name] && !LOADED[name] && BASE) start(name); // своя модель подвески ещё не пришла - пока подходящая из загруженных
   const rank = ([n, m]) => (n === name ? -2 : m.cls === cls ? -1 : 0);
   const pick = Object.entries(META).filter(([n, m]) => m.side && m.side === side && LOADED[n] && (!m.only || n === name) && (!m.heli || n === name)).sort((a, b) => rank(a) - rank(b))[0];
   if (!pick) return null;
   const [n, m] = pick;
-  return { obj: LOADED[n].clone(), pods4: !!m.pods4, nozzles: m.nozzles, nr: m.nr, dry: !!m.dry, pod: m.pod, name: n, cls: m.cls, ...stationsFor(n, keys) }; // dry - без форсажа (только слабое свечение)
+  return { obj: pylShow(LOADED[n].clone(), n, keys), pods4: !!m.pods4, nozzles: m.nozzles, nr: m.nr, dry: !!m.dry, pod: m.pod, name: n, cls: m.cls, ...stationsFor(n, keys) }; // dry - без форсажа (только слабое свечение)
 }
 // вертолёт: готовая модель (копия) и точки подвески на консолях; нет модели (или ещё грузится - запрос послан) - null, подмены самолётом нет
 export function heliModel(name) {

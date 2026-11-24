@@ -419,6 +419,7 @@ export default {
   "Охота за ПВО: Х-58У ×4 + «Сорбция»": "Chasse à la DCA: Kh-58U ×4 + Sorbtsiya",
   "Охота за ПВО: Х-58У ×2 + КАБ-500С ×2": "Chasse à la DCA: Kh-58U ×2 + KAB-500S ×2",
   "Точный удар: КАБ-500С ×4": "Frappe de précision: KAB-500S ×4",
+  "Скрытный удар: Х-29Т + КАБ-500С": "Frappe furtive : Kh-29T + KAB-500S",
   "Дальний удар: Х-59МК2 ×2 + Х-31П ×2": "Frappe à distance: Kh-59MK2 ×2 + Kh-31P ×2",
   "Дальний удар: Х-55 ×6": "Frappe à distance: Kh-55 ×6",
   "Охота за ПВО: Х-31П ×4": "Chasse à la DCA: Kh-31P ×4",

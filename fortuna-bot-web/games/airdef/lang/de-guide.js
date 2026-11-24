@@ -47,7 +47,7 @@ export default {
   "Лёгкий фронтовой истребитель.": "Leichter Frontjäger.",
   "Фронтовой бомбардировщик со встроенным прицельным комплексом.": "Frontbomber mit integrierter Zielanlage.",
   "Перехватчик; в модернизации - охотник за ПВО.": "Abfangjäger; modernisiert als SEAD-Jäger.",
-  "Малозаметный: оружие во внутренних отсеках, выходит при пуске.": "Tarnkappenflugzeug: Waffen in internen Schächten, beim Start fahren sie aus.",
+  "Малозаметный, пока всё оружие в отсеках; большие ракеты - на наружных пилонах и выдают его радарам.": "Schwer zu orten, solange alle Waffen in den Schächten sind; große Raketen hängen an Außenpylonen und verraten ihn ans Radar.",
   "Ветеран-«охотник за ПВО».": "Veteran unter den SEAD-Jägern.",
   "Палубный многоцелевой.": "Trägergestütztes Mehrzweckflugzeug.",
   "Лёгкий многоцелевой.": "Leichtes Mehrzweckflugzeug.",

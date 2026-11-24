@@ -2,11 +2,11 @@
 // ветки сверху, стороны слева (нейтрально), колонки - ранги I-IV, линии - от предыдущей единицы к следующей, карточка -
 // модель, название, ранг, цена; строка паритета над колонкой. Тап - досье: игровые ТТХ, аналог другой стороны,
 // «Исследовать» / «Сделать целью» / «Купить». Тратит сервер (progress-net.js → airdef-progress).
-import { NODE, BRANCHES, SIDES, SIDE_NAME, RANKS, RANK_NAME, nodesOf, owned, researched, rankOpen, rankBlock, canBuy, canResearch, cardStats, pairOf, unitType, treeLayout, ranked } from './progress.js?v=20261120a';
-import { SAM, AG, ERAS, LOADOUTS } from './arsenal.js?v=20261120a';
-import { ico, capsHtml } from './icons.js?v=20261120a';
-import { XP, SV, trMsg } from './progress-net.js?v=20261120a';
-import { tr, trIf, LANG, XL, LOCALE, numLoc, L10N } from './i18n.js?v=20261120a';
+import { NODE, BRANCHES, SIDES, SIDE_NAME, RANKS, RANK_NAME, nodesOf, owned, researched, rankOpen, rankBlock, canBuy, canResearch, cardStats, pairOf, unitType, treeLayout, ranked } from './progress.js?v=20261124a';
+import { SAM, AG, ERAS, LOADOUTS } from './arsenal.js?v=20261124a';
+import { ico, capsHtml } from './icons.js?v=20261124a';
+import { XP, SV, trMsg } from './progress-net.js?v=20261124a';
+import { tr, trIf, LANG, XL, LOCALE, numLoc, L10N } from './i18n.js?v=20261124a';
 
 // сцены категорий (рендеры сборщика, Mark 2026-11-04): файл ветка_сторона.jpg, у «Авиации» ещё вертолёты
 const BG_SCENE = {}; for (const k of ['air.east', 'air.west', 'air.heli', 'wpn.east', 'wpn.west', 'pvo.east', 'pvo.west', 'strike.east', 'strike.west']) BG_SCENE[k] = `airdef/ui/research/${k.replace('.', '_')}.jpg`;
@@ -80,7 +80,7 @@ const CSS = `
 const n2 = (v) => Math.round(v).toLocaleString(LOCALE);
 // значения карточки из progress.js (cardStats): «480 км/ч», «1,5-30 км», «2,5 т», «есть» - единицы и запятая на выбранном языке
 const trVal = (v) => (!XL ? v : LANG === 'en' ? numLoc(trIf(v).replace(/^none$/, 'no')) : numLoc(trIf(v)));
-const thumb = (n) => `airdef/thumbs/${n.branch}_${n.key}.webp?v=20261120a`;
+const thumb = (n) => `airdef/thumbs/${n.branch}_${n.key}.webp?v=20261124a`;
 // подпись строки карточки; «Обзор» у ЗРК без РЛС - дальность обзора оптикой (Detection), а в словаре «Обзор» - кнопка камеры (View)
 const statName = (k) => (XL && k === 'Обзор' ? L10N.detect : trIf(k));
 const GOAL_TAG = L10N.goal; // по-русски та же «ЦЕЛЬ», что кнопка захвата цели (словарь - один ключ на оба), по-английски это разные слова

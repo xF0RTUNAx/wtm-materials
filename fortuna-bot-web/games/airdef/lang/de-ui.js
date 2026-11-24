@@ -201,7 +201,7 @@ export default {
   "МиГ-31БМ": "MiG-31BM",
   "Россия · перехватчик, в модернизации - ПРР Х-31П против ПВО.": "Russland · Abfangjäger, modernisiert mit der Antiradarrakete Kh-31P gegen Flugabwehr.",
   "Су-57": "Su-57",
-  "Россия · малозаметный: оружие во внутренних отсеках (Х-59МК2 создавалась под них), выходит из отсека при пуске.": "Russland · Tarnkappenjäger: Waffen in internen Waffenschächten (die Kh-59MK2 wurde dafür entworfen), beim Start fahren sie aus.",
+  "Россия · малозаметный, пока всё оружие в отсеках; большие ракеты - на наружных пилонах и выдают его радарам.": "Russland · schwer zu orten, solange alle Waffen in den Schächten sind; große Raketen hängen an Außenpylonen und verraten ihn ans Radar.",
   "США · «Дикая ласка» F-4G - охотник за ПВО: Shrike, HARM.": "USA · F-4G „Wild Weasel“ jagt Flugabwehrstellungen: Shrike, HARM.",
   "США · палубный многоцелевой: Mk 82, GBU-12, JDAM, HARM, AARGM-ER.": "USA · trägergestütztes Mehrzweckflugzeug: Mk 82, GBU-12, JDAM, HARM, AARGM-ER.",
   "США · лёгкий многоцелевой: Mk 82, Maverick, HARM, JASSM.": "USA · leichtes Mehrzweckflugzeug: Mk 82, Maverick, HARM, JASSM.",

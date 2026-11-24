@@ -5,15 +5,15 @@
 // carrier - носитель «Мульти-волны» (sim/combined.js): у края района пускает крылатые ракеты и ложные цели и уходит.
 // Уклонение: захват или пуск на СПО, датчик пуска - ловушки и диполи, отворот «траверзом» и снижение.
 /* global THREE */
-import { tr } from '../i18n.js?v=20261120a';
-import { AG, raidPlane } from '../arsenal.js?v=20261120a';
-import { flightModel, loadOf } from './flight.js?v=20261120a';
-import { initDamage, hitZones, burnRate } from './damage.js?v=20261120a';
-import { cmOf } from './cm.js?v=20261120a';
-import { setGround, makeCraft, flyStep, steerTo, fwdOf, clamp, angleBetween, D2R } from '../../drone/sim/core.js?v=20261120a';
-import { predictBomb, predictRocket } from './strike.js?v=20261120a';
-import { heliModel, heliStep, heliInit, touchVerdict } from './heli.js?v=20261120a';
-import { CITY, objAimXZ } from '../city.js?v=20261120a';
+import { tr } from '../i18n.js?v=20261124a';
+import { AG, raidPlane, loadInBay } from '../arsenal.js?v=20261124a';
+import { flightModel, loadOf } from './flight.js?v=20261124a';
+import { initDamage, hitZones, burnRate } from './damage.js?v=20261124a';
+import { cmOf } from './cm.js?v=20261124a';
+import { setGround, makeCraft, flyStep, steerTo, fwdOf, clamp, angleBetween, D2R } from '../../drone/sim/core.js?v=20261124a';
+import { predictBomb, predictRocket } from './strike.js?v=20261124a';
+import { heliModel, heliStep, heliInit, touchVerdict } from './heli.js?v=20261124a';
+import { CITY, objAimXZ } from '../city.js?v=20261124a';
 
 // Ударные самолёты (обобщённые образы эпохи; без названий конкретных машин): лётные данные для flyStep
 export const STRIKERS = {
@@ -85,7 +85,7 @@ export function createRaid(S, city, rnd, opts = {}) {
     a.jam = Math.max(0, ...load.map((l) => AG[l.key].jam || 0)); // станция помех на подвеске
     // свои ТТХ самолёта (sim/flight.js): модель - как в отрисовке (носитель - o.plane); ИИ - честная лётная модель
     if (role === 'heli') return spawnHeli(a, bearing, R0 || 9000);
-    a.model = o.plane || raidPlane(side, era, role); a.fm = flightModel(a.model) || null;
+    a.model = o.plane || raidPlane(side, era, role); a.fm = flightModel(a.model) || null; a.inBay = loadInBay(a.model, load.map((l) => [l.key, l.n]));
     if (!cmOf(a.model, side).flare) a.cmFlare = 0; // старые машины - без ЛТЦ: только диполи (sim/cm.js)
     if (a.fm) { a.fuel = 0.8; setLoad(a); a.speed = Math.min(a.speed, a.fm.s.vSL / 3.6 * 0.7); initDamage(a); }
     a.pos.set(Math.sin(bearing) * R, a.cruise + (role === 'low' ? 300 : 0), Math.cos(bearing) * R);
@@ -165,7 +165,7 @@ export function createRaid(S, city, rnd, opts = {}) {
   // оторвало консоль: подвески на ней (внешние пилоны - примерно четверть груза под крылом) уходят вместе с ней
   function loseCons(a) { for (const l of a.load) { const k = AG[l.key]; if (!k || k.kind === 'ecm' || l.n < 2) continue; l.n -= Math.max(1, Math.floor(l.n / 4)); } setLoad(a); }
   // груз и сопротивление подвесок → лётная модель (после каждого пуска и сброса)
-  function setLoad(a) { if (!a.fm) return; const L = loadOf(a.fm.key, a.load.map((l) => ({ mass: (AG[l.key] || {}).mass || 0, n: l.n }))); a.payload = L.payload; a.dragK = L.dragK; }
+  function setLoad(a) { if (!a.fm) return; const L = loadOf(a.fm.key, a.load.map((l) => ({ mass: (AG[l.key] || {}).mass || 0, n: l.n })), a.inBay !== false); a.payload = L.payload; a.dragK = L.dragK; }
   const alive = () => planes.filter((a) => !a.dead && !a.out && a.phase !== 'wait');
   // урон: корпус, при гибели - падение
   // from - точка подрыва: зоны повреждений (sim/damage.js) - отрыв частей, пожар, потеря тяги и управления

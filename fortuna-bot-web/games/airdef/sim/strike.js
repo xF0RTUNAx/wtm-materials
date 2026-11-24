@@ -13,12 +13,12 @@
 //   fx: { ... }     - хуки (список - в NOOP_FX).
 // }
 /* global THREE */
-import { tr } from '../i18n.js?v=20261120a';
-import { AG, SAM, eqOf, STEALTH, REVEAL_T } from '../arsenal.js?v=20261120a';
-import { LNCH, lnchToWorld, lnchDir, slotOf, trainable, yawGoal, elMaxOf } from '../launchers.js?v=20261120a';
-import { clamp, D2R, G0, rhoAt, angleBetween, seekerHeat, offTailDeg, turnToward } from '../../drone/sim/core.js?v=20261120a';
-import { cmOf, cmKey, cmBoost, cmWorld } from './cm.js?v=20261120a';
-import { partDist, siteBld, bldDie, bldKillMains } from '../city.js?v=20261120a';
+import { tr } from '../i18n.js?v=20261124a';
+import { AG, SAM, eqOf, STEALTH, REVEAL_T } from '../arsenal.js?v=20261124a';
+import { LNCH, lnchToWorld, lnchDir, slotOf, trainable, yawGoal, elMaxOf } from '../launchers.js?v=20261124a';
+import { clamp, D2R, G0, rhoAt, angleBetween, seekerHeat, offTailDeg, turnToward } from '../../drone/sim/core.js?v=20261124a';
+import { cmOf, cmKey, cmBoost, cmWorld } from './cm.js?v=20261124a';
+import { partDist, siteBld, bldDie, bldKillMains } from '../city.js?v=20261124a';
 
 // Режимы: Аркада прощает (медленнее реакция ПВО, меньше урона, больше ловушек и диполей), Реализм - как есть
 // ind - доля индуктивного сопротивления в лётной модели самолётов (sim/flight.js): в «Аркаде» в вираже скорость теряется вдвое меньше
@@ -108,8 +108,8 @@ export function createStrike(ctx) {
   const aglOf = (a) => a.pos.y - city.groundH(a.pos.x, a.pos.z);
   // РЛС видит цель: дальность по ЭПР, радиогоризонт, земля под целью (у некогерентных - «низкую» цель не видно),
   // доплеровский провал у когерентных, здания и рельеф между антенной и целью
-  // малозаметный самолёт (arsenal.js STEALTH): ключ машины - model (ИИ, игрок в одиночной), plane (игрок онлайн); после пуска - засвечен
-  const stealthOf = (t) => { if (!t || t.isMun || t.heli) return null; const S = STEALTH[t.model || t.plane]; return S && !(t.revealT > 0) ? S : null; };
+  // малозаметный самолёт (arsenal.js STEALTH): ключ машины - plane (онлайн: у людей и ботов model - сторона или машина роли), иначе model (одиночная); после пуска - засвечен; inBay false - груз снаружи (Су-57)
+  const stealthOf = (t) => { if (!t || t.isMun || t.heli) return null; const S = STEALTH[t.plane || t.model]; return S && t.inBay !== false && !(t.revealT > 0) ? S : null; };
   function radarSees(u, t) {
     const R = u.S.radar, d = u.ant.distanceTo(t.pos);
     let range = R.range * Math.min(1.4, Math.pow((t.rcs || 5) / 5, 0.25));
@@ -673,7 +673,7 @@ export function createStrike(ctx) {
     if (W.planeDmg && !a.heli) W = { ...W, dmg: W.planeDmg, blast: W.planeBlast || W.blast, eq: W.planeEq ?? eqOf(W) }; // НАР с самолёта - свой урон (усиление - только вертолётам)
     const w = { id: mid++, key, W, owner: a, pos: a.pos.clone().addScaledVector(TMP.set(0, -1, 0), 2.5), vel: a.vel.clone(), dir: a.vel.clone().normalize(),
       speed: a.speed, t: 0, flown: 0, dead: false, aim: opts.aim ? opts.aim.clone() : null, target: opts.target || null, mem: null, lost: false, homing: false, trailT: 0 };
-    if (STEALTH[a.model || a.plane]) a.revealT = REVEAL_T; // пуск выдаёт малозаметный самолёт
+    if (STEALTH[a.plane || a.model]) a.revealT = REVEAL_T; // пуск выдаёт малозаметный самолёт
     if (W.kind === 'arm' && w.target) w.mem = w.target.pos.clone();
     if (W.kind === 'agm' && W.seeker === 'laser' && w.aim) { w.mem = w.aim.clone(); w.memT = 0; } // лазерная с точкой захвата: подсвет включается уже после пуска - до него летит туда
     // с вертолёта (скорость бывает и нулевой, нос - не по скорости) ракеты и НАР сходят по оси корпуса; бомбы - со скоростью

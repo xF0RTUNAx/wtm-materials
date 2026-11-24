@@ -203,7 +203,7 @@ export default {
   "МиГ-31БМ": "MiG-31BM",
   "Россия · перехватчик, в модернизации - ПРР Х-31П против ПВО.": "Russia · interceptor; upgraded with the Kh-31P ARM for SEAD.",
   "Су-57": "Su-57",
-  "Россия · малозаметный: оружие во внутренних отсеках (Х-59МК2 создавалась под них), выходит из отсека при пуске.": "Russia · stealth: weapons in internal bays (the Kh-59MK2 was designed for them), extended at launch.",
+  "Россия · малозаметный, пока всё оружие в отсеках; большие ракеты - на наружных пилонах и выдают его радарам.": "Russia · stealthy while all weapons are in the bays; large missiles hang on external pylons and give it away to radar.",
   "США · «Дикая ласка» F-4G - охотник за ПВО: Shrike, HARM.": "USA · F-4G \"Wild Weasel\", a SEAD hunter: Shrike, HARM.",
   "США · палубный многоцелевой: Mk 82, GBU-12, JDAM, HARM, AARGM-ER.": "USA · carrier-based multirole: Mk 82, GBU-12, JDAM, HARM, AARGM-ER.",
   "США · лёгкий многоцелевой: Mk 82, Maverick, HARM, JASSM.": "USA · light multirole: Mk 82, Maverick, HARM, JASSM.",

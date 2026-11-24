@@ -178,5 +178,7 @@
  "цель - объект или ПВО.": "Ziel - Objekt oder Flugabwehr.",
  "Где стоит ПВО, заранее неизвестно - её засекает разведчик, выдают излучение и пуски; засечённые комплексы появляются на карте. В бою - «Ход волны»: что летит и что будет; «Смотреть» - камера к событию, «Ждать» и ×4 - ускорить время. Наряд можно докупать и менять прямо в бою.": "Wo die Flugabwehr steht, ist vorher unbekannt - der Aufklärer deckt sie auf, Strahlung und Starts verraten sie; entdeckte Stellungen erscheinen auf der Karte. Im Gefecht - „Wellenverlauf“: was fliegt und was kommt; „Ansehen“ - Kamera zum Ereignis, „Warten“ und ×4 - Zeit beschleunigen. Das Paket kannst du mitten im Gefecht nachkaufen und ändern.",
  "<b>Баллистика ограничена:</b> её можно взять немного, а «Искандер» (из-за ложных целей), «Кинжал» и ARRW - только без другой баллистики. Онлайн это правило - на всю команду.": "<b>Ballistische Raketen sind begrenzt:</b> Du kannst nur wenige mitnehmen, und Iskander (wegen der Täuschziele), Kinzhal und ARRW - nur ohne andere ballistische Raketen. Online gilt diese Regel für das ganze Team.",
- "Мульти-волна: за ПВО": "Multi-Welle: für die Flugabwehr"
+ "Мульти-волна: за ПВО": "Multi-Welle: für die Flugabwehr",
+ "Малозаметный, пока всё оружие в отсеках; большие ракеты - на наружных пилонах и выдают его радарам.": "Schwer zu orten, solange alle Waffen in den Schächten sind; große Raketen hängen an Außenpylonen und verraten ihn ans Radar.",
+ "Россия · малозаметный, пока всё оружие в отсеках; большие ракеты - на наружных пилонах и выдают его радарам.": "Russland · schwer zu orten, solange alle Waffen in den Schächten sind; große Raketen hängen an Außenpylonen und verraten ihn ans Radar."
 }

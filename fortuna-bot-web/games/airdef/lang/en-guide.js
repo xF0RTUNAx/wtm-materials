@@ -46,7 +46,7 @@ export default {
   "Лёгкий фронтовой истребитель.": "Light frontline fighter.",
   "Фронтовой бомбардировщик со встроенным прицельным комплексом.": "Tactical bomber with a built-in targeting system.",
   "Перехватчик; в модернизации - охотник за ПВО.": "Interceptor; the upgrade makes it a SEAD hunter.",
-  "Малозаметный: оружие во внутренних отсеках, выходит при пуске.": "Stealth: weapons in internal bays, extended at launch.",
+  "Малозаметный, пока всё оружие в отсеках; большие ракеты - на наружных пилонах и выдают его радарам.": "Stealthy while all weapons are in the bays; large missiles hang on external pylons and give it away to radar.",
   "Ветеран-«охотник за ПВО».": "A veteran SEAD hunter.",
   "Палубный многоцелевой.": "Carrier-based multirole.",
   "Лёгкий многоцелевой.": "Light multirole.",

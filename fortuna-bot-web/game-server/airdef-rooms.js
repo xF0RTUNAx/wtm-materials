@@ -15,16 +15,16 @@ import { buildCity, CITY, bldMask } from '../games/airdef/city.js?v=20260930m';
 import { createStrike, MODES } from '../games/airdef/sim/strike.js?v=20260930m';
 import { createRaid, STRIKERS } from '../games/airdef/sim/raid.js?v=20260930m';
 import { pickTargets, spotNear, freeGround, roofOk, buildingAt } from '../games/airdef/mission.js?v=20260930m';
-import { AG, SAM, LOADOUTS, DEFENSE, loadoutRole } from '../games/airdef/arsenal.js?v=20260930m';
+import { AG, SAM, LOADOUTS, DEFENSE, loadoutRole, loadInBay } from '../games/airdef/arsenal.js?v=20260930m';
 import { makeCraft, fwdOf, setGround } from '../games/drone/sim/core.js?v=20260930m';
 import * as O from '../games/airdef/sim/online.js?v=20260930m';
-import { cmOf, cmKey } from '../games/airdef/sim/cm.js?v=20261120a';
+import { cmOf, cmKey } from '../games/airdef/sim/cm.js?v=20261124a';
 import { createMulti } from './airdef-multi.js';
 import { adProgress, realDeny, loadoutIds, samIds, quickEra, useOf, useOut } from './airdef-own.js';
 import { flightModel, loadOf } from '../games/airdef/sim/flight.js?v=20261022d';
 import { initDamage, hitZones, dmgPack, burnRate } from '../games/airdef/sim/damage.js?v=20261022d';
 import { buildWinter } from '../games/airdef/map-winter.js?v=20261022d';
-import { battleParts } from '../games/airdef/rating.js?v=20261120a';
+import { battleParts } from '../games/airdef/rating.js?v=20261124a';
 
 const city = buildCity(1); setGround(city.groundH); // город один для всех комнат (как у клиентов: seed 1), только чтение
 const winter = buildWinter(1); // «Мульти-волна» - зимняя горная долина «Северный рубеж» (как у клиентов: seed 1)
@@ -235,7 +235,7 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, s
       const tgt = r.targets[p.id % r.targets.length] || r.targets[0];
       const role = L.items.some(([k]) => AG[k].kind === 'arm') ? 'sead' : L.items.some(([k]) => AG[k].kind === 'cruise') ? 'cruise' : L.items.some(([k]) => AG[k].kind === 'agm' || AG[k].kind === 'tvb') ? 'tv' : 'bomber';
       const a = r.raid.spawn(role, tgt, p.bearing, 0, R);
-      a.load = L.items.map(([k, n]) => ({ key: k, n })); a.owner = p.id; a.plane = L.plane; a.cmFlare = cmOf(a.plane, r.sideAir).flare ? a.cmFlare || 30 : 0; // ЛТЦ - по машине бота (cmKey берёт plane), а не по raidPlane
+      a.load = L.items.map(([k, n]) => ({ key: k, n })); a.owner = p.id; a.plane = L.plane; a.inBay = loadInBay(L.plane, L.items); a.cmFlare = cmOf(a.plane, r.sideAir).flare ? a.cmFlare || 30 : 0; // ЛТЦ - по машине бота (cmKey берёт plane), а не по raidPlane
       p.plane = a; announce(r, a);
       return;
     }
@@ -245,28 +245,29 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, s
     p.zFuel = O.ZONE.FUEL; p.zAmmo = O.ZONE.AMMO; p.fuel = 1; p.zT = 0; // зона пополнения: на этот вылет - 1 раз топливо, 2 раза боекомплект
     sendSpawn(r, p);
   }
-  function humanCraft(r, p, plane, load, x, y, z, yaw, speed, hp) {
+  function humanCraft(r, p, plane, load, x, y, z, yaw, speed, hp, inBay) {
     const ST = STRIKERS[r.sideAir];
     const a = makeCraft({ ...ST, id: p.id, human: true, side: r.sideAir, hp, hpMax: O.MAX_HP, rcs: ST.rcs, speed, thr: 0.8, owner: p.id, plane, camo: (plane && p.worn && p.worn[plane]) || '' });
     a.pos.set(x, y, z); a.yaw = yaw; a.pitch = 0; a.roll = 0; fwdOf(a, a.vel).multiplyScalar(a.speed);
     a.jam = Math.max(0, ...load.map((l) => AG[l.key].jam || 0));
     // свои ТТХ самолёта (когда его ведёт ИИ сервера - после обрыва связи): масса, подвески, режим комнаты
     a.fm = flightModel(plane || (r.sideAir === 'east' ? 'su30' : 'f16'), { ind: MODES[r.mode].ind }); a.fuel = 1;
-    if (a.fm) { const Lw = loadOf(a.fm.key, load.map((l) => ({ mass: (AG[l.key] || {}).mass || 0, n: l.n }))); a.payload = Lw.payload; a.dragK = Lw.dragK; }
+    a.inBay = inBay ?? loadInBay(plane, load.map((l) => [l.key, l.n])); // возврат от ИИ - по полной загрузке вылета (inBay двойника): потраченное наружное малозаметность не возвращает
+    if (a.fm) { const Lw = loadOf(a.fm.key, load.map((l) => ({ mass: (AG[l.key] || {}).mass || 0, n: l.n })), a.inBay !== false); a.payload = Lw.payload; a.dragK = Lw.dragK; }
     initDamage(a); // зоны повреждений: считает сервер, игроку - в событии 'hp'
     p.craft = a; p.load = load; p.cap = null; p.relT = 0; p.relTok = 2; p.cmT = 0; p.lastSt = clock();
     r.humanCraft.set(p.id, a); a.load = p.load; announce(r, a);
     return a;
   }
   // back - управление вернулось игроку (связь восстановилась): с того же места, скорости и прочности
-  const sendSpawn = (r, p, back) => { const a = p.craft; bcast(r, { t: 'spawn', id: p.id, s: [r1(a.pos.x), r1(a.pos.y), r1(a.pos.z), Math.round(a.yaw * 1000) / 1000], lives: p.lives, load: p.load, cm: p.cm, plane: a.plane, choice: p.choice, back: back ? 1 : undefined, v: back ? Math.round(a.speed) : undefined, hp: back ? Math.round(a.hp) : undefined }); };
+  const sendSpawn = (r, p, back) => { const a = p.craft; bcast(r, { t: 'spawn', id: p.id, s: [r1(a.pos.x), r1(a.pos.y), r1(a.pos.z), Math.round(a.yaw * 1000) / 1000], lives: p.lives, load: p.load, cm: p.cm, plane: a.plane, ext: a.inBay === false ? 1 : undefined, choice: p.choice, back: back ? 1 : undefined, v: back ? Math.round(a.speed) : undefined, hp: back ? Math.round(a.hp) : undefined }); };
   // самолёт, который вёл ИИ (связь пропадала), - снова игроку; ИИ-двойник тихо исчезает (без взрыва)
   function retake(r, p) {
     if (r.state !== 'play' || !p.ws) return;
     if (p.craft && !p.craft.dead) { p.lastSt = clock(); sendSpawn(r, p, true); return; } // самолёт ещё у игрока (вернулся быстро) - только напомнить где он
     const b = p.plane; if (!b || b.dead || b.out || !p.ai || b.fromHuman !== p.id) return;
     p.plane = null; p.ai = false; b.out = true;
-    humanCraft(r, p, b.plane, (b.load || []).map((l) => ({ key: l.key, n: l.n, rs: l.rs })) /* rs - начатый блок НАР (ИИ-двойник пускал залпы) */, b.pos.x, b.pos.y, b.pos.z, b.yaw, Math.max(150, b.speed), b.hp);
+    humanCraft(r, p, b.plane, (b.load || []).map((l) => ({ key: l.key, n: l.n, rs: l.rs })) /* rs - начатый блок НАР (ИИ-двойник пускал залпы) */, b.pos.x, b.pos.y, b.pos.z, b.yaw, Math.max(150, b.speed), b.hp, b.inBay);
     sendSpawn(r, p, true);
     J(r, 'to_human', { who: p.name });
   }
@@ -277,7 +278,7 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, s
     const tgt = r.targets[0];
     const b = r.raid.spawn('bomber', tgt, 0, 0);
     b.pos.copy(a.pos); b.yaw = a.yaw; b.pitch = a.pitch; b.speed = a.speed; fwdOf(b, b.vel).multiplyScalar(b.speed); b.hp = a.hp; b.hpMax = O.MAX_HP;
-    b.load = (p.load || []).filter((l) => l.n > 0).map((l) => ({ ...l })); b.owner = p.id; b.plane = a.plane; b.camo = a.camo; b.fromHuman = p.id;
+    b.load = (p.load || []).filter((l) => l.n > 0).map((l) => ({ ...l })); b.owner = p.id; b.plane = a.plane; b.inBay = a.inBay; b.camo = a.camo; b.fromHuman = p.id;
     p.plane = b; p.ai = true; announce(r, b);
     bcast(r, { t: 'ev', e: [['ai', p.id, b.id]] });
     J(r, 'to_ai', { who: p.name, why });

@@ -30,11 +30,17 @@ function seeRange(model, reveal = false) {
   for (let i = 0; i < 30; i++) { const m = (lo + hi) / 2; a.pos.set(0, 9000, m); if (S.radarSees(u, a)) lo = m; else hi = m; }
   return lo;
 }
+// онлайн: у людей model - сторона, у ботов - машина роли; машина - в plane. Наружный груз (inBay false) малозаметность снимает
+function lockOnline(model, pl, inBay) { seed = 7; const a = plane(model); a.plane = pl; a.inBay = inBay; const S = sim([a]), u = S.addUnit('patriot', 0, 0, { skill: 1 }); u.ambush = false; u.emit = true;
+  a.pos.set(0, 6000, 30000); a.yaw = 0; a.pitch = 0; a.speed = 0; a.vel.set(0, 0, -0.01); const dt = 1 / 30; for (let t = 0; t < 20; t += dt) { S.step(dt); if (u.track === a) return t; } return null; }
 const tN = lockTime('f16'), tS = lockTime('e_f22'), tB = lockTime('e_b2'), t57 = lockTime('e_su57');
 console.log(`  захват Patriot: F-16 ${tN?.toFixed(2)} с, F-22 ${tS?.toFixed(2)} с, B-2 ${tB?.toFixed(2)} с, Су-57 ${t57?.toFixed(2)} с`);
 ok(tN != null && tS != null && Math.abs(tS - tN - STEALTH.e_f22.acq) < 0.15, `F-22 захватывается на ${STEALTH.e_f22.acq} с дольше`);
 ok(tB != null && Math.abs(tB - tN - STEALTH.e_b2.acq) < 0.15, `B-2 - на ${STEALTH.e_b2.acq} с дольше`);
 ok(t57 != null && Math.abs(t57 - tN - STEALTH.e_su57.acq) < 0.15, `Су-57 - на ${STEALTH.e_su57.acq} с дольше`);
+ok(Math.abs(lockOnline('east', 'e_su57', true) - tN - STEALTH.e_su57.acq) < 0.15, 'онлайн, человек: Су-57 с грузом в отсеках малозаметен (model - сторона)');
+ok(Math.abs(lockOnline('east', 'e_su57', false) - tN) < 0.15, 'онлайн: Су-57 с наружным грузом - как обычный');
+ok(Math.abs(lockOnline('e_f35', 'e_f15e', true) - tN) < 0.15, 'онлайн, бот: F-15E с машиной роли F-35 не малозаметен');
 const rN = seeRange('f16'), rS = seeRange('e_f22'), rB = seeRange('e_b2'), rR = seeRange('e_b2', true);
 console.log(`  обнаружение Patriot: F-16 ${(rN / 1000).toFixed(1)} км, F-22 ${(rS / 1000).toFixed(1)} км, B-2 ${(rB / 1000).toFixed(1)} км, B-2 после пуска ${(rR / 1000).toFixed(1)} км`);
 ok(Math.abs(rS / rN - 0.8) < 0.02 && Math.abs(rB / rN - 0.75) < 0.02, 'дальность обнаружения: F-22 ×0,8, B-2 ×0,75 (не меньше 0,75)');

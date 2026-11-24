@@ -3,9 +3,9 @@
 // на видеокарту (models.js). Кадр считается только когда что-то меняется: в покое ни 3D, ни нагрева (как прежний фон на кадрах menubg.js).
 // Фон и самолёт масштабируются как одна картинка: «полный кадр» - весь рендер 16:9 с его камерой, экран - окно в нём (setViewOffset), поэтому пол и самолёт совпадают на любом экране.
 // Подвеска расставлена как в бою (air.js: order, buildPylons). Подъёмник: base, ram (шток, длина 1 м, scale.y = ход), head (седло). ?oldbg=1 - прежний фон.
-import { AG } from './arsenal.js?v=20261120a';
-import { setPaintHall, paintOn } from './paint.js?v=20261120a';
-import { planeModel, planeMeta, classOf, wantModel, wantWeapon, weaponPending, weaponFailed, pylonMesh, seatStores, podModel, anyModel, modelLoaded, modelFailed, releaseModel, wantCamo, camoKnown, hiKnown, stOrder, setPose } from './models.js?v=20261120a';
+import { AG } from './arsenal.js?v=20261124a';
+import { setPaintHall, paintOn } from './paint.js?v=20261124a';
+import { planeModel, planeMeta, classOf, wantModel, wantWeapon, weaponPending, weaponFailed, pylonMesh, seatStores, podModel, anyModel, modelLoaded, modelFailed, releaseModel, wantCamo, camoKnown, hiKnown, stOrder, setPose } from './models.js?v=20261124a';
 
 const VIEWS = { // ПАСПОРТ.json сборщика
   // near, far - не из паспорта: буфер со сглаживанием держит 16 бит глубины, при near 0,3 на 31 м различал только 5 см, и близкие поверхности мерцали лесенкой (Mark, телефон)
@@ -146,7 +146,7 @@ export function createHangar(C, renderer) {
     const obj = pm.obj; holder.add(obj); obj.position.set(0, 0, 0); pivot.updateMatrixWorld(true);
     const box0 = new THREE.Box3().setFromObject(obj), sz = box0.getSize(new THREE.Vector3());
     // подвеска - как в бою
-    let oi = 0; const parts = obj.children.slice(), hung = [], ms = [], seatL = [], ord = stOrder(pm.stations ? pm.stations.length : 8, !!pm.heli), outSt = new Set((pm.internal && (planeMeta(pm.name) || {}).out) || []); // out - точки вне отсека (Ту-22М3: МБД)
+    let oi = 0; const parts = obj.children.slice(), hung = [], ms = [], seatL = [], ord = stOrder(pm.stations ? pm.stations.length : 8, !!pm.heli), outSt = new Set((pm.internal && pm.out) || []); // out - точки вне отсека (Ту-22М3: МБД)
     for (const [key, n] of L.items.slice().sort((a, b) => AG[b[0]].mass - AG[a[0]].mass)) {
       for (let i = 0; i < n && oi < ord.length; i++) {
         const st = ord[oi++], p = pm.stations[st]; if (!p) continue;

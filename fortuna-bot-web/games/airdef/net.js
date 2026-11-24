@@ -5,14 +5,14 @@
 // пуск, захват, РЛС, ручное наведение, покупки) уходят серверу - их перехватывает обёртка методов зеркала (wrapMirror).
 // Чужие самолёты и боты - «зеркальные» самолёты в C.raid.planes; свой самолёт игрок ведёт сам (C.player).
 /* global THREE, CONFIG */
-import * as O from './sim/online.js?v=20261120a';
-import * as MW from './sim/online-multi.js?v=20261120a';
-import { AG, SAM } from './arsenal.js?v=20261120a';
-import { dmgUnpack } from './sim/damage.js?v=20261120a';
-import { LNCH } from './launchers.js?v=20261120a';
-import { bldFromMask, bldKillMains } from './city.js?v=20261120a';
-import { cmOf, cmKey } from './sim/cm.js?v=20261120a';
-import { activeAcc, siteNoProgress, ensureSession, authBody, refreshSession } from './account.js?v=20261120a';
+import * as O from './sim/online.js?v=20261124a';
+import * as MW from './sim/online-multi.js?v=20261124a';
+import { AG, SAM } from './arsenal.js?v=20261124a';
+import { dmgUnpack } from './sim/damage.js?v=20261124a';
+import { LNCH } from './launchers.js?v=20261124a';
+import { bldFromMask, bldKillMains } from './city.js?v=20261124a';
+import { cmOf, cmKey } from './sim/cm.js?v=20261124a';
+import { activeAcc, siteNoProgress, ensureSession, authBody, refreshSession } from './account.js?v=20261124a';
 
 const PORT = 8787;
 export function adServerUrl() {

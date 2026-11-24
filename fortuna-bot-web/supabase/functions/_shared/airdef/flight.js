@@ -124,9 +124,9 @@ export const FUEL_K = 0.6;
 // оружие во внутренних отсеках - внешние подвески сопротивления не добавляют
 export const INTERNAL_BAY = new Set(['e_f22', 'e_f35', 'e_su57']);
 // подвески: [{ mass кг, n }] → масса груза и доп. сопротивление (доля cd0): каждая внешняя ~2,5 % + по массе (ФАБ-500 ≈ 4,5 %)
-export function loadOf(key, items) {
+export function loadOf(key, items, inBay = true) { // inBay false - груз не весь в отсеках (Су-57 с наружными ракетами): сопротивление - как у обычного
   let payload = 0, extra = 0;
-  for (const it of items) { if (!it.n) continue; payload += it.n * (it.mass || 0); if (!INTERNAL_BAY.has(key)) extra += it.n * (0.025 + (it.mass || 0) / 25000); }
+  for (const it of items) { if (!it.n) continue; payload += it.n * (it.mass || 0); if (!inBay || !INTERNAL_BAY.has(key)) extra += it.n * (0.025 + (it.mass || 0) / 25000); }
   return { payload, dragK: 1 + extra };
 }
 export const massOf = (s, fuel, payload) => s.empty + FUEL_K * s.fuel * fuel + payload;

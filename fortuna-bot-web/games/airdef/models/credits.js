@@ -19,16 +19,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "Sukhoi Su-57 \"Felon\"",
-  "author": "andertan",
-  "url": "https://sketchfab.com/3d-models/sukhoi-su-57-felon-09d546b4355c4fa6882ca46e05069bee",
-  "license": "CC-BY-4.0",
-  "files": [
-   "e_su57",
-   "e_su57_lo"
-  ]
- },
- {
   "title": "ELTA 8222 ECM POD 1/48",
   "author": "Original_linny",
   "url": "https://www.thingiverse.com/thing:5360259",
