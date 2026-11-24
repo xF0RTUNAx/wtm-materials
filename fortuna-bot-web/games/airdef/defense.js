@@ -1237,7 +1237,7 @@ export function createDefense(C) {
     drawPpi(t);
     // звук: тон ГСН у ИК, тон захвата
     if (S.type === 'ir') snd.growl(u.seek ? (u.track ? 0.05 : 0.03) : 0, u.track ? 900 : 420 + (u.seek || 0) * 200); // онлайн у комплекса нет seek (не в снимке) - было NaN и ошибка звука
-    if (u.track !== op.lastTrack) { if (u.track) snd.lock(); op.lastTrack = u.track; }
+    if (u.track !== op.lastTrack) { if (u.track) snd.lock(); else if (op.lastTrack && !op.lastTrack.dead && op.lastTrack === u.desig && op.lastTrack.jam && u.emit && sees(u, op.lastTrack)) { opSay(tr('Сопровождение сорвано помехами - перезахват')); snd.deny(); } op.lastTrack = u.track; }
   }
   // «АВТО» оператора: цель - ближайшая видимая из видов фильтра «Цели» комплекса (Mark 2026-10-27: С-300 «только баллистика» с «Авто» стрелял
   // по всему - «Авто» брало любую ближайшую; ручное назначение касанием - по-прежнему любая), сначала - те, что уже в зоне пуска; пуск в зоне

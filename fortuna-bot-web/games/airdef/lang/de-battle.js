@@ -467,6 +467,7 @@ export default {
   "вид оператора": "Bedienersicht",
   "снаружи - пусковая от третьего лица": "außen - Außenansicht des Startgeräts",
   "Бинокль выключен": "Fernglas aus",
+  "Сопровождение сорвано помехами - перезахват": "Verfolgung durch Störung abgerissen - Neuerfassung",
   "Бинокль - только когда цель захвачена": "Fernglas - nur bei aufgeschaltetem Ziel",
   "У этой установки - только вид оператора": "Dieses Startgerät hat nur die Bedienersicht",
   "Камера: ": "Kamera: ",

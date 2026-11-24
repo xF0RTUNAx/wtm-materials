@@ -565,5 +565,6 @@
  "{0} · {1} очк.": "{0} · {1} Pkt.",
  "без цели": "kein Ziel",
  "ещё собирает": "stellt noch zusammen",
- "Раунд {0}/{1} · расстановка ПВО{2}": "Runde {0}/{1} · Flugabwehr-Aufstellung{2}"
+ "Раунд {0}/{1} · расстановка ПВО{2}": "Runde {0}/{1} · Flugabwehr-Aufstellung{2}",
+ "Сопровождение сорвано помехами - перезахват": "Verfolgung durch Störung abgerissen - Neuerfassung"
 }

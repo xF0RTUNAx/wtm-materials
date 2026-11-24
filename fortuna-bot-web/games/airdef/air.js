@@ -7,7 +7,7 @@ import { premById, drawWings, wingsW } from './prem.js?v=20261124a';
 import { tr } from './i18n.js?v=20261124a';
 import { CITY, ZONE_NAME, mulberry32, riverX, objAimXZ, objDist } from './city.js?v=20261124a';
 import { strikerGeo, attachFlames } from './units-render.js?v=20261124a';
-import { planeModel, classOf, weaponMesh, pylonMesh, seatStores, podModel, weaponHasModel, planeMeta, spinProps, wantWeapon, hiKnown, stOrder, stationsFor, setPose } from './models.js?v=20261124a';
+import { planeModel, classOf, weaponMesh, pylonMesh, seatStores, podModel, weaponHasModel, planeMeta, spinProps, wantWeapon, hiKnown, stOrder, stationsFor, setPose, tipPods } from './models.js?v=20261124a';
 import { ico, drawIco } from './icons.js?v=20261124a';
 import { applyLayout } from './layout.js?v=20261124a';
 import { clamp, makeCraft, pilotStep, fwdOf, D2R, angleBetween } from '../drone/sim/core.js?v=20261124a';
@@ -93,7 +93,9 @@ export function createAir(C) {
     pylonMeshes.length = 0;
     if (seatExtra) { ship.remove(seatExtra); seatExtra = null; }
     const seatL = [];
+    const shipN = shipModel && shipModel.userData.pm ? shipModel.userData.pm.replace(/@.*$/, '') : null;
     for (const l of loadout) for (const st of l.st) {
+      if (st === 'tip') { for (const T of tipPods(shipN, l.key) || []) { const m = pylonMesh(l.key, AG[l.key], C.weaponGeo, C.mats.wMat); m.position.copy(T.p); m.rotation.z = T.rz; m.userData.tip = Math.sign(T.p.x); ship.add(m); pylonMeshes.push(m); } continue; }
       const p = stations[st], W0 = AG[l.key].vis; if (!p || (shipInternal && AG[l.key].kind === 'ecm' && !shipOut.has(st)) /* у малозаметных станция помех встроенная - в отсеке её нет */) continue; const m = pylonMesh(l.key, AG[l.key], C.weaponGeo, C.mats.wMat, !!craft.heli); /* пока грузится своя модель, стоит подходящая из загруженных - у неё точек может быть меньше (F-100D, МиГ-23: шесть) */ m.position.set(p.x, p.y - (W0.hang ?? W0.r) - 0.05, p.z); // hang - у ракет с гондолой под корпусом
       m.userData.st = st; m.visible = !shipInternal || shipOut.has(st); ship.add(m); pylonMeshes.push(m); seatL.push({ m, st, key: l.key, W: AG[l.key] }); // во внутренних отсеках - не видно
     }
@@ -120,7 +122,7 @@ export function createAir(C) {
     if (craft.dmgVis) craft.dmgVis.sync(craft);
     // с оторванной консолью уходят и подвески на ней
     for (const z of ev) if ((z === 'consL' || z === 'consR') && craft.dmgVis) {
-      const cx = craft.dmgVis.P.consX, sg = z === 'consL' ? -1 : 1;
+      const cx = craft.dmgVis.P.consX, sg = z === 'consL' ? -1 : 1; for (const m of pylonMeshes) if (m.userData.tip === sg) m.visible = false; // контейнер на оторванной законцовке
       // пилоны на оторванной консоли выбывают до конца вылета: ни пуска, ни перезарядки в воздухе, ни пополнения в зоне
       for (const l of loadout) for (const st of l.st0.slice()) { const p = stations[st]; if (!p || p.x * sg <= cx * 0.92) continue;
         l.st0.splice(l.st0.indexOf(st), 1); l.n0 = l.st0.length; const k = l.st.indexOf(st); if (k >= 0) { l.st.splice(k, 1); l.n--; }
@@ -1402,7 +1404,7 @@ export function createAir(C) {
     const hOrd = { rack: [0, 6, 1, 7, 2, 8, 3, 9], pod: stations.length > 10 ? [4, 5, 10, 11] : [4, 5] }, hi = { rack: 0, pod: 0 }; // Ми-8МТВ - 4 блока НАР
     for (const [key, n] of L.items.slice().sort((a, b) => AG[b[0]].mass - AG[a[0]].mass)) {
       const st = [], h = AG[key].kind === 'rocket' ? 'pod' : 'rack';
-      for (let i = 0; i < n; i++) { if (craft.heli) { if (hi[h] < hOrd[h].length) st.push(hOrd[h][hi[h]++]); } else if (oi < order.length) st.push(order[oi++]); }
+      if (!craft.heli && tipPods(L.plane, key)) st.push('tip'); /* «Сорбция» на законцовках - точку подвески не занимает */ else for (let i = 0; i < n; i++) { if (craft.heli) { if (hi[h] < hOrd[h].length) st.push(hOrd[h][hi[h]++]); } else if (oi < order.length) st.push(order[oi++]); }
       loadout.push({ key, n: st.length, n0: st.length, st, st0: st.slice(), rt: 0, res: st.length * sets });
     }
     sel = 0;

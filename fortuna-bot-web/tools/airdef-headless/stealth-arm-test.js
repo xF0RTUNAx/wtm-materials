@@ -48,6 +48,18 @@ ok(Math.abs(rR - rN) < 50, 'после пуска оружия малозаме�
 { const a = plane('e_f22'), S = sim([a]); a.pos.set(0, 5000, 20000); a.vel.set(0, 0, -250); S.release(a, 'gbu39'); const r0 = a.revealT; for (let i = 0; i < 30 * (REVEAL_T + 0.5); i++) S.step(1 / 30);
   ok(r0 === REVEAL_T && !(a.revealT > 0), `пуск засвечивает на ${REVEAL_T} с, потом снова малозаметный`); }
 
+// ── 1а. помехи срывают сопровождение и у комплекса под управлением игрока ──
+function breaks(key, manual, jam) {
+  seed = 5; const a = plane('f16'); a.jam = jam; let n = 0; const S = sim([a], { trackBroken: () => { n++; } });
+  const u = S.addUnit(key, 0, 0, { skill: 1 }); u.ambush = false; u.emit = true; if (manual) { u.manual = true; u.desig = a; }
+  a.pos.set(0, 5000, 9000); a.speed = 0; a.vel.set(0, 0, -0.01); const dt = 1 / 30; let tr = 0;
+  for (let t = 0; t < 300; t += dt) { a.hp = 100; a.dead = false; u.ammo = 0; u.reloadT = 9; u.emit = true; S.step(dt); if (u.track === a) tr += dt; }
+  return [n, tr];
+}
+{ const [bm, tm] = breaks('s75', true, 0.6), [ba] = breaks('s75', false, 0.6), [b4] = breaks('s400', true, 0.6), [b0] = breaks('s75', true, 0);
+  console.log(`  срывы за 300 с: С-75 оператор ${bm} (сопровождал ${tm.toFixed(0)} с), С-75 ИИ ${ba}, С-400 оператор ${b4}, без станции ${b0}`);
+  ok(bm > 15 && bm < 50, 'С-75 под управлением игрока: помехи срывают сопровождение'); ok(b4 < bm / 2, 'С-400 - намного реже'); ok(b0 === 0, 'без станции помех срывов нет'); }
+
 // ── 2-3. ПРР в режиме памяти ──
 // ракета пущена по «Осе» с 14 км; РЛС выключают за offBefore секунд до подлёта (null - не выключают); jam - станция подавления навигации рядом
 function armRun(key, offBefore, jam = false) {

@@ -467,6 +467,7 @@ export default {
   "вид оператора": "vue opérateur",
   "снаружи - пусковая от третьего лица": "extérieur - lanceur à la troisième personne",
   "Бинокль выключен": "Jumelles éteintes",
+  "Сопровождение сорвано помехами - перезахват": "Poursuite rompue par brouillage - réacquisition",
   "Бинокль - только когда цель захвачена": "Jumelles - seulement quand la cible est verrouillée",
   "У этой установки - только вид оператора": "Ce lanceur n'a que la vue opérateur",
   "Камера: ": "Caméra : ",

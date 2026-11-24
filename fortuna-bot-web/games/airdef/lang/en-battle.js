@@ -470,6 +470,7 @@ export default {
   'вид оператора': 'operator view',
   'снаружи - пусковая от третьего лица': 'external: launcher, third person',
   'Бинокль выключен': 'Binoculars off',
+  'Сопровождение сорвано помехами - перезахват': 'Track broken by jamming - reacquiring',
   'Бинокль - только когда цель захвачена': 'Binoculars need a target lock',
   'У этой установки - только вид оператора': 'Operator view only for this launcher',
   'Камера: ': 'Camera: ',

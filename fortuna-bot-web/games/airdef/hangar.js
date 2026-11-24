@@ -5,7 +5,7 @@
 // Подвеска расставлена как в бою (air.js: order, buildPylons). Подъёмник: base, ram (шток, длина 1 м, scale.y = ход), head (седло). ?oldbg=1 - прежний фон.
 import { AG } from './arsenal.js?v=20261124a';
 import { setPaintHall, paintOn } from './paint.js?v=20261124a';
-import { planeModel, planeMeta, classOf, wantModel, wantWeapon, weaponPending, weaponFailed, pylonMesh, seatStores, podModel, anyModel, modelLoaded, modelFailed, releaseModel, wantCamo, camoKnown, hiKnown, stOrder, setPose } from './models.js?v=20261124a';
+import { planeModel, planeMeta, classOf, wantModel, wantWeapon, weaponPending, weaponFailed, pylonMesh, seatStores, podModel, anyModel, modelLoaded, modelFailed, releaseModel, wantCamo, camoKnown, hiKnown, stOrder, setPose, tipPods } from './models.js?v=20261124a';
 
 const VIEWS = { // ПАСПОРТ.json сборщика
   // near, far - не из паспорта: буфер со сглаживанием держит 16 бит глубины, при near 0,3 на 31 м различал только 5 см, и близкие поверхности мерцали лесенкой (Mark, телефон)
@@ -148,6 +148,7 @@ export function createHangar(C, renderer) {
     // подвеска - как в бою
     let oi = 0; const parts = obj.children.slice(), hung = [], ms = [], seatL = [], ord = stOrder(pm.stations ? pm.stations.length : 8, !!pm.heli), outSt = new Set((pm.internal && pm.out) || []); // out - точки вне отсека (Ту-22М3: МБД)
     for (const [key, n] of L.items.slice().sort((a, b) => AG[b[0]].mass - AG[a[0]].mass)) {
+      const TP = pm.heli ? null : tipPods(pm.name, key); if (TP) { for (const T of TP) { const m = pylonMesh(key, AG[key], C.weaponGeo, C.mats.wMat); m.position.copy(T.p); m.rotation.z = T.rz; obj.add(m); hung.push(m); ms.push([key, m]); } continue; } // «Сорбция» на законцовках
       for (let i = 0; i < n && oi < ord.length; i++) {
         const st = ord[oi++], p = pm.stations[st]; if (!p) continue;
         const W0 = AG[key].vis || {}, m = pylonMesh(key, AG[key], C.weaponGeo, C.mats.wMat); m.position.set(p.x, p.y - (W0.hang ?? W0.r ?? 0.2) - 0.05, p.z); const inB = pm.internal && !outSt.has(st); m.visible = !inB; obj.add(m); if (inB) continue; hung.push(m); ms.push([key, m]); seatL.push({ m, st, key, W: AG[key] }); // во внутренних отсеках не видно, как в бою

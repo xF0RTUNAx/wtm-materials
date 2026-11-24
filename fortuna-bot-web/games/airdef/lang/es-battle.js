@@ -467,6 +467,7 @@ export default {
   "вид оператора": "vista del operador",
   "снаружи - пусковая от третьего лица": "exterior: lanzador en tercera persona",
   "Бинокль выключен": "Prismáticos apagados",
+  "Сопровождение сорвано помехами - перезахват": "Seguimiento roto por interferencias - readquiriendo",
   "Бинокль - только когда цель захвачена": "Los prismáticos requieren un objetivo fijado",
   "У этой установки - только вид оператора": "Este lanzador solo tiene vista del operador",
   "Камера: ": "Cámara: ",

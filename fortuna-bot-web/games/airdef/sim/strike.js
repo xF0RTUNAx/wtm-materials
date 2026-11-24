@@ -110,6 +110,11 @@ export function createStrike(ctx) {
   // доплеровский провал у когерентных, здания и рельеф между антенной и целью
   // малозаметный самолёт (arsenal.js STEALTH): ключ машины - plane (онлайн: у людей и ботов model - сторона или машина роли), иначе model (одиночная); после пуска - засвечен; inBay false - груз снаружи (Су-57)
   const stealthOf = (t) => { if (!t || t.isMun || t.heli) return null; const S = STEALTH[t.plane || t.model]; return S && t.inBay !== false && !(t.revealT > 0) ? S : null; };
+  // помехи цели иногда срывают сопровождение (у помехозащищённых - редко): и у ИИ, и у комплекса под управлением игрока (Mark 2026-11-24)
+  function jamBreak(u, t, dt) {
+    if (u.track !== t || !t.jam || !u.emit || rnd() >= t.jam * (1 - (u.S.eccm || 0)) * 0.25 * dt) return;
+    u.track = null; u.seeT = -0.5; u.relock = t; fx.trackBroken(u, t); fx.radarState(u);
+  }
   function radarSees(u, t) {
     const R = u.S.radar, d = u.ant.distanceTo(t.pos);
     let range = R.range * Math.min(1.4, Math.pow((t.rcs || 5) / 5, 0.25));
@@ -206,8 +211,7 @@ export function createStrike(ctx) {
       // вертолёт у земли (ниже 60 м) берут на 3 с дольше (Mark 2026-10-22): выскочил из-за складки - успевает пустить ПТУР и уйти вниз
       // (пока не видно, seeT тает вдвое быстрее - подскок снова начинает отсчёт почти с нуля)
       const acq = (S.radar ? S.radar.acq : 2) * (M.reactK || 1) + (t.heli && aglOf(t) < 60 ? 3 : 0) + (S.radar && u.emit && stealthOf(t) ? stealthOf(t).acq : 0); // малозаметный - захват РЛС дольше
-      // помехи цели иногда срывают сопровождение (у помехозащищённых - редко)
-      if (u.track === t && t.jam && u.emit && rnd() < t.jam * (1 - (S.eccm || 0)) * 0.25 * dt) { u.track = null; u.seeT = -0.5; u.relock = t; fx.trackBroken(u, t); fx.radarState(u); }
+      jamBreak(u, t, dt);
       if (!u.track && u.seeT > (u.relock === t ? 0.8 : acq)) { u.track = t; u.relock = null; fx.radarState(u); }
       if (u.track && S.radar && u.emit) { net.alertT = 30; net.last.copy(t.pos); u.known = true; }
     } else {
@@ -310,6 +314,7 @@ export function createStrike(ctx) {
     const sees = (S.radar && u.emit && radarSees(u, t)) || ((S.type === 'saclos' || S.optTrack) && eyesSee(u, t));
     if (sees) {
       u.lostT = 0; u.seeT += dt; u.seeTgt = t; // кого видит (интерфейс: «вас видит» - только про игрока)
+      if (S.radar) jamBreak(u, t, dt);
       if (!u.track && u.seeT > (u.relock === t ? 0.8 : (S.radar ? S.radar.acq : 2) * (M.reactK || 1) + (S.radar && u.emit && stealthOf(t) ? stealthOf(t).acq : 0))) { u.track = t; u.relock = null; fx.radarState(u); } // перезахват той же цели после диполей - быстрее; малозаметный - дольше
       if (u.track && u.emit) { net.alertT = 30; net.last.copy(t.pos); }
     } else {

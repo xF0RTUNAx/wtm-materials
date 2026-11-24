@@ -7,7 +7,7 @@
 /* global THREE, CONFIG */
 import * as O from './sim/online.js?v=20261124a';
 import * as MW from './sim/online-multi.js?v=20261124a';
-import { AG, SAM } from './arsenal.js?v=20261124a';
+import { AG, SAM, loadInBay } from './arsenal.js?v=20261124a';
 import { dmgUnpack } from './sim/damage.js?v=20261124a';
 import { LNCH } from './launchers.js?v=20261124a';
 import { bldFromMask, bldKillMains } from './city.js?v=20261124a';
@@ -276,6 +276,8 @@ export function createNet(C) {
     const a = { id, pos: V(), vel: V(), sp: V(), sv: V(), st: 0, yaw: 0, pitch: 0, roll: 0, ty: 0, tp: 0, tr: 0, speed: 0, thr: 0.9, ab: false, hp: 100, hpMax: role === 'human' ? 100 : 70,
       dead: false, out: false, side: N.battle ? N.battle.sideAir : 'west', role: role === 'human' ? 'bomber' : role, plane: plane || null, decoyKey: decoyKey || null, owner, phase: 'ingress',
       r: 10, rcs: 5, ir: 1, load: load ? load.split(',').filter(Boolean).map((s) => { const [key, n] = s.split(':'); return { key, n: +n }; }).filter((l) => AG[l.key]) : [], fresh: true };
+    a.jam = Math.max(0, ...a.load.map((l) => AG[l.key].jam || 0)); // станция помех: оператору - полоса помех и дальность, как на сервере
+    a.inBay = loadInBay(a.plane, a.load.map((l) => [l.key, l.n])); // Су-57 с наружным грузом - не малозаметен
     ac.set(id, a); N.raid.planes.push(a);
     return a;
   }

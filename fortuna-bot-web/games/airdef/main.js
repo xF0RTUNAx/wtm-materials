@@ -29,7 +29,7 @@ import { POD, RAIL, podLift } from './sim/combined.js?v=20261124a';
 import { unitModel, weaponGeo, samMissileMesh, mountWpnFlame, narMesh, flameOf, wpnNozzle, strikerGeo, createFx, attachFlames } from './units-render.js?v=20261124a';
 import { slotCount, LNCH, lnchToWorld, cylPose, mslView } from './launchers.js?v=20261124a';
 import { makeBay, bayHold } from './bay.js?v=20261124a';
-import { spinProps as spinRotors, spinSails, modelStats, loadModels, FLY, planeModel, heliModel, classOfRole, weaponMesh, pylonMesh, seatStores, unitModelGlb, unitMissileGlb, samMissileLo, samNose, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, wantUnitNear, bldModel, wantBuildings, wantModel, wantWeapon, weaponPending, anyModel, setWings, glideWings, spinVanes, planeMeta , stOrder } from './models.js?v=20261124a';
+import { spinProps as spinRotors, spinSails, tipPods, modelStats, loadModels, FLY, planeModel, heliModel, classOfRole, weaponMesh, pylonMesh, seatStores, unitModelGlb, unitMissileGlb, samMissileLo, samNose, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, wantUnitNear, bldModel, wantBuildings, wantModel, wantWeapon, weaponPending, anyModel, setWings, glideWings, spinVanes, planeMeta , stOrder } from './models.js?v=20261124a';
 import { planeDamageVis, updateDebris, clearDebris } from './plane-damage.js?v=20261124a';
 import { createSound } from './sound.js?v=20261124a';
 import { ico, iconize } from './icons.js?v=20261124a';
@@ -752,6 +752,7 @@ const LOD_D = 2500; // дальше LOD_D - простая модель само
 function hangLoad(g, stations, load, plane, inBay = false, outL = null) {
   const out = [], seatL = [], pmH = plane ? planeMeta(plane) : null, outSt = new Set((inBay && outL) || []), ord = stOrder(stations.length, !!(pmH && pmH.heli)); let oi = 0; // порядок развески - как у игрока (models.js stOrder)
   for (const l of [...load].sort((x, y) => AG[y.key].mass - AG[x.key].mass)) for (let k = 0; k < l.n && oi < ord.length; k++) {
+    const TP = plane ? tipPods(plane, l.key) : null; if (TP) { if (weaponPending(l.key)) wantWeapon(l.key); for (const T of TP) { const m = pylonMesh(l.key, AG[l.key], weaponGeo, wMat); m.position.copy(T.p); m.rotation.z = T.rz; g.add(m); out.push({ m, l, k: 0, out: true }); } break; } // «Сорбция» на законцовках
     const st = ord[oi++], W = AG[l.key], p = stations[st]; if (!p || (inBay && W.kind === 'ecm')) continue; // у малозаметных станция помех встроенная - в отсеке её нет
     const m = pylonMesh(l.key, W, weaponGeo, wMat); if (weaponPending(l.key)) wantWeapon(l.key); // пришла - самолёты пересоберутся
     m.position.set(W.kind === 'tbm' ? 0 : p.x, p.y - (W.vis.hang ?? W.vis.r) - 0.05, p.z); g.add(m); out.push({ m, l, k, out: outSt.has(st) }); if (W.kind !== 'tbm' && (!inBay || outSt.has(st))) seatL.push({ m, st, key: l.key, W }); // «Кинжал» - под фюзеляжем по оси
