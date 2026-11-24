@@ -288,7 +288,8 @@ const META = {
   w_decoy_e: { weapon: 'decoy_e', wings: 'deploy', wingAx: { wing1: [0.165, -0.2045, -0.4, 80], wing2: [-0.165, -0.2045, -0.4, -80] }, stations: [] }, // Ложная цель (имитатор) — собственная модель (tools/airdef-models/own/decoy_e)
   w_gbu39: { weapon: ['gbu39', 'sdb'], wings: 'deploy', flip: true, wingAx: { wing1: [0, -0.1135, -0.27, 60], wing2: [0, -0.1235, -0.27, -60], wing1s: [0.03, -0.104, 0.03, 85], wing2s: [-0.03, -0.104, 0.03, -85] }, stations: [] }, // GBU-39/B SDB — собственная модель (tools/airdef-models/own/gbu39): висит крылом вниз, после сброса переворот (flip, как УМПК), крылья на общей оси и подкосы на своих - из паспорта
   w_gbu31: { weapon: 'gbu31', stations: [] }, // GBU-31 JDAM — собственная модель (tools/airdef-models/own/gbu31)
-  w_pod: { pod: true, stations: [] }, // AN/AAQ-28 LITENING - прицельный контейнер
+  w_pod: { pod: 'west', lazy: true, matte: true, paint: true, stations: [] }, // прицельный контейнер запада: AN/AAQ-28 LITENING - своя модель (Свои/LITENING, 2026-11-24)
+  w_pod_e: { pod: 'east', lazy: true, matte: true, paint: true, stations: [] }, // прицельный контейнер востока: Т220 - своя модель (Свои/Т220, 2026-11-24)
   // постройки военных объектов (целей) - расставляются по OBJ_DIMS из city.js
   obj_tanks: { obj: true, stations: [] }, obj_rtank: { obj: true, stations: [] }, // резервуары и ангар obj_jhangar - для «Летки» (на картах этой игры - свои сцены)
   // свои дома (Свои/Дома города): модули панельной девятиэтажки II-49 и хрущёвок 1-464 / 1-447 - city-render.js kitHouses
@@ -614,7 +615,7 @@ const GLB_V_OWN = {
   w_kalibr: '20261115i',
 };
 GLB_V.hg_jack = '20261104b'; // подъёмник, ревизия 2: матовый, с износом
-GLB_V.w_pod = '20261104b'; // серый корпус контейнера, без комьев от упрощения
+GLB_V.w_pod = '20261124b'; GLB_V.w_pod_e = '20261124b'; // свои прицельные контейнеры
 GLB_V.e_f35 = GLB_V.e_f35_lo = GLB_V.e_f35_gear = '20261106a'; // своя модель и стойки
 GLB_V.f18 = GLB_V.f18_gear = '20261106b'; // своя модель и стойки, ревизия 2: без планки через кабину
 GLB_V.f16 = GLB_V.f16_gear = '20261106b'; // своя модель и стойки, ревизия 2: без планки через кабину
@@ -1160,8 +1161,9 @@ const WMODEL = byKey('weapon'), SAMMSL = byKey('samMissile'), LAUNCHER = byKey('
 export const FLY = { shturm: 'w_fly_shturm', ataka: 'w_fly_ataka' };
 export function wantWeapon(key) { const n = WMODEL[key]; if (n && BASE) start(n); const f = FLY[key]; if (f && BASE && META[f]) start(f); }
 // прицельный контейнер игрока (или null - тогда цилиндр)
-// (у самолётов pod - место подвески контейнера: ищем именно модель контейнера, pod === true)
-export function podModel() { const n = Object.keys(META).find((k) => META[k].pod === true); return n && LOADED[n] ? LOADED[n].clone() : null; }
+// контейнер по стороне самолёта (у самолётов pod - место подвески, у моделей контейнеров - сторона строкой); plane - ключ самолёта
+export const podModelName = (plane = null) => (plane && META[plane] && META[plane].side === 'east' ? 'w_pod_e' : 'w_pod');
+export function podModel(plane = null) { const n = podModelName(plane); if (!LOADED[n] && BASE) start(n); return LOADED[n] ? LOADED[n].clone() : null; } // грузится по требованию; пришла - подвеска пересобирается (modelsReady)
 // труба ПЗРК (качающаяся часть пусковой у расчёта) или null
 export function launcherGlb(key) { const n = LAUNCHER[key]; return n && LOADED[n] ? LOADED[n].clone() : null; }
 // крылья планирующей бомбы: k = 0 - сложены (на подвеске), 1 - раскрыты (в полёте)
@@ -1190,9 +1192,9 @@ export function weaponMesh(key, W, geoFn, mat) {
 const PYLON = new Map(), PI4 = new THREE.Matrix4();
 // посадка подвески на пилоны по таблице (seat.js); list: { m, st, key, W } или { m, pod: true }. Возвращает сетку с балками и надставками (уже в root) или null. Нет записи или другая версия файла - подвеска остаётся на старой точке
 function seatRec(plane) { const r = SEATS.p[plane]; return r && r.v === glbVer(plane) ? r : null; }
-function seatWpn(key, W, pod) {
-  const n = pod ? podModelName() : WMODEL[key];
-  if (n && LOADED[n]) { const r = SEATS.w[pod ? 'pod' : key]; return r && r[0] === glbVer(n) ? r.slice(1) : null; }
+function seatWpn(key, W, pod, plane) {
+  const n = pod ? podModelName(plane) : WMODEL[key];
+  if (n && LOADED[n]) { const r = SEATS.w[pod ? (n === 'w_pod_e' ? 'pod_e' : 'pod') : key]; return r && r[0] === glbVer(n) ? r.slice(1) : null; }
   return pod ? [0.2, 0, 2.4, 0, 0, null] : [W.vis.hang ?? W.vis.r, 0, W.vis.L || 2, 0, 0, null]; // простая фигура, пока модель не пришла
 }
 const SEAT_GEO = new Map();
@@ -1202,7 +1204,7 @@ export function seatStores(root, plane, list, mat = pylonMat) {
   const v = [], sig = [plane];
   for (const { m, st, key, W, pod } of list) {
     const o = SS[st], p = pod ? R.pod : o === undefined ? S[st] : typeof o === 'number' ? S[o] : o; if (!p || !p[0]) continue;
-    const s = seatWpn(key, W, pod); if (!s) continue;
+    const s = seatWpn(key, W, pod, plane); if (!s) continue;
     const q = seatOne(p, s, v); m.position.set(q[0], q[1], q[2]); sig.push(`${pod ? 'pod' : st}:${pod ? '' : key}:${s.join()}`); // весь размер: у простой фигуры и настоящей модели верх корпуса может совпасть
   }
   if (!v.length) return null;
@@ -1214,7 +1216,6 @@ export function seatStale(AG) { const out = []; for (const n of Object.keys(META
 const planeSeated = (n) => { const m = META[n]; return !!m && !!m.stations && m.stations.length > 0 && !m.heli && !m.internal && !m.weapon && !n.endsWith('_lo'); };
 export const planeNames = () => Object.keys(META).filter(planeSeated);
 export const weaponModelName = (key) => WMODEL[key] || null;
-export const podModelName = () => Object.keys(META).find((k) => META[k].pod === true) || null;
 export const glbVerOf = (n) => glbVer(n);
 // heli - подвеска вертолёта: у блока Б-8 части cone (обтекатель Б-8М1 с носами ракет в нём) и heli (носы ракет у срезов труб
 // вертолётного Б-8В20) - одна из двух; пока у модели нет части heli - обтекатель везде (Mark 2026-11-08)

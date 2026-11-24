@@ -18,7 +18,7 @@ try {
     const f = (v) => (v == null ? null : +v.toFixed(3)), ray = new THREE.Raycaster(), o = new THREE.Vector3(), up = new THREE.Vector3(0, 1, 0), down = new THREE.Vector3(0, -1, 0);
     const out = { p: {}, w: {}, log: [] };
     // оружие: измерить модель, как её ставит игра
-    const AXIS0 = new Set(['jassm']); // начало модели на оси корпуса, а габариты сбивает сложенный киль
+    const AXIS0 = new Set(['jassm', 'pod', 'pod_e']); // начало модели на оси корпуса, а габариты сбивает сложенный киль
     const measure = (m, isPod, k) => {
       m.position.set(0, 0, 0); m.updateWorldMatrix(true, true); const b = new THREE.Box3().setFromObject(m), L = b.max.z - b.min.z, cx = AXIS0.has(k) ? 0 : (b.min.x + b.max.x) / 2, cz = (b.min.z + b.max.z) / 2;
       const hit = (x, z) => { ray.set(o.set(x, b.max.y + 1, z), down); ray.far = 8; const h = ray.intersectObject(m, true)[0]; return h ? h.point.y : null; };
@@ -28,7 +28,7 @@ try {
     };
     const stub = new THREE.MeshBasicMaterial(), geoStub = () => new THREE.BoxGeometry(0.2, 0.2, 2);
     for (const k of Object.keys(AG)) { const n = M.weaponModelName(k); if (!n || !want(k)) continue; M.wantWeapon(k); if (!(await wait(() => !M.weaponPending(k), 40000))) { out.log.push(`нет модели ${k}`); continue; } if (!M.modelLoaded(n)) continue; out.w[k] = [M.glbVerOf(n), ...measure(M.pylonMesh(k, AG[k], geoStub, stub), false, k)]; }
-    if (want('pod')) { const n = M.podModelName(); M.wantModel(n); await wait(() => M.modelLoaded(n), 40000); const m = M.podModel(); if (m) out.w.pod = [M.glbVerOf(n), ...measure(m, true)]; }
+    for (const [id, pl] of [['pod', null], ['pod_e', 'su30']]) if (want(id)) { const n = M.podModelName(pl); M.wantModel(n); await wait(() => M.modelLoaded(n), 40000); const m = M.podModel(pl); if (m) out.w[id] = [M.glbVerOf(n), ...measure(m, true, id)]; }
     // самолёты
     const clearOf = (under, x, z, y) => { let c = 99; for (const dx of [-0.4, -0.25, 0.25, 0.4]) for (const dz of [-1.4, -1, -0.6, 0.6, 1, 1.4]) { const h = under(x + dx, z + dz, y); if (h != null && h < c) c = h; } return f(c); };
     for (const name of M.planeNames()) {

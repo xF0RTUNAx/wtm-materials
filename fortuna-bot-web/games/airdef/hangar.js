@@ -5,7 +5,7 @@
 // Подвеска расставлена как в бою (air.js: order, buildPylons). Подъёмник: base, ram (шток, длина 1 м, scale.y = ход), head (седло). ?oldbg=1 - прежний фон.
 import { AG } from './arsenal.js?v=20261124a';
 import { setPaintHall, paintOn } from './paint.js?v=20261124a';
-import { planeModel, planeMeta, classOf, wantModel, wantWeapon, weaponPending, weaponFailed, pylonMesh, seatStores, podModel, anyModel, modelLoaded, modelFailed, releaseModel, wantCamo, camoKnown, hiKnown, stOrder, setPose, tipPods } from './models.js?v=20261124a';
+import { planeModel, planeMeta, classOf, wantModel, wantWeapon, weaponPending, weaponFailed, pylonMesh, seatStores, podModel, podModelName, anyModel, modelLoaded, modelFailed, releaseModel, wantCamo, camoKnown, hiKnown, stOrder, setPose, tipPods } from './models.js?v=20261124a';
 
 const VIEWS = { // ПАСПОРТ.json сборщика
   // near, far - не из паспорта: буфер со сглаживанием держит 16 бит глубины, при near 0,3 на 31 м различал только 5 см, и близкие поверхности мерцали лесенкой (Mark, телефон)
@@ -105,7 +105,8 @@ export function createHangar(C, renderer) {
   const refresh = () => { const L = (want && want.L) || lastL; if (L) show(L); }; // кошелёк обновился: окраска сменилась - пересборка, нет - show ничего не делает
   const keyOf = (q) => (q.skin ? `${q.plane}@${q.skin}` : q.plane);
   const gearOf = (plane) => (paintOn && planeMeta(plane) && planeMeta(plane).gearModel) || null; // своя модель со стойками: в ангаре на шасси, а не на подъёмниках (проба, ?paint=1)
-  const fullyHere = (q) => modelLoaded(keyOf(q)) && modelLoaded('hg_jack') && (!gearOf(q.plane) || modelLoaded(gearOf(q.plane)) || modelFailed(gearOf(q.plane))) && !q.L.items.some(([k]) => weaponPending(k) && !weaponFailed(k));
+  const podOf = (q) => (q.L.pod && planeMeta(q.plane) && planeMeta(q.plane).pod ? podModelName(q.plane) : null); // прицельный контейнер - по требованию
+  const fullyHere = (q) => modelLoaded(keyOf(q)) && modelLoaded('hg_jack') && (!gearOf(q.plane) || modelLoaded(gearOf(q.plane)) || modelFailed(gearOf(q.plane))) && !q.L.items.some(([k]) => weaponPending(k) && !weaponFailed(k)) && (!podOf(q) || modelLoaded(podOf(q)) || modelFailed(podOf(q)));
   function stepBuild() {
     if (!on) return;
     // показали замену, потому что нужная модель не успела: пришла - пересобрать
@@ -117,7 +118,7 @@ export function createHangar(C, renderer) {
       want.asked = true;
       if (!modelLoaded(keyOf(want))) mine.add(keyOf(want));
       if (want.skin) wantCamo(want.plane, want.skin); else wantModel(want.plane);
-      wantModel('hg_jack'); { const gk = gearOf(want.plane); if (gk) { if (!modelLoaded(gk)) mine.add(gk); wantModel(gk); } } for (const [k] of want.L.items) wantWeapon(k); // стойки делят картинки с самолётом: освобождать их вместе с ним, иначе текстуры остаются в памяти
+      wantModel('hg_jack'); { const gk = gearOf(want.plane); if (gk) { if (!modelLoaded(gk)) mine.add(gk); wantModel(gk); } } for (const [k] of want.L.items) wantWeapon(k); if (podOf(want)) wantModel(podOf(want)); // стойки делят картинки с самолётом: освобождать их вместе с ним, иначе текстуры остаются в памяти
     }
     if (want.skin && modelFailed(keyOf(want))) { want.skin = null; want.asked = false; wantT = now - PICK_WAIT; return; } // файл с окраской или большими текстурами не пришёл - обычная модель
     const q = want, broke = modelFailed(q.plane) || modelFailed('hg_jack'), here = fullyHere(q);
@@ -154,7 +155,7 @@ export function createHangar(C, renderer) {
         const W0 = AG[key].vis || {}, m = pylonMesh(key, AG[key], C.weaponGeo, C.mats.wMat); m.position.set(p.x, p.y - (W0.hang ?? W0.r ?? 0.2) - 0.05, p.z); const inB = pm.internal && !outSt.has(st); m.visible = !inB; obj.add(m); if (inB) continue; hung.push(m); ms.push([key, m]); seatL.push({ m, st, key, W: AG[key] }); // во внутренних отсеках не видно, как в бою
       }
     }
-    if (L.pod && pm.pod) { const m = podModel() || new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 2.4, 10).rotateX(Math.PI / 2), new THREE.MeshPhongMaterial({ color: 0x5a636c })); m.position.copy(pm.pod); obj.add(m); hung.push(m); seatL.push({ m, pod: true }); } // как в бою: контейнер ещё не пришёл - простая фигура
+    if (L.pod && pm.pod) { const m = podModel(pm.name) || new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 2.4, 10).rotateX(Math.PI / 2), new THREE.MeshPhongMaterial({ color: 0x5a636c })); m.position.copy(pm.pod); obj.add(m); hung.push(m); seatL.push({ m, pod: true }); } // как в бою: контейнер ещё не пришёл - простая фигура
     pivot.updateMatrixWorld(true);
     hangStores(obj, pm.name, hung, seatL);
     for (const [key, m] of ms) { let g = groups.find((x) => x.key === key); if (!g) groups.push(g = { key, pos: [] }); g.pos.push(m.position.clone()); }
