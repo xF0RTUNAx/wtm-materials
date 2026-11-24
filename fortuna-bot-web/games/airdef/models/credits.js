@@ -19,15 +19,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "ELTA 8222 ECM POD 1/48",
-  "author": "Original_linny",
-  "url": "https://www.thingiverse.com/thing:5360259",
-  "license": "CC-BY-4.0",
-  "files": [
-   "w_ecm"
-  ]
- },
- {
   "title": "AGM-86",
   "author": "mahmadsaleem11111",
   "url": "https://sketchfab.com/3d-models/agm-86-de64a3d9282249e39760a5fee425e7ae",

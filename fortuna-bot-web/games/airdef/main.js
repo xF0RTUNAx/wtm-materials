@@ -752,7 +752,7 @@ const LOD_D = 2500; // дальше LOD_D - простая модель само
 function hangLoad(g, stations, load, plane, inBay = false, outL = null) {
   const out = [], seatL = [], pmH = plane ? planeMeta(plane) : null, outSt = new Set((inBay && outL) || []), ord = stOrder(stations.length, !!(pmH && pmH.heli)); let oi = 0; // порядок развески - как у игрока (models.js stOrder)
   for (const l of [...load].sort((x, y) => AG[y.key].mass - AG[x.key].mass)) for (let k = 0; k < l.n && oi < ord.length; k++) {
-    const st = ord[oi++], W = AG[l.key], p = stations[st]; if (!p) continue;
+    const st = ord[oi++], W = AG[l.key], p = stations[st]; if (!p || (inBay && W.kind === 'ecm')) continue; // у малозаметных станция помех встроенная - в отсеке её нет
     const m = pylonMesh(l.key, W, weaponGeo, wMat); if (weaponPending(l.key)) wantWeapon(l.key); // пришла - самолёты пересоберутся
     m.position.set(W.kind === 'tbm' ? 0 : p.x, p.y - (W.vis.hang ?? W.vis.r) - 0.05, p.z); g.add(m); out.push({ m, l, k, out: outSt.has(st) }); if (W.kind !== 'tbm' && (!inBay || outSt.has(st))) seatL.push({ m, st, key: l.key, W }); // «Кинжал» - под фюзеляжем по оси
   }

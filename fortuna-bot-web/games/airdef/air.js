@@ -94,7 +94,7 @@ export function createAir(C) {
     if (seatExtra) { ship.remove(seatExtra); seatExtra = null; }
     const seatL = [];
     for (const l of loadout) for (const st of l.st) {
-      const p = stations[st], W0 = AG[l.key].vis; if (!p) continue; const m = pylonMesh(l.key, AG[l.key], C.weaponGeo, C.mats.wMat, !!craft.heli); /* пока грузится своя модель, стоит подходящая из загруженных - у неё точек может быть меньше (F-100D, МиГ-23: шесть) */ m.position.set(p.x, p.y - (W0.hang ?? W0.r) - 0.05, p.z); // hang - у ракет с гондолой под корпусом
+      const p = stations[st], W0 = AG[l.key].vis; if (!p || (shipInternal && AG[l.key].kind === 'ecm' && !shipOut.has(st)) /* у малозаметных станция помех встроенная - в отсеке её нет */) continue; const m = pylonMesh(l.key, AG[l.key], C.weaponGeo, C.mats.wMat, !!craft.heli); /* пока грузится своя модель, стоит подходящая из загруженных - у неё точек может быть меньше (F-100D, МиГ-23: шесть) */ m.position.set(p.x, p.y - (W0.hang ?? W0.r) - 0.05, p.z); // hang - у ракет с гондолой под корпусом
       m.userData.st = st; m.visible = !shipInternal || shipOut.has(st); ship.add(m); pylonMeshes.push(m); seatL.push({ m, st, key: l.key, W: AG[l.key] }); // во внутренних отсеках - не видно
     }
     if (hasPod && podPos) { const m = podModel() || new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 2.4, 10).rotateX(Math.PI / 2), new THREE.MeshPhongMaterial({ color: 0x5a636c })); m.position.copy(podPos); ship.add(m); pylonMeshes.push(m); seatL.push({ m, pod: true }); } // LITENING или цилиндр

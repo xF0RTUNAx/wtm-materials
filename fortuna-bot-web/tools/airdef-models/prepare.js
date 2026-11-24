@@ -243,7 +243,6 @@ const CONFIG = {
   // GBU-10 — PhilCiborowski, Thingiverse (CC BY; 1/72, мм): снизу «пенёк» для печати — долой
   w_gbu10: { src: new URL('./own/gbu10.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 1024, nTex: () => 512, pickMesh: /./, own: true }, // GBU-10 Paveway: своя модель (Blender, own/gbu10.glb)
   // станция помех ELTA 8222 — Original_linny, Thingiverse (CC BY; 1/48, мм): и для запада, и пока вместо «Сорбции» (Mark 2026-10-19)
-  w_ecm: { src: `${DL}/stl-glb/elta8222.glb`, scale: 0.048, axes: (x, y, z) => [x, z, -y], tex: () => 256, pickMesh: /./, crease: 35, colors: { '': [0.2, 0.21, 0.2] } },
   w_kh101: { src: new URL('./own/kh101.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 1024, nTex: () => 512, pickMesh: /./, own: true, groups: (c) => (/(^|\/)wing1/.test(c.path) ? 'wing1' : /(^|\/)wing2/.test(c.path) ? 'wing2' : 'body') }, // Х-101: своя модель (Blender, own/kh101.glb)
   w_kh555: { src: new URL('./own/kh555.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 512, nTex: () => 512, pickMesh: /./, own: true }, // Х-555: своя модель (Blender, own/kh555.glb)
   w_kalibr: { src: new URL('./own/w_kalibr.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 1024, nTex: () => 512, pickMesh: /./, own: true }, // 3М14 «Калибр»: своя модель (Blender, own/w_kalibr.glb)
