@@ -29,7 +29,7 @@ const CSS = U(`
 #endView { position: absolute; inset: 0; overflow: hidden; }
 /* пока открыт итог - интерфейс боя (HUD, кнопки, подсказки, чат, метки) не поверх него */
 body.endOn #hudc, body.endOn #hud, body.endOn #mute, body.endOn #pause, body.endOn #exit, body.endOn #perf, body.endOn #hint, body.endOn #msg, body.endOn #warn, body.endOn #ask, body.endOn #touch, body.endOn #opHud,
-body.endOn #netChat, body.endOn #plPanel, body.endOn #plBtn, body.endOn #netPlan, body.endOn #evBtn, body.endOn #evPanel, body.endOn #dtop, body.endOn #dside, body.endOn #dshelf, body.endOn #wBar, body.endOn #mapNav, body.endOn #lsnPanel { display: none !important; }
+body.endOn #netChat, body.endOn #plPanel, body.endOn #plBtn, body.endOn #netPlan, body.endOn #mkPlan, body.endOn #evBtn, body.endOn #evPanel, body.endOn #dtop, body.endOn #dside, body.endOn #dshelf, body.endOn #wBar, body.endOn #mapNav, body.endOn #lsnPanel { display: none !important; }
 #endView .num, #end .num { font-family: 'Oswald', 'Golos Text', sans-serif; font-variant-numeric: tabular-nums; } /* цифры итогов - Oswald, как заголовок (Mark 2026-10-27: моноширинный «выдавал ИИ»); tabular - счёт при отсчёте не дрожит */
 #endView .ic { width: 1em; height: 1em; fill: currentColor; display: inline-block; vertical-align: -0.14em; flex: none; }
 #endBtns { position: absolute; display: flex; gap: 1.2u; z-index: 3; }

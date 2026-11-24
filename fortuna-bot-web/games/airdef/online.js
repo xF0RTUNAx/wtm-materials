@@ -565,6 +565,18 @@ export function createOnline(C, ctrls) {
         : { kind: 'air', era: 2, mode: 'arcade', sideAir: 'east', map: 'city', targets: C.S.objects.filter((o) => !o.noTarget).slice(0, 3).map((o) => o.id), waves: 3, wave: 1, state: 'plan', valueK: 0, T: 0 };
       N.send = () => {}; enterBattle(); return;
     }
+    if (/^matk[1-6]?$/.test(name)) { // сбор волны «Мульти-волны» онлайн без сервера: matkN - в атакующей команде N человек (по умолчанию 3); &pside=east|west, &pbud=очки, &phave=1 - часть наряда уже есть
+      const n = +name.slice(4) || 3, qp = new URLSearchParams(location.search), atkS = qp.get('pside') === 'west' ? 'west' : 'east', defS = atkS === 'east' ? 'west' : 'east', bud = +qp.get('pbud') || 150;
+      const al = ['xFORTUNAx', 'Sokol_77', 'Viper', 'Гром_52', 'Ястреб', 'Strela_21'].slice(0, n).map((nm, i) => P(i + 1, nm, atkS, { ready: i === 1, budget: bud }));
+      N.me = { id: 1, name: 'xFORTUNAx' }; N.battle = { kind: 'multi', era: 4, mode: 'arcade', map: 'winter', atk: atkS, round: 1, rounds: 2, targets: [], wave: 1, waves: 1, state: 'plan', valueK: 0, T: 0, V: 0, v0: 1 };
+      Object.assign(N.room, { kind: 'multi', size: n, era: 4, map: 'winter', state: 'plan', left: 38, wave: 1, atk: atkS, players: [...al, ...[7, 8, 9].slice(0, n).map((id) => P(id, 'ПВО-' + id, defS, {}))] });
+      C.netBattle(N, { defSide: defS, era: 4, mode: 'arcade', game: 'multi', map: 'winter' });
+      const T = C.S.objects.filter((o) => !o.noTarget).map((o) => 'o' + o.id);
+      N.room.allies = al.map((p, i) => ({ id: p.id, name: p.name, cost: [0, 96, 40, 148, 0, 72][i], tg: i === 1 ? { [T[0]]: 5, [T[1]]: 2 } : i === 2 ? { [T[1]]: 4 } : i === 3 ? { [T[4] || T[0]]: 6 } : {}, tbn: i === 1 && n > 4 ? { [atkS === 'east' ? 'r17' : 'lance']: 1 } : {} }));
+      if (qp.get('phave')) { const k2 = atkS === 'east' ? ['kalibr', 'shahed', 'kh55d', 'r17'] : ['tomahawk', 'uav_w', 'quail', 'lance'], u = (t, m) => Array.from({ length: m }, () => ({ tgt: t ? +t.slice(1) : null, sam: false }));
+        N.battle.myPlan = { n: { [k2[0]]: 5, [k2[1]]: 6, [k2[2]]: 3, [k2[3]]: 1 }, cfg: { [k2[0]]: { pts: [], alt: null, t: null, sam: false, tgt: null, units: [...u(T[1], 4), ...u(null, 1)] }, [k2[1]]: { pts: [], alt: null, t: null, sam: false, tgt: null, units: u(T[0], 6) }, [k2[2]]: { pts: [], alt: null, t: null, sam: false, tgt: null, units: Array.from({ length: 3 }, () => ({ sam: true })) }, [k2[3]]: { pts: [], alt: null, t: null, sam: false, tgt: null, units: u(T[1], 1) } } }; }
+      N.chat = [{ id: 2, name: 'Sokol_77', text: 'Беру авиабазу' }]; N.send = () => {}; N.ready = (v) => { al[0].ready = v; ctrls.defense.netSync(); }; enterBattle(); return;
+    }
     C.setup.game = 'online'; C.menu.panel(true); C.menu.render();
   }
   return { N, panel, primary, primaryText, onClick, mock, again() {

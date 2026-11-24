@@ -16,7 +16,7 @@ import { CITY, mulberry32 } from './city.js?v=20261124a';
 import { weaponHasModel } from './models.js?v=20261124a';
 import { LNCH, lnchToWorld, trainable, yawGoal } from './launchers.js?v=20261124a';
 import { ico, iconize, capsHtml, tgtRowHtml, tgtLabel, tgtChoices } from './icons.js?v=20261124a';
-import { SAM, SAM_COST, SAM_TYPE, AG, eqOf, MULTI, CARRIERS, THREAT, COMBINED, DEFENSE, multiBudget, multiItems, threatOf, multiCap, multiSamCost, multiSamCap, multiSamOk, multiSamFree } from './arsenal.js?v=20261124a';
+import { SAM, SAM_COST, SAM_TYPE, AG, eqOf, MULTI, CARRIERS, THREAT, COMBINED, DEFENSE, multiBudget, multiItems, MULTI_LINES, threatOf, multiCap, multiSamCost, multiSamCap, multiSamOk, multiSamFree } from './arsenal.js?v=20261124a';
 import { samClass, samCost, samCostFor, LIMIT1 } from './sim/online.js?v=20261124a';
 import { TEAM_NAME, TBM_RULE, TBM_EXCL, tbmOf, tbmCheck, sumN } from './sim/online-multi.js?v=20261124a';
 const esc = (x) => String(x ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -72,7 +72,7 @@ export function createDefense(C) {
   // ═════════════ Тактическая карта ═════════════
   const w2s = (x, z) => [C.VW / 2 + (x - view.cx) * view.k, C.VH / 2 + (z - view.cz) * view.k];
   const s2w = (px, py) => [view.cx + (px - C.VW / 2) / view.k, view.cz + (py - C.VH / 2) / view.k];
-  function fit() { view.cx = 500; view.cz = -300; view.k = Math.max(60, Math.min(C.VW - (IS_TOUCH ? 250 : 300), C.VH)) / 22000; } // узкое окно - не меньше 60 px
+  function fit() { if (kistOn()) return kistFit(); view.cx = 500; view.cz = -300; view.k = Math.max(60, Math.min(C.VW - (IS_TOUCH ? 250 : 300), C.VH)) / 22000; } // узкое окно - не меньше 60 px
   // присваивание размера очищает холст - только если размер правда другой (иначе динамическое разрешение 3D-кадра «моргало» картой)
   function sizeMap() { const k = Math.min(2, devicePixelRatio || 1), w = Math.round(C.VW * k), h = Math.round(C.VH * k); if (tm.width !== w || tm.height !== h) { tm.width = w; tm.height = h; } }
   // «тень» зоны: на высоте 300 м над землёй по 72 направлениям - докуда антенна (или глаз расчёта) видит без перерыва
@@ -104,10 +104,11 @@ export function createDefense(C) {
     const base = C.menu.mapBase(1600), [x0, y0] = w2s(-CITY.HALF, -CITY.HALF), sz = 2 * CITY.HALF * view.k;
     tx.globalAlpha = 0.85; tx.drawImage(base, x0, y0, sz, sz); tx.globalAlpha = 1;
     tx.font = '600 11px "Golos Text", -apple-system, Segoe UI, sans-serif'; tx.textAlign = 'center';
+    const mk = kistOn() ? new Set(tKeys()) : null;
     // объекты города с прочностью
     for (const o of C.S.objects) {
       if (o.key === 'bridge' && view.k < 0.06 && !st.targets?.includes(o)) continue;
-      const [px, py] = w2s(o.x, o.z), tgt = st.targets && st.targets.includes(o) && (st.phase === 'wave' || atk());
+      const [px, py] = w2s(o.x, o.z), tgt = mk ? mk.has('o' + o.id) : st.targets && st.targets.includes(o) && (st.phase === 'wave' || atk()); // сбор волны - красные только те, на кого есть наряд
       tx.fillStyle = o.dead ? '#444' : tgt ? '#f87171' : '#fbbf24';
       tx.beginPath(); tx.moveTo(px, py - 6); tx.lineTo(px + 6, py); tx.lineTo(px, py + 6); tx.lineTo(px - 6, py); tx.closePath(); tx.fill();
       tx.fillStyle = 'rgba(0,0,0,.5)'; tx.fillRect(px - 16, py + 8, 32, 4); tx.fillStyle = o.dead ? '#444' : '#4ade80'; tx.fillRect(px - 16, py + 8, 32 * Math.max(0, o.hp / o.hpMax), 4);
@@ -115,7 +116,7 @@ export function createDefense(C) {
     }
     // зоны: выбранный комплекс - тень зоны, у остальных - тонкий круг
     const arcade = C.MODE().markers;
-    if (atk()) { drawAlloc(); drawRoutes(); drawEnemy(); drawOwn(); drawMsg(); return; }
+    if (atk()) { drawAlloc(); drawRoutes(); drawEnemy(); drawOwn(); if (kistOn() && !st.edKey) kistBadges(); else drawMsg(); return; }
     for (const u of C.S.units) {
       if (u.dead) continue;
       const [px, py] = w2s(u.pos.x, u.pos.z);
@@ -273,7 +274,7 @@ export function createDefense(C) {
       const b = Math.atan2(p[0], p[1]), [ax, ay] = w2s(Math.sin(b) * LAUNCH_R, Math.cos(b) * LAUNCH_R), [bx, by] = w2s(p[0], p[1]), cur = st.tsel === key;
       tx.globalAlpha = cur || !st.tsel ? 0.9 : 0.35; tx.strokeStyle = '#e2e8f0'; tx.lineWidth = cur ? 3 : 1.8; tx.setLineDash([12, 6]); tx.beginPath(); tx.moveTo(ax, ay); tx.lineTo(bx, by); tx.stroke(); tx.setLineDash([]);
       const rows = Object.entries(grp).sort((q, r) => q[1].t - r[1].t), mx = ax + (bx - ax) * 0.55, my = ay + (by - ay) * 0.55 - (rows.length - 1) * 7;
-      rows.forEach(([k, g], j) => { const lab = tr('{0} {1} · пуск {2}{3}', [AG[k].short, numTxt(g.ix), fmtT(g.t), AG[k].kind === 'tbm' ? tr(' · баллистика') : '']) /* номера - те же, что в карточке цели */, col = AG[k].kind === 'tbm' ? '#f87171' : RCOL[items.findIndex(([q]) => q === k) % RCOL.length]; // баллистика - красным
+      if (!kistOn() || st.edKey) rows.forEach(([k, g], j) => { const lab = tr('{0} {1} · пуск {2}{3}', [AG[k].short, numTxt(g.ix), fmtT(g.t), AG[k].kind === 'tbm' ? tr(' · баллистика') : '']) /* номера - те же, что в карточке цели */, col = AG[k].kind === 'tbm' ? '#f87171' : RCOL[items.findIndex(([q]) => q === k) % RCOL.length]; // баллистика - красным
         tx.strokeStyle = 'rgba(0,0,0,.85)'; tx.lineWidth = 3; tx.strokeText(lab, mx, my + j * 14); tx.fillStyle = col; tx.fillText(lab, mx, my + j * 14); });
       tx.globalAlpha = 1;
     }
@@ -281,6 +282,7 @@ export function createDefense(C) {
       if (key[0] !== 'o') continue; const f = forecast(key), p = posOf(key); if (!f || !p) continue;
       const [x, y] = w2s(p[0], p[1]), cnt = planComp().reduce((s0, [k]) => s0 + idxOf(k, key).length, 0);
       tx.strokeStyle = fcCol(f.k); tx.lineWidth = st.tsel === key ? 4 : 2.5; tx.beginPath(); tx.arc(x, y, 15, 0, 7); tx.stroke();
+      if (kistOn() && !st.edKey) continue; // сбор волны - метками kistBadges
       const lab = `×${cnt} · ≈ ${Math.round(f.k * 100)} %`; tx.strokeStyle = 'rgba(0,0,0,.85)'; tx.lineWidth = 3; tx.strokeText(lab, x, y + 30); tx.fillStyle = fcCol(f.k); tx.fillText(lab, x, y + 30);
     }
     if (st.tsel && st.tsel[0] === 'u') { const p = posOf(st.tsel); if (p) { const [x, y] = w2s(p[0], p[1]); tx.strokeStyle = '#fff'; tx.lineWidth = 3; tx.beginPath(); tx.arc(x, y, 18, 0, 7); tx.stroke(); } }
@@ -419,7 +421,9 @@ export function createDefense(C) {
       let best = null, bd = IS_TOUCH ? 26 : 16;
       for (const o of C.S.objects) { if (o.dead || o.noTarget) continue; const [x, y] = w2s(o.x, o.z), d = Math.hypot(x - px, y - py); if (d < bd) { bd = d; best = 'o' + o.id; } }
       for (const u of C.S.units) { if (u.dead || !samKnown(u) || !u.S.radar) continue; const [x, y] = w2s(u.pos.x, u.pos.z), d = Math.hypot(x - px, y - py); if (d < bd) { bd = d; best = 'u' + u.id; } }
+      if (!best && kistOn()) { const q = kistB.find((b) => px >= b.x - 4 && px <= b.x + b.w + 4 && py >= b.y - 4 && py <= b.y + b.h + 4); if (q) best = q.key; } // метка прогноза - та же цель
       if (st.pick) { if (!best) { say(tr('Коснитесь цели: объект или засечённый ЗРК')); snd.deny(); return; } setTkey(st.pick.k, st.pick.i, best); st.pick = null; st.tsel = best; say(`${uName(st.edKey, st.edUnit)} → «${tName(best)}»`, 2); snd.click(); afterEdit(); return; } // окно - уже новой цели
+      if (best && kistOn() && st.hand) { kistPut(best); return; } // «Кисть»: оружие в руке - каждое касание цели +1
       st.tsel = best; if (best) st.edKey = null; snd.click(); renderSide(); return;
     }
     // размещение и перенос: каждое касание - новое место («призрак» с зоной), купить или переехать - «Подтвердить»
@@ -728,6 +732,7 @@ export function createDefense(C) {
     const tOf = (i) => (wave && !info(i).launched ? info(i).t : D.units[i] ? D.units[i].t : 0), arrOf = (i) => (D.units[i] ? D.units[i].arrive : 0);
     const ts = (one ? [i0] : grp).map(tOf), t0 = Math.min(...ts), t1 = Math.max(...ts);
     let h = `<h3>${one ? uName(k, i0) : `${W.short} ${numTxt(grp)}`}${st.tsel ? ` → «${tName(st.tsel)}»` : ''}${wave ? tr(' · бой идёт') : ''}</h3>`;
+    if (st.phase === 'plan' && st.tsel) { const ty = kistHere(st.tsel); if (ty.length > 1) h += `<div class="mktabs">${ty.map(([q]) => `<button data-a="edk" data-k="${q}" class="${q === k ? 'on' : ''}" title="${AG[q].short}">${kistImg(q)}</button>`).join('')}</div>`; } // несколько типов на цели - вкладки
     if (all.length > 1) h += segH('unit', one ? st.edUnit : -1, [[-1, tr('Все здесь ({0})', [grp.length])], ...all.map((i) => [i, `${i + 1}${info(i).launched ? ico('ok', 'ii') : c.units[i] && (c.units[i].pts || c.units[i].t != null || c.units[i].alt != null) ? '•' : ''}`])]);
     if (one && info(i0).launched) { setSide(h + `<p class="hint">${iconize(tr('{0} уже пущена - её не изменить. «✓» - пущенные.', [uName(k, i0)]))}</p><div class="dact"><button class="btn" data-a="rdone">${tr('Готово')}</button></div>`); return; }
     if (wave) h += `<p class="hint">${tr('Бой идёт: можно менять только то, что ещё не пущено. Время - не раньше «сейчас» и прилёта носителя на рубеж.')}</p>`;
@@ -746,16 +751,115 @@ export function createDefense(C) {
   function renderAtkPlan() {
     { const T = tgtObjs(); if (T.length) st.targets = T; } // цели плана - те, на которые есть наряд
     if (st.edKey) return renderTypeEd();
-    if (st.tsel) return renderTgtCard();
-    const left = st.budget - planCost(), sk = attSide() === 'east' ? 'scout_e' : 'scout';
-    let h = `<h3>${tr('План волны{0}', [st.net ? tr(' · раунд {0}/{1}{2}', [st.net.battle.round, st.net.battle.rounds, st.net.room && st.net.room.left != null ? tr(' · {0} с', [st.net.room.left]) : '']) : ''])}</h3><div>${tr('Очки угрозы: <b style="color:#fde68a">{0}</b> из {1}', [left, st.budget])}</div>`;
-    h += `<div class="dcard"><div class="nm"><b>${AG[sk].short} ×1</b><span>${tr('разведчик: без боевой части, бесплатно. Засекает ПВО, летит сам с начала боя')}</span></div></div>`;
-    h += targetRows();
-    h += `<p class="hint">${tr('{0}коснитесь объекта на карте, откроется его наряд: «+» покупает единицу сразу на эту цель, там же у каждой единицы маршрут, высота и время пуска. Номера единиц («Калибр 3») те же на карте. Где ПВО противника, заранее неизвестно.', [planCost() ? '' : `<b>${tr('Соберите волну сами:')}</b> `])}</p>
-      ${st.net ? netAllies() + `<button class="btn ${st.ready ? 'alt' : ''}" data-a="ready">${st.ready ? ico('ok', 'ii') + tr('Готов (снять)') : tr('Готов')}</button><p class="hint">${tr('Волна стартует, когда все готовы или кончится время подготовки. Пустой план - волны от вас не будет.')}</p>`
-        : `<button class="btn" data-a="go" ${planCost() > 0 && left >= 0 && tKeys().length ? '' : 'disabled'}>${tr('Пуск')}</button>`}`;
-    setSide(h);
+    setSide(''); // сбор волны - «Кисть» (kistSync)
   }
+  // ── «Кисть» (Mark 2026-11-24, вариант В, Интерфейс/Выбор техники/_чистовые): сбор волны перед ударом. Внизу полоса оружия: взяли плитку (st.hand) -
+  // каждое касание цели на карте (или плашки «ПВО») +1 единица; без оружия касание выбирает цель: её наряд (плитка = «−1», шестерёнка - настройки единиц).
+  // Во время волны - прежние список целей и окно цели (renderSide0)
+  const kistEl = document.createElement('div'); kistEl.id = 'mkPlan'; document.body.appendChild(kistEl);
+  let kistH = '', kistChat = false, kistSeen = 0, kistB = [], kistMsg = null, kistWas = false;
+  const kistOn = () => !!C.S && atk() && !!st.plan && st.phase === 'plan' && st.view === 'map' && !st.over;
+  const kistZ = () => (C.VW >= 1350 && C.VH >= 700 ? 1.5 : C.VW >= 1100 && C.VH >= 620 ? 1.25 : 1); // как масштабы #mkPlan в airdef.html
+  const KST_S = { kh101: 1, kh55: 1, jassm: 1, storm: 1 }, KST_LT = { r17: 1, tochka: 1, iskander: 1, atacms: 1, prsm: 1, lance: 1 }; // _s - одна ракета без второй рядом; пусковые темнее - осветлить
+  const kistSrc = (k) => `airdef/thumbs/strike_${k}${KST_S[k] ? '_s' : ''}.webp?v=20261124a`;
+  const kistImg = (k) => `<img class="${KST_LT[k] ? 'lt' : ''}" src="${kistSrc(k)}" alt="" draggable="false" onerror="this.onerror=null;this.src='airdef/thumbs/wpn_${k}.webp?v=20261124a'">`;
+  const kistHere = (key) => planComp().filter(([k]) => !AG[k].recon).map(([k]) => [k, idxOf(k, key).length]).filter(([, n]) => n);
+  const kistGroups = () => (MULTI_LINES[attSide()] || []).map(([id, , it]) => [id, it.filter(([k]) => !st.opts.items || st.opts.items.has(k))]).filter(([, it]) => it.length);
+  function kistInfo(k) { // состояние плитки: взято, цена, почему нельзя (lock | other | full | exp)
+    const n = st.plan.n[k] || 0, c = THREAT[k] ?? 3, tbm = AG[k].kind === 'tbm', R = tbm ? tbmRoom(k) : null, ex = TBM_EXCL.includes(k); let why = '';
+    if (lockedStrike(k)) why = 'lock';
+    else if (R && R.deny) why = ex || TBM_EXCL.some((e) => R[e] && e !== k) ? 'other' : 'full';
+    else if (capDeny(k)) why = 'full';
+    else if (c > st.budget - planCost()) why = 'exp';
+    return { k, n, c, tbm, ex, why, deny: R && R.deny ? `${R.deny} ${st.net ? tr('на команду') : tr('на волну')}` : '', cap: tbm ? tbmRoom().rule[ex ? k : 'total'] : multiCap(k) };
+  }
+  function kistPut(key) {
+    const ok = addTo(key, st.hand); st.tsel = key; st.edKey = null;
+    if (ok) { snd.click(); afterEdit(); } else renderSide();
+  }
+  // все цели - между шапкой и полосой оружия (снизу на компьютере ещё полоса наряда)
+  function kistFit() {
+    const Z = kistZ(), ob = C.S.objects.filter((o) => !o.noTarget), xs = ob.map((o) => o.x), zs = ob.map((o) => o.z); if (!ob.length) return;
+    const x0 = Math.min(...xs), x1 = Math.max(...xs), z0 = Math.min(...zs), z1 = Math.max(...zs), bh = Z > 1 ? 84 : C.VH < 340 ? 62 : 68, rb = kistEl.getBoundingClientRect ? kistEl.getBoundingClientRect() : null;
+    const t = (Z > 1 ? 34 : 24) * Z, b0 = (rb && rb.height && rb.bottom > 0 ? rb.bottom : C.VH - 10) - (bh + (Z > 1 ? 92 : 34)) * Z, w = Math.max(120, C.VW - (Z > 1 ? 20 : 94) - 260 * Z);
+    view.k = clamp(Math.min(Math.max(60, Math.min(C.VW, C.VH)) / 22000, Math.max(60, b0 - t) / Math.max(1000, z1 - z0), w / Math.max(1000, x1 - x0)), 0.008, 0.6);
+    view.cx = (x0 + x1) / 2; view.cz = (z0 + z1) / 2 - ((t + b0) / 2 - C.VH / 2) / view.k;
+  }
+  // метки у целей: прогноз, голубое «+N» союзников; на большом экране - ещё мини-картинки состава. Снизу нет места или там подпись соседа - справа от цели
+  const kistPic = {};
+  function kistPicOf(k) { if (!kistPic[k] && typeof Image !== 'undefined') { const im = kistPic[k] = new Image(); im.onerror = () => { im.onerror = null; im.src = `airdef/thumbs/wpn_${k}.webp?v=20261124a`; }; im.src = kistSrc(k); } return kistPic[k]; }
+  const kistNW = {}; function kistNameW(n) { if (!kistNW[n]) { const f = tx.font; tx.font = '600 11px "Golos Text", -apple-system, Segoe UI, sans-serif'; kistNW[n] = (tx.measureText(n).width || 60) / 2 + 2; tx.font = f; } return kistNW[n]; } // половина ширины подписи цели
+  function kistBadges() {
+    const Z = kistZ(), big = Z > 1, N = st.net, me = N && N.me && N.me.id, AT = {}, ks = new Set(tKeys().filter((k) => k[0] === 'o'));
+    for (const p of (N && N.room && N.room.allies) || []) if (p.id !== me) for (const [t, n] of Object.entries(p.tg || {})) if (t[0] === 'o') { AT[t] = (AT[t] || 0) + n; ks.add(t); }
+    if (st.tsel && st.tsel[0] === 'o') ks.add(st.tsel);
+    const obs = C.S.objects.filter((o) => !o.noTarget).map((o) => ({ o, p: w2s(o.x, o.z), hw: kistNameW(o.name) })), bt = (kistEl.lastBar || C.VH) - 2, L = [], fs = Math.round(12.5 * Z), h = Math.round(19 * Z), f1 = `600 ${fs}px Oswald, "Arial Narrow", sans-serif`;
+    tx.save(); tx.textAlign = 'left'; tx.textBaseline = 'middle'; tx.font = f1;
+    for (const { o, p: [x, y] } of obs) {
+      const key = 'o' + o.id; if (!ks.has(key)) continue;
+      const f = forecast(key), it = kistHere(key), sel = key === st.tsel, pc = it.length && f ? `${Math.round(f.k * 100)} %` : '', al = AT[key] ? `+${AT[key]}` : ''; if (!pc && !al) continue;
+      const wp = pc ? tx.measureText(pc).width + 10 * Z : 0, wa = al ? tx.measureText(al).width + 10 * Z : 0, pics = big ? it.map(([k, n]) => [k, '×' + n, tx.measureText('×' + n).width + 5 * Z]) : [];
+      let w = wp + wa + pics.reduce((q, r) => q + 38 * Z + r[2], 0), bx = x - w / 2, by = y + 14 * Z;
+      const hit = (X, Y) => obs.some((q) => q.o !== o && q.p[0] + q.hw > X && q.p[0] - q.hw < X + w && q.p[1] + 7 > Y && q.p[1] - 21 < Y + h);
+      const spots = () => [[x - w / 2, y + 14 * Z], [x + 20, y - h / 2 + 1], [x - 20 - w, y - h / 2 + 1]].find(([X, Y]) => Y + h <= bt && !hit(X, Y)); // под целью, справа, слева
+      let at = spots(); if (!at && pics.length) { w -= pics.reduce((q, r) => q + 38 * Z + r[2], 0); pics.length = 0; at = spots(); } if (at) [bx, by] = at; else { bx = x - w / 2; if (by + h > bt) { bx = x + 20; by = y - h / 2 + 1; } }
+      L.push({ key, x: bx, y: by, w, h, sel, pc, wp, al, wa, pics, col: fcCol(f ? f.k : 0) });
+    }
+    const ov = (a, b) => a.x < b.x + b.w + 2 && a.x + a.w > b.x - 2 && a.y < b.y + b.h && a.y + a.h > b.y;
+    for (const a of L) if (a.pics.length && L.some((b) => b !== a && ov(a, b) && !(a.sel && b.pics.length))) { const d = a.pics.reduce((q, r) => q + 38 * Z + r[2], 0); a.pics = []; a.w -= d; a.x += d / 2; } // налезают - без картинок
+    L.sort((a, b) => a.sel - b.sel);
+    for (const b of L) {
+      tx.fillStyle = 'rgba(14,17,12,.9)'; tx.fillRect(b.x, b.y, b.w, b.h); tx.strokeStyle = b.sel ? '#e8b04a' : '#515b48'; tx.lineWidth = b.sel ? 2 : 1; tx.strokeRect(b.x - (b.sel ? 1 : 0), b.y - (b.sel ? 1 : 0), b.w + (b.sel ? 2 : 0), b.h + (b.sel ? 2 : 0));
+      let q = b.x; const my = b.y + b.h / 2 + 1;
+      for (const [k, lab, lw] of b.pics) { const im = kistPicOf(k), pw = 36 * Z, ph = b.h - 2; tx.fillStyle = '#2b3229'; tx.fillRect(q + 1, b.y + 1, pw, ph);
+        if (im && im.complete && im.naturalWidth) { const s1 = Math.min(pw * 1.1 / im.naturalWidth, ph * 1.1 / im.naturalHeight), iw = im.naturalWidth * s1, ih = im.naturalHeight * s1; tx.drawImage(im, q + 1 + (pw - iw) / 2, b.y + 1 + (ph - ih) / 2, iw, ih); }
+        tx.fillStyle = '#f3efe2'; tx.fillText(lab, q + pw + 3 * Z, my); q += 38 * Z + lw; }
+      if (b.pc) { tx.fillStyle = b.col; tx.fillText(b.pc, q + 5 * Z, my); q += b.wp; }
+      if (b.al) { tx.fillStyle = '#2c4763'; tx.fillRect(q, b.y, b.wa, b.h); tx.fillStyle = '#cfe5fb'; tx.fillText(b.al, q + 5 * Z, my); }
+    }
+    tx.restore(); kistB = L;
+  }
+  const kistPips = (n, f) => Array.from({ length: n }, (_, i) => `<i class="mkp ${f(i)}"></i>`).join('');
+  function kistSync() {
+    const on = kistOn(); if (document.body.classList.contains('mkist') !== on) document.body.classList.toggle('mkist', on);
+    document.body.classList.toggle('mked', on && !!st.edKey); document.body.classList.toggle('mkchat', on && kistChat);
+    if (!on) { if (kistWas) { kistWas = false; kistH = ''; kistEl.innerHTML = ''; kistB = []; kistMsg = null; kistChat = false; } st.hand = null; return; }
+    const first = !kistWas; kistWas = true;
+    const N = st.net, r = N && N.room, left = st.budget - planCost(), tb = tbmRoom(), key = st.tsel, G = kistGroups(), me = N && N.me && N.me.id, ready = !!st.ready, empty = !planCost() || (!N && (left < 0 || !tKeys().length));
+    // баллистика: мест на команду; исключительная занимает все (у 5-6 игроков - сколько её можно), голубые - союзников
+    const exk = TBM_EXCL.find((e) => tb[e]), bigT = tb.rule.total > 2, tot = exk && bigT ? tb.rule[exk] : tb.rule.total, oth = Math.min(tot, exk && !bigT ? (tb.other ? tot : 0) : tb.other), own = exk && !bigT ? tot - oth : tb.used - tb.other;
+    const cell = (h, c = '') => `<span class="ncell ${c}">${h}</span>`, hasTbm = G.some(([id]) => id === 'ballistic');
+    const head = (N ? cell(`<small>${tr('Раунд')}</small><b>${N.battle.round}/${N.battle.rounds}</b>`) : '') + cell(`<small>${tr('очки')}</small><b>${left}</b><small class="of">/ ${st.budget}</small><span class="mkbar"><i style="width:${st.budget ? Math.max(0, Math.min(100, 100 * (1 - left / st.budget))) : 0}%"></i></span>`, left < 5 ? 'rd' : 'am')
+      + (hasTbm ? cell(`<span class="mki">${ico('capTbm')}</span>${kistPips(tot, (i) => (i < oth ? 'al' : i < oth + own ? 'f' : ''))}`) : '');
+    const mini = ([k, n]) => `<span class="mk1"><span>${kistImg(k)}</span>×${n}</span>`, sm = kistHere('sam'), fresh = N && !kistChat && N.chat.length > kistSeen;
+    const row2 = (N ? `<button class="mksq${kistChat ? ' on' : ''}" data-a="kchat" aria-label="${tr('Сообщение команде')}">${ico('send')}${fresh ? '<u></u>' : ''}</button>` : '') + `<button class="ncell mksam${key === 'sam' ? ' on' : ''}" data-a="ksam"><span class="mki">${ico('radar')}</span><b>${tr('ПВО')}</b>${key === 'sam' ? '' : sm.slice(0, 3).map(mini).join('')}</button>`;
+    // союзники и наряд выбранной цели
+    const al = ((r && r.allies) || []).filter((p) => p.id !== me), alH = al.length ? `<div class="mkal">${al.map((p) => { const q = r.players.find((z) => z.id === p.id); return `<div><span>${esc(p.name)}</span><b>${p.cost}</b><i>${q && q.ready ? ico('ok') : ''}</i></div>`; }).join('')}</div>` : '';
+    let ord = '';
+    if (key) { const f = forecast(key), it = kistHere(key), nAl = key[0] === 'o' ? al.reduce((q, p) => q + ((p.tg || {})[key] || 0), 0) : 0, pc = f ? Math.round(f.k * 100) : 0, nmT = key === 'sam' ? tr('ПВО') : tName(key);
+      ord = `<div class="mkord"><div class="t"><b class="${nmT.length > 14 ? 'lg' : ''}">${nmT}</b>${f ? `<span class="p"><span class="mkbar"><i style="width:${pc}%;background:${fcCol(f.k)}"></i></span><em style="color:${fcCol(f.k)}">${pc} %</em></span>` : ''}</div><div class="c">${it.map(([k, n]) => `<button class="mk2" data-a="tdec" data-k="${k}" title="${AG[k].short}"><span>${kistImg(k)}</span><b><i>−</i>×${n}</b></button>`).join('')}${nAl ? `<span class="al">+${nAl}</span>` : ''}</div>${it.length ? `<button class="mkcg" data-a="ked" aria-label="${tr('Маршрут')}">${ico('cog')}</button>` : ''}</div>`; }
+    // полоса оружия
+    const nAll = G.reduce((q, [, it]) => q + it.length, 0), pipsOf = (q) => (q.tbm ? `<span class="pp">${kistPips(q.ex ? tb.rule.total : 1, () => '')}</span>` : '');
+    const tile = (k) => { const q = kistInfo(k), off = q.why && !q.n;
+      return `<button class="mkt${st.hand === k ? ' on' : ''}${off ? ' no ' + q.why : ''}" data-a="hand" data-k="${k}"><span class="im">${kistImg(k)}</span><span class="pr">${q.c}</span>${q.n ? `<b class="n">×${q.n}</b>` : pipsOf(q)}<span class="nm">${AG[k].short.replace('Kampfdrohne', 'Kampf\u00ADdrohne')}</span>${off ? `<span class="wh"><span class="nwhy${q.why === 'lock' ? ' lk' : ''}">${q.why === 'lock' || q.why === 'other' ? ico('lock') : q.why === 'exp' ? tr('дорого') : tr('лимит')}</span></span>` : ''}</button>`; };
+    const strip = G.map(([, it]) => `<div class="g" style="--k:${it.length}">${it.map(([k]) => tile(k)).join('')}</div>`).join('');
+    const go = N ? `<button class="mkgo${ready ? ' dn' : empty ? ' off' : ''}" data-a="ready">${tr('Готов')}${ready ? `<i>${ico('ok')}</i>` : ''}</button>` : `<button class="mkgo${empty ? ' off' : ''}" data-a="go" ${empty ? 'disabled' : ''}>${tr('Пуск')}</button>`;
+    // оружие в руке и единицы без цели
+    const hq = st.hand ? kistInfo(st.hand) : null, via = hq && (multiItems(attSide()).find(([q]) => q === st.hand) || [])[1];
+    const hand = hq ? `<span class="ncell mkh"><span class="im">${kistImg(st.hand)}</span><b>${AG[st.hand].short}</b><small>${hq.n}/${hq.cap}</small>${via ? `<img class="via" src="airdef/thumbs/air_${via}.webp?v=20261124a" alt="" onerror="this.style.display='none'">` : ''}</span>` : `<span class="ncell mkh none"><b>${tr('Выберите оружие, затем цель')}</b></span>`;
+    const fr = kistHere(null), freeH = fr.length ? `<button class="ncell mkfr" data-a="spread" title="${tr('Раздать поровну')}"><b class="q">?</b>${fr.slice(0, 3).map(mini).join('')}<i>${ico('target')}</i></button>` : '';
+    const h = `<div class="mktop"><div class="nhead">${head}</div><div class="mkr2">${row2}</div></div><div class="mkright">${alH}${ord}</div><div class="mkmsg"></div>
+      <div class="mklow">${freeH}<div class="mkr3"><button class="mksq" data-a="kfit" aria-label="${tr('Весь район')}">${ico('fullscreen')}</button>${hand}${freeH}${ord}</div><div class="mkbot"><div class="mkst${nAll > 11 ? ' many' : ''}" style="--n:${nAll};--g:${G.length}">${strip}</div>${go}</div></div>`;
+    if (h !== kistH) { kistH = h; kistMsg = null; kistEl.innerHTML = h; const q = (c) => (kistEl.querySelector ? kistEl.querySelector(c) : null), R = q('.mkright'); // не хватает высоты справа - наряд вместо союзников
+      if (R && R.classList && R.scrollHeight > R.clientHeight + 1) R.classList.add('tight'); const bar = q('.mkbot'); if (bar && bar.getBoundingClientRect) kistEl.lastBar = bar.getBoundingClientRect().top; }
+    if (first) fit();
+  }
+  function kistTick() { // всплывающее сообщение (отказ) - над полосой: подсказка на карте под ней не видна
+    const m = st.msgT > 0 && !st.edKey ? st.msg : ''; if (m === kistMsg) return; kistMsg = m;
+    const e = kistEl.querySelector ? kistEl.querySelector('.mkmsg') : null; if (e && e.classList) { e.innerHTML = m; e.classList.toggle('on', !!m); }
+  }
+  kistEl.onclick = (e) => side.onclick(e);
+  kistEl.addEventListener('pointerdown', holdOn);
   function multiDefHint() {
     const comp = st.opts.comp || aiComp(), tbm = comp.filter(([k]) => AG[k].kind === 'tbm'), abm = Object.entries(SAM).filter(([k, s]) => s.abm && s.side === dside() && !lockedSam(k));
     return `<p class="hint">${tr('Ожидается: {0}.', [comp.filter(([k]) => !AG[k].recon).map(([k, n, , v]) => `${AG[k].short} ×${n}${v ? ` (${CARRIERS[v].name})` : ''}`).join(', ')])}</p>` +
@@ -770,7 +874,7 @@ export function createDefense(C) {
       (atk() ? '' : `<p class="hint">${abm.length ? abm.map((u) => `${u.S.short}: ${!u.emit ? tr('РЛС выключена!') : u.reloadT > 0 ? tr('перезарядка {0} с', [Math.ceil(u.reloadT)]) : tr('ракет {0}', [u.ammo])}`).join(' · ') : tr('Противоракетных комплексов нет - баллистику не сбить.')}</p>`);
   }
   function watchBtns() { return `<div class="dact"><button class="btn alt" data-a="watch">${tr('Смотреть')}${ico('tri', 'ii')}</button>${st.net ? '' : `<button class="btn alt" data-a="speed">${ico('speed', 'ii')}${tr('Время ×{0}', [st.timeK === 1 ? 4 : 1])}</button>`}</div>`; }
-  function renderSide() { side.classList.remove('dpl', 'plc'); renderSide0(); shelfSync(); } // панель расстановки (.dpl) включает dsPlan; полка внизу - shelfSync
+  function renderSide() { side.classList.remove('dpl', 'plc'); renderSide0(); shelfSync(); kistSync(); } // панель расстановки (.dpl) включает dsPlan; полка внизу - shelfSync
   function renderSide0() {
     const S = C.S; if (!S) return;
     if (st.net && st.multi && st.phase === 'debrief') return renderNetRes();
@@ -852,6 +956,16 @@ export function createDefense(C) {
     }
     if (a === 'ed') { st.edKey = b.dataset.k; st.edUnit = null; st.tsel = null; st.pick = null; cfgOf(st.edKey); snd.click(); renderSide(); return; }
     if (a === 'ued' || a === 'ged') { st.edKey = b.dataset.k; st.edUnit = a === 'ued' ? +b.dataset.i : null; st.pick = null; cfgOf(st.edKey); snd.click(); renderSide(); return; } // из карточки цели: единица / все этого типа здесь
+    if (a === 'hand') { const k = b.dataset.k, q = kistInfo(k);
+      if (st.hand === k) st.hand = null;
+      else if (q.why && !q.n) { say(q.why === 'lock' ? LOCK_SAY : q.tbm && q.deny ? q.deny : q.why === 'exp' ? tr('Не хватает очков угрозы') : capDeny(k) || '', 3); snd.deny(); renderSide(); return; }
+      else st.hand = k;
+      snd.click(); renderSide(); return; }
+    if (a === 'ksam') { if (st.hand) { kistPut('sam'); return; } st.tsel = st.tsel === 'sam' ? null : 'sam'; snd.click(); renderSide(); return; }
+    if (a === 'kfit') { fit(); snd.click(); return; }
+    if (a === 'kchat') { kistChat = !kistChat; kistSeen = st.net ? st.net.chat.length : 0; snd.click(); renderSide(); return; }
+    if (a === 'ked') { const ty = kistHere(st.tsel); if (!ty.length) { snd.deny(); return; } st.hand = null; st.edKey = ty[0][0]; st.edUnit = null; st.pick = null; cfgOf(st.edKey); snd.click(); renderSide(); return; }
+    if (a === 'edk') { st.edKey = b.dataset.k; st.edUnit = null; st.pick = null; cfgOf(st.edKey); snd.click(); renderSide(); return; }
     if (a === 'tsel') { st.tsel = b.dataset.v; st.edKey = null; snd.click(); renderSide(); return; }
     if (a === 'tclose') { st.tsel = null; snd.click(); renderSide(); return; }
     if (a === 'tinc' || a === 'tdec') { const k = b.dataset.k, ok = a === 'tinc' ? addTo(st.tsel, k) : removeFrom(st.tsel, k); if (ok) { snd.click(); afterEdit(); } else if (a === 'tdec') snd.deny(); return; }
@@ -1460,7 +1574,7 @@ export function createDefense(C) {
   function start(opts = {}) {
     st.opts = opts; st.aiPlace = null; C.ended = false; C.lastGame = opts.lastGame || 'defense';
     st.rnd = mulberry32((Date.now() & 0xffffff) ^ 0x2468);
-    topH = ''; st.bud0K = null; st.multi = opts.multi || null; st.defSide = null; st.flash = new Map(); st.watch = null; st.timeK = 1; st.cue = null; st.watchNextAt = null; st.edKey = null; st.edUnit = null; st.addQ = {}; st.addT = 0; st.alertT = 0;
+    topH = ''; st.bud0K = null; st.multi = opts.multi || null; st.defSide = null; st.flash = new Map(); st.watch = null; st.timeK = 1; st.cue = null; st.watchNextAt = null; st.edKey = null; st.edUnit = null; st.hand = null; st.addQ = {}; st.addT = 0; st.alertT = 0;
     if (st.multi) { st.defSide = st.multi === 'atk' ? (C.setup.side === 'east' ? 'west' : 'east') : C.setup.side; opts.waves = 1; }
     C.newBattle({ defSide: dside(), era: C.setup.era, rnd: st.rnd, game: st.multi ? 'multi' : null });
     C.hooks = atk() ? atkHooks() : defHooks();
@@ -1529,14 +1643,14 @@ export function createDefense(C) {
     st.rnd = mulberry32((Date.now() & 0xffffff) ^ 0x1357);
     C.hooks = role === 'atk' ? atkHooks() : defHooks();
     Object.assign(st, { phase: 'plan', wave: 1, waves: 1, budget: 0, score: 0, downs: 0, waveDowns: 0, leaked: 0, waveLeak: 0, lostUnits: 0, placing: null, draft: null, sel: null, moving: false, view: 'map', op: null, over: false, win: null, ready: false, netRes: null,
-      watch: null, timeK: 1, cue: null, watchNextAt: null, edKey: null, edUnit: null, tsel: null, pick: null, addQ: {}, addT: 0, alertT: 0, sirenC: false, sirenT: false, flash: new Map(), mres: { launched: 0, down: 0, hits: 0, carriers: 0 }, targets: [] });
+      watch: null, timeK: 1, cue: null, watchNextAt: null, edKey: null, edUnit: null, tsel: null, pick: null, addQ: {}, addT: 0, alertT: 0, hand: null, sirenC: false, sirenT: false, flash: new Map(), mres: { launched: 0, down: 0, hits: 0, carriers: 0 }, targets: [] });
     st.plan = N.battle && N.battle.myPlan ? N.battle.myPlan : { n: {}, cfg: {} }; // переподключение: свой план - от сервера (иначе первая правка затёрла бы его пустым)
     st.value0 = C.S.objects.reduce((q, o) => q + (o.noTarget ? 0 : o.value), 0) || 1;
     C.ev = N.ev;
     C.syncUnits(); seen.clear();
     document.body.classList.add('defense', 'dmap'); document.body.classList.toggle('matk', role === 'atk'); document.body.classList.remove('evon', 'evopen');
     sizeMap(); fit(); netSync();
-    say(role === 'atk' ? tr('Раунд {0}: ваша команда собирает волну - коснитесь целей на карте', [B.round]) : tr('Раунд {0}: вы - ПВО. Ставьте комплексы: что и куда полетит, неизвестно', [B.round]), 5);
+    if (role !== 'atk') say(tr('Раунд {0}: вы - ПВО. Ставьте комплексы: что и куда полетит, неизвестно', [B.round]), 5);
   }
   function netWaveStart() {
     const military = C.S.objects.filter((o) => !o.noTarget && !o.dead);
@@ -1545,12 +1659,6 @@ export function createDefense(C) {
     st.tv0 = st.targets.reduce((q, o) => q + o.value * Math.max(0, o.hp / o.hpMax), 0) || 1;
     st.mres = { launched: 0, down: 0, hits: 0, carriers: 0 }; st.sirenC = st.sirenT = false;
     snd.alarm(); say(atk() ? tr('Волна пошла: разведчик над городом, остальное - по вашему расписанию («Ход волны» слева)') : tr('Волна пошла! Красные треугольники - что видит ваша сеть РЛС'), 5);
-  }
-  // союзники по атаке: сколько очков потратили и куда бьют (сводка сервера)
-  function netAllies() {
-    const N = st.net, al = (N.room && N.room.allies || []).filter((p) => p.id !== (N.me && N.me.id));
-    if (!al.length) return '';
-    return `<div class="cat-h">${tr('Союзники')}</div>` + al.map((p) => `<div class="dcard"><div class="nm"><b>${tr('{0} · {1} очк.', [esc(p.name), p.cost])}</b><span>${Object.entries(p.tg).map(([k, t]) => `${k === 'free' ? tr('без цели') : tName(k)}: ${t}`).join(' · ') || tr('ещё собирает')}</span></div></div>`).join('');
   }
   function renderNetDef() {
     const N = st.net, B = N.battle; let h = '';
@@ -1597,7 +1705,8 @@ export function createDefense(C) {
     if (st.op) leaveOp();
     st.net = null; if (chatEl) chatEl.style.display = 'none';
     if (st.setupSave) { C.setup.era = st.setupSave.era; C.setup.diff = st.setupSave.diff; st.setupSave = null; }
-    for (const c of ['defense', 'dmap', 'oper', 'watch', 'matk', 'evon', 'evopen']) document.body.classList.remove(c);
+    for (const c of ['defense', 'dmap', 'oper', 'watch', 'matk', 'evon', 'evopen', 'mkist', 'mked', 'mkchat']) document.body.classList.remove(c);
+    kistH = ''; kistEl.innerHTML = ''; kistWas = false; kistB = []; kistChat = false; st.hand = null;
     evOpen = false; evHtml = ''; sideHtml = '';
     st.watch = null; st.timeK = 1;
     side.innerHTML = ''; side.classList.remove('dpl', 'plc'); $('dtop').innerHTML = ''; snd.growl(0, 400);
@@ -1685,12 +1794,12 @@ export function createDefense(C) {
     else if (atk()) setTop(st.phase === 'plan' ? tr('План волны · очки угрозы <b>{0}</b>', [st.budget - planCost()]) : tr('{0}Волна · цели разрушены <b>{1}%</b>{2}', [clock(), Math.round((1 - targetsValue()) * 100), st.timeK > 1 ? tr(' · время ×{0}', [st.timeK]) : '']));
     else if (st.multi && st.phase === 'wave') setTop(tr('{0}Мульти-волна · сбито <b>{1}</b> · цели целы <b>{2}%</b>{3}', [clock(), st.downs, Math.round(targetsValue() * 100), st.timeK > 1 ? tr(' · время ×{0}', [st.timeK]) : '']));
     else setTop(st.phase === 'plan' ? budCell(tr('Расстановка · {0}', [st.multi ? tr('Мульти-волна') : tr('волна {0}/{1}', [st.wave + 1, st.waves])])) : wavePanel());
-    if (st.view === 'op' && st.op) opHud(dt, t); else if (st.view === 'watch') watchHud(); else drawMap(t);
+    if (st.view === 'op' && st.op) opHud(dt, t); else if (st.view === 'watch') watchHud(); else { drawMap(t); if (kistWas) kistTick(); }
     if (st.view !== 'map' && st.alertT > 0) drawAlert(C.hx); // плашка тревоги - и в 3D
   }
   function onKey(e, down) {
     if (st.view !== 'op' && down && st.phase === 'plan' && st.draft && (e.code === 'Enter' || e.code === 'NumpadEnter')) { confirmDraft(); return; }
-    if (st.view !== 'op') { if (down && e.code === 'Space' && st.phase === 'plan') { if (st.net) { st.ready = !st.ready; st.net.ready(st.ready); renderSide(); } else startWave(); } return; }
+    if (st.view !== 'op') { if (down && e.code === 'Space' && st.phase === 'plan') { if (st.net) { st.ready = !st.ready; st.net.ready(st.ready); renderSide(); } else if (!kistOn() || (planCost() > 0 && planCost() <= st.budget && tKeys().length)) startWave(); else snd.deny(); } return; }
     op.keys = op.keys || new Set();
     if (!down) { op.keys.delete(e.code); if (e.code === 'Space' || e.code === 'KeyF') opFire(false); return; }
     if (e.repeat) return;
@@ -1706,7 +1815,7 @@ export function createDefense(C) {
     else if (e.code === 'KeyZ') op.fov = op.fov > 30 ? 20 : op.fov > 12 ? 8 : 55;
   }
   const api = {
-    startNetMulti, chatSync, st, sim: true, confirmDraft, cancelDraft, onEsc: () => { if (st.view !== 'op' && st.phase === 'plan' && (st.placing || st.moving)) { cancelDraft(); return true; } return false; }, tapAt: (x, z) => { const [px, py] = w2s(x, z); mapTap(px, py); }, /* tapAt - касание карты в точке мира (проверки) */ forecast: (key) => forecast(key), idxOf: (k, key) => idxOf(k, key), tkeyOf: (k, i) => tkeyOf(k, i), setTkey: (k, i, key) => setTkey(k, i, key), start, stop, update, hud, onKey, enterOp, leaveOp, startWave, designate, renderSide, startNet, netSync,
+    startNetMulti, chatSync, st, sim: true, confirmDraft, cancelDraft, onEsc: () => { if (kistOn() && (st.edKey || st.hand)) { if (st.edKey) { st.edKey = null; st.pick = null; } else st.hand = null; renderSide(); return true; } if (st.view !== 'op' && st.phase === 'plan' && (st.placing || st.moving)) { cancelDraft(); return true; } return false; }, mapAt: (x, z) => w2s(x, z), tapAt: (x, z) => { const [px, py] = w2s(x, z); mapTap(px, py); }, /* tapAt - касание карты в точке мира (проверки) */ forecast: (key) => forecast(key), idxOf: (k, key) => idxOf(k, key), tkeyOf: (k, i) => tkeyOf(k, i), setTkey: (k, i, key) => setTkey(k, i, key), start, stop, update, hud, onKey, enterOp, leaveOp, startWave, designate, renderSide, startNet, netSync,
     setNetRes(r) { st.netRes = r; renderSide(); },
     camera(dt) { if (st.view === 'op' && st.op) opCamera(dt); else if (st.view === 'watch') watchCamera(dt); else { camera.position.set(view.cx, 9000, view.cz + 1); camera.lookAt(view.cx, 0, view.cz); } },
     focus: () => (st.op ? st.op.pos : st.watch ? st.watch.pos : camera.position),

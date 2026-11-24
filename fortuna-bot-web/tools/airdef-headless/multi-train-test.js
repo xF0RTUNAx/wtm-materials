@@ -82,7 +82,7 @@ function runLesson(side, i, bot, sec) {
     if (D.st.multi === 'atk' && D.st.budget > 0 && cost > D.st.budget) check(`наряд ${cost} - в бюджете урока ${D.st.budget}`, false);
     D.st.edKey = null; D.st.tsel = null; D.startWave(); } D.st.timeK = 4; };
   const B = {
-    m_scout: (D, T) => { const st = D.st; if (T.s === 0) st.tsel = tg(st); else if (T.s === 1) once(T, 1, () => add(D, 'shahed', 3, st.tsel)); else go(D); },
+    m_scout: (D, T) => { const st = D.st; if (T.s === 0) st.hand = 'shahed'; else if (T.s === 1) once(T, 1, () => { for (let j = 0; j < 3; j++) { const o = st.targets[0]; D.tapAt(o.x, o.z); } }); else go(D); }, // «Кисть»: оружие в руке, три касания цели
     m_alloc: (D, T) => { const st = D.st; if (T.s === 0) st.tsel = tg(st); else if (T.s === 1) { once(T, 1, () => add(D, 'shahed', 2, st.tsel)); if (!T.d.k || T.d.k < T.t) { T.d.k = T.t + 0.2; add(D, 'kh555', 1, st.tsel); } } else if (T.s === 2) once(T, 2, () => { st.plan.n.shahed--; }); else if (T.s === 3) once(T, 3, () => { const o = C.S.objects.find((q) => !q.noTarget && !q.dead && 'o' + q.id !== st.tsel); st.tsel = 'o' + o.id; add(D, 'shahed', 2, st.tsel); }); },
     m_unit: (D, T) => { const st = D.st, u = (i) => (st.plan.cfg.kalibr.units[i] = st.plan.cfg.kalibr.units[i] || {}); if (T.s === 0) st.tsel = tg(st); else if (T.s === 1) { st.edKey = 'kalibr'; st.edUnit = 0; } else if (T.s === 2) u(0).pts = [[4000, 3000], [2000, 5000]]; else if (T.s === 3) u(0).alt = 300; else if (T.s === 4) u(0).t = 280; else if (T.s === 5) st.edUnit = null; else if (T.s === 6) u(1).t = 290; },
     m_carrier: (D, T) => { go(D); document.body.classList.add('evopen'); },
