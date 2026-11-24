@@ -566,5 +566,8 @@
  "без цели": "sans cible",
  "ещё собирает": "prépare encore",
  "Раунд {0}/{1} · расстановка ПВО{2}": "Manche {0}/{1} · déploiement de la DCA{2}",
- "Сопровождение сорвано помехами - перезахват": "Poursuite rompue par brouillage - réacquisition"
+ "Сопровождение сорвано помехами - перезахват": "Poursuite rompue par brouillage - réacquisition",
+ "вылеты": "sorties",
+ "дорого": "trop cher",
+ "цены +10 %": "prix +10 %"
 }

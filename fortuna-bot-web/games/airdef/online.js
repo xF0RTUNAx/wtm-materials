@@ -8,7 +8,7 @@ import { trFmt } from './i18n-fmt.js?v=20261124a';
 import { createNet } from './net.js?v=20261124a';
 import * as O from './sim/online.js?v=20261124a';
 import * as MW from './sim/online-multi.js?v=20261124a';
-import { AG, SAM, CARRIERS, LOADOUTS, PLANES, ERAS, loadoutRole, AVA_SHOP } from './arsenal.js?v=20261124a';
+import { AG, SAM, CARRIERS, LOADOUTS, PLANES, ERAS, loadoutRole, ROLE_NAME, AVA_SHOP } from './arsenal.js?v=20261124a';
 import { retiredHidden } from './progress.js?v=20261124a';
 import { MODES } from './sim/strike.js?v=20261124a';
 import { ICON, ico } from './icons.js?v=20261124a';
@@ -183,23 +183,41 @@ export function createOnline(C, ctrls) {
     feed = []; helps = []; renderWait(); renderPlan();
     document.body.classList.add('netOn'); // кнопка «Игроки»
   }
-  // выбор связки лётчиком: что по карману, что выбрали союзники
+  // выбор загрузки лётчиком перед волной - «Ангар» (Mark 2026-11-24, вариант Б, Интерфейс/Выбор техники/_чистовые): слева самолёты, в центре раскрытый крупно и команда,
+  // справа его загрузки. Нажатие на самолёт - только раскрыть (planOpen - на клиенте, перерисовка по «room» его не сбрасывает), на загрузку - купить.
+  let planOpen = null, planKey = '', planHtml = '';
   function renderPlan() {
-    const r = N.room, show = N.battle && N.battle.kind !== 'multi' && r && r.state === 'plan' && team() === 'air';
-    planEl.style.display = show ? 'block' : 'none'; if (!show) return;
-    const B = N.battle, me = N.myPlayer(), list = LOADOUTS[B.era].map((L, i) => [L, i]).filter(([L]) => L.side === B.sideAir && O.netOk(L) && !retiredHidden(C.progress && C.progress.P, L.plane)); // вертолёты - пока только одиночная игра (НАР в онлайне - с 2026-10-22)
-    const allies = r.players.filter((p) => p.team === 'air' && p.id !== me.id), others = allies.map((p) => (p.choice !== null ? LOADOUTS[B.era][p.choice] : null));
-    const nAir = allies.length + 1, hunters = others.filter((x) => x && loadoutRole(x) === 'sead').length;
-    planEl.innerHTML = `<h3>${tr('Волна {0}/{1} · выбор связки · {2} с', [r.wave, O.WAVES, r.left ?? ''])}</h3><div>${tr('Очки: <b style="color:#fde68a">{0}</b> · вылетов на волну: {1}{2}', [me.budget, me.lives ?? O.RESPAWNS[r.wave - 1] + 1, r.lead === 'pvo' ? tr(' (+1: команда отстаёт)') : ''])}</div>
-      <div class="dim">${tr('Охотников за ПВО в команде: {0}/{1} · после {2} с каждая уничтоженная РЛС замедляет перезарядку ПВО{3}', [hunters + (me.choice !== null && loadoutRole(LOADOUTS[B.era][me.choice]) === 'sead' ? 1 : 0), O.huntCap(nAir), O.SUPPRESS_T, r.lead === 'air' ? tr(' · вы ведёте - связки на 10 % дороже') : ''])}</div>
-      ${allies.length ? `<div class="cat-h">${tr('Союзники')}</div>${allies.map((p) => { const L = p.choice !== null ? LOADOUTS[B.era][p.choice] : null; return `<div class="adp"><b>${pnm(p)}</b> - ${L ? `${PLANES[L.plane]} <span class="role ${loadoutRole(L)}">${O.approachOf(L)}</span>` : tr('выбирает…')}${p.ready ? ` <span class="okc">${ico('ok', 'ii')}</span>` : ''}</div>`; }).join('')}` : ''}
-      <div class="cat-h">${tr('Связки')}</div>` + list.map(([L, i]) => {
-      const cost = O.loadoutCostFor(L, r.lead), back = me.choice !== null ? O.loadoutCostFor(LOADOUTS[B.era][me.choice], r.lead) : 0, deny = O.roleDeny(L, others, nAir), miss = r.mode === 'real' && C.progress && C.progress.ready() ? C.progress.loadoutMissing(L) : [], no = cost > me.budget + back || !!deny || miss.length > 0; // «Реализм»: только купленное
-      return `<button class="opt ${me.choice === i ? 'on' : ''} ${no ? 'no' : ''}" data-bi="${i}"><div class="nm"><b>${PLANES[L.plane]} · ${L.name}</b><span class="role ${loadoutRole(L)}">${O.approachOf(L)}</span><span>${L.items.map(([k, n]) => `${AG[k].short} ×${n}`).join(' · ')}${L.pod ? (podBuiltIn(L.plane) ? tr(' · прицел') : tr(' · контейнер')) : ''}${deny ? ` ${tr('· <b class="warnc">лимит охотников</b>')}` : ''}${miss.length ? ` · <b class="warnc">${C.progress.needText(miss)}</b>` : ''}</span></div><span class="pr">${cost}</span></button>`;
-    }).join('') + `<button class="btn ${me.ready ? 'alt' : ''}" data-oa="pready">${me.ready ? tr('Готов (снять)') : tr('Готов')}</button>`;
+    const r = N.room, show = !!(N.battle && N.battle.kind !== 'multi' && r && r.state === 'plan' && team() === 'air');
+    document.body.classList.toggle('apick', show); planEl.style.display = show ? 'block' : 'none'; if (!show) { planHtml = ''; planKey = ''; return; }
+    const B = N.battle, me = N.myPlayer(), LO = LOADOUTS[B.era], key = `${B.era}|${B.sideAir}|${r.wave}`; if (key !== planKey) { planKey = key; planOpen = null; }
+    const allies = r.players.filter((p) => p.team === 'air' && p.id !== me.id), others = allies.map((p) => (p.choice !== null ? LO[p.choice] : null)), nAir = allies.length + 1;
+    const cur = me.choice !== null ? LO[me.choice] : null, back = cur ? O.loadoutCostFor(cur, r.lead) : 0;
+    const list = LO.map((L, i) => ({ L, i })).filter(({ L }) => L.side === B.sideAir && O.netOk(L) && !retiredHidden(C.progress && C.progress.P, L.plane)).map((q) => { // вертолёты - пока только одиночная игра (НАР в онлайне - с 2026-10-22)
+      const cost = O.loadoutCostFor(q.L, r.lead), miss = r.mode === 'real' && C.progress && C.progress.ready() ? C.progress.loadoutMissing(q.L) : []; // «Реализм»: только купленное
+      return { ...q, cost, role: loadoutRole(q.L), need: miss.length ? C.progress.needText(miss) : '', why: miss.length ? 'lock' : O.roleDeny(q.L, others, nAir) ? 'hunt' : cost > me.budget + back ? 'exp' : '' };
+    });
+    const planes = []; for (const q of list) { let p = planes.find((x) => x.k === q.L.plane); if (!p) planes.push(p = { k: q.L.plane, lo: [] }); p.lo.push(q); }
+    if (!planes.length) return;
+    for (const p of planes) p.why = p.lo.every((q) => q.why) ? (p.lo.every((q) => q.why === 'lock') ? 'lock' : p.lo.some((q) => q.why === 'exp') ? 'exp' : 'hunt') : ''; // самолёт тусклый, только если недоступны все его загрузки
+    const P0 = planes.find((p) => p.k === planOpen) || (cur && planes.find((p) => p.k === cur.plane)) || planes.find((p) => !p.why) || planes[0];
+    const hunters = others.filter((x) => x && loadoutRole(x) === 'sead').length + (cur && loadoutRole(cur) === 'sead' ? 1 : 0), cap = O.huntCap(nAir), full = hunters >= cap;
+    const air = (k) => `<img src="airdef/thumbs/air_${k}.webp?v=20261124a" alt="" onerror="this.style.visibility='hidden'">`, rIco = (x) => ico(x === 'sead' ? 'radar' : 'target');
+    const role = (x, word) => `<i class="nrl ${x}${word ? ' w' : ''}" title="${trIf(ROLE_NAME[x])}">${rIco(x)}${word ? `<em>${trIf(ROLE_NAME[x])}</em>` : ''}</i>`;
+    const why = (w, need) => (w === 'lock' ? `<span class="nwhy lk" title="${esc(need || '')}">${ico('lock')}</span>` : w === 'hunt' ? `<span class="nwhy">${ico('radar')}${hunters}/${cap}</span>` : w === 'exp' ? `<span class="nwhy">${tr('дорого')}</span>` : '');
+    const cell = (cap, v, c = '') => `<span class="ncell ${c}">${cap ? (cap[0] === '<' ? cap : `<small>${cap}</small>`) : ''}<b>${v}</b></span>`;
+    const head = cell(tr('Волна'), `${r.wave}/${O.WAVES}`) + cell(tr('очки'), `${me.budget}${r.lead === 'air' ? `<u class="bad">${tr('цены +10 %')}</u>` : ''}`, 'am') + cell(ico('radar'), `${hunters}/${cap}`, full ? 'rd' : '') + cell(tr('вылеты'), `${me.lives ?? O.RESPAWNS[r.wave - 1] + 1}${r.lead === 'pvo' ? '<u>+1</u>' : ''}`);
+    const mate = (p) => { const L = p.choice !== null ? LO[p.choice] : null, rl = L ? loadoutRole(L) : ''; return `<span class="nmate ${p.ready ? 'ok' : ''}"><span class="im">${L ? air(L.plane) : '<b>?</b>'}${L ? `<i class="r ${rl}">${rIco(rl)}</i>` : ''}${p.ready ? `<i class="k">${ico('ok')}</i>` : ''}</span><span class="tx"><b>${pnm(p)}</b><em>${L ? `${role(rl)}${trIf(PLANES[L.plane])}` : tr('выбирает…')}</em></span></span>`; };
+    const tiles = (L) => L.items.map(([k, n]) => `<span class="nwt"><img src="airdef/thumbs/wpn_${k}.webp?v=20261124a" alt="${esc(trIf(AG[k].short))}" onerror="this.style.visibility='hidden'"><u>×${n}</u></span>`).join('') + (L.pod ? `<span class="nwt pod" title="${podBuiltIn(L.plane) ? tr('прицел') : tr('контейнер')}">${ico('target')}</span>` : '');
+    const big = P0.lo.length <= 3, mine = cur && cur.plane === P0.k, none = !cur && list.some((q) => !q.why);
+    const html = `<div class="nhead">${head}</div><div class="nbox"><div class="npl c${planes.length > 8 ? 3 : 2}">${planes.map((p) => `<button class="ncard ${p === P0 ? 'on' : ''} ${p.why ? 'no' : ''}" data-op="${p.k}">${air(p.k)}<b>${trIf(PLANES[p.k])}</b>${why(p.why, p.lo[0].need)}${cur && cur.plane === p.k && p !== P0 ? '<i class="mark"></i>' : ''}</button>`).join('')}</div>
+      <div class="nmid">${allies.length ? `<div class="nteam n${allies.length} ${allies.length <= 2 ? 'nwide' : 'ntiny'}">${allies.map(mate).join('')}</div>` : ''}<div class="nhero">${air(P0.k)}<span class="cap"><b>${trIf(PLANES[P0.k])}</b>${mine ? role(loadoutRole(cur), true) : ''}</span></div>${mine ? `<div class="nset">${cur.items.map(([k, n]) => `${trIf(AG[k].short)} ×${n}`).join(' · ')}</div>` : ''}
+      <button class="ngo ${none ? 'off' : me.ready ? 'dn' : ''}" data-oa="pready" ${none ? 'disabled' : ''}>${tr('Готов')}${me.ready ? `<i>${ico('ok')}</i>` : ''}</button></div>
+      <div class="nlo ${big ? 'big' : 'row'}" style="--n:${P0.lo.length}">${P0.lo.map((q) => `<button class="ncard ${me.choice === q.i ? 'on' : ''} ${q.why ? 'no ' + q.why : ''}" data-bi="${q.i}">${big ? `<span class="t">${role(q.role, true)}<s></s>${why(q.why, q.need)}<b class="pr">${q.cost}</b></span><span class="tl">${tiles(q.L)}</span>` : `${role(q.role)}<span class="tl">${tiles(q.L)}</span><span class="e"><b class="pr">${q.cost}</b>${why(q.why, q.need)}</span>`}</button>`).join('')}</div></div>`;
+    if (html !== planHtml) planEl.innerHTML = planHtml = html; // без лишней замены разметки: обновление комнаты раз в секунду не съедает нажатие
   }
   planEl.onclick = (e) => {
-    const b = e.target.closest('[data-bi]'), a = e.target.closest('[data-oa]');
+    const b = e.target.closest('[data-bi]'), p = e.target.closest('[data-op]'), a = e.target.closest('[data-oa]');
+    if (p) { planOpen = p.dataset.op; snd.click(); renderPlan(); }
     if (b) { N.buyAir(+b.dataset.bi); snd.click(); }
     if (a && a.dataset.oa === 'pready') { const me = N.myPlayer(); N.ready(!(me && me.ready)); snd.click(); }
   };
@@ -501,7 +519,7 @@ export function createOnline(C, ctrls) {
   // после боя «В КОМНАТУ» - остаться (keepRoom: комната вернётся в лобби), «Закрыть» и выход из боя - уйти из комнаты
   const toMenu0 = C.toMenu;
   let booted = false; // первый вызов - показ меню при загрузке: комната (вернулись в неё после перезагрузки под карту) остаётся
-  C.toMenu = function () { if (booted && (N.battle || N.room) && !keepRoom) { N.leave(); afterBattle = false; } if (booted) liveOff(); booted = true; keepRoom = false; planEl.style.display = 'none'; document.body.classList.remove('netOn', 'plOpen'); for (const id of ['tMap', 'opMap']) $(id).classList.remove('helpGlow'); toMenu0(); };
+  C.toMenu = function () { if (booted && (N.battle || N.room) && !keepRoom) { N.leave(); afterBattle = false; } if (booted) liveOff(); booted = true; keepRoom = false; planEl.style.display = 'none'; planHtml = ''; document.body.classList.remove('netOn', 'plOpen', 'apick'); for (const id of ['tMap', 'opMap']) $(id).classList.remove('helpGlow'); toMenu0(); };
   // ?ad=КОД - приглашение: сразу режим «Онлайн» и вход в комнату
   const inv = new URLSearchParams(location.search).get('ad');
   if (inv) { C.setup.game = 'online'; let done = false; N.on('conn', () => { if (N.conn === 'on' && !done && !N.room) { done = true; N.join(O.cleanCode(inv)); } }); N.connect(); }
@@ -529,6 +547,13 @@ export function createOnline(C, ctrls) {
         kl(); setInterval(kl, 5000); // лента живёт 6 с - обновляем, чтобы кадр можно было снять в любой момент
       }, 2500);
       return;
+    }
+    if (name.startsWith('plan')) { // выбор загрузки лётчиком («Ангар»): plan - 3 на 3, ранг IV, восток; plan1 … plan6 - размер команды; &pera=1…4 - ранг, &pside=west
+      const Q2 = new URLSearchParams(location.search), n = +name.slice(4) || 3, era = +Q2.get('pera') || 4, sideAir = Q2.get('pside') === 'west' ? 'west' : 'east', lead = Q2.get('plead') || null;
+      const names = ['xFORTUNAx', 'Sokol_77', 'Viper', 'Гром_52', 'Ястреб', 'Strela_21'], air = names.slice(0, n).map((q, i) => P(i + 1, q, 'air', {})), mine = LOADOUTS[era].map((L, i) => i).filter((i) => LOADOUTS[era][i].side === sideAir && O.netOk(LOADOUTS[era][i]));
+      air.forEach((q, i) => { q.budget = Q2.get('pbud') ? +Q2.get('pbud') : 420; q.lives = 2; q.choice = i && i % 3 !== 2 ? mine[(i * 7) % mine.length] : null; q.ready = i % 2 === 1; });
+      Object.assign(N.room, { size: n, era, sideAir, state: 'plan', left: 38, wave: 1, lead, players: [...air, P(20, 'Ракетчик', 'pvo', {})] }); N.battle = { kind: 'air', era, mode: 'arcade', map: 'city', targets: [], waves: 3, wave: 1, state: 'plan', valueK: 0, T: 0, sideAir };
+      C.setup.game = 'air'; C.start('air'); setTimeout(() => { N.buyAir = (i) => { air[0].choice = air[0].choice === i ? null : i; renderPlan(); }; N.ready = (v) => { air[0].ready = v; renderPlan(); }; document.body.classList.add('netOn'); renderPlan(); }, 2500); return;
     }
     if (name === 'pvo' || name === 'mdef') { // расстановка ПВО онлайн без сервера: pvo - «Оборона» (первая волна, лимит классов), mdef - ПВО «Мульти-волны» (раунд 1, очки, не больше N); я - ПВО, за комплексы платят очки
       N.me = { id: 5, name: 'Ракетчик' }; for (const q of players) if (q.team === 'pvo') q.budget = 1200;

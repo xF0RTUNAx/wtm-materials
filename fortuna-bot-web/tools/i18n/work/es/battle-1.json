@@ -566,5 +566,8 @@
  "без цели": "sin objetivo",
  "ещё собирает": "aún preparando",
  "Раунд {0}/{1} · расстановка ПВО{2}": "Ronda {0}/{1} · despliegue de defensa antiaérea{2}",
- "Сопровождение сорвано помехами - перезахват": "Seguimiento roto por interferencias - readquiriendo"
+ "Сопровождение сорвано помехами - перезахват": "Seguimiento roto por interferencias - readquiriendo",
+ "вылеты": "salidas",
+ "дорого": "muy caro",
+ "цены +10 %": "precios +10 %"
 }

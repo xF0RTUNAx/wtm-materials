@@ -566,5 +566,8 @@
  "без цели": "kein Ziel",
  "ещё собирает": "stellt noch zusammen",
  "Раунд {0}/{1} · расстановка ПВО{2}": "Runde {0}/{1} · Flugabwehr-Aufstellung{2}",
- "Сопровождение сорвано помехами - перезахват": "Verfolgung durch Störung abgerissen - Neuerfassung"
+ "Сопровождение сорвано помехами - перезахват": "Verfolgung durch Störung abgerissen - Neuerfassung",
+ "вылеты": "Einsätze",
+ "дорого": "zu teuer",
+ "цены +10 %": "Preise +10 %"
 }
