@@ -933,7 +933,7 @@ export function createDefense(C) {
       else if (a === 'desel') { st.sel = null; st.moving = false; st.draft = null; }
       else if (a === 'move' && u && mine(u)) { st.moving = !st.moving; st.draft = null; }
       else if (a === 'sell' && u && mine(u)) { st.net.sell(u.id); st.sel = null; }
-      else if (a === 'emit' && u && mine(u)) C.S.setEmit(u, !u.emit);
+      else if (a === 'emit' && u && mine(u)) { C.S.setEmit(u, !u.emit); snd.radarSw(); }
       else if (a === 'op' && u && mine(u)) enterOp(u);
       else if (a === 'help') { const q = st.op && !st.op.dead ? st.op : u && !u.dead && mine(u) ? u : C.S.units.find((x) => !x.dead && mine(x)); if (C.askHelp) C.askHelp(q ? [q.pos.x, q.pos.z] : [view.cx, view.cz]); } // метка - у своего комплекса (за пультом, выбранного или любого), иначе - центр карты
       else if ((a === 'tg' || a === 'tgall') && u && mine(u)) setTgtCat(u, a === 'tg' ? b.dataset.k : 'all');
@@ -1022,7 +1022,7 @@ export function createDefense(C) {
     else if (a === 'move') { st.moving = !st.moving; st.draft = null; }
     else if (a === 'sell' && u) { st.budget += Math.round((u.paid || priceOf(u.key)) * 0.7); C.S.removeUnit(u); C.syncUnits(); st.sel = null; }
     else if (a === 'amb' && u) { u.ambush = !u.ambush; u.emit = !u.ambush; }
-    else if (a === 'emit' && u) { C.S.setEmit(u, !u.emit); on('radar', u); }
+    else if (a === 'emit' && u) { C.S.setEmit(u, !u.emit); snd.radarSw(); on('radar', u); }
     else if ((a === 'tg' || a === 'tgall') && u) setTgtCat(u, a === 'tg' ? b.dataset.k : 'all');
     else if (a === 'op' && u) enterOp(u);
     snd.click(); renderSide();
@@ -1227,7 +1227,7 @@ export function createDefense(C) {
     btn('opAuto', () => C.setAuto(!C.auto));
     btn('opCam', () => cycleCam());
     btn('opBino', () => binoToggle());
-    btn('opRadar', () => { const u = st.op; if (u && u.S.radar) { C.S.setEmit(u, !u.emit); snd.click(); on('radar', u); } });
+    btn('opRadar', () => { const u = st.op; if (u && u.S.radar) { C.S.setEmit(u, !u.emit); snd.radarSw(); on('radar', u); } });
     btn('opMethod', () => { const u = st.op; if (u) { u.method = u.method === 'half' ? '3t' : 'half'; snd.click(); opSay(u.method === 'half' ? tr('Метод: половинное спрямление') : tr('Метод: три точки')); } });
     $('opFire').addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); opFire(true); });
     for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) $('opFire').addEventListener(ev, () => opFire(false));
@@ -1805,7 +1805,7 @@ export function createDefense(C) {
     if (e.repeat) return;
     op.keys.add(e.code);
     if (e.code === 'Space' || e.code === 'KeyF') { opFire(true); e.preventDefault(); }
-    else if (e.code === 'KeyE' && st.op.S.radar) { C.S.setEmit(st.op, !st.op.emit); snd.click(); on('radar', st.op); }
+    else if (e.code === 'KeyE' && st.op.S.radar) { C.S.setEmit(st.op, !st.op.emit); snd.radarSw(); on('radar', st.op); }
     else if (e.code === 'Tab') { cycleTarget(); e.preventDefault(); }
     else if (e.code === 'KeyM' && st.op.S.type === 'command') st.op.method = st.op.method === 'half' ? '3t' : 'half';
     else if (e.code === 'KeyQ' || e.code === 'Backspace') leaveOp();
