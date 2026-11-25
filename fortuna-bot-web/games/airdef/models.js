@@ -355,13 +355,14 @@ const META = {
   hawk: { units: ['hawk'], stations: [] }, // MIM-23 Hawk - Dominik Biały
   hawk21: { units: ['hawk21'], matte: true, stations: [] }, // Hawk XXI - своя пусковая на прицепе M192 с восемью AIM-120 (сборщик, Свои/Hawk XXI, 2026-11-03); раньше - пусковая Hawk
   m163: { units: ['m163'], stations: [], matte: true, paint: true }, // M163 VADS - своя модель, ревизия 2 (Свои/M163 Vulcan своя, 2026-11-24): трёхцветка НАТО запечена; paint - материал с картой ORM (paint.js), у наземных её иначе не читает никто
-  zsu234: { units: ['zsu234'], matte: true, stations: [] }, // ЗСУ-23-4М «Шилка» - voron335
+  zsu234: { units: ['zsu234'], stations: [], matte: true, paint: true }, // ЗСУ-23-4М «Шилка» - своя модель (Свои/ЗСУ-23-4 Шилка, 2026-11-25): окраска запечена, paint - карта ORM
   strela10: { units: ['strela10'], matte: true, stations: [] }, // «Стрела-10» (9А35 на МТ-ЛБ) - своя (сборщик, Свои/Стрела-10; раньше - low-poly ScurvyWoof с шейдерным камуфляжем)
   avenger: { units: ['avenger'], matte: true, stations: [] }, // AN/TWQ-1 Avenger - свой (сборщик, Свои/Avenger; раньше - KillCaptureDestroy с шейдерным камуфляжем)
   chaparral: { units: ['chaparral'], matte: true, stations: [] }, // MIM-72 Chaparral - своя пусковая M54 на M730 (сборщик, Свои/Chaparral, 2026-11-03), песочная; предел подъёма по азимуту (launchers.js elMaxAz)
   msl_chaparral: { samMissile: ['chaparral'], lazy: true, onRail: true, matte: true, stations: [] }, // ракета MIM-72 - своя (Свои/MIM-72), 2,9 м, нос −Z; 4 на направляющих
   gepard: { units: ['gepard'], matte: true, stations: [] }, // Flakpanzer Gepard - своя модель, ревизия 2 (Свои/Гепард_rev2, 2026-11-02): трёхцветный камуфляж бундесвера запечён (шейдерный узор снят), антенна сопровождения качается за целью
-  roland: { units: ['roland'], matte: true, stations: [], camo: { scheme: 'nato', size: 1.4 } },
+  roland: { units: ['roland'], matte: true, paint: true, stations: [] }, // Roland 2 на Marder - своя модель (Свои/Roland 2, 2026-11-25), трёхцветка НАТО запечена
+  msl_roland: { samMissile: ['roland'], lazy: true, matte: true, stations: [] }, // ракета Roland - своя, 2,4 м, нос −Z
   tunguska: { units: ['tunguska'], matte: true, stations: [] }, // 2К22 «Тунгуска» - SIpriv (CC BY 4.0), переделана в Blender (Свои/Тунгуска): камуфляж, затенение и карта нормалей запечены - шейдерного узора нет
   msl_9m311: { samMissile: ['tunguska'], matte: true, stations: [] }, // ракета 9М311 - своя (Свои/Тунгуска), 2,56 м, нос −Z
   skyguard: { units: ['skyguard'], stations: [] },
@@ -492,39 +493,39 @@ const GLB_V_OWN = {
   s400: '20261102a', // С-400 - своя (Свои/С-400, 2026-11-02)
   s400_lo: '20261102a',
   site_radar: '20261028c', // объект «РЛС на вершине» (своя сцена, 2026-10-28)
-  site_radar_lo: '20261028c',
+  site_radar_lo: '20261125a',
   site_heli: '20261028d', // объект «Вертолётная площадка „Ведьмина поляна“» (своя сцена, 2026-10-28)
-  site_heli_lo: '20261028d',
+  site_heli_lo: '20261125a',
   site_ammo_city: '20261028f', // объект «Склад боеприпасов» (город, своя сцена, 2026-10-28; f - ревизия 2, 540 × 520)
-  site_ammo_city_lo: '20261028f',
+  site_ammo_city_lo: '20261125a',
   site_ammo_w: '20261028f', // объект «Арсенал в ущелье» (зима, своя сцена из набора склада, 2026-10-28)
-  site_ammo_w_lo: '20261028f',
+  site_ammo_w_lo: '20261125a',
   site_ammo_a: '20261028h', // объект склад «Фонарь Джека» (осень, своя сцена из набора склада, 2026-10-28)
-  site_ammo_a_lo: '20261028h',
+  site_ammo_a_lo: '20261125a',
   site_fuel_city: '20261028h', // объект «Склад горючего» (город, своя сцена второго сборщика, 2026-10-28)
-  site_fuel_city_lo: '20261028h',
+  site_fuel_city_lo: '20261125a',
   site_fuel_w: '20261028h', // объект «Склад ГСМ» (зима, своя сцена второго сборщика, 2026-10-28)
-  site_fuel_w_lo: '20261028h',
+  site_fuel_w_lo: '20261125a',
   site_park_city: '20261028h', // объект «Парк бронетехники» (город, своя сцена, набор военного городка, 2026-10-28)
-  site_park_city_lo: '20261028h',
+  site_park_city_lo: '20261125a',
   site_fuel_a: '20261028h', // объект склад ГСМ «Болотный огонь» (осень, своя сцена второго сборщика, 2026-10-28)
-  site_fuel_a_lo: '20261028h',
+  site_fuel_a_lo: '20261125a',
   site_garr_w: '20261028h', // объект «Военный городок» (зима, своя сцена из набора парка, 2026-10-28)
-  site_garr_w_lo: '20261028h',
+  site_garr_w_lo: '20261125a',
   site_cp_w: '20261028h', // объект «Командный пункт» (зима, своя сцена, набор КП, 2026-10-28)
-  site_cp_w_lo: '20261028h',
+  site_cp_w_lo: '20261125a',
   site_garr_a: '20261028i', // гарнизон «Пугало» (осень, своя сцена из набора парка, 2026-10-28)
-  site_garr_a_lo: '20261028i',
+  site_garr_a_lo: '20261125a',
   site_cp_a: '20261028i', // КП «Погост» (осень, своя сцена, набор КП, 2026-10-28)
-  site_cp_a_lo: '20261028i',
+  site_cp_a_lo: '20261125a',
   site_cp_city: '20261029a', // «Командный пункт» в городе (своя сцена, набор КП, 2026-10-29)
-  site_cp_city_lo: '20261029a',
+  site_cp_city_lo: '20261125a',
   site_wreck_a: '20261029a', // рембаза «Костяной овраг» (осень, своя сцена из набора парка, 2026-10-29)
-  site_wreck_a_lo: '20261029a',
+  site_wreck_a_lo: '20261125a',
   site_air: '20261029b', // «Военный аэродром» (город, своя сцена из набора парка, 2026-10-29)
-  site_air_lo: '20261029b',
+  site_air_lo: '20261125a',
   site_tv_city: '20261029b', // «Узел связи» (город, своя сцена, набор КП, башня падает, 2026-10-29)
-  site_tv_city_lo: '20261029b',
+  site_tv_city_lo: '20261125a',
   pk_su30: '20261118a', // лёгкие копии на стоянках объектов-сцен (prepare.js pk_*, ~4 тыс. треугольников)
   pk_mig29: '20261120a', // лёгкая копия своего МиГ-29
   pk_e_su24: '20261113c', // своя модель Су-24М
@@ -535,7 +536,7 @@ const GLB_V_OWN = {
   pk_e_a10: '20261112c', // своя модель A-10A
   pk_e_su34: '20261115a', // своя модель Су-34
   e_su57: '20261124a', e_su57_gear: '20261124a', e_su57_lo: '20261124a', // свой Су-57
-  pk_e_mig31: '20261124a', e_mig31: '20261124a', e_mig31_gear: '20261124a', e_mig31_lo: '20261124a', m163: '20261124a', m163_lo: '20261124a', // свои МиГ-31БМ и M163
+  pk_e_mig31: '20261124a', e_mig31: '20261124a', e_mig31_gear: '20261124a', e_mig31_lo: '20261124a', m163: '20261124a', m163_lo: '20261124a', zsu234: '20261125a', zsu234_lo: '20261125a', roland: '20261125a', roland_lo: '20261125a', msl_roland: '20261125a', msl_roland_lo: '20261125a', // свои МиГ-31БМ и M163
 
   pk_h_mi24: '20261029b',
   pk_h_ah64: '20261029b',
@@ -543,13 +544,13 @@ const GLB_V_OWN = {
   pk_h_mi8: '20261029c',
   pk_h_uh60: '20261029c',
   site_air_w: '20261029c', // «Авиабаза» (зима, своя сцена, аэродромный набор, 2026-10-29)
-  site_air_w_lo: '20261029c',
+  site_air_w_lo: '20261125a',
   site_rail_w: '20261029c', // «Железнодорожный узел» (зима, своя сцена, 2026-10-29)
-  site_rail_w_lo: '20261029c',
+  site_rail_w_lo: '20261125a',
   site_dam_w: '20261029d', // «ГЭС на плотине» (зима, своя сцена, новый набор ГЭС, 2026-10-29)
-  site_dam_w_lo: '20261029d',
+  site_dam_w_lo: '20261125a',
   site_port: '20261029d', // «Военно-морская база» (город, своя сцена, корабли, 2026-10-29)
-  site_port_lo: '20261029d',
+  site_port_lo: '20261125a',
   msl_9m83: '20261028b',
   msl_5v55: '20261102a',
   patriot: '20261102b', // Patriot - своя (Свои/Patriot) вместо M901 Muhamad Mirza Arrafi; b - ревизия 2 с поворотной плитой
@@ -990,7 +991,7 @@ async function load(name, base) {
 // готовая модель комплекса: { body, turret, cradle } (копии) или null - тогда процедурная
 const UMODEL = Object.fromEntries(Object.entries(META).filter(([, m]) => m.units).flatMap(([n, m]) => m.units.map((k) => [k, n])));
 // у тяжёлых моделей ПВО - дальняя копия <имя>_lo: каждая часть (корпус, башня, пакет) - THREE.LOD, ближе 400 м - подробная
-const UNIT_LO = new Set(['strela10', 'nasams', 'buk', 'torm2', 'hawk21', 'bukm3', 's125', 'gepard', 'ew_e', 'ew_w', 's300', 's400', 'patriot', 'pac3', 'tor', 'pantsir', 'sampt', 'tunguska', 'skyguard', 'rapier', 'zsu234', 'm163', 'chaparral', 'avenger', 'strela1']);
+const UNIT_LO = new Set(['strela10', 'nasams', 'buk', 'torm2', 'hawk21', 'bukm3', 's125', 'gepard', 'ew_e', 'ew_w', 's300', 's400', 'patriot', 'pac3', 'tor', 'pantsir', 'sampt', 'tunguska', 'skyguard', 'rapier', 'zsu234', 'm163', 'chaparral', 'avenger', 'strela1', 'roland']);
 export function unitModelGlb(key) {
   const n = UMODEL[key], G = n && (LOADED[n] || LOADED[n + '_lo']), GL = n && LOADED[n] && LOADED[n + '_lo']; if (!G) return null;
   const find = (M, k) => M.children.find((c) => c.name === k);
@@ -1007,7 +1008,7 @@ export function unitModelGlb(key) {
     tdish: near('dish'), barrels: get('barrels'), lids, // «Тор»: антенна сопровождения (качается по углу места цели) и крышки ячеек (lid0…7, открываются к пуску)
     th: seq('th'), ca: seq('ca'), turret1: get('turret1'), cs: seq('cs'), // расчёт ПЗРК: позы наводчика (головы, руки) и второй номер
     jacks: seq('jack'), cyl: seq('cyl'), mast: seq('mast'), // С-300: штоки домкратов и гидроцилиндр подъёма (корпус, два штока); Patriot - ещё подкос (cyl3…5) и секции мачты
-    rfold: get('rfold'), sh: seq('sh'),
+    rfold: get('rfold'), sh: seq('sh'), cradle2: get('cradle2'), clink: near('clink'), brl: near('brl'), bru: near('bru'), // «Шилка»: верхняя люлька, тяга, пары стволов
     arms: seq('arm'), heel: get('heel'), heelp: get('heelp') }; // SAMP/T: балки опор (лапы jack - их дети в игре), ноги пятки и плита // «Тор-М2»: антенна обнаружения (складывается в стакане radar) и броне-шторки окон кабины
 }
 // летящая ракета - без деталей пусковой, прилипших к ней при подготовке модели (prepare.js: детали пакета у ракеты-образца): связный кусок

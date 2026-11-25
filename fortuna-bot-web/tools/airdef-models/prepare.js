@@ -394,14 +394,12 @@ const CONFIG = {
     orig: { title: 'BRDM 2 armored reconnaissance vehicle', author: 'zhek', source: 'https://sketchfab.com/3d-models/brdm-2-armored-reconnaissance-vehicle-065dc054914f40fdbfb25ad62d6696b7', license: 'CC-BY-4.0' },
     groups: (c) => (/(^|\/)missile/.test(c.path) ? 'missile' : /(^|\/)cradle/.test(c.path) ? 'cradle' : /(^|\/)turret/.test(c.path) ? 'turret' : 'body') },
   msl_strela1: { src: new URL('./own/msl_strela1.glb', import.meta.url).pathname, scale: 1, nose: '-z', own: true, tex: () => 512, nTex: () => 512, pickMesh: /./ }, // ракета 9М31 — своя, 1,8 м
-  // Roland 2 на Marder — ScurvyWoof: без текстур, цвета авторов «мятные» — перекраска в бронзово-зелёный бундесвера (RAL 6031)
-  roland: { src: `${DL}/marder_roland_low-poly.glb`, scale: 2.3, nose: '+z', rulesIn: 'game', unit: true, tex: () => 512, camo: { scheme: 'nato', skip: /^(material_0|Material\.0(0[2-9]|1))/  }, hinge: [0, 2.74, 0.5], tube: [0.25, 0.4],
-    colors: { '^Material\\.002': [0.05, 0.06, 0.065], '^Material\\.003': [0.025, 0.025, 0.024], '^Material\\.008': [0.035, 0.035, 0.032], '^Material\\.011': [0.03, 0.03, 0.028] }, // гусеницы и катки — тёмные (у автора белые и светло-серые)
-    groups: (c) => {
-      if (c.min[1] < 2.0 || c.ctr[2] < -1.2 || c.ctr[2] > 1.9) return 'body';
-      if (Math.abs(c.ctr[0]) < 0.6 && c.min[1] > 3.15 && c.ctr[2] > 0.9) return 'radar'; // РЛС обзора на мачте — крутится
-      return Math.abs(c.ctr[0]) > 0.65 && c.min[1] > 2.12 ? 'cradle' : 'turret'; // контейнеры с ракетами и их рычаги — качаются
-    } },
+  // Roland 2 (FlaRakPz на Marder) - свой (сборщик hawk21-builder, Свои/Roland 2, 2026-11-25; Mark: «модель Roland готова»; раньше - low-poly ScurvyWoof): трёхцветка НАТО,
+  // сети и ветки запечены. Части - rolandPart: turret_ / tnet_ / sight_ - башня, cradle_ / tube_ - балки с контейнерами на одном валу, lid0 / lid1 - крышки левого и правого
+  // контейнера (рвутся при пуске), dish - тарелка сопровождения, radar - антенна обзора. Ракеты в контейнерах (round_*) не видны - не берём
+  roland: { src: `${DL}/Свои/Roland 2/roland.glb`, scale: 1, nose: '-z', rulesIn: 'game', unit: true, own: true, tex: (m) => (/^RL_(R|net)$/.test(m.name) ? 1024 : 2048), nTex: (m) => (/^RL_(R|net)$/.test(m.name) ? 512 : 1024), pickMesh: /./,
+    axisX: 0, axisZ: 0, ground: 0, hinge: [0, 2.985, 0.9594], tpFix: [0, 1.939, 1.0394], pack0: 0, groups: (c) => rolandPart(c, true) },
+  msl_roland: { src: `${DL}/Свои/Roland 2/msl_roland.glb`, scale: 1, nose: '-z', own: true, tex: () => 1024, nTex: () => 512, pickMesh: /./ }, // ракета Roland - своя, 2,4 м, крылья раскрыты
   // 2К22 «Тунгуска» — SIpriv (CC BY 4.0, Low poly 2k22 Tunguska), переделана в Blender (Свои/Тунгуска, README.md): цвет и карта нормалей запечены в 2048 (материал TG_paint); без упрощения (28,8 тыс. треугольников; tunguska_lo — дальняя);
   // tunguska_game.glb = tunguska_baked.glb + asset.extras оригинала (для титров). Метры, нос −Z, начало — ось симметрии, середина длины корпуса, низ гусениц y = 0; части — по именам объектов:
   // body — шасси, turret — башня с РЛС сопровождения (погон: ось x 0, y 1,674, z −0,439), cradle — 2×2 пушки 2А38 и рамы люлек, missile — 8 ТПК 9М311 (по 4 на борт; в игре — часть cradle: контейнеры остаются на месте после пуска, ракета вылетает из них, а «missile» у игры — модель самой ракеты), radar — антенна обзора сзади (ось 0; 2,681; 1,485);
@@ -483,12 +481,10 @@ const CONFIG = {
       if (c.min[1] < 2.85 || c.ctr[2] > 0.15 || c.ctr[2] < -3.3) return 'body';
       return c.min[1] > 3.25 && c.ctr[2] < -1.35 ? 'cradle' : 'turret';
     } },
-  // ЗСУ-23-4М «Шилка» — voron335 (CC BY; прежняя от Scout снята 2026-10-19: имена материалов — как в War Thunder, похоже на выгрузку из игры)
-  zsu234: { src: `${DL}/zsu-23-4m.glb`, scale: 1.55, nose: '+x', unit: true, tex: () => 512, /* без упрощения (656 тыс.; вдали — zsu234_lo) */ // правила — в осях автора (y вверх, нос +x, ось z 5,37)
-    hinge: [0.9, 6.92, 5.37], // цапфы автоматов — у лобового листа башни
-    groups: (c) => (c.mat === 14 || c.mat === 15 ? null /* кормовые фонари без кронштейнов — висели в воздухе */ : c.min[1] > 7.0 && c.max[1] > 7.3 && c.ctr[0] < -0.3 && c.size[1] < 1 ? 'radar' /* антенна РЛС на корме башни — крутится */
-      : c.min[1] > 6.7 && c.ctr[0] > 0.75 && Math.abs(c.ctr[2] - 5.37) < 0.42 && c.size[2] < 0.7 ? 'cradle' /* четыре автомата и маска */
-      : c.min[1] > 6.7 && c.ctr[0] > -1.1 ? 'turret' : 'body') },
+  // ЗСУ-23-4М «Шилка» — своя модель (сборщик s300-builder, Свои/ЗСУ-23-4 Шилка, 2026-11-25; прежняя — voron335): 225 тыс., окраска, ORM и нормали запечены.
+  // Две люльки 2А7 на своих цапфах с одним углом: нижняя — cradle (hinge), верхняя — cradle2; тяга clink, пары стволов brl / bru (откат); антенна radar (азимут), зеркало dish
+  zsu234: { src: new URL('./own/zsu234.glb', import.meta.url).pathname, scale: 1, nose: '-z', rulesIn: 'game', unit: true, own: true, tex: (m) => (m.name === 'SH_R' ? 1024 : 2048), nTex: (m) => (m.name === 'SH_R' ? 512 : 1024), pickMesh: /./,
+    axisX: 0, axisZ: 0, ground: 0, hinge: [0, 1.7878, -1.094], tpFix: [0, 1.5419, -0.1481], pack0: 0, groups: (c) => zsu234Part(c, true) },
   // «Стрела-10» (9А35 на МТ-ЛБ) — своя (сборщик, Свои/Стрела-10, 2026-11-03; Mark: «модель Стрела-10 готова»; раньше — low-poly ScurvyWoof).
   // Части — strela10Part: turret_* — башня (ось (0; 1,4; 0,3)), cradle_* — пакет на шарнире (0; 2,12; 0,4), lid0…3 — крышки контейнеров (рвутся при пуске)
   strela10: { src: `${DL}/Свои/Стрела-10/strela10.glb`, scale: 1, nose: '-z', rulesIn: 'game', unit: true, own: true, tex: (m) => (m.name === 'S10_R' ? 1024 : 2048),
@@ -804,6 +800,23 @@ function m163Part(c, near) {
   if (/(^|\/)dish/.test(p)) return near ? 'dish' : 'turret';
   return /(^|\/)barrels/.test(p) ? 'barrels' : /(^|\/)cradle/.test(p) ? 'cradle' : /(^|\/)turret/.test(p) ? 'turret' : 'body';
 }
+// Roland 2: вдали крышки - с контейнерами, тарелка - в башне
+function rolandPart(c, near) {
+  const p = c.path; if (/(^|\/)round_/.test(p)) return null;
+  const L = p.match(/(^|\/)lid_[fr]_(l|r)/); if (L) return near ? (L[2] === 'l' ? 'lid0' : 'lid1') : 'cradle';
+  if (/(^|\/)(cradle|tube)_/.test(p)) return 'cradle';
+  if (/(^|\/)dish_/.test(p)) return near ? 'dish' : 'turret';
+  return /(^|\/)(radar|rfold)_/.test(p) ? 'radar' : /(^|\/)(turret|tnet|sight)_/.test(p) ? 'turret' : 'body';
+}
+// «Шилка»: вдали тяга и стволы — в своих люльках, зеркало — в антенне
+function zsu234Part(c, near) {
+  const p = c.path, B = p.match(/(^|\/)barrel_(\d)/); if (B) return +B[2] < 2 ? (near ? 'brl' : 'cradle') : near ? 'bru' : 'cradle2';
+  if (/(^|\/)clink/.test(p)) return near ? 'clink' : 'cradle';
+  if (/(^|\/)cradle2/.test(p)) return 'cradle2';
+  if (/(^|\/)cradle/.test(p)) return 'cradle';
+  if (/(^|\/)dish/.test(p)) return near ? 'dish' : 'radar';
+  return /(^|\/)(radar|rmast|rstrut)/.test(p) ? 'radar' : /(^|\/)turret/.test(p) ? 'turret' : 'body';
+}
 // «Бук-М1», Chaparral, Hawk XXI: пакет и цилиндр — дети башни (turret_main/cradle_*, turret_main/cyl_*): сначала они, потом башня; штоки — по последнему узлу пути
 function bukPart(c) {
   const p = c.path, Y = [...p.matchAll(/(?:^|\/)cyl_(barrel|rod1|rod2)/g)].pop(); if (Y) return 'cyl' + ['barrel', 'rod1', 'rod2'].indexOf(Y[1]);
@@ -832,7 +845,7 @@ function torm2Part(c, near, lidOrder) {
   return /(^|\/)turret/.test(p) ? 'turret' : 'body';
 }
 // ПВО: дальние копии (_lo) — main.js рисует их дальше 400 м (THREE.LOD по частям: корпус, башня, пакет)
-const SAM_LO = ['osa', 'bukm3', 's125', 'gepard', 'ew_e', 'pantsir', 'sampt', 'tunguska', 'skyguard', 'zsu234'];
+const SAM_LO = ['osa', 'bukm3', 's125', 'gepard', 'ew_e', 'pantsir', 'sampt', 'tunguska', 'skyguard'];
 for (const k of SAM_LO) CONFIG[k + '_lo'] = { ...CONFIG[k], target: k === 'pantsir' ? 15000 : 20000, simpErr: 0.05, tex: () => 256, nTex: null };
 CONFIG.bukm3_lo.tracks = { ...CONFIG.bukm3.tracks, links: false }; // дальняя копия: лента — гладкая, без звеньев
 // Гепард ревизии 2: дальняя копия сборщика (gepard_lo.glb, без мелочи), цвет 512, без нормалей; антенна сопровождения — в башне (вдали не качается).
@@ -842,6 +855,9 @@ CONFIG.bukm3_lo.tracks = { ...CONFIG.bukm3.tracks, links: false }; // дальн
 CONFIG.gepard_lo = { ...CONFIG.gepard, src: `${DL}/Свои/Гепард_rev2/gepard_lo.glb`, tex: () => 512, nTex: null, groups: (c) => gepardPart(c, false),
   simplify: 0.2, simpErr: 0.006, simpKeep: /^GP_(T|H|glassF)$/ };
 // M163: дальняя копия сборщика (50 тыс.), ходовая упрощена, как у Гепарда; тарелка - в башне
+CONFIG.roland_lo = { ...CONFIG.roland, src: `${DL}/Свои/Roland 2/roland_lo.glb`, tex: () => 512, nTex: null, groups: (c) => rolandPart(c, false), simplify: 0.45, simpErr: 0.006, simpKeep: /^RL_(T|H|G|net|glassF)$/ };
+CONFIG.msl_roland_lo = { ...CONFIG.msl_roland, target: 900, simpErr: 0.01, tex: () => 256, nTex: null };
+CONFIG.zsu234_lo = { ...CONFIG.zsu234, src: new URL('./own/zsu234_lo.glb', import.meta.url).pathname, tex: () => 512, nTex: null, groups: (c) => zsu234Part(c, false), simplify: 0.4, simpErr: 0.006, simpKeep: /^SH_(T|H|glassF)$/ };
 CONFIG.m163_lo = { ...CONFIG.m163, src: new URL('./own/m163_lo.glb', import.meta.url).pathname, tex: () => 512, nTex: null, groups: (c) => m163Part(c, false), simplify: 0.4, simpErr: 0.006, simpKeep: /^VD_(T|H|glassF)$/ };
 // «Стрела-1» (основа 130 тыс., почти всё — колёса): дальняя копия — 15 тыс., цвет 512, без нормалей
 CONFIG.strela1_lo = { ...CONFIG.strela1, target: 15000, simpErr: 0.05, tex: () => 512, nTex: null };
@@ -936,6 +952,8 @@ CONFIG.site_dam_w_lo = { ...CONFIG.site_park_city_lo, src: `${DL}/Свои/ГЭ�
 // «Военно-морская база» (город, port) — второй сборщик, наборы склада горючего, КП и ж/д узла + корабли
 CONFIG.site_port = { ...CONFIG.site_fuel_city, src: `${DL}/Свои/Порт город/port.glb` };
 CONFIG.site_port_lo = { ...CONFIG.site_fuel_city_lo, src: `${DL}/Свои/Порт город/port_lo.glb` };
+// дальние сцены (Mark 2026-11-25: «упрощённые модели должны повторять габариты, форму и цвет оригиналов»): из подробной, без мелочи до 1 м, силуэт - в пределах 0,2 м
+if (Deno.env.get('SITE_LO')) for (const k of Object.keys(CONFIG).filter((q) => /^site_.*_lo$/.test(q))) { const hi = CONFIG[k.replace(/_lo$/, '')]; CONFIG[k] = { ...CONFIG[k], src: hi.src, minPart: +Deno.env.get('SITE_MIN') || 1, simpKeep: /tile_mesh/, simplify: 0.01, simpAbs: +Deno.env.get('SITE_LO') }; }
 // машины: дальние копии (_lo, ~1000 треуг.) — для движения на дорогах дальше 250 м
 // самолёты, вертолёты и ЗУ-23 на стоянках объектов-сцен (SITES place, «Военный аэродром»): лёгкие копии pk_* ~4 тыс. треугольников (полные — 3–256 тыс.:
 // 16 самолётов, 2 вертолёта и 3 ЗУ-23 на аэродроме дали бы ~2 млн треугольников и сотни вызовов отрисовки вблизи)
@@ -1229,7 +1247,7 @@ async function prepare(name, views) {
   // tracks — гусеницы комплекса (у автора нет): по бортам x = ±xc, лента звеньями (links) или гладкая; тёмная краска #track, часть body (в осях правил, затем центровка)
   if (cfg.tracks) buildTracks(cfg.tracks).forEach((M, i) => { for (let k = 0; k < M.pos.length; k += 3) { M.pos[k] -= dx; M.pos[k + 1] -= dy; M.pos[k + 2] -= dz; } byMat.set(`track${i}`, M); });
   if (cfg.groups && cfg.unit) articulate(cfg, byMat, [dx, dy, dz], cfg.rulesIn === 'game' ? (x, y, z) => [x / cfg.scale, y / cfg.scale, z / cfg.scale] : ax);
-  SIMP_ERR = cfg.simpErr || 0.05; WELD = cfg.weld || 1e-4; CLUSTER = !!cfg.cluster; LOCK = !!cfg.lockBorder; SKEEP = cfg.simpKeep || null;
+  SABS = cfg.simpAbs || 0; /* допуск в метрах, а не в долях размера: силуэт одинаково точен у домика и у всей ограды */ SIMP_ERR = cfg.simpErr || 0.05; WELD = cfg.weld || 1e-4; CLUSTER = !!cfg.cluster; LOCK = !!cfg.lockBorder; SKEEP = cfg.simpKeep || null;
   // PREPARE_SIMP — проба упрощения без правки конфига: 'none' — без него; 'доля:ошибка[:lock]' — своя доля, ошибка (доля размера), lock — края
   // открытых листов закреплены (стенд tools/airdef-models/house-compare.html, 2026-10-27)
   const PS = Deno.env.get('PREPARE_SIMP');
@@ -1347,7 +1365,7 @@ function articulate(cfg, byMat, shift, ax) {
   // расчёт ПЗРК: th0…5 — головы наводчика по позам угла места (части башни), ca0…5 — его руки (части пакета, уже в осях пакета при угле 0);
   // второй номер — своя башня turret1 (ось tp1) и рука cs0…2 (шарнир hinge1) — в осях модели, без центровки (axisX, ground, axisZ — 0)
   if (cfg.tp1) for (const m of byMat.values()) if (m.group === 'turret1' || /^cs\d+$/.test(m.group)) { const o = m.group === 'turret1' ? cfg.tp1 : cfg.hinge1; for (let i = 0; i < m.pos.length; i += 3) { m.pos[i] -= o[0]; m.pos[i + 1] -= o[1]; m.pos[i + 2] -= o[2]; } }
-  const T = [...byMat.values()].filter((m) => m.group === 'turret' || m.group === 'radar' || m.group === 'dish' || m.group === 'barrels' || m.group === 'rfold' || /^lid\d/.test(m.group) || /^th\d+$/.test(m.group)), K = [...byMat.values()].filter((m) => m.group === 'cradle' || m.group === 'missile' || /^ca\d+$/.test(m.group));
+  const T = [...byMat.values()].filter((m) => m.group === 'turret' || m.group === 'radar' || m.group === 'dish' || m.group === 'barrels' || /^(cradle2|clink|brl|bru)$/.test(m.group) || m.group === 'rfold' || /^lid\d/.test(m.group) || /^th\d+$/.test(m.group)), K = [...byMat.values()].filter((m) => m.group === 'cradle' || m.group === 'missile' || /^ca\d+$/.test(m.group));
   if (!T.length && !K.length) return; // машина целиком
   if (!K.length && T.every((m) => m.group === 'radar')) return; // только антенна обзора без башни (Sentinel): в осях модели, игра крутит её вокруг оси опоры
   // основание башни: нижние 0,5 м её вершин
@@ -1443,7 +1461,31 @@ function extractMissile(cfg, byMat) {
 }
 // упрощение сетки: вершины свариваются по положению (швы UV не держат сетку), упрощается сваренная сетка, потом каждому
 // углу треугольника возвращается исходная вершина — из той «островной» группы UV, где три угла ближе всего друг к другу
-let SIMP_ERR = 0.05, WELD = 1e-4, CLUSTER = false, LOCK = false, SKEEP = null; // SKEEP (cfg.simpKeep) — материалы, которые не упрощаются (черепица из перекрытых полос рвётся) // LOCK (cfg.lockBorder) — края открытых листов не двигаются (черепица, навесы)
+let SABS = 0, SIMP_ERR = 0.05, WELD = 1e-4, CLUSTER = false, LOCK = false, SKEEP = null; // SKEEP (cfg.simpKeep) — материалы, которые не упрощаются (черепица из перекрытых полос рвётся) // LOCK (cfg.lockBorder) — края открытых листов не двигаются (черепица, навесы)
+// исходная поверхность для дальней сцены: at(точка, нормаль) → развёртка самого близкого по плоскости исходного треугольника (нормали до ~53°, до 0,8 м), dens - развёртка на метр
+function uvSource(m) {
+  const G = new Map(), T = [], CELL = 3, p = m.pos; let uA = 0, pA = 0;
+  for (let t = 0; t < m.idx.length; t += 3) {
+    const [a, b, c] = [m.idx[t], m.idx[t + 1], m.idx[t + 2]], A = [p[a * 3], p[a * 3 + 1], p[a * 3 + 2]], B = [p[b * 3], p[b * 3 + 1], p[b * 3 + 2]], C = [p[c * 3], p[c * 3 + 1], p[c * 3 + 2]];
+    const e1 = B.map((x, k) => x - A[k]), e2 = C.map((x, k) => x - A[k]), n = [e1[1] * e2[2] - e1[2] * e2[1], e1[2] * e2[0] - e1[0] * e2[2], e1[0] * e2[1] - e1[1] * e2[0]], l = Math.hypot(...n); if (l < 1e-9) continue;
+    uA += Math.hypot(m.uv[a * 2] - m.uv[b * 2], m.uv[a * 2 + 1] - m.uv[b * 2 + 1]); pA += Math.hypot(...e1);
+    const d11 = e1[0] * e1[0] + e1[1] * e1[1] + e1[2] * e1[2], d12 = e1[0] * e2[0] + e1[1] * e2[1] + e1[2] * e2[2], d22 = e2[0] * e2[0] + e2[1] * e2[1] + e2[2] * e2[2];
+    const r = { A, e1, e2, n: n.map((x) => x / l), d11, d12, d22, D: d11 * d22 - d12 * d12, u: [a, b, c].map((v) => [m.uv[v * 2], m.uv[v * 2 + 1]]) };
+    const lo = [0, 1, 2].map((k) => Math.floor((Math.min(A[k], B[k], C[k]) - 0.8) / CELL)), hi = [0, 1, 2].map((k) => Math.floor((Math.max(A[k], B[k], C[k]) + 0.8) / CELL));
+    for (let x = lo[0]; x <= hi[0]; x++) for (let y = lo[1]; y <= hi[1]; y++) for (let z = lo[2]; z <= hi[2]; z++) { const k = `${x},${y},${z}`; let q = G.get(k); if (!q) G.set(k, q = []); q.push(r); }
+  }
+  return { dens: uA / Math.max(1e-6, pA), at(x, n, all) { // all - развёртки всех слоёв рядом (стена под карнизом, вывеской)
+    let best = null, bd = 0.8;
+    for (const r of G.get(`${Math.floor(x[0] / CELL)},${Math.floor(x[1] / CELL)},${Math.floor(x[2] / CELL)}`) || []) {
+      const al = Math.abs(r.n[0] * n[0] + r.n[1] * n[1] + r.n[2] * n[2]); if (al < 0.6) continue;
+      const q = [x[0] - r.A[0], x[1] - r.A[1], x[2] - r.A[2]], d = Math.abs(q[0] * r.n[0] + q[1] * r.n[1] + q[2] * r.n[2]) + (1 - al) * 0.5; if (d >= (all ? 0.8 : bd)) continue;
+      const q1 = q[0] * r.e1[0] + q[1] * r.e1[1] + q[2] * r.e1[2], q2 = q[0] * r.e2[0] + q[1] * r.e2[1] + q[2] * r.e2[2], v = (r.d22 * q1 - r.d12 * q2) / r.D, w = (r.d11 * q2 - r.d12 * q1) / r.D;
+      if (v < -0.03 || w < -0.03 || v + w > 1.03) continue;
+      const uv = [r.u[0][0] * (1 - v - w) + r.u[1][0] * v + r.u[2][0] * w, r.u[0][1] * (1 - v - w) + r.u[1][1] * v + r.u[2][1] * w]; if (all) all.push(uv); if (d < bd) { bd = d; best = uv; this.r = r; }
+    } return best; },
+    ext(x) { const r = this.r, q = [x[0] - r.A[0], x[1] - r.A[1], x[2] - r.A[2]], q1 = q[0] * r.e1[0] + q[1] * r.e1[1] + q[2] * r.e1[2], q2 = q[0] * r.e2[0] + q[1] * r.e2[1] + q[2] * r.e2[2], v = (r.d22 * q1 - r.d12 * q2) / r.D, w = (r.d11 * q2 - r.d12 * q1) / r.D;
+      return [0, 1].map((k) => r.u[0][k] * (1 - v - w) + r.u[1][k] * v + r.u[2][k] * w); } };
+}
 async function simplifyAll(byMat, ratio) {
   await MeshoptSimplifier.ready;
   let before = 0, after = 0;
@@ -1455,9 +1497,36 @@ async function simplifyAll(byMat, ratio) {
       let w = key.get(k); if (w === undefined) { key.set(k, w = wpos.length / 3); wpos.push(m.pos[v * 3], m.pos[v * 3 + 1], m.pos[v * 3 + 2]); cand.push([]); }
       wid[v] = w; cand[w].push(v);
     }
+    if (SABS) { // дальняя сцена: низ тонких плит слипался бы с верхом - долой; нормали потом заново
+      // долой только грань вниз, над которой не дальше 0,8 м есть грань вверх (у холмов и крыш автора обход бывает вывернут - материал двусторонний, их не трогаем)
+      const p = m.pos, up = new Map(), T = [];
+      for (let t = 0; t < m.idx.length; t += 3) {
+        const a = m.idx[t] * 3, b = m.idx[t + 1] * 3, c = m.idx[t + 2] * 3, ux = p[b] - p[a], uy = p[b + 1] - p[a + 1], uz = p[b + 2] - p[a + 2], vx = p[c] - p[a], vy = p[c + 1] - p[a + 1], vz = p[c + 2] - p[a + 2];
+        const nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx, l = Math.hypot(nx, ny, nz);
+        if (l < 1e-9) continue;
+        T.push([a, b, c, ny / l, t]);
+        if (ny / l > 0.85) { const x1 = Math.max(p[a], p[b], p[c]), z1 = Math.max(p[a + 2], p[b + 2], p[c + 2]);
+          for (let x = Math.floor(Math.min(p[a], p[b], p[c]) / 2); x * 2 <= x1; x++) for (let z = Math.floor(Math.min(p[a + 2], p[b + 2], p[c + 2]) / 2); z * 2 <= z1; z++) { const k = `${x},${z}`; let q = up.get(k); if (!q) up.set(k, q = []); q.push([a, b, c]); } }
+      }
+      const covered = (x, y, z) => (up.get(`${Math.floor(x / 2)},${Math.floor(z / 2)}`) || []).some(([a, b, c]) => {
+        const d = (p[b + 2] - p[c + 2]) * (p[a] - p[c]) + (p[c] - p[b]) * (p[a + 2] - p[c + 2]); if (Math.abs(d) < 1e-9) return false;
+        const u = ((p[b + 2] - p[c + 2]) * (x - p[c]) + (p[c] - p[b]) * (z - p[c + 2])) / d, v = ((p[c + 2] - p[a + 2]) * (x - p[c]) + (p[a] - p[c]) * (z - p[c + 2])) / d, w = 1 - u - v;
+        if (u < -0.02 || v < -0.02 || w < -0.02) return false;
+        const h = u * p[a + 1] + v * p[b + 1] + w * p[c + 1] - y; return h > 0.005 && h < 0.8; }); // только плоские плиты: у валунов и насыпей грани наклонные
+      const K = []; for (const [a, b, c, ny, t] of T) if (!(ny < -0.85 && covered((p[a] + p[b] + p[c]) / 3, (p[a + 1] + p[b + 1] + p[c + 1]) / 3, (p[a + 2] + p[b + 2] + p[c + 2]) / 3))) K.push(m.idx[t], m.idx[t + 1], m.idx[t + 2]);
+      m.idx = K; if (K.length < 30) continue;
+    }
     const widx = Uint32Array.from(m.idx, (v) => wid[v]); before += widx.length / 3;
     const target = Math.max(3, Math.floor(widx.length * ratio / 3) * 3);
-    let [out] = MeshoptSimplifier.simplify(widx, Float32Array.from(wpos), 3, target, SIMP_ERR, LOCK ? ['LockBorder'] : []);
+    const RU = /_ruin/.test(m.group || ''), few = SABS && !RU && m.idx.length / 3 < 420; // целая постройка и так простая - как есть
+    let thin = null, rest = widx; if (SABS && !few && !RU) { const DEC = !/^b_/.test(m.group || ''); // связные детали длиной от 4 м из ≤ 24 треугольников (раскосы ферм, стрелы, мачты) - как есть, иначе схлопываются в ничто
+      const par = new Uint32Array(wpos.length / 3).map((_, k) => k), fd = (x) => { while (par[x] !== x) x = par[x] = par[par[x]]; return x; };
+      for (let t = 0; t < widx.length; t += 3) { const a = fd(widx[t]), b = fd(widx[t + 1]); par[b] = a; par[fd(widx[t + 2])] = fd(a); }
+      const C = new Map(); for (let t = 0; t < widx.length; t += 3) { const k = fd(widx[t]); let q = C.get(k); if (!q) C.set(k, q = { n: 0, lo: [1e9, 1e9, 1e9], hi: [-1e9, -1e9, -1e9] }); q.n++; for (let j = 0; j < 3; j++) for (let d = 0; d < 3; d++) { const x = wpos[widx[t + j] * 3 + d]; q.lo[d] = Math.min(q.lo[d], x); q.hi[d] = Math.max(q.hi[d], x); } }
+      thin = []; rest = []; for (let t = 0; t < widx.length; t += 3) { const q = C.get(fd(widx[t])); (q.n <= 24 && Math.hypot(q.hi[0] - q.lo[0], q.hi[1] - q.lo[1], q.hi[2] - q.lo[2]) >= 4 && (!DEC || q.hi[1] > 8) ? thin : rest).push(widx[t], widx[t + 1], widx[t + 2]); } rest = Uint32Array.from(rest);
+    }
+    let [out] = few || rest.length < 12 ? [rest] : MeshoptSimplifier.simplify(rest, Float32Array.from(wpos), 3, Math.min(target, rest.length), SABS ? Math.min(1, SABS * (RU ? 2.5 : 1) / Math.max(1e-3, MeshoptSimplifier.getScale(Float32Array.from(wpos), 3))) : SIMP_ERR, LOCK ? ['LockBorder'] : []);
+    if (thin && thin.length) out = Uint32Array.from([...out, ...thin]);
     // топология не дала упростить — кластеризация по сетке: вершины одной ячейки сливаются, вырожденные треугольники долой
     if (CLUSTER && out.length > target * 1.6) {
       let lo = [1e9, 1e9, 1e9], hi = [-1e9, -1e9, -1e9]; for (let i = 0; i < wpos.length; i += 3) for (let d = 0; d < 3; d++) { lo[d] = Math.min(lo[d], wpos[i + d]); hi[d] = Math.max(hi[d], wpos[i + d]); }
@@ -1471,12 +1540,44 @@ async function simplifyAll(byMat, ratio) {
       }
     }
     const uvd = (a, b) => (m.hasUv ? Math.abs(m.uv[a * 2] - m.uv[b * 2]) + Math.abs(m.uv[a * 2 + 1] - m.uv[b * 2 + 1]) : 0);
+    const SRC = SABS && m.hasUv ? uvSource(m) : null;
     const map = new Int32Array(nv).fill(-1), P = [], N = [], U = [], I = [];
+    // дальняя сцена: упрощённый треугольник мог накрыть чужой кусок развёртки (чёрный фасад, трава цвета валуна). Сверяем с исходной поверхностью в 4 точках; не сошлось - берём развёртку оттуда, не помогло - делим на 4, мельче некуда - ровный цвет исходной точки
+    let u0 = 1e9, u1 = -1e9; if (SRC) for (const x of m.uv) { u0 = Math.min(u0, x); u1 = Math.max(u1, x); }
+    const TILED = u1 - u0 > 1.5;
+    const DEP = /_ruin/.test(m.group || '') ? 0 : /^b_/.test(m.group || '') ? 2 : 1; // обломки не делим
+    const splitUv = (a, b, c) => {
+      const vx = (v) => [m.pos[v * 3], m.pos[v * 3 + 1], m.pos[v * 3 + 2]], vu = (v) => [m.uv[v * 2], m.uv[v * 2 + 1]];
+      const push = (A, B, C, ua, ub, uc) => { for (const [p, u] of [[A, ua], [B, ub], [C, uc]]) { I.push(P.length / 3); P.push(...p); N.push(0, 1, 0); U.push(...u); } };
+      const S4 = [[1 / 3, 1 / 3, 1 / 3], [0.7, 0.15, 0.15], [0.15, 0.7, 0.15], [0.15, 0.15, 0.7]], mix = (A, B, C, w) => A.map((x, k) => x * w[0] + B[k] * w[1] + C[k] * w[2]);
+      const go = (A, B, C, ua, ub, uc, dep) => {
+        const e1 = B.map((x, k) => x - A[k]), e2 = C.map((x, k) => x - A[k]), n = [e1[1] * e2[2] - e1[2] * e2[1], e1[2] * e2[0] - e1[0] * e2[2], e1[0] * e2[1] - e1[1] * e2[0]], l = Math.hypot(...n); if (l < 1e-9) return;
+        for (let k = 0; k < 3; k++) n[k] /= l;
+        const id = [], all = S4.map((w) => { const L = []; id.push(SRC.at(mix(A, B, C, w), n, L)); return L; }), fits = (x, y, z) => all.every((L, k) => { if (!L.length) return true; const t = mix(x, y, z, S4[k]); return L.some((q) => Math.hypot(t[0] - q[0], t[1] - q[1]) < 0.01 + SRC.dens * 1.2); });
+        if (fits(ua, ub, uc)) return push(A, B, C, ua, ub, uc);
+        if (TILED && SRC.at(mix(A, B, C, S4[0]), n)) return push(A, B, C, SRC.ext(A), SRC.ext(B), SRC.ext(C)); // плиточная текстура: любое продолжение годится
+        const nu = [[0.96, 0.02, 0.02], [0.02, 0.96, 0.02], [0.02, 0.02, 0.96]].map((w) => SRC.at(mix(A, B, C, w), n));
+        if (nu.every(Boolean) && fits(...nu)) return push(A, B, C, ...nu);
+        if (dep < DEP && l / 2 > 4) { const ab = A.map((x, k) => (x + B[k]) / 2), bc = B.map((x, k) => (x + C[k]) / 2), ca = C.map((x, k) => (x + A[k]) / 2), mu = (x, y) => [(x[0] + y[0]) / 2, (x[1] + y[1]) / 2], uab = mu(ua, ub), ubc = mu(ub, uc), uca = mu(uc, ua);
+          go(A, ab, ca, ua, uab, uca, dep + 1); go(ab, B, bc, uab, ub, ubc, dep + 1); go(ca, bc, C, uca, ubc, uc, dep + 1); go(ab, bc, ca, uab, ubc, uca, dep + 1); return; }
+        const q = id.find(Boolean); push(A, B, C, q, q, q);
+      };
+      go(vx(a), vx(b), vx(c), vu(a), vu(b), vu(c), 0);
+    };
     for (let t = 0; t < out.length; t += 3) {
       const A = cand[out[t]], B = cand[out[t + 1]], Cc = cand[out[t + 2]];
       let best = [A[0], B[0], Cc[0]], bd = 1e9;
       if (A.length * B.length * Cc.length > 1) for (const a of A) for (const b of B) for (const c of Cc) { const d = uvd(a, b) + uvd(b, c) + uvd(a, c); if (d < bd) { bd = d; best = [a, b, c]; } }
+      if (SABS && m.hasUv) { splitUv(best[0], best[1], best[2]); continue; }
       for (const v of best) { if (map[v] < 0) { map[v] = P.length / 3; P.push(m.pos[v * 3], m.pos[v * 3 + 1], m.pos[v * 3 + 2]); N.push(m.nor[v * 3], m.nor[v * 3 + 1], m.nor[v * 3 + 2]); if (m.hasUv) U.push(m.uv[v * 2], m.uv[v * 2 + 1]); } I.push(map[v]); }
+    }
+    if (SABS) { // нормали по новым граням: ровные стены и крыши, острые углы (порог 40°)
+      const F = new Float32Array(I.length), by = new Map(), kk = (v) => `${Math.round(P[v * 3] * 200)},${Math.round(P[v * 3 + 1] * 200)},${Math.round(P[v * 3 + 2] * 200)}`;
+      for (let t = 0; t < I.length; t += 3) { const [a, b, c] = [I[t] * 3, I[t + 1] * 3, I[t + 2] * 3], ux = P[b] - P[a], uy = P[b + 1] - P[a + 1], uz = P[b + 2] - P[a + 2], vx = P[c] - P[a], vy = P[c + 1] - P[a + 1], vz = P[c + 2] - P[a + 2]; let n = [uy * vz - uz * vy, uz * vx - ux * vz, ux * vy - uy * vx]; const l = Math.hypot(...n) || 1; F[t] = n[0] / l; F[t + 1] = n[1] / l; F[t + 2] = n[2] / l; for (let q = 0; q < 3; q++) { const k = kk(I[t + q]); let L = by.get(k); if (!L) by.set(k, L = []); L.push([t, l]); } }
+      const P2 = [], N2 = [], U2 = [], I2 = [], seen = new Map();
+      for (let t = 0; t < I.length; t += 3) for (let q = 0; q < 3; q++) { const v = I[t + q]; let x = 0, y = 0, z = 0; for (const [o, l] of by.get(kk(v))) if (F[o] * F[t] + F[o + 1] * F[t + 1] + F[o + 2] * F[t + 2] > 0.77) { x += F[o] * l; y += F[o + 1] * l; z += F[o + 2] * l; } const l = Math.hypot(x, y, z) || 1; const key2 = `${v}|${Math.round(x / l * 50)},${Math.round(y / l * 50)},${Math.round(z / l * 50)}`; let w = seen.get(key2);
+        if (w === undefined) { seen.set(key2, w = P2.length / 3); P2.push(P[v * 3], P[v * 3 + 1], P[v * 3 + 2]); N2.push(x / l, y / l, z / l); if (m.hasUv) U2.push(U[v * 2], U[v * 2 + 1]); } I2.push(w); }
+      P.length = 0; N.length = 0; U.length = 0; I.length = 0; for (const x of P2) P.push(x); for (const x of N2) N.push(x); for (const x of U2) U.push(x); for (const x of I2) I.push(x);
     }
     if (Deno.args.includes('--debug')) console.log(`   ${m.group}|${m.mat}: ${widx.length / 3} → ${I.length / 3}`);
     m.pos = P; m.nor = N; m.uv = U; m.idx = I; after += I.length / 3;

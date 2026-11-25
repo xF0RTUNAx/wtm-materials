@@ -10,6 +10,157 @@ export const CREDITS = [
   ]
  },
  {
+  "title": "Russian weapon pack",
+  "author": "Rhine_Lab_Muelsyse",
+  "url": "https://sketchfab.com/3d-models/russian-weapon-pack-af00b7135a184ecfb2812a0e54458a8a",
+  "license": "CC-BY-4.0",
+  "files": [
+   "aam_r73",
+   "aam_r77",
+   "aam_r27",
+   "aam_r33"
+  ]
+ },
+ {
+  "title": "300 followers - free aircraft missile set",
+  "author": "NETRUNNER_pl",
+  "url": "https://sketchfab.com/3d-models/300-followers-free-aircraft-missile-set-2e70bc2ea0824897b2ccaea378809c9e",
+  "license": "CC-BY-4.0",
+  "files": [
+   "aam_aim9",
+   "aam_aim54"
+  ]
+ },
+ {
+  "title": "Generic passenger car pack",
+  "author": "Comrade1280",
+  "url": "https://sketchfab.com/3d-models/generic-passenger-car-pack-20f9af9b8a404d5cb022ac6fe87f21f5",
+  "license": "CC-BY-4.0",
+  "files": [
+   "c_compact",
+   "c_coupe",
+   "c_hatch",
+   "c_van",
+   "c_offroad",
+   "c_pickup",
+   "c_sedan",
+   "c_sport",
+   "c_suv",
+   "c_wagon",
+   "c_compact_lo",
+   "c_coupe_lo",
+   "c_hatch_lo",
+   "c_van_lo",
+   "c_offroad_lo",
+   "c_pickup_lo",
+   "c_sedan_lo",
+   "c_sport_lo",
+   "c_suv_lo",
+   "c_wagon_lo"
+  ]
+ },
+ {
+  "title": "Low Poly Car",
+  "author": "Roma",
+  "url": "https://sketchfab.com/3d-models/low-poly-car-54c466359f8b459dbccea0168ea01c85",
+  "license": "CC-BY-4.0",
+  "files": [
+   "c_police",
+   "c_police_lo"
+  ]
+ },
+ {
+  "title": "MiG-21 Chibi",
+  "author": "Oleh",
+  "url": "https://sketchfab.com/3d-models/mig-21-chibi-8a46e5b9d03d41a6b7611c1b5d6aacb6",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_mig21",
+   "e_mig21_lo"
+  ]
+ },
+ {
+  "title": "Tornado",
+  "author": "manilov.ap",
+  "url": "https://sketchfab.com/3d-models/tornado-9fd925dabddc4c1998b7c3df5ac47bf8",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_tornado"
+  ]
+ },
+ {
+  "title": "Tu16",
+  "author": "manilov.ap",
+  "url": "https://sketchfab.com/3d-models/tu16-9c4ee54ca28e44d7a4604be112acab9f",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_tu16"
+  ]
+ },
+ {
+  "title": "Jaguar",
+  "author": "manilov.ap",
+  "url": "https://sketchfab.com/3d-models/jaguar-b09a0ee965bb424aaf14ebd06b698f96",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_jaguar"
+  ]
+ },
+ {
+  "title": "Buccaneer",
+  "author": "manilov.ap",
+  "url": "https://sketchfab.com/3d-models/buccaneer-db82ad0e1f5644ccaee1b25b77566dc7",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_buccaneer"
+  ]
+ },
+ {
+  "title": "Harrier",
+  "author": "manilov.ap",
+  "url": "https://sketchfab.com/3d-models/harrier-9ccfd6758680413bb19d656db4f46185",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_harrier"
+  ]
+ },
+ {
+  "title": "Dassault Rafale (из неё - часть носа корпуса; остальная модель своя)",
+  "author": "CloudHub",
+  "url": "https://sketchfab.com/3d-models/dassault-rafale-fce1a5076caf4710917c14624b4d7d22",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_rafale"
+  ]
+ },
+ {
+  "title": "M4",
+  "author": "manilov.ap",
+  "url": "https://sketchfab.com/3d-models/m4-65059c25184c48c5b6a1b9ac27d34db6",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_m4"
+  ]
+ },
+ {
+  "title": "Mikoyan-Gurevich MiG-19",
+  "author": "Tom Zimmermann",
+  "url": "https://sketchfab.com/3d-models/mikoyan-gurevich-mig-19-9204188bf7114b90904c35f64a110ed3",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_mig19"
+  ]
+ },
+ {
+  "title": "Mig17",
+  "author": "manilov.ap",
+  "url": "https://sketchfab.com/3d-models/mig17-672ef502523b4cbe9aced1e4252c0cca",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_mig17"
+  ]
+ },
+ {
   "title": "AGM-86",
   "author": "mahmadsaleem11111",
   "url": "https://sketchfab.com/3d-models/agm-86-de64a3d9282249e39760a5fee425e7ae",
@@ -46,6 +197,151 @@ export const CREDITS = [
   ]
  },
  {
+  "title": "McClintic Marshall Products Co., Tender B",
+  "author": "statelibrarynsw",
+  "url": "https://sketchfab.com/3d-models/mcclintic-marshall-products-co-tender-b-34ccaa9abec244d999004055ffcd02c3",
+  "license": "CC-BY-4.0",
+  "files": [
+   "br_truss"
+  ]
+ },
+ {
+  "title": "High Voltage Transmission Line Tower (tileable)",
+  "author": "mednios",
+  "url": "https://sketchfab.com/3d-models/high-voltage-transmission-line-tower-tileable-cbeec33de6d64374b6d22de2749c1313",
+  "license": "CC-BY-4.0",
+  "files": [
+   "m_pylon"
+  ]
+ },
+ {
+  "title": "Wind Turbine [Demo]",
+  "author": "3Dexter",
+  "url": "https://sketchfab.com/3d-models/wind-turbine-demo-68669d1cfb3647ba9b1da47cbe580931",
+  "license": "CC-BY-4.0",
+  "files": [
+   "m_wind"
+  ]
+ },
+ {
+  "title": "Low Poly Cargo Ship",
+  "author": "Javier_Fernandez",
+  "url": "https://sketchfab.com/3d-models/low-poly-cargo-ship-4c22cbaf01c1427f8ab60b3a07b1b32c",
+  "license": "CC-BY-4.0",
+  "files": [
+   "m_ship"
+  ]
+ },
+ {
+  "title": "Sea ​​container - Low Poly",
+  "author": "Mozhet_Moroz",
+  "url": "https://sketchfab.com/3d-models/sea-container-low-poly-979114d6e1754f5591735ef3e5e203d4",
+  "license": "CC-BY-4.0",
+  "files": [
+   "m_cont"
+  ]
+ },
+ {
+  "title": "Port crane \"Sokol\"",
+  "author": "Vitaliy Kovalchuk",
+  "url": "https://sketchfab.com/3d-models/port-crane-sokol-4964eaa7634e47c9bac4c2a74fa91c20",
+  "license": "CC-BY-4.0",
+  "files": [
+   "m_crane"
+  ]
+ },
+ {
+  "title": "Lighthouse",
+  "author": "KarlDufresne",
+  "url": "https://sketchfab.com/3d-models/lighthouse-464af883421f4ac68ede2605f4f1407b",
+  "license": "CC-BY-4.0",
+  "files": [
+   "m_light"
+  ]
+ },
+ {
+  "title": "Train | Locomotive, Low-poly locomotive",
+  "author": "Nikcore",
+  "url": "https://sketchfab.com/3d-models/train-locomotive-low-poly-locomotive-0eea1fa85cfa40769ce8e0cbb98e1d05",
+  "license": "CC-BY-4.0",
+  "files": [
+   "m_loco"
+  ]
+ },
+ {
+  "title": "Train | Locomotive SD40-2",
+  "author": "Nikcore",
+  "url": "https://sketchfab.com/3d-models/train-locomotive-sd40-2-bdeadf60bf774adc9a39c744792c02c4",
+  "license": "CC-BY-4.0",
+  "files": [
+   "m_loco2"
+  ]
+ },
+ {
+  "title": "Il78",
+  "author": "manilov.ap",
+  "url": "https://sketchfab.com/3d-models/il78-0c0da2cc1b4c441dadc2510212c25fb7",
+  "license": "CC-BY-4.0",
+  "files": [
+   "t_il78"
+  ]
+ },
+ {
+  "title": "McDonnell Douglas KC-10 Extender",
+  "author": "Spark_Customs",
+  "url": "https://sketchfab.com/3d-models/mcdonnell-douglas-kc-10-extender-b13585efd6814861970d1a61cf510308",
+  "license": "CC-BY-4.0",
+  "files": [
+   "t_kc10"
+  ]
+ },
+ {
+  "title": "US Weapon Pack",
+  "author": "Rhine_Lab_Muelsyse",
+  "url": "https://sketchfab.com/3d-models/us-weapon-pack-c0783151b0024554a97d8ed6e5082745",
+  "license": "CC-BY-4.0",
+  "files": [
+   "aam_aim7",
+   "aam_aim9x"
+  ]
+ },
+ {
+  "title": "Simple GameReady Weapons for Fighter Jet Games",
+  "author": "ekmekarasikodlamaytb",
+  "url": "https://sketchfab.com/3d-models/simple-gameready-weapons-for-fighter-jet-games-4c231dda5e8a4db39c2f53c3e16f57e9",
+  "license": "CC-BY-4.0",
+  "files": [
+   "aam_r60"
+  ]
+ },
+ {
+  "title": "Low poly German IRIS-T AAM",
+  "author": "Raptor9",
+  "url": "https://sketchfab.com/3d-models/low-poly-german-iris-t-aam-f287bb3f4a7a4851b63d15673d9032c4",
+  "license": "CC-BY-4.0",
+  "files": [
+   "aam_iris"
+  ]
+ },
+ {
+  "title": "Low Poly Missiles and Torpedos",
+  "author": "sakigakefuruzawa",
+  "url": "https://sketchfab.com/3d-models/low-poly-missiles-and-torpedos-99783c90ce904951a3c71e851a527d35",
+  "license": "CC-BY-4.0",
+  "files": [
+   "aam_mica"
+  ]
+ },
+ {
+  "title": "Boeing F/A-18E/F \"Super Hornet\"",
+  "author": "andertan",
+  "url": "https://sketchfab.com/3d-models/boeing-fa-18ef-super-hornet-f71e9fea01e24fea9b1b380161d21d38",
+  "license": "CC-BY-4.0",
+  "files": [
+   "msl_aim120"
+  ]
+ },
+ {
   "title": "Pantsir-S1 (окраска и запекание текстур)",
   "author": "SanderWolf",
   "url": "https://sketchfab.com/3d-models/pantsir-s1-3cb67b0bae10418190e7ce32142231e4",
@@ -66,12 +362,13 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "Marder Roland (low-poly)",
-  "author": "ScurvyWoof",
-  "url": "https://sketchfab.com/3d-models/marder-roland-low-poly-2f30452b85ec461db2de4bc118b7448e",
+  "title": "Low poly 2k22 Tunguska (окраска и запекание текстур)",
+  "author": "SIpriv",
+  "url": "https://sketchfab.com/3d-models/low-poly-2k22-tunguska-0bea108df2434f779418e51af9597f5b",
   "license": "CC-BY-4.0",
   "files": [
-   "roland"
+   "tunguska",
+   "tunguska_lo"
   ]
  },
  {
@@ -80,8 +377,6 @@ export const CREDITS = [
   "url": "https://sketchfab.com/3d-models/low-poly-2k22-tunguska-0bea108df2434f779418e51af9597f5b",
   "license": "CC-BY-4.0",
   "files": [
-   "tunguska",
-   "tunguska_lo",
    "msl_9m311"
   ]
  },
@@ -97,7 +392,7 @@ export const CREDITS = [
  },
  {
   "title": "ZIF-122 & 4K33 Osa-M Missile",
-  "author": "Art Blender (KoreanNavy)",
+  "author": "KoreanNavy",
   "url": "https://sketchfab.com/3d-models/zif-122-4k33-osa-m-missile-5cd6b3ec8b9d4e798f662dd9aefefb43",
   "license": "CC-BY-4.0",
   "files": [
@@ -143,16 +438,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "ZSU-23-4M",
-  "author": "voron",
-  "url": "https://sketchfab.com/3d-models/zsu-23-4m-e9e3ca1a5ee7455f90886de220519e42",
-  "license": "CC-BY-4.0",
-  "files": [
-   "zsu234",
-   "zsu234_lo"
-  ]
- },
- {
   "title": "Humvee Transport (кузов, прицеп и антенна AN/MPQ-64 — свои)",
   "author": "karmy2k",
   "url": "https://sketchfab.com/3d-models/humvee-transport-48336bc41caf4fa1bdf147823a774111",
@@ -173,6 +458,33 @@ export const CREDITS = [
   ]
  },
  {
+  "title": "Large Industrial Storage Tanks",
+  "author": "Duane's Mind",
+  "url": "https://sketchfab.com/3d-models/large-industrial-storage-tanks-bd3ac97071104b64bc388a155b64f79e",
+  "license": "CC-BY-4.0",
+  "files": [
+   "obj_tanks"
+  ]
+ },
+ {
+  "title": "Rusty airbase fuel tank",
+  "author": "LuddePudde",
+  "url": "https://sketchfab.com/3d-models/rusty-airbase-fuel-tank-5ac257aee23e47e0a0f91a4e07a40692",
+  "license": "CC-BY-4.0",
+  "files": [
+   "obj_rtank"
+  ]
+ },
+ {
+  "title": "j type hanger",
+  "author": "ElectricLeo",
+  "url": "https://sketchfab.com/3d-models/j-type-hanger-d86713d61b4941378a6ad21569e0cbac",
+  "license": "CC-BY-4.0",
+  "files": [
+   "obj_jhangar"
+  ]
+ },
+ {
   "title": "Factory Low-Poly",
   "author": "KIFIR",
   "url": "https://sketchfab.com/3d-models/factory-low-poly-7d3bc4d7ce6d48d9986a664d48f3cca1",
@@ -182,12 +494,57 @@ export const CREDITS = [
   ]
  },
  {
+  "title": "Soviet Panelki — Voxel Style Apartment Buildings",
+  "author": "My Name Is This",
+  "url": "https://sketchfab.com/3d-models/soviet-panelki-voxel-style-apartment-buildings-632517fa9977439895f8953f2e541ee5",
+  "license": "CC-BY-4.0",
+  "files": [
+   "bld_p5"
+  ]
+ },
+ {
+  "title": "Soviet panel house built in the 1970s",
+  "author": "Unka II",
+  "url": "https://sketchfab.com/3d-models/soviet-panel-house-built-in-the-1970s-94996e8cf4a8452d91ec1e206b5b4137",
+  "license": "CC-BY-4.0",
+  "files": [
+   "bld_p9"
+  ]
+ },
+ {
+  "title": "LOW POLY - SOVIET  APARTMENT BUILDING 8K",
+  "author": "Colin.Greenall",
+  "url": "https://sketchfab.com/3d-models/low-poly-soviet-apartment-building-8k-05229ac1d1f94e6c8cacaad91110c602",
+  "license": "CC-BY-4.0",
+  "files": [
+   "bld_b12"
+  ]
+ },
+ {
   "title": "Old Soviet Apartment Building",
   "author": "dimmeyster",
   "url": "https://sketchfab.com/3d-models/old-soviet-apartment-building-a546c0af8c184b1da4de1b547097f7a3",
   "license": "CC-BY-4.0",
   "files": [
    "bld_st"
+  ]
+ },
+ {
+  "title": "9 storey residential building (updated)",
+  "author": "bean(alwayshasbean)",
+  "url": "https://sketchfab.com/3d-models/9-storey-residential-building-updated-4407c6bd0d944a9c8ad0b9c08e65a1da",
+  "license": "CC-BY-4.0",
+  "files": [
+   "bld_t9"
+  ]
+ },
+ {
+  "title": "Apartment building House GameReady",
+  "author": "Xvoer",
+  "url": "https://sketchfab.com/3d-models/apartment-building-house-gameready-9356c589d74e4e029366d0c6410f33ba",
+  "license": "CC-BY-4.0",
+  "files": [
+   "bld_a16"
   ]
  },
  {
@@ -358,7 +715,8 @@ export const CREDITS = [
   "url": "https://sketchfab.com/3d-models/zu-23-23-fdae5a37901941fea3a02578506072a3",
   "license": "CC-BY-4.0",
   "files": [
-   "zu23"
+   "zu23",
+   "pk_zu23"
   ]
  },
  {
@@ -387,7 +745,8 @@ export const CREDITS = [
   "url": "https://sketchfab.com/3d-models/mi24-5d0b5d8dc985401685f217a775deadad",
   "license": "CC-BY-4.0",
   "files": [
-   "h_mi24"
+   "h_mi24",
+   "pk_h_mi24"
   ]
  },
  {
@@ -396,7 +755,8 @@ export const CREDITS = [
   "url": "https://sketchfab.com/3d-models/ah64-3bc9b90cc97a40a6bfc13237329ce51b",
   "license": "CC-BY-4.0",
   "files": [
-   "h_ah64"
+   "h_ah64",
+   "pk_h_ah64"
   ]
  },
  {
@@ -450,7 +810,8 @@ export const CREDITS = [
   "url": "https://sketchfab.com/3d-models/uh60-47b4230a324c4390a105f656ff1210b9",
   "license": "CC-BY-4.0",
   "files": [
-   "h_uh60"
+   "h_uh60",
+   "pk_h_uh60"
   ]
  },
  {
@@ -459,7 +820,8 @@ export const CREDITS = [
   "url": "https://sketchfab.com/3d-models/mi8-1bc2f674ad8345648710f16df847599a",
   "license": "CC-BY-4.0",
   "files": [
-   "h_mi8"
+   "h_mi8",
+   "pk_h_mi8"
   ]
  },
  {
@@ -496,15 +858,6 @@ export const CREDITS = [
   "license": "CC-BY-4.0",
   "files": [
    "c_vaz"
-  ]
- },
- {
-  "title": "Dassault Rafale (из неё - часть носа корпуса; остальная модель своя)",
-  "author": "CloudHub",
-  "url": "https://sketchfab.com/3d-models/dassault-rafale-fce1a5076caf4710917c14624b4d7d22",
-  "license": "CC-BY-4.0",
-  "files": [
-   "e_rafale"
   ]
  }
 ];

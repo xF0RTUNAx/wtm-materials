@@ -327,7 +327,7 @@ export function createAir(C) {
     const ir = NIGHT >= 0.5, fog = scene.fog, H = C.G.hemi, ex = renderer.toneMappingExposure, keep = ir && { fd: fog.density, fc: fog.color.clone(), hi: H.intensity, hc: H.color.clone(), hg: H.groundColor.clone() };
     const gain = ir ? 1.6 : podGain(); pod.gain = gain; renderer.toneMappingExposure = ex * gain;
     if (ir) { fog.density *= 0.35; fog.color.setRGB(0.1, 0.1, 0.1); H.intensity = 1.7; H.color.setRGB(0.75, 0.75, 0.75); H.groundColor.setRGB(0.45, 0.45, 0.45); }
-    renderer.setRenderTarget(target); renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.setRenderTarget(target); renderer.toneMapping = renderer.toneMapping === THREE.CineonToneMapping ? THREE.CineonToneMapping : THREE.ACESFilmicToneMapping; /* без HDR-буфера - та же кривая, что у кадра (main.js): новых вариантов шейдеров не собирать */
     // точка взгляда контейнера (пересечение с землёй) - вокруг неё дома и техника подробно, только на время кадра окна
     const gy = C.city.groundH(pod.pos.x, pod.pos.z), tt = pod.dir.y < -0.02 ? Math.min(30000, (pod.pos.y - gy) / -pod.dir.y) : 6000;
     const back = C.podPass ? C.podPass(podCam, PAT.copy(pod.pos).addScaledVector(pod.dir, tt), target.height) : null;

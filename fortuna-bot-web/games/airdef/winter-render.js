@@ -3,6 +3,7 @@
 // и гребнях, лёд с наметёнными пятнами снега, хвойная крона издали (лес читается лесом между редкими импосторами),
 // укатанный снег и асфальт у базы, ВПП. Нормали - из сетки высот (50 м): склоны освещены точнее, чем грубая сетка земли.
 /* global THREE */
+import { TB_GLSL, ROUGH_GLSL, groundLit } from './terrain-bake.js?v=20261124a';
 import { tr } from './i18n.js?v=20261124a';
 import { ZONE, partDist } from './city.js?v=20261124a';
 import { WINTER } from './map-winter.js?v=20261124a';
@@ -40,7 +41,7 @@ export function winterNormalTex(city) {
   for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
     const hx = HM[j * N + Math.min(N - 1, i + 1)] - HM[j * N + Math.max(0, i - 1)], hz = HM[Math.min(N - 1, j + 1) * N + i] - HM[Math.max(0, j - 1) * N + i];
     let nx = -hx / (2 * R), ny = 1, nz = -hz / (2 * R); const l = Math.hypot(nx, ny, nz); nx /= l; ny /= l; nz /= l;
-    const q = (j * N + i) * 4; d[q] = (nx * 0.5 + 0.5) * 255; d[q + 1] = (ny * 0.5 + 0.5) * 255; d[q + 2] = (nz * 0.5 + 0.5) * 255; d[q + 3] = 255;
+    const q = (j * N + i) * 4; d[q] = (nx * 0.5 + 0.5) * 255; d[q + 1] = (nz * 0.5 + 0.5) * 255; d[q + 2] = 255; d[q + 3] = 255; // раскладка - как у запечённого рельефа (terrain-bake.js): x, z нормали, небо, солнце
   }
   const t = new THREE.DataTexture(d, N, N, THREE.RGBAFormat); t.magFilter = THREE.LinearFilter; t.minFilter = THREE.LinearFilter; t.flipY = false; t.needsUpdate = true;
   return t;
@@ -52,7 +53,7 @@ const WCOARSE = new Set(['wSA', 'wRA']); // снимки с высоты (пли
 export function winterTextures(aniso, stats) {
   const U = {};
   for (const [u, f] of Object.entries(WTEX)) {
-    const t = new THREE.Texture(); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = WCOARSE.has(u) ? 1 : Math.min(4, aniso); t.minFilter = THREE.LinearMipmapLinearFilter; U[u] = { value: t };
+    const t = new THREE.Texture(); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = WCOARSE.has(u) ? 1 : Math.min(8, aniso); t.minFilter = THREE.LinearMipmapLinearFilter; U[u] = { value: t };
     if (typeof createImageBitmap !== 'function' || typeof fetch !== 'function') continue;
     if (stats) stats.req++;
     const jpg = () => fetch(new URL(`./tex/${f}.jpg?v=20261021a`, import.meta.url)).then((r) => (r.ok ? r.blob() : Promise.reject(new Error(f)))).then((b) => createImageBitmap(b))
@@ -80,12 +81,18 @@ function wGroundGLSL(H) {
   vec3 rock = vec3(0.13, 0.125, 0.12) * (0.55 + 0.9 * rA) * mix(1.0, 0.6 + 0.8 * rl, near);
   float rk = smoothstep(0.2, 0.36, slope + 0.14 * (rA - 0.5) + 0.1 * (vn(P.xz / 60.0) - 0.5));
   rk = max(rk, smoothstep(1250.0, 1650.0, hgt) * smoothstep(0.1, 0.26, slope + 0.1 * (rA - 0.5)));
-  vec3 col = mix(snow, rock, rk);
+  vec3 col = mix(snow, rock, rk); gRough = mix(0.35, 0.9, rk);
   // лес: издали - хвойная крона со снегом (импосторы редкие), вблизи под деревьями - притоптанный снег
   // край леса - рваный (шум двух масштабов), внутри - куртины и прогалины
   float fr = smoothstep(0.2, 0.8, Z.r + 0.5 * (vn(P.xz / 160.0) - 0.5) + 0.3 * (vn(P.xz / 45.0) - 0.5)), far = smoothstep(300.0, 1600.0, dist);
   vec3 canopy = mix(vec3(0.04, 0.06, 0.047), vec3(0.6, 0.63, 0.67), 0.12 + 0.2 * vn(P.xz / 35.0) + 0.12 * vn(P.xz / 7.0)); // хвоя со снегом
-  col = mix(col, canopy, fr * far * (0.6 + 0.3 * vn(P.xz / 22.0))); col *= mix(1.0, 0.88, fr * (1.0 - far));
+  { // лес издали: тёмные кроны кучками с тенью на снегу (клетка 8 м) - не ровная серая заливка и не «горох»
+    float dn = vn(P.xz / 33.0) * 0.6 + vn(P.xz / 95.0 + 3.0) * 0.5; vec2 cq = P.xz / 8.0 + 0.35 * vec2(vn(P.xz / 19.0), vn(P.xz / 19.0 + 5.0)), ci = floor(cq), cf = cq - ci; float cr = 0.0, sh = 0.0;
+    for (int k = 0; k < 4; k++) { vec2 o = vec2(float(k & 1), float(k >> 1)) - step(cf, vec2(0.5)) * 1.0; vec2 c = ci + o, j = vec2(hs(c), hs(c + 7.7)); float on = step(hs(c + 3.3), dn * 0.95); vec2 q = cf - o - 0.2 - 0.6 * j; float R = 0.28 + 0.26 * hs(c + 1.9);
+      cr = max(cr, on * (1.0 - smoothstep(R * 0.45, R, length(q)))); sh = max(sh, on * (1.0 - smoothstep(R * 0.5, R * 1.2, length(q + uSunT * 0.5)))); }
+    vec3 cc = mix(vec3(0.035, 0.05, 0.042), vec3(0.16, 0.18, 0.19), vn(P.xz / 5.0) * 0.6);
+    vec3 fl = mix(col * mix(vec3(1.0), vec3(0.5, 0.55, 0.68), sh * 0.8), cc, cr * 0.9);
+    col = mix(col, mix(col * 0.8, fl, 0.85), fr * far); } col *= mix(1.0, 0.88, fr * (1.0 - far));
   // лёд: голубовато-серый с наметёнными полосами снега
   float ip = smoothstep(0.35, 0.7, vn(P.xz / 140.0) * 0.7 + vn(P.xz / 23.0) * 0.3);
   // берег - по высоте над уровнем льда (линия идёт по рельефу, а не по клеткам), у кромки - наметённый снег
@@ -114,7 +121,7 @@ function wGroundGLSL(H) {
 }
 `;
 }
-const wHeadGLSL = () => `uniform vec4 uAir, uIce; uniform sampler2D tZ, tNm, wSn, wSnN, wSA, wRk, wRA, wIce, wAs;
+const wHeadGLSL = () => `${TB_GLSL}${ROUGH_GLSL}uniform vec4 uAir, uIce; uniform vec2 uSunT; uniform sampler2D tZ, tNm, wSn, wSnN, wSA, wRk, wRA, wIce, wAs;
       float lum(vec3 c) { return dot(c, vec3(0.3, 0.59, 0.11)); }
       float hs(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
       ${NOISE_ON ? NOISE_GLSL + 'float vn(vec2 p) { return vnt(p); } // шум - текстурой (noise-tex.js), как у осени' : 'float vn(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(hs(i), hs(i + vec2(1, 0)), f.x), mix(hs(i + vec2(0, 1)), hs(i + vec2(1, 1)), f.x), f.y); }'}
@@ -124,20 +131,20 @@ const wHeadGLSL = () => `uniform vec4 uAir, uIce; uniform sampler2D tZ, tNm, wSn
 // материал земли: Phong (свет, тени, туман - как у остального), цвет и нормаль - в шейдере. bake - запечённый цвет дальней земли (ground-bake.js)
 export function winterGroundMaterial(city, zt, nt, ENV, WT, bake) {
   const a = city.airport, H = 16000;
-  const m = new THREE.MeshPhongMaterial({ color: 0xffffff, specular: 0x101418, shininess: 14 }); m.userData.WT = WT; m.userData.AT = WT; m.userData.farU = FAR_U;
+  const m = new THREE.MeshPhongMaterial({ color: 0xffffff, specular: 0x101418, shininess: 14 }); m.userData.WT = WT; m.userData.AT = WT; m.defines = { ...(m.defines || {}), NO_SH: 1 }; m.userData.farU = FAR_U;
   m.extensions = { derivatives: true, shaderTextureLOD: true }; // земля вдали (ground-far.js) - на WebGL 1; на WebGL 2 и так есть
   const GU = { uFar: FAR_U, tZ: { value: zt }, tNm: { value: nt }, tNoise: { value: NOISE_ON ? noiseTex() : null }, uAir: { value: new THREE.Vector4(a.x, a.z, a.rwyL / 2, a.rwyW / 2) },
-    uIce: { value: new THREE.Vector4(WINTER.LAKE_N_Y, WINTER.LAKE_S_Y, WINTER.DAM_Z, 0) } };
+    uSunT: { value: new THREE.Vector2(ENV.uSun.value.x, ENV.uSun.value.z).normalize() }, uIce: { value: new THREE.Vector4(WINTER.LAKE_N_Y, WINTER.LAKE_S_Y, WINTER.DAM_Z, 0) } };
   m.userData.GU = GU; m.userData.groundGLSL = () => wHeadGLSL() + wGroundGLSL(H); // для запекания - те же текстуры и код
   m.onBeforeCompile = (sh) => {
     Object.assign(sh.uniforms, WT, GU, { uCam: ENV.uCam }, bake ? bake.U : {});
     sh.vertexShader = 'varying vec3 vWp;\n' + sh.vertexShader.replace('#include <project_vertex>', '#include <project_vertex>\n vWp = (modelMatrix * vec4(transformed, 1.0)).xyz;');
     sh.fragmentShader = `varying vec3 vWp; uniform vec3 uCam;
       ${wHeadGLSL()}${wGroundGLSL(H)}${bake ? bake.GLSL : ''}
-` + sh.fragmentShader.replace('#include <shadowmap_pars_fragment>', groundShadowChunk())
+` + groundLit(sh.fragmentShader, 'gSunV', 'gSky').replace('#include <shadowmap_pars_fragment>', groundShadowChunk())
       .replace('#include <color_fragment>', `#include <color_fragment>
   farInit(vWp.xz); // мелкие текстуры вдали - средним цветом (texF, ground-far.js); вблизи - только при ненулевом весе
-  wN = normalize(texture2D(tNm, (vWp.xz + ${H.toFixed(1)}) / ${(2 * H).toFixed(1)}).xyz * 2.0 - 1.0);
+  wN = wNt(texture2D(tNm, (vWp.xz + ${H.toFixed(1)}) / ${(2 * H).toFixed(1)}));
   float dist = length(vWp - uCam);
   ${bake ? `float bk = bakeK(dist, vWp.xz); vec4 gC = vec4(0.0); // дальняя земля - запечённый цвет (ground-bake.js); в полосе перехода - смесь
   if (bk < 1.0) gC = aGround(vWp, dist);

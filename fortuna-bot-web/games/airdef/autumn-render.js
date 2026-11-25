@@ -3,6 +3,7 @@
 // листва в лесу и рыжая крона издали, грязь на дне оврагов и в болоте, пашня и тыквенные поля, скалы Лысой горы; туман
 // стелется в низинах (над болотом и в оврагах) - гуще в сумерках. Нормали - из сетки высот (50 м).
 /* global THREE */
+import { TB_GLSL, ROUGH_GLSL, groundLit } from './terrain-bake.js?v=20261124a';
 import { tr } from './i18n.js?v=20261124a';
 import { ZONE } from './city.js?v=20261124a';
 import { AUTUMN } from './map-autumn.js?v=20261124a';
@@ -44,7 +45,7 @@ const ACOARSE = new Set(['aGA', 'aRA', 'aMA']); // снимки с высоты 
 export function autumnTextures(aniso, stats) {
   const U = {};
   for (const [u, f] of Object.entries(ATEX)) {
-    const t = new THREE.Texture(); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = ACOARSE.has(u) ? 1 : Math.min(4, aniso); t.minFilter = THREE.LinearMipmapLinearFilter; U[u] = { value: t };
+    const t = new THREE.Texture(); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = ACOARSE.has(u) ? 1 : Math.min(8, aniso); t.minFilter = THREE.LinearMipmapLinearFilter; U[u] = { value: t };
     if (typeof createImageBitmap !== 'function' || typeof fetch !== 'function') continue;
     if (stats) stats.req++;
     const jpg = () => fetch(new URL(`./tex/${f}.jpg?v=20261023a`, import.meta.url)).then((r) => (r.ok ? r.blob() : Promise.reject(new Error(f)))).then((b) => createImageBitmap(b))
@@ -115,7 +116,7 @@ function aGroundGLSL(H) {
 }
 `;
 }
-const aHeadGLSL = () => `uniform vec3 uBald; uniform sampler2D tZ, tZ2, tNm, aG, aGN, aGA, aL, aM, aMA, aF, aRk, aRA;
+const aHeadGLSL = () => `${TB_GLSL}${ROUGH_GLSL}uniform vec3 uBald; uniform sampler2D tZ, tZ2, tNm, aG, aGN, aGA, aL, aM, aMA, aF, aRk, aRA;
       float lum(vec3 c) { return dot(c, vec3(0.3, 0.59, 0.11)); }
       float hs(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
       ${NOISE_ON ? NOISE_GLSL + 'float vn(vec2 p) { return vnt(p); } // шум - текстурой (noise-tex.js): 24 вызова на пиксель были главной ценой земли' : 'float vn(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(hs(i), hs(i + vec2(1, 0)), f.x), mix(hs(i + vec2(0, 1)), hs(i + vec2(1, 1)), f.x), f.y); }'}
@@ -125,7 +126,7 @@ const aHeadGLSL = () => `uniform vec3 uBald; uniform sampler2D tZ, tZ2, tNm, aG,
 // материал земли: Phong (свет, тени, туман - как у остального), цвет и нормаль - в шейдере. bake - запечённый цвет дальней земли (ground-bake.js)
 export function autumnGroundMaterial(city, zt, nt, ENV, AT, W, bake) {
   const H = 16000, BA = AUTUMN.BALD, fogC = new THREE.Color(W.fog).convertSRGBToLinear();
-  const m = new THREE.MeshPhongMaterial({ color: 0xffffff, specular: 0x0c0c0a, shininess: 10 }); m.userData.AT = AT; m.userData.farU = FAR_U;
+  const m = new THREE.MeshPhongMaterial({ color: 0xffffff, specular: 0x0c0c0a, shininess: 10 }); m.userData.AT = AT; m.defines = { ...(m.defines || {}), NO_SH: 1 }; m.userData.farU = FAR_U;
   m.extensions = { derivatives: true, shaderTextureLOD: true }; // земля вдали (ground-far.js) - на WebGL 1; на WebGL 2 и так есть
   const GU = { uFar: FAR_U, tZ: { value: zt[0] }, tZ2: { value: zt[1] }, tNm: { value: nt }, tNoise: { value: NOISE_ON ? noiseTex() : null }, uBald: { value: new THREE.Vector3(BA.x, BA.z, BA.r) } };
   const uLowL = { value: 1 }; m.userData.uLowL = uLowL; // яркость тумана низин - по свету сцены (city-render.js updateCityScene): в темноте не светится
@@ -135,10 +136,10 @@ export function autumnGroundMaterial(city, zt, nt, ENV, AT, W, bake) {
     sh.vertexShader = 'varying vec3 vWp;\n' + sh.vertexShader.replace('#include <project_vertex>', '#include <project_vertex>\n vWp = (modelMatrix * vec4(transformed, 1.0)).xyz;');
     sh.fragmentShader = `varying vec3 vWp; uniform vec3 uCam; uniform vec4 uLow; uniform float uLowL;
       ${aHeadGLSL()}${aGroundGLSL(H)}${bake ? bake.GLSL : ''}
-` + sh.fragmentShader.replace('#include <shadowmap_pars_fragment>', groundShadowChunk())
+` + groundLit(sh.fragmentShader, 'gSunV', 'gSky').replace('#include <shadowmap_pars_fragment>', groundShadowChunk())
       .replace('#include <color_fragment>', `#include <color_fragment>
   farInit(vWp.xz); // мелкие текстуры вдали - средним цветом (texF, ground-far.js); вблизи - только при ненулевом весе
-  wN = normalize(texture2D(tNm, (vWp.xz + ${H.toFixed(1)}) / ${(2 * H).toFixed(1)}).xyz * 2.0 - 1.0);
+  wN = wNt(texture2D(tNm, (vWp.xz + ${H.toFixed(1)}) / ${(2 * H).toFixed(1)}));
   float dist = length(vWp - uCam);
   ${bake ? `float bk = bakeK(dist, vWp.xz); vec4 gC = vec4(0.0); // дальняя земля - запечённый цвет (ground-bake.js); в полосе перехода - смесь
   if (bk < 1.0) gC = aGround(vWp, dist);

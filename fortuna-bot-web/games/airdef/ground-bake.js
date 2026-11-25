@@ -116,7 +116,7 @@ void main() { vWp = (modelMatrix * vec4(position, 1.0)).xyz; gl_Position = vec4(
         fragmentShader: `varying vec3 vWp;
 ${gm.userData.groundGLSL()}
 void main() {
-  farInit(vWp.xz); wN = normalize(texture2D(tNm, (vWp.xz + ${h}) / ${h2}).xyz * 2.0 - 1.0);
+  farInit(vWp.xz); wN = wNt(texture2D(tNm, (vWp.xz + ${h}) / ${h2}));
   vec4 g = aGround(vWp, 1.0e6);
   gl_FragColor = vec4(sqrt(clamp(g.rgb, 0.0, 1.0)), clamp(g.a / 1.2, 0.0, 1.0));
 }` });

@@ -70,6 +70,12 @@ export function createPipeline(renderer, cfg) {
   const comp = mat(`uniform sampler2D tDiffuse, tBloom, tBloom2, tRays, tHaze, tDepth; uniform vec2 camNF; uniform float bloom, raysK, exposure, vignette, grade, ca, p3, p3k, hazeK, time, gSat, gCon; uniform vec3 gLift, gGain;
     varying vec2 vUv;
     vec3 aces(vec3 x) { return clamp((x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14), 0.0, 1.0); }
+    ${cfg.tone === 1 ? `vec3 tone(vec3 x) { x *= 1.45; // GT (Uchimura): мягкий носок, прямая середина, плечо
+      vec3 w0 = 1.0 - smoothstep(0.0, 0.22, x), w2 = step(vec3(0.532), x), w1 = 1.0 - w0 - w2, T = 0.22 * pow(max(x, 1e-4) / 0.22, vec3(1.33)), S = 1.0 - 0.468 * exp(-(x - 0.532) / 0.468);
+      return clamp(T * w0 + x * w1 + S * w2, 0.0, 1.0); }` : cfg.tone === 2 ? `vec3 tone(vec3 c) { c *= 1.72; // Khronos PBR Neutral: цвета точные, плечо только у светов
+      float x = min(c.r, min(c.g, c.b)), off = x < 0.08 ? x - 6.25 * x * x : 0.04; c -= off; float pk = max(c.r, max(c.g, c.b)); if (pk < 0.76) return max(c, 0.0);
+      float np = 1.0 - 0.0576 / (pk + 0.24 - 0.76); c *= np / pk; return mix(c, vec3(np), 1.0 - 1.0 / (0.15 * (pk - np) + 1.0)); }` : cfg.tone === 3 ? `vec3 tone(vec3 x) { x = aces(x); // ACES + глубокие тени чуть подняты, контраст в верхних средних
+      float l = dot(x, vec3(0.2126, 0.7152, 0.0722)); x *= 1.0 + 0.5 * (1.0 - smoothstep(0.0, 0.1, l)); return clamp(x + 0.16 * x * (l - 0.45) * smoothstep(0.2, 0.4, l) * (1.0 - smoothstep(0.75, 1.0, l)), 0.0, 1.0); }` : 'vec3 tone(vec3 x) { return aces(x); }'}
     vec3 toSRGB(vec3 c) { return mix(c * 12.92, 1.055 * pow(c, vec3(1.0 / 2.4)) - 0.055, step(0.0031308, c)); }
     void main() {
       vec2 uv = vUv;
@@ -81,7 +87,7 @@ export function createPipeline(renderer, cfg) {
       vec3 col = ca > 0.0 ? vec3(texture2D(tDiffuse, uv + off).r, texture2D(tDiffuse, uv).g, texture2D(tDiffuse, uv - off).b) : texture2D(tDiffuse, uv).rgb;
       col += (texture2D(tBloom, vUv).rgb * 0.6 + texture2D(tBloom2, vUv).rgb * 0.9) * bloom;
       col += texture2D(tRays, vUv).rgb * raysK;
-      col = aces(col * exposure);
+      col = tone(col * exposure);
       float l = dot(col, vec3(0.2126, 0.7152, 0.0722));
       col = mix(col, col * mix(vec3(0.9, 0.99, 1.1), vec3(1.1, 1.0, 0.88), l), grade);  // холодные тени, тёплые света
       col = max(mix(vec3(l), col, 1.0 + 0.15 * grade), 0.0);

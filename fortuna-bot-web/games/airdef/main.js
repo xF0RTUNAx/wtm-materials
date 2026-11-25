@@ -18,6 +18,7 @@ import { WINTER_KEYS } from './winter-render.js?v=20261124a';
 import { buildAutumn } from './map-autumn.js?v=20261124a';
 import { AUTUMN_KEYS } from './autumn-render.js?v=20261124a';
 import { buildCityScene, updateCityScene, UPX, ENV, texStats, freezeTree, SITE_ANIMS, farFlat } from './city-render.js?v=20261124a';
+import { addBlast } from './blast.js?v=20261124a';
 import { mergeLocal } from './merge.js?v=20261124a';
 import { createPipeline } from '../drone/post.js?v=20261124a';
 import { setGround, D2R, clamp, fwdOf } from '../drone/sim/core.js?v=20261124a';
@@ -83,7 +84,8 @@ const LIVE = (() => { if (Q.get('test') === '1') return null; try { const o = JS
 export const PRESETS = {
   low: { name: tr('Низкий'), skyOnly: true, fxLo: true, lodObj: 3500, desc: tr('слабые телефоны'), prCap: 1.25, prMul: 0.8, draw: 8000, houseK: 0.5, bldNear: 0, groundSeg: 160, zoneTex: 512, trees: 0, clouds: 0, roofDetail: false, shadows: false, particles: 1500,
     perf: { scale: 1, min: 0.75, aa: 'off', up: 'off' } },
-  medium: { name: tr('Средний'), skyOnly: true, fxLo: true, lodObj: 4500, desc: tr('большинство телефонов'), prCap: 1.5, prMul: 1, draw: 11000, houseK: 0.8, bldNear: 300, bldFar: 1600, treeFar: 450, treeNear: 110, groundSeg: 256, zoneTex: 1024, trees: 3500, clouds: 150, roofDetail: true, shadows: false, particles: 2500,
+  medium: { name: tr('Средний'), skyOnly: true, fxLo: true, lodObj: 4500, desc: tr('большинство телефонов'), prCap: 1.5, prMul: 1, draw: 11000, houseK: 0.8, bldNear: 300, bldFar: 1600, treeFar: 450, treeNear: 110, groundSeg: 256, zoneTex: 1024, trees: 3500, clouds: 150, roofDetail: true, particles: 2500,
+    shadows: true, shadowMap: 1024, shadowBox: 240, shadowLite: true, /* дешёвые тени (Mark 2026-11-25): 2 × 1024², 5 выборок вместо 17, дома - коробками, деревья - подставными кронами, трава - без теней */
     perf: { scale: 1, min: 0.7, aa: 'fxaa', up: 'cas', sharp: 0.45 } },
   high: { name: tr('Высокий'), lodObj: 6000, desc: tr('мощные телефоны и ПК: тени, свечение'), prCap: 2, prMul: 1, draw: 16000, houseK: 1, bldNear: 450, bldFar: 2600, treeFar: 700, treeNear: 170, groundSeg: 320, zoneTex: 1024, trees: 14000, clouds: 500, roofDetail: true, particles: 4000,
     shadows: true, shadowMap: 2048, shadowBox: 600, aniso: 8, /* 4 → 8 (2026-10-23): земля и крыши под острым углом чётче, на телефонах почти бесплатно */
@@ -99,8 +101,9 @@ export const PRESETS = {
 };
 export const WEATHER_KEYS = ['day', 'morning', 'evening', 'sunset', 'overcast']; // ночь временно убрана (Mark, 2026-10-18): вернуть 'night' - и она снова в настройках
 // цветокоррекция по погоде (post.js): gGain - оттенок светов, gLift - теней, gSat - насыщенность, gCon - контраст; сдержанно
+const Q0LT0 = /[?&]lt=0/.test(location.search);
 const GRADE = {
-  day: { gSat: 1.02 },
+  day: Q0LT0 ? { gSat: 1.02 } : { gSat: 0.92, gCon: 1.08 }, // объёмный свет дня (city-render.js LAB.day); ?lt=0 - прежний
   morning: { gGain: [1.035, 1.0, 0.95], gLift: [0, 0.004, 0.012] },
   evening: { gGain: [1.05, 0.995, 0.92], gLift: [0.006, 0, 0.012], gSat: 0.97 },
   sunset: { gGain: [1.07, 0.98, 0.88], gLift: [0.01, 0, 0.018], gCon: 1.04 },
@@ -159,6 +162,8 @@ function touchGfx(P, custom) {
   if (P.shadowMap > 2048) Object.assign(P, { shadowMap: 2048, shadowBox: Math.min(P.shadowBox, 600) });
   if (!custom && P.perf.aa === 'msaa') P.perf.aa = 'fxaa';
   if (!custom && P.shadows && !(P.shEvery > 1)) { P.shEvery = 2; P.shAuto = true; } // тени через кадр (main.js frame: камера низко - каждый кадр)
+  if (gfxKey === 'medium' && GPU.score < 2000) P.shadows = false; // слабые видеочипы - как раньше, пятно под машиной
+  if (/[?&]sh0=1/.test(location.search)) P.shadows = false; // замер: без теней
   P.bloomQ = true; P.halfFx = true; P.treeLoD = 1600;
   // треугольники (Mark 2026-11-17, снимки с телефона на «Ультра»: видеочип упирается в треугольники, не в пиксели; стенд: сетка земли 0,75 млн,
   // пролёты мостов и огни подхода ~0,45 млн - рисовались всегда): сетка земли ×0,75 (ячейка ~70 м вместо ~52), мосты моделью ближе 1 км (на ПК 1,6 км).
@@ -185,6 +190,7 @@ const P = CINEMA ? Object.assign(P0, { name: tr('Кино'), lodObj: 1e9, draw: 
   treeShadows: true, aniso: 16, zoneTex: 2048, prCap: 2, podHalf: false, perf: { ...P0.perf, scale: 1, dynOff: true, aa: 'msaa', up: 'off' }, post: { ...P0.post, bloom: 0.5 } }) : P0;
 // ?full=1 вместе с «Кино» - для кадров меню и ролика (Mark 2026-10-27: «в полном качестве даже на таком расстоянии»): дома, деревья, реквизит
 // улиц - полными моделями на всю карту (±16 км), без упрощённых копий, импосторов и коробок; кадр медленный - только для записи
+if (Q.get('tn') && Q.get('test') === '1') P.treeNear = +Q.get('tn'); // стенд цвета деревьев: радиус моделей (0 - только снимки)
 if (CINEMA && Q.get('full') === '1') Object.assign(P, { bldNear: 24000, treeNear: 24000, bldFar: 0, treeFar: 0, bldLo: false, full: true, propNear: 5000, prCap: 3 }); // мелочь улиц (фонари, провода, надгробия) - в 5 км: дальше она тоньше пикселя и мерцает «крупой»; ×3 - сглаживание мелких моделей вдали
 if (Q.get('bldfar') !== null) Object.assign(P, { bldFar: +Q.get('bldfar'), treeFar: +Q.get('bldfar') * 0.3 }); // проверка: ?bldfar=0 - без дальних копий моделей
 // карта: «Мульти-волна» (и в онлайне) и «Кино» - только зимняя долина «Северный рубеж», вылеты, задания и уроки - город
@@ -261,13 +267,26 @@ camera.rotation.order = 'YXZ';
 const basePR = Math.min((window.devicePixelRatio || 1) * P.prMul, P.prCap);
 const perf = { ...P.perf };
 if (Q.get('dyn') === '0') perf.dynOff = true; // стенды: без динамического разрешения
-let pipe = null, sceneTM = THREE.ACESFilmicToneMapping;
+// «Низкий» и «Средний» (без HDR-буфера, тон и гамму делают материалы), разбор 2026-11-25: 1) в r128 дымка подмешивалась ПОСЛЕ тонмаппинга и гаммы - линейный
+// цвет ложился на уже готовую картинку (даль не того цвета, чем небо и чем на «Высоком»); 2) цветокоррекция погоды (GRADE) и тональная кривая «Высокого»
+// до этих пресетов не доходили. Теперь дымка - до тонмаппинга, кривая (место Cineon в three.js: Custom занят ангаром) и коррекция - те же, что в drone/post.js (comp). ?ldr=0 - как было
+const LDR_GRADE = Q.get('ldr') !== '0';
+if (LDR_GRADE) {
+  for (const k in THREE.ShaderLib) { const L = THREE.ShaderLib[k], fs = L.fragmentShader; if (fs && fs.includes('#include <fog_fragment>') && fs.includes('#include <tonemapping_fragment>')) L.fragmentShader = fs.replace('#include <fog_fragment>', '').replace('#include <tonemapping_fragment>', '#include <fog_fragment>\n\t#include <tonemapping_fragment>'); }
+  const g = { gSat: 1, gCon: 1, gGain: [1, 1, 1], gLift: [0, 0, 0], ...(GRADE[W_KEY] || {}) }, n = (x) => Number(x).toFixed(4), v3 = (a) => `vec3(${a.map(n).join(', ')})`;
+  THREE.ShaderChunk.tonemapping_pars_fragment = THREE.ShaderChunk.tonemapping_pars_fragment.replace(/vec3 OptimizedCineonToneMapping\( vec3 color \) \{[^}]*\}/, () => `vec3 OptimizedCineonToneMapping( vec3 color ) {
+    vec3 x = color * toneMappingExposure, c = clamp((x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14), 0.0, 1.0); float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
+    c = mix(c, c * mix(vec3(0.9, 0.99, 1.1), vec3(1.1, 1.0, 0.88), l), 0.18); c = max(mix(vec3(l), c, 1.027), 0.0);
+    c = max(c * ${v3(g.gGain)} + ${v3(g.gLift)} * (1.0 - l), 0.0); c = max(mix(vec3(dot(c, vec3(0.2126, 0.7152, 0.0722))), c, ${n(g.gSat)}), 0.0);
+    return saturate(0.18 * pow(c / 0.18, vec3(${n(g.gCon)}))); }`);
+}
+let pipe = null, sceneTM = LDR_GRADE ? THREE.CineonToneMapping : THREE.ACESFilmicToneMapping;
 if (P.post || perf.aa !== 'off' || perf.up !== 'off') {
   const ldr = !P.post;
-  pipe = createPipeline(renderer, { ...(P.post || {}), ...(GRADE[W_KEY] || {}), ...(MAP === 'city' && LIGHT_GRADE[Q.get('light')] && (W_KEY === 'day' || W_KEY === 'morning' || W_KEY === 'evening') ? LIGHT_GRADE[Q.get('light')] : {}), ...(Q.get('look') === '1' && MAP === 'city' ? { gGain: [1.045, 1.0, 0.94], gLift: [0.004, 0.002, 0], gCon: 1.12, gSat: 1.04 } : {}) /* проба «земля и свет» города (city-render.js LOOK) */, ldr, ...(Q.get('pp') ? JSON.parse(Q.get('pp')) : {}) /* стенды: свои настройки постобработки (?pp={"bloom":0}) */, exposure: renderer.toneMappingExposure, scale: perf.scale, upscaler: perf.up, sharp: perf.sharp || 0.4, aa: perf.aa,
+  pipe = createPipeline(renderer, { ...(P.post || {}), ...(GRADE[W_KEY] || {}), ...(MAP === 'city' && LIGHT_GRADE[Q.get('light')] && (W_KEY === 'day' || W_KEY === 'morning' || W_KEY === 'evening') ? LIGHT_GRADE[Q.get('light')] : {}), ...(Q.get('look') === '1' && MAP === 'city' ? { gGain: [1.045, 1.0, 0.94], gLift: [0.004, 0.002, 0], gCon: 1.12, gSat: 1.04 } : {}) /* проба «земля и свет» города (city-render.js LOOK) */, ldr, tone: +Q.get('tc') || 0, ...(Q.get('pp') ? JSON.parse(Q.get('pp')) : {}) /* стенды: свои настройки постобработки (?pp={"bloom":0}) */, exposure: renderer.toneMappingExposure, scale: perf.scale, upscaler: perf.up, sharp: perf.sharp || 0.4, aa: perf.aa,
     bloomQ: !!P.bloomQ, fx: !!P.halfFx, fxU: FXU, fxLayer: FX_LAYER, fxAddLayer: FX_ADD_LAYER, // fx - облака и дым в половине разрешения (слои FX_*)
     samples: CINEMA ? 4 : 2, aaCas1: Q.get('pp1') !== '0' }); // FXAA и резкость CAS - одним проходом (post.js; ?pp1=0 - двумя, как раньше)
-  sceneTM = ldr ? THREE.ACESFilmicToneMapping : THREE.NoToneMapping;
+  sceneTM = ldr ? (LDR_GRADE ? THREE.CineonToneMapping : THREE.ACESFilmicToneMapping) : THREE.NoToneMapping;
   renderer.setPixelRatio(basePR);
 } else renderer.setPixelRatio(basePR * perf.scale);
 renderer.toneMapping = sceneTM;
@@ -463,6 +482,13 @@ C.syncUnits = function () {
         if (gm && gm.tdish && md.LN.tdish) { const P = md.LN.tdish.p, pv = new THREE.Group(); obj(gm.tdish, pv); pv.position.fromArray(P); gm.tdish.position.set(-P[0], -P[1], -P[2]); tg.add(pv); g.userData.tdish = pv; }
         // M163: блок стволов - в люльке, крутится вокруг своей оси (spin); prepare.js кладёт barrels в оси башни (от tp) - сдвиг на −cp и на ось
         if (gm && gm.barrels && md.LN.spin) { const P = md.LN.spin.p, pv = new THREE.Group(); obj(gm.barrels, pv); pv.position.fromArray(P); gm.barrels.position.set(-Ld.cp[0] - P[0], -Ld.cp[1] - P[1], -Ld.cp[2] - P[2]); cg.add(pv); g.userData.spin = { o: pv, v: 0 }; }
+        // «Шилка»: верхняя люлька на своих цапфах с тем же углом, тяга между люльками (обратным углом - остаётся параллельна себе), откат пар стволов
+        if (gm && md.LN.twin && gm.cradle2) {
+          const W = md.LN.twin, up = new THREE.Group(), at = (o, host, q) => { if (!o) return null; const z = new THREE.Group(); obj(o, z); o.position.set(-q[0], -q[1], -q[2]); host.add(z); return z; };
+          up.position.fromArray(W.p); tg.add(up); at(gm.cradle2, up, W.p); let lk = null;
+          if (gm.clink) { lk = new THREE.Group(); lk.position.set(W.link[0] - Ld.cp[0], W.link[1] - Ld.cp[1], W.link[2] - Ld.cp[2]); cg.add(lk); at(gm.clink, lk, W.link); }
+          g.userData.twin = { up, lk, rl: at(gm.brl, cg, Ld.cp), ru: at(gm.bru, up, W.p), t: 0 };
+        }
         // NASAMS: у каждой крышки свой шарнир (lids.piv, в осях башни; ось вдоль X - откидывается вперёд-вниз); С-300 - в осях пакета (onPack), поднимаются с ним
         if (gm && gm.lids.length && md.LN.lids) {
           const LD = md.LN.lids, H = LD.hinge; g.userData.lids = gm.lids.map((lid, i) => {
@@ -501,11 +527,12 @@ C.syncUnits = function () {
       // антенна обзора (готовая модель): на первой башне (без башни - на машине, Sentinel), ось вращения - центр её опоры (нижние 15 % по высоте)
       // «Тор-М2»: ось стакана - из паспорта (fold.axis), сама антенна (rfold) - на шарнире fold.hinge в стакане, в модели сложена (radarFold)
       if (gm && gm.radar) {
-        const rd = gm.radar.clone(), pv = new THREE.Group(), F = md.LN && md.LN.fold; obj(rd, pv); (tur.length ? tur[0].tg : g).add(pv); const ax = F ? F.axis : radarAxis(rd); pv.position.set(ax[0], 0, ax[1]); rd.position.set(-ax[0], 0, -ax[1]); g.userData.radar = pv;
+        const rd = gm.radar.clone(), pv = new THREE.Group(), F = md.LN && md.LN.fold; obj(rd, pv); (tur.length ? tur[0].tg : g).add(pv); const SR = md.LN && md.LN.sradar, ax = F ? F.axis : SR ? [SR.p[0], SR.p[2]] : (md.LN && md.LN.radarAx) || radarAxis(rd); pv.position.set(ax[0], 0, ax[1]); rd.position.set(-ax[0], 0, -ax[1]); g.userData.radar = pv;
+        if (SR && gm.tdish) { const H = SR.dish, dp = new THREE.Group(); obj(gm.tdish, dp); dp.position.set(H[0] - ax[0], H[1], H[2] - ax[1]); gm.tdish.position.set(-H[0], -H[1], -H[2]); pv.add(dp); g.userData.sdish = dp; } // «Шилка»: зеркало - на антенне
         if (F && gm.rfold) { const H = F.hinge, fp = new THREE.Group(); obj(gm.rfold, fp); fp.position.set(H[0] - ax[0], H[1], H[2] - ax[1]); gm.rfold.position.set(-H[0], -H[1], -H[2]); pv.add(fp); g.userData.rfold = fp; }
       }
       g.userData.tur = tur; g.userData.slots = slots; g.userData.nSlots = md.LN ? slotCount(md.LN) : 0;
-      if (!P.shadows) addBlob(g); // без карты теней - мягкое пятно под машиной (иначе «висит» над землёй)
+      addBlob(g, P.shadows ? (Q.get('blob') === '0' ? 0 : 0.75) : 1); // мягкое пятно под машиной: без карты теней - вместо тени, с ней - закрытое днищем небо (?blob=0)
       g.rotation.y = u.yaw; scene.add(g); unitMeshes.set(u.id, g); warmSoon(); // его ракета - собрать шейдеры заранее (оборона и онлайн ставят комплексы по ходу)
     }
     g.position.copy(u.pos); g.position.y -= 1.5; seat(g, u); // по рельефу: на склоне длинная машина не уходит в землю
@@ -585,6 +612,24 @@ function gunSpin(u, g, dt) {
   const s = g.userData.spin, w = LNCH[u.key].spin.w, on = u.gunOn && !u.dead; s.v = clamp(s.v + Math.max(0, dt) * (on ? w / 0.3 : -w), 0, w);
   if (s.v > 0) s.o.rotation.z += s.v * dt;
 }
+// «Шилка»: верхняя люлька - тот же угол, тяга - обратный; откат пар стволов по очереди, пока стреляет (вблизи)
+function twinGun(u, g, dt) {
+  const W = g.userData.twin, R = LNCH[u.key].twin.rec; W.up.rotation.x = u.lel; if (W.lk) W.lk.rotation.x = -u.lel;
+  const on = u.gunOn && !u.dead; if (on) W.t += Math.max(0, dt) * 14;
+  const a = on ? (W.t % 1 < 0.5 ? R : 0) : 0; if (W.rl) W.rl.position.z = a; if (W.ru) W.ru.position.z = on ? R - a : 0;
+}
+// антенна «Шилки»: секторный поиск ±S.sec от оси башни (сектор всегда смотрит туда же, куда башня; у РПК-2 - 30-80°), угол места при этом тоже меняется;
+// цель на сопровождении - поворачивается на неё в том же секторе, зеркало - по углу места; РЛС выключена - стоит
+function shilkaRadar(u, g, dt) {
+  const S = LNCH[u.key].sradar, R = g.userData.radar, D = g.userData.sdish, w = S.w * Math.max(0, dt); let el = 0.05, az = null;
+  if (u.emit && u.track && !u.track.dead) {
+    D.getWorldPosition(LP); const t = u.track.pos; az = clamp(wrapA(Math.atan2(-(t.x - LP.x), -(t.z - LP.z)) - u.yaw - u.lyaw), -S.sec, S.sec);
+    el = clamp(Math.atan2(t.y - LP.y, Math.hypot(t.x - LP.x, t.z - LP.z)), S.lo, S.hi);
+  } else if (u.emit) { const q = g.userData.scan = (g.userData.scan || 0) + Math.max(0, dt) * S.rate / S.sec; az = S.sec * (Math.abs(((q + 1) % 4 + 4) % 4 - 2) - 1); el = 0.1 + 0.1 * Math.sin(q * 0.8); } // туда-обратно ровным ходом
+  if (az !== null) R.rotation.y += clamp(az - R.rotation.y, -w, w);
+  D.rotation.x += clamp(el - D.rotation.x, -w, w);
+}
+const wrapA = (a) => Math.atan2(Math.sin(a), Math.cos(a));
 // ось антенны обзора: центр (x, z) вершин её нижней части - опоры или мачты (тарелка бывает смещена от оси)
 const RADAR_W = { gepard: 6.3, tor: 6.3, torm2: 6.3, osa: 3.5, pantsir: 4.2, roland: 6.3, tunguska: 6.3, rapier: 4, gpsjamw: 3.1, gpsjam: 0.63 }; // рад/с: Gepard и «Тор» ≈ 60 об/мин, «Оса» и «Панцирь» - медленнее, Sentinel - 30, П-18 - 6
 function radarAxis(o) {
@@ -597,10 +642,11 @@ function radarAxis(o) {
 }
 // мягкое тёмное пятно под машиной по её габаритам (радиальный градиент, без записи глубины)
 let blobTex = null;
-function addBlob(g) {
+function addBlob(g, k = 1) {
+  if (!k) return;
   if (!blobTex) { const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext && c.getContext('2d'); if (x) { const gr = x.createRadialGradient(32, 32, 4, 32, 32, 32); gr.addColorStop(0, 'rgba(0,0,0,0.55)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); x.fillStyle = gr; x.fillRect(0, 0, 64, 64); } blobTex = new THREE.CanvasTexture(c); }
-  const sz = new THREE.Box3().setFromObject(g).getSize(new THREE.Vector3()), q = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: blobTex, transparent: true, depthWrite: false, color: 0x000000 }));
-  q.rotation.x = -Math.PI / 2; q.scale.set(Math.max(2, sz.x * 1.35), Math.max(2, sz.z * 1.25), 1); q.position.y = 0.08; q.renderOrder = 1; g.add(q);
+  const sz = new THREE.Box3().setFromObject(g).getSize(new THREE.Vector3()), q = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: blobTex, transparent: true, depthWrite: false, color: 0x000000, opacity: k }));
+  q.rotation.x = -Math.PI / 2; q.scale.set(Math.max(2, sz.x * (k < 1 ? 1.2 : 1.35)), Math.max(2, sz.z * (k < 1 ? 1.15 : 1.25)), 1); q.position.y = 0.08; q.renderOrder = 1; g.add(q);
 }
 const dist = (p) => camera.position.distanceTo(p);
 const TP = new THREE.Vector3();
@@ -985,13 +1031,15 @@ function syncWorld(dt, t) {
       for (let k = 0; k < sl.length; k++) sl[k].visible = (rem >= N || ((k - fired % N) + N) % N < rem) && !(u.slotT[k] > 0);
     }
     if (g.userData.rfold) radarFold(u, g, dt);
-    if (g.userData.radar && (u.emit || u.S.type === 'jammer') && !(g.userData.rfold && u.rfV < 1)) g.userData.radar.rotation.y += (RADAR_W[u.key] || 4) * Math.max(0, dt); // крутится, пока РЛС включена (станция РЭБ работает всегда)
+    if (g.userData.sdish) shilkaRadar(u, g, dt);
+    else if (g.userData.radar && (u.emit || u.S.type === 'jammer') && !(g.userData.rfold && u.rfV < 1)) g.userData.radar.rotation.y += (RADAR_W[u.key] || 4) * Math.max(0, dt); // крутится, пока РЛС включена (станция РЭБ работает всегда)
     if (g.userData.lids) torLids(u, g, dt);
     if (g.userData.blow) blowLids(u, g);
     if (g.userData.erect) erectView(u, g, dt);
     if (g.userData.cyl && g.userData.cyl.length) cylView(u, g);
     if (g.userData.tdish) torDish(u, g, dt);
     if (g.userData.spin) gunSpin(u, g, dt);
+    if (g.userData.twin) twinGun(u, g, dt);
     const d = g.userData.dish; if (!d) continue;
     if (u.track && u.emit) { LP.copy(u.track.pos).sub(u.pos); d.rotation.y = Math.atan2(-LP.x, -LP.z) - u.yaw; }
     else if (u.emit) d.rotation.y = t * 2.5 + u.id;
@@ -1486,7 +1534,7 @@ setInterval(() => {
   // (attachBridgeSegs, attachAirfield ставят их у аэродрома города - на зиме и осени они стояли в поле)
   for (const n of new Set([...city.objects.flatMap((o) => (o.models || []).map((q) => q.m)), ...(C.G.bldNames || []).filter(isObjModel),
     ...(city.kind === 'city' ? ['br_seg', 'af_appr'] : [])])) wantModel(n); // топливозаправщики у ангаров (af_fuel) не нужны - у сцены аэродрома свои
-  C.fx = createFx(scene, P); C.fx.groundH = (x, z) => city.groundH(x, z); // пыль от упавших комьев - по рельефу
+  C.fx = createFx(scene, P); { const ex = C.fx.explosion; C.fx.explosion = (p, R, kind) => { addBlast(p, R, ENV.uTime.value); ex(p, R, kind); }; } C.fx.groundH = (x, z) => city.groundH(x, z); // пыль от упавших комьев - по рельефу
   // заранее (2026-10-23, рывки при первом появлении): листы взрывов, огня и вспышек - на видеокарту, как только пришли; новые материалы - компилировать сразу
   C.fx.onTex = (t) => { try { if (renderer.initTexture) renderer.initTexture(t); } catch (_) { /* нет - загрузится при первом показе */ } };
   C.fx.onNewMats = () => prewarm();
