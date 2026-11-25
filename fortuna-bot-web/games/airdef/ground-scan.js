@@ -9,7 +9,7 @@ export function scanTextures(k, aniso, hi, stats) {
   const U = {};
   for (const [u, f] of [['tSC', 'c'], ['tSN', 'n']]) {
     const t = new THREE.Texture(); U[u] = { value: t }; if (stats) stats.req++;
-    ktxLoad(`sg${k}_${f}_${hi ? 'hi' : 'lo'}`).then((q) => { q.wrapS = q.wrapT = THREE.ClampToEdgeWrapping; q.anisotropy = Math.min(8, aniso); U[u].value = q; if (stats) stats.done++; }).catch((e) => { if (stats) stats.done++; console.warn('атлас земли', e.message); });
+    ktxLoad(`sg${k}_${f}_${hi ? 'hi' : 'lo'}`).then((q) => { q.wrapS = q.wrapT = THREE.ClampToEdgeWrapping; q.anisotropy = Math.min(4, aniso); U[u].value = q; if (stats) stats.done++; }).catch((e) => { if (stats) stats.done++; console.warn('атлас земли', e.message); });
   }
   return U;
 }
@@ -22,7 +22,7 @@ vec2 sUV(float s, vec2 p, float T) { return (vec2(mod(s, 4.0), floor(s * 0.25 + 
 void sMat(float s, vec3 m, vec3 tg, vec2 p, float T, float w) {
   if (w <= 0.01) return;
   float k1 = 1.0 - smoothstep(T * 0.035, T * 0.11, gFp), h = 0.5; vec3 r = vec3(gMo); vec2 n = vec2(0.0);
-  if (k1 > 0.0) { float q = 0.21875 / T; vec2 uv = sUV(s, p, T); vec4 c = TEXG(tSC, uv, sGr(gDx * q), sGr(gDy * q)); vec3 q3 = clamp(c.rgb * c.rgb / m, 0.12, 3.5); if (tg.g > 0.6) q3 = mix(vec3(1.0), q3, 0.35); r *= mix(vec3(1.0), q3, k1); h = mix(0.5, c.a, k1); n = (TEXG(tSN, uv, sGr(gDx * q), sGr(gDy * q)).rg * 2.0 - 1.0) * k1; }
+  if (k1 > 0.0) { float q = 0.21875 / T; vec2 uv = sUV(s, p, T); vec4 c = TEXG(tSC, uv, sGr(gDx * q), sGr(gDy * q)); vec3 q3 = clamp(c.rgb * c.rgb / m, 0.12, 3.5); if (tg.g > 0.6) q3 = mix(vec3(1.0), q3, 0.35); r *= mix(vec3(1.0), q3, k1); h = mix(0.5, c.a, k1); if (gFp < 0.09) n = (TEXG(tSN, uv, sGr(gDx * q), sGr(gDy * q)).rg * 2.0 - 1.0) * k1 * (1.0 - smoothstep(0.05, 0.09, gFp)); }
   float wh = w * exp(h * 5.0 * (1.0 - w * 0.6)); wh *= w; SC += r * tg * wh; SN += n * wh; SH += h * wh; SW += wh;
 }
 // пятнистость 2-60 м: вместо ровной заливки с высоты (дешевле второй выборки скана и без великанских листьев)

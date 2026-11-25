@@ -304,7 +304,7 @@ const META = {
   h_brick: { bld: true, stations: [] }, h_house: { bld: true, stations: [] }, h_log: { bld: true, stations: [], matte: true /* нормали черепицы автора - вбок: блик Phong делал крышу белой (2026-10-27) */ }, h_khata: { bld: true, stations: [] }, o_block: { bld: true, stations: [] }, h_shanty: { bld: true, stations: [] }, h_mobile: { bld: true, stations: [] }, // дома города
   bld_t9: { bld: true, stations: [] }, bld_a16: { bld: true, stations: [] }, o_tall: { bld: true, stations: [] }, g_amel: { bld: true, stations: [] }, g_fortune: { bld: true, stations: [] }, // башни и корпуса
   gc: { matte: true, bld: true, stations: [] }, // покров земли (Свои/Покров земли): 65 своих моделей травы, цветов, камней и мелочи в одном файле (tools/airdef-models/gc-pack.js); ставит city-render groundCover
-  trees_c: { matte: true, bld: true, stations: [] }, trees_w: { matte: true, bld: true, stations: [] }, trees_a: { matte: true, bld: true, stations: [] }, // деревья ревизии 2 наборами (tools/airdef-models/trees-pack.js)
+  trees_c: { matte: true, bld: true, stations: [] }, trees_w: { matte: true, bld: true, stations: [] }, trees_a: { matte: true, bld: true, stations: [] }, trees_x: { matte: true, bld: true, stations: [] }, lo_fall_s: { matte: true, bld: true, stations: [] }, lo_fall_m: { matte: true, bld: true, stations: [] }, lo_fall_l: { matte: true, bld: true, stations: [] }, lo_talus: { matte: true, bld: true, stations: [] }, lo_col: { matte: true, bld: true, stations: [] }, // lo_* - глыбы и осыпь лёсса на склонах (Свои/Текстуры земли и дорог/глыбы); деревья ревизии 2 наборами (tools/airdef-models/trees-pack.js)
   tr_oak: { matte: true, bld: true, stations: [] }, tr_lime: { matte: true, bld: true, stations: [] }, tr_pine: { matte: true, bld: true, stations: [] }, tr_bush: { matte: true, bld: true, stations: [] }, p_lamp: { matte: true, bld: true, stations: [] },
   w_fir1: { matte: true, bld: true, stations: [] }, w_fir3: { matte: true, bld: true, stations: [] }, w_pine1: { matte: true, bld: true, stations: [] }, w_pine2: { matte: true, bld: true, stations: [] }, // зимний лес вблизи // деревья и фонари вблизи
   // свои деревья, мелочь и цеха (Свои/Периферия, Свои/Цеха и склады, Mark 2026-11-08): все матовые (у Phong по умолчанию блик 0x3a3a3a - кроны «словно глянцевые»);
@@ -616,7 +616,7 @@ const GLB_V_OWN = {
   w_kh59mk2: '20261115h',
   w_kalibr: '20261115i',
 };
-GLB_V.trees_c = GLB_V.trees_w = GLB_V.trees_a = GLB_V.pr_oldtree = GLB_V.pr_deadtree = '20261125c'; // деревья ревизии 2
+GLB_V.trees_c = GLB_V.trees_w = GLB_V.trees_a = GLB_V.pr_oldtree = GLB_V.pr_deadtree = '20261125c'; GLB_V.trees_x = '20261125e'; for (const k of ['lo_fall_s', 'lo_fall_m', 'lo_fall_l', 'lo_talus', 'lo_col']) GLB_V[k] = '20261125e'; // деревья ревизии 2
 GLB_V.hg_jack = '20261104b'; // подъёмник, ревизия 2: матовый, с износом
 GLB_V.w_pod = '20261124b'; GLB_V.w_pod_e = '20261124b'; // свои прицельные контейнеры
 GLB_V.e_f35 = GLB_V.e_f35_lo = GLB_V.e_f35_gear = '20261106a'; // своя модель и стойки

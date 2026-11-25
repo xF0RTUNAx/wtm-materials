@@ -107,8 +107,8 @@ vec4 bakeAt(vec2 p) {
       R = renderer; AT = gm.userData.AT; L = [mk(aniso, N), mk(aniso, N1)]; L[0].texture.wrapS = L[0].texture.wrapT = THREE.RepeatWrapping; // L0 - по кругу (тороидально)
       RDY = gm.userData.bakeReady || null;
       if (gm.userData.bakeFS) mat = new THREE.ShaderMaterial({ uniforms: { ...gm.userData.bakeU, uRect: { value: new THREE.Vector4() } }, depthTest: false, depthWrite: false, side: THREE.DoubleSide,
-        vertexShader: `uniform vec4 uRect; varying vec3 vWp; varying vec2 vUv;
-void main() { vUv = uv; vWp = (modelMatrix * vec4(position, 1.0)).xyz; gl_Position = vec4((vWp.xz - uRect.xy) / uRect.zw * 2.0 - 1.0, 0.0, 1.0); }`,
+        vertexShader: `uniform vec4 uRect; varying vec3 vWp, vGN; varying vec2 vUv;
+void main() { vUv = uv; vGN = mat3(modelMatrix) * normal; vWp = (modelMatrix * vec4(position, 1.0)).xyz; gl_Position = vec4((vWp.xz - uRect.xy) / uRect.zw * 2.0 - 1.0, 0.0, 1.0); }`,
         fragmentShader: gm.userData.bakeFS });
       else mat = new THREE.ShaderMaterial({ uniforms: { ...AT, ...gm.userData.GU, uRect: { value: new THREE.Vector4() } }, depthTest: false, depthWrite: false, side: THREE.DoubleSide,
         vertexShader: `uniform vec4 uRect; varying vec3 vWp;

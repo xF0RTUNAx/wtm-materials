@@ -9,7 +9,7 @@ TM = 3  # м на клетку атласа
 # (папка, размер скана в жизни, м; сила рельефа; насыщенность; как складывать: 'mix' - из случайно сдвинутых кусков, 'rep' - ровным повтором (плитка, кладка))
 z = lambda n, M, amp=1., sat=.95, how='mix': (f'{Z}/{n}', M, amp, sat, how)
 GT = [z('Grass004', 1.4, 1, .85), z('Grass003', 1.4, 1, .85), z('grass_ground', 2.5), z('grass_path_2', 1.4), z('grass_path_3', 1.4), z('forrest_ground_01', 2, 1, .85), z('leafy_grass', 2), z('withered_grass', 2),
-      z('Ground072', 2), z('Ground106', 2), z('farm_soil', 2), z('raked_dirt', 2, 1, .95, 'rep'), (f'{T2}/Ground078_2K-JPG', 2, 1, .95, 'mix'), (f'{R}/excavated_soil_wall', 3, 1, .95, 'rep'), z('coast_sand_03', 3), z('damp_sand', 2)]
+      z('Ground072', 2), z('Ground106', 2), z('farm_soil', 2), z('raked_dirt', 2, 1, .95, 'rep'), (f'{T2}/Ground078_2K-JPG', 2, 1, .95, 'mix'), (f'{OWN}/склон_макро_1', 16, 1, .95, 'macro'), z('coast_sand_03', 3), z('damp_sand', 2)]
 PT = [z('Asphalt025A', 2), z('Asphalt028A', 2), z('Asphalt028A', 1.6), z('Asphalt026A', 3, 1, .95, 'rep'), z('worn_asphalt', 2), z('asphalt_04', 3, 1, .95, 'rep'), z('concrete_pavement_03', 2, 1, .95, 'rep'), z('pavement_04', 3, 1, .95, 'rep'),
       z('cobblestone_05', 2.4, 1, .95, 'rep'), z('concrete_floor_damaged_01', 3, 1, .95, 'rep'), z('cracked_concrete', 2, 1, .95, 'rep'), z('gravel_floor_03', 2.5), z('stony_dirt_path', 2.2), z('dirty_concrete', 3, 1, .95, 'rep'), z('overgrown_concrete_pavers', 2, 1, .95, 'rep'), 'плиты_паг_1']
 def probe(p):
@@ -35,6 +35,9 @@ def synth(A, S, seed):  # плитка S×S (по кругу) из кусков 
             out[np.ix_(iy, ix)] += A[np.ix_(sy, sx)] * w; W[np.ix_(iy, ix)] += w
     o = (out / np.maximum(W, 1e-300)).astype(np.float32); L = o[..., :3].mean(2); o[..., :3] = np.clip(o[..., :3] * ((L.mean() / np.maximum(blur(L, S / 22), .02)) ** .85)[..., None], 0, 1); return o  # без клетки от швов: ровная яркость крупнее ~14 см
 def tile(spec, S, seed=1):  # → (цвет S×S×3 0..1 sRGB, высота, нормаль xy, шероховатость) на TM метров
+    if not isinstance(spec, str) and spec[4] == 'macro':  # тон × цвет своей глины, высота, нормали (плитка 16 м)
+        d = spec[0]; t = read(f'{d}/тон.png', S); h = read(f'{d}/высота.png', S, True)[..., 0]; nm = read(f'{d}/нормали.png', S)[..., :2]; g = read(f'{OWN}/глина_1/цвет.png', 1024).reshape(-1, 3).mean(0); lt = t.mean(2, keepdims=True); c = np.clip(g * (lt / lt.mean()), 0, 1); hh = h - blur(h, S / 60); c = np.clip(c * np.clip(1 + hh[..., None] * 4, .55, 1.25), 0, 1)
+        return np.concatenate([c, h[..., None], nm, np.full_like(h, .9)[..., None]], 2)
     if isinstance(spec, str):
         d = f'{OWN}/{spec}'; c = read(f'{d}/цвет.png', S); h = read(f'{d}/высота.png', S, True)[..., 0]; amp = 1.; r = read(f'{d}/шероховатость.png', S, True)[..., 0]; nm = read(f'{d}/нормали.png', S)[..., :2]; how = 'one'; sat = 1.; s = S
     else:

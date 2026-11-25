@@ -8,6 +8,7 @@ const K = (d, L) => L.map((k) => [k, `${SRC}/${d}/${k}`]);
 const PACKS = {
   c: ['trees_c', K('лето', ['tr_oak', 'tr_oak_b', 'tr_lime', 'tr_lime_b', 'tr_pine', 'tr_pine_b', 'tr_bush', 'tr_bush_b', 'tr_birch', 'tr_birch_b', 'tr_maple', 'tr_maple_b', 'tr_poplar', 'tr_poplar_b', 'tr_spruce', 'tr_spruce_b'])],
   w: ['trees_w', K('зима', ['w_fir1', 'w_fir3', 'w_fir_b', 'w_pine1', 'w_pine2', 'w_birch', 'w_oak'])],
+  x: ['trees_x', K('сломанные', ['st_oak', 'st_oak_b', 'st_fir', 'st_fir_b', 'st_pine', 'st_pine_b']), [1]], // пни - от взрывов (treefall.js)
   a: ['trees_a', [...K('осень', ['a_oak', 'a_oak_h', 'a_lime', 'a_maple', 'a_birch']), ...K('лето', ['tr_pine', 'tr_pine_b']), ...K('старые', ['pr_deadtree'])]],
 };
 const tmp = Deno.makeTempDirSync({ prefix: 'trpack' }); const run = (c, a) => { const o = new Deno.Command(c, { args: a, stdout: 'piped', stderr: 'piped' }).outputSync(); if (!o.success) throw new Error(c + ': ' + new TextDecoder().decode(o.stderr).slice(-300)); return new TextDecoder().decode(o.stdout); };
@@ -50,7 +51,7 @@ function writer() {
     const G = new Uint8Array(28 + js.length + bl), dv = new DataView(G.buffer); dv.setUint32(0, 0x46546C67, true); dv.setUint32(4, 2, true); dv.setUint32(8, G.length, true); dv.setUint32(12, js.length, true); dv.setUint32(16, 0x4E4F534A, true); G.set(js, 20); dv.setUint32(20 + js.length, bl, true); dv.setUint32(24 + js.length, 0x004E4942, true); G.set(bin, 28 + js.length);
     Deno.writeFileSync(OUT + file + '.glb', G); console.log(`${file}.glb: мешей ${J.meshes.length}, материалов ${J.materials.length}, картинок ${J.images.length}, ${(G.length / 1048576).toFixed(1)} МБ`); } };
 }
-const todo = Deno.args.length ? Deno.args : ['c', 'w', 'a', 'pr'];
-for (const q of todo) if (PACKS[q]) { const [file, L] = PACKS[q], W = writer(); for (const [k, p] of L) for (const l of [0, 1, 2]) await W.add(k, l, p + (l ? `_lod${l}` : '') + '.glb'); W.save(file); }
+const todo = Deno.args.length ? Deno.args : ['c', 'w', 'a', 'x', 'pr'];
+for (const q of todo) if (PACKS[q]) { const [file, L, LV = [0, 1, 2]] = PACKS[q], W = writer(); for (const [k, p] of L) for (const l of LV) await W.add(k, l, p + (l ? `_lod${l}` : '') + '.glb'); W.save(file); }
 if (todo.includes('pr')) for (const k of ['pr_oldtree', 'pr_deadtree']) { const W = writer(); await W.add(k, 1, `${SRC}/старые/${k}_lod1.glb`, true); W.save(k); }
 Deno.removeSync(tmp, { recursive: true });

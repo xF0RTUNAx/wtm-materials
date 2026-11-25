@@ -1541,7 +1541,7 @@ setInterval(() => {
   // (attachBridgeSegs, attachAirfield ставят их у аэродрома города - на зиме и осени они стояли в поле)
   for (const n of new Set([...city.objects.flatMap((o) => (o.models || []).map((q) => q.m)), ...(C.G.bldNames || []).filter(isObjModel),
     ...(city.kind === 'city' ? ['br_seg', 'af_appr'] : [])])) wantModel(n); // топливозаправщики у ангаров (af_fuel) не нужны - у сцены аэродрома свои
-  C.fx = createFx(scene, P); { const ex = C.fx.explosion; C.fx.explosion = (p, R, kind) => { addBlast(p, R, ENV.uTime.value); ex(p, R, kind); }; } C.fx.groundH = (x, z) => city.groundH(x, z); // пыль от упавших комьев - по рельефу
+  C.fx = createFx(scene, P); { const ex = C.fx.explosion; C.fx.explosion = (p, R, kind) => { addBlast(p, R, ENV.uTime.value); if (kind !== 'air' && C.G && C.G.tf) C.G.tf.hit(p, R, ENV.uTime.value); ex(p, R, kind); }; } C.fx.groundH = (x, z) => city.groundH(x, z); // пыль от упавших комьев - по рельефу
   // заранее (2026-10-23, рывки при первом появлении): листы взрывов, огня и вспышек - на видеокарту, как только пришли; новые материалы - компилировать сразу
   C.fx.onTex = (t) => { try { if (renderer.initTexture) renderer.initTexture(t); } catch (_) { /* нет - загрузится при первом показе */ } };
   C.fx.onNewMats = () => prewarm();
