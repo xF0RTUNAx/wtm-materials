@@ -7,33 +7,58 @@
 /* global THREE */
 export const NS_ON = typeof location === 'undefined' || !/[?&]ns=0/.test(location.search);
 export const NS_K = 8;
-let patched = false;
-function patch(lite) {
+// аппаратное сглаживание (2026-11-25, AIRDEF_GRAPHICS.md этап 2): карта теней солнца - текстура глубины, четыре сравнения с билинейным смешением делает сама видеокарта
+// за одну выборку. Вместо 17 выборок с распаковкой - 4 (на «Среднем» и у дальней половины - 1-2), край мягче и без «лесенки». Только WebGL2; ?hws=0 - прежнее.
+// Правка - при загрузке модуля: все материалы игры (и ангара) обязаны брать карту солнца одним и тем же типом. Прожекторы - как были
+export const HWS = typeof location === 'undefined' || !/[?&]hws=0/.test(location.search);
+let hw = false, patched = false;
+const NS2 = (A) => `
+	float getShadow( ${A ? 'highp sampler2DShadow' : 'sampler2D'} shadowMap, vec2 shadowMapSize, float shadowBias, float shadowRadius, vec4 shadowCoord ) {
+		if ( shadowRadius < 8.0 ) return getShadowA( shadowMap, shadowMapSize, shadowBias, shadowRadius, shadowCoord );
+		vec3 c = shadowCoord.xyz / shadowCoord.w; vec2 at = vec2( shadowMapSize.x * 2.0, shadowMapSize.y ); vec3 n = vec3( ( c.xy - 0.5 - nsOff.xy ) * ${NS_K}.0 + 0.5, c.z - nsOff.z );
+		if ( c.z >= 1.0 ) return 1.0;
+		float m = 4.0 / shadowMapSize.x, en = min( min( n.x, 1.0 - n.x ), min( n.y, 1.0 - n.y ) ) - m, k = clamp( en * 12.0, 0.0, 1.0 ), s = 1.0;
+		if ( k > 0.0 ) s = getShadowA( shadowMap, at, shadowBias, shadowRadius - 16.0, vec4( 0.5 + n.x * 0.5, n.yz, 1.0 ) );
+		if ( k >= 1.0 ) return s;
+		float f = 1.0; vec2 ef = min( c.xy, 1.0 - c.xy );
+		if ( min( ef.x, ef.y ) > m ) f = ${A ? `texture( shadowMap, vec3( c.x * 0.5, c.y, c.z + shadowBias * ${NS_K}.0 ) )` : `getShadowA( shadowMap, at, shadowBias * ${NS_K}.0, shadowRadius - 16.0, vec4( c.x * 0.5, c.y, c.z, 1.0 ) )`};
+		return k > 0.0 ? mix( f, s, k ) : f;
+	}
+`;
+// сдвиг ближней половины относительно дальней (дальняя рисуется реже - её коробка отстаёт на шаг-два): общий для всех программ (простой объект three не копирует)
+export const NS_OFF = { x: 0, y: 0, z: 0 };
+export function shadowPatch(renderer) {
   if (patched) return; patched = true;
   const C = THREE.ShaderChunk, src = C.shadowmap_pars_fragment, i = src.indexOf('float getShadow('), j = src.indexOf('vec2 cubeToUV(');
   if (i < 0 || j < 0) return; // другая версия three - как есть
-  let body = src.slice(i, j).replace('float getShadow(', 'float getShadowA(');
-  if (lite) { // «Средний»: PCF в 5 выборок (углы и середина) вместо 17
-    const m = /shadow = \(([\s\S]*?)\)\s*\*\s*\(\s*1\.0 \/ 17\.0\s*\);/.exec(body), t = m ? m[1].match(/texture2DCompare\(.*?shadowCoord\.z \)/g) || [] : [], five = t.filter((q) => /vec2\( dx[01], dy[01] \)|shadowCoord\.xy, shadowCoord\.z/.test(q));
-    if (five.length === 5) body = body.replace(m[0], `shadow = (${five.join(' + ')}) * 0.2;`);
-  }
-  C.shadowmap_pars_fragment = src.slice(0, i) + body + `
-	float getShadow( sampler2D shadowMap, vec2 shadowMapSize, float shadowBias, float shadowRadius, vec4 shadowCoord ) {
-		if ( shadowRadius < 8.0 ) return getShadowA( shadowMap, shadowMapSize, shadowBias, shadowRadius, shadowCoord );
-		vec3 c = shadowCoord.xyz / shadowCoord.w; vec2 at = vec2( shadowMapSize.x * 2.0, shadowMapSize.y ), n = ( c.xy - 0.5 ) * ${NS_K}.0 + 0.5;
-		if ( c.z >= 1.0 ) return 1.0;
-		float m = 4.0 / shadowMapSize.x, en = min( min( n.x, 1.0 - n.x ), min( n.y, 1.0 - n.y ) ) - m, k = clamp( en * 12.0, 0.0, 1.0 ), s = 1.0;
-		if ( k > 0.0 ) s = getShadowA( shadowMap, at, shadowBias, shadowRadius - 16.0, vec4( 0.5 + n.x * 0.5, n.y, c.z, 1.0 ) );
-		if ( k >= 1.0 ) return s;
-		float f = 1.0; vec2 ef = min( c.xy, 1.0 - c.xy );
-		if ( min( ef.x, ef.y ) > m ) f = getShadowA( shadowMap, at, shadowBias * ${NS_K}.0, shadowRadius - 16.0, vec4( c.x * 0.5, c.y, c.z, 1.0 ) );
-		return k > 0.0 ? mix( f, s, k ) : f;
+  hw = HWS && renderer.capabilities.isWebGL2 && renderer.shadowMap.hw === false; if (hw) renderer.shadowMap.hw = true;
+  const body = src.slice(i, j).replace('float getShadow(', 'float getShadowA('), dirD = 'uniform sampler2D directionalShadowMap[ NUM_DIR_LIGHT_SHADOWS ];';
+  for (const k in THREE.ShaderLib) { const u = THREE.ShaderLib[k].uniforms; if (u && u.directionalShadowMap) u.nsOff = { value: NS_OFF }; }
+  THREE.UniformsLib.lights.nsOff = { value: NS_OFF };
+  const A = `
+	float getShadowA( highp sampler2DShadow shadowMap, vec2 shadowMapSize, float shadowBias, float shadowRadius, vec4 shadowCoord ) {
+		vec3 c = shadowCoord.xyz / shadowCoord.w; c.z += shadowBias;
+		if ( c.x < 0.0 || c.x > 1.0 || c.y < 0.0 || c.y > 1.0 || c.z > 1.0 ) return 1.0;
+		vec2 t = vec2( 0.6 ) / shadowMapSize;
+		#ifdef NS_LITE
+		return 0.5 * ( texture( shadowMap, vec3( c.xy + t * 0.6, c.z ) ) + texture( shadowMap, vec3( c.xy - t * 0.6, c.z ) ) );
+		#else
+		return 0.25 * ( texture( shadowMap, vec3( c.xy + t, c.z ) ) + texture( shadowMap, vec3( c.xy - t, c.z ) ) + texture( shadowMap, vec3( c.xy + vec2( t.x, - t.y ), c.z ) ) + texture( shadowMap, vec3( c.xy + vec2( - t.x, t.y ), c.z ) ) );
+		#endif
 	}
-	` + src.slice(j);
+`;
+  C.shadowmap_pars_fragment = 'uniform vec3 nsOff;\n' + (hw ? src.slice(0, i).replace(dirD, dirD.replace('uniform sampler2D', 'uniform highp sampler2DShadow')) + body.replace('getShadowA(', 'getShadow(') + A + NS2(true) : src.slice(0, i) + body + NS2(false)) + src.slice(j);
+}
+// «Средний»: вместо 17 выборок 5 (углы и середина); с аппаратным сглаживанием - две (define в начале куска). До сборки материалов карты
+function lite() {
+  const C = THREE.ShaderChunk; let s = C.shadowmap_pars_fragment; if (!patched || s.includes('#define NS_LITE')) return;
+  if (hw) { C.shadowmap_pars_fragment = '#define NS_LITE\n' + s; return; }
+  const m = /shadow = \(([\s\S]*?)\)\s*\*\s*\(\s*1\.0 \/ 17\.0\s*\);/.exec(s), t = m ? m[1].match(/texture2DCompare\(.*?shadowCoord\.z \)/g) || [] : [], five = t.filter((q) => /vec2\( dx[01], dy[01] \)|shadowCoord\.xy, shadowCoord\.z/.test(q));
+  if (five.length === 5) C.shadowmap_pars_fragment = s.replace(m[0], `shadow = (${five.join(' + ')}) * 0.2;`);
 }
 // light - солнце (DirectionalLight), N - сторона половины карты, far - полуразмер дальней (м), sunY - высота солнца (синус)
-export function nearShadow(light, N, far, sunY, G, renderer, lite = false) {
-  patch(lite);
+export function nearShadow(light, N, far, sunY, G, renderer, lt = false) {
+  shadowPatch(renderer); if (lt) lite();
   // подставные формы теней (Mark 2026-11-25): простая крона вместо дерева, лепестки вместо куста травы - видны только карте теней, в кадр не попадают
   // (visible включается на время её прохода). G.nsProxy.far - в дальней половине, .near - в ближней; подробные наборы домов и деревьев - только в ближней
   // (в дальней дома дают тень коробками плиток, деревья - подставными кронами)
@@ -45,6 +70,13 @@ export function nearShadow(light, N, far, sunY, G, renderer, lite = false) {
   sh.radius = 17; // признак двойной карты (16 + обычный радиус 1)
   const c = sh.camera, depth = c.far - c.near, tan = sunY / Math.sqrt(Math.max(1e-4, 1 - sunY * sunY));
   sh.normalBias = texN * 1.5; sh.bias = -Math.min(0.6, texN * 0.9 / Math.max(0.12, tan)) / depth; // ближняя; у дальней в шейдере ×NS_K
+  // дальняя половина - раз в FE кадров (или если коробка ушла дальше 4 % её полуразмера): там дома, рельеф и кроны, за 3 кадра они не меняются; ?fsh=1 - каждый кадр
+  const FE = +((typeof location !== 'undefined' && /[?&]fsh=(\d+)/.exec(location.search) || [])[1] || 3), O3 = new THREE.Vector3(), M3 = new THREE.Matrix4(); let fn = 0, zT = 0, have = false;
+  sh.skipView = (l) => {
+    if (FE < 2) return -1; T.setFromMatrixPosition(l.target.matrixWorld); fn++;
+    if (have && sh.map && fn % FE) { O3.copy(T).applyMatrix4(M3); O3.x -= 0.5; O3.y -= 0.5; O3.z -= zT; if (Math.max(Math.abs(O3.x), Math.abs(O3.y)) < 0.02) { NS_OFF.x = O3.x; NS_OFF.y = O3.y; NS_OFF.z = O3.z; return 1; } }
+    fn = 0; NS_OFF.x = NS_OFF.y = NS_OFF.z = 0; return -1;
+  };
   sh.updateMatrices = function (l, vp) {
     P.setFromMatrixPosition(l.matrixWorld); c.position.copy(P); T.setFromMatrixPosition(l.target.matrixWorld); c.lookAt(T);
     const nr = !vp, b = nr ? near : far;
@@ -53,7 +85,7 @@ export function nearShadow(light, N, far, sunY, G, renderer, lite = false) {
     show(PX.far, !nr); show(PX.near, nr);
     if (G.nsPools) G.nsPools((m) => { if (nr) { m.userData.nsC = m.count; m.count = m.userData.nsN; } else m.count = m.userData.nsFar ? m.userData.nsC : 0; }); c.left = c.bottom = -b; c.right = c.top = b; c.updateProjectionMatrix(); c.updateMatrixWorld();
     PM.multiplyMatrices(c.projectionMatrix, c.matrixWorldInverse); this._frustum.setFromProjectionMatrix(PM);
-    if (!nr) this.matrix.set(0.5, 0, 0, 0.5, 0, 0.5, 0, 0.5, 0, 0, 0.5, 0.5, 0, 0, 0, 1).multiply(PM);
+    if (!nr) this.matrix.set(0.5, 0, 0, 0.5, 0, 0.5, 0, 0.5, 0, 0, 0.5, 0.5, 0, 0, 0, 1).multiply(PM), M3.copy(this.matrix), zT = O3.copy(T).applyMatrix4(M3).z, have = true;
   };
 }
 // подставная крона дерева (высота 1, у земли 0): round - лиственное, иначе ель / сосна конусом; около 20 треугольников

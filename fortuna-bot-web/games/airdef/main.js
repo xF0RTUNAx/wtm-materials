@@ -8,6 +8,7 @@
 // Параметры адреса: ?gfx=low|medium|high|ultra, ?weather=…, ?touch=1, ?test=1 (window.__a), ?go=air|defense - сразу в бой,
 // ?view=x,y,z,курс°,тангаж° - неподвижная камера (снимки города).
 /* global THREE */
+import { NS_ON, shadowPatch } from './near-shadow.js?v=20261124a';
 import { localizeTree } from './lang/data.js?v=20261124a'; // язык: названия и описания из данных (arsenal, flight, heli) - до progress.js, который строит по ним дерево
 import { TREE, BRANCHES } from './progress.js?v=20261124a';
 import { trDom, tr, trIf, LANG, XL, askLang } from './i18n.js?v=20261124a';
@@ -259,6 +260,7 @@ ktxInit(renderer); // сжатые текстуры (ktx.js): нужен рен�
 canvas.addEventListener('webglcontextrestored', () => { if (!IS_TOUCH) return; if ((C.net && C.net.battle) || C.state === 'play') { C.reloadAfterBattle = true; ktxRestore(renderer); } else location.reload(); }); // и в одиночном бою (2026-10-22, «бои изредка вылетают»): свернул Telegram / пришло уведомление - iOS отбирает контекст WebGL, раньше страница сразу перезагружалась и бой пропадал
 renderer.outputEncoding = THREE.sRGBEncoding;
 renderer.toneMappingExposure = ((P.post && P.post.exposure) || 1.1) * (W.exposure || 1);
+if (P.shadows && NS_ON) shadowPatch(renderer); // до сборки любых материалов (near-shadow.js)
 renderer.shadowMap.enabled = !!P.shadows; renderer.shadowMap.type = IS_TOUCH ? THREE.PCFShadowMap : THREE.PCFSoftShadowMap;
 const scene = new THREE.Scene();
 scene.autoUpdate = false; // матрицы сцены - раз за кадр (frame, перед отрисовкой): каждый renderer.render обходил ~1000 объектов заново - основной кадр, облака и дым, огонь, окно ТВ (2026-11-16: ~3200 обходов за кадр → ~1000)
@@ -657,9 +659,12 @@ const objC = new Map();
 // или окно ТВ смотрит на объект (at - точка взгляда; до того - только дальняя копия _lo); в окне ТВ (D огромное) - подробная, если пришла
 // «Низкий» (слабые телефоны) - только дальняя копия: подробная - 13 МБ и 150 тыс. треугольников
 const SITE_NEAR = 1200, SITE_HI = gfxKey !== 'low' || CINEMA;
+// прицел с узким полем зрения приближает объект так же, как подлёт: порог - по видимому размеру (до ×2,5); вернуться к дальней копии - на 6 % дальше (без мигания на границе)
+let LK = 1;
+const lodFov = (fov) => Math.min(2.5, Math.max(1, Math.tan(27.5 * D2R) / Math.tan(Math.max(1, fov) * D2R / 2)));
 function siteLod(o, g, c, p, D, at) {
-  const G = C.G, f = G.objFar && G.objFar[o.id], b = G.objBox[o.id], d = Math.hypot(c.x - p.x, c.z - p.z) - c.r, Ds = D > 1e8 ? D : Math.min(D, SITE_NEAR);
-  if (SITE_HI && !g.userData.want && (d < SITE_NEAR * 1.6 || (at && Math.hypot(c.x - at.x, c.z - at.z) - c.r < 300))) { g.userData.want = true; wantModel(o.site); }
+  const G = C.G, f = G.objFar && G.objFar[o.id], b = G.objBox[o.id], d = Math.hypot(c.x - p.x, c.z - p.z) - c.r, Ds = D > 1e8 ? D : Math.min(D, SITE_NEAR * LK) * (g.visible ? 1.06 : 1);
+  if (SITE_HI && !g.userData.want && (d < SITE_NEAR * 1.6 * LK || (at && Math.hypot(c.x - at.x, c.z - at.z) - c.r < 300))) { g.userData.want = true; wantModel(o.site); }
   const fr = !!(f && f.userData.site), full = !!g.userData.site && d < Ds;
   g.visible = full; if (f) f.visible = !full && fr; if (b) b.visible = !full && !fr; // заглушка - пока нет ни подробной, ни дальней
   if (full && !g.userData.placeDone) sitePlace(o, g);
@@ -672,7 +677,7 @@ function objLod(p, D, at) {
     // стена игры у ГЭС (wall, до 2 км в стороны) - не сцена: в центр и радиус детализации не входит
     if (!c) { const L = !o.site && o.models && o.models.length ? o.models : o.parts.filter((q) => !q.wall); let x = 0, z = 0, r = 0; for (const q of L) { x += q.x; z += q.z; } x /= L.length; z /= L.length; for (const q of L) r = Math.max(r, Math.hypot(q.x - x, q.z - z)); objC.set(o.id, c = { x, z, r }); }
     if (o.site) { siteLod(o, g, c, p, D, at); continue; }
-    const full = Math.hypot(c.x - p.x, c.z - p.z) - c.r < D, b = G.objBox[o.id], f = G.objFar && G.objFar[o.id], fr = !!(f && f.userData.ready);
+    const full = Math.hypot(c.x - p.x, c.z - p.z) - c.r < D * (D > 1e8 ? 1 : LK * (g.visible ? 1.06 : 1)), b = G.objBox[o.id], f = G.objFar && G.objFar[o.id], fr = !!(f && f.userData.ready);
     g.visible = full; if (f) { f.visible = !full && fr; if (fr && f.userData.ruin !== g.userData.ruin && g.userData.ruin !== undefined) objLook(o.id, g.userData.ruin); } // вдали - упрощённые копии тех же построек
     if (b) b.visible = (!full && !fr) || g.userData.left.size > 0; // коробка - пока не пришли модели (или нет дальних копий)
   }
@@ -1424,7 +1429,7 @@ function frame(now) {
   if (still && !stillWas) stillClock = t; stillWas = still; const t3 = still ? stillClock : t;
   syncWorld(C.paused ? 0 : dts, t3);
   if (still && draw3D) { const mv = stillMoved(); if (mv || now < stillDirty || now - stillT > 2000 || stillN < 6) { stillT = now; stillN = mv ? 0 : stillN + 1; } else { hold = true; draw3D = false; } } else if (!still) stillN = 0;
-  if (draw3D) objLod(camera.position, P.lodObj);
+  if (draw3D) { LK = lodFov(camera.fov); objLod(camera.position, P.lodObj); }
   if (draw3D) updateCityScene(C.G, camera, P, ctrl && ctrl.focus ? ctrl.focus() : camera.position, t3); // окно ТВ - свой набор моделей вблизи (C.podPass)
   // тактическая карта обороны закрывает весь экран - 3D-кадр не рисуем (телефон не греется)
   // «Тени через кадр»: карта теней перерисовывается раз в P.shEvery кадров (город стоит, тени техники чуть запаздывают). На телефоне у пресетов
