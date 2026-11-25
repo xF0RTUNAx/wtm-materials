@@ -429,7 +429,7 @@ C.netBattle = function (N, o) {
   return S;
 };
 C.objLook = (id, ruin) => objLook(id, ruin);
-const OWN_UNITS = new Set(['gepard', 'roland', 'rapier', 'tunguska', 'strela1', 'strela10', 'zsu234', 'm163', 'tor', 'torm2', 'buk', 'pantsir', 's300', 's400', 'patriot', 'pac3', 'sampt', 'nasams', 'hawk21', 'avenger', 'chaparral', 'gpsjam', 'gpsjamw']); // свои и переделанные модели техники
+const OWN_UNITS = new Set(['gepard', 'roland', 'rapier', 'skyguard', 'tunguska', 'strela1', 'strela10', 'zsu234', 'm163', 'tor', 'torm2', 'buk', 'pantsir', 's300', 's400', 'patriot', 'pac3', 'sampt', 'nasams', 'hawk21', 'avenger', 'chaparral', 'gpsjam', 'gpsjamw']); // свои и переделанные модели техники
 // модели комплексов - по списку боя (после расстановки или переезда)
 C.syncUnits = function () {
   const S = C.S; if (!S) return;
@@ -493,6 +493,8 @@ C.syncUnits = function () {
           if (gm.clink) { lk = new THREE.Group(); lk.position.set(W.link[0] - Ld.cp[0], W.link[1] - Ld.cp[1], W.link[2] - Ld.cp[2]); cg.add(lk); at(gm.clink, lk, W.link); }
           g.userData.twin = { up, lk, rl: at(gm.brl, cg, Ld.cp), ru: at(gm.bru, up, W.p), t: 0 };
         }
+        // Skyguard: левый и правый ствол - дети люльки, ходят назад вдоль оси
+        if (gm && md.LN.recoil && gm.brl) { const at = (o) => { const z = new THREE.Group(); obj(o, z); o.position.set(-Ld.cp[0], -Ld.cp[1], -Ld.cp[2]); cg.add(z); return z; }; g.userData.recoil = { b: [at(gm.brl), at(gm.bru)], t: 0 }; }
         // NASAMS: у каждой крышки свой шарнир (lids.piv, в осях башни; ось вдоль X - откидывается вперёд-вниз); С-300 - в осях пакета (onPack), поднимаются с ним
         if (gm && gm.lids.length && md.LN.lids) {
           const LD = md.LN.lids, H = LD.hinge; g.userData.lids = gm.lids.map((lid, i) => {
@@ -615,6 +617,11 @@ function torDish(u, g, dt) {
 function gunSpin(u, g, dt) {
   const s = g.userData.spin, w = LNCH[u.key].spin.w, on = u.gunOn && !u.dead; s.v = clamp(s.v + Math.max(0, dt) * (on ? w / 0.3 : -w), 0, w);
   if (s.v > 0) s.o.rotation.z += s.v * dt;
+}
+// Skyguard: стволы откатываются по очереди - рывок назад, накат медленнее
+function gunRecoil(u, g, dt) {
+  const W = g.userData.recoil, R = LNCH[u.key].recoil, on = u.gunOn && !u.dead; if (on) W.t += Math.max(0, dt) * R.rate;
+  W.b.forEach((o, i) => { const f = (W.t + i * 0.5) % 1; o.position.z = on ? R.rec * (f < 0.2 ? f / 0.2 : (1 - f) / 0.8) : Math.max(0, o.position.z - Math.max(0, dt) * 0.6); });
 }
 // «Шилка»: верхняя люлька - тот же угол, тяга - обратный; откат пар стволов по очереди, пока стреляет (вблизи)
 function twinGun(u, g, dt) {
@@ -1047,6 +1054,7 @@ function syncWorld(dt, t) {
     if (g.userData.tdish) torDish(u, g, dt);
     if (g.userData.spin) gunSpin(u, g, dt);
     if (g.userData.twin) twinGun(u, g, dt);
+    if (g.userData.recoil) gunRecoil(u, g, dt);
     const d = g.userData.dish; if (!d) continue;
     if (u.track && u.emit) { LP.copy(u.track.pos).sub(u.pos); d.rotation.y = Math.atan2(-LP.x, -LP.z) - u.yaw; }
     else if (u.emit) d.rotation.y = t * 2.5 + u.id;

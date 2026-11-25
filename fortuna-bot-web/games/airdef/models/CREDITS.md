@@ -42,7 +42,6 @@
 - "BRDM 2 armored reconnaissance vehicle (пусковая 9П31 и ракета 9М31 — свои)" (https://sketchfab.com/3d-models/brdm-2-armored-reconnaissance-vehicle-065dc054914f40fdbfb25ad62d6696b7) by zhek — CC-BY-4.0 — `strela1.glb`, `strela1_lo.glb`
 - "Low poly 2k22 Tunguska (окраска и запекание текстур)" (https://sketchfab.com/3d-models/low-poly-2k22-tunguska-0bea108df2434f779418e51af9597f5b) by SIpriv — CC-BY-4.0 — `tunguska.glb`, `tunguska_lo.glb`
 - "Low poly 2k22 Tunguska (окраска и запекание текстур)" (https://sketchfab.com/3d-models/low-poly-2k22-tunguska-0bea108df2434f779418e51af9597f5b) by SIpriv — CC-BY-4.0 — `msl_9m311.glb`
-- "OERLIKON 35MM SKYGUARD RADAR" (https://sketchfab.com/3d-models/oerlikon-35mm-skyguard-radar-a136b501ae9847258249d51c769b779d) by lm9241221 — CC-BY-4.0 — `skyguard.glb`, `skyguard_lo.glb`
 - "ZIF-122 & 4K33 Osa-M Missile" (https://sketchfab.com/3d-models/zif-122-4k33-osa-m-missile-5cd6b3ec8b9d4e798f662dd9aefefb43) by KoreanNavy — CC-BY-4.0 — `osa.glb`, `osa_lo.glb`
 - "SAM S-75 "Dvina"" (https://sketchfab.com/3d-models/sam-s-75-dvina-ed7d4831832d499482a6aa9620a858e4) by manyakasia — CC-BY-4.0 — `s75.glb`
 - "ЗРК С-125 «Нева / SAM S-125 "Neva"" (https://sketchfab.com/3d-models/125-sam-s-125-neva-4482f05be23b49099c2cf553a2f38dcd) by teanid — CC-BY-4.0 — `s125.glb`, `s125_lo.glb`

@@ -417,16 +417,10 @@ const CONFIG = {
   // Сетка 74,6 тыс. треугольников без упрощения (правило Mark)
   sampt: { src: `${DL}/Свои/SAMP-T/sampt_game.glb`, scale: 1, nose: '-z', rulesIn: 'game', unit: true, own: true, tex: () => 1024, nTex: () => 512, pickMesh: /./,
     axisX: 0, axisZ: 0, ground: 0, hinge: [0, 2.55, 3.8], tpFix: [0, 2.55, 3.8], pack0: 0, groups: (c) => samptPart(c, true) },
-  // Oerlikon GDF 35 мм — из сцены Skyguard (lm9241221): одна из двух пушек (сцена в мм, пушка — в половину размера → ×0,002);
-  // станок поворачивается, спарка со стволами и коробами — качается на цапфах; подложка, кабели, радар и вторая пушка — долой
-  skyguard: { src: `${DL}/oerlikon_35mm_skyguard_radar.glb`, scale: 0.002, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, target: 80000, simpErr: 0.002, minPart: 0.06, hinge: [19.62, 1.45, -8.1],
-    groups: (c) => {
-      if (Math.abs(c.ctr[0] - 19.6) > 6 || Math.abs(c.ctr[2] + 7.2) > 6.8 || Math.max(...c.size) > 12) return null;
-      const dx = c.ctr[0] - 19.62;
-      // вся верхняя часть (спарка, короба, стволы с дульными тормозами) — качающаяся: по отдельности детали расходились в воздухе
-      if (c.min[1] > 1.0 && Math.abs(dx) < 1.3) return 'cradle';
-      return c.min[1] > 0.85 && Math.abs(dx) < 1.3 ? 'turret' : 'body';
-    } },
+  // Skyguard 35 мм (Oerlikon GDF) - своя (сборщик hawk21-builder, Свои/Skyguard 35 мм (Oerlikon GDF), 2026-11-25; Mark: «Модель Skyguard готова»; раньше - lm9241221).
+  // Окраска и сети запечены (SG_net - вырез по альфе). Части - skyguardPart: turret_ / tnet_ - башня, cradle_ - люлька, barrel_l / barrel_r - откатные стволы (вблизи)
+  skyguard: { src: `${DL}/Свои/Skyguard 35 мм (Oerlikon GDF)/skyguard.glb`, scale: 1, nose: '-z', rulesIn: 'game', unit: true, own: true, tex: (m) => (/^SG_(R|net)$/.test(m.name) ? 1024 : 2048), nTex: (m) => (/^SG_(R|net)$/.test(m.name) ? 512 : 1024), pickMesh: /./,
+    axisX: 0, axisZ: 0, ground: 0, hinge: [0, 1.36, -0.19], tpFix: [0, 0.66, 0], pack0: 0, groups: (c) => skyguardPart(c, true) },
   // Tracked Rapier — свой (сборщик, Свои/Rapier, 2026-11-03; Mark: «модель Rapier готова»; раньше — stealth86). Части — rapierPart: turret_* — башня пусковой (ось (0; 1,12; 2,3)),
   // radar_drum — барабан РЛС (крутится сам), cradle_* — балки с тарелкой и щитками на валу (0; 1,9; 2,3); маск-сети net_* — вырез по альфе (MASK), прибор наведения tracker — неподвижен
   rapier: { src: `${DL}/Свои/Rapier/rapier.glb`, scale: 1, nose: '-z', rulesIn: 'game', unit: true, own: true, tex: (m) => (m.name === 'RPR_R' || m.name === 'RPR_net' ? 1024 : 2048),
@@ -808,6 +802,11 @@ function rolandPart(c, near) {
   if (/(^|\/)dish_/.test(p)) return near ? 'dish' : 'turret';
   return /(^|\/)(radar|rfold)_/.test(p) ? 'radar' : /(^|\/)(turret|tnet|sight)_/.test(p) ? 'turret' : 'body';
 }
+// Skyguard 35 мм: вдали стволы - в люльке
+function skyguardPart(c, near) {
+  const p = c.path, B = p.match(/(^|\/)barrel_(l|r)/); if (B) return near ? (B[2] === 'l' ? 'brl' : 'bru') : 'cradle';
+  return /(^|\/)cradle/.test(p) ? 'cradle' : /(^|\/)(turret|tnet)_/.test(p) ? 'turret' : 'body';
+}
 // «Шилка»: вдали тяга и стволы — в своих люльках, зеркало — в антенне
 function zsu234Part(c, near) {
   const p = c.path, B = p.match(/(^|\/)barrel_(\d)/); if (B) return +B[2] < 2 ? (near ? 'brl' : 'cradle') : near ? 'bru' : 'cradle2';
@@ -845,7 +844,7 @@ function torm2Part(c, near, lidOrder) {
   return /(^|\/)turret/.test(p) ? 'turret' : 'body';
 }
 // ПВО: дальние копии (_lo) — main.js рисует их дальше 400 м (THREE.LOD по частям: корпус, башня, пакет)
-const SAM_LO = ['osa', 'bukm3', 's125', 'gepard', 'ew_e', 'pantsir', 'sampt', 'tunguska', 'skyguard'];
+const SAM_LO = ['osa', 'bukm3', 's125', 'gepard', 'ew_e', 'pantsir', 'sampt', 'tunguska'];
 for (const k of SAM_LO) CONFIG[k + '_lo'] = { ...CONFIG[k], target: k === 'pantsir' ? 15000 : 20000, simpErr: 0.05, tex: () => 256, nTex: null };
 CONFIG.bukm3_lo.tracks = { ...CONFIG.bukm3.tracks, links: false }; // дальняя копия: лента — гладкая, без звеньев
 // Гепард ревизии 2: дальняя копия сборщика (gepard_lo.glb, без мелочи), цвет 512, без нормалей; антенна сопровождения — в башне (вдали не качается).
@@ -856,6 +855,7 @@ CONFIG.gepard_lo = { ...CONFIG.gepard, src: `${DL}/Свои/Гепард_rev2/ge
   simplify: 0.2, simpErr: 0.006, simpKeep: /^GP_(T|H|glassF)$/ };
 // M163: дальняя копия сборщика (50 тыс.), ходовая упрощена, как у Гепарда; тарелка - в башне
 CONFIG.roland_lo = { ...CONFIG.roland, src: `${DL}/Свои/Roland 2/roland_lo.glb`, tex: () => 512, nTex: null, groups: (c) => rolandPart(c, false), simplify: 0.45, simpErr: 0.006, simpKeep: /^RL_(T|H|G|net|glassF)$/ };
+CONFIG.skyguard_lo = { ...CONFIG.skyguard, src: `${DL}/Свои/Skyguard 35 мм (Oerlikon GDF)/skyguard_lo.glb`, tex: () => 512, nTex: null, groups: (c) => skyguardPart(c, false), simplify: 0.45, simpErr: 0.006, simpKeep: /^SG_(T|H|G|net|glassF)$/ };
 CONFIG.msl_roland_lo = { ...CONFIG.msl_roland, target: 900, simpErr: 0.01, tex: () => 256, nTex: null };
 CONFIG.zsu234_lo = { ...CONFIG.zsu234, src: new URL('./own/zsu234_lo.glb', import.meta.url).pathname, tex: () => 512, nTex: null, groups: (c) => zsu234Part(c, false), simplify: 0.4, simpErr: 0.006, simpKeep: /^SH_(T|H|glassF)$/ };
 CONFIG.m163_lo = { ...CONFIG.m163, src: new URL('./own/m163_lo.glb', import.meta.url).pathname, tex: () => 512, nTex: null, groups: (c) => m163Part(c, false), simplify: 0.4, simpErr: 0.006, simpKeep: /^VD_(T|H|glassF)$/ };

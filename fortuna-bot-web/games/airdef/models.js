@@ -366,7 +366,7 @@ const META = {
   msl_roland: { samMissile: ['roland'], lazy: true, matte: true, stations: [] }, // ракета Roland - своя, 2,4 м, нос −Z
   tunguska: { units: ['tunguska'], matte: true, stations: [] }, // 2К22 «Тунгуска» - SIpriv (CC BY 4.0), переделана в Blender (Свои/Тунгуска): камуфляж, затенение и карта нормалей запечены - шейдерного узора нет
   msl_9m311: { samMissile: ['tunguska'], matte: true, stations: [] }, // ракета 9М311 - своя (Свои/Тунгуска), 2,56 м, нос −Z
-  skyguard: { units: ['skyguard'], stations: [] },
+  skyguard: { units: ['skyguard'], matte: true, paint: true, stations: [] }, // Skyguard 35 мм (Oerlikon GDF) - своя модель (Свои/Skyguard 35 мм, 2026-11-25), окраска и сети запечены, paint - карта ORM
   rapier: { units: ['rapier'], matte: true, stations: [] }, // Tracked Rapier - свой (сборщик, Свои/Rapier; раньше - stealth86 с шейдерным камуфляжем); маск-сети - вырез по альфе // Oerlikon GDF 35 мм - из сцены Skyguard (lm9241221) // 2К22 «Тунгуска» - usedm
   msl_rapier: { samMissile: ['rapier'], lazy: true, onRail: true, matte: true, stations: [] }, // ракета Rapier - своя (Свои/Rapier), на балках
   sampt: { units: ['sampt'], matte: true, stations: [] }, // SAMP/T - своя пусковая на Renault Kerax (Свои/SAMP-T, 2026-11-18) вместо скана Chenzoss: боевое положение в файле, 8 ТПК, крышки lid0…7 рвутся при пуске
@@ -537,7 +537,7 @@ const GLB_V_OWN = {
   pk_e_a10: '20261112c', // своя модель A-10A
   pk_e_su34: '20261115a', // своя модель Су-34
   e_su57: '20261124a', e_su57_gear: '20261124a', e_su57_lo: '20261124a', // свой Су-57
-  pk_e_mig31: '20261124a', e_mig31: '20261124a', e_mig31_gear: '20261124a', e_mig31_lo: '20261124a', m163: '20261124a', m163_lo: '20261124a', zsu234: '20261125a', zsu234_lo: '20261125a', roland: '20261125a', roland_lo: '20261125a', msl_roland: '20261125a', msl_roland_lo: '20261125a', // свои МиГ-31БМ и M163
+  pk_e_mig31: '20261124a', e_mig31: '20261124a', e_mig31_gear: '20261124a', e_mig31_lo: '20261124a', m163: '20261124a', m163_lo: '20261124a', zsu234: '20261125a', zsu234_lo: '20261125a', skyguard: '20261125a', skyguard_lo: '20261125a', roland: '20261125a', roland_lo: '20261125a', msl_roland: '20261125a', msl_roland_lo: '20261125a', // свои МиГ-31БМ и M163
 
   pk_h_mi24: '20261029b',
   pk_h_ah64: '20261029b',

@@ -381,16 +381,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "OERLIKON 35MM SKYGUARD RADAR",
-  "author": "lm9241221",
-  "url": "https://sketchfab.com/3d-models/oerlikon-35mm-skyguard-radar-a136b501ae9847258249d51c769b779d",
-  "license": "CC-BY-4.0",
-  "files": [
-   "skyguard",
-   "skyguard_lo"
-  ]
- },
- {
   "title": "ZIF-122 & 4K33 Osa-M Missile",
   "author": "KoreanNavy",
   "url": "https://sketchfab.com/3d-models/zif-122-4k33-osa-m-missile-5cd6b3ec8b9d4e798f662dd9aefefb43",
