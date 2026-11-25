@@ -2778,8 +2778,8 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
       return u + v <= 1 ? a + (d - a) * u + (b - a) * v : c + (b - c) * (1 - u) + (d - c) * (1 - v);
     };
   }
-  if (HILLS || RELIEF) { // обрывы на крутых склонах (cliffs.js): верх уступов и осыпь - в высоте сетки
-    const mh = G.meshH, cl = G.cliffs = createCliffs({ scene, city, gh: mh, P, sh, ground, winter: WINT, waterY: AUT ? city.autumn.WY : WINT ? -1e9 : CITY.WATER_Y });
+  if (AUT || (RELIEF && !WINT)) { // обрывы на крутых склонах (cliffs.js): верх уступов и осыпь - в высоте сетки
+    const mh = G.meshH, cl = G.cliffs = createCliffs({ scene, city, gh: mh, P, sh, ground, waterY: AUT ? city.autumn.WY : CITY.WATER_Y });
     if (cl) G.meshH = (x, z) => { const b = mh(x, z), t = cl.topH(x, z, b); return t > b ? t : b; };
   }
   if (RELIEF && !HILLS) GH = G.meshH; // город с рельефом (проба): дома, деревья, площадки - по высоте сетки
