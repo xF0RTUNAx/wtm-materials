@@ -5,7 +5,7 @@
 import { KTX2Loader } from './vendor/basis/KTX2Loader.js?v=20261124a';
 const V = '20261022c';
 // своя версия у перепечённых текстур (остальные игрокам заново не качать): импосторы деревьев - свои деревья, 2026-11-08
-const VN = Object.fromEntries(['tr_city_a', 'tr_city_n', 'tr_city_a_lo', 'tr_city_n_lo', 'tr_winter_a', 'tr_winter_n', 'tr_winter_a_lo', 'tr_winter_n_lo'].map((n) => [n, '20261108h']).concat(['gt_c', 'gt_n', 'pt_c', 'pt_n', 'dc', 'dn', 'mt'].flatMap((n) => [`${n}_hi`, `${n}_lo`]).map((n) => [n, '20261116a']))); // свои атласы земли и дорог (city-render.js GT_V)
+const VN = Object.fromEntries(['tr_city_a', 'tr_city_n', 'tr_city_a_lo', 'tr_city_n_lo', 'tr_winter_a', 'tr_winter_n', 'tr_winter_a_lo', 'tr_winter_n_lo'].map((n) => [n, '20261108h']).concat(['sgt_c', 'sgt_n', 'spt_c', 'spt_n'].flatMap((n) => [`${n}_hi`, `${n}_lo`]).map((n) => [n, '20261125c'])).concat(['gt_c', 'gt_n', 'pt_c', 'pt_n', 'dc', 'dn', 'mt'].flatMap((n) => [`${n}_hi`, `${n}_lo`]).map((n) => [n, '20261116a']))); // свои атласы земли и дорог (city-render.js GT_V)
 let L = null, META = null;
 export function ktxInit(renderer) {
   if (L || !renderer || typeof Worker === 'undefined' || typeof WebAssembly === 'undefined') return;

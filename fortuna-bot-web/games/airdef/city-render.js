@@ -523,7 +523,7 @@ float hbw(float w, float ha, float hb) { return w <= 0.001 ? 0.0 : (w >= 0.999 ?
 vec3 LR; float LH; vec2 LN; float LS = 1.0, PS = 1.0; vec3 LM = vec3(0.0); vec2 gDN = vec2(0.0); float gMS = 1.0, gSpec = 0.0;
 ${SCAN ? 'float ms1(sampler2D t, float s, vec2 p, vec2 gx, vec2 gy, float T, float h) { vec2 o = uSun.xz / max(uSun.y, 0.3) * 0.022; float k = 0.21875 / T; float a = TXG(t, atUV(s, p + o, T), gc(gx * k), gc(gy * k)).a, b = TXG(t, atUV(s, p + o * 0.45, T), gc(gx * k), gc(gy * k)).a; return 1.0 - clamp(max(a - 0.34, b - 0.12) - h, 0.0, 0.3) / 0.3 * 0.75; }' : ''}
 void gSet(vec3 m, float s, vec2 p, vec2 gx, vec2 gy, float T, float nk, vec3 bm, float w, float own) {
-  if (w <= 0.0) return;
+  if (w <= 0.0) return;${SCAN ? ' T = T > 5.0 ? T : T * 0.75;' : ''}
   vec3 b = mix(bm, m, own); vec3 r = m / max(b, vec3(0.004)); float h = 0.5, ms = 1.0; vec2 n = vec2(0.5);
   if (nk > 0.0) { float k = 0.21875 / T; vec2 uv = atUV(s, p, T); vec4 c = TXG(tGC, uv, gc(gx * k), gc(gy * k));${SCAN ? ' if (gNear > 0.0) ms = mix(1.0, ms1(tGC, s, p, gx, gy, T, c.a), gNear);' : ''}
     r = mix(r, srgb(c.rgb) / max(b, vec3(0.004)), nk); h = mix(0.5, c.a, nk); n = mix(n, TXG(tGNm, uv, gc(gx * k), gc(gy * k)).rg, nk); }
@@ -533,7 +533,7 @@ void gSet(vec3 m, float s, vec2 p, vec2 gx, vec2 gy, float T, float nk, vec3 bm,
 vec3 PC, PM; float PH; vec2 PN;
 void pBeg() { PC = vec3(0.0); PM = vec3(0.0); PH = 0.5; PN = vec2(0.5); PS = 1.0; }
 void pSet(vec3 m, float s, vec2 p, vec2 gx, vec2 gy, float T, float nk, float w) {
-  if (w <= 0.0) return;
+  if (w <= 0.0) return;${SCAN ? ' T = T > 5.0 ? T : T * 0.75;' : ''}
   vec3 c3 = m; float h = 0.5, ms = 1.0; vec2 n = vec2(0.5);
   if (nk > 0.0) { float k = 0.21875 / T; vec2 uv = atUV(s, p, T); vec4 c = TXG(tPC, uv, gc(gx * k), gc(gy * k));${SCAN ? ' if (gNear > 0.0) ms = mix(1.0, ms1(tPC, s, p, gx, gy, T, c.a), gNear);' : ''}
     c3 = mix(m, srgb(c.rgb), nk); h = mix(0.5, c.a, nk); n = mix(n, TXG(tPN, uv, gc(gx * k), gc(gy * k)).rg, nk); }
@@ -597,11 +597,12 @@ ${SCAN ? `
   gSet(GM4, 4.0, p, cDx, cDy, 4.0, nk, bm, 0.5 * smoothstep(0.35, 0.75, n3) * (1.0 - fm), 0.0);
   if (crop > 0.0) { float cs = fh < 0.55 ? 10.0 : fh < 0.78 ? 8.0 : 11.0; vec3 csm = fh < 0.55 ? GM10 : fh < 0.78 ? GM8 : GM11; bool rz = fh2 <= 0.5;
     gSet(csm, cs, rz ? p.yx : p, rz ? cDx.yx : cDx, rz ? cDy.yx : cDy, 4.0, nk, bm, fm * crop, 0.0); }
-  gSet(GM9, 9.0, pR, gxR, gyR, 4.0, nk, bm, max(bare * (0.75 + 0.25 * ind), ind * (0.45 + 0.55 * n1)), 0.0);
+  gSet(GM9 * 0.85, 9.0, pR, gxR, gyR, 4.0, nk, bm, max(bare * (0.75 + 0.25 * ind), ind * (0.45 + 0.55 * n1)), 0.0);
   gSet(GM12, 12.0, p, cDx, cDy, 4.0, nk, bm, pm * smoothstep(0.38, 0.72, n3 * 0.4 + n1 * 0.35 + nD * 0.35), 0.0);
   { float l0 = max(dot(LM, vec3(0.3, 0.59, 0.11)), 0.004), l1 = max(dot(LR, vec3(0.3, 0.59, 0.11)), 0.002); col = LR * clamp(pow(l1 / l0, 0.35 * nk), 0.6, 1.6) * 0.8; col = mix(vec3(dot(col, vec3(0.3, 0.59, 0.11))), col, 0.85) * mix(1.0, 0.82, pm); }
   ${DNM('LN', 'LS', '1.0')}
-  if (ind > 0.0) { pBeg(); pSet(PM11, 11.0, p, cDx, cDy, 4.0, nk, 1.0); pSet(PM12, 12.0, pR, gxR, gyR, 4.0, nk, wv); float w = hbw(ind * smoothstep(0.35, 0.65, n3 * 0.5 + nD * 0.5), LH, PH); col = mix(col, PC * 0.5, w); ${DNM('PN', 'PS', 'w')} }
+  if (ind > 0.0) { pBeg(); pSet(PM11, 11.0, p, cDx, cDy, 4.0, nk, 1.0); pSet(PM12, 12.0, pR, gxR, gyR, 4.0, nk, wv); float w = hbw(ind * smoothstep(0.35, 0.65, n3 * 0.5 + nD * 0.5), LH, PH); col = mix(col, PC * 0.4, w); ${DNM('PN', 'PS', 'w')} }
+  col *= mix(vec3(1.0), vec3(0.74, 0.77, 0.82), ind);
   if (pv > 0.0) { pBeg(); pSet(PM9, 9.0, p, cDx, cDy, 4.0, nk, 1.0); pSet(PM10, 10.0, pR, gxR, gyR, 4.0, nk, wv); pSet(PM13, 13.0, p, cDx, cDy, 4.0, nk, smoothstep(0.5, 0.7, n3)); pSet(PM4, 4.0, p, cDx, cDy, 4.0, nk, smoothstep(0.5, 0.6, vns(p / 38.0 + 3.0)));
     col = mix(col, PC * 0.42, pv); ${DNM('PN', 'PS', 'pv * nk')} }
   if (uTexOn > 0.5) { float L3 = dot(crA(p, 260.0), vec3(0.3, 0.59, 0.11)), L4 = dot(crA(p * 1.37 + 91.0, 75.0), vec3(0.3, 0.59, 0.11)); col *= mix(1.0, L3, 0.4 * gm) * mix(1.0, L4, 0.3 * gm * (1.0 - smoothstep(6.0, 20.0, px))); } // снимок с высоты - только яркость

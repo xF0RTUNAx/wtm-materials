@@ -1,17 +1,17 @@
 # Проба «земля по сканам» (Mark 2026-11-25: сравнение Watch Dogs 2 и GTA 6): те же атласы 4 × 4, что у ground-atlas.py, но плитки - сканы настоящей земли
-# (Poly Haven, ambientCG - CC0). Нет карты высот у скана - высота из яркости (полоса частот). Крупные пятна скана приглушены (иначе виден повтор).
+# (Poly Haven, ambientCG - CC0). Плитка - из случайно сдвинутых кусков скана (synth). Крупные пятна скана приглушены (иначе виден повтор).
 #   PY=/Applications/Blender.app/Contents/Resources/5.2/python/bin/python3.13; $PY tools/airdef-tex/scan-atlas.py [--lo]
 import sys, os, json, subprocess, shutil, tempfile, glob, numpy as np
 HOME = os.environ['HOME']; BASE = f'{HOME}/Downloads/Воздушное превосходство'; R = f'{BASE}/Модели/Свои/Текстуры земли и дорог/референсы/cc0'; T2 = f'{BASE}/Текстуры'; OWN = f'{BASE}/Модели/Свои/Текстуры земли и дорог/плитки'
 WEB = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../..')); OUT = f'{WEB}/games/airdef/tex'
-# (папка, размер плитки скана, м - сколько раз укладывается в клетку 4 м; сила рельефа; насыщенность)
-GT = [(f'{T2}/Grass004_1K-JPG', 2, .9, .8), (f'{R}/ph_leafy_grass', 2, .8, .8), (f'{R}/ph_sparse_grass', 2, .8, .85), (f'{R}/ph_grass_path_2', 2, .8, .85), (f'{R}/Ground037', 2, .8, .85),
-      (f'{R}/ph_sparse_grass', 2, .8, .85), (f'{R}/ph_leafy_grass', 2, .8, .85), (f'{R}/ph_withered_grass', 2, .8, .85), (f'{R}/ph_grass_path_2', 2, .8, .85), (f'{R}/brown_mud_dry', 2, .8, .9),
-      (f'{R}/farm_soil', 2, .9, .9), (f'{R}/raked_dirt', 2, .9, .9), (f'{R}/ph_forest_floor', 2, .9, .9), (f'{R}/excavated_soil_wall', 4, .8, .9), (f'{R}/coast_sand_01', 2, .7, .9), (f'{R}/damp_sand', 2, .6, .9)]
-A2 = f'{T2}/asphalt_02_1k'
-PT = [(A2, 2, 1, .9), (A2, 4, 1, .9), (A2, 2, .7, .7), (f'{R}/Road008B', 4, 1, .9), (A2, 2, 1, .9), (A2, 4, .8, .8),
-      (f'{T2}/concrete_pavement_1k', 2, .8, .9), (f'{T2}/concrete_pavement_02_1k', 2, .8, .9), (f'{T2}/cobblestone_large_01_2k', 2, .9, .9), (f'{R}/concrete_floor_worn_001', 2, .7, .9), (f'{R}/concrete_floor_02', 2, .7, .9),
-      (f'{R}/sandy_gravel', 2, 1, .9), (f'{R}/stony_dirt_path', 2, 1, .9), (f'{R}/concrete_moss', 2, .8, .9), (f'{T2}/concrete_pavement_02_1k', 2, .8, .9), 'плиты_паг_1']
+Z = f'{BASE}/Модели/Свои/_текстуры_CC0/земля'
+TM = 3  # м на клетку атласа
+# (папка, размер скана в жизни, м; сила рельефа; насыщенность; как складывать: 'mix' - из случайно сдвинутых кусков, 'rep' - ровным повтором (плитка, кладка))
+z = lambda n, M, amp=1., sat=.95, how='mix': (f'{Z}/{n}', M, amp, sat, how)
+GT = [z('Grass004', 1.4, 1, .85), z('Grass003', 1.4, 1, .85), z('grass_ground', 2.5), z('grass_path_2', 1.4), z('grass_path_3', 1.4), z('forrest_ground_01', 2, 1, .85), z('leafy_grass', 2), z('withered_grass', 2),
+      z('Ground072', 2), z('Ground106', 2), z('farm_soil', 2), z('raked_dirt', 2, 1, .95, 'rep'), (f'{T2}/Ground078_2K-JPG', 2, 1, .95, 'mix'), (f'{R}/excavated_soil_wall', 3, 1, .95, 'rep'), z('coast_sand_03', 3), z('damp_sand', 2)]
+PT = [z('Asphalt025A', 2), z('Asphalt028A', 2), z('Asphalt028A', 1.6), z('Asphalt026A', 3, 1, .95, 'rep'), z('worn_asphalt', 2), z('asphalt_04', 3, 1, .95, 'rep'), z('concrete_pavement_03', 2, 1, .95, 'rep'), z('pavement_04', 3, 1, .95, 'rep'),
+      z('cobblestone_05', 2.4, 1, .95, 'rep'), z('concrete_floor_damaged_01', 3, 1, .95, 'rep'), z('cracked_concrete', 2, 1, .95, 'rep'), z('gravel_floor_03', 2.5), z('stony_dirt_path', 2.2), z('dirty_concrete', 3, 1, .95, 'rep'), z('overgrown_concrete_pavers', 2, 1, .95, 'rep'), 'плиты_паг_1']
 def probe(p):
     o = subprocess.run(['ffprobe', '-v', 'error', '-select_streams', 'v:0', '-show_entries', 'stream=width,height', '-of', 'csv=p=0', p], capture_output=True, text=True, check=True).stdout.strip().split(','); return int(o[0]), int(o[1])
 def read(p, S, gray=False):
@@ -24,24 +24,31 @@ def find(d, pats):
     for pt in pats:
         f = sorted(q for q in glob.glob(glob.escape(d) + '/**/*', recursive=True) if pt.lower() in os.path.basename(q).lower() and q.lower().endswith(('.jpg', '.png')))
         if f: return f[0]
-def tile(spec, S):  # → (цвет S×S×3 0..1 sRGB, высота, нормаль xy, шероховатость) на 4 м
+def synth(A, S, seed):  # плитка S×S (по кругу) из кусков скана A (s×s, по кругу): сетка 5 × 5 кусков со случайным сдвигом; шов - по высоте (камешек целиком из одного куска)
+    s = A.shape[0]; N = 5; rng = np.random.default_rng(seed); out = np.zeros((S, S, A.shape[2]), np.float32); W = np.zeros((S, S, 1), np.float64)
+    out = out.astype(np.float64); g = (np.arange(S) + .5) / S * N; nz = blur(rng.standard_normal((S, S)).astype(np.float32), S / 40); nz = np.clip(nz / nz.std() * .16, -.4, .4); h = A[..., 3]
+    for j in range(N):
+        for i in range(N):
+            dx = np.abs((g - i - .5 + N / 2) % N - N / 2); dy = np.abs((g - j - .5 + N / 2) % N - N / 2); wx = np.clip(1.0 - dx, 0, 1); wy = np.clip(1.0 - dy, 0, 1)
+            ix = np.where(wx > 0)[0]; iy = np.where(wy > 0)[0]; ox, oy = rng.integers(0, s, 2); sx = (ix + ox) % s; sy = (iy + oy) % s
+            w = np.clip(wy[iy][:, None] * wx[ix][None, :] + nz[np.ix_(iy, ix)] * np.minimum(1, wy[iy][:, None] * wx[ix][None, :] * 6), 1e-3, None) ** 14 * np.exp(1.5 * h[np.ix_(sy, sx)]) + 1e-60; w = w[..., None]
+            out[np.ix_(iy, ix)] += A[np.ix_(sy, sx)] * w; W[np.ix_(iy, ix)] += w
+    o = (out / np.maximum(W, 1e-300)).astype(np.float32); L = o[..., :3].mean(2); o[..., :3] = np.clip(o[..., :3] * ((L.mean() / np.maximum(blur(L, S / 22), .02)) ** .85)[..., None], 0, 1); return o  # без клетки от швов: ровная яркость крупнее ~14 см
+def tile(spec, S, seed=1):  # → (цвет S×S×3 0..1 sRGB, высота, нормаль xy, шероховатость) на TM метров
     if isinstance(spec, str):
-        d = f'{OWN}/{spec}'; c = read(f'{d}/цвет.png', S); h = read(f'{d}/высота.png', S, True)[..., 0]; hm = 1.; sat = 1.; n = 1; amp = 1.; r = read(f'{d}/шероховатость.png', S, True)[..., 0]
+        d = f'{OWN}/{spec}'; c = read(f'{d}/цвет.png', S); h = read(f'{d}/высота.png', S, True)[..., 0]; amp = 1.; r = read(f'{d}/шероховатость.png', S, True)[..., 0]; nm = read(f'{d}/нормали.png', S)[..., :2]; how = 'one'; sat = 1.; s = S
     else:
-        d, M, amp, sat = spec; n = round(4 / M); s = S // n
-        c = read(find(d, ['_diff', '_Color']), s); dp = find(d, ['_disp', 'Displacement']); rp = find(d, ['_rough', 'Roughness'])
-        r = read(rp, s, True)[..., 0] if rp else np.full((s, s), .85, np.float32)
-        L = c.mean(2)
-        if dp: h = read(dp, s, True)[..., 0]
-        else: h = blur(L, 1.2) - blur(L, s / 24) * 0.85
-        big = blur(L, s / 10); c = np.clip(c * ((L.mean() / np.maximum(big, .02)) ** .75)[..., None], 0, 1)  # крупные пятна тише
-    lo, hi = np.percentile(h, [1, 99]); h = np.clip((h - lo) / max(hi - lo, 1e-4), 0, 1)
-    g = c.mean(2, keepdims=True); c = np.clip(g + (c - g) * sat, 0, 1)
-    px = h.shape[0]; k = amp * px / 1024 * 9  # наклон: высота клетки ~ 3 см на 2 м
-    hb = blur(h, .7); dx = (np.roll(hb, -1, 1) - np.roll(hb, 1, 1)) * k; dy = (np.roll(hb, -1, 0) - np.roll(hb, 1, 0)) * k
-    cav = np.clip(1 + (h - blur(h, px / 60)) * 1.1, .55, 1.15); c = np.clip(c * cav[..., None], 0, 1)  # тень в ямках - в цвет
-    ln = np.sqrt(1 + dx * dx + dy * dy); nx = -dx / ln; ny = dy / ln  # OpenGL (G - вверх по картинке)
-    a = np.concatenate([c, h[..., None], np.stack([nx * .5 + .5, ny * .5 + .5, r], 2)], 2); return np.tile(a, (n, n, 1))
+        d, M, amp, sat, how = spec; s = S // max(1, round(TM / M)) if how == 'rep' else round(S * M / TM / 2) * 2
+        s = min(s, 2048)
+        c = read(find(d, ['_diff', '_Color']), s); h = read(find(d, ['_disp', 'Displacement']), s, True)[..., 0]; rp = find(d, ['_rough', 'Roughness']); r = read(rp, s, True)[..., 0] if rp else np.full((s, s), .85, np.float32)
+        nm = read(find(d, ['nor_gl', 'NormalGL']), s)[..., :2]; ap = find(d, ['_ao_', 'AmbientOcclusion']); ao = read(ap, s, True)[..., 0] if ap else np.ones((s, s), np.float32)
+        L = c.mean(2); big = blur(L, s / 9); c = np.clip(c * ((L.mean() / np.maximum(big, .02)) ** .7)[..., None], 0, 1) * (ao ** .7)[..., None]
+    h = h - blur(h, h.shape[0] / 7) * .8; lo, hi = np.percentile(h, [1, 99]); h = np.clip((h - lo) / max(hi - lo, 1e-4), 0, 1)
+    cav = np.clip(1 + (h - blur(h, h.shape[0] / 60)) * .6, .6, 1.12); c = np.clip(c * cav[..., None], 0, 1)
+    g = c.mean(2, keepdims=True); c = np.clip(g + (c - g) * sat, 0, 1); nm = np.clip((nm - .5) * amp + .5, 0, 1)
+    a = np.concatenate([c, h[..., None], nm, r[..., None]], 2)
+    if how == 'mix': return synth(a, S, seed)
+    n = S // a.shape[0]; return np.tile(a, (n, n, 1))[:S, :S] if n > 1 else a
 def scale(a, w):
     H, W, n = a.shape; src = (np.clip(a, 0, 1) * 65535 + .5).astype('<u2').tobytes(); raw = subprocess.run(['ffmpeg', '-v', 'error', '-f', 'rawvideo', '-pix_fmt', 'rgba64le', '-s', f'{W}x{H}', '-i', '-', '-vf', f'scale={w}:{w}:flags=lanczos', '-f', 'rawvideo', '-pix_fmt', 'rgba64le', '-'], input=src, capture_output=True, check=True).stdout
     return np.frombuffer(raw, '<u2').reshape(w, w, 4).astype(np.float32) / 65535
@@ -62,9 +69,9 @@ for key, L in (('gt', GT), ('pt', PT)):
     if ONLY and key not in ONLY: continue
     S = 2048; T = []; info[key] = []
     for s, o in zip(L, OWNM[key]):
-        a = tile(s, S); m0 = (a[..., :3] ** 2).reshape(-1, 3).mean(0); mo = np.array(o['mean'], np.float32); g = mo.mean(); mo = g + (mo - g) * (.72 if key == 'gt' else .6)
-        mo = mo * .75 + m0 * (mo.mean() / m0.mean()) * .25 # средний тон - от прежней плитки (на него настроены свет и смешивание), оттенок немного от скана
-        a[..., :3] = np.clip(a[..., :3] * np.sqrt(mo / m0), 0, 1); m = (a[..., :3] ** 2).reshape(-1, 3).mean(0); T.append(a); info.setdefault(key, []).append({'name': os.path.basename(s if isinstance(s, str) else s[0]), 'T': 4, 'mean': [round(float(v), 5) for v in m], 'rough': round(float(a[..., 6].mean()), 3)}); print(key, info[key][-1], flush=True)
+        a = tile(s, S, len(T) + 11); m0 = (a[..., :3] ** 2).reshape(-1, 3).mean(0); mo = np.array(o['mean'], np.float32); g = mo.mean(); mo = g + (mo - g) * (.8 if key == 'gt' else .6)
+        mo = mo * .5 + m0 * (mo.mean() / m0.mean()) * .5 # средний тон - от прежней плитки (на него настроены свет и смешивание), оттенок немного от скана
+        a[..., :3] = np.clip(a[..., :3] * np.sqrt(mo / m0), 0, 1); m = (a[..., :3] ** 2).reshape(-1, 3).mean(0); T.append(a); info.setdefault(key, []).append({'name': os.path.basename(s if isinstance(s, str) else s[0]), 'T': TM, 'mean': [round(float(v), 5) for v in m], 'rough': round(float(a[..., 6].mean()), 3)}); print(key, info[key][-1], flush=True)
     for sfx, Cc, Cn in (('hi', 1024, 1024), ('lo', 512, 256)):
         A = np.zeros((4 * Cc, 4 * Cc, 4), np.float32); N = np.ones((4 * Cn, 4 * Cn, 4), np.float32)
         for i, a in enumerate(T):
