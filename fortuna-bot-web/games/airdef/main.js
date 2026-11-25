@@ -18,7 +18,7 @@ import { buildWinter } from './map-winter.js?v=20261124a';
 import { WINTER_KEYS } from './winter-render.js?v=20261124a';
 import { buildAutumn } from './map-autumn.js?v=20261124a';
 import { AUTUMN_KEYS } from './autumn-render.js?v=20261124a';
-import { buildCityScene, updateCityScene, UPX, ENV, texStats, freezeTree, SITE_ANIMS, farFlat } from './city-render.js?v=20261124a';
+import { buildCityScene, updateCityScene, UPX, ENV, texStats, freezeTree, SITE_ANIMS, farFlat, unitSnow } from './city-render.js?v=20261124a';
 import { addBlast } from './blast.js?v=20261124a';
 import { mergeLocal } from './merge.js?v=20261124a';
 import { createPipeline } from '../drone/post.js?v=20261124a';
@@ -105,9 +105,9 @@ export const WEATHER_KEYS = ['day', 'morning', 'evening', 'sunset', 'overcast'];
 const Q0LT0 = /[?&]lt=0/.test(location.search);
 const GRADE = {
   day: Q0LT0 ? { gSat: 1.02 } : { gSat: 0.92, gCon: 1.08 }, // объёмный свет дня (city-render.js LAB.day); ?lt=0 - прежний
-  morning: { gGain: [1.035, 1.0, 0.95], gLift: [0, 0.004, 0.012] },
-  evening: { gGain: [1.05, 0.995, 0.92], gLift: [0.006, 0, 0.012], gSat: 0.97 },
-  sunset: { gGain: [1.07, 0.98, 0.88], gLift: [0.01, 0, 0.018], gCon: 1.04 },
+  morning: { gGain: [1.035, 1.0, 0.95], gLift: [0, 0.002, 0.005] },
+  evening: { gGain: [1.05, 0.995, 0.92], gLift: [0.002, 0.002, 0.004], gSat: 0.97 },
+  sunset: { gGain: [1.07, 0.98, 0.88], gLift: [0.003, 0.002, 0.005] },
   overcast: { gGain: [0.97, 1.0, 1.03], gSat: 0.86, gCon: 0.96 },
 };
 // проба света города (?light=1 / 2, city-render.js LIGHT): контраст и чуть теплее свет - поверх цвета погоды
@@ -429,6 +429,7 @@ C.netBattle = function (N, o) {
   return S;
 };
 C.objLook = (id, ruin) => objLook(id, ruin);
+const OWN_UNITS = new Set(['gepard', 'roland', 'rapier', 'tunguska', 'strela1', 'strela10', 'zsu234', 'm163', 'tor', 'torm2', 'buk', 'pantsir', 's300', 's400', 'patriot', 'pac3', 'sampt', 'nasams', 'hawk21', 'avenger', 'chaparral', 'gpsjam', 'gpsjamw']); // свои и переделанные модели техники
 // модели комплексов - по списку боя (после расстановки или переезда)
 C.syncUnits = function () {
   const S = C.S; if (!S) return;
@@ -440,7 +441,8 @@ C.syncUnits = function () {
     if (!g) {
       const md = unitModel(u.key, u.S), gm = unitModelGlb(u.key); g = new THREE.Group();
       const mesh = (geo, parent) => { const m = new THREE.Mesh(geo, unitMat); m.castShadow = !!P.shadows; parent.add(m); return m; };
-      const obj = (o, parent) => { o.traverse((q) => { if (q.isMesh && !q.userData.glass) { q.castShadow = !!P.shadows; q.receiveShadow = !!P.shadows; } }); parent.add(o); return o; };
+      const snow = city.kind === 'winter' && OWN_UNITS.has(u.key); // снег - на своих моделях (стволы горячие - без снега)
+      const obj = (o, parent) => { if (snow) o.traverse((q) => { if (q.isMesh && !q.userData.glass && !/barrel/.test((q.name || '') + (q.parent ? q.parent.name : ''))) q.material = Array.isArray(q.material) ? q.material.map((x) => unitSnow(x)) : unitSnow(q.material); }); o.traverse((q) => { if (q.isMesh && !q.userData.glass) { q.castShadow = !!P.shadows; q.receiveShadow = !!P.shadows; } }); parent.add(o); return o; };
       // готовая модель (корпус, башня, пакет - РЛС на башне) или процедурная
       if (gm) { if (gm.body) obj(gm.body, g); } else if (md.body) mesh(md.body, g); // у стрелка ПЗРК корпуса нет (только тело на башне)
       // «Тор-М2»: броне-шторки окон кабины в бою открыты - поворот вокруг X на петлях shut.piv (в осях машины)

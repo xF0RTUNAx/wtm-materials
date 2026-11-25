@@ -3,6 +3,7 @@
 // листва в лесу и рыжая крона издали, грязь на дне оврагов и в болоте, пашня и тыквенные поля, скалы Лысой горы; туман
 // стелется в низинах (над болотом и в оврагах) - гуще в сумерках. Нормали - из сетки высот (50 м).
 /* global THREE */
+import { SCAN_S, SCAN_GLSL, scanTextures, autumnScan } from './ground-scan.js?v=20261124a';
 import { TB_GLSL, ROUGH_GLSL, groundLit } from './terrain-bake.js?v=20261124a';
 import { tr } from './i18n.js?v=20261124a';
 import { ZONE } from './city.js?v=20261124a';
@@ -42,9 +43,10 @@ export function autumnZoneTex(city, size) {
 const ATEX = { aG: 'a_grass', aGN: 'a_grass_n', aGA: 'a_grassA', aL: 'a_leaves', aM: 'a_mud', aMA: 'a_mudA', aF: 'a_field', aRk: 'w_rock', aRA: 'w_rockA' };
 const ACOARSE = new Set(['aGA', 'aRA', 'aMA']); // снимки с высоты (плитка 200-1300 м) - без анизотропии: крупный рисунок не мылится, а выборка втрое дешевле (ground-far.js)
 // мелкие (трава, грязь, листва) - не больше 4: вдали они и так средним цветом (ground-far.js), а 8 против 4 на снимках не отличить (стенд 2026-10-25: −0,6 мс низко на «Высоком»)
-export function autumnTextures(aniso, stats) {
-  const U = {};
+export function autumnTextures(aniso, stats, hi) {
+  const U = SCAN_S ? scanTextures('a', aniso, hi, stats) : {};
   for (const [u, f] of Object.entries(ATEX)) {
+    if (SCAN_S && (u === 'aL' || u === 'aGN')) continue;
     const t = new THREE.Texture(); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = ACOARSE.has(u) ? 1 : Math.min(8, aniso); t.minFilter = THREE.LinearMipmapLinearFilter; U[u] = { value: t };
     if (typeof createImageBitmap !== 'function' || typeof fetch !== 'function') continue;
     if (stats) stats.req++;
@@ -72,6 +74,7 @@ function aGroundGLSL(H) {
   float pv = vn(P.xz / 80.0) * 0.6 + vn(P.xz / 17.0) * 0.4;
   grass *= pv < 0.35 ? vec3(0.85, 0.95, 0.8) : pv < 0.55 ? vec3(1.0) : pv < 0.72 ? vec3(1.18, 1.05, 0.85) : vec3(1.2, 0.85, 0.65);
   grass *= (0.55 + 0.9 * gA) * mix(0.75 + 0.9 * lum(dG2), 1.0, near * 0.5) * mix(1.0, 0.3 + 2.4 * lum(dG), 0.6 * near) * mix(vec3(1.0), dG / max(lum(dG), 0.05), 0.3 * near);
+  ${SCAN_S ? autumnScan(AUTUMN.WY) : ''}
   // скалы: крутые склоны и голая Лысая гора (там же - бледная выгоревшая трава)
   float rA = lum(texture2D(aRA, P.xz / 300.0).rgb), rl = near > 0.0 ? lum(texF(aRk, P.xz, 24.0, vec2(0.0)).rgb) : 0.5;
   vec3 rock = vec3(0.12, 0.11, 0.095) * (0.55 + 0.9 * rA) * mix(1.0, 0.6 + 0.8 * rl, near);
@@ -85,7 +88,7 @@ function aGroundGLSL(H) {
   vec3 bog = mix(vec3(0.045, 0.05, 0.022), vec3(0.085, 0.08, 0.03), vn(P.xz / 70.0) * 0.7 + vn(P.xz / 13.0) * 0.3) * (0.6 + 0.8 * mA); // мох и осока
   bog = mix(bog, vec3(0.13, 0.11, 0.05), smoothstep(0.62, 0.8, vn(P.xz / 25.0)) * 0.6); // сухая осока куртинами
   bog = mix(bog, bog * (0.5 + 1.2 * lum(dG)) * vec3(0.95, 1.05, 0.8), 0.6 * near);
-  col = mix(col, bog, smoothstep(0.3, 0.8, Z2.a + 0.25 * (vn(P.xz / 150.0) - 0.5)) * (1.0 - smoothstep(4.0, 9.0, hgt - ${AUTUMN.WY.toFixed(1)})));
+  ${SCAN_S ? '' : 'col = mix(col, bog, smoothstep(0.3, 0.8, Z2.a + 0.25 * (vn(P.xz / 150.0) - 0.5)) * (1.0 - smoothstep(4.0, 9.0, hgt - ' + AUTUMN.WY.toFixed(1) + ')));'}
   // дно оврага: сырая грязь и палая листва (где врезка глубже, а земля ниже краёв)
   float rv = smoothstep(0.6, 0.85, Z2.r + 0.15 * (vn(P.xz / 40.0) - 0.5)) * (1.0 - smoothstep(0.12, 0.28, slope)); // только дно (врезка глубже ~35 м и полого)
   vec3 mud = texF(aM, P.xz, 5.0, vec2(0.0)).rgb * 0.5 * mix(1.0, 0.7 + 0.6 * mA, 1.0 - near);
@@ -95,11 +98,12 @@ function aGroundGLSL(H) {
   float ch = vn(P.xz / 38.0) * 0.65 + vn(P.xz / 9.0) * 0.35;
   vec3 canopy = ch < 0.3 ? vec3(0.28, 0.08, 0.015) : ch < 0.5 ? vec3(0.34, 0.17, 0.02) : ch < 0.7 ? vec3(0.3, 0.24, 0.035) : ch < 0.86 ? vec3(0.19, 0.1, 0.035) : vec3(0.12, 0.1, 0.08);
   canopy = mix(canopy, vec3(0.03, 0.05, 0.03), step(0.9, vn(P.xz / 260.0 + 3.1))); // кое-где ельник
-  vec3 litter = far < 1.0 ? texF(aL, P.xz, 4.0, vec2(0.0)).rgb * 0.6 : vec3(0.0);
-  col = mix(col, canopy * (0.75 + 0.5 * vn(P.xz / 14.0)), fr * far * 0.85);
+  ${SCAN_S ? 'canopy = mix(vec3(lum(canopy)) * vec3(1.1, 1.0, 0.8), canopy, 0.6);' : ''}
+  vec3 litter = ${SCAN_S ? 'col' : 'far < 1.0 ? texF(aL, P.xz, 4.0, vec2(0.0)).rgb * 0.6 : vec3(0.0)'};
+  col = mix(col, canopy * (0.75 + 0.5 * vn(P.xz / 14.0)), fr * far * ${SCAN_S ? '0.6' : '0.85'});
   col = mix(col, mix(col, litter, 0.7), fr * (1.0 - far));
   // поля: пашня (бурые борозды) и тыквенные (вблизи - оранжевые точки по рядам, вдали - рыжий отлив)
-  vec3 fld = texF(aF, P.xz, 9.0, vec2(0.0)).rgb * 0.55 * mix(0.9, 1.1, vn(P.xz / 30.0));
+  vec3 fld = ${SCAN_S ? 'col * clamp(lum(texF(aF, P.xz, 9.0, vec2(0.0)).rgb) * 4.0, 0.6, 1.5)' : 'texF(aF, P.xz, 9.0, vec2(0.0)).rgb * 0.55 * mix(0.9, 1.1, vn(P.xz / 30.0))'};
   float pf = smoothstep(0.3, 0.7, Z2.b), pl = smoothstep(0.3, 0.7, Z2.g);
   col = mix(col, fld, max(pl, pf) * 0.9);
   vec2 pc = floor(P.xz / 2.2); float pk = step(0.62, hs(pc)) * (1.0 - smoothstep(0.25, 0.45, length(fract(P.xz / 2.2) - 0.5)));
@@ -116,12 +120,12 @@ function aGroundGLSL(H) {
 }
 `;
 }
-const aHeadGLSL = () => `${TB_GLSL}${ROUGH_GLSL}uniform vec3 uBald; uniform sampler2D tZ, tZ2, tNm, aG, aGN, aGA, aL, aM, aMA, aF, aRk, aRA;
+const aHeadGLSL = () => `${TB_GLSL}${ROUGH_GLSL}uniform vec3 uBald; ${SCAN_S ? '' : ''}uniform sampler2D tZ, tZ2, tNm, aG, aGN, aGA, aL, aM, aMA, aF, aRk, aRA;
       float lum(vec3 c) { return dot(c, vec3(0.3, 0.59, 0.11)); }
       float hs(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
       ${NOISE_ON ? NOISE_GLSL + 'float vn(vec2 p) { return vnt(p); } // шум - текстурой (noise-tex.js): 24 вызова на пиксель были главной ценой земли' : 'float vn(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(hs(i), hs(i + vec2(1, 0)), f.x), mix(hs(i + vec2(0, 1)), hs(i + vec2(1, 1)), f.x), f.y); }'}
       vec3 wN; float aLow;
-      ${FAR_GLSL}
+      ${FAR_GLSL}${SCAN_S ? SCAN_GLSL : ''}
 `;
 // материал земли: Phong (свет, тени, туман - как у остального), цвет и нормаль - в шейдере. bake - запечённый цвет дальней земли (ground-bake.js)
 export function autumnGroundMaterial(city, zt, nt, ENV, AT, W, bake) {
@@ -144,14 +148,14 @@ export function autumnGroundMaterial(city, zt, nt, ENV, AT, W, bake) {
   ${bake ? `float bk = bakeK(dist, vWp.xz); vec4 gC = vec4(0.0); // дальняя земля - запечённый цвет (ground-bake.js); в полосе перехода - смесь
   if (bk < 1.0) gC = aGround(vWp, dist);
   if (bk > 0.0) gC = mix(gC, bakeAt(vWp.xz), bk);` : 'vec4 gC = aGround(vWp, dist);'}
-  aLow = gC.a * mix(0.04, 1.0, smoothstep(300.0, 5000.0, dist));
+  aLow = gC.a * mix(0.04, 1.0, smoothstep(300.0, 5000.0, dist))${SCAN_S ? ' * mix(1.0, 0.15, smoothstep(0.03, 0.35, abs(vWp.y - uCam.y) / max(dist, 1.0)))' : ''}; // сверху пелена тонкая: земля под ней видна
   diffuseColor.rgb = gC.rgb;`)
       .replace('#include <fog_fragment>', `#include <fog_fragment>
   gl_FragColor.rgb = mix(gl_FragColor.rgb, uLow.rgb * uLowL, clamp(aLow * uLow.w * 0.8, 0.0, 0.85));`)
       .replace('#include <normal_fragment_begin>', `#include <normal_fragment_begin>
   // мелкий рельеф травы и земли: нормали текстуры в двух масштабах, вблизи сильнее
   float nw = 1.0 - smoothstep(150.0, 900.0, length(vWp - uCam));
-  vec2 nd = (nw > 0.0 ? (texF(aGN, vWp.xz, 5.0, vec2(0.0)).xy - 0.5) * 0.8 * nw : vec2(0.0)) + (texture2D(aGN, vWp.xz / 60.0 + 0.5).xy - 0.5) * 0.35;
+  vec2 nd = ${SCAN_S ? 'SN * 1.15' : '(nw > 0.0 ? (texF(aGN, vWp.xz, 5.0, vec2(0.0)).xy - 0.5) * 0.8 * nw : vec2(0.0)) + (texture2D(aGN, vWp.xz / 60.0 + 0.5).xy - 0.5) * 0.35'};
   vec3 wn2 = normalize(wN + vec3(nd.x, 0.0, -nd.y));
   normal = normalize((viewMatrix * vec4(wn2, 0.0)).xyz);`);
   };

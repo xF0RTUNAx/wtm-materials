@@ -3,6 +3,7 @@
 // и гребнях, лёд с наметёнными пятнами снега, хвойная крона издали (лес читается лесом между редкими импосторами),
 // укатанный снег и асфальт у базы, ВПП. Нормали - из сетки высот (50 м): склоны освещены точнее, чем грубая сетка земли.
 /* global THREE */
+import { SCAN_S, SCAN_GLSL, scanTextures, winterScan } from './ground-scan.js?v=20261124a';
 import { TB_GLSL, ROUGH_GLSL, groundLit } from './terrain-bake.js?v=20261124a';
 import { tr } from './i18n.js?v=20261124a';
 import { ZONE, partDist } from './city.js?v=20261124a';
@@ -50,8 +51,8 @@ export function winterNormalTex(city) {
 const WTEX = { wSn: 'w_snow', wSnN: 'w_snow_n', wSA: 'w_snowA', wRk: 'w_rock', wRA: 'w_rockA', wIce: 'w_ice', wAs: 'w_asph' };
 const WCOARSE = new Set(['wSA', 'wRA']); // снимки с высоты (плитка 300-1900 м) - без анизотропии: крупный рисунок не мылится, а выборка втрое дешевле (ground-far.js)
 // мелкие (снег, скала, лёд, асфальт) - не больше 4, как у осени: вдали они и так средним цветом
-export function winterTextures(aniso, stats) {
-  const U = {};
+export function winterTextures(aniso, stats, hi) {
+  const U = SCAN_S ? scanTextures('w', aniso, hi, stats) : {};
   for (const [u, f] of Object.entries(WTEX)) {
     const t = new THREE.Texture(); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = WCOARSE.has(u) ? 1 : Math.min(8, aniso); t.minFilter = THREE.LinearMipmapLinearFilter; U[u] = { value: t };
     if (typeof createImageBitmap !== 'function' || typeof fetch !== 'function') continue;
@@ -76,12 +77,13 @@ function wGroundGLSL(H) {
   vec3 sA = texture2D(wSA, P.xz / 420.0).rgb, sA2 = texture2D(wSA, P.xz / 1900.0 + 0.37).rgb;
   float dS = near > 0.0 ? lum(texF(wSn, P.xz, 7.0, vec2(0.0)).rgb) / 0.82 : 1.0;
   vec3 snow = vec3(0.8, 0.83, 0.88) * mix(1.0, dS, 0.4 * near) * mix(vec3(1.0), sA * sA / 0.62, 0.35) * mix(vec3(1.0), sA2 * sA2 / 0.62, 0.25);
+  ${SCAN_S ? winterScan() : ''}
   // скалы: крутые склоны и выдутые ветром гребни (рисунок - из текстур, цвет - серый камень)
   float rA = lum(texture2D(wRA, P.xz / 300.0).rgb), rl = near > 0.0 ? lum(texF(wRk, P.xz, 24.0, vec2(0.0)).rgb) : 0.5;
   vec3 rock = vec3(0.13, 0.125, 0.12) * (0.55 + 0.9 * rA) * mix(1.0, 0.6 + 0.8 * rl, near);
   float rk = smoothstep(0.2, 0.36, slope + 0.14 * (rA - 0.5) + 0.1 * (vn(P.xz / 60.0) - 0.5));
   rk = max(rk, smoothstep(1250.0, 1650.0, hgt) * smoothstep(0.1, 0.26, slope + 0.1 * (rA - 0.5)));
-  vec3 col = mix(snow, rock, rk); gRough = mix(0.35, 0.9, rk);
+  vec3 col = mix(snow, rock, rk); gRough = mix(${SCAN_S ? 'mix(0.9, 0.35, smoothstep(0.25, 0.6, lum(snow)))' : '0.35'}, 0.9, rk);
   // лес: издали - хвойная крона со снегом (импосторы редкие), вблизи под деревьями - притоптанный снег
   // край леса - рваный (шум двух масштабов), внутри - куртины и прогалины
   float fr = smoothstep(0.2, 0.8, Z.r + 0.5 * (vn(P.xz / 160.0) - 0.5) + 0.3 * (vn(P.xz / 45.0) - 0.5)) * (1.0 - smoothstep(0.16, 0.3, slope)), far = smoothstep(300.0, 1600.0, dist); // на круче леса нет (кроны тянулись полосами)
@@ -126,7 +128,7 @@ const wHeadGLSL = () => `${TB_GLSL}${ROUGH_GLSL}uniform vec4 uAir, uIce; uniform
       float hs(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
       ${NOISE_ON ? NOISE_GLSL + 'float vn(vec2 p) { return vnt(p); } // шум - текстурой (noise-tex.js), как у осени' : 'float vn(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(hs(i), hs(i + vec2(1, 0)), f.x), mix(hs(i + vec2(0, 1)), hs(i + vec2(1, 1)), f.x), f.y); }'}
       vec3 wN;
-      ${FAR_GLSL}
+      ${FAR_GLSL}${SCAN_S ? SCAN_GLSL : ''}
 `;
 // материал земли: Phong (свет, тени, туман - как у остального), цвет и нормаль - в шейдере. bake - запечённый цвет дальней земли (ground-bake.js)
 export function winterGroundMaterial(city, zt, nt, ENV, WT, bake) {
@@ -153,7 +155,7 @@ export function winterGroundMaterial(city, zt, nt, ENV, WT, bake) {
       .replace('#include <normal_fragment_begin>', `#include <normal_fragment_begin>
   // мелкий рельеф снега (сугробы, наст): нормали текстуры в двух масштабах, вблизи сильнее; на скалах - слабее
   float nw = 1.0 - smoothstep(150.0, 900.0, length(vWp - uCam));
-  vec2 nd = (nw > 0.0 ? (texF(wSnN, vWp.xz, 6.0, vec2(0.0)).xy - 0.5) * 0.9 * nw : vec2(0.0)) + (texture2D(wSnN, vWp.xz / 55.0 + 0.5).xy - 0.5) * 0.5;
+  vec2 nd = (nw > 0.0 ? (texF(wSnN, vWp.xz, 6.0, vec2(0.0)).xy - 0.5) * 0.9 * nw : vec2(0.0)) + (texture2D(wSnN, vWp.xz / 55.0 + 0.5).xy - 0.5) * 0.5;${SCAN_S ? ' nd = nd * 0.7 + SN;' : ''}
   vec3 wn2 = normalize(wN + vec3(nd.x, 0.0, -nd.y));
   normal = normalize((viewMatrix * vec4(wn2, 0.0)).xyz);`);
   };
