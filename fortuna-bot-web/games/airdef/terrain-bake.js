@@ -34,7 +34,7 @@ vec2 hh(vec2 p) { vec3 q = fract(vec3(p.xyx) * vec3(0.1031, 0.1030, 0.0973)); q 
 // полосы поперёк направления d (d - вдоль изолинии, длина - сила): значение и производные; опорные точки со сдвигом, веса - колокол
 vec3 gul(vec2 p, vec2 d) { vec2 ip = floor(p), fp = p - ip; vec3 s = vec3(0.0); float W = 0.0;
   for (int j = -1; j <= 2; j++) for (int i = -1; i <= 2; i++) { vec2 o = vec2(float(i), float(j)), q = fp - o + 0.5 - hh(ip + o); float w = exp(-dot(q, q) * 1.9), m = dot(q, d) * 6.2831853; s += vec3(cos(m), -sin(m) * 6.2831853 * d) * w; W += w; }
-  s /= W; float a = 1.0 - abs(s.x); return vec3(1.0 - 2.0 * a * a, 4.0 * a * sign(s.x) * s.yz * 0.5); } // гребни острее, промоины шире
+  s /= W; float a = 1.0 - abs(s.x); return vec3(1.0 - 2.0 * a * a, 4.0 * a * (s.x / (abs(s.x) + 0.12)) * s.yz * 0.55); } // гребни острее, промоины шире
 void main() { vec2 w = (vUv * 2.0 - 1.0) * uHalf; vec3 H = hCub(w); vec2 g = H.yz; float s = length(g); vec3 acc = vec3(0.0); float cav = 0.0, wt = 0.0;
   float st = smoothstep(0.06, 0.42, s); vec2 dir0 = s > 1e-4 ? vec2(-g.y, g.x) / s : vec2(0.0); float lam = 420.0, amp = 1.0;
   for (int k = 0; k < 5; k++) { vec2 gg = g + acc.yz * 1.1; float l = length(gg); vec2 d = l > 1e-4 ? vec2(-gg.y, gg.x) / l : dir0;
@@ -55,7 +55,7 @@ export function bakeTerrain(renderer, city, sunDir, N, aniso) {
   const U = { tH: { value: tH }, uN: { value: hn }, uR: { value: city.HRES }, uHalf: { value: city.HRES * (hn - 1) / 2 }, uSun: { value: sunDir.clone() } };
   const mk = (fs, u) => new THREE.ShaderMaterial({ uniforms: { ...U, ...u }, vertexShader: VS, fragmentShader: fs.replace(/texelFetch/g, 'texelFetch'), depthTest: false, depthWrite: false, toneMapped: false });
   const Sh = new THREE.WebGLRenderTarget(1024, 1024, { ...o, type: THREE.HalfFloatType, minFilter: THREE.LinearFilter, generateMipmaps: false });
-  const mS = mk(FS_S, {}), mA = mk(FS_A, {}), mB = mk(FS_B, { tA: { value: A.texture }, uGul: { value: +(Q.get('gul') || 1.7) } });
+  const mS = mk(FS_S, {}), mA = mk(FS_A, {}), mB = mk(FS_B, { tA: { value: A.texture }, uGul: { value: +(Q.get('gul') || 2.6) } });
   const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), mA), sc = new THREE.Scene(), cam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1); quad.frustumCulled = false; sc.add(quad);
   const run = () => {
     const rt = renderer.getRenderTarget(), tm = renderer.toneMapping, au = renderer.shadowMap.autoUpdate; renderer.toneMapping = THREE.NoToneMapping; renderer.shadowMap.autoUpdate = false;
