@@ -451,15 +451,14 @@ const CONFIG = {
       if (c.ctr[2] < -0.6 && c.min[1] > 0.6 && axis(c, [-0.95, 1.13], [-0.931, 0.366], 1.0, -0.6, 6)) return 'cradle';
       return c.min[1] > 0.25 ? 'turret' : 'body';
     } },
-  kub: { src: `${DL}/2k12_kub.glb`, scale: 0.00236, axes: (x, y, z) => [-x, z, y], rulesIn: 'game', unit: true, tex: () => 512, hinge: [0, 2.41, 1.05], // модель лежит «Z вверх»
-    // без текстуры у модели только корпус: остальное светло-серое — ракеты и пусковая (оливковые), гусеницы, катки, люки
-    colors: { '^Material__25$': [0.17, 0.17, 0.1], '^Material__30$': [0.03, 0.028, 0.025], '^Material__36$': [0.07, 0.08, 0.045], '^Material__29$': [0.09, 0.09, 0.055],
-      '^Material__3[1-4]$': [0.1, 0.095, 0.06] },
-    groups: (c) => {
-      if (axis(c, [1.68, 2.58], [-0.844, 0.536], 0.2, -0.3, 6) && c.size[0] < 0.7 && c.max[1] - c.min[1] < 4 && !(c.size[0] < 0.12 && Math.hypot(c.size[1], c.size[2]) > 1)) return 'missile'; // прутья рамок — не ракета
-      if (c.min[1] > 2.0 && axis(c, [1.05, 2.41], [-0.844, 0.536], 1.0, -0.6, 6)) return 'cradle';
-      return c.min[1] > 1.8 && c.ctr[2] > -0.9 && c.ctr[2] < 2.0 && c.max[1] < 3 ? 'turret' : 'body';
-    } },
+  // 2П25 «Куб» - своя (сборщик s300-builder, Свои/2К12 Куб (2П25) + 3М9, 2026-11-26; Mark: «куб готов»; раньше - UltraKill). Метры, нос −Z, земля y = 0, оси без
+  // центровки; части - kubPart: turret_ - башня (ось tp (0; 1,8256; −0,25)), cradle_ / sector_ - пакет трёх направляющих на шарнире (0; 2,1225; 0,5766),
+  // lift_cyl / lift_mid / lift_rod → cyl0…2 - подъёмник (launchers.js kub.lift). Ракет в модели нет - своя 3М9 (msl_kub), игра ставит её в слоты
+  kub: { src: `${DL}/Свои/2К12 Куб (2П25) + 3М9/kub.glb`, scale: 1, nose: '-z', rulesIn: 'game', unit: true, own: true, tex: (m) => (/_R$/.test(m.name) ? 1024 : 2048),
+    nTex: (m) => (/_R$/.test(m.name) ? 512 : 1024), pickMesh: /./, axisX: 0, axisZ: 0, ground: 0, hinge: [0, 2.1225, 0.5766], tpFix: [0, 1.8256, -0.25], pack0: 0,
+    groups: (c) => kubPart(c) },
+  // ракета 3М9 - своя (Свои/2К12 Куб (2П25) + 3М9/ракета): 5,8 м, Ø 0,335, нос −Z, срез сопла z 2,9175; рули отдельными узлами (в игре неподвижны)
+  msl_kub: { src: `${DL}/Свои/2К12 Куб (2П25) + 3М9/ракета/msl_kub.glb`, scale: 1, nose: '-z', own: true, tex: () => 1024, nTex: () => 512, pickMesh: /./ },
   hawk: { src: `${DL}/mim-23_hawk_sam_air_defence_system_game-ready.glb`, scale: 0.012, nose: '+z', rulesIn: 'game', unit: true, tex: () => 512, target: 55000, hinge: [0, 1.77, -0.19], absorb: 0, /* рули ракеты — уже в её детали; с «прилипанием» 0,9 м к ракете цеплялись 115 деталей пусковой (Mark 2026-10-22) */
     groups: (c) => {
       if (c.size[2] > 3.8 && axis(c, [-0.19, 1.77], [-0.985, 0.175], 1.2, -3.2, 3.6)) return 'missile';
@@ -807,6 +806,11 @@ function skyguardPart(c, near) {
   const p = c.path, B = p.match(/(^|\/)barrel_(l|r)/); if (B) return near ? (B[2] === 'l' ? 'brl' : 'bru') : 'cradle';
   return /(^|\/)cradle/.test(p) ? 'cradle' : /(^|\/)(turret|tnet)_/.test(p) ? 'turret' : 'body';
 }
+// «Куб»: подъёмник пакета - три звена (как цилиндр «Бука»), сектор - с пакетом
+function kubPart(c) {
+  const p = c.path, L = p.match(/(^|\/)lift_(cyl|mid|rod)/); if (L) return 'cyl' + ['cyl', 'mid', 'rod'].indexOf(L[2]);
+  return /(^|\/)(cradle|sector)_/.test(p) ? 'cradle' : /(^|\/)turret_/.test(p) ? 'turret' : 'body';
+}
 // «Шилка»: вдали тяга и стволы — в своих люльках, зеркало — в антенне
 function zsu234Part(c, near) {
   const p = c.path, B = p.match(/(^|\/)barrel_(\d)/); if (B) return +B[2] < 2 ? (near ? 'brl' : 'cradle') : near ? 'bru' : 'cradle2';
@@ -868,6 +872,8 @@ CONFIG.tor_lo = { ...CONFIG.tor, src: `${DL}/Свои/Тор-М1/tor_lo.glb`, te
 CONFIG.torm2_lo = { ...CONFIG.torm2, src: `${DL}/Свои/Тор-М2/torm2_lo.glb`, tex: () => 512, nTex: null, groups: (c) => torm2Part(c, false) }; // «Тор-М2»: дальняя сборщика (60 тыс.)
 CONFIG.buk_lo = { ...CONFIG.buk, src: `${DL}/Свои/Бук-М1/buk_lo.glb`, tex: () => 512, nTex: null }; // «Бук-М1»: дальняя сборщика (69 тыс.)
 // 9М38М1 на пусковой издали (дальше 400 м, как buk_lo; Mark 2026-11-03: «облегченные модели ракет бука для дальнего плана»): 8,9 тыс. → ≈ 1,2 тыс., цвет 256, без нормалей
+CONFIG.kub_lo = { ...CONFIG.kub, src: `${DL}/Свои/2К12 Куб (2П25) + 3М9/kub_lo.glb`, tex: () => 512, nTex: null }; // «Куб»: дальняя сборщика (46 тыс.)
+CONFIG.msl_kub_lo = { ...CONFIG.msl_kub, src: `${DL}/Свои/2К12 Куб (2П25) + 3М9/ракета/msl_kub_lo.glb`, target: 1500, simpErr: 0.01, tex: () => 256, nTex: null }; // 3М9 на пусковой издали
 CONFIG.msl_buk_lo = { ...CONFIG.msl_buk, target: 1200, simpErr: 0.01, tex: () => 256, nTex: null };
 CONFIG.chaparral_lo = { ...CONFIG.chaparral, src: `${DL}/Свои/Chaparral/chaparral_lo.glb`, tex: () => 512, nTex: null }; // Chaparral: дальняя сборщика
 CONFIG.hawk21_lo = { ...CONFIG.hawk21, src: `${DL}/Свои/Hawk XXI/hawk21_lo.glb`, tex: () => 512, nTex: null }; // Hawk XXI: дальняя сборщика (15 тыс.)

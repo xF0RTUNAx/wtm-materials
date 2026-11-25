@@ -352,7 +352,9 @@ const META = {
   // комплексы с ракетами на направляющих: ракета модели - в слотах и в полёте (у С-75 и С-125 - с отделяемым ускорителем)
   s75: { units: ['s75'], stations: [] }, // С-75 «Двина» - manyakasia
   s125: { units: ['s125'], stations: [], bright: 1.9 }, // С-125 «Нева» - teanid; текстура у автора очень тёмная (bright - множитель цвета)
-  kub: { units: ['kub'], stations: [] }, // 2К12 «Куб» - UltraKill
+  kub: { units: ['kub'], matte: true, paint: true, metalK: { KB_R: 0.3 }, aoK: { KB_R: 0 }, stations: [] }, // metalK - траки и катки: металл карты ×0,3 (в Blender их освещало окружение, у нас металл без отражений выходил чёрным, Mark 2026-11-26)
+  // 2П25 «Куб» - своя (Свои/2К12 Куб (2П25) + 3М9, 2026-11-26): окраска запечена, подъёмник пакета
+  msl_kub: { samMissile: ['kub'], lazy: true, onRail: true, matte: true, paint: true, stations: [] }, // ракета 3М9 - своя, 5,8 м, нос −Z; три на направляющих
   hawk: { units: ['hawk'], stations: [] }, // MIM-23 Hawk - Dominik Biały
   hawk21: { units: ['hawk21'], matte: true, stations: [] }, // Hawk XXI - своя пусковая на прицепе M192 с восемью AIM-120 (сборщик, Свои/Hawk XXI, 2026-11-03); раньше - пусковая Hawk
   m163: { units: ['m163'], stations: [], matte: true, paint: true }, // M163 VADS - своя модель, ревизия 2 (Свои/M163 Vulcan своя, 2026-11-24): трёхцветка НАТО запечена; paint - материал с картой ORM (paint.js), у наземных её иначе не читает никто
@@ -537,7 +539,7 @@ const GLB_V_OWN = {
   pk_e_a10: '20261112c', // своя модель A-10A
   pk_e_su34: '20261115a', // своя модель Су-34
   e_su57: '20261124a', e_su57_gear: '20261124a', e_su57_lo: '20261124a', // свой Су-57
-  pk_e_mig31: '20261124a', e_mig31: '20261124a', e_mig31_gear: '20261124a', e_mig31_lo: '20261124a', m163: '20261124a', m163_lo: '20261124a', zsu234: '20261125a', zsu234_lo: '20261125a', skyguard: '20261125a', skyguard_lo: '20261125a', roland: '20261125a', roland_lo: '20261125a', msl_roland: '20261125a', msl_roland_lo: '20261125a', // свои МиГ-31БМ и M163
+  pk_e_mig31: '20261124a', e_mig31: '20261124a', e_mig31_gear: '20261124a', e_mig31_lo: '20261124a', m163: '20261124a', m163_lo: '20261124a', zsu234: '20261125a', zsu234_lo: '20261125a', skyguard: '20261125a', skyguard_lo: '20261125a', kub: '20261126a', kub_lo: '20261126a', msl_kub: '20261126a', msl_kub_lo: '20261126a', roland: '20261125a', roland_lo: '20261125a', msl_roland: '20261125a', msl_roland_lo: '20261125a', // свои МиГ-31БМ и M163
 
   pk_h_mi24: '20261029b',
   pk_h_ah64: '20261029b',
@@ -910,7 +912,7 @@ async function load(name, base) {
     else if (!m.fold && !map && !glass && f[0] === 1 && f[1] === 0 && f[2] === 1) mat.color.setHex(0x2e3128); // пурпурная «нет текстуры» - в нейтральный тёмный
     if (MM.camo && !glass && (MM.camo.tex ? map : /#camo$/.test(m.mat.name || ''))) camoMat(mat, MM.camo, !/_lo$/.test(name) && !/[?&]det=0/.test(typeof location !== 'undefined' ? location.search : '')); // узор - шейдером (tex - по краске текстуры; зернистость - только у ближней модели)
     else if ((MM.weapon || MM.samMissile || /^w_nar_/.test(name)) && !glass) { wearMat(mat); if (!matte) { mat.specular.setHex(0x262626); mat.shininess = 24; } } // оружие - краска с потёртостями, полуматовая
-    if (paintOn && (MM.cls || MM.paint) && !/_lo$/.test(name)) paintMat(mat, glass ? { glass: true, rough: 0.06 } : { rough: matte ? 0.58 : 0.46, orm: pbr.metallicRoughnessTexture ? tex[pbr.metallicRoughnessTexture.index] : null });
+    if (paintOn && (MM.cls || MM.paint) && !/_lo$/.test(name)) paintMat(mat, glass ? { glass: true, rough: 0.06 } : { rough: matte ? 0.58 : 0.46, orm: pbr.metallicRoughnessTexture ? tex[pbr.metallicRoughnessTexture.index] : null, metalK: MM.metalK && MM.metalK[m.mat.name], aoK: MM.aoK && MM.aoK[m.mat.name] });
     if (paintOn && glass && MM.clearGlass) { mat.opacity = Math.max(0.16, f[3]); mat.color.setRGB(f[0], f[1], f[2]); } // своя кабина внутри: стекло прозрачнее, цвет свой (прежний нижний предел 0,5 - для пустых фонарей чужих моделей) // краска, живая к миру (проба, paint.js)
     const mesh = new THREE.Mesh(g, mat); mesh.name = m.name; mesh.userData.glass = glass; const pt = partOf(m.name || ''); pt.add(mesh); if (m.hub) pt.userData.hub = m.hub;
   }
@@ -993,7 +995,7 @@ async function load(name, base) {
 // готовая модель комплекса: { body, turret, cradle } (копии) или null - тогда процедурная
 const UMODEL = Object.fromEntries(Object.entries(META).filter(([, m]) => m.units).flatMap(([n, m]) => m.units.map((k) => [k, n])));
 // у тяжёлых моделей ПВО - дальняя копия <имя>_lo: каждая часть (корпус, башня, пакет) - THREE.LOD, ближе 400 м - подробная
-const UNIT_LO = new Set(['strela10', 'nasams', 'buk', 'torm2', 'hawk21', 'bukm3', 's125', 'gepard', 'ew_e', 'ew_w', 's300', 's400', 'patriot', 'pac3', 'tor', 'pantsir', 'sampt', 'tunguska', 'skyguard', 'rapier', 'zsu234', 'm163', 'chaparral', 'avenger', 'strela1', 'roland']);
+const UNIT_LO = new Set(['kub', 'strela10', 'nasams', 'buk', 'torm2', 'hawk21', 'bukm3', 's125', 'gepard', 'ew_e', 'ew_w', 's300', 's400', 'patriot', 'pac3', 'tor', 'pantsir', 'sampt', 'tunguska', 'skyguard', 'rapier', 'zsu234', 'm163', 'chaparral', 'avenger', 'strela1', 'roland']);
 export function unitModelGlb(key) {
   const n = UMODEL[key], G = n && (LOADED[n] || LOADED[n + '_lo']), GL = n && LOADED[n] && LOADED[n + '_lo']; if (!G) return null;
   const find = (M, k) => M.children.find((c) => c.name === k);

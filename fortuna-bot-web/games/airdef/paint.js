@@ -25,7 +25,7 @@ const U = {
   uPSun: { get value() { return SRC ? SRC.sunDir.value : V0; } },
 };
 const GLSL = `
-uniform sampler2D uPSky; uniform float uPOn, uPU, uPK, uPHall, uPRough, uPMetal; uniform vec3 uPZen, uPHor, uPGnd, uPSun;
+uniform sampler2D uPSky; uniform float uPOn, uPU, uPK, uPHall, uPRough, uPMetal, uPMetK, uPAoK; uniform vec3 uPZen, uPHor, uPGnd, uPSun;
 #ifdef PAINT_ORM
 uniform sampler2D uPOrm;
 #endif
@@ -50,19 +50,19 @@ vec3 paintEnv(vec3 d, float r) {
   return d.y >= 0.0 ? col : mix(uPHor, uPGnd, smoothstep(0.0, 0.25, -d.y));
 }
 `;
-// mat - MeshPhongMaterial; o: { rough, metal, glass, orm - карта } (rough и metal - основа, карта их заменяет)
+// mat - MeshPhongMaterial; o: { rough, metal, glass, orm - карта, metalK - множитель металла карты, aoK - доля затенения карты (у кого оно уже запечено в цвет) } (rough и metal - основа, карта их заменяет)
 export function paintMat(mat, o = {}) {
   const prev = mat.onBeforeCompile, was = mat.customProgramCacheKey && mat.customProgramCacheKey(), glass = !!o.glass, rough = o.rough ?? 0.5, metal = o.metal ?? 0;
   if (o.orm) mat.defines = { ...(mat.defines || {}), PAINT_ORM: 1 };
   mat.onBeforeCompile = (sh, r) => {
     if (prev && prev !== THREE.Material.prototype.onBeforeCompile) prev(sh, r);
-    Object.assign(sh.uniforms, U, { uPRough: { value: rough }, uPMetal: { value: metal } }); if (o.orm) sh.uniforms.uPOrm = { value: o.orm };
+    Object.assign(sh.uniforms, U, { uPRough: { value: rough }, uPMetal: { value: metal }, uPMetK: { value: o.metalK ?? 1 }, uPAoK: { value: o.aoK ?? 1 } }); if (o.orm) sh.uniforms.uPOrm = { value: o.orm };
     sh.vertexShader = 'varying vec3 vPP;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\nvPP = position;');
     sh.fragmentShader = GLSL + sh.fragmentShader
       .replace('#include <lights_phong_fragment>', `#include <lights_phong_fragment>
   float pRg = uPRough, pMt = uPMetal, pOc = 1.0;
   #ifdef PAINT_ORM
-    { vec4 pO = texture2D(uPOrm, vUv); pOc = pO.r; pRg = pO.g; pMt = pO.b; }
+    { vec4 pO = texture2D(uPOrm, vUv); pOc = mix(1.0, pO.r, uPAoK); pRg = pO.g; pMt = pO.b * uPMetK; }
   #else
     ${glass ? '' : `{ float pN1 = pV(vPP * 1.7), pN2 = pV(vPP * 9.0), pL = dot(diffuseColor.rgb, vec3(0.3, 0.59, 0.11));
       pRg = clamp(pRg + (pN1 - 0.5) * 0.22 + (pN2 - 0.5) * 0.1 + (0.32 - pL) * 0.28, 0.12, 0.95); }`} // пока нет карты: пятна полировки и краски, тёмное и грязное - матовее

@@ -410,15 +410,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "2K12 Kub",
-  "author": "UltraKill",
-  "url": "https://sketchfab.com/3d-models/2k12-kub-4e2e8506c9e546b3b7da1554db8185bc",
-  "license": "CC-BY-4.0",
-  "files": [
-   "kub"
-  ]
- },
- {
   "title": "Mim-23 Hawk SAM air defence system (game-ready)",
   "author": "Dominik Biały",
   "url": "https://sketchfab.com/3d-models/mim-23-hawk-sam-air-defence-system-game-ready-8728909b6ce24ef8baeffabbf5bae8f4",
