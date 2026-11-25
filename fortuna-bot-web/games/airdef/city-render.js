@@ -16,6 +16,7 @@ import { part, mergeParts, M } from '../drone/models.js?v=20261124a';
 import { WEATHERS, ATMO, skyMaterial, skyUniforms, skyPano, SKY, FXU, FX_LAYER, FX_ADD_LAYER } from '../drone/world.js?v=20261124a';
 import { bakeTerrain, ROUGH_GLSL, groundLit } from './terrain-bake.js?v=20261124a';
 import { BU, BLAST_GLSL, tickBlast } from './blast.js?v=20261124a';
+import { createCliffs } from './cliffs.js?v=20261124a';
 import { createTreeFall, TF_ON } from './treefall.js?v=20261124a';
 import { setAir, tickAir, airUniforms, CLD_ON } from './atmo.js?v=20261124a';
 import { setPaintSky } from './paint.js?v=20261124a';
@@ -2219,7 +2220,7 @@ function nearHouses(G, scene, B, near, P, sh) {
       if (S.part) { kitAttach(S, key, group); continue; }
       group.traverse((c) => {
         if (!c.isMesh) return;
-        if (/^lo_/.test(name)) { c.material.color.setRGB(0.3, 0.26, 0.225); if (c.material.specular) c.material.specular.setHex(0); } // лёсс под игровым солнцем - в тон склона, не белый
+        if (/^lo_/.test(name)) { c.material.color.setRGB(0.26, 0.268, 0.265); if (c.material.specular) c.material.specular.setHex(0); } // лёсс под игровым солнцем - в тон склона, не белый
         if (G.winter) snowify(c.material); // зимой - снег на крышах моделей
         const fd = FD_ON && S.slot && S.slot !== YARD && !(S.slot >= 14 && S.slot <= 17) && !S.wind && S.col == null; if (fd && !S.fd) S.fd = fdAttr(S.n); if (fd && !c.geometry.boundingSphere) c.geometry.computeBoundingSphere();
         const m = new THREE.InstancedMesh(fd ? fdGeo(c.geometry, S.fd) : c.geometry, S.col != null ? colMat(c.material, S.col) : S.wind ? windMat(c.material, S.wind, S.slot, /^tr_/.test(name)) : fd ? fdMat(c.material) : c.material, S.n); m.instanceMatrix = S.im; m.count = 0; m.frustumCulled = false; m.userData.set = key;
@@ -2777,6 +2778,10 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
       return u + v <= 1 ? a + (d - a) * u + (b - a) * v : c + (b - c) * (1 - u) + (d - c) * (1 - v);
     };
   }
+  if (HILLS || RELIEF) { // обрывы на крутых склонах (cliffs.js): верх уступов и осыпь - в высоте сетки
+    const mh = G.meshH, cl = G.cliffs = createCliffs({ scene, city, gh: mh, P, sh, ground, winter: WINT, waterY: AUT ? city.autumn.WY : WINT ? -1e9 : CITY.WATER_Y });
+    if (cl) G.meshH = (x, z) => { const b = mh(x, z), t = cl.topH(x, z, b); return t > b ? t : b; };
+  }
   if (RELIEF && !HILLS) GH = G.meshH; // город с рельефом (проба): дома, деревья, площадки - по высоте сетки
   if (HILLS) { // дальше всё ставится по высоте сетки, а не по точной высоте карты: дороги и дома на склоне «тонули» бы
     GH = G.meshH; G.roads = AUT ? autumnRoads(scene, city, ground.material.userData.AT || {}, P, GH) : winterRoads(scene, city, ground.material.userData.WT || {}, P, GH);
@@ -2987,6 +2992,7 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
       if (r < 0.12 + 0.35 * k) for (let i = 0, n = 2 + Math.floor(R0() * 5); i < n; i++) put('lo_fall_s', x + (R0() - 0.5) * 9, z + (R0() - 0.5) * 9, 0.6 + R0() * 1.1, 0.05);
       if (r < 0.05 + 0.18 * k) put('lo_fall_m', x + (R0() - 0.5) * 8, z + (R0() - 0.5) * 8, 0.7 + R0() * 0.8, 0.12); if (r < 0.015 + 0.07 * k) put('lo_fall_l', x, z, 0.7 + R0() * 0.7, 0.25);
       if (s > 0.3) { const l = Math.hypot(a, b) || 1, fx = x - a / l * 16, fz = z - b / l * 16; if (sl(fx, fz)[0] < 0.22 && R0() < 0.55) put('lo_talus', fx, fz, 0.7 + R0() * 0.6, 0.3); if (s > 0.5 && R0() < 0.06) put('lo_col', x, z, 0.5 + R0() * 0.4, 1.2); } }
+    for (const [x, z, h] of (G.cliffs && G.cliffs.foot) || []) { const k = R0(), n = k < 0.45 ? 'lo_fall_s' : k < 0.78 ? 'lo_fall_m' : 'lo_fall_l'; if (free(x, z, 2)) ds[n].push([x, z, (n === 'lo_fall_s' ? 1.3 : 0.7) + R0() * 0.9, R0() * 6.283, 0.2]); } // обломки под обрывами
     const mm = new THREE.Matrix4(), qq = new THREE.Quaternion(), pp = new THREE.Vector3(), ss = new THREE.Vector3(), YY = new THREE.Vector3(0, 1, 0), RS = { lo_fall_s: 160, lo_fall_m: 320, lo_fall_l: 520, lo_talus: 520, lo_col: 620 };
     for (const [n, L] of Object.entries(ds)) { if (!L.length) continue; const xz = new Float32Array(L.length * 2), mats = new Float32Array(L.length * 16); L.forEach(([x, z, sc, ry, sink], j) => { mm.compose(pp.set(x, GH(x, z) - sink * sc, z), qq.setFromAxisAngle(YY, ry), ss.setScalar(sc)); mm.toArray(mats, j * 16); xz[j * 2] = x; xz[j * 2 + 1] = z; }); G.addNear(n, 0, n, RS[n] * (TOUCH_GT ? 0.5 : 1), xz, mats); }
     G.slopeN = Object.fromEntries(Object.entries(ds).map(([n, L]) => [n, L.length]));
@@ -3109,6 +3115,7 @@ export function updateCityScene(G, camera, P, focus, t, extra) {
   if (G.snow) G.snow.update(camera, t || 0, G.renderer ? G.renderer.domElement.height : 720);
   if (G.lodTicks) for (const f of G.lodTicks) f(camera); // мосты и огни подхода: вдали - простое или ничего
   if (G.ofTick) G.ofTick(camera); // офисы и стекло: какие здания - настоящими шагами (до отбора наборов: плоскости этих зданий выключены в том же кадре)
+  if (G.cliffs) G.cliffs.update(camera);
   if (G.near) { camera.updateMatrixWorld(); const cs = extra ? CAM2 : CAM1; cs[0] = camera; if (extra) cs[1] = extra; G.near(camera, cs); }
   if (G.kitTick) G.kitTick(camera); // свои дома: руины
   const cx = camera.position.x, cz = camera.position.z, D = P.draw + TILE;
