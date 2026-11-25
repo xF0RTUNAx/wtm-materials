@@ -1074,6 +1074,7 @@ function roofGeo() {
 // вдали то же дерево, что вблизи; winter - две ели и две сосны (свои, Свои/Периферия; TREES_W - они же вблизи). Вид: [радиус описанной сферы, центр по высоте, высота]
 const TREE_CAL = typeof location === 'undefined' || !/[?&]tcal=0/.test(location.search); // ?tcal=0 - прежний цвет деревьев
 export const TREE_IMP = {
+  city2: { G: 6, C: 4, RW: 2, tr2: 1, kA: [0.3, 0.315, 0.285], kD: [0.195, 0.21, 0.17], tint: [1, 1, 1], snow: 0, sp: [[9.49, 5.18, 10.36], [7.396, 4.76, 9.52], [8.472, 6.355, 12.71], [5.621, 3.56, 7.12], [8.385, 6.5, 13], [9.84, 5.6, 11.2], [9.35, 8.5, 17], [6.875, 5.5, 11]] }, winter2: { G: 6, C: 4, RW: 2, tr2: 1, kA: [0.235, 0.235, 0.24], kD: [0.19, 0.2, 0.21], tint: [1, 1, 1], snow: 0, sp: [[6.068, 4.655, 9.31], [5.576, 4.05, 8.1], [10.61, 8.445, 16.89], [11.805, 9.81, 19.62], [7.908, 6.2, 12.4], [8.773, 5.3, 10.6]] }, autumn2: { G: 6, C: 4, RW: 2, tr2: 1, kA: [0.33, 0.3, 0.29], kD: [0.28, 0.24, 0.19], tint: [1, 1, 1], snow: 0, sp: [[9.516, 5.18, 10.36], [7.405, 4.76, 9.52], [8.472, 6.355, 12.71], [9.836, 5.6, 11.2], [8.356, 6.5, 13], [9.96, 4.8, 9.6], [7.854, 5, 10]] },
   // kA, kD - поправка рассеянного и прямого света снимка под модель (замер tools: средний цвет кроны модели и снимка с трёх сторон, 2026-11-25; Mark: «дальние отличаются цветом»)
   city: { G: 6, kA: [2.75, 1.85, 1.55], kD: [1.8, 1.32, 1.05], tint: [0.1, 0.14, 0.085], snow: 0, sp: [[7.501, 5.18, 10.36], [7.136, 4.76, 9.52], [7.59, 6.355, 12.71], [5.169, 3.56, 7.12]] }, // свои деревья (Свои/Периферия), перепечены 2026-11-08
   winter: { G: 6, kA: [0.9, 1.08, 1.32], kD: [2.5, 2.25, 2.55], tint: [0.1, 0.13, 0.095], snow: 0.7, sp: [[6.126, 4.655, 9.31], [5.444, 4.05, 8.1], [10.483, 8.445, 16.89], [12.242, 9.81, 19.62]] },
@@ -1087,19 +1088,19 @@ function treeImpTex(f) { // → uniform { value }: KTX2, иначе WebP
   texStats.req++;
   if (ktxOn()) { ktxLoad(f).then((k) => { U.value = k; texStats.done++; }).catch(() => webp()); return U; }
   webp(); return U;
-  function webp() { fetch(new URL(`./tex/${f}.webp?v=20261108h`, import.meta.url)).then((r) => (r.ok ? r.blob() : Promise.reject(new Error(f))))
+  function webp() { fetch(new URL(`./tex/${f}.webp?v=20261125c`, import.meta.url)).then((r) => (r.ok ? r.blob() : Promise.reject(new Error(f))))
     .then((b) => createImageBitmap(b, { premultiplyAlpha: 'none', colorSpaceConversion: 'none' })).then((bmp) => { t.image = bmp; t.needsUpdate = true; texStats.done++; })
     .catch((e) => { texStats.done++; console.warn('деревья не загрузились:', e.message); }); }
 }
 function treeImpMat(set, hi, hemi, sunL, a2c = false) {
-  const I = TREE_IMP[set], sfx = hi ? '' : '_lo', atl = I.atlas || set;
-  const sp = I.sp.map(([R, cy, H]) => new THREE.Vector4(R / H, cy / H, 0, 0)); // в долях высоты: экземпляр масштабирован под высоту модели
+  if (TR2 && TREE_IMP[set + '2'].sp.length) set += '2'; const I = TREE_IMP[set], CC = I.C || 2, RW = I.RW || 2, sfx = hi ? '' : '_lo', atl = I.atlas || set;
+  const sp = I.sp.map(([R, cy, H]) => new THREE.Vector4(R / H, cy / H, 0, 0)); while (sp.length < 8) sp.push(sp[0]); // в долях высоты: экземпляр масштабирован под высоту модели
   const mat = new THREE.ShaderMaterial({
     uniforms: { ...THREE.UniformsLib.fog, ...airUniforms(), atmoSunDir: { value: ATMO.sunDir }, atmoSunCol: { value: ATMO.sunCol }, atmoP: { value: ATMO.p }, /* воздушная перспектива как у земли (world.js): без них высота тумана = 0 → туман ×2,2 - деревья вдали белые */ uCam: ENV.uCam, uHide: ENV.uHide, uMdl: ENV.uMdl, uSun: ENV.uSun, uTime: ENV.uTime, ...BU,
-      tA: treeImpTex(`tr_${atl}_a${sfx}`), tN: treeImpTex(`tr_${atl}_n${sfx}`), uSp: { value: sp }, uRec: { value: I.recolor || 0 },
+      tA: treeImpTex(`tr_${I.tr2 ? set : atl}_a${sfx}`), tN: treeImpTex(`tr_${I.tr2 ? set : atl}_n${sfx}`), uSp: { value: sp }, uRec: { value: I.recolor || 0 },
       uHS: { value: hemi.color.clone().multiplyScalar(hemi.intensity) }, uHG: { value: hemi.groundColor.clone().multiplyScalar(hemi.intensity) },
       uSL: { value: sunL.color.clone().multiplyScalar(sunL.intensity) }, uTint: { value: new THREE.Vector3(...I.tint) }, uKA: { value: new THREE.Vector3(...(TREE_CAL && I.kA || [1, 1, 1])) }, uKD: { value: new THREE.Vector3(...(TREE_CAL && I.kD || [1, 1, 1])) }, uSnow: { value: I.snow } },
-    vertexShader: `${BLAST_GLSL}attribute float aKind, aMdl; uniform vec3 uCam, uHide; uniform float uMdl[32], uTime; uniform vec4 uSp[4]; varying float vTF;
+    vertexShader: `${BLAST_GLSL}attribute float aKind, aMdl; uniform vec3 uCam, uHide; uniform float uMdl[32], uTime; uniform vec4 uSp[8]; varying float vTF;
       varying vec2 vUv, vG0, vG1, vF; varying vec3 vAx, vAz, vCol; varying float vSp, vTint, vVar;
       #include <fog_pars_vertex>
       void main() {
@@ -1126,29 +1127,29 @@ function treeImpMat(set, hi, hemi, sunL, a2c = false) {
     fragmentShader: `varying float vTF; uniform sampler2D tA, tN; uniform vec3 uHS, uHG, uSL, uSun, uTint, uKA, uKD; uniform float uSnow, uRec;
       varying vec2 vUv, vG0, vG1, vF; varying vec3 vAx, vAz, vCol; varying float vSp, vTint, vVar;
       #include <fog_pars_fragment>
-      vec2 at(vec2 c) { float s = floor(vSp + 0.5); vec2 o = vec2(mod(s, 2.0), floor(s / 2.0)) * ${I.G.toFixed(1)};
-        vec2 q = (o + c + clamp(vUv, 0.01, 0.99)) / ${(I.G * 2).toFixed(1)}; return vec2(q.x, 1.0 - q.y); }
+      vec2 at(vec2 c) { float s = floor(vSp + 0.5); vec2 o = vec2(mod(s, ${CC.toFixed(1)}), floor(s / ${CC.toFixed(1)})) * ${I.G.toFixed(1)};
+        vec2 q = (o + c + clamp(vUv, 0.01, 0.99)) / vec2(${(I.G * CC).toFixed(1)}, ${(I.G * RW).toFixed(1)}); return vec2(q.x, 1.0 - q.y); }
       void main() {
         if (vTF < 1.0 && fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715)))) >= vTF) discard;
         vec2 a0 = at(vG0), a1 = at(vec2(vG1.x, vG0.y)), a2 = at(vec2(vG0.x, vG1.y)), a3 = at(vG1);
         float w0 = (1.0 - vF.x) * (1.0 - vF.y), w1 = vF.x * (1.0 - vF.y), w2 = (1.0 - vF.x) * vF.y, w3 = vF.x * vF.y;
         vec4 A = texture2D(tA, a0) * w0 + texture2D(tA, a1) * w1 + texture2D(tA, a2) * w2 + texture2D(tA, a3) * w3;
         // порог покрытия - ниже на мелких мип-уровнях (иначе редкая хвоя и листва вдали «облезают» до ствола)
-        vec2 ts = vec2(${(I.G * 2 * 128).toFixed(1)}); float lod = log2(max(max(length(dFdx(a0 * ts)), length(dFdy(a0 * ts))), 1.0)), lk = clamp(lod / 4.0, 0.0, 1.0);
-        float thr = mix(0.45, 0.1, lk);
+        vec2 ts = vec2(${(I.G * CC * 128).toFixed(1)}, ${(I.G * RW * 128).toFixed(1)}); float lod = log2(max(max(length(dFdx(a0 * ts)), length(dFdy(a0 * ts))), 1.0)), lk = clamp(lod / 4.0, 0.0, 1.0);
+        float thr = mix(${I.tr2 ? '0.3' : '0.45'}, 0.1, lk);
         ${a2c ? `float cov = clamp((A.a - thr) / max(fwidth(A.a), 1e-3) + 0.5, 0.0, 1.0); if (cov < 0.01) discard; // край хвои - сглаженный (MSAA: покрытие из альфы), без мерцания вдали`
           : 'if (A.a < thr) discard;'}
         vec4 Nn = texture2D(tN, a0) * w0 + texture2D(tN, a1) * w1 + texture2D(tN, a2) * w2 + texture2D(tN, a3) * w3;
-        vec3 alb = pow(A.rgb / max(A.a, 0.05), vec3(2.2)) * (0.85 + 3.0 * vTint); // атлас - sRGB; тон - от цвета экземпляра
-        alb *= uTint * mix(1.0, 0.85, clamp(lod / 4.0, 0.0, 1.0)); // крона в тени самой себя: темнее и зеленее, вдали - как у моделей
+        vec3 alb = pow(A.rgb / max(A.a, 0.05), vec3(2.2)) * (0.85 + 3.0 * vTint);${I.tr2 ? ` alb = min(alb, vec3(${set === 'city2' ? '0.3' : '0.85'}));` + (set === 'city2' ? ' if (abs(vSp - 4.0) < 0.5) alb *= vec3(0.6, 0.72, 0.62);' : '') : ''} // атлас - sRGB; тон - от цвета экземпляра
+        alb *= uTint * mix(1.0, ${I.tr2 ? '1.0' : '0.85'}, clamp(lod / 4.0, 0.0, 1.0)); // крона в тени самой себя: темнее и зеленее, вдали - как у моделей
         float cl = dot(vCol, vec3(0.3, 0.59, 0.11)); // осень: тон листвы - цвет экземпляра (яркость - от атласа); сосна - без перекраски
         float gy = clamp(dot(alb, vec3(0.3, 0.59, 0.11)), 0.012, 0.11) * mix(1.0, 0.75, lk); // яркость листвы - с потолком: у края кроны и на мелких мипах цвет/прозрачность взлетает (неоновые ободки вблизи, белёсые пятна вдали)
         alb = mix(alb, gy * vCol / max(cl, 1e-3), uRec * (1.0 - step(abs(vSp - 2.0), 0.5)));
         vec3 nl = normalize(Nn.rgb / max(A.a, 0.05) * 2.0 - 1.0), n = normalize(vAx * nl.x + vec3(0.0, nl.y, 0.0) + vAz * nl.z);
         float ao = clamp(Nn.a / max(A.a, 0.05), 0.0, 1.0);
-        float ny0 = n.y; n = normalize(mix(n, vec3(0.0, 0.6, 0.0) + normalize(uSun) * 0.25, lk * 0.6)); // вдали мелкий рельеф кроны не виден - свет ровнее (без искр)
+        float ny0 = n.y; n = normalize(mix(n, vec3(0.0, 0.6, 0.0) + normalize(uSun) * 0.25, ${I.tr2 ? '0.25 + lk * 0.4' : 'lk * 0.6'})); // вдали мелкий рельеф кроны не виден - свет ровнее (без искр)
         vec3 lt = mix(uHG, uHS, n.y * 0.5 + 0.5) * ao * uKA + uKD * uSL * max(dot(n, normalize(uSun)) * 0.8 + 0.2, 0.0) * mix(0.6, 1.0, ao)${CLD_ON ? ' * vCld' : ''};
-        ${TREE_CAL ? 'if (uRec < 0.5) { lt *= mix(1.0, 0.5, lk); alb = mix(alb, vec3(dot(alb, vec3(0.3, 0.59, 0.11))), 0.35 * lk); } // вдали крона - в тени самой себя: темнее и спокойнее (светлые «конфетти» на дальних склонах)' : ''}
+        ${TREE_CAL && !I.tr2 ? 'if (uRec < 0.5) { lt *= mix(1.0, 0.5, lk); alb = mix(alb, vec3(dot(alb, vec3(0.3, 0.59, 0.11))), 0.35 * lk); } // вдали крона - в тени самой себя: темнее и спокойнее (светлые «конфетти» на дальних склонах)' : ''}
         vec3 col = alb * lt;
         // снег на ветвях: плавно на обращённых вверх лапах, у каждого дерева - своё количество; вдали - приглушённо
         float sn = uSnow * smoothstep(0.35, 0.9, ny0) * (0.2 + 0.35 * vVar) * mix(1.0, 0.5, lk) * ao;
@@ -1420,6 +1421,22 @@ const WH = [23, 24, 25, 26, 27, 28, 29], YARD = 30, YARD_FAR = +((typeof locatio
 // цех v в коробке L × S: [копий вдоль, копий поперёк, растяжение вдоль, поперёк]
 const whGrid = (v, L, S) => { const [, mx, , mz] = BLD[v], nl = Math.max(1, Math.round(L / mz)), nw = Math.max(1, Math.round(S / mx)); return [nl, nw, L / nl / mz, S / nw / mx]; };
 // деревья вблизи (номер в uMdl - 14…17) и их высота при масштабе 1; фонарь
+// деревья ревизии 2 (Свои/Деревья, 2026-11-25): наборы trees_c / _w / _a (tools/airdef-models/trees-pack.js) - все породы карты одним файлом, уровни 0-2, дальше - снимки; ?tr2=0 - прежние
+const TR2 = typeof location === 'undefined' || !/[?&]tr2=0/.test(location.search), TRS = 14;
+const T2 = { c: [['tr_oak', 10.36, 'tr_oak_b', 9.6], ['tr_lime', 9.52, 'tr_lime_b', 10.8], ['tr_pine', 12.71, 'tr_pine_b', 14.5], ['tr_bush', 7.12, 'tr_bush_b', 5.6], ['tr_birch', 13, 'tr_birch_b', 11], ['tr_maple', 11.2, 'tr_maple_b', 9.4], ['tr_poplar', 17, 'tr_poplar_b', 14], ['tr_spruce', 11, 'tr_spruce_b', 14]],
+  w: [['w_fir1', 9.31, 'w_fir_b', 11.5], ['w_fir3', 8.1], ['w_pine1', 16.89], ['w_pine2', 19.62], ['w_birch', 12.4], ['w_oak', 10.6]],
+  a: [['a_oak', 10.36], ['a_lime', 9.52], ['tr_pine', 12.71, 'tr_pine_b', 14.5], ['a_maple', 11.2], ['a_birch', 13], ['a_oak_h', 9.6], ['pr_deadtree', 10]] };
+const trHash = (t) => { let h = (Math.round(t.x * 3) * 374761393 + Math.round(t.z * 3) * 668265263) | 0; h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
+// вблизи - наборы пород: основной вид и вариант вперемешку; k - множитель высоты к t.sy (город и зима 1,3, осень 1)
+function addTrees2(G, set, tl, R, k) {
+  const m4 = new THREE.Matrix4(), qq = new THREE.Quaternion(), YY = new THREE.Vector3(0, 1, 0), pp = new THREE.Vector3(), ss = new THREE.Vector3();
+  T2[set].forEach(([n0, h0, n1, h1], v) => { const all = tl.filter((t) => t.v === v);
+    for (const [nm, mh, list] of n1 ? [[n0, h0, all.filter((t) => !treeB(t))], [n1, h1, all.filter(treeB)]] : [[n0, h0, all]]) {
+      const xz = new Float32Array(list.length * 2), mats = new Float32Array(list.length * 16);
+      list.forEach((t, j) => { m4.compose(pp.set(t.x, t.y + 0.3, t.z), qq.setFromAxisAngle(YY, t.ry), ss.setScalar(k * t.sy / mh)); m4.toArray(mats, j * 16); xz[j * 2] = t.x; xz[j * 2 + 1] = t.z; t.mdl = TRS; });
+      G.addNear('tr2_' + nm, TRS, nm, R, xz, mats, { wind: mh, pack: 'trees_' + set });
+    } });
+}
 const TREES = [[14, 'tr_oak', 10.36], [15, 'tr_lime', 9.52], [16, 'tr_pine', 12.71], [17, 'tr_bush', 7.12]];
 // зимний лес вблизи (те же номера: на зимней карте городских деревьев нет): две ели, две сосны - высота модели, м
 const TREES_W = [[14, 'w_fir1', 9.31], [15, 'w_fir3', 8.1], [16, 'w_pine1', 16.89], [17, 'w_pine2', 19.62]];
@@ -1486,6 +1503,30 @@ function colMat(m0, k) {
 }
 // покачивание дерева на ветру (Mark: деревья живые): сдвиг xz растёт как (y / H)², фаза - от места экземпляра; у кроны - мелкая дрожь
 const TREE_FADE = typeof location === 'undefined' || !/[?&]tfade=0/.test(location.search), TF0 = TREE_FADE ? 0.84 : 1; // переход модель ↔ снимок дерева: в полосе 84-100 % радиуса - узором точек (модель тает, снимок проявляется), ?tfade=0 - скачком
+const TR2M = new WeakMap();
+// материал деревьев ревизии 2: цвет вершины - R гибкость (y / H)², G фаза ветки, B дрожь края карточки, A затенение кроны (только оно идёт в цвет); листва односторонняя (изнанка - своими гранями)
+function tree2Mat(m0, H, slot) {
+  let M = TR2M.get(m0); if (!M) TR2M.set(m0, M = new Map()); let m = M.get(H); if (m) return m;
+  m = m0.clone(); m.side = THREE.FrontSide; m.specular.setHex(0); m.vertexColors = true; const leaf = m0.alphaTest > 0, UH = { value: H };
+  m.onBeforeCompile = (sh) => {
+    Object.assign(sh.uniforms, { uTime: ENV.uTime, uTreeH: UH, uHide: ENV.uHide, uMdl: ENV.uMdl, uSun: ENV.uSun, uCam: ENV.uCam, uSunL: T2SUN }, BU);
+    sh.vertexShader = 'uniform float uTime, uTreeH; uniform vec3 uHide; uniform float uMdl[32]; varying float vTF; varying vec3 vTW;\n' + BLAST_GLSL + sh.vertexShader.replace('#include <color_vertex>', 'vColor = vec4(vec3(color.a), 1.0);').replace('#include <begin_vertex>', `#include <begin_vertex>
+  vTF = 0.0; vTW = vec3(0.0);
+  #ifdef USE_INSTANCING
+  { float wk = color.r, ph = dot(instanceMatrix[3].xz, vec2(0.031)), g = color.g * 6.2832; mat3 im = mat3(instanceMatrix); float s2 = dot(im[0], im[0]), hw = uTreeH * length(im[1]);
+    ${TREE_FADE && slot ? `vTF = smoothstep(${TF0.toFixed(2)}, 1.0, distance(instanceMatrix[3].xz, uHide.xz) / uMdl[${slot}]);` : ''}
+    vec3 bl = blastAt(instanceMatrix[3].xyz + vec3(0.0, hw * 0.5, 0.0), 2.1 * pow(max(hw, 1.0), -0.55), 0.09, uTime); vec3 bd = vec3(bl.x, -0.5 * dot(bl.xy, bl.xy), bl.y) * hw * wk;
+    transformed += vec3(dot(im[0], bd), dot(im[1], bd), dot(im[2], bd)) / max(s2, 1e-4);
+    float sw = sin(uTime * 1.1 + ph) + 0.45 * sin(uTime * 2.3 + ph * 1.7);
+    transformed.xz += vec2(0.7, 0.45) * (sw * 0.012 * uTreeH * wk) + vec2(cos(g), sin(g)) * (0.006 * uTreeH * wk * sin(uTime * 1.9 + g + ph)); // ствол качается, ветка - своей фазой
+    transformed += color.b * (0.02 + 0.25 * bl.z * wk) * sin(uTime * vec3(6.1, 7.3, 5.2) * (1.0 + 4.0 * bl.z) + g * 3.0 + position.yzx * 2.1); } // край побега дрожит, от ударной волны - сильнее
+  #endif`).replace('#include <project_vertex>', '#include <project_vertex>\n  vTW = (modelMatrix * TR_INST * vec4(transformed, 1.0)).xyz;').replace('void main() {', '#ifdef USE_INSTANCING\n#define TR_INST instanceMatrix\n#else\n#define TR_INST mat4(1.0)\n#endif\nvoid main() {');
+    sh.fragmentShader = 'varying float vTF; varying vec3 vTW; uniform vec3 uSun, uCam, uSunL;\n' + sh.fragmentShader.replace('#include <clipping_planes_fragment>', '#include <clipping_planes_fragment>\n  if (vTF > 0.0 && fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715)))) < vTF) discard;');
+    if (leaf) sh.fragmentShader = sh.fragmentShader.replace('#include <alphatest_fragment>', '{ vec2 ts = vUv * 1024.0; float ml = 0.5 * log2(max(max(dot(dFdx(ts), dFdx(ts)), dot(dFdy(ts), dFdy(ts))), 1.0)); if (diffuseColor.a < mix(0.5, 0.26, clamp((ml - 2.0) / 3.5, 0.0, 1.0))) discard; diffuseColor.a = 1.0; } // порог выреза ниже на мелких мипах: редкая хвоя и берёза вдали не рассыпаются в точки').replace('#include <lights_fragment_end>', '#include <lights_fragment_end>\n  { float bk = pow(clamp(dot(normalize(vTW - uCam), uSun), 0.0, 1.0), 4.0); reflectedLight.directDiffuse += diffuseColor.rgb * uSunL * bk * 0.35 * vColor.a * smoothstep(0.55, 1.0, vColor.r); } // просвет листвы против солнца');
+  };
+  m.customProgramCacheKey = () => 'tr2' + (leaf ? 'l' : 'b') + (slot || 0); M.set(H, m); return m;
+}
+const T2SUN = { value: new THREE.Color(0, 0, 0) };
 function windMat(m0, H, slot, leafy) {
   let m = WINDM.get(m0); if (m) return m;
   m = m0.clone(); if (TREE_CAL && m.alphaTest > 0 && leafy) { m.color = m.color.clone(); m.color.r *= 0.6; m.color.g *= 0.6; m.color.b *= 0.72; } // листва города - не неоновая (альбедо 0,05-0,1)
@@ -1604,7 +1645,7 @@ function nearHouses(G, scene, B, near, P, sh) {
       gb[0] = Math.min(gb[0], ix); gb[1] = Math.max(gb[1], ix); gb[2] = Math.min(gb[2], iz); gb[3] = Math.max(gb[3], iz);
     }
     const grid = new Map(); for (const [k, c] of cells) grid.set(k, Int32Array.from(c));
-    sets.set(key, { slot, name, xz, mats, im, n, meshes: [], R: Rs, grid, gb, col: o.col ?? null, wind: o.wind || 0, part: o.part || null, rIn: o.rIn || 0, kit: o.kit || 0, kitR: o.kitR || 0 });
+    sets.set(key, { slot, name, xz, mats, im, n, meshes: [], R: Rs, grid, gb, col: o.col ?? null, wind: o.wind || 0, part: o.part || null, rIn: o.rIn || 0, kit: o.kit || 0, kitR: o.kitR || 0, pack: o.pack || null });
   };
   for (let v = 1; v < BLD.length; v++) {
     if (!BLD[v] || !near[v].length || (KIT_ON && KIT_SER.some((q) => q.v === v)) || (PH_ON && PH[v])) continue;
@@ -1635,7 +1676,7 @@ function nearHouses(G, scene, B, near, P, sh) {
   // модель пришла: по мешу на материал, общая матрица инстансов; коробки этого вида вблизи прячутся
   // радиус моделей вблизи по роли (Mark 2026-11-08: «если играется самолет - то можно в самом минимальном разрешении это выдавать - в первую
   // очередь то что на земле будет важно при игре на пво»): k = 1 - ПВО и меню, меньше - самолёт; коробки и импосторы прячутся в том же радиусе
-  G.kitOn = new Map(); G.nearScale = (k) => { G.kitK = k; for (const [v, r] of G.kitOn) ENV.uMdl.value[v] = r * k; for (const S of sets.values()) { if (S.R0 === undefined) { S.R0 = S.R; S.rIn0 = S.rIn; } S.R = S.R0 * k; S.rIn = S.rIn0 * k; if (S.R1 !== undefined) S.R1 = Math.max(120, S.R * 0.45); if (S.meshes.length && S.slot && !S.far) ENV.uMdl.value[S.slot] = S.R; } lx = 1e9; if (G.grassT) G.grassT.scale(k); };
+  G.kitOn = new Map(); G.nearScale = (k) => { G.kitK = k; for (const [v, r] of G.kitOn) ENV.uMdl.value[v] = r * k; for (const S of sets.values()) { if (S.R0 === undefined) { S.R0 = S.R; S.rIn0 = S.rIn; } S.R = S.R0 * k; S.rIn = S.rIn0 * k; if (S.tr) { S.Rf = S.Rf0 * k; if (S.R10) S.R1 = S.R10 * k; ENV.uMdl.value[S.slot] = S.Rf; continue; } if (S.R1 !== undefined) S.R1 = Math.max(120, S.R * 0.45); if (S.meshes.length && S.slot && !S.far) ENV.uMdl.value[S.slot] = S.R; } lx = 1e9; if (G.grassT) G.grassT.scale(k); };
   G.nearDirty = () => { lx = 1e9; }; // покров земли пришёл - пересчитать и стоящей камере
   // модуль набора пришёл: один меш (часть модели по имени), без упрощения и импостора - у набора свои *_lod1 (кольцо rIn…R)
   const LOD1_K = FAC_ON ? { bld_tw_b: 0.85, bld_tw_g: 0.85, bld_tw_t: 0.85, bld_d12_b: 0.88, bld_d12_g: 0.95, bld_d12_t: 0.97, bld_hr_c: 0.81, bld_ii49: 0.98, bld_d16_b: 0.96, bld_d16_t: 0.97 } : {}, L1M = new Map();
@@ -2105,10 +2146,27 @@ function nearHouses(G, scene, B, near, P, sh) {
   if (PH_ON && Object.keys(PH).some((v) => near[v] && near[v].length)) phHouses(R); // частный сектор - свои дома и дворы
   if (KIT_ON && OF_ON && near[OFV].length) ofHouses(R); // офисы и стеклянные башни Сити - из деталей
   if (KIT_ON && KIT_SER.some((q) => near[q.v] && near[q.v].length)) kitHouses(G, B, R, TOUCH_GT ? R * (+((typeof location !== 'undefined' && /[?&]kitrf=([\d.]+)/.exec(location.search)) || [0, 2])[1]) : Math.max(R * 1.5, P.bldFar || 0)); // телефон: упрощённые модули - до 2 R (дальше коробки; до bldFar кадр «Среднего» +25 %); ?kitrf= - проба
+  // породы деревьев из набора: уровни 0 / 1 / 2 (телефоны - с первого), дальше - снимки леса
+  const tree2Attach = (S, key, group) => {
+    const L = [0, 1, 2].map((l) => group.getObjectByName(`${S.name}@${l}`)); if (L.some((q) => !q)) { console.warn('нет дерева', S.name); return; }
+    const hi = (P.bldNear || 0) >= 450, tier = hi ? L : L.slice(1), crownOK = (!TOUCH_GT && !P.shadowLite) || P.treeShadows;
+    const mk = (g, im, tag, cs) => g.children.filter((c) => c.isMesh).map((c) => { const leaf = c.material.alphaTest > 0, m = new THREE.InstancedMesh(c.geometry, tree2Mat(c.material, S.wind, S.slot), S.n); m.instanceMatrix = im; m.count = 0; m.visible = false; m.frustumCulled = false; Object.assign(m.userData, { set: key, ...tag });
+      const crown = NS_ON && leaf && crownOK; if (crown) m.customDepthMaterial = leafDepth(c.material); m.castShadow = cs && !!sh.cast && (!leaf || crown); m.receiveShadow = !!sh.receive; scene.add(m); return m; });
+    const buf = () => { const b = new THREE.InstancedBufferAttribute(new Float32Array(S.n * 16), 16); b.setUsage(THREE.DynamicDrawUsage); return b; };
+    const R0 = S.R; S.tr = true; S.Rf = R0; S.R = R0 * 0.62; S.Rf0 = S.Rf; S.R0 = S.R; S.rIn0 = 0;
+    S.meshes = mk(tier[0], S.im, {}, true);
+    if (hi) { S.imLo = buf(); S.lo = mk(tier[1], S.imLo, { lo: true }, true); S.R1 = S.R10 = Math.min(45, R0 * 0.2); }
+    S.imFar = buf(); S.far = mk(tier[tier.length - 1], S.imFar, { far: true }, false);
+    const bb = new THREE.Box3().setFromObject(L[0]); let r0 = 0; for (const x of [bb.min.x, bb.max.x]) for (const y of [bb.min.y, bb.max.y]) for (const z of [bb.min.z, bb.max.z]) r0 = Math.max(r0, Math.hypot(x, y, z));
+    S.rad = new Float32Array(S.n); S.cxyz = new Float32Array(S.n * 3);
+    for (let j = 0, e = S.mats; j < S.n; j++) { const o = j * 16; S.rad[j] = r0 * Math.hypot(e[o], e[o + 1], e[o + 2]) + (sh.cast ? 45 : 15); S.cxyz[j * 3] = e[o + 12]; S.cxyz[j * 3 + 1] = e[o + 13]; S.cxyz[j * 3 + 2] = e[o + 14]; }
+    S.imPod = buf(); const k = G.kitK || 1; if (k !== 1) { S.R = S.R0 * k; S.Rf = S.Rf0 * k; if (S.R10) S.R1 = S.R10 * k; } ENV.uMdl.value[S.slot] = S.Rf; lx = 1e9;
+  };
   G.attachBld = (name, group) => {
     for (const [key, S] of sets) {
-      if (S.name !== name || S.meshes.length) continue;
+      if ((S.pack || S.name) !== name || S.meshes.length) continue;
       let cast = false;
+      if (S.pack) { tree2Attach(S, key, group); continue; }
       if (S.part) { kitAttach(S, key, group); continue; }
       group.traverse((c) => {
         if (!c.isMesh) return;
@@ -2162,7 +2220,7 @@ function nearHouses(G, scene, B, near, P, sh) {
       }).catch(() => { /* без дальней копии - коробки */ });
     }
   };
-  Object.defineProperty(G, 'bldNames', { get: () => [...new Set([...sets.values()].map((S) => S.name))] });
+  Object.defineProperty(G, 'bldNames', { get: () => [...new Set([...sets.values()].map((S) => S.pack || S.name))] });
   // раз в кадр: в радиусе от камеры (его коробки прячет шейдер) и в поле зрения - камеры или контейнера (cams);
   // модели за спиной не рисуются ни в кадре, ни в тенях, ни в окне контейнера
   let lx = 1e9, lz = 1e9, nk = 0, nfx = 1e9, nfz = 1e9;
@@ -2213,7 +2271,7 @@ function nearHouses(G, scene, B, near, P, sh) {
       // на видеочип - только занятая часть буфера (у деревьев весь буфер - сотни КБ, а видно десятки)
       if (c || S.c0) { S.im.updateRange.count = Math.max(c, 1) * 16; S.im.needsUpdate = true; } S.c0 = c;
       for (const m of S.meshes) { m.count = c; m.visible = c > 0; m.userData.nsN = cn; m.userData.nsC = undefined; } // пустые - без вызова отрисовки
-      if (al) { if (cl || S.cl0) { S.imLo.updateRange.count = Math.max(cl, 1) * 16; S.imLo.needsUpdate = true; } S.cl0 = cl; for (const m of S.lo) { m.count = cl; m.visible = cl > 0; m.userData.nsN = 0; m.userData.nsC = undefined; } }
+      if (al) { if (cl || S.cl0) { S.imLo.updateRange.count = Math.max(cl, 1) * 16; S.imLo.needsUpdate = true; } S.cl0 = cl; for (const m of S.lo) { m.count = cl; m.visible = cl > 0; m.userData.nsN = S.tr ? cl : 0; m.userData.nsC = undefined; } }
       if (af) { if (cf || S.cf0) { S.imFar.updateRange.count = Math.max(cf, 1) * 16; S.imFar.needsUpdate = true; } S.cf0 = cf; for (const m of S.far) { m.count = cf; m.visible = cf > 0; } }
     }
     if (G.grassT) G.grassT(cam.position);
@@ -2612,7 +2670,7 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
     if (NS_ON) { nearShadow(sunL, N, b, sunDir.y, G, renderer, !!P.shadowLite); G.ns = { f: new THREE.Vector3(1e9, 0, 0), R: b / NS_K }; }
     G.shTexel = 2 * b / (NS_ON ? N : P.shadowMap || 2048);
   }
-  G.sun = sunL; G.sunDir = sunDir; G.hemi = hemi;
+  G.sun = sunL; G.sunDir = sunDir; G.hemi = hemi; T2SUN.value.copy(sunL.color).multiplyScalar(sunL.intensity);
   const sh = { cast: P.shadows, receive: P.shadows, proxy: () => (GRASS_SH && !P.shadowLite ? G.nsProxy : null) };
   const CROWN = (!TOUCH_GT && !P.shadowLite) || P.treeShadows; // кроны моделей сами дают тень вблизи; иначе - подставные и в ближней половине
   // подставные тени деревьев - по плиткам, в дальней половине карты теней
@@ -2667,7 +2725,7 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
 
   // река: тёмная вода, волны, отражение неба, блик солнца
   const WM = AUT ? autumnWaterMask(city) : null; // осень: вода болота - по маске (где вода), а не вдоль реки
-  const wm = new THREE.MeshPhongMaterial({ color: lin(AUT ? 0x141710 : 0x1a2e3a), specular: lin(W.sun).multiplyScalar(W.sunVis ? 1.2 : 0.2), shininess: 260 });
+  const wm = new THREE.MeshPhongMaterial({ color: lin(AUT ? 0x141710 : 0x1a2e3a), specular: lin(W.sun).multiplyScalar(W.sunVis ? (SCAN && !AUT ? 0.5 : 1.2) : 0.2), shininess: SCAN && !AUT ? 120 : 260 });
   // болото: дно в 1,5 м под водой, берег - в 0,5 м над ней; издалека (камера за баллистикой в десятках км) шаг глубины - метры, вода и дно мерцали.
   // Сдвиг глубины на несколько шагов к камере: вблизи - доли миллиметра (не видно), вдали - вода всегда поверх дна (берег - по маске воды)
   if (WM) Object.assign(wm, { polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -4 });
@@ -2679,12 +2737,13 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
   float t = uTime; vec2 q = vWp.xz;
   vec2 gw = vec2(cos(q.x * 0.11 + t * 1.3) + 0.6 * cos(q.x * 0.27 + q.y * 0.19 + t * 1.9), sin(q.y * 0.13 + t * 1.1) + 0.6 * sin(q.y * 0.31 - q.x * 0.17 + t * 2.3));
   gw += (vec2(vns(q * 0.35 + t * 0.4), vns(q.yx * 0.35 - t * 0.4)) - 0.5) * 1.6;
-  vec3 nW = normalize(vec3(gw.x * 0.05, 1.0, gw.y * 0.05));
+  vec3 nW = normalize(vec3(gw.x * 0.05, 1.0, gw.y * 0.05)); ${SCAN && !WM ? 'nW = normalize(vec3(gw.x * 0.008, 1.0, gw.y * 0.008));' : ''}
   float wd = length(vWp - uCam), wpx = wd * uPx, rimD = ${WM ? '(texture2D(tWM, (vWp.xz - uWM.xy) / uWM.zw).r - 0.5) * 110.0' : `${(CITY.RIVER_W / 2).toFixed(1)} - abs(vWp.x - riverX(vWp.z))`}; // до берега, м (болото - по размытой маске воды)
   if (rimD < -1.5) discard; // полоса воды шире реки (закрыть урез) - за линией берега её нет: там, где земля ниже уровня, иначе вылезала голубым
   if (uTexOn > 0.5) { // рябь (three.js waternormals): два слоя навстречу по течению, вдали - спокойнее
     vec3 a = texture2D(tWN, q / 21.0 + vec2(0.012, 0.031) * t).rgb * 2.0 - 1.0, b = texture2D(tWN, q / 53.0 - vec2(0.021, 0.017) * t).rgb * 2.0 - 1.0;
-    vec2 rp = (a.xy + b.xy) * (0.22 * (1.0 - smoothstep(1.0, 12.0, wpx)) + 0.05)${WM ? ' * 0.25' : ''}; // болото - стоячая вода, рябь слабая
+    ${SCAN && !WM ? `vec2 q3 = mat2(0.82, 0.57, -0.57, 0.82) * q; vec3 c3 = texture2D(tWN, q3 / 127.0 + vec2(0.006, -0.004) * t).rgb * 2.0 - 1.0, d3 = texture2D(tWN, q3 / 8.3 + vec2(0.05, 0.02) * t).rgb * 2.0 - 1.0; a = a * 0.55 + c3 * 0.8; b = b * 0.6 + d3 * 0.35 * (1.0 - smoothstep(0.1, 0.6, wpx));` : ''}
+    vec2 rp = (a.xy + b.xy) * (${SCAN && !WM ? '0.1 * (1.0 - smoothstep(0.5, 6.0, wpx)) + 0.018' : '0.22 * (1.0 - smoothstep(1.0, 12.0, wpx)) + 0.05'})${WM ? ' * 0.25' : ''}; // болото - стоячая вода, рябь слабая
     nW = normalize(nW + vec3(rp.x, 0.0, rp.y));
   }
   ${WM ? 'nW = normalize(vec3(nW.x * 0.2, 1.0, nW.z * 0.2)); // болото: без волн - гладь' : ''}
@@ -2692,6 +2751,7 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
   vec3 Vw = normalize(uCam - vWp), Rf = reflect(-Vw, nW);
   float fres = 0.03 + 0.97 * pow(1.0 - max(dot(nW, Vw), 0.0), 5.0);
   float shallow = 1.0 - smoothstep(4.0, 45.0, rimD); // у берега - мельче: светлее, мутно-зелёная
+  ${SCAN && !WM ? 'fres = 0.02 + 0.62 * pow(1.0 - max(dot(nW, Vw), 0.0), 5.0); diffuseColor.rgb = mix(vec3(0.006, 0.02, 0.026), vec3(0.012, 0.034, 0.032), vns(q * 0.004 + 3.0)); // глубина - тёмная сине-зелёная, крупными пятнами' : ''}
   wEmis = skyAt(Rf) * fres * 0.9 * (1.0 - 0.45 * shallow); // у кромки отражение неба слабее (мелко, видно дно)
   diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * vec3(1.6, 1.9, 1.5) + vec3(0.01, 0.012, 0.006), shallow * 0.6);
   // у самой кромки (≈ 12 м) вода - цвета мокрого песка под ней, без отражения неба: никакой голубой каёмки у берега
@@ -2837,7 +2897,9 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
   if (P.trees > 0 && WINT) { // зимняя карта: ельник по району «лес» - импосторы ели и сосны, снег на ветвях
     const tl = winterTrees(city, P, mulberry32(city.seed * 7 + 3), GH), q = new THREE.PlaneGeometry(1, 1);
     // вблизи - 3D-модели (снег на лапах - snowify в attachBld), импосторы там прячутся; радиус больше городского - лес гуще
-    if (G.addNear && P.treeNear) {
+    if (TR2) for (const t of tl) { const h = trHash(t); if (t.v < 2 && h < 0.07) t.v = h < 0.045 ? 4 : 5; }
+    if (TR2 && G.addNear && P.treeNear) addTrees2(G, 'w', tl, Math.round(P.treeNear * 1.6), 1.3);
+    else if (G.addNear && P.treeNear) {
       const per = TREES_W.map(() => []), m4 = new THREE.Matrix4(), qq = new THREE.Quaternion(), YY = new THREE.Vector3(0, 1, 0), pp = new THREE.Vector3(), ss = new THREE.Vector3();
       for (const t of tl) { per[t.v].push(t); t.mdl = TREES_W[t.v][0]; }
       TREES_W.forEach(([slot, name, h], v) => addTrees(G, 'w', slot, name, h, per[v], Math.round(P.treeNear * 1.6)));
@@ -2846,8 +2908,9 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
     G.tiles.push(...tiled(scene, li, q, treeImpMat('winter', P.trees >= 14000, hemi, sunL, !!P.perf && P.perf.aa === 'msaa'), { cast: false, receive: false }, 0.8)); treeShadows(li, false, !(G.addNear && P.treeNear && CROWN));
   } else if (P.trees > 0 && AUT) { // осенняя карта: лес по району «лес» (склоны оврагов, холмы, кочки в болоте) - импосторы, листва перекрашена
     const tl = autumnTrees(city, P, mulberry32(city.seed * 7 + 3), GH), q = new THREE.PlaneGeometry(1, 1);
-    const li = tl.map((t) => ({ x: t.x, z: t.z, y: t.y + 0.3, sx: t.sy, sy: t.sy, sz: t.sy, kind: t.v, color: t.color, ry: t.ry, mdl: 0 }));
-    G.tiles.push(...tiled(scene, li, q, treeImpMat('autumn', P.trees >= 14000, hemi, sunL, !!P.perf && P.perf.aa === 'msaa'), { cast: false, receive: false }, 0.8)); treeShadows(li, true, true); // осень: вблизи тоже импосторы - подставные тени и в ближней
+    if (TR2) { for (const t of tl) { const h = trHash(t); t.v = t.v === 2 ? 2 : h < 0.07 ? 6 : t.v === 0 ? (h < 0.35 ? 5 : h < 0.55 ? 3 : 0) : t.v === 1 ? (h < 0.4 ? 4 : 1) : h < 0.5 ? 4 : 1; } if (G.addNear && P.treeNear) addTrees2(G, 'a', tl, P.treeNear, 1); }
+    const li = tl.map((t) => ({ x: t.x, z: t.z, y: t.y + 0.3, sx: t.sy, sy: t.sy, sz: t.sy, kind: t.v, color: t.color, ry: t.ry, mdl: TR2 ? t.mdl || 0 : 0 }));
+    G.tiles.push(...tiled(scene, li, q, treeImpMat('autumn', P.trees >= 14000, hemi, sunL, !!P.perf && P.perf.aa === 'msaa'), { cast: false, receive: false }, 0.8)); treeShadows(li, true, !(TR2 && G.addNear && P.treeNear && CROWN)); // осень: вблизи тоже импосторы - подставные тени и в ближней
   } else if (P.trees > 0) {
     const rnd = mulberry32(city.seed * 7 + 3), tl = [], tc = new THREE.Color();
     const tree = (x, z, s) => {
@@ -2866,7 +2929,7 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
       for (let s = 0; s < 6 && tl.length < streetN; s++) {
         const a2 = along + s * 14, x2 = alongX ? a2 : across, z2 = alongX ? across : a2;
         const m2 = ((a2 % G2) + G2) % G2; if (m2 < 30 || m2 > G2 - 30 || city.bldAt(x2, z2) > 0 || !city.onRoad(alongX ? x2 : i * G2, alongX ? i * G2 : z2)) break; // ряд - только вдоль существующей улицы
-        if (rnd() < 0.85) tree(x2, z2, 5 + rnd() * 3);
+        if (rnd() < 0.85) { tree(x2, z2, 5 + rnd() * 3); tl[tl.length - 1].st = 1; }
       }
     }
     // парки и дворы
@@ -2907,8 +2970,11 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
     // вид дерева (дуб, липа, сосна, куст) - для ближних моделей и импосторов одинаковый
     const rr = mulberry32(city.seed * 13 + 5);
     for (const t of tl) { const r = rr(); t.v = r < 0.35 ? 0 : r < 0.7 ? 1 : r < 0.9 ? 2 : 3; }
+    if (TR2) tl.forEach((t, i) => { const h = trHash(t), pk = ZA(t.x, t.z), gr = gcNoise(t.x, t.z, 120); // улица - узкие кроны (липа, берёза, тополь), парк - гнёздами пород, склон - берёза, клён, сосна
+      t.v = t.st ? (h < 0.36 ? 1 : h < 0.58 ? 4 : h < 0.76 ? 6 : h < 0.9 ? 5 : 0) : pk === ZONE.PARK ? (gr < 0.35 ? (h < 0.5 ? 2 : h < 0.75 ? 7 : 4) : gr < 0.6 ? (h < 0.45 ? 4 : h < 0.7 ? 5 : h < 0.9 ? 0 : 3) : h < 0.4 ? 0 : h < 0.7 ? 1 : h < 0.85 ? 5 : 3) : pk === ZONE.FIELD ? (h < 0.35 ? 6 : h < 0.6 ? 4 : h < 0.8 ? 0 : 3) : h < 0.28 ? 1 : h < 0.48 ? 4 : h < 0.64 ? 5 : h < 0.74 ? 0 : h < 0.84 ? 7 : h < 0.92 ? 2 : 3; });
     // вблизи - готовые деревья (процедурные там прячутся): вид по случайному, высота - как у процедурного (крона ~1,3 высоты)
-    if (G.addNear && P.treeNear) {
+    if (TR2 && G.addNear && P.treeNear) addTrees2(G, 'c', tl, P.treeNear, 1.3);
+    else if (G.addNear && P.treeNear) {
       const per = TREES.map(() => []);
       for (const t of tl) { per[t.v].push(t); t.mdl = TREES[t.v][0]; }
       const m4 = new THREE.Matrix4(), qq = new THREE.Quaternion(), YY = new THREE.Vector3(0, 1, 0), pp = new THREE.Vector3(), ss = new THREE.Vector3();
@@ -2919,7 +2985,7 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
     if (!(typeof location !== "undefined" && /[?&]treeimp=0/.test(location.search))) {
       const q = new THREE.PlaneGeometry(1, 1), li = tl.map((t) => ({ ...t, y: t.y + 0.3, sx: 1.3 * t.sy, sy: 1.3 * t.sy, sz: 1.3 * t.sy, kind: t.v })); // масштаб - высота дерева
       G.tiles.push(...tiled(scene, li, q, treeImpMat('city', P.trees >= 14000, hemi, sunL, !!P.perf && P.perf.aa === 'msaa'), { cast: false, receive: false }, 0.6));
-      { const bo = !(G.addNear && P.treeNear && CROWN); treeShadows(li.filter((t) => t.kind !== 2), true, bo); treeShadows(li.filter((t) => t.kind === 2), false, bo); }
+      { const bo = !(G.addNear && P.treeNear && CROWN); const cone = (t) => t.kind === 2 || (TR2 && t.kind >= 6); treeShadows(li.filter((t) => !cone(t)), true, bo); treeShadows(li.filter(cone), false, bo); }
     } else G.tiles.push(...tiled(scene, tl, treeGeo(), tMat, { cast: P.shadows && P.treeShadows, receive: false, lo: treeGeoLo(), loD: P.treeLoD || 2600 }, 0.6)); // на сенсорных - простая крона ближе (P.treeLoD)
   }
 

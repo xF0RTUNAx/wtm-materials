@@ -58,7 +58,7 @@ const sh = async (cmd, a, stdin) => { const p = new Deno.Command(cmd, { args: a,
 async function toPng(im, tmp) {
   const src = `${tmp}.src`; Deno.writeFileSync(src, im.data);
   let alpha = false;
-  if (im.mime === 'image/png') { const ct = im.data[25]; if (ct === 4 || ct === 6 || ct === 3) { const px = await sh('ffmpeg', ['-v', 'error', '-i', src, '-f', 'rawvideo', '-pix_fmt', 'rgba', '-']); for (let k = 3; k < px.length; k += 4) if (px[k] < 255) { alpha = true; break; } } }
+  if (im.mime === 'image/png' || im.mime === 'image/webp') { const ct = im.mime === 'image/webp' ? 6 : im.data[25]; if (ct === 4 || ct === 6 || ct === 3) { const px = await sh('ffmpeg', ['-v', 'error', '-i', src, '-f', 'rawvideo', '-pix_fmt', 'rgba', '-']); for (let k = 3; k < px.length; k += 4) if (px[k] < 255) { alpha = true; break; } } }
   await sh('ffmpeg', ['-v', 'error', '-y', '-i', src, '-pix_fmt', alpha ? 'rgba' : 'rgb24', `${tmp}.png`]);
   Deno.removeSync(src); return alpha;
 }
