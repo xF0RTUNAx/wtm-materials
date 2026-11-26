@@ -1364,6 +1364,20 @@ function stillMoved() {
   return m;
 }
 const CAM_FLOOR = !/[?&]camfloor=0/.test(location.search), CAM_FW = new THREE.Vector3();
+// вспышка взрыва светом (ИССЛЕДОВАНИЕ взрывов, шаг 4): два постоянных PointLight - заведены сразу (добавлять свет в бою - перекомпиляция всех
+// шейдеров, рывок); яркая фаза у фугасного ВВ - десятые доли секунды (≈ 0,1-0,3 с × ∛(R/47)), потом гаснет. Телефонные пресеты (fxLo) - без них.
+// Тряска камеры - когда до камеры дошла ударная волна (скорость звука), по силе ∝ R / расстояние; ?shake=0 - без неё
+const FLASH = [], SHK = { a: 0, t: 0, at: 0, q: new THREE.Quaternion(), e: new THREE.Euler() };
+function boomFlash(p, R, kind) {
+  if (FLASH.length) { const F = FLASH.reduce((a, b) => (a.t > b.t ? a : b)); F.t = 0; F.R = R; F.L.position.set(p.x, p.y + Math.max(2, R * 0.35), p.z); F.dur = (0.12 + 0.22 * Math.cbrt(R / 47)) * (kind === 'plane' ? 2.5 : 1); }
+  if (/[?&]shake=0/.test(location.search) || !camera) return;
+  const d = camera.position.distanceTo(p), a = Math.min(0.012, 0.05 * R / (d + R * 3)); if (a < 0.0008) return;
+  SHK.at = d / 343; SHK.a = Math.max(SHK.a, a); SHK.t = 0;
+}
+function flashTick(dt) {
+  for (const F of FLASH) { F.t += dt; const x = F.t; const k = x < 0.025 ? x / 0.025 : Math.exp(-(x - 0.025) / Math.max(0.05, F.dur) * 2.2); F.L.intensity = k > 0.01 ? k * 7 * Math.sqrt(F.R / 30) : 0; F.L.distance = F.R * 9; }
+  if (SHK.a > 0) { SHK.t += dt; if (SHK.t > SHK.at + 0.9) SHK.a = 0; }
+}
 function frame(now) {
   requestAnimationFrame(frame);
   // меню и пауза - 30 к/с (фон не должен греть телефон), бой на телефоне - не больше 60
@@ -1451,7 +1465,10 @@ function frame(now) {
   }
   if (C.fx && C.fx.setView) C.fx.setView(camera.position.y); // порядок дыма и облаков - по высоте камеры (units-render)
   if (draw3D || (ctrl && ctrl.afterRender)) scene.updateMatrixWorld(); // scene.autoUpdate = false - здесь, раз за кадр (и для окна ТВ в afterRender)
+  flashTick(C.paused ? 0 : dts); let shook = false;
+  if (SHK.a > 0 && SHK.t > SHK.at) { const u = SHK.t - SHK.at, k = SHK.a * Math.exp(-u * 5) * Math.min(1, u * 30); SHK.q.copy(camera.quaternion); SHK.e.set(Math.sin(u * 61) * k, Math.sin(u * 47 + 1.3) * k * 0.7, Math.sin(u * 53 + 2.1) * k * 0.5); camera.quaternion.multiply(new THREE.Quaternion().setFromEuler(SHK.e)); camera.updateMatrixWorld(); shook = true; }
   if (draw3D && !(ctrl && ctrl.skip3D && ctrl.skip3D())) { if (pipe) pipe.render(scene, camera, t3); else renderer.render(scene, camera); }
+  if (shook) { camera.quaternion.copy(SHK.q); camera.updateMatrixWorld(); }
   if (C.perfHud && renderer.info) { pf.cpu += performance.now() - t0; pf.n++; pf.calls = renderer.info.render.calls; pf.tris = renderer.info.render.triangles; }
   if (!hold && ctrl && ctrl.afterRender) ctrl.afterRender(); // окно ТВ рисуется прямо на экран: без кадра сцены под ним экран был бы чёрным (ревью)
   if (!hold) { // кадр держим - HUD тоже (холст не меняется - экрану нечего пересобирать)
@@ -1549,10 +1566,17 @@ setInterval(() => {
   // (attachBridgeSegs, attachAirfield ставят их у аэродрома города - на зиме и осени они стояли в поле)
   for (const n of new Set([...city.objects.flatMap((o) => (o.models || []).map((q) => q.m)), ...(C.G.bldNames || []).filter(isObjModel),
     ...(city.kind === 'city' ? ['br_seg', 'af_appr'] : [])])) wantModel(n); // топливозаправщики у ангаров (af_fuel) не нужны - у сцены аэродрома свои
-  C.fx = createFx(scene, P); { const ex = C.fx.explosion; C.fx.explosion = (p, R, kind) => { addBlast(p, R, ENV.uTime.value); if (kind !== 'air' && C.G && C.G.tf) C.G.tf.hit(p, R, ENV.uTime.value); ex(p, R, kind); }; } C.fx.groundH = (x, z) => city.groundH(x, z); // пыль от упавших комьев - по рельефу
+  C.fx = createFx(scene, P);
+  // цвет пыли взрыва - грунт под ним (линейный): снег, торф топи, бетон и асфальт в городе, суглинок (Mark 2026-11-26: взрыв «не взаимодействует с окружением»)
+  C.fx.bldAt = (x, z) => (C.city ? C.city.bldAt(x, z) : 0); // клубы остатка облака не ставятся в дома и за стены (cloudpuffs)
+  C.fx.groundCol = (p) => { const cy = C.city; if (!cy) return [0.18, 0.15, 0.11];
+    if (cy.kind === 'winter') return cy.iceAt && cy.iceAt(p.x, p.z) ? [0.5, 0.55, 0.6] : [0.62, 0.64, 0.68];
+    if (cy.kind === 'autumn') return cy.waterAt && cy.waterAt(p.x, p.z) ? [0.12, 0.11, 0.09] : [0.13, 0.105, 0.075];
+    return cy.bldAt(p.x, p.z) > 0 || (cy.onRoad && cy.onRoad(p.x, p.z, 6)) ? [0.3, 0.29, 0.27] : [0.19, 0.16, 0.12]; }; { const ex = C.fx.explosion; C.fx.explosion = (p, R, kind) => { addBlast(p, R, ENV.uTime.value); boomFlash(p, R, kind); if (kind !== 'air' && C.G && C.G.tf) C.G.tf.hit(p, R, ENV.uTime.value); ex(p, R, kind); }; } C.fx.groundH = (x, z) => city.groundH(x, z); // пыль от упавших комьев - по рельефу
   // заранее (2026-10-23, рывки при первом появлении): листы взрывов, огня и вспышек - на видеокарту, как только пришли; новые материалы - компилировать сразу
   C.fx.onTex = (t) => { try { if (renderer.initTexture) renderer.initTexture(t); } catch (_) { /* нет - загрузится при первом показе */ } };
   C.fx.onNewMats = () => prewarm();
+  if (!P.fxLo && !/[?&]flash=0/.test(location.search)) for (let i = 0; i < 2; i++) { const L = new THREE.PointLight(0xffc48a, 0, 1, 2); scene.add(L); FLASH.push({ L, t: 1e9, R: 30, dur: 0.2 }); }
   if (pipe && pipe.fx) { C.fx.setLayers(FX_LAYER, FX_ADD_LAYER); if (C.G.clouds) C.G.clouds.layers.set(FX_LAYER); } // облака и дым - в половине разрешения
   await ldStep(tr('Режимы игры: вылет, оборона, обучение…'), 0.7);
   ctrls.air = createAir(C); ctrls.defense = createDefense(C);

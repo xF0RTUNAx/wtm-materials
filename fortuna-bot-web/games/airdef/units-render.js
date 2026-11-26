@@ -8,6 +8,8 @@ import { FLAME_KIND, makeJetFlame, setJetLayer } from './jetflame.js?v=20261124a
 import { createCmFx } from './cmfx.js?v=20261124a';
 import { LNCH, mslView } from './launchers.js?v=20261124a';
 import { createBook } from './flipbook.js?v=20261124a';
+import { ktxOn } from './ktx.js?v=20261124a';
+import { createCloudPuffs } from './cloudpuffs.js?v=20261124a';
 import { makePuffs } from './puffs.js?v=20261124a';
 
 const OLIVE = 0x4f5c3c, OLIVE_D = 0x3c4630, SAND = 0x6e6a4c, NATO = 0x3f4a35, DARK = 0x1d2024, WHITE = 0xd8d8d0, STEEL = 0x707478;
@@ -567,7 +569,8 @@ export function createFx(scene, P) {
   const EX = createBook(scene, { url: FXU_('explosion'), cols: 8, rows: 7, frames: 50, cell: [1, 1], anchor: [0.5, 0.5], gain: 2.4, onTex }, 48);
   const BL = createBook(scene, { url: FXU_('blast'), cols: 8, rows: 2, frames: 16, cell: [1, 1], anchor: [0.5, 0.5], gain: 2.6, onTex }, 16);
   // языки пламени пожаров (Explosion FX Free, лист flame) убраны (Mark 2026-10-28: «мультяшный, а у нас уже есть свой») - огонь даёт свой столб ex_burn
-  const books = [EX, BL], LT = new THREE.Vector3();
+  const CP = createCloudPuffs(scene, P.fxLo ? 200 : 400); // остаток облака листов со светом - клубами в объёме (cloudpuffs.js)
+  const books = [EX, BL], LT = new THREE.Vector3(), XB6 = {}, XJ6 = {}, SUNW = new THREE.Vector3(), SUNC = new THREE.Color(), SKYC = new THREE.Color(), GNDC = new THREE.Color();
   // взрывы по типу боевой части (2026-10-23, Mark: «пререндерить взрыв для каждой бомбы по боевой части - красиво, физически правдоподобно»):
   // свои симуляции Mantaflow в Blender (tools/airdef-fx/explode: огненный шар, тёмный дым, «гриб», волна пыли, выброс грунта и комья со шлейфами)
   // → fx/ex_<тип>.ktx2 (сжатые) или .webp, описание листов - fx/explode.json. Тип - по радиусу поражения и виду подрыва (exType); кадр - по
@@ -624,10 +627,71 @@ export function createFx(scene, P) {
       }).catch(() => {});
       if (LZ.want) api.wantLaunch(); else if (api && api.onNewMats) api.onNewMats(); // новые материалы листов - скомпилировать сразу
     }).catch(() => { /* нет листов - прежние раскадровки */ });
+    // взрывы со светом сцены (Mark 2026-11-26: «странная палитра… не взаимодействует со светом и окружением»; tools/airdef-fx/explode6): в листах -
+    // отклик облака на свет с шести сторон, пыль/сажа и накал, цвет и свет даёт игра (солнце, небо, земля, грунт под взрывом). Нужен KTX2; пока не
+    // пришли или ?ex6=0 - прежние листы
+    if (ktxOn() && !/[?&]ex6=0/.test(location.search)) fetch(new URL('./fx/explode6.json?v=20261124a', import.meta.url)).then((r) => r.json()).then((J) => {
+      for (const [t, j] of Object.entries(J)) {
+        if (t === 'try' || (SWARM && !t.startsWith('clump')) || (!SWARM && t.startsWith('clump'))) continue; // рой - только клубы, ?swarm=0 - только прежние листы
+        const u = (n) => new URL(`./fx/ex6_${t}_${n}${P.fxLo || P.halfFx ? '_lo' : ''}.ktx2?v=20261124a`, import.meta.url).href;
+        // clump - клуб роя (swarm): вращается, летит, пыль и огонь - свои у каждого; линии земли на листе нет
+        const b = XB6[t] = t.startsWith('clump') ? createBook(scene, { six: [u('a'), u('b')], rot: true, dustY: -1, cols: j.cols, rows: j.rows, frames: j.frames, last: j.last, times: j.times, cell: [j.width / j.height, 1], anchor: j.anchor, gain: 2.4, soft: 0.22, hold: 3, onTex }, 320)  // soft шире: клуб пыли, ушедший в склон, не режется прямой линией рельефа
+          : createBook(scene, { six: [u('a'), u('b')], cols: j.cols, rows: j.rows, frames: j.frames, last: j.last, times: j.times, cell: [j.width / j.height, 1], anchor: j.anchor, gain: 2.4, push: t === 'air' || t === 'plane' ? 0 : 0.06, soft: 0.04, hold: 3.5, onTex }, t === 'light' || t === 'air' ? 48 : 24);
+        XJ6[t] = j; books.push(b); const sg = /^clump_(bu|bi|bg|du)/.exec(t); if (sg) { SWB[sg[1] === 'bg' ? 'bi' : sg[1]].push(b); b.upright = sg[1] === 'bg'; } // всплывающий клуб не переворачивать - ножкой вниз // bg - всплывающий клуб в уменьшенной сцене (clump.py G = 0,25) if (LY) { b.mesh.layers.set(LY[0]); b.pre.layers.set(LY[0]); }
+      }
+      if (api && api.onNewMats) api.onNewMats();
+    }).catch((e) => { console.warn('взрыв: листы света', e && e.message); /* нет листов света - прежние */ });
   }
   // EXK - во сколько раз крупнее физического (снято в масштабе: у ФАБ-500 шар ≈ 40 м); ?exk=1 / 2,5 - сравнить (Mark решает)
   const EXK = (typeof location !== 'undefined' && +new URLSearchParams(location.search).get('exk')) || 1.5, LATER = []; // LATER - отложенные эффекты { t - через сколько с, f }
   // 'plane' - сбитый самолёт (main.js down, air.js); 'air' - разрыв ЗУР / перехват любого размера (ревью: крупные ЗУР выглядели «сбитым»)
+  // Взрыв роем клубов (Mark 2026-11-26: «чёткие границы», «купол», дым сквозь дома): как у студий - не один большой лист, а десятки малых
+  // клубов одной съёмки (ex6_clump: огненный шар → дым, свет с шести сторон), каждый повёрнут и отражён, летит по своей физике: огненное ядро,
+  // всплывающая шапка (скорость гаснет - сопротивление воздуха), пыльный ствол, юбка пыли по земле (не проходит сквозь дома). Общей границы
+  // у облака нет, малый клуб дом закрывает честно. ?swarm=0 - прежний один лист. Возвращает H - высоту «листа» для остаточных клубов (верх облака = 0,8 H)
+  const SWARM = typeof location === 'undefined' || !/[?&]swarm=0/.test(location.search), SWV = new THREE.Vector3();
+  // клубы по видам (tools/airdef-fx/explode6/clump.py): bu - огненный выброс, bi - всплывающий клуб дыма, du - пыль у земли (стоит на земле, не вращается);
+  // у каждого вида несколько своих симуляций - рядом стоящие клубы не повторяют друг друга. Нет вида - любой готовый
+  const SWB = { bu: [], bi: [], du: [] };
+  const swPick = (g) => { for (const k of [g, 'bi', 'bu']) { const L = SWB[k].filter((b) => b.ready); if (L.length) return L[Math.floor(Math.random() * L.length)]; } return XB6.clump && XB6.clump.ready ? XB6.clump : null; };
+  // рой - одно течение, а не россыпь (Mark 2026-11-26: «словно независимые клубы»): ядро огня; столб - клубы выходят один за другим от земли и всплывают,
+  // каждый следующий - медленнее и ниже (столб сплошной от земли до шапки); шапка - самые быстрые, наверху расходятся в стороны; пыль - валом по земле
+  // (упёрлась в дом - стоит у стены), за ней - пыль у основания столба. Клуб не висит в воздухе отдельно: каждый - часть столба, шапки или вала
+  const swarm = (p, R, kind) => {
+    const air = kind === 'air' || kind === 'plane', rnd = Math.random, lo = P.fxLo ? 0.6 : 1, TAU = 6.283;
+    const Ht = R * (air ? 1.0 : 2.05) * EXK, g0 = api.groundCol ? api.groundCol(p) : [0.3, 0.27, 0.23];
+    const gc = g0.map((v, i) => (v * 0.4 + [0.22, 0.19, 0.15][i] * 0.6) * 0.7); // выброс - не верхний слой (снег, бетон), а перемешанный с ним грунт
+    const gd = gc.map((v) => v * 0.78); // пыль в тени собственного облака - темнее открытого грунта (светлые бугры выделялись)
+    const one = (g, x, y, z, h, o) => { const B = swPick(g); if (!B) return; SWV.set(x, y, z); const it = B.add(SWV, h, o.rate || 1, { rot: g === 'du' ? (rnd() - 0.5) * 0.25 : B.upright ? (rnd() - 0.5) * 0.6 : rnd() * TAU, flip: rnd() < 0.5, col: g === 'du' ? gd : gc, ...o }); if (o.alpha) it.a = o.alpha; if (B.upright && it.sk === 0 && g !== 'du') { it.sk = 1.6 + rnd() * 0.8; it.fin = Math.max(it.fin || 0, 0.35); } }; // всплывающий - с середины съёмки
+    const n = (k) => Math.max(1, Math.round(k * lo));
+    const blocked = (x, z) => { if (!api.bldAt) return false; for (let k = 1; k <= 4; k++) if (api.bldAt(p.x + (x - p.x) * k / 4, p.z + (z - p.z) * k / 4) > 0) return true; return false; };
+    if (air) {
+      // разрыв в воздухе - один комок (россыпь шаров выглядела «помпонами»): клубы внахлёст, разлёт малый
+      for (let i = 0; i < n(5); i++) { const a = rnd() * TAU, e = (rnd() - 0.5) * 2, v = Ht * (0.04 + rnd() * 0.08);
+        one('bu', p.x + Math.cos(a) * Ht * 0.03, p.y + e * Ht * 0.03, p.z + Math.sin(a) * Ht * 0.03, Ht * (0.75 + rnd() * 0.2), { v: [Math.cos(a) * v, e * v, Math.sin(a) * v], drag: 1.2, rate: 1 + rnd() * 0.3, fire: 1, dust: 0, t0: -rnd() * 0.05, grow: 0.02, hold: 1.8 + rnd() * 0.6 }); }
+      for (let i = 0; i < n(4); i++) { const a = rnd() * TAU, d = Ht * (0.02 + rnd() * 0.06);
+        one('bi', p.x + Math.cos(a) * d, p.y + (rnd() - 0.4) * Ht * 0.15, p.z + Math.sin(a) * d, Ht * (0.55 + rnd() * 0.25), { v: [Math.cos(a) * Ht * 0.06, Ht * 0.04, Math.sin(a) * Ht * 0.06], drag: 0.8, rate: 0.85 + rnd() * 0.2, fire: 0, dust: 0, t0: -(0.25 + i * 0.22), fin: 0.25, grow: 0.02, hold: 2.2 + rnd() * 0.8 }); }
+      return Ht * 1.6;
+    }
+    // огненное ядро у точки удара
+    for (let i = 0; i < n(3); i++) { const a = rnd() * TAU, d = rnd() * Ht * 0.05;
+      one('bu', p.x + Math.cos(a) * d, p.y + Ht * (0.08 + rnd() * 0.06), p.z + Math.sin(a) * d, Ht * (0.55 + rnd() * 0.15), { v: [Math.cos(a) * Ht * 0.04, Ht * (0.06 + rnd() * 0.05), Math.sin(a) * Ht * 0.04], drag: 0.6, rate: 0.95 + rnd() * 0.25, fire: 1, dust: 0.1, t0: -rnd() * 0.05, grow: 0.02, hold: 1.6 + rnd() * 0.6 }); }
+    // шапка: первые и самые быстрые, наверху расходятся
+    for (let i = 0, N = n(5); i < N; i++) { const a = (i + rnd() * 0.6) / N * TAU, vy = Ht * (0.72 + rnd() * 0.16), vl = Ht * (0.07 + rnd() * 0.05);
+      one(i < 2 ? 'bu' : 'bi', p.x + Math.cos(a) * Ht * 0.04, p.y + Ht * 0.12, p.z + Math.sin(a) * Ht * 0.04, Ht * (0.68 + rnd() * 0.2), { v: [Math.cos(a) * vl, vy, Math.sin(a) * vl], drag: 1.0, rate: 0.85 + rnd() * 0.25, fire: i < 2 ? 0.6 : 0, dust: 0.12, t0: -(0.04 + rnd() * 0.08), grow: 0.035, hold: 2 + rnd() * 0.8 }); }
+    // столб: клуб за клубом от земли, каждый следующий медленнее - останавливаются всё ниже, столб сплошной
+    // клубов много и они крупные: соседние по высоте перекрываются больше чем наполовину (реже - «бусы» из шаров)
+    for (let i = 0, N = n(13); i < N; i++) { const q = i / Math.max(1, N - 1), a = rnd() * TAU, d = Ht * (0.02 + rnd() * 0.05), vy = Ht * (0.62 - 0.45 * q) * (0.92 + rnd() * 0.16);
+      one(i < 2 ? 'bu' : 'bi', p.x + Math.cos(a) * d, p.y + Ht * 0.06, p.z + Math.sin(a) * d, Ht * (0.52 - 0.12 * q) * (0.9 + rnd() * 0.2), { v: [Math.cos(a) * Ht * 0.03, vy, Math.sin(a) * Ht * 0.03], drag: 0.95, rate: 0.85 + rnd() * 0.25, fire: i < 2 ? 0.5 : 0, dust: 0.25 + 0.35 * q, t0: -(0.08 + i * 0.08), fin: 0.12, grow: 0.03, hold: 1.8 + rnd() * 0.8 }); }
+    // пыль ударной волны - валом по земле; упёрлась в дом - стоит у стены
+    // мельче и чаще, внахлёст по кругу и в два ряда (крупные одиночные - отдельные бугры), тает раньше столба - край вала рваный
+    for (let i = 0, N = n(13); i < N; i++) { const a = (i + rnd() * 0.8) / N * TAU, r0 = Ht * (0.03 + (i % 2) * 0.07), v = Ht * (0.24 + rnd() * 0.16), dr = 1.5, L = v / dr, k = blocked(p.x + Math.cos(a) * (r0 + L), p.z + Math.sin(a) * (r0 + L)) ? 0.25 : 1;
+      one('du', p.x + Math.cos(a) * r0, p.y, p.z + Math.sin(a) * r0, Ht * (0.3 + rnd() * 0.2), { wk: 1.35, v: [Math.cos(a) * v * k, 0, Math.sin(a) * v * k], drag: dr, rate: 0.8 + rnd() * 0.2, fire: 0, dust: 0.85, t0: -rnd() * 0.06, fin: 0.1, grow: 0.03, hold: 1.6 + rnd() * 0.8, e0: 0.25, alpha: 0.72 }); }
+    // пыль у основания столба (поднятая следом): закрывает стык столба с землёй
+    for (let i = 0; i < n(4); i++) { const a = rnd() * TAU, v = Ht * 0.08;
+      one('du', p.x + Math.cos(a) * Ht * 0.08, p.y, p.z + Math.sin(a) * Ht * 0.08, Ht * (0.5 + rnd() * 0.15), { wk: 1.2, v: [Math.cos(a) * v, 0, Math.sin(a) * v], drag: 0.8, rate: 0.8, fire: 0, dust: 0.7, t0: -(0.5 + rnd() * 0.6), fin: 0.4, grow: 0.02, hold: 2.5 + rnd() * 0.8 }); }
+    return Ht / 0.8;
+  };
   const exType = (R, kind) => (kind === 'plane' ? 'plane' : kind === 'air' ? 'air' : R < 20 ? 'light' : R < 40 ? 'medium' : R < 60 ? 'heavy' : 'super');
   const CR = makeCraters(scene, P.craters || 150);
   const PL = createPlumes(scene, P); // дымные ленты ракет (plume.js)
@@ -659,7 +723,7 @@ export function createFx(scene, P) {
     // порядок с облаками (у облаков 0,5): камера ниже облаков - дым и взрывы после них (облака - фон; было: у частиц дыма порядок 0 -
     // далёкое облако ложилось поверх близкого дыма белыми клубками); выше облаков - раньше них (облако между камерой и дымом закрывает его)
     setView(camY) { lo = camY < 2250; smoke.points.renderOrder = fire.points.renderOrder = linger.points.renderOrder = lo ? 1 : 0.46; if (PF) PF.points.renderOrder = lo ? 1 : 0.46; if (PT) PT.points.renderOrder = lo ? 1 : 0.46; PL.mesh.renderOrder = lo ? 2 : 0.47; for (const b of books) b.mesh.renderOrder = lo ? 0.8 : 0.44; }, // низ облаков - от 2300 м (city-render buildClouds)
-    setLayers(fxL, addL) { LY = [fxL, addL]; smoke.points.layers.set(fxL); linger.points.layers.set(fxL); if (PF) PF.points.layers.set(fxL); if (PT) PT.points.layers.set(fxL); fire.points.layers.set(addL); PL.mesh.layers.set(fxL); setFlameLayer(addL); setJetLayer(addL); CMF.setLayers(fxL, addL); for (const b of books) { b.mesh.layers.set(fxL); b.pre.layers.set(fxL); } }, // раскадровки огня и взрывов - в проходе дыма: после облаков (фон), до дыма (он закрывает огонь) // дым - в половине разрешения, огонь - поверх (post.js); раскадровки - в основном проходе (там глубина кадра: дома их загораживают)
+    setLayers(fxL, addL) { LY = [fxL, addL]; CP.mesh.layers.set(fxL); smoke.points.layers.set(fxL); linger.points.layers.set(fxL); if (PF) PF.points.layers.set(fxL); if (PT) PT.points.layers.set(fxL); fire.points.layers.set(addL); PL.mesh.layers.set(fxL); setFlameLayer(addL); setJetLayer(addL); CMF.setLayers(fxL, addL); for (const b of books) { b.mesh.layers.set(fxL); b.pre.layers.set(fxL); } }, // раскадровки огня и взрывов - в проходе дыма: после облаков (фон), до дыма (он закрывает огонь) // дым - в половине разрешения, огонь - поверх (post.js); раскадровки - в основном проходе (там глубина кадра: дома их загораживают)
     // kind: 'air' - в воздухе (подрыв ЗУР, сбитый самолёт), 'ground' - ракета, падение; 'bomb' - бомба (крупнее, вспышка с кольцом, пыль)
     explosion(p, R, kind) {
       if (R < 6) { // мелочь (обломки) - частицами
@@ -667,27 +731,47 @@ export function createFx(scene, P) {
         smoke.emit(p.x, p.y + 1, p.z, 0, 3, 0, 0.3, 0.28, 0.26, 0.6, R, R, 2.5, 0.5, 1);
         return;
       }
-      const xt = exType(R, kind), xb = XB[xt];
+      const xt = exType(R, kind), sw = SWARM && !!swPick('bu'), x6 = sw || (XB6[xt] && XB6[xt].ready), xb = sw ? swPick('bu') : x6 ? XB6[xt] : XB[xt];
       if (xb && xb.ready) { // лист ещё грузится - прежний взрыв (не пустота) // свой взрыв по типу боевой части: лист кадров; комья грунта - частицами (летят в объёме, в листе - их шлейфы)
         // размер - ×1,5 к физическому: снято в масштабе (у ФАБ-500 шар ≈ 40 м), но с высоты удар должен читаться (прежний кадр был 260 м)
-        const j = XJ[xt], k = R / j.ref, H = j.width * k * EXK, rate = Math.min(1.6, Math.max(0.6, Math.sqrt(1 / k)));
-        xb.add(p, H, rate);
+        let j, H, rate;
+        if (sw) { H = swarm(p, R, kind); j = { anchor: [0.5, 0.8], times: [7], frames: 1 }; rate = 1; } // рой: облако живёт ≈ 7 с (съёмка 4 с + hold), дальше - остаточные клубы
+        else { j = x6 ? XJ6[xt] : XJ[xt]; const k = R / j.ref; H = (x6 ? j.height : j.width) * k * EXK; rate = Math.min(1.6, Math.max(0.6, Math.sqrt(1 / k)));
+          xb.add(p, H, rate, { col: api.groundCol ? api.groundCol(p) : undefined }); } // цвет пыли - грунт под взрывом (main.js groundCol)
         if (kind !== 'air' && kind !== 'plane' && R >= 30) api.clods(p, R, kind === 'tbm' ? 1.4 : 1);
         // остаточный дым: появляется, когда лист начинает растворяться (облако уже там), - те же место и размер, висит ещё 15-20 с, сносится ветром
         const T = j.times[j.frames - 1] / rate, P0 = p.clone(), air = kind === 'air' || kind === 'plane';
         // по форме облака в конце листа: «шапка» (плотная, выше), тонкий ствол, светлая пыль у земли; у воздушных - один клуб
         // s1 - размер к концу жизни (у частиц рост задаётся в м/с: s1 «как есть» за 50 с давал клубы в 3-4 км - видеокарта обрезала их прямоугольником)
-        const puff = (n0, h0, h1, rr, s0, s1, c, a, life, up) => { const n = Math.max(1, Math.round(n0 / WAVES)); for (let i = 0; i < n; i++) {
-          const an = Math.random() * 6.283, d = Math.random() * rr, hh = h0 + Math.random() * (h1 - h0), g = c * (0.85 + Math.random() * 0.3), L = life * (0.8 + Math.random() * 0.4);
-          linger.emit(P0.x + Math.cos(an) * d, P0.y + hh, P0.z + Math.sin(an) * d, Math.cos(an) * 1.2, up * (0.6 + Math.random() * 0.8), Math.sin(an) * 1.2, g, g * 0.95, g * 0.88, a, s0, (s1 - s0) / L, L, 0.5, 0.15);
+        // листы со светом (x6): облако в конце листа серое и освещённое - остаток светлее прежнего, пыль у земли - цвета грунта (gc)
+        const gc = x6 && api.groundCol ? api.groundCol(p) : null, dc = gc ? gc.map((v) => Math.min(0.85, Math.sqrt(v) * 0.85)) : null;
+        const puff = (n0, h0, h1, rr, s0, s1, c, a, life, up, col) => { const n = Math.max(1, Math.round(n0 / WAVES)); for (let i = 0; i < n; i++) {
+          const an = Math.random() * 6.283, d = Math.random() * rr, hh = h0 + Math.random() * (h1 - h0), k = 0.85 + Math.random() * 0.3, g = c * k, L = life * (0.8 + Math.random() * 0.4);
+          const cr = col ? col[0] * k : g, cg = col ? col[1] * k : g * 0.95, cb = col ? col[2] * k : g * 0.88;
+          linger.emit(P0.x + Math.cos(an) * d, P0.y + hh, P0.z + Math.sin(an) * d, Math.cos(an) * 1.2, up * (0.6 + Math.random() * 0.8), Math.sin(an) * 1.2, cr, cg, cb, a, s0, (s1 - s0) / L, L, 0.5, 0.15);
         } };
         // волнами, пока лист растворяется (последние 45 % его времени, S-кривая): дым густеет по мере того, как облако тает - стыка не видно
         const WAVES = 6;
-        for (let w = 0; w < WAVES; w++) LATER.push({ t: T * (0.56 + 0.4 * w / (WAVES - 1)), f: () => {
-          if (air) { puff(9 + R * 0.12, -H * 0.08, H * 0.08, H * 0.12, H * 0.16, H * 0.38, 0.2, 0.7, 40, 0.3); return; } // висит и медленно тает (как у настоящих разрывов ЗУР)
-          puff(14 + R * 0.1, H * 0.25, H * 0.52, H * 0.22, H * 0.22, H * 0.45, 0.19, 0.75, 55, 0.5); // шапка: живёт ≈ 45-65 с, разрастается и редеет (тёмная - как облако листа)
-          puff(7, H * 0.06, H * 0.3, H * 0.08, H * 0.14, H * 0.28, 0.22, 0.6, 35, 0.35); // ствол
-          puff(8, H * 0.01, H * 0.05, H * 0.22, H * 0.16, H * 0.34, 0.43, 0.5, 35, 0.05); // пыль у земли
+        // листы со светом: облако подхватывают клубы в объёме - появляются, пока лист тает (последние 6 с листа и его hold), живут до минуты
+        if (x6) {
+          const an = j.anchor[1], top = H * an, gc0 = (gc || [0.3, 0.27, 0.23]).map((v, i) => (v * 0.4 + [0.22, 0.19, 0.15][i] * 0.6) * 0.6), /* остаток пыли - грунт со снегом или бетоном, в тени облака (чистый снег светился белыми пятнами) */ lo = P.fxLo ? 0.5 : 1, Tp = T * 0.55, rnd = Math.random;
+          // клуб не внутри дома и не за стеной от взрыва (пыль упирается в дома): путь от центра взрыва до клуба - по 4 точкам, нет постройки
+          const free = (x, z) => { if (!api.bldAt) return true; for (let k = 1; k <= 4; k++) if (api.bldAt(P0.x + (x - P0.x) * k / 4, P0.z + (z - P0.z) * k / 4) > 0) return false; return true; };
+          const put = (n, y0, y1, rr, s0, s1, a, dust, life, vy, flat) => { for (let i = 0, tr = 0; i < Math.round(n * lo) && tr < n * 4; tr++) { const a2 = rnd() * 6.283, d = Math.sqrt(rnd()) * rr;
+            if (!free(P0.x + Math.cos(a2) * d, P0.z + Math.sin(a2) * d)) continue; i++;
+            CP.add({ x: P0.x + Math.cos(a2) * d, y: P0.y + y0 + rnd() * (y1 - y0), z: P0.z + Math.sin(a2) * d }, { s0: s0 * (0.8 + rnd() * 0.4), s1: s1 * (0.8 + rnd() * 0.4), life: life * (0.8 + rnd() * 0.4), a, dust, col: gc0, v: [Math.cos(a2) * 0.6, vy * (0.6 + rnd() * 0.8), Math.sin(a2) * 0.6], flat, tIn: 2 + rnd() * 1.5, delay: Tp + rnd() * 1.2 }); } };
+          if (air) put(14, -H * 0.1, H * 0.1, H * 0.14, H * 0.14, H * 0.3, 0.8, 0.05, 45, 0.25, 1);
+          else {
+            put(26, top * 0.5, top * 0.9, H * 0.22, H * 0.14, H * 0.3, 0.85, 0.1, 70, 0.3, 0.9); // шапка: густая, медленно расползается
+            put(34, top * 0.08, top * 0.6, H * 0.2, H * 0.13, H * 0.28, 0.85, 0.3, 60, 0.15, 1); // тело облака от земли до шапки (облако листа - сплошное, без провала посередине)
+            put(sw ? 12 : 26, top * 0.01, top * 0.06, H * 0.32, H * 0.08, H * 0.2, sw ? 0.4 : 0.8, 1, 45, 0.02, 0.55); /* рой: пыль у земли уже несут клубы вала - остаток редкий (плотные ложились светлой стеной с ровным верхом) */ // пыль у земли - низкая и широкая, мелкими клубами (крупный клуб пересекал стены)
+          }
+        }
+        if (!x6) for (let w = 0; w < WAVES; w++) LATER.push({ t: T * (0.56 + 0.4 * w / (WAVES - 1)), f: () => {
+          if (air) { puff(9 + R * 0.12, -H * 0.08, H * 0.08, H * 0.12, H * 0.16, H * 0.38, x6 ? 0.26 : 0.2, 0.7, 40, 0.3); return; } // висит и медленно тает (как у настоящих разрывов ЗУР)
+          puff(14 + R * 0.1, H * 0.25, H * 0.52, H * 0.22, H * 0.22, H * 0.45, x6 ? 0.3 : 0.19, x6 ? 0.6 : 0.75, 55, 0.5); // шапка: живёт ≈ 45-65 с, разрастается и редеет (тёмная - как облако листа)
+          puff(7, H * 0.06, H * 0.3, H * 0.08, H * 0.14, H * 0.28, x6 ? 0.32 : 0.22, 0.6, 35, 0.35); // ствол
+          puff(8, H * 0.01, H * 0.05, H * 0.22, H * 0.16, H * 0.34, 0.43, 0.5, 35, 0.05, dc); // пыль у земли
         } });
         return;
       }
@@ -718,7 +802,7 @@ export function createFx(scene, P) {
       for (let i = 0; i < 28 * k; i++) {
         const a = Math.random() * 6.283, e = 0.35 + Math.random() * 0.55, s = (25 + Math.random() * 40) * (R / 45) * Math.sqrt(k), vy = s * Math.sin(e) * 1.4, vh = s * Math.cos(e);
         const tf = Math.max(1, (2 * vy) / 9.8 * 0.92); // время полёта (сопротивление воздуха - чуть короче)
-        smoke.emit(p.x, p.y + 2, p.z, Math.cos(a) * vh, vy, Math.sin(a) * vh, 0.14, 0.12, 0.1, 0.95, 1.6 + Math.random() * 2, 0.4, tf * 1.5, 0.12, -9.8);
+        smoke.emit(p.x, p.y + 2, p.z, Math.cos(a) * vh, vy, Math.sin(a) * vh, 0.11, 0.1, 0.085, 1, 0.5 + Math.random() * 0.7, 0.12, tf * 1.5, 0.12, -9.8); // ком - мелкий и плотный (прежние 1,6-3,6 м с ростом вблизи висели размытыми шарами, Mark 2026-11-26)
         if (i % 2) continue;
         const L = vh * (1 - Math.exp(-0.12 * tf)) / 0.12, gx = p.x + Math.cos(a) * L, gz = p.z + Math.sin(a) * L; // дальность с сопротивлением (drag 0,12, как у частицы)
         LATER.push({ t: tf, f: () => { const g = 0.4 + Math.random() * 0.08, gy = api.groundH ? api.groundH(gx, gz) : p.y; smoke.emit(gx, gy + 1, gz, 0, 0.6, 0, g, g * 0.93, g * 0.84, 0.4, 2 + Math.random() * 2, 0.6 + Math.random() * 0.4, 8 + Math.random() * 6, 0.6, 0.02); } }); // облачко пыли: до ≈ 8-12 м
@@ -879,7 +963,8 @@ export function createFx(scene, P) {
     burn(pos, r) {
       const b = { pos: pos.clone(), r, t: 0 }; if (CB) b.col = colAdd(b); burning.push(b);
     },
-    clearBurning() { LATER.length = 0; if (PF) PF.clear(); if (PT) PT.clear(); for (let i = 0; i < LINGER_N; i++) linger.emit(0, -1e5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1e-4, 0, 0); /* остаточный дым прошлого боя - долой (у пула нет clear: все места - мёртвыми частицами) */ burning.length = 0; PL.clear(); CMF.clear(); if (CB) CB.clear(); }, // новый бой - без пожаров и дымных лент прошлого
+    ex6State: () => Object.fromEntries(Object.entries(XB6).map(([k, b]) => [k, b.ready])), // проверка: какие листы взрывов со светом пришли
+    clearBurning() { LATER.length = 0; CP.clear(); if (PF) PF.clear(); if (PT) PT.clear(); for (let i = 0; i < LINGER_N; i++) linger.emit(0, -1e5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1e-4, 0, 0); /* остаточный дым прошлого боя - долой (у пула нет clear: все места - мёртвыми частицами) */ burning.length = 0; PL.clear(); CMF.clear(); if (CB) CB.clear(); }, // новый бой - без пожаров и дымных лент прошлого
     // след взрыва у земли или на крыше: gh - высота земли (city.groundH), bh - высота здания (city.bldAt); kind 'bomb' - яма с
     // бруствером, 'ground' (ракета, снаряд) - ямка поменьше; на крыше - только копоть. Размер - от радиуса поражения R (≈ ∛ массы ВВ).
     // Земля за городом - с холмами: пятно чуть приподнято (на склоне край уходит в грунт)
@@ -901,6 +986,8 @@ export function createFx(scene, P) {
       if (!hemi) for (const o of scene.children) { if (o.isHemisphereLight) hemi = o; else if (o.isDirectionalLight && !sunL) sunL = o; }
       LT.set(0.6, 0.6, 0.6); if (hemi) LT.set(hemi.color.r, hemi.color.g, hemi.color.b).multiplyScalar(hemi.intensity * 0.55);
       if (sunL) LT.x += sunL.color.r * sunL.intensity * 0.35, LT.y += sunL.color.g * sunL.intensity * 0.35, LT.z += sunL.color.b * sunL.intensity * 0.35;
+      if (sunL && hemi) { SUNW.copy(sunL.position).sub(sunL.target.position).normalize(); SUNC.copy(sunL.color).multiplyScalar(sunL.intensity); SKYC.copy(hemi.color).multiplyScalar(hemi.intensity); GNDC.copy(hemi.groundColor).multiplyScalar(hemi.intensity); for (const t in XB6) XB6[t].lights(SUNW, SUNC, SKYC, GNDC); CP.lights(SUNW, SUNC, SKYC, GNDC); }
+      CP.update(dt, scene.fog);
       for (const b of books) b.update(dt, LT, scene.fog);
       if (PF) PF.update(dt, LT);
       if (PT) PT.update(dt, LT);
