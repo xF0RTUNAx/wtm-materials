@@ -790,3 +790,42 @@ a.chip:active { border-color: var(--c-link); }
   .hero__lead, .hero__stats { max-width: 520px; }
 }
 #th-research { transform: translateX(max(0px, min(var(--sx, 0px), var(--sepx, 0px)))); }
+/* aircraft characteristics (WT Wiki data, Mark 2026-11-26: variant A without icons, bars and places) */
+.panel.as h2 small{font:500 15px var(--f-head);color:var(--c-muted);text-transform:none;letter-spacing:0}
+.as h3{margin:14px 0 6px;font:700 13px/1.2 var(--f-head);letter-spacing:.06em;text-transform:uppercase;color:var(--c-muted)}
+.as-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.as-t{background:var(--c-block-2);border:1px solid var(--c-line-soft);border-radius:var(--r);padding:9px 10px;min-width:0}
+.as-t span{display:block;font:500 13px/1.2 var(--f-head);color:var(--c-muted)}
+.as-t b{display:block;margin-top:5px;font:700 24px/1 var(--f-head);font-variant-numeric:tabular-nums}
+.as-t b small{font:500 14px var(--f-head);color:var(--c-muted);margin-left:4px}
+.panel .as-guns{list-style:none;margin:0;padding:0;border-top:1px solid var(--c-line-soft)}
+.panel .as-guns li{margin:0;padding:8px 0;border-bottom:1px solid var(--c-line-soft)}
+.as-guns b{display:block;font:700 15px/1.25 var(--f-head)}.as-guns small{color:var(--c-muted);font-size:13px}
+.as-strip{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}
+.as-strip img{width:36px;height:36px;padding:3px;object-fit:contain;background:var(--c-block-2);border:1px solid var(--c-line-soft);border-radius:var(--r)}
+.as-load,.as-feat{border:1px solid var(--c-line);border-radius:var(--r);background:var(--c-block-2);margin-bottom:6px}
+.as-load summary,.as-feat summary{display:flex;gap:10px;align-items:center;min-height:52px;padding:4px 10px;cursor:pointer;list-style:none}
+.as-load summary::-webkit-details-marker,.as-feat summary::-webkit-details-marker{display:none}
+.as-feat summary{font:700 15px/1.2 var(--f-head)}
+.as-load img{width:40px;height:40px;object-fit:contain;flex:none}
+.as-load b{display:block;font:700 15px/1.2 var(--f-head)}.as-load small{color:var(--c-muted);font-size:13px}
+.as-arr{margin-left:auto;width:16px;height:16px;color:var(--c-muted);flex:none;transition:transform .15s}
+details[open]>summary .as-arr{transform:rotate(180deg)}
+.as dl{display:grid;grid-template-columns:auto 1fr;gap:3px 14px;margin:0 0 6px;font-size:14px}
+.as-load dl,.as-feat dl{padding:0 10px 10px 10px}.as-load dl{padding-left:60px}
+.as dt{color:var(--c-muted)}.as dd{margin:0}
+.as-feat p,.as-none{margin:0;padding:0 10px 10px;color:var(--c-muted);font-size:14px}
+@media (prefers-reduced-motion: reduce){.as-arr{transition:none}}
+/* campaign: filters by characteristics */
+.fx{grid-column:1/-1;border:1px solid var(--c-line);border-radius:var(--r);background:var(--c-block)}
+.fx>summary{display:flex;align-items:center;gap:8px;min-height:44px;padding:0 10px;cursor:pointer;font:700 14px var(--f-head);list-style:none}
+.fx>summary::-webkit-details-marker{display:none}.fx>summary svg.i{width:18px;height:18px;color:var(--c-muted)}.fx-n{color:var(--c-link)}
+.fx-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 8px;padding:0 10px}
+.fx-r span{display:block;margin-bottom:3px;font:500 12px/1.2 var(--f-head);color:var(--c-muted)}
+.fx-r div{display:flex;gap:4px}.fx-r input{width:50%;min-width:0;min-height:40px;background:var(--c-input);color:var(--c-text);border:1px solid var(--c-line);border-radius:var(--r);padding:0 8px;font:inherit}
+.fx-k{margin:10px 10px 4px;font:700 12px/1.2 var(--f-head);letter-spacing:.06em;text-transform:uppercase;color:var(--c-muted)}
+.fx-types{display:flex;flex-wrap:wrap;gap:6px;padding:0 10px}
+.fx-types button{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 10px 0 6px;background:var(--c-block-2);border:1px solid var(--c-line);border-radius:var(--r);color:var(--c-text);font:500 14px var(--f-head)}
+.fx-types button[aria-pressed=true]{border-color:var(--c-link);color:var(--c-link)}.fx-types img{width:28px;height:28px;object-fit:contain}
+.fx-sort{display:flex;gap:6px;align-items:center;padding:10px}.fx-sort .sel{flex:1}
+.vcell__stat{display:block;font:700 13px/1.2 var(--f-head);color:var(--c-link)}
