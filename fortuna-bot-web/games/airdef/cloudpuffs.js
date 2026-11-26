@@ -50,12 +50,12 @@ export function createCloudPuffs(scene, max = 400) {
     add(p, o) { if (live.length >= max) live.shift(); live.push({ x: p.x, y: p.y, z: p.z, s0: o.s0, s1: o.s1, life: o.life, a: o.a, dust: o.dust || 0, c: o.col || [0.3, 0.27, 0.23], vx: o.v ? o.v[0] : 0, vy: o.v ? o.v[1] : 0, vz: o.v ? o.v[2] : 0, flat: o.flat || 1, tIn: o.tIn || 1, t: -(o.delay || 0), seed: Math.random() }); },
     clear() { live.length = 0; geo.instanceCount = 0; mesh.visible = false; },
     lights(sunV, sunC, skyC, gndC) { const U = mat.uniforms; U.uSunV.value.copy(sunV); U.uSunC.value.copy(sunC); U.uSkyC.value.copy(skyC); U.uGndC.value.copy(gndC); },
-    update(dt, fog) {
+    update(dt, fog, wind) {
       let c = 0;
       for (let i = live.length - 1; i >= 0; i--) {
         const q = live[i]; q.t += dt; if (q.t < 0) continue; if (q.t >= q.life) { live.splice(i, 1); continue; }
         const u = q.t / q.life, k = Math.min(1, q.t / q.tIn), a = q.a * k * k * (3 - 2 * k) * Math.pow(1 - u, 1.3), dr = Math.exp(-q.t * 0.08); // скорость гаснет (сопротивление воздуха)
-        q.x += q.vx * dr * dt; q.y += q.vy * dr * dt; q.z += q.vz * dr * dt;
+        q.x += q.vx * dr * dt; q.y += q.vy * dr * dt; q.z += q.vz * dr * dt; if (wind) { q.x += wind.x * dt; q.z += wind.z * dt; } // ветер карты
         aP.setXYZW(c, q.x, q.y, q.z, q.s0 + (q.s1 - q.s0) * Math.sqrt(u)); aA.setXYZW(c, a, q.seed, q.dust, q.t); aC.setXYZW(c, q.c[0], q.c[1], q.c[2], q.flat); c++;
       }
       geo.instanceCount = c; mesh.visible = c > 0;

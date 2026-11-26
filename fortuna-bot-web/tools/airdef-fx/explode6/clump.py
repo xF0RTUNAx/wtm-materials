@@ -12,8 +12,10 @@ a = sys.argv[sys.argv.index('--') + 1:]
 path = a[0]; seed = int(a[1]) if len(a) > 1 else 3; KIND = a[2] if len(a) > 2 else 'burst'; PX = int(a[3]) if len(a) > 3 else 512; random.seed(seed)
 G = float(a[4]) if len(a) > 4 else 1.0; VG = G ** 0.5  # G - масштаб сцены (как у пожара scene.py): в большой области всплытие слабее завихрений - клуб не поднимался;
 # сцена в G раз меньше, скорости × √G, время × √G (подобие по Фруду); игре - game_scale = 1 / G (render6.py: кадр × 1/G, время × √(1/G))
-BU, BI, DU = KIND == 'burst', KIND == 'billow', KIND == 'dust'
+BU, BI, DU = KIND in ('burst', 'jets'), KIND == 'billow', KIND == 'dust'
+JE = KIND == 'jets'  # jets - взрыв целиком (Mark 2026-11-26, съёмка с дрона): венец толстых тёмных струй, короткий огонь, струи тормозятся и вспухают одним многолопастным облаком
 N = 72  # 3 с при 24 к/с: дальше клуб в игре растягивает hold
+if KIND == 'jets': N = 96
 bpy.ops.wm.read_homefile(use_empty=True)
 sc = bpy.context.scene; sc.render.fps = 24; sc.frame_start = 1; sc.frame_end = N; sc['game_scale'] = 1 / G
 try: sc.render.engine = 'CYCLES'
@@ -28,7 +30,7 @@ if DU: em.scale = (1.6, 1.6, 0.45)
 for v in em.data.vertices: v.co *= 0.75 + 0.5 * random.random()
 bpy.ops.object.quick_smoke(style='BOTH')
 dom = next(o for o in bpy.data.objects if o.modifiers and o.modifiers[0].type == 'FLUID' and o.modifiers[0].fluid_type == 'DOMAIN'); dom.name = 'Область'
-W = (24.0 if DU else 21.0) * G; dom.location = (0, 0, W / 2 if DU else 4.5 * G); dom.scale = (1, 1, 1); dom.dimensions = (W, W, W); bpy.context.view_layer.update()  # шире облака: стенки не режут край
+W = (44.0 if JE else 24.0 if DU else 21.0) * G; dom.location = (0, 0, W / 2 if DU else 4.5 * G); dom.scale = (1, 1, 1); dom.dimensions = (W, W, W); bpy.context.view_layer.update()  # шире облака: стенки не режут край
 ds = dom.modifiers[0].domain_settings
 ds.resolution_max = 224; ds.use_noise = True; ds.noise_scale = 2; ds.noise_strength = 0.6; ds.noise_pos_scale = 2.5; ds.noise_time_anim = 0.2
 ds.cache_type = 'ALL'; ds.cache_directory = cache; ds.cache_frame_start = 1; ds.cache_frame_end = N
@@ -39,6 +41,7 @@ ds.alpha = -0.1; ds.beta = 8.0; ds.vorticity = 0.8;  # горячий газ в�
 ds.flame_vorticity = 1.4  # сильнее завихрения - клубится (у прежних 0,45 - гладкий шар)
 ds.burning_rate = 1.8; ds.flame_ignition = 1.5; ds.flame_max_temp = 3.0; ds.flame_smoke = 1.6; ds.flame_smoke_color = (0.12, 0.11, 0.1)  # пламя гаснет быстро, дым тротила - тёмный
 ds.use_dissolve_smoke = False
+if JE: ds.resolution_max = 288; ds.vorticity = 0.75; ds.beta = 2.0; ds.burning_rate = 2.2; ds.flame_smoke = 2.0; ds.flame_smoke_color = (0.05, 0.048, 0.045)
 if BI: ds.beta = 8.0; ds.alpha = -0.05; ds.vorticity = 0.9
 if DU: ds.beta = 0.6; ds.alpha = 0.25; ds.vorticity = 0.7  # пыль тяжелее воздуха: не всплывает, оседает
 ds.use_adaptive_timesteps = True; ds.timesteps_min = 2; ds.timesteps_max = 12; ds.cfl_condition = 3.0  # больше шагов: быстрый выброс не «размазывается»
@@ -47,13 +50,15 @@ em.modifiers.new('Выброс', 'PARTICLE_SYSTEM'); ps = em.particle_systems[0]
 st.count = 12; st.frame_start = 1; st.frame_end = 3; st.lifetime = 10; st.emit_from = 'FACE'; st.use_emit_random = True; ps.seed = seed
 st.normal_factor = 5.0; st.factor_random = 6.0; st.object_align_factor = (0, 0, 3.0)
 if BI: st.count = 9; st.frame_end = 6; st.normal_factor = 2.5; st.factor_random = 3.0; st.object_align_factor = (0, 0, 2.5)
+if JE: st.count = 18; st.frame_end = 2; st.lifetime = 18; st.normal_factor = 16.0; st.factor_random = 8.0; st.object_align_factor = (0, 0, 4.0); st.effector_weights.gravity = 0.3
 if DU: st.count = 16; st.frame_end = 4; st.normal_factor = 7.0; st.factor_random = 4.0; st.object_align_factor = (0, 0, 0.4); st.effector_weights.gravity = 0.5
 st.normal_factor *= VG; st.factor_random *= VG; st.object_align_factor = tuple(x * VG for x in st.object_align_factor)
-st.physics_type = 'NEWTON'; st.mass = 1; st.effector_weights.gravity = 0.15; st.drag_factor = 1.0; st.particle_size = 2.0 * G; st.size_random = 0.8; st.render_type = 'NONE'
+st.physics_type = 'NEWTON'; st.mass = 1; st.effector_weights.gravity = 0.15; st.drag_factor = 1.4 if JE else 1.0; st.particle_size = (1.6 if JE else 2.0) * G; st.size_random = 0.6 if JE else 0.8; st.render_type = 'NONE'
 fm = next(x for x in em.modifiers if x.type == 'FLUID'); f = fm.flow_settings  # газ - из частиц (сам ком не излучает)
 with bpy.context.temp_override(object=em, active_object=em): bpy.ops.object.modifier_move_to_index(modifier='Выброс', index=0)
-f.flow_type = 'BOTH'; f.flow_behavior = 'INFLOW'; f.flow_source = 'PARTICLES'; f.particle_system = ps; f.use_particle_size = True; f.particle_size = 2.0 * G
+f.flow_type = 'BOTH'; f.flow_behavior = 'INFLOW'; f.flow_source = 'PARTICLES'; f.particle_system = ps; f.use_particle_size = True; f.particle_size = (1.6 if JE else 2.0) * G
 f.fuel_amount = 1.4; f.temperature = 5.0; f.density = 1.2; f.smoke_color = (0.12, 0.11, 0.1); f.subframes = 3; f.use_initial_velocity = True; f.velocity_factor = 0.7
+if JE: f.fuel_amount = 0.5; f.temperature = 2.0; f.density = 1.6; f.smoke_color = (0.05, 0.048, 0.045)
 if not BU: f.flow_type = 'SMOKE'; f.temperature = 4.0 if BI else 0.3; f.density = 1.4
 # ядро: сам заряд - огненный шар первые 2 кадра (частицы рвут его край языками)
 bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=3, radius=1.6 * G, location=(0, 0, 0)); co = bpy.context.active_object; co.name = 'Ядро'; co.hide_render = True
@@ -74,8 +79,8 @@ nt.links.new(ramp.outputs['Color'], pv.inputs['Emission Color']); nt.links.new(m
 w = bpy.data.worlds.new('World'); sc.world = w; w.use_nodes = True
 # камера: ортогональная, 15° сверху, кадр 16 м вокруг центра облака (низ клуба не срезан)
 cam = bpy.data.objects.new('Камера', bpy.data.cameras.new('Камера')); sc.collection.objects.link(cam); sc.camera = cam
-cam.data.type = 'ORTHO'; cam.data.ortho_scale = (16.0 if BU else 19.0 if BI else 22.0) * G
-tgt = Vector((0, 0, (1.5 if BU else 4.0 if BI else 3.5) * G)); el = math.radians(15); d = 80 * G
+cam.data.type = 'ORTHO'; cam.data.ortho_scale = (40.0 if JE else 16.0 if BU else 19.0 if BI else 22.0) * G
+tgt = Vector((0, 0, (3.0 if JE else 1.5 if BU else 4.0 if BI else 3.5) * G)); el = math.radians(15); d = 80 * G
 cam.location = tgt + Vector((0, -d * math.cos(el), d * math.sin(el))); cam.rotation_euler = (tgt - cam.location).to_track_quat('-Z', 'Y').to_euler(); cam.data.clip_end = 400
 sc.render.film_transparent = True; sc.render.resolution_x = sc.render.resolution_y = PX
 sc.cycles.samples = 64; sc.cycles.use_denoising = True; sc.cycles.volume_bounces = 1; sc.cycles.max_bounces = 4; sc.cycles.volume_step_rate = 0.5  # шаг мельче - видна мелкая фактура

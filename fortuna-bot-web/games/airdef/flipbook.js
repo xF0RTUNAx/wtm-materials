@@ -58,7 +58,11 @@ void main() {
   vec4 A = mix(texture2D(map, cell(vF.x)), texture2D(map, cell(vF.y)), vF.z), B = mix(texture2D(mapB, cell(vF.x)), texture2D(mapB, cell(vF.y)), vF.z);
   // эрозия края (Mark 2026-11-26: «чёткие границы», «купол»): тонкий дым по краю выедается шумом неровно, плотное ядро остаётся; узор свой у каждого взрыва
   // (vC.x как зерно) и медленно ползёт - край рваный, клочьями, а не гладкая полусфера симуляции
-  vec2 nq = vec2(vUv.x * uAsp, vUv.y) * 4.5 + vec2(vC.x * 91.0, vF.x * 0.035); float nz = fbN(nq) * 0.55 + fbN(nq * 2.3 + 3.1) * 0.3 + fbN(nq * 5.7 + 7.7) * 0.15;
+  vec2 nq = vec2(vUv.x * uAsp, vUv.y) * 4.5 + vec2(vC.x * 91.0, vF.x * 0.035);
+#ifdef ROT
+  nq += vec2(vE * 0.7, -vE * 1.6); // пока клуб тает, узор рваного края ползёт (в hold кадр съёмки стоит - край не должен застывать)
+#endif
+  float nz = fbN(nq) * 0.55 + fbN(nq * 2.3 + 3.1) * 0.3 + fbN(nq * 5.7 + 7.7) * 0.15;
   float th = nz * 0.58;
 #ifdef ROT
   // клуб тает с краёв (Mark 2026-11-26: «заранее начать плавное исчезание… рассеивание с краёв»): порог плотности растёт с возрастом - тонкий край
@@ -67,13 +71,17 @@ void main() {
 #endif
   float ea = clamp((A.a - th) / max(1.0 - th, 0.05), 0.0, 1.0);
   vec4 t = vec4(0.0, 0.0, 0.0, 1.0 - pow(1.0 - ea, 1.8)); // плотность ×1,7: юбка пыли и столб в первые секунды непрозрачны (сквозь них было видно, Mark 2026-11-26); край - мягкий уже в листе
+#ifdef ROT
+  // чёткость края (|iR.y| - 1): разрыв в воздухе - плотный рваный комок, а не пушистый «плюш» (Mark 2026-11-26)
+  t.a = mix(t.a, smoothstep(0.12, 0.6, ea), clamp(abs(vR.y) - 1.0, 0.0, 1.0));
+#endif
   t.a *= smoothstep(0.0, 0.16, min(vUv.x, 1.0 - vUv.x)) * smoothstep(0.0, 0.1, 1.0 - vUv.y); // к краям листа - на нет (облако расползается в фазе рассеивания - прямые края листа были видны) // овальная маска (у стенок области симуляции дым копится ровной стеной): облако, вышедшее за кадр съёмки, не режется прямыми краями листа
   if (t.a * vA < 0.004) discard;
   vec3 La = A.rgb * A.rgb, Lb = B.rgb * B.rgb; float lf = 0.25 * (La.r + La.g + La.b + Lb.r);
   vec3 s = normalize((viewMatrix * vec4(uSunV, 0.0)).xyz);
 #ifdef ROT
   // свет в осях повёрнутого (и отражённого) клуба: съёмка знает только свои «справа» и «сверху»
-  s.xy = mat2(cos(vR.x), -sin(vR.x), sin(vR.x), cos(vR.x)) * s.xy; s.x *= vR.y;
+  s.xy = mat2(cos(vR.x), -sin(vR.x), sin(vR.x), cos(vR.x)) * s.xy; s.x *= sign(vR.y);
 #endif
   // на солнце, в осях камеры: x - вправо, y - вверх, z - к зрителю (лист смотрит на камеру)
   float dirL = La.r * max(s.x, 0.0) + La.g * max(-s.x, 0.0) + La.b * max(s.y, 0.0) + Lb.r * max(-s.y, 0.0) + lf * max(s.z, 0.0) + Lb.g * max(-s.z, 0.0) * 0.6; // просвет против солнца - слабее (светлый контур)
@@ -160,20 +168,22 @@ export function createBook(scene, cfg, max = 64) {
     add(p, h, fps, o = {}) {
       if (live.length >= max) live.shift(); // переполнение - старейший уходит
       const it = { x: p.x, y: p.y, z: p.z, h, w: h * asp * (o.wk || 1), fps, t: o.t0 || 0, a: 1, c: o.col || [0.3, 0.27, 0.23] };
-      if (ROT) Object.assign(it, { e0: o.e0, sk: o.skip || 0, r: o.rot || 0, fl: o.flip ? -1 : 1, du: o.dust || 0, fi: o.fire == null ? 1 : o.fire, vx: o.v ? o.v[0] : 0, vy: o.v ? o.v[1] : 0, vz: o.v ? o.v[2] : 0, dr: o.drag || 0, gr: o.grow || 0, fin: o.fin || 0, t0: Math.max(0, o.t0 || 0), age: 0, hd: o.hold });
+      if (ROT) Object.assign(it, { e0: o.e0, sh: o.sharp || 0, sk: o.skip || 0, r: o.rot || 0, fl: o.flip ? -1 : 1, du: o.dust || 0, fi: o.fire == null ? 1 : o.fire, vx: o.v ? o.v[0] : 0, vy: o.v ? o.v[1] : 0, vz: o.v ? o.v[2] : 0, dr: o.drag || 0, gr: o.grow || 0, fin: o.fin || 0, t0: Math.max(0, o.t0 || 0), age: 0, hd: o.hold });
       live.push(it); return it;
     },
     remove(it) { const i = live.indexOf(it); if (i >= 0) live.splice(i, 1); },
     clear() { live.length = 0; geo.instanceCount = 0; },
     // SIX: свет сцены по частям (units-render): sunV - направление на солнце в мире, sunC / skyC / gndC - цвет × сила
     lights(sunV, sunC, skyC, gndC) { if (!SIX) return; const U = mat.uniforms; U.uSunV.value.copy(sunV); U.uSunC.value.copy(sunC); U.uSkyC.value.copy(skyC); U.uGndC.value.copy(gndC); },
-    update(dt, light, fog) {
+    update(dt, light, fog, wind) {
       let c = 0;
       for (let i = live.length - 1; i >= 0; i--) {
         const it = live[i]; it.t += dt; if (it.t < 0) continue;
         if (it.sk) { it.t += it.sk / it.fps; it.sk = 0; } // skip - клуб показывается с середины съёмки (начало - маленький колючий шарик), проявляется по fin
         if (ROT) { // клуб летит: скорость гаснет (сопротивление воздуха, drag 1/с), рост - сверх съёмки
-          it.age += dt; const e = Math.exp(-it.dr * dt); it.vx *= e; it.vy *= e; it.vz *= e; it.x += it.vx * dt; it.y += it.vy * dt; it.z += it.vz * dt; }
+          it.age += dt; const e = Math.exp(-it.dr * dt); it.vx *= e; it.vy *= e; it.vz *= e; it.x += it.vx * dt; it.y += it.vy * dt; it.z += it.vz * dt;
+          // ветер карты сносит облако: свежий выброс держит свою скорость, через 2-3 с дым уже идёт с воздухом (выше - сильнее)
+          if (wind) { const w = Math.min(1, it.age / 2.5) * (it.du > 0.8 ? 0.5 : 1); it.x += wind.x * w * dt; it.z += wind.z * w * dt; } }
         let f = TM ? frameAt(cfg.loop ? (it.t * it.fps) % LOOPT : it.t * it.fps) : it.t * it.fps;
         // hold - облако после последнего кадра не пропадает: ещё hold с расползается (×1,7), поднимается и тает (листы со светом; раньше его подхватывали
         // частицы - тёмные размытые шары, а сам лист растворялся за пару секунд, Mark 2026-11-26)
@@ -190,8 +200,8 @@ export function createBook(scene, cfg, max = 64) {
         if (ROT) { // клуб: проявление, рост по своей скорости, таяние с краёв - с 55 % съёмки до конца hold (раздувание после съёмки - малое)
           if (it.fin) { const x = Math.min(1, it.age / it.fin); a *= x * x * (3 - 2 * x); }
           const tEnd = TM[n - 1] / it.fps, tt = it.t, e0 = tEnd * (it.e0 == null ? 0.55 : it.e0), e1 = tEnd + (HD || 0), x = Math.min(1, Math.max(0, (tt - e0) / Math.max(0.1, e1 - e0))), e = x * x * (3 - 2 * x);
-          gk = (1 + 0.1 * hk) * (1 + it.gr * it.age); a = it.a * (1 - e * e * 0.6) * (it.fin ? Math.min(1, it.age / it.fin) : 1);
-          aR.setXYZW(c, it.r, it.fl, it.du, it.fi); aE.setX(c, e); } aPos.setXYZ(c, it.x, it.y + hk * it.h * 0.04, it.z); aSize.setXY(c, it.w * gk, it.h * gk); aF.setXYZW(c, f0, f1, f - f0, a); if (aC) aC.setXYZ(c, it.c[0], it.c[1], it.c[2]); c++;
+          gk = (1 + 0.12 * hk) * (1 + it.gr * Math.min(it.age, 6)); a = it.a * (1 - e * e * 0.5) * (it.fin ? Math.min(1, it.age / it.fin) : 1);
+          aR.setXYZW(c, it.r, it.fl * (1 + (it.sh || 0)), it.du, it.fi); aE.setX(c, e); } aPos.setXYZ(c, it.x, it.y + hk * it.h * 0.04, it.z); aSize.setXY(c, it.w * gk, it.h * gk); aF.setXYZW(c, f0, f1, f - f0, a); if (aC) aC.setXYZ(c, it.c[0], it.c[1], it.c[2]); c++;
       }
       geo.instanceCount = c; mesh.visible = pre.visible = c > 0;
       if (c) { aPos.needsUpdate = aSize.needsUpdate = aF.needsUpdate = true; if (aC) aC.needsUpdate = true; if (aR) { aR.needsUpdate = true; aE.needsUpdate = true; } }

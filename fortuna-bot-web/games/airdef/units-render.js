@@ -666,30 +666,35 @@ export function createFx(scene, P) {
     const n = (k) => Math.max(1, Math.round(k * lo));
     const blocked = (x, z) => { if (!api.bldAt) return false; for (let k = 1; k <= 4; k++) if (api.bldAt(p.x + (x - p.x) * k / 4, p.z + (z - p.z) * k / 4) > 0) return true; return false; };
     if (air) {
-      // разрыв в воздухе - один комок (россыпь шаров выглядела «помпонами»): клубы внахлёст, разлёт малый
-      for (let i = 0; i < n(5); i++) { const a = rnd() * TAU, e = (rnd() - 0.5) * 2, v = Ht * (0.04 + rnd() * 0.08);
-        one('bu', p.x + Math.cos(a) * Ht * 0.03, p.y + e * Ht * 0.03, p.z + Math.sin(a) * Ht * 0.03, Ht * (0.75 + rnd() * 0.2), { v: [Math.cos(a) * v, e * v, Math.sin(a) * v], drag: 1.2, rate: 1 + rnd() * 0.3, fire: 1, dust: 0, t0: -rnd() * 0.05, grow: 0.02, hold: 1.8 + rnd() * 0.6 }); }
-      for (let i = 0; i < n(4); i++) { const a = rnd() * TAU, d = Ht * (0.02 + rnd() * 0.06);
-        one('bi', p.x + Math.cos(a) * d, p.y + (rnd() - 0.4) * Ht * 0.15, p.z + Math.sin(a) * d, Ht * (0.55 + rnd() * 0.25), { v: [Math.cos(a) * Ht * 0.06, Ht * 0.04, Math.sin(a) * Ht * 0.06], drag: 0.8, rate: 0.85 + rnd() * 0.2, fire: 0, dust: 0, t0: -(0.25 + i * 0.22), fin: 0.25, grow: 0.02, hold: 2.2 + rnd() * 0.8 }); }
+      const AIRC = [0.012, 0.012, 0.013]; // сажа разрыва почти чёрная: светлее - на солнце комок выходил бурым «плюшевым»
+      // разрыв в воздухе (Mark 2026-11-26: «неестественный»): нагретой земли нет - столба и «гриба» нет; вспышка и огненный шар на доли секунды,
+      // тёмный рваный клуб быстро раздувается (осколки и газ - во все стороны, воздух их тормозит), дальше висит, сносится ветром и медленно тает
+      for (let i = 0; i < n(4); i++) { const a = rnd() * TAU, e = (rnd() - 0.5) * 1.6, v = Ht * (0.25 + rnd() * 0.2);
+        one('bu', p.x, p.y, p.z, Ht * (0.6 + rnd() * 0.15), { v: [Math.cos(a) * v, e * v, Math.sin(a) * v], drag: 2.2, rate: 1.05 + rnd() * 0.3, fire: 1, dust: 0.6, col: AIRC, sharp: 0.85, t0: -rnd() * 0.03, grow: 0.03, hold: 6 + rnd() * 2, e0: 0.8 }); }
+      // оболочка тёмного дыма: те же съёмки без огня, с середины (уже клубы), чуть позже - облако становится неровным, без «помпонов»
+      // вспышка: огненный шар доли секунды (светится сам, поверх дыма)
+      for (let i = 0; i < 3; i++) fire.emit(p.x + (rnd() - 0.5) * Ht * 0.1, p.y + (rnd() - 0.5) * Ht * 0.1, p.z + (rnd() - 0.5) * Ht * 0.1, 0, 0, 0, 1, 0.75, 0.4, 1, Ht * (0.35 + rnd() * 0.15), Ht * 2.2, 0.22 + rnd() * 0.08, 0, 0);
+      for (let i = 0; i < n(8); i++) { const a = rnd() * TAU, e = (rnd() - 0.5) * 1.4, v = Ht * (0.15 + rnd() * 0.3);
+        one('bu', p.x + Math.cos(a) * Ht * 0.1, p.y + e * Ht * 0.1, p.z + Math.sin(a) * Ht * 0.1, Ht * (0.35 + rnd() * 0.4), { v: [Math.cos(a) * v, e * v, Math.sin(a) * v], drag: 1.8, rate: 0.9 + rnd() * 0.2, fire: 0, dust: 0.6, col: AIRC, sharp: 0.85, t0: -(0.05 + rnd() * 0.15), skip: 0.2 + rnd() * 0.25, fin: 0.2, grow: 0.035, hold: 7 + rnd() * 3, e0: 0.8 }); }
       return Ht * 1.6;
     }
     // огненное ядро у точки удара
     for (let i = 0; i < n(3); i++) { const a = rnd() * TAU, d = rnd() * Ht * 0.05;
-      one('bu', p.x + Math.cos(a) * d, p.y + Ht * (0.08 + rnd() * 0.06), p.z + Math.sin(a) * d, Ht * (0.55 + rnd() * 0.15), { v: [Math.cos(a) * Ht * 0.04, Ht * (0.06 + rnd() * 0.05), Math.sin(a) * Ht * 0.04], drag: 0.6, rate: 0.95 + rnd() * 0.25, fire: 1, dust: 0.1, t0: -rnd() * 0.05, grow: 0.02, hold: 1.6 + rnd() * 0.6 }); }
+      one('bu', p.x + Math.cos(a) * d, p.y + Ht * (0.08 + rnd() * 0.06), p.z + Math.sin(a) * d, Ht * (0.55 + rnd() * 0.15), { v: [Math.cos(a) * Ht * 0.04, Ht * (0.06 + rnd() * 0.05), Math.sin(a) * Ht * 0.04], drag: 0.6, rate: 0.95 + rnd() * 0.25, fire: 1, dust: 0.1, t0: -rnd() * 0.05, grow: 0.02, hold: 3 + rnd() * 1 }); }
     // шапка: первые и самые быстрые, наверху расходятся
     for (let i = 0, N = n(5); i < N; i++) { const a = (i + rnd() * 0.6) / N * TAU, vy = Ht * (0.72 + rnd() * 0.16), vl = Ht * (0.07 + rnd() * 0.05);
-      one(i < 2 ? 'bu' : 'bi', p.x + Math.cos(a) * Ht * 0.04, p.y + Ht * 0.12, p.z + Math.sin(a) * Ht * 0.04, Ht * (0.68 + rnd() * 0.2), { v: [Math.cos(a) * vl, vy, Math.sin(a) * vl], drag: 1.0, rate: 0.85 + rnd() * 0.25, fire: i < 2 ? 0.6 : 0, dust: 0.12, t0: -(0.04 + rnd() * 0.08), grow: 0.035, hold: 2 + rnd() * 0.8 }); }
+      one(i < 2 ? 'bu' : 'bi', p.x + Math.cos(a) * Ht * 0.04, p.y + Ht * 0.12, p.z + Math.sin(a) * Ht * 0.04, Ht * (0.68 + rnd() * 0.2), { v: [Math.cos(a) * vl, vy, Math.sin(a) * vl], drag: 1.0, rate: 0.85 + rnd() * 0.25, fire: i < 2 ? 0.6 : 0, dust: 0.12, t0: -(0.04 + rnd() * 0.08), grow: 0.035, hold: 6 + rnd() * 2, e0: 0.75 }); }
     // столб: клуб за клубом от земли, каждый следующий медленнее - останавливаются всё ниже, столб сплошной
     // клубов много и они крупные: соседние по высоте перекрываются больше чем наполовину (реже - «бусы» из шаров)
     for (let i = 0, N = n(13); i < N; i++) { const q = i / Math.max(1, N - 1), a = rnd() * TAU, d = Ht * (0.02 + rnd() * 0.05), vy = Ht * (0.62 - 0.45 * q) * (0.92 + rnd() * 0.16);
-      one(i < 2 ? 'bu' : 'bi', p.x + Math.cos(a) * d, p.y + Ht * 0.06, p.z + Math.sin(a) * d, Ht * (0.52 - 0.12 * q) * (0.9 + rnd() * 0.2), { v: [Math.cos(a) * Ht * 0.03, vy, Math.sin(a) * Ht * 0.03], drag: 0.95, rate: 0.85 + rnd() * 0.25, fire: i < 2 ? 0.5 : 0, dust: 0.25 + 0.35 * q, t0: -(0.08 + i * 0.08), fin: 0.12, grow: 0.03, hold: 1.8 + rnd() * 0.8 }); }
+      one(i < 2 ? 'bu' : 'bi', p.x + Math.cos(a) * d, p.y + Ht * 0.06, p.z + Math.sin(a) * d, Ht * (0.52 - 0.12 * q) * (0.9 + rnd() * 0.2), { v: [Math.cos(a) * Ht * 0.03, vy, Math.sin(a) * Ht * 0.03], drag: 0.95, rate: 0.85 + rnd() * 0.25, fire: i < 2 ? 0.5 : 0, dust: 0.25 + 0.35 * q, t0: -(0.08 + i * 0.08), fin: 0.12, grow: 0.03, hold: 5 + rnd() * 2, e0: 0.7 }); }
     // пыль ударной волны - валом по земле; упёрлась в дом - стоит у стены
     // мельче и чаще, внахлёст по кругу и в два ряда (крупные одиночные - отдельные бугры), тает раньше столба - край вала рваный
     for (let i = 0, N = n(13); i < N; i++) { const a = (i + rnd() * 0.8) / N * TAU, r0 = Ht * (0.03 + (i % 2) * 0.07), v = Ht * (0.24 + rnd() * 0.16), dr = 1.5, L = v / dr, k = blocked(p.x + Math.cos(a) * (r0 + L), p.z + Math.sin(a) * (r0 + L)) ? 0.25 : 1;
-      one('du', p.x + Math.cos(a) * r0, p.y, p.z + Math.sin(a) * r0, Ht * (0.3 + rnd() * 0.2), { wk: 1.35, v: [Math.cos(a) * v * k, 0, Math.sin(a) * v * k], drag: dr, rate: 0.8 + rnd() * 0.2, fire: 0, dust: 0.85, t0: -rnd() * 0.06, fin: 0.1, grow: 0.03, hold: 1.6 + rnd() * 0.8, e0: 0.25, alpha: 0.72 }); }
+      one('du', p.x + Math.cos(a) * r0, p.y, p.z + Math.sin(a) * r0, Ht * (0.3 + rnd() * 0.2), { wk: 1.35, v: [Math.cos(a) * v * k, 0, Math.sin(a) * v * k], drag: dr, rate: 0.8 + rnd() * 0.2, fire: 0, dust: 0.85, t0: -rnd() * 0.06, fin: 0.1, grow: 0.03, hold: 3.5 + rnd() * 1.5, e0: 0.4, alpha: 0.72 }); }
     // пыль у основания столба (поднятая следом): закрывает стык столба с землёй
     for (let i = 0; i < n(4); i++) { const a = rnd() * TAU, v = Ht * 0.08;
-      one('du', p.x + Math.cos(a) * Ht * 0.08, p.y, p.z + Math.sin(a) * Ht * 0.08, Ht * (0.5 + rnd() * 0.15), { wk: 1.2, v: [Math.cos(a) * v, 0, Math.sin(a) * v], drag: 0.8, rate: 0.8, fire: 0, dust: 0.7, t0: -(0.5 + rnd() * 0.6), fin: 0.4, grow: 0.02, hold: 2.5 + rnd() * 0.8 }); }
+      one('du', p.x + Math.cos(a) * Ht * 0.08, p.y, p.z + Math.sin(a) * Ht * 0.08, Ht * (0.5 + rnd() * 0.15), { wk: 1.2, v: [Math.cos(a) * v, 0, Math.sin(a) * v], drag: 0.8, rate: 0.8, fire: 0, dust: 0.7, t0: -(0.5 + rnd() * 0.6), fin: 0.4, grow: 0.02, hold: 5 + rnd() * 1.5 }); }
     return Ht / 0.8;
   };
   const exType = (R, kind) => (kind === 'plane' ? 'plane' : kind === 'air' ? 'air' : R < 20 ? 'light' : R < 40 ? 'medium' : R < 60 ? 'heavy' : 'super');
@@ -735,7 +740,7 @@ export function createFx(scene, P) {
       if (xb && xb.ready) { // лист ещё грузится - прежний взрыв (не пустота) // свой взрыв по типу боевой части: лист кадров; комья грунта - частицами (летят в объёме, в листе - их шлейфы)
         // размер - ×1,5 к физическому: снято в масштабе (у ФАБ-500 шар ≈ 40 м), но с высоты удар должен читаться (прежний кадр был 260 м)
         let j, H, rate;
-        if (sw) { H = swarm(p, R, kind); j = { anchor: [0.5, 0.8], times: [7], frames: 1 }; rate = 1; } // рой: облако живёт ≈ 7 с (съёмка 4 с + hold), дальше - остаточные клубы
+        if (sw) { H = swarm(p, R, kind); j = { anchor: [0.5, 0.8], times: [12], frames: 1 }; rate = 1; } // рой: клубы держатся до 8-11 с (съёмка 3-6 с + hold), остаточные клубы проявляются с ≈ 6,6 с
         else { j = x6 ? XJ6[xt] : XJ[xt]; const k = R / j.ref; H = (x6 ? j.height : j.width) * k * EXK; rate = Math.min(1.6, Math.max(0.6, Math.sqrt(1 / k)));
           xb.add(p, H, rate, { col: api.groundCol ? api.groundCol(p) : undefined }); } // цвет пыли - грунт под взрывом (main.js groundCol)
         if (kind !== 'air' && kind !== 'plane' && R >= 30) api.clods(p, R, kind === 'tbm' ? 1.4 : 1);
@@ -754,13 +759,13 @@ export function createFx(scene, P) {
         const WAVES = 6;
         // листы со светом: облако подхватывают клубы в объёме - появляются, пока лист тает (последние 6 с листа и его hold), живут до минуты
         if (x6) {
-          const an = j.anchor[1], top = H * an, gc0 = (gc || [0.3, 0.27, 0.23]).map((v, i) => (v * 0.4 + [0.22, 0.19, 0.15][i] * 0.6) * 0.6), /* остаток пыли - грунт со снегом или бетоном, в тени облака (чистый снег светился белыми пятнами) */ lo = P.fxLo ? 0.5 : 1, Tp = T * 0.55, rnd = Math.random;
+          const an = j.anchor[1], top = H * an, /* рой держится дольше - остаток проявляется позже */ gc0 = (gc || [0.3, 0.27, 0.23]).map((v, i) => (v * 0.4 + [0.22, 0.19, 0.15][i] * 0.6) * 0.6), /* остаток пыли - грунт со снегом или бетоном, в тени облака (чистый снег светился белыми пятнами) */ lo = P.fxLo ? 0.5 : 1, Tp = T * 0.55, rnd = Math.random;
           // клуб не внутри дома и не за стеной от взрыва (пыль упирается в дома): путь от центра взрыва до клуба - по 4 точкам, нет постройки
           const free = (x, z) => { if (!api.bldAt) return true; for (let k = 1; k <= 4; k++) if (api.bldAt(P0.x + (x - P0.x) * k / 4, P0.z + (z - P0.z) * k / 4) > 0) return false; return true; };
           const put = (n, y0, y1, rr, s0, s1, a, dust, life, vy, flat) => { for (let i = 0, tr = 0; i < Math.round(n * lo) && tr < n * 4; tr++) { const a2 = rnd() * 6.283, d = Math.sqrt(rnd()) * rr;
             if (!free(P0.x + Math.cos(a2) * d, P0.z + Math.sin(a2) * d)) continue; i++;
             CP.add({ x: P0.x + Math.cos(a2) * d, y: P0.y + y0 + rnd() * (y1 - y0), z: P0.z + Math.sin(a2) * d }, { s0: s0 * (0.8 + rnd() * 0.4), s1: s1 * (0.8 + rnd() * 0.4), life: life * (0.8 + rnd() * 0.4), a, dust, col: gc0, v: [Math.cos(a2) * 0.6, vy * (0.6 + rnd() * 0.8), Math.sin(a2) * 0.6], flat, tIn: 2 + rnd() * 1.5, delay: Tp + rnd() * 1.2 }); } };
-          if (air) put(14, -H * 0.1, H * 0.1, H * 0.14, H * 0.14, H * 0.3, 0.8, 0.05, 45, 0.25, 1);
+          if (air) put(sw ? 6 : 14, -H * 0.1, H * 0.1, H * 0.14, H * 0.14, H * 0.3, sw ? 0.45 : 0.8, 0.05, 45, 0.25, 1); /* рой в воздухе висит сам до 10 с - остаток лишь редкая дымка */
           else {
             put(26, top * 0.5, top * 0.9, H * 0.22, H * 0.14, H * 0.3, 0.85, 0.1, 70, 0.3, 0.9); // шапка: густая, медленно расползается
             put(34, top * 0.08, top * 0.6, H * 0.2, H * 0.13, H * 0.28, 0.85, 0.3, 60, 0.15, 1); // тело облака от земли до шапки (облако листа - сплошное, без провала посередине)
@@ -987,8 +992,8 @@ export function createFx(scene, P) {
       LT.set(0.6, 0.6, 0.6); if (hemi) LT.set(hemi.color.r, hemi.color.g, hemi.color.b).multiplyScalar(hemi.intensity * 0.55);
       if (sunL) LT.x += sunL.color.r * sunL.intensity * 0.35, LT.y += sunL.color.g * sunL.intensity * 0.35, LT.z += sunL.color.b * sunL.intensity * 0.35;
       if (sunL && hemi) { SUNW.copy(sunL.position).sub(sunL.target.position).normalize(); SUNC.copy(sunL.color).multiplyScalar(sunL.intensity); SKYC.copy(hemi.color).multiplyScalar(hemi.intensity); GNDC.copy(hemi.groundColor).multiplyScalar(hemi.intensity); for (const t in XB6) XB6[t].lights(SUNW, SUNC, SKYC, GNDC); CP.lights(SUNW, SUNC, SKYC, GNDC); }
-      CP.update(dt, scene.fog);
-      for (const b of books) b.update(dt, LT, scene.fog);
+      const WD = api.wind ? api.wind() : null; CP.update(dt, scene.fog, WD);
+      for (const b of books) b.update(dt, LT, scene.fog, WD);
       if (PF) PF.update(dt, LT);
       if (PT) PT.update(dt, LT);
       PL.update(dt, LT, null, sunL ? V.copy(sunL.position).sub(sunL.target.position).normalize() : null);

@@ -1566,7 +1566,7 @@ setInterval(() => {
   // (attachBridgeSegs, attachAirfield ставят их у аэродрома города - на зиме и осени они стояли в поле)
   for (const n of new Set([...city.objects.flatMap((o) => (o.models || []).map((q) => q.m)), ...(C.G.bldNames || []).filter(isObjModel),
     ...(city.kind === 'city' ? ['br_seg', 'af_appr'] : [])])) wantModel(n); // топливозаправщики у ангаров (af_fuel) не нужны - у сцены аэродрома свои
-  C.fx = createFx(scene, P);
+  C.fx = createFx(scene, P); C.fx.wind = () => C.windV || null; // ветер карты сносит дым взрывов (units-render)
   // цвет пыли взрыва - грунт под ним (линейный): снег, торф топи, бетон и асфальт в городе, суглинок (Mark 2026-11-26: взрыв «не взаимодействует с окружением»)
   C.fx.bldAt = (x, z) => (C.city ? C.city.bldAt(x, z) : 0); // клубы остатка облака не ставятся в дома и за стены (cloudpuffs)
   C.fx.groundCol = (p) => { const cy = C.city; if (!cy) return [0.18, 0.15, 0.11];
