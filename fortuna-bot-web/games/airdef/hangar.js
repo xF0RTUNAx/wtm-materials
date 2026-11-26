@@ -16,21 +16,67 @@ const FULL_W = 16, FULL_H = 9, AZ0 = +new URLSearchParams(location.search).get('
 const JACK_TOP = 1.7, JACK_HEAD = 0.125, JACK_MAX = 2.5; // ПАСПОРТ.json, подъёмник версии 2
 const MODEL_WAIT = 12000, PICK_WAIT = 180, KEEP_LOOKED = 3; // модель всё не приходит - показать, что есть; быстрое листание ленты не качает каждый самолёт; на телефоне в памяти - последние просмотренные
 const BLOB_GEO = () => new THREE.PlaneGeometry(2.6, 2.6).rotateX(-Math.PI / 2);
+// Новогодний ангар (Mark 2026-11-26, fuel-builder; tools/airdef-hangar/ny-pack.py): тот же зал в сумерках со снегом, гирлянды мигают, цветные нитки меняют цвет,
+// за воротами и в фонарях крыши идёт снег. С 1 декабря по 14 января; ?ny=1 / ?ny=0 - включить / выключить. Схема сборщика («Новый год/СОСТОЯНИЕ.md»), петля 12 с:
+// кадр = база + Σ Ii·тёплые_i + Σ Ci·цветные_i. Самолёт считается по-прежнему только при изменениях, анимируется лишь фон (24-30 кадров/с, телефон - меньше хлопьев)
+const NYQ = new URLSearchParams(location.search).get('ny');
+const NY = NYQ === '1' || (NYQ !== '0' && (() => { const d = new Date(), m = d.getMonth(), k = d.getDate(); return (m === 11 && k >= 1) || (m === 0 && k <= 14); })());
+const NY_PAL = [[1, 0.12, 0.08], [1, 0.55, 0.08], [0.25, 1, 0.25], [0.22, 0.45, 1], [0.85, 0.25, 1], [1, 0.3, 0.55]];
+const NY_STILL = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches; // без движения: лампы горят, снег стоит
+function nyLevels(t, I, Cv) {
+  for (let i = 0; i < 4; i++) {
+    const x = 0.5 + 0.5 * Math.cos(2 * Math.PI * (t / 6 - i / 4)); I.setComponent(i, NY_STILL ? 0.8 : 0.06 + 0.94 * x * x * (3 - 2 * x));
+    const st = t / 2 + 1.5 * i, k = Math.floor(st), f = st - k, q = Math.min(1, Math.max(0, (f - 0.6) / 0.4)), w = q * q * (3 - 2 * q), A = NY_PAL[k % 6], B = NY_PAL[(k + 1) % 6];
+    Cv[i].set(A[0] * (1 - w) + B[0] * w, A[1] * (1 - w) + B[1] * w, A[2] * (1 - w) + B[2] * w);
+  }
+}
+// снег: хлопья в области маски (кадр 1600 × 900 - «точки сборщика»), дальность 3,5-220 м, ветер с порывами, кружение; не виден там, где предмет ближе (глубина улицы);
+// вторая стая - в стёклах фонарей крыши (без глубины). Положение считает видеокарта по времени - на процессоре ничего
+const SNOW_VS = `attribute vec4 aP; attribute vec4 aS; uniform float uT, uF, uPx; uniform vec4 uR0, uR1, uWin;
+varying vec2 vUv; varying float vA, vZ, vSet; varying vec3 vC;
+void main() {
+  vec4 R = aS.w > 0.5 ? uR1 : uR0; float z = aP.z, inv = uF / z;
+  float ug = 6.2832 * uT / 12.0 - aP.x / R.z * 1.3;
+  float gi = 1.9099 * (-0.25 * cos(ug + 0.4) - 0.05 * cos(2.0 * ug + 1.7) - 0.0167 * cos(3.0 * ug + 0.2));
+  float wob = aS.y * inv;
+  float x = mod(aP.x + 1.4 * inv * (uT + gi) + wob * sin(6.2832 * floor(1.0 + aS.x * 3.0) * uT / 12.0 + aS.x * 40.0), R.z);
+  float y = mod(aP.y + aS.z * inv * uT + 0.35 * wob * sin(6.2832 * floor(1.0 + fract(aS.x * 7.0) * 3.0) * uT / 12.0 + aS.x * 90.0), R.w);
+  vec2 ip = R.xy + vec2(x, y), uv = vec2(ip.x / 1600.0, 1.0 - ip.y / 900.0);
+  gl_Position = vec4((uv - uWin.xy) / uWin.zw, 0.0, 1.0);
+  float rp = max(aP.w * inv * 0.5, 0.35) * uPx, ps = max(2.0, rp * 2.0 + 1.0); gl_PointSize = ps;
+  float dens = 0.55 + 0.45 * (0.5 + 0.5 * sin(6.2832 * (2.0 * uT / 12.0) - x / R.z * 2.6 + 1.1));
+  vA = (exp(-z / 150.0) + 0.18) * clamp(aP.w / 0.006, 0.6, 1.7) * dens * 0.55 * min(1.0, pow(rp * 2.0 / ps, 2.0) * 1.6);
+  float warm = aS.w > 0.5 ? 0.0 : exp(-pow((z - 9.0) / 9.0, 2.0)) * (0.5 + 0.5 * fract(aS.x * 13.0));
+  vC = vec3(0.80 + 0.18 * warm, 0.83 + 0.07 * warm, 0.92 - 0.12 * warm) * (0.55 + 0.45 * exp(-z / 120.0));
+  vUv = uv; vZ = z; vSet = aS.w;
+}`;
+const SNOW_FS = `uniform sampler2D mT; varying vec2 vUv; varying float vA, vZ, vSet; varying vec3 vC;
+void main() {
+  vec2 q = gl_PointCoord * 2.0 - 1.0; float r = dot(q, q); if (r > 1.0) discard;
+  float vis;
+  if (vSet < 0.5) { float m = texture2D(mT, vec2(vUv.x * 0.5, 0.5 + vUv.y * 0.5)).r, d = texture2D(mT, vec2(vUv.x * 0.5, vUv.y * 0.5)).r; vis = step(0.5, m) * step(vZ, d * d * 600.0); }
+  else vis = step(0.5, texture2D(mT, vec2(0.5 + vUv.x * 0.5, 0.5 + vUv.y * 0.5)).r);
+  float a = vA * vis * (1.0 - smoothstep(0.15, 1.0, r)); if (a < 0.003) discard;
+  gl_FragColor = vec4(vC, min(a, 0.95));
+}`;
 
 export function createHangar(C, renderer) {
   const Q = (() => { try { return new URLSearchParams(location.search); } catch (_) { return new URLSearchParams(''); } })();
   let can = !!(renderer && renderer.capabilities && renderer.setRenderTarget && renderer.getDrawingBufferSize) && Q.get('oldbg') !== '1' && typeof document !== 'undefined' && !!document.createElementNS && !!document.getElementById('menu'); // createElementNS нет у заглушки DOM в стендах
   let inited = false, on = false, dirty = true, hs, cam, pivot, holder, shadow, jackG, bg, blitS, blitC, blit, rt = null, rtW = 0, rtH = 0;
+  let nyS = null, snowM = null, snowP = null, snowKey = null, blitP = null, blitPS = null, nyT0 = performance.now(), nyLast = 0;
   let viewKey = 'fighter', V = VIEWS.fighter, texA = null, texB = null, fade = 1;
   const TEX = {};
   let nFrames = 0, baseZ = 1, az = AZ0, tAz = AZ0, vel = 0, drag = null, moved = 0, z = 1, tZ = 1, cx = 0.5, cy = 0.5, tCx = 0.5, tCy = 0.5, hw = 0.5, hh = 0.5;
   let want = null, cur = null, wantT = 0, built = false, groups = [], focusKey = null, panelW = () => 0;
   const tmp = new THREE.Vector3(), UP = new THREE.Vector3(0, 1, 0), TOUCH = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
+  const NYF = NY_STILL ? 0 : TOUCH ? 24 : 30; // темп новогоднего фона, кадров/с
 
   function texOf(key) {
     if (TEX[key]) return TEX[key];
-    const big = Math.min(2, devicePixelRatio || 1) * Math.max(innerWidth, innerHeight) > 1700, src = `airdef/ui/hangar/${key}${big ? '' : '_s'}.jpg`, t = { tex: null, ok: false };
+    const big = Math.min(2, devicePixelRatio || 1) * Math.max(innerWidth, innerHeight) > 1700, src = `airdef/ui/hangar/${NY ? 'ny/' : ''}${key}${big ? '' : '_s'}.jpg`, t = { tex: null, ok: false };
     TEX[key] = t;
+    if (NY) nyLayers(key, t);
     // один сбой сети не должен оставлять игрока без ангара на весь сеанс (Safari при первом заходе на сайт, 2026-11-05): ещё три попытки, и только потом прежний фон
     const load = (n) => {
       t.tex = new THREE.TextureLoader().load(n ? `${src}?r=${n}` : src, () => { t.ok = true; dirty = true; if (key === viewKey) { if (texB) texB = t.tex; else texA = t.tex; } /* после повтора t.tex - новая текстура, а зал ещё держит пустую первую */ }, undefined, () => {
@@ -41,6 +87,30 @@ export function createHangar(C, renderer) {
     };
     load(0);
     return t;
+  }
+
+  // слои новогоднего зала: тёплые и цветные нитки (сетки 2 × 2), цвет отсвета, маски снега; не пришли - зал без мигания (одна база)
+  function nyLayers(key, t) {
+    const L = t.ny = { n: 0 }, one = (k) => { const x = new THREE.TextureLoader().load(`airdef/ui/hangar/ny/${key}_${k}.jpg`, () => { L.n++; dirty = true; if (k === 'm') snowFor(key, x.image); }, undefined, () => { L.bad = true; });
+      x.minFilter = THREE.LinearFilter; x.magFilter = THREE.LinearFilter; x.generateMipmaps = false; return x; };
+    L.w = one('w'); L.c = one('c'); L.t = one('t'); L.m = one('m');
+  }
+  // область снега - рамка маски (улица, фонари крыши) в точках кадра 1600 × 900; хлопьев - как у сборщика (площадь / 20), телефон - не больше 1500
+  const SNOW = {};
+  function snowFor(key, img) {
+    try {
+      const cv = document.createElement('canvas'), w = img.width >> 1, h = img.height >> 1; cv.width = img.width; cv.height = img.height; const x = cv.getContext('2d'); x.drawImage(img, 0, 0);
+      const box = (ox) => { const d = x.getImageData(ox, 0, w, h).data; let x0 = w, x1 = -1, y0 = h, y1 = -1; for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) if (d[(j * w + i) * 4] > 127) { if (i < x0) x0 = i; if (i > x1) x1 = i; if (j < y0) y0 = j; if (j > y1) y1 = j; }
+        if (x1 < 0) return null; const k = 1600 / w, M = 60; return [Math.max(0, x0 * k - M), Math.max(0, y0 * k - M), Math.min(1600, x1 * k + M) - Math.max(0, x0 * k - M), Math.min(900, y1 * k + 4) - Math.max(0, y0 * k - M)]; };
+      const r0 = box(0), r1 = box(w), cap = TOUCH ? 1500 : 4500, n0 = r0 ? Math.round(r0[2] * r0[3] / 20) : 0, n1 = r1 ? Math.round(r1[2] * r1[3] / 20) : 0, k = Math.min(1, cap / Math.max(1, n0 + n1));
+      const N0 = Math.round(n0 * k), N1 = Math.round(n1 * k), N = N0 + N1; if (!N) return;
+      const P = new Float32Array(N * 4), S = new Float32Array(N * 4), rnd = Math.random;
+      const logn = () => { let u = 0, v = 0; while (!u) u = rnd(); v = rnd(); return Math.exp(Math.log(0.009) + 0.45 * Math.sqrt(-2 * Math.log(u)) * Math.cos(6.2832 * v)); };
+      for (let i = 0; i < N; i++) { const s1 = i >= N0, R = s1 ? r1 : r0, z0 = s1 ? 8 : 3.5, z = z0 * Math.pow(220 / z0, Math.pow(rnd(), 1.15));
+        P.set([rnd() * R[2], rnd() * R[3], z, Math.min(0.032, Math.max(0.003, logn()))], i * 4); S.set([rnd(), 0.05 + rnd() * 0.07, 0.75 * (0.8 + rnd() * 0.4), s1 ? 1 : 0], i * 4); }
+      const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(N * 3), 3)); g.setAttribute('aP', new THREE.BufferAttribute(P, 4)); g.setAttribute('aS', new THREE.BufferAttribute(S, 4));
+      SNOW[key] = { g, r0: r0 || [0, 0, 1, 1], r1: r1 || [0, 0, 1, 1] }; dirty = true;
+    } catch (e) { console.warn('ангар: снег', e.message); }
   }
 
   const MAIN_L = [-0.15, 0.96, 0.22]; // главный свет зала
@@ -64,11 +134,28 @@ export function createHangar(C, renderer) {
     const rim = new THREE.DirectionalLight(0xfff0d9, paintOn ? 0.42 : 0.24); rim.position.set(-0.5, 0.48, -0.72); hs.add(rim);
     // фон: прямоугольник на весь экран, окно в картинке - те же cx, cy, hw, hh, что у камеры; при приближении - размытие через младшие уровни картинки
     bg = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.ShaderMaterial({
-      uniforms: { a: { value: null }, b: { value: null }, t: { value: 0 }, win: { value: new THREE.Vector4(0.5, 0.5, 0.5, 0.5) }, bias: { value: 0 } },
+      uniforms: { a: { value: null }, b: { value: null }, t: { value: 0 }, win: { value: new THREE.Vector4(0.5, 0.5, 0.5, 0.5) }, bias: { value: 0 },
+        ny: { value: 0 }, wT: { value: null }, cT: { value: null }, tT: { value: null }, I: { value: new THREE.Vector4() }, Cc: { value: [0, 1, 2, 3].map(() => new THREE.Vector3()) } },
       vertexShader: 'uniform vec4 win; varying vec2 u; void main() { u = win.xy + position.xy * win.zw; gl_Position = vec4(position.xy, 0.9999, 1.0); }',
-      fragmentShader: 'uniform sampler2D a, b; uniform float t, bias; varying vec2 u; void main() { vec3 c = texture2D(a, u, bias).rgb; if (t > 0.001) c = mix(c, texture2D(b, u, bias).rgb, t); gl_FragColor = vec4(c, 1.0); }',
+      // новогодний зал: слой группы i - клетка сетки 2 × 2 (сверху g1 g2, снизу g3 g4), яркость - в корне; отсвет - цвет из tT (слева тёплые, справа цветные)
+      fragmentShader: `uniform sampler2D a, b, wT, cT, tT; uniform float t, bias, ny; uniform vec4 I; uniform vec3 Cc[4]; varying vec2 u;
+        vec2 g(float i) { return vec2((u.x + mod(i, 2.0)) * 0.5, (u.y + 1.0 - floor(i / 2.0)) * 0.5); }
+        void main() { vec3 c = texture2D(a, u, bias).rgb; if (t > 0.001) c = mix(c, texture2D(b, u, bias).rgb, t);
+          if (ny > 0.5) { vec3 tw = texture2D(tT, vec2(u.x * 0.5, u.y)).rgb, tc = texture2D(tT, vec2(0.5 + u.x * 0.5, u.y)).rgb; vec4 w, k;
+            w.x = texture2D(wT, g(0.0)).r; w.y = texture2D(wT, g(1.0)).r; w.z = texture2D(wT, g(2.0)).r; w.w = texture2D(wT, g(3.0)).r;
+            k.x = texture2D(cT, g(0.0)).r; k.y = texture2D(cT, g(1.0)).r; k.z = texture2D(cT, g(2.0)).r; k.w = texture2D(cT, g(3.0)).r; w *= w; k *= k;
+            c += tw * dot(w, I) + tc * (Cc[0] * k.x + Cc[1] * k.y + Cc[2] * k.z + Cc[3] * k.w); }
+          gl_FragColor = vec4(c, 1.0); }`,
       depthTest: false, depthWrite: false, toneMapped: false }));
-    bg.frustumCulled = false; bg.renderOrder = -1000; hs.add(bg);
+    bg.frustumCulled = false; bg.renderOrder = -1000;
+    if (NY) { // фон анимируется отдельно: зал и снег - каждый кадр, самолёт - из буфера (прозрачный вокруг, тень на полу - полупрозрачная)
+      nyS = new THREE.Scene(); nyS.add(bg);
+      snowM = new THREE.ShaderMaterial({ vertexShader: SNOW_VS, fragmentShader: SNOW_FS, transparent: true, depthTest: false, depthWrite: false, toneMapped: false,
+        uniforms: { uT: { value: 0 }, uF: { value: 900 / (2 * Math.tan(19 * Math.PI / 180)) }, uPx: { value: 1 }, uR0: { value: new THREE.Vector4() }, uR1: { value: new THREE.Vector4() }, uWin: { value: new THREE.Vector4() }, mT: { value: null } } });
+      blitP = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.ShaderMaterial({ uniforms: { t: { value: null } }, vertexShader: 'varying vec2 u; void main() { u = position.xy * 0.5 + 0.5; gl_Position = vec4(position.xy, 0.0, 1.0); }',
+        fragmentShader: 'uniform sampler2D t; varying vec2 u; void main() { gl_FragColor = texture2D(t, u); }', transparent: true, blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor, depthTest: false, depthWrite: false, toneMapped: false }));
+      blitP.frustumCulled = false; blitPS = new THREE.Scene(); blitPS.add(blitP);
+    } else hs.add(bg);
     // вывод на экран из буфера со сглаживанием (у основного холста antialias выключен)
     blitS = new THREE.Scene(); blitC = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
     blit = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.ShaderMaterial({ uniforms: { t: { value: null } }, vertexShader: 'varying vec2 u; void main() { u = position.xy * 0.5 + 0.5; gl_Position = vec4(position.xy, 0.0, 1.0); }', fragmentShader: 'uniform sampler2D t; varying vec2 u; void main() { gl_FragColor = vec4(texture2D(t, u).rgb, 1.0); }', depthTest: false, depthWrite: false, toneMapped: false }));
@@ -87,7 +174,7 @@ export function createHangar(C, renderer) {
     rt = renderer.capabilities.isWebGL2 && THREE.WebGLMultisampleRenderTarget ? new THREE.WebGLMultisampleRenderTarget(rtW, rtH, P) : new THREE.WebGLRenderTarget(rtW, rtH, P);
     if (rt.samples !== undefined) rt.samples = 4;
     rt.texture.encoding = THREE.sRGBEncoding; rt.texture.generateMipmaps = false;
-    blit.material.uniforms.t.value = rt.texture;
+    blit.material.uniforms.t.value = rt.texture; if (blitP) blitP.material.uniforms.t.value = rt.texture;
   }
   const tmp2 = new THREE.Vector2();
 
@@ -300,7 +387,9 @@ export function createHangar(C, renderer) {
         const k = 0.2, T0 = TEX[viewKey]; if (!T0 || !T0.ok) return; // зал ещё грузится
     if (!settled()) { az += (tAz - az) * k; z += (tZ - z) * k; cx += (tCx - cx) * k; cy += (tCy - cy) * k; if (fade < 1) fade = Math.min(1, fade + 0.09); dirty = true; }
     if (texB && fade >= 1) { texA = texB; texB = null; }
-    if (!dirty || !texA) return; dirty = false; nFrames++;
+    const now = performance.now(), nyTick = NY && NYF > 0 && now - nyLast >= 1000 / NYF - 4;
+    if (!texA || (!dirty && !nyTick)) return;
+    const plane = dirty; dirty = false; if (plane) nFrames++; // nFrames - кадры самолёта: в покое не растут и у новогоднего зала (анимируется только фон)
     const W = C.VW || innerWidth, H = C.VH || innerHeight, s = Math.max(W / FULL_W, H / FULL_H) * z, fullW = s * FULL_W, fullH = s * FULL_H;
     hw = W / (2 * fullW); hh = H / (2 * fullH);
     const X = Math.max(hw, Math.min(1 - hw, cx)), Y = Math.max(hh, Math.min(1 - hh, cy));
@@ -310,8 +399,16 @@ export function createHangar(C, renderer) {
     ensureRT();
     const tm = renderer.toneMapping, tx = renderer.toneMappingExposure, ac = renderer.autoClear, au = renderer.shadowMap.autoUpdate; renderer.toneMapping = HG_TM; renderer.toneMappingExposure = HG_EXP; renderer.autoClear = true; // свой тон у самолёта; у фона, пола и подъёмников toneMapped: false
     if (mainL) { renderer.shadowMap.autoUpdate = false; if (shAz !== az) { renderer.shadowMap.needsUpdate = true; shAz = az; } }
-    renderer.setRenderTarget(rt); renderer.render(hs, cam);
-    renderer.setRenderTarget(null); renderer.render(blitS, blitC);
+    if (!NY) { renderer.setRenderTarget(rt); renderer.render(hs, cam); renderer.setRenderTarget(null); renderer.render(blitS, blitC); }
+    else {
+      if (plane || !rt.__ny) { const cc = renderer.getClearColor(new THREE.Color()), ca = renderer.getClearAlpha(); renderer.setClearColor(0x000000, 0); renderer.setRenderTarget(rt); renderer.render(hs, cam); renderer.setClearColor(cc, ca); rt.__ny = true; }
+      nyLast = now; const tt = ((now - nyT0) / 1000) % 600, L = TEX[viewKey] && TEX[viewKey].ny;
+      U.ny.value = L && L.n >= 3 && !L.bad ? 1 : 0; if (U.ny.value) { U.wT.value = L.w; U.cT.value = L.c; U.tT.value = L.t; nyLevels(tt, U.I.value, U.Cc.value); }
+      const SN = SNOW[viewKey];
+      if (SN && snowKey !== viewKey) { if (snowP) nyS.remove(snowP); snowP = new THREE.Points(SN.g, snowM); snowP.frustumCulled = false; snowP.renderOrder = 1; nyS.add(snowP); snowKey = viewKey; snowM.uniforms.uR0.value.fromArray(SN.r0); snowM.uniforms.uR1.value.fromArray(SN.r1); snowM.uniforms.mT.value = L.m; }
+      if (snowP) { snowP.visible = !fade || fade >= 1; const SU = snowM.uniforms; SU.uT.value = NY_STILL ? 3 : tt; SU.uWin.value.copy(U.win.value); SU.uPx.value = rtW / (2 * hw * 1600); }
+      renderer.setRenderTarget(null); renderer.render(nyS, blitC); renderer.autoClear = false; renderer.render(blitPS, blitC);
+    }
     renderer.toneMapping = tm; renderer.toneMappingExposure = tx; renderer.autoClear = ac; renderer.shadowMap.autoUpdate = au;
   }
 
@@ -319,6 +416,7 @@ export function createHangar(C, renderer) {
     has: () => can,
     sim: false, idle: () => true, skip3D: () => true,
     busy: () => on && (dirty || !!want || !settled()),
+    anim: () => (on && NY ? NYF : 0), // новогодний зал: фон живёт (гирлянды, снег) - main.js держит этот темп кадров
     ready: () => !can || (!!built && !!texA && !!TEX[viewKey] && !!TEX[viewKey].ok && !want),
     start() {
       init(); on = true; dirty = true;
@@ -336,7 +434,7 @@ export function createHangar(C, renderer) {
       C.snd.ambient(false);
       if (rt) { rt.dispose(); rt = null; rtW = rtH = 0; } // бою память нужнее; вернёмся в меню - создадим заново
       if (TOUCH) { if (shA) { shA.dispose(); shB.dispose(); shA = shB = null; if (shadow) { shadow.material.dispose(); pivot.remove(shadow); shadow = null; } cur = null; } if (mainL && mainL.shadow.map) { mainL.shadow.map.dispose(); mainL.shadow.map = null; shAz = null; } } // телефон: тень на полу и своя тень самолёта - тоже; при возврате самолёт пересоберётся
-      for (const k in TEX) if (TEX[k].tex) TEX[k].tex.dispose();
+      for (const k in TEX) { if (TEX[k].tex) TEX[k].tex.dispose(); const L = TEX[k].ny; if (L) for (const x of [L.w, L.c, L.t, L.m]) if (x) x.dispose(); }
       dirty = true;
     },
     modeChanged() { C.snd.ambient(true, C.setup.game); },

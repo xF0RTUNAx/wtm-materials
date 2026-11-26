@@ -39,6 +39,13 @@
   #loading .ldlamps { display: flex; gap: 3px; height: 15px; margin-top: 8px; } #loading .ldlamps i { flex: 1 1 0; background: url(airdef/ui/quests/seg_off.webp) center / 100% 100%; } #loading .ldlamps i.on { background-image: url(airdef/ui/quests/seg_on.webp); } #loading.done .ldlamps i.on { background-image: url(airdef/ui/quests/seg_green.webp); }
   @media (max-height: 460px) { #loading .ldb { width: 300px; padding: 12px 12px 10px; } #loading .ldlogo { margin-bottom: 9px; } #loading .ldrow { font-size: 12.5px; } #loading .ldlamps { height: 11px; margin-top: 6px; gap: 2px; } }
   @media (prefers-reduced-motion: reduce) { #loading .lgd, #loading .ldb { transition: none; } }
+  /* новогоднее лого (Mark 2026-11-26, fuel-builder «Новый год/логотип»): шапка на правом верхнем углу подложки и гирлянда вокруг, лампы мигают бегущей волной (4 группы,
+     период 6 с, как гирлянды ангара). Слой - подложка 460 × 277 + поля 120 со всех сторон, растянут по настоящей подложке. С 1 декабря по 14 января, ?ny=1 / ?ny=0 */
+  #loading .ldny { position: absolute; left: -26.087%; top: -43.321%; width: 152.174%; height: 186.643%; pointer-events: none; } #loading .ldny img { position: absolute; inset: 0; width: 100%; height: 100%; }
+  #loading .ldny .nl { mix-blend-mode: screen; mix-blend-mode: plus-lighter; opacity: .06; animation: ldnyW 6s ease-in-out infinite; }
+  #loading .ldny .n1 { animation-delay: -6s; } #loading .ldny .n2 { animation-delay: -4.5s; } #loading .ldny .n3 { animation-delay: -3s; } #loading .ldny .n4 { animation-delay: -1.5s; }
+  @keyframes ldnyW { 0%, 100% { opacity: 1; } 50% { opacity: .06; } }
+  @media (prefers-reduced-motion: reduce) { #loading .ldny .nl { animation: none; opacity: .8; } }
   .ldbar { height: 4px; background: #2a3226; overflow: hidden; } .ldbar i { display: block; height: 100%; width: 3%; background: #e8b04a; transition: width .25s; }
   /* догрузка моделей и текстур после старта (меню уже на экране): статус внизу, исчезает, когда всё пришло */
   #assetLoad { position: fixed; z-index: 2147482000; left: 50%; transform: translateX(-50%); bottom: max(8px, var(--sa-b)); width: min(340px, 70vw); display: none; flex-direction: column; gap: 4px;
@@ -1195,7 +1202,9 @@ body.lsnOpen.playing.training #lsnBtn { background-image: var(--tr-q-on); color:
 <div id="doorsBoot"><div class="dl"></div><div class="dr"></div></div>
 <canvas id="c"></canvas>
 <div id="fade"></div>
-<div id="loading"><div class="lgd lgl"></div><div class="lgd lgr"></div><div class="ldb"><img class="ldlogo" src="../img/airdef-logo-alpha.webp" alt="Air Superiority"><div class="ldrow"><span id="ldTxt">Генерируем город: улицы, кварталы, река…</span><span id="ldPct">0 %</span></div><div class="ldlamps" id="ldBar"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div></div>
+<div id="loading"><div class="lgd lgl"></div><div class="lgd lgr"></div><div class="ldb"><div class="ldny" id="ldNy" hidden></div><img class="ldlogo" src="../img/airdef-logo-alpha.webp" alt="Air Superiority"><div class="ldrow"><span id="ldTxt">Генерируем город: улицы, кварталы, река…</span><span id="ldPct">0 %</span></div><div class="ldlamps" id="ldBar"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div></div>
+<script>try { (function () { var q = (location.search.match(/[?&]ny=([01])/) || [])[1], d = new Date(), m = d.getMonth(), k = d.getDate(), on = q === '1' || (q !== '0' && ((m === 11 && k >= 1) || (m === 0 && k <= 14))), e = document.getElementById('ldNy');
+  if (!on || !e) return; var h = '<img src="airdef/ui/ny/logo_base.webp?v=20261124a" alt="">'; for (var i = 1; i <= 4; i++) h += '<img class="nl n' + i + '" src="airdef/ui/ny/logo_l' + i + '.webp?v=20261124a" alt="">'; e.innerHTML = h; e.hidden = false; })(); } catch (_) {}</script>
 <div id="assetLoad"><span id="alTxt"></span><div class="ldbar"><i id="alBar"></i></div></div>
 <canvas id="hudc"></canvas>
 

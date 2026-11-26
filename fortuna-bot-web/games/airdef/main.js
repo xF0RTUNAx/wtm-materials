@@ -1380,7 +1380,7 @@ function frame(now) {
   const rd = now - lastRaf; lastRaf = now; if (rd > 0 && rd < 100) rafEma += (rd - rafEma) * 0.05;
   const uc = gfxKey === 'custom' ? P.cap : fpsCap === 'auto' ? undefined : fpsCap; // предел игрока (0 - нет)
   const menu = !C.probeOn && (idle || C.state === 'menu' || C.paused || C.endFreeze); // меню, пауза и итог одиночного боя - 30 к/с всему (и 3D, и интерфейсу); замер ?probe=1 - без предела
-  const capUI = idle ? (cc.busy && cc.busy() ? 1000 / 60 : 1000 / 8) : menu ? 1000 / 30 : uc ? 1000 / uc : 0; // ангар: пока самолёт вращается - плавно, в покое кадр не считается
+  const capUI = idle ? (cc.busy && cc.busy() ? 1000 / 60 : cc.anim && cc.anim() ? 1000 / cc.anim() : 1000 / 8) : menu ? 1000 / 30 : uc ? 1000 / uc : 0; // ангар: пока самолёт вращается - плавно, в покое кадр не считается
   const capMs = C.probeOn ? 0 : capUI || (uc !== 0 ? 1000 / 60 : 0); // «Авто» - 60 к/с и на ПК (Mark 2026-11-16: на экране 120 Гц Mac рисовал 120 кадров - вентиляторы); «Нет» - без предела
   const cap3D = !menu && IS_TOUCH && !fly ? 1000 / 30 : 0; // предел игрока (45, 60) - не отменяет 30 для 3D вне полёта
   if (capMs) { capAcc = Math.min(capAcc + Math.max(0, rd), capMs * 2); if (capAcc < capMs - 1.5) return; capAcc = Math.max(0, capAcc - capMs); } else capAcc = 0;
