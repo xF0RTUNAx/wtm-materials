@@ -27,6 +27,8 @@ for f in frames:
     L = [unpre(E[m][..., :3].mean(-1) / np.maximum(a0, 1e-4), a0) for m in ('rt', 'lf', 'up', 'dn', 'bk')]  # EXR - с умножением на альфу
     P.append((al, L, E['heat'][..., :3].mean(-1), box(unpre(E['alb'][..., :3].mean(-1) / np.maximum(a0, 1e-4), a0), 9)))  # доля пыли - сглажена: крапинки сажи давали пятнистую «леопардовую» юбку
 lm = float(np.percentile(np.concatenate([np.concatenate([l[al > 0.1] for l in L]) for al, L, h, b in P if (al > 0.1).any()]), 99.7))
+LM = [x for x in a[4:] if x.startswith('lm=')]
+if LM: print(kind, 'свет своего листа', round(lm, 3), '→ общий', LM[0][3:], flush=True); lm = float(LM[0][3:])  # клубы роя: одна норма света на все листы - иначе соседние клубы разной яркости
 hk = float(np.percentile(np.concatenate([h[h > 0.05] for al, L, h, b in P if (h > 0.05).any()] or [np.ones(1)]), 90))
 bl = np.concatenate([b[al > 0.3] for al, L, h, b in P if (al > 0.3).any()]); b0, b1 = float(np.percentile(bl, 2)), float(np.percentile(bl, 98))
 print(kind, 'кадров', len(frames), 'свет 99,7 %', round(lm, 3), 'накал 90 %', round(hk, 3), 'цвет', round(b0, 3), round(b1, 3), flush=True)

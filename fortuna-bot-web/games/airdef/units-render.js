@@ -632,11 +632,11 @@ export function createFx(scene, P) {
     // пришли или ?ex6=0 - прежние листы
     if (ktxOn() && !/[?&]ex6=0/.test(location.search)) fetch(new URL('./fx/explode6.json?v=20261124a', import.meta.url)).then((r) => r.json()).then((J) => {
       for (const [t, j] of Object.entries(J)) {
-        if (t === 'try' || (SWARM && !t.startsWith('clump')) || (!SWARM && t.startsWith('clump'))) continue; // рой - только клубы, ?swarm=0 - только прежние листы
+        if (t === 'try' || (SWARM && !t.startsWith('clump') && t !== 'air') || (!SWARM && t.startsWith('clump'))) continue; // рой - только клубы, ?swarm=0 - только прежние листы
         const u = (n) => new URL(`./fx/ex6_${t}_${n}${P.fxLo || P.halfFx ? '_lo' : ''}.ktx2?v=20261124a`, import.meta.url).href;
         // clump - клуб роя (swarm): вращается, летит, пыль и огонь - свои у каждого; линии земли на листе нет
         const b = XB6[t] = t.startsWith('clump') ? createBook(scene, { six: [u('a'), u('b')], rot: true, dustY: -1, cols: j.cols, rows: j.rows, frames: j.frames, last: j.last, times: j.times, cell: [j.width / j.height, 1], anchor: j.anchor, gain: 2.4, soft: 0.22, hold: 3, onTex }, 320)  // soft шире: клуб пыли, ушедший в склон, не режется прямой линией рельефа
-          : createBook(scene, { six: [u('a'), u('b')], cols: j.cols, rows: j.rows, frames: j.frames, last: j.last, times: j.times, cell: [j.width / j.height, 1], anchor: j.anchor, gain: 2.4, push: t === 'air' || t === 'plane' ? 0 : 0.06, soft: 0.04, hold: 3.5, onTex }, t === 'light' || t === 'air' ? 48 : 24);
+          : createBook(scene, { six: [u('a'), u('b')], cols: j.cols, rows: j.rows, frames: j.frames, last: j.last, times: j.times, cell: [j.width / j.height, 1], anchor: j.anchor, gain: 2.4, push: t === 'air' || t === 'plane' ? 0 : 0.06, soft: 0.04, hold: t === 'air' ? 6 : 3.5, ...(t === 'air' ? { dustY: -1, soot: true } : {}), onTex }, t === 'light' || t === 'air' ? 48 : 24);
         XJ6[t] = j; books.push(b); const sg = /^clump_(bu|bi|bg|du)/.exec(t); if (sg) { SWB[sg[1] === 'bg' ? 'bi' : sg[1]].push(b); b.upright = sg[1] === 'bg'; } // всплывающий клуб не переворачивать - ножкой вниз // bg - всплывающий клуб в уменьшенной сцене (clump.py G = 0,25) if (LY) { b.mesh.layers.set(LY[0]); b.pre.layers.set(LY[0]); }
       }
       if (api && api.onNewMats) api.onNewMats();
@@ -662,7 +662,7 @@ export function createFx(scene, P) {
     const Ht = R * (air ? 1.0 : 2.05) * EXK, g0 = api.groundCol ? api.groundCol(p) : [0.3, 0.27, 0.23];
     const gc = g0.map((v, i) => (v * 0.4 + [0.22, 0.19, 0.15][i] * 0.6) * 0.7); // выброс - не верхний слой (снег, бетон), а перемешанный с ним грунт
     const gd = gc.map((v) => v * 0.78); // пыль в тени собственного облака - темнее открытого грунта (светлые бугры выделялись)
-    const one = (g, x, y, z, h, o) => { const B = swPick(g); if (!B) return; SWV.set(x, y, z); const it = B.add(SWV, h, o.rate || 1, { rot: g === 'du' ? (rnd() - 0.5) * 0.25 : B.upright ? (rnd() - 0.5) * 0.6 : rnd() * TAU, flip: rnd() < 0.5, col: g === 'du' ? gd : gc, ...o }); if (o.alpha) it.a = o.alpha; if (B.upright && it.sk === 0 && g !== 'du') { it.sk = 1.6 + rnd() * 0.8; it.fin = Math.max(it.fin || 0, 0.35); } }; // всплывающий - с середины съёмки
+    const one = (g, x, y, z, h, o) => { const B = swPick(g); if (!B) return; SWV.set(x, y, z); const it = B.add(SWV, h, o.rate || 1, { by: p.y, ht: Ht, rot: g === 'du' ? (rnd() - 0.5) * 0.25 : B.upright ? (rnd() - 0.5) * 0.6 : rnd() * TAU, flip: rnd() < 0.5, col: g === 'du' ? gd : gc, ...o }); if (o.alpha) it.a = o.alpha; if (B.upright && it.sk === 0 && g !== 'du') { it.sk = 1.6 + rnd() * 0.8; it.fin = Math.max(it.fin || 0, 0.35); } }; // всплывающий - с середины съёмки
     const n = (k) => Math.max(1, Math.round(k * lo));
     const blocked = (x, z) => { if (!api.bldAt) return false; for (let k = 1; k <= 4; k++) if (api.bldAt(p.x + (x - p.x) * k / 4, p.z + (z - p.z) * k / 4) > 0) return true; return false; };
     if (air) {
@@ -680,18 +680,18 @@ export function createFx(scene, P) {
     }
     // огненное ядро у точки удара
     for (let i = 0; i < n(3); i++) { const a = rnd() * TAU, d = rnd() * Ht * 0.05;
-      one('bu', p.x + Math.cos(a) * d, p.y + Ht * (0.08 + rnd() * 0.06), p.z + Math.sin(a) * d, Ht * (0.55 + rnd() * 0.15), { v: [Math.cos(a) * Ht * 0.04, Ht * (0.06 + rnd() * 0.05), Math.sin(a) * Ht * 0.04], drag: 0.6, rate: 0.95 + rnd() * 0.25, fire: 1, dust: 0.1, t0: -rnd() * 0.05, grow: 0.02, hold: 3 + rnd() * 1 }); }
+      one('bu', p.x + Math.cos(a) * d, p.y + Ht * (0.08 + rnd() * 0.06), p.z + Math.sin(a) * d, Ht * (0.55 + rnd() * 0.15), { v: [Math.cos(a) * Ht * 0.04, Ht * (0.06 + rnd() * 0.05), Math.sin(a) * Ht * 0.04], drag: 0.6, rate: 0.95 + rnd() * 0.25, fire: 1, dust: 0.04, t0: -rnd() * 0.05, grow: 0.02, hold: 3 + rnd() * 1 }); }
     // шапка: первые и самые быстрые, наверху расходятся
     for (let i = 0, N = n(5); i < N; i++) { const a = (i + rnd() * 0.6) / N * TAU, vy = Ht * (0.72 + rnd() * 0.16), vl = Ht * (0.07 + rnd() * 0.05);
-      one(i < 2 ? 'bu' : 'bi', p.x + Math.cos(a) * Ht * 0.04, p.y + Ht * 0.12, p.z + Math.sin(a) * Ht * 0.04, Ht * (0.68 + rnd() * 0.2), { v: [Math.cos(a) * vl, vy, Math.sin(a) * vl], drag: 1.0, rate: 0.85 + rnd() * 0.25, fire: i < 2 ? 0.6 : 0, dust: 0.12, t0: -(0.04 + rnd() * 0.08), grow: 0.035, hold: 6 + rnd() * 2, e0: 0.75 }); }
+      one(i < 2 ? 'bu' : 'bi', p.x + Math.cos(a) * Ht * 0.04, p.y + Ht * 0.12, p.z + Math.sin(a) * Ht * 0.04, Ht * (0.68 + rnd() * 0.2), { v: [Math.cos(a) * vl, vy, Math.sin(a) * vl], drag: 1.0, rate: 0.85 + rnd() * 0.25, fire: i < 2 ? 0.6 : 0, dust: 0.04, t0: -(0.04 + rnd() * 0.08), grow: 0.035, hold: 6 + rnd() * 2, e0: 0.75 }); }
     // столб: клуб за клубом от земли, каждый следующий медленнее - останавливаются всё ниже, столб сплошной
     // клубов много и они крупные: соседние по высоте перекрываются больше чем наполовину (реже - «бусы» из шаров)
     for (let i = 0, N = n(13); i < N; i++) { const q = i / Math.max(1, N - 1), a = rnd() * TAU, d = Ht * (0.02 + rnd() * 0.05), vy = Ht * (0.62 - 0.45 * q) * (0.92 + rnd() * 0.16);
-      one(i < 2 ? 'bu' : 'bi', p.x + Math.cos(a) * d, p.y + Ht * 0.06, p.z + Math.sin(a) * d, Ht * (0.52 - 0.12 * q) * (0.9 + rnd() * 0.2), { v: [Math.cos(a) * Ht * 0.03, vy, Math.sin(a) * Ht * 0.03], drag: 0.95, rate: 0.85 + rnd() * 0.25, fire: i < 2 ? 0.5 : 0, dust: 0.25 + 0.35 * q, t0: -(0.08 + i * 0.08), fin: 0.12, grow: 0.03, hold: 5 + rnd() * 2, e0: 0.7 }); }
+      one(i < 2 ? 'bu' : 'bi', p.x + Math.cos(a) * d, p.y + Ht * 0.06, p.z + Math.sin(a) * d, Ht * (0.52 - 0.12 * q) * (0.9 + rnd() * 0.2), { v: [Math.cos(a) * Ht * 0.03, vy, Math.sin(a) * Ht * 0.03], drag: 0.95, rate: 0.85 + rnd() * 0.25, fire: i < 2 ? 0.5 : 0, dust: 0.06 + 0.16 * q, t0: -(0.08 + i * 0.08), fin: 0.12, grow: 0.03, hold: 5 + rnd() * 2, e0: 0.7 }); }
     // пыль ударной волны - валом по земле; упёрлась в дом - стоит у стены
     // мельче и чаще, внахлёст по кругу и в два ряда (крупные одиночные - отдельные бугры), тает раньше столба - край вала рваный
-    for (let i = 0, N = n(13); i < N; i++) { const a = (i + rnd() * 0.8) / N * TAU, r0 = Ht * (0.03 + (i % 2) * 0.07), v = Ht * (0.24 + rnd() * 0.16), dr = 1.5, L = v / dr, k = blocked(p.x + Math.cos(a) * (r0 + L), p.z + Math.sin(a) * (r0 + L)) ? 0.25 : 1;
-      one('du', p.x + Math.cos(a) * r0, p.y, p.z + Math.sin(a) * r0, Ht * (0.3 + rnd() * 0.2), { wk: 1.35, v: [Math.cos(a) * v * k, 0, Math.sin(a) * v * k], drag: dr, rate: 0.8 + rnd() * 0.2, fire: 0, dust: 0.85, t0: -rnd() * 0.06, fin: 0.1, grow: 0.03, hold: 3.5 + rnd() * 1.5, e0: 0.4, alpha: 0.72 }); }
+    for (let i = 0, N = n(9); i < N; i++) { const a = (i + rnd() * 0.8) / N * TAU, r0 = Ht * (0.03 + (i % 2) * 0.07), v = Ht * (0.24 + rnd() * 0.16), dr = 1.5, L = v / dr, k = blocked(p.x + Math.cos(a) * (r0 + L), p.z + Math.sin(a) * (r0 + L)) ? 0.25 : 1;
+      one('du', p.x + Math.cos(a) * r0, p.y, p.z + Math.sin(a) * r0, Ht * (0.2 + rnd() * 0.34), { wk: 1.1 + rnd() * 0.5, v: [Math.cos(a) * v * k, Ht * rnd() * 0.06, Math.sin(a) * v * k], /* разной высоты и ширины - вал без ровного верха */ drag: dr, rate: 0.8 + rnd() * 0.2, fire: 0, dust: 0.6, t0: -rnd() * 0.06, fin: 0.1, grow: 0.03, hold: 3.5 + rnd() * 1.5, e0: 0.4, alpha: 0.5 }); } /* вал тише и темнее - сливается с основанием облака */
     // пыль у основания столба (поднятая следом): закрывает стык столба с землёй
     for (let i = 0; i < n(4); i++) { const a = rnd() * TAU, v = Ht * 0.08;
       one('du', p.x + Math.cos(a) * Ht * 0.08, p.y, p.z + Math.sin(a) * Ht * 0.08, Ht * (0.5 + rnd() * 0.15), { wk: 1.2, v: [Math.cos(a) * v, 0, Math.sin(a) * v], drag: 0.8, rate: 0.8, fire: 0, dust: 0.7, t0: -(0.5 + rnd() * 0.6), fin: 0.4, grow: 0.02, hold: 5 + rnd() * 1.5 }); }
@@ -736,12 +736,13 @@ export function createFx(scene, P) {
         smoke.emit(p.x, p.y + 1, p.z, 0, 3, 0, 0.3, 0.28, 0.26, 0.6, R, R, 2.5, 0.5, 1);
         return;
       }
-      const xt = exType(R, kind), sw = SWARM && !!swPick('bu'), x6 = sw || (XB6[xt] && XB6[xt].ready), xb = sw ? swPick('bu') : x6 ? XB6[xt] : XB[xt];
+      // разрыв в воздухе - один цельный лист со светом сцены (Mark 2026-11-26: рой из клубов в небе «некрасиво и нереалистично»)
+      const airK = kind === 'air' || kind === 'plane', xt = airK && XB6.air && XB6.air.ready ? 'air' : exType(R, kind), sw = SWARM && !(airK && XB6.air && XB6.air.ready) && !!swPick('bu'), x6 = sw || (XB6[xt] && XB6[xt].ready), xb = sw ? swPick('bu') : x6 ? XB6[xt] : XB[xt];
       if (xb && xb.ready) { // лист ещё грузится - прежний взрыв (не пустота) // свой взрыв по типу боевой части: лист кадров; комья грунта - частицами (летят в объёме, в листе - их шлейфы)
         // размер - ×1,5 к физическому: снято в масштабе (у ФАБ-500 шар ≈ 40 м), но с высоты удар должен читаться (прежний кадр был 260 м)
         let j, H, rate;
         if (sw) { H = swarm(p, R, kind); j = { anchor: [0.5, 0.8], times: [12], frames: 1 }; rate = 1; } // рой: клубы держатся до 8-11 с (съёмка 3-6 с + hold), остаточные клубы проявляются с ≈ 6,6 с
-        else { j = x6 ? XJ6[xt] : XJ[xt]; const k = R / j.ref; H = (x6 ? j.height : j.width) * k * EXK; rate = Math.min(1.6, Math.max(0.6, Math.sqrt(1 / k)));
+        else { j = x6 ? XJ6[xt] : XJ[xt]; const k = R / j.ref; H = (x6 ? j.height : j.width) * k * EXK * (xt === 'air' && x6 ? 2 : 1); rate = Math.min(1.6, Math.max(0.6, Math.sqrt(1 / k)));
           xb.add(p, H, rate, { col: api.groundCol ? api.groundCol(p) : undefined }); } // цвет пыли - грунт под взрывом (main.js groundCol)
         if (kind !== 'air' && kind !== 'plane' && R >= 30) api.clods(p, R, kind === 'tbm' ? 1.4 : 1);
         // остаточный дым: появляется, когда лист начинает растворяться (облако уже там), - те же место и размер, висит ещё 15-20 с, сносится ветром
@@ -765,7 +766,7 @@ export function createFx(scene, P) {
           const put = (n, y0, y1, rr, s0, s1, a, dust, life, vy, flat) => { for (let i = 0, tr = 0; i < Math.round(n * lo) && tr < n * 4; tr++) { const a2 = rnd() * 6.283, d = Math.sqrt(rnd()) * rr;
             if (!free(P0.x + Math.cos(a2) * d, P0.z + Math.sin(a2) * d)) continue; i++;
             CP.add({ x: P0.x + Math.cos(a2) * d, y: P0.y + y0 + rnd() * (y1 - y0), z: P0.z + Math.sin(a2) * d }, { s0: s0 * (0.8 + rnd() * 0.4), s1: s1 * (0.8 + rnd() * 0.4), life: life * (0.8 + rnd() * 0.4), a, dust, col: gc0, v: [Math.cos(a2) * 0.6, vy * (0.6 + rnd() * 0.8), Math.sin(a2) * 0.6], flat, tIn: 2 + rnd() * 1.5, delay: Tp + rnd() * 1.2 }); } };
-          if (air) put(sw ? 6 : 14, -H * 0.1, H * 0.1, H * 0.14, H * 0.14, H * 0.3, sw ? 0.45 : 0.8, 0.05, 45, 0.25, 1); /* рой в воздухе висит сам до 10 с - остаток лишь редкая дымка */
+          if (air) put(6, -H * 0.1, H * 0.1, H * 0.14, H * 0.14, H * 0.3, 0.45, 0.05, 45, 0.25, 1); /* рой в воздухе висит сам до 10 с - остаток лишь редкая дымка */
           else {
             put(26, top * 0.5, top * 0.9, H * 0.22, H * 0.14, H * 0.3, 0.85, 0.1, 70, 0.3, 0.9); // шапка: густая, медленно расползается
             put(34, top * 0.08, top * 0.6, H * 0.2, H * 0.13, H * 0.28, 0.85, 0.3, 60, 0.15, 1); // тело облака от земли до шапки (облако листа - сплошное, без провала посередине)
