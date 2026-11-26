@@ -3,9 +3,9 @@
 // чтобы не расходиться с игрой; описание каждого - guide из арсенала + общие советы по типу.
 // Язык (2026-10-21): текст - в tr() пофразно (словарь lang/en-guide.js), названия и описания юнитов из arsenal.js приходят уже
 // переведёнными (lang/data.js подменяет их при импорте).
-import { AG, SAM, ERAS, LOADOUTS, PLANES, CARRIERS, MULTI, SAM_TYPE, eqOf, RETIRED_PLANES } from './arsenal.js?v=20261126a';
-import { ico, ICON_LEGEND, capsHtml } from './icons.js?v=20261126a';
-import { tr } from './i18n.js?v=20261126a';
+import { AG, SAM, ERAS, LOADOUTS, PLANES, CARRIERS, MULTI, SAM_TYPE, eqOf, RETIRED_PLANES } from './arsenal.js?v=20261126b';
+import { ico, ICON_LEGEND, capsHtml } from './icons.js?v=20261126b';
+import { tr } from './i18n.js?v=20261126b';
 
 const era = (e) => (ERAS[e - 1] ? ERAS[e - 1].short : e);
 const li = (a) => a.map((t) => `<li>${t}</li>`).join('');

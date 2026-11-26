@@ -32,8 +32,9 @@ for key in ('fighter', 'heavy'):
     H, Wd = W[0].shape[:2]; w, h = int(Wd * K) // 4 * 4, int(H * K) // 4 * 4
     lum = lambda x: np.sqrt(np.clip(x.max(-1, keepdims=True), 0, 1))
     tint = lambda L: (lambda s: s / np.maximum(s.max(-1, keepdims=True), 1e-4))(sum(L))
-    jpg(rs(grid([lum(x) for x in W]), 2 * w, 2 * h), os.path.join(OUT, f'{key}_w.jpg'), 3)
-    jpg(rs(grid([lum(x) for x in Cc]), 2 * w, 2 * h), os.path.join(OUT, f'{key}_c.jpg'), 3)
+    for sfx, kk in (('', 1), ('_s', 0.5)):  # _s - телефон и малые экраны: сетка 1600 × 900 (полная 3200 × 1800 - около 23 МБ видеопамяти на слой)
+        jpg(rs(grid([lum(x) for x in W]), int(2 * w * kk), int(2 * h * kk)), os.path.join(OUT, f'{key}_w{sfx}.jpg'), 3)
+        jpg(rs(grid([lum(x) for x in Cc]), int(2 * w * kk), int(2 * h * kk)), os.path.join(OUT, f'{key}_c{sfx}.jpg'), 3)
     jpg(rs(np.concatenate([tint(W), tint(Cc)], 1), Wd, H // 2), os.path.join(OUT, f'{key}_t.jpg'), 4)
     M = rd(os.path.join(ds, f'{key}_s_маска_улицы.png'))[..., :1]
     try: Ml = rd(os.path.join(ds, f'{key}_s_маска_фонари.png'))[..., :1]

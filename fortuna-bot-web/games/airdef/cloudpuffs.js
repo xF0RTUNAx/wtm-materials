@@ -3,7 +3,7 @@
 // клуб - мягкая шумовая «шапка» со сферическими нормалями (свет солнца с нужной стороны, небо сверху, земля снизу - как у листов explode6),
 // цвет - сажа или пыль грунта, край рвётся шумом, у домов и земли - мягкий переход по глубине (как у частиц). Все клубы - один вызов отрисовки.
 /* global THREE */
-import { FXU, SOFT_GLSL } from '../drone/world.js?v=20261126a';
+import { FXU, SOFT_GLSL } from '../drone/world.js?v=20261126b';
 const VS = `attribute vec4 iP; attribute vec4 iA; attribute vec4 iC; attribute float iU;
 varying vec2 vUv; varying vec4 vA; varying vec3 vC; varying float vD, vU;
 void main() {

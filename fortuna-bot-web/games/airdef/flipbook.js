@@ -4,8 +4,8 @@
 // иначе превращаются в полоску. up: 'strict' (столб старта С-300) - всегда стоит вертикально в мире (иначе снизу и сверху лист
 // наклонялся к камере и расходился с ракетой), почти отвесно сверху или снизу - тает. Огонь светится сам, дым освещается сценой (небо + солнце) и тонет в дымке, как всё остальное.
 /* global THREE */
-import { FXU } from '../drone/world.js?v=20261126a';
-import { ktxOn, ktxLoadUrl } from './ktx.js?v=20261126a';
+import { FXU } from '../drone/world.js?v=20261126b';
+import { ktxOn, ktxLoadUrl } from './ktx.js?v=20261126b';
 const VS = `attribute vec3 iPos; attribute vec2 iSize; attribute vec4 iF;
 #ifdef SIX
 attribute vec3 iC; varying vec3 vC;
@@ -16,8 +16,11 @@ attribute vec4 iR; attribute vec3 iE; varying vec4 vR; varying float vE, vO, vG;
 #ifdef ERODE
 attribute float iEr; varying float vEr;
 #endif
-uniform vec2 uAnchor; uniform float uUp, uPush;
+uniform vec2 uAnchor; uniform float uUp, uPush, uSteep;
 varying vec2 vUv; varying vec3 vF; varying float vA, vD, vS;
+#ifdef TOPV
+uniform vec2 uAnchorT; uniform float uTopOn; varying float vTop;
+#endif
 void main() {
   vUv = uv; vF = iF.xyz; vA = iF.w; vS = iSize.y;
 #ifdef SIX
@@ -33,12 +36,18 @@ void main() {
 #ifdef ROT
   // клуб пыли у земли снят сбоку: при крутом взгляде сверху виден срез по линии земли - такой клуб тает (Mark 2026-11-26, вид сверху)
   if (iE.z > 0.5) vA *= 1.0 - smoothstep(0.5, 0.82, abs(t.y));
+  vA *= 1.0 - uSteep * smoothstep(0.82, 0.97, abs(t.y)); // всплывающие клубы (steepFade) - тоже
 #endif
   if (uUp > 1.5) vA *= 1.0 - smoothstep(0.9, 0.98, abs(t.y));
   vec3 cr = vec3(viewMatrix[0][0], viewMatrix[1][0], viewMatrix[2][0]), cu = vec3(viewMatrix[0][1], viewMatrix[1][1], viewMatrix[2][1]);
   float s = uUp > 1.5 ? 1.0 : uUp * (1.0 - smoothstep(0.55, 0.8, abs(t.y)));
   vec3 R = normalize(mix(cr, normalize(vec3(t.z, 0.0, -t.x) + vec3(1e-4, 0.0, 0.0)), s)), U = normalize(mix(cu, vec3(0.0, 1.0, 0.0), s));
-  vec2 q = (position.xy + vec2(0.5 - uAnchor.x, uAnchor.y - 0.5)) * iSize;
+  vec2 anc = uAnchor;
+#ifdef TOPV
+  // взгляд круто сверху - съёмка сверху (Mark 2026-11-26: клубы, снятые сбоку, сверху читались столбами); переход 55-85° от горизонта
+  vTop = smoothstep(0.82, 0.996, abs(t.y)) * uTopOn; anc = mix(uAnchor, uAnchorT, vTop);
+#endif
+  vec2 q = (position.xy + vec2(0.5 - anc.x, anc.y - 0.5)) * iSize;
 #ifdef ROT
   // клуб роя: поворот в плоскости экрана и отражение (iR.x - угол, iR.y - ±1) - одна съёмка не повторяется узнаваемо
   if (iR.y < 0.0) vUv.x = 1.0 - vUv.x;
@@ -51,6 +60,9 @@ void main() {
 const FS = `uniform sampler2D map;
 #ifdef SIX
 uniform sampler2D mapB; uniform vec3 uSunV, uSunC, uSkyC, uGndC; uniform float uDustY, uAsp, uSoot; varying vec3 vC;
+#ifdef TOPV
+uniform sampler2D mapT, mapBT; varying float vTop;
+#endif
 #ifdef ROT
 varying vec4 vR; varying float vE, vO, vG; uniform vec2 uAnchor;
 #endif
@@ -69,6 +81,9 @@ void main() {
 #ifdef SIX
   // свет с шести сторон (Blender, render6.py): a - справа, слева, сверху, прозрачность; b - снизу, сзади, пыль/сажа, накал
   vec4 A = mix(texture2D(map, cell(vF.x)), texture2D(map, cell(vF.y)), vF.z), B = mix(texture2D(mapB, cell(vF.x)), texture2D(mapB, cell(vF.y)), vF.z);
+#ifdef TOPV
+  if (vTop > 0.002) { vec4 AT = mix(texture2D(mapT, cell(vF.x)), texture2D(mapT, cell(vF.y)), vF.z), BT = mix(texture2D(mapBT, cell(vF.x)), texture2D(mapBT, cell(vF.y)), vF.z); A = mix(A, AT, vTop); B = mix(B, BT, vTop); }
+#endif
   // эрозия края (Mark 2026-11-26: «чёткие границы», «купол»): тонкий дым по краю выедается шумом неровно, плотное ядро остаётся; узор свой у каждого взрыва
   // (vC.x как зерно) и медленно ползёт - край рваный, клочьями, а не гладкая полусфера симуляции
   vec2 nq = vec2(vUv.x * uAsp, vUv.y) * 4.5 + vec2(vC.x * 91.0, vF.x * 0.035);
@@ -194,12 +209,13 @@ export function createBook(scene, cfg, max = 64) {
   if (aR) { aR.setUsage(THREE.DynamicDrawUsage); geo.setAttribute('iR', aR); aE.setUsage(THREE.DynamicDrawUsage); geo.setAttribute('iE', aE); }
   // erode - лист целиком (не рой) тает с краёв с доли erode съёмки до конца hold, без раздувания
   const ERO = SIX && !ROT && !!cfg.erode, aEr = ERO ? new THREE.InstancedBufferAttribute(new Float32Array(max), 1) : null; if (aEr) { aEr.setUsage(THREE.DynamicDrawUsage); geo.setAttribute('iEr', aEr); }
-  const DEF = SIX ? (ROT ? { SIX: 1, ROT: 1 } : ERO ? { SIX: 1, ERODE: 1 } : { SIX: 1 }) : {};
+  const DEF = SIX ? (ROT ? { SIX: 1, ROT: 1 } : ERO ? { SIX: 1, ERODE: 1 } : { SIX: 1 }) : {}; if (SIX && cfg.sixTop) DEF.TOPV = 1; // sixTop: [a, b] съёмки сверху (та же сетка кадров), anchorTop
   const mat = new THREE.ShaderMaterial({ vertexShader: VS, fragmentShader: FS, transparent: true, depthWrite: false, defines: DEF,
     uniforms: { map: { value: tex }, uGrid: { value: new THREE.Vector2(cfg.cols, cfg.rows) }, uAnchor: { value: new THREE.Vector2(...cfg.anchor) }, uUp: { value: cfg.up === 'strict' ? 2 : cfg.up ? 1 : 0 },
       ...FXU, uGain: { value: cfg.gain || 2.2 }, uLit: { value: cfg.lit || 1 }, uPush: { value: cfg.push || 0 }, uSoft: { value: cfg.soft || 0 }, uFogD: { value: 0 }, uLight: { value: new THREE.Vector3(1, 1, 1) }, uFog: { value: new THREE.Color() },
-      ...(SIX ? { mapB: { value: new THREE.Texture() }, uSunV: { value: new THREE.Vector3(0, 1, 0) }, uSunC: { value: new THREE.Color(1, 1, 1) }, uSkyC: { value: new THREE.Color(0.5, 0.55, 0.6) }, uGndC: { value: new THREE.Color(0.2, 0.2, 0.2) }, uDustY: { value: cfg.dustY != null ? cfg.dustY : 1 - cfg.anchor[1] + 0.02 }, uSoot: { value: cfg.soot ? 1 : 0 }, uAsp: { value: cfg.cell[0] / cfg.cell[1] } } : {}) } }); // uDustY - линия земли на листе (снизу)
+      ...(SIX ? { mapB: { value: new THREE.Texture() }, uSunV: { value: new THREE.Vector3(0, 1, 0) }, uSunC: { value: new THREE.Color(1, 1, 1) }, uSkyC: { value: new THREE.Color(0.5, 0.55, 0.6) }, uGndC: { value: new THREE.Color(0.2, 0.2, 0.2) }, uDustY: { value: cfg.dustY != null ? cfg.dustY : 1 - cfg.anchor[1] + 0.02 }, uSoot: { value: cfg.soot ? 1 : 0 }, uSteep: { value: cfg.steepFade ? 1 : 0 }, ...(cfg.sixTop ? { mapT: { value: new THREE.Texture() }, mapBT: { value: new THREE.Texture() }, uAnchorT: { value: new THREE.Vector2(...(cfg.anchorTop || [0.5, 0.5])) }, uTopOn: { value: 0 } } : {}), uAsp: { value: cfg.cell[0] / cfg.cell[1] } } : {}) } }); // uDustY - линия земли на листе (снизу)
   if (web && SIX) Promise.all([ktxLoadUrl(cfg.six[0]), ktxLoadUrl(cfg.six[1])]).then(([ta, tb]) => { mat.uniforms.map.value = ta; mat.uniforms.mapB.value = tb; done(); if (cfg.onTex) cfg.onTex(tb); }).catch((e) => console.warn('взрыв: листы света', e.message));
+  if (web && SIX && cfg.sixTop) Promise.all([ktxLoadUrl(cfg.sixTop[0]), ktxLoadUrl(cfg.sixTop[1])]).then(([ta, tb]) => { mat.uniforms.mapT.value = ta; mat.uniforms.mapBT.value = tb; mat.uniforms.uTopOn.value = 1; }).catch((e) => console.warn('взрыв: листы сверху', e.message)); // пока не пришли - сверху тот же вид сбоку
   if (web && cfg.ktx && ktxOn()) ktxLoadUrl(cfg.ktx).then((t) => { mat.uniforms.map.value = t; done(); }).catch(() => { mat.uniforms.map.value = new THREE.TextureLoader().load(cfg.url, done); });
   const mesh = new THREE.Mesh(geo, mat); mesh.frustumCulled = false; mesh.renderOrder = 0.8; scene.add(mesh); // после облаков (0,5), до дыма (1)
   // глубина плотной части (непрозрачный проход - раньше всего прозрачного): дым позади огня не закрывает его, дым спереди - закрывает
@@ -225,8 +241,12 @@ export function createBook(scene, cfg, max = 64) {
     clear() { live.length = 0; geo.instanceCount = 0; },
     // SIX: свет сцены по частям (units-render): sunV - направление на солнце в мире, sunC / skyC / gndC - цвет × сила
     lights(sunV, sunC, skyC, gndC) { if (!SIX) return; const U = mat.uniforms; U.uSunV.value.copy(sunV); U.uSunC.value.copy(sunC); U.uSkyC.value.copy(skyC); U.uGndC.value.copy(gndC); },
-    update(dt, light, fog, wind) {
+    update(dt, light, fog, wind, cam) {
       let c = 0;
+      // клубы роя - от дальних к ближним (Mark 2026-11-26: «ближние закрывают то, что сзади, особенно сверху»): ниже запись идёт с конца списка,
+      // поэтому список - от ближних к дальним; сам лист рисуется по средней дальности своих клубов (дальние виды клубов - раньше)
+      if (ROT && cam && live.length > 1) { const P = cam.position; for (const it of live) it.cd = (it.x - P.x) ** 2 + (it.y - P.y) ** 2 + (it.z - P.z) ** 2; live.sort((a, b) => a.cd - b.cd); }
+      if (ROT && cam && live.length) { let sd = 0; for (const it of live) sd += Math.sqrt(it.cd || 0); mesh.renderOrder = (mesh.userData.ro ?? 0.8) + 0.009 * (1 - Math.min(1, sd / live.length / 30000)); }
       for (let i = live.length - 1; i >= 0; i--) {
         const it = live[i]; it.t += dt; if (it.t < 0) continue;
         if (it.sk) { it.t += it.sk / it.fps; it.sk = 0; } // skip - клуб показывается с середины съёмки (начало - маленький колючий шарик), проявляется по fin

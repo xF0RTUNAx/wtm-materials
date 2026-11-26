@@ -3,9 +3,9 @@
 // на видеокарту (models.js). Кадр считается только когда что-то меняется: в покое ни 3D, ни нагрева (как прежний фон на кадрах menubg.js).
 // Фон и самолёт масштабируются как одна картинка: «полный кадр» - весь рендер 16:9 с его камерой, экран - окно в нём (setViewOffset), поэтому пол и самолёт совпадают на любом экране.
 // Подвеска расставлена как в бою (air.js: order, buildPylons). Подъёмник: base, ram (шток, длина 1 м, scale.y = ход), head (седло). ?oldbg=1 - прежний фон.
-import { AG } from './arsenal.js?v=20261126a';
-import { setPaintHall, paintOn } from './paint.js?v=20261126a';
-import { planeModel, planeMeta, classOf, wantModel, wantWeapon, weaponPending, weaponFailed, pylonMesh, seatStores, podModel, podModelName, anyModel, modelLoaded, modelFailed, releaseModel, wantCamo, camoKnown, hiKnown, stOrder, setPose, tipPods } from './models.js?v=20261126a';
+import { AG } from './arsenal.js?v=20261126b';
+import { setPaintHall, paintOn } from './paint.js?v=20261126b';
+import { planeModel, planeMeta, classOf, wantModel, wantWeapon, weaponPending, weaponFailed, pylonMesh, seatStores, podModel, podModelName, anyModel, modelLoaded, modelFailed, releaseModel, wantCamo, camoKnown, hiKnown, stOrder, setPose, tipPods } from './models.js?v=20261126b';
 
 const VIEWS = { // ПАСПОРТ.json сборщика
   // near, far - не из паспорта: буфер со сглаживанием держит 16 бит глубины, при near 0,3 на 31 м различал только 5 см, и близкие поверхности мерцали лесенкой (Mark, телефон)
@@ -17,10 +17,10 @@ const JACK_TOP = 1.7, JACK_HEAD = 0.125, JACK_MAX = 2.5; // ПАСПОРТ.json,
 const MODEL_WAIT = 12000, PICK_WAIT = 180, KEEP_LOOKED = 3; // модель всё не приходит - показать, что есть; быстрое листание ленты не качает каждый самолёт; на телефоне в памяти - последние просмотренные
 const BLOB_GEO = () => new THREE.PlaneGeometry(2.6, 2.6).rotateX(-Math.PI / 2);
 // Новогодний ангар (Mark 2026-11-26, fuel-builder; tools/airdef-hangar/ny-pack.py): тот же зал в сумерках со снегом, гирлянды мигают, цветные нитки меняют цвет,
-// за воротами и в фонарях крыши идёт снег. С 1 декабря по 14 января; ?ny=1 / ?ny=0 - включить / выключить. Схема сборщика («Новый год/СОСТОЯНИЕ.md»), петля 12 с:
+// за воротами и в фонарях крыши идёт снег. С 26 ноября до конца февраля (Mark 2026-11-26); ?ny=1 / ?ny=0 - включить / выключить. Схема сборщика («Новый год/СОСТОЯНИЕ.md»), петля 12 с:
 // кадр = база + Σ Ii·тёплые_i + Σ Ci·цветные_i. Самолёт считается по-прежнему только при изменениях, анимируется лишь фон (24-30 кадров/с, телефон - меньше хлопьев)
 const NYQ = new URLSearchParams(location.search).get('ny');
-const NY = NYQ === '1' || (NYQ !== '0' && (() => { const d = new Date(), m = d.getMonth(), k = d.getDate(); return (m === 11 && k >= 1) || (m === 0 && k <= 14); })());
+const NY = NYQ === '1' || (NYQ !== '0' && (() => { const d = new Date(), m = d.getMonth(), k = d.getDate(); return (m === 10 && k >= 26) || m === 11 || m === 0 || m === 1; })()); // с 26 ноября до конца февраля (Mark 2026-11-26)
 const NY_PAL = [[1, 0.12, 0.08], [1, 0.55, 0.08], [0.25, 1, 0.25], [0.22, 0.45, 1], [0.85, 0.25, 1], [1, 0.3, 0.55]];
 const NY_STILL = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches; // без движения: лампы горят, снег стоит
 function nyLevels(t, I, Cv) {
@@ -76,7 +76,7 @@ export function createHangar(C, renderer) {
     if (TEX[key]) return TEX[key];
     const big = Math.min(2, devicePixelRatio || 1) * Math.max(innerWidth, innerHeight) > 1700, src = `airdef/ui/hangar/${NY ? 'ny/' : ''}${key}${big ? '' : '_s'}.jpg`, t = { tex: null, ok: false };
     TEX[key] = t;
-    if (NY) nyLayers(key, t);
+    if (NY) nyLayers(key, t, big);
     // один сбой сети не должен оставлять игрока без ангара на весь сеанс (Safari при первом заходе на сайт, 2026-11-05): ещё три попытки, и только потом прежний фон
     const load = (n) => {
       t.tex = new THREE.TextureLoader().load(n ? `${src}?r=${n}` : src, () => { t.ok = true; dirty = true; if (key === viewKey) { if (texB) texB = t.tex; else texA = t.tex; } /* после повтора t.tex - новая текстура, а зал ещё держит пустую первую */ }, undefined, () => {
@@ -90,8 +90,9 @@ export function createHangar(C, renderer) {
   }
 
   // слои новогоднего зала: тёплые и цветные нитки (сетки 2 × 2), цвет отсвета, маски снега; не пришли - зал без мигания (одна база)
-  function nyLayers(key, t) {
-    const L = t.ny = { n: 0 }, one = (k) => { const x = new THREE.TextureLoader().load(`airdef/ui/hangar/ny/${key}_${k}.jpg`, () => { L.n++; dirty = true; if (k === 'm') snowFor(key, x.image); }, undefined, () => { L.bad = true; });
+  function nyLayers(key, t, big) {
+    // слои ниток на телефоне и малом экране - вдвое меньше (_s): полные 3200 × 1800 - около 23 МБ видеопамяти каждый
+    const L = t.ny = { n: 0 }, one = (k) => { const x = new THREE.TextureLoader().load(`airdef/ui/hangar/ny/${key}_${k}${!big && (k === 'w' || k === 'c') ? '_s' : ''}.jpg`, () => { L.n++; dirty = true; if (k === 'm') snowFor(key, x.image); }, undefined, () => { L.bad = true; });
       x.minFilter = THREE.LinearFilter; x.magFilter = THREE.LinearFilter; x.generateMipmaps = false; return x; };
     L.w = one('w'); L.c = one('c'); L.t = one('t'); L.m = one('m');
   }
