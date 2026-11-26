@@ -11,7 +11,10 @@ const VS = `attribute vec3 iPos; attribute vec2 iSize; attribute vec4 iF;
 attribute vec3 iC; varying vec3 vC;
 #endif
 #ifdef ROT
-attribute vec4 iR; attribute vec2 iE; varying vec4 vR; varying float vE, vO;
+attribute vec4 iR; attribute vec3 iE; varying vec4 vR; varying float vE, vO, vG;
+#endif
+#ifdef ERODE
+attribute float iEr; varying float vEr;
 #endif
 uniform vec2 uAnchor; uniform float uUp, uPush;
 varying vec2 vUv; varying vec3 vF; varying float vA, vD, vS;
@@ -20,10 +23,17 @@ void main() {
 #ifdef SIX
   vC = iC;
 #endif
+#ifdef ERODE
+  vEr = iEr;
+#endif
 #ifdef ROT
-  vR = iR; vE = iE.x; vO = iE.y;
+  vR = iR; vE = iE.x; vO = iE.y; vG = iE.z;
 #endif
   vec3 t = cameraPosition - iPos; t /= max(length(t), 1e-3);
+#ifdef ROT
+  // клуб пыли у земли снят сбоку: при крутом взгляде сверху виден срез по линии земли - такой клуб тает (Mark 2026-11-26, вид сверху)
+  if (iE.z > 0.5) vA *= 1.0 - smoothstep(0.5, 0.82, abs(t.y));
+#endif
   if (uUp > 1.5) vA *= 1.0 - smoothstep(0.9, 0.98, abs(t.y));
   vec3 cr = vec3(viewMatrix[0][0], viewMatrix[1][0], viewMatrix[2][0]), cu = vec3(viewMatrix[0][1], viewMatrix[1][1], viewMatrix[2][1]);
   float s = uUp > 1.5 ? 1.0 : uUp * (1.0 - smoothstep(0.55, 0.8, abs(t.y)));
@@ -42,7 +52,10 @@ const FS = `uniform sampler2D map;
 #ifdef SIX
 uniform sampler2D mapB; uniform vec3 uSunV, uSunC, uSkyC, uGndC; uniform float uDustY, uAsp, uSoot; varying vec3 vC;
 #ifdef ROT
-varying vec4 vR; varying float vE, vO;
+varying vec4 vR; varying float vE, vO, vG; uniform vec2 uAnchor;
+#endif
+#ifdef ERODE
+varying float vEr; uniform vec2 uAnchor;
 #endif
 float fbH(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 float fbN(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(fbH(i), fbH(i + vec2(1.0, 0.0)), f.x), mix(fbH(i + vec2(0.0, 1.0)), fbH(i + vec2(1.0, 1.0)), f.x), f.y); }
@@ -60,22 +73,38 @@ void main() {
   // (vC.x как зерно) и медленно ползёт - край рваный, клочьями, а не гладкая полусфера симуляции
   vec2 nq = vec2(vUv.x * uAsp, vUv.y) * 4.5 + vec2(vC.x * 91.0, vF.x * 0.035);
 #ifdef ROT
-  nq += vec2(vE * 0.7, -vE * 1.6); // пока клуб тает, узор рваного края ползёт (в hold кадр съёмки стоит - край не должен застывать)
+  nq += vec2(vE * 0.7, -vE * 1.6);
+#endif
+#ifdef ERODE
+  nq += vec2(vEr * 0.7, -vEr * 1.6); // лист целиком (струи): узор края ползёт, пока тает // пока клуб тает, узор рваного края ползёт (в hold кадр съёмки стоит - край не должен застывать)
 #endif
   float nz = fbN(nq) * 0.55 + fbN(nq * 2.3 + 3.1) * 0.3 + fbN(nq * 5.7 + 7.7) * 0.15;
   float th = nz * 0.58;
 #ifdef ROT
   // клуб тает с краёв (Mark 2026-11-26: «заранее начать плавное исчезание… рассеивание с краёв»): порог плотности растёт с возрастом - тонкий край
   // съедается первым и неровно (шум), плотное ядро держится дольше
-  th = mix(th, 0.3 + nz * 1.0, vE); // к концу порог выше любой плотности - клуб уходит весь, без остатка
+  th = mix(th, 0.3 + nz * 1.0, vE);
+#endif
+#ifdef ERODE
+  // лист целиком тает с краёв ещё до конца съёмки, неровно (Mark 2026-11-26: «струи упираются в невидимую границу»)
+  float big = fbN(nq * 0.28 + vec2(vC.x * 17.0, 3.7)) * 0.65 + fbN(nq * 0.6 + 9.1) * 0.35;
+  th = mix(th, 0.25 + nz * 0.7, vEr * 0.6); // край рвётся слегка; главное - прозрачность ниже // к концу порог выше любой плотности - клуб уходит весь, без остатка
 #endif
   float ea = clamp((A.a - th) / max(1.0 - th, 0.05), 0.0, 1.0);
+#ifdef ERODE
+  // уход в прозрачность - неравномерный (Mark 2026-11-26): крупные участки облака становятся прозрачными в разное время, плавно
+  ea *= 1.0 - smoothstep(0.0, 1.0, clamp(vEr * 1.9 - big * 0.95, 0.0, 1.0));
+  // кончики струй тают на подлёте к краю кадра съёмки, пока ещё летят (Mark: «упираются в невидимый барьер» - край кадра)
+  { vec2 dq = vec2((vUv.x - uAnchor.x) / 0.5, (vUv.y - (1.0 - uAnchor.y)) / max(uAnchor.y, 0.2)); ea *= 1.0 - smoothstep(0.52, 0.92, length(dq) + (big - 0.5) * 0.3); }
+#endif
   vec4 t = vec4(0.0, 0.0, 0.0, 1.0 - pow(1.0 - ea, 1.8 + 1.4 * uSoot)); // лист сажи (разрыв в воздухе) - плотнее: облако симуляции редкое, в небе выходило полупрозрачным // плотность ×1,7: юбка пыли и столб в первые секунды непрозрачны (сквозь них было видно, Mark 2026-11-26); край - мягкий уже в листе
 #ifdef ROT
   // чёткость края (|iR.y| - 1): разрыв в воздухе - плотный рваный комок, а не пушистый «плюш» (Mark 2026-11-26)
   t.a = mix(t.a, smoothstep(0.12, 0.6, ea), clamp(abs(vR.y) - 1.0, 0.0, 1.0));
   // к краям кадра - по кругу на нет (Mark 2026-11-26: «видны чёткие яркие границы каждого спрайта»): слабая дымка у края клетки не обрывается прямой
   t.a *= 1.0 - smoothstep(0.6, 0.97, length((vUv - 0.5) * 2.0));
+  // клуб пыли: линия земли листа - мягко, на 14 % высоты (прямой срез читался светлой «плитой»)
+  if (vG > 0.5) t.a *= smoothstep(1.0 - uAnchor.y - 0.02, 1.0 - uAnchor.y + 0.14, vUv.y);
 #endif
   t.a *= smoothstep(0.0, 0.16, min(vUv.x, 1.0 - vUv.x)) * smoothstep(0.0, 0.1, 1.0 - vUv.y); // к краям листа - на нет (облако расползается в фазе рассеивания - прямые края листа были видны) // овальная маска (у стенок области симуляции дым копится ровной стеной): облако, вышедшее за кадр съёмки, не режется прямыми краями листа
   if (t.a * vA < 0.004) discard;
@@ -135,6 +164,9 @@ void main() {
   float fog = 1.0 - exp(-vD * vD * uFogD * uFogD);
   float soft = 1.0; if (fxOn > 0.5) soft = clamp((fxLinZ(texture2D(tDepth, gl_FragCoord.xy / fxSize).r) - vD) / max(4.0, uSoft * vS), 0.0, 1.0); // мягкий переход у земли и домов: у крупных - пропорционально размеру
 #ifdef DEPTH_PRE
+#ifdef ROT
+  if (t.a * vA < 0.82) discard; gl_FragColor = vec4(0.0); return; // плотное ядро клуба пишет глубину: ближний клуб закрывает дальние любого листа (Mark: «иерархия переднего плана»)
+#endif
   if (t.a * vA * soft < 0.93) discard; gl_FragColor = vec4(0.0); return; // только глубина плотной части
 #endif
   gl_FragColor = vec4(mix(col, uFog, fog * (1.0 - hot * 0.6)), t.a * vA * soft);
@@ -158,9 +190,11 @@ export function createBook(scene, cfg, max = 64) {
   geo.setAttribute('iPos', aPos); geo.setAttribute('iSize', aSize); geo.setAttribute('iF', aF); geo.instanceCount = 0;
   const aC = SIX ? new THREE.InstancedBufferAttribute(new Float32Array(max * 3), 3) : null; if (aC) { aC.setUsage(THREE.DynamicDrawUsage); geo.setAttribute('iC', aC); }
   // rot - клубы роя (только SIX): у каждого поворот, отражение, доля пыли, сила огня, скорость и рост (add: o.rot, o.flip, o.dust, o.fire, o.v, o.drag, o.grow, o.fin)
-  const ROT = SIX && !!cfg.rot, aR = ROT ? new THREE.InstancedBufferAttribute(new Float32Array(max * 4), 4) : null, aE = ROT ? new THREE.InstancedBufferAttribute(new Float32Array(max * 2), 2) : null;
+  const ROT = SIX && !!cfg.rot, aR = ROT ? new THREE.InstancedBufferAttribute(new Float32Array(max * 4), 4) : null, aE = ROT ? new THREE.InstancedBufferAttribute(new Float32Array(max * 3), 3) : null;
   if (aR) { aR.setUsage(THREE.DynamicDrawUsage); geo.setAttribute('iR', aR); aE.setUsage(THREE.DynamicDrawUsage); geo.setAttribute('iE', aE); }
-  const DEF = SIX ? (ROT ? { SIX: 1, ROT: 1 } : { SIX: 1 }) : {};
+  // erode - лист целиком (не рой) тает с краёв с доли erode съёмки до конца hold, без раздувания
+  const ERO = SIX && !ROT && !!cfg.erode, aEr = ERO ? new THREE.InstancedBufferAttribute(new Float32Array(max), 1) : null; if (aEr) { aEr.setUsage(THREE.DynamicDrawUsage); geo.setAttribute('iEr', aEr); }
+  const DEF = SIX ? (ROT ? { SIX: 1, ROT: 1 } : ERO ? { SIX: 1, ERODE: 1 } : { SIX: 1 }) : {};
   const mat = new THREE.ShaderMaterial({ vertexShader: VS, fragmentShader: FS, transparent: true, depthWrite: false, defines: DEF,
     uniforms: { map: { value: tex }, uGrid: { value: new THREE.Vector2(cfg.cols, cfg.rows) }, uAnchor: { value: new THREE.Vector2(...cfg.anchor) }, uUp: { value: cfg.up === 'strict' ? 2 : cfg.up ? 1 : 0 },
       ...FXU, uGain: { value: cfg.gain || 2.2 }, uLit: { value: cfg.lit || 1 }, uPush: { value: cfg.push || 0 }, uSoft: { value: cfg.soft || 0 }, uFogD: { value: 0 }, uLight: { value: new THREE.Vector3(1, 1, 1) }, uFog: { value: new THREE.Color() },
@@ -178,13 +212,13 @@ export function createBook(scene, cfg, max = 64) {
   // петля: после последнего кадра - плавно к первому (дальше f %= n)
   const frameAt = (t) => { if (t >= TM[n - 1]) return cfg.loop ? n - 1 + (t - TM[n - 1]) / (LOOPT - TM[n - 1]) : n - 1; let k = 0; while (k < n - 2 && TM[k + 1] <= t) k++; return k + (t - TM[k]) / (TM[k + 1] - TM[k]); };
   return {
-    mesh, pre, mat, live, get ready() { return st.ready; },
+    mesh, pre, mat, live, rot: ROT, get ready() { return st.ready; },
     // h - высота кадра в метрах; fps - скорость; t0 < 0 - задержка; a - прозрачность (меняет хозяин, напр. у затухающего пожара)
     // с times: fps - скорость против съёмки (1 - как снято; крупнее - медленнее)
     add(p, h, fps, o = {}) {
       if (live.length >= max) live.shift(); // переполнение - старейший уходит
       const it = { x: p.x, y: p.y, z: p.z, h, w: h * asp * (o.wk || 1), fps, t: o.t0 || 0, a: 1, c: o.col || [0.3, 0.27, 0.23] };
-      if (ROT) Object.assign(it, { by: o.by, ht: o.ht, e0: o.e0, sh: o.sharp || 0, sk: o.skip || 0, r: o.rot || 0, fl: o.flip ? -1 : 1, du: o.dust || 0, fi: o.fire == null ? 1 : o.fire, vx: o.v ? o.v[0] : 0, vy: o.v ? o.v[1] : 0, vz: o.v ? o.v[2] : 0, dr: o.drag || 0, gr: o.grow || 0, fin: o.fin || 0, t0: Math.max(0, o.t0 || 0), age: 0, hd: o.hold });
+      if (ROT) Object.assign(it, { gnd: o.ground ? 1 : 0, bx: o.bx, bz: o.bz, by: o.by, ht: o.ht, e0: o.e0, sh: o.sharp || 0, sk: o.skip || 0, r: o.rot || 0, fl: o.flip ? -1 : 1, du: o.dust || 0, fi: o.fire == null ? 1 : o.fire, vx: o.v ? o.v[0] : 0, vy: o.v ? o.v[1] : 0, vz: o.v ? o.v[2] : 0, dr: o.drag || 0, gr: o.grow || 0, fin: o.fin || 0, t0: Math.max(0, o.t0 || 0), age: 0, hd: o.hold });
       live.push(it); return it;
     },
     remove(it) { const i = live.indexOf(it); if (i >= 0) live.splice(i, 1); },
@@ -212,15 +246,19 @@ export function createBook(scene, cfg, max = 64) {
         // hold: разбавляется быстро в первые секунды, дальше - редкая дымка
         let fa = 1; if (HD) fa = Math.pow(1 - hk, 1.4) * (1 - 0.35 * Math.min(1, hk * 3)); else if (cfg.fadeT && TM) { const x = Math.min(1, Math.max(0, (TM[n - 1] - it.t * it.fps) / cfg.fadeT)); fa = x * x * (3 - 2 * x); } else if (cfg.fade) fa = Math.min(1, (n - 1 - f) / cfg.fade);
         let a = it.a * (cfg.loop ? Math.min(1, it.t * 2) : fa);
-        let gk = 1 + 0.45 * hk;
+        if (ERO) { const tE = TM[n - 1] / it.fps, e0 = tE * cfg.erode, e1 = (TM[n - 1] + (HD || 0)) / it.fps, x = Math.min(1, Math.max(0, (it.t - e0) / Math.max(0.1, e1 - e0))), e = x * x * (3 - 2 * x); a = it.a * (1 - e * e * e); aEr.setX(c, e); } /* ровное общее затухание - лишь в конце: уходит неравномерно, участками */
+        let gk = 1 + (cfg.holdGrow != null ? cfg.holdGrow : 0.45) * hk;
         if (ROT) { // клуб: проявление, рост по своей скорости, таяние с краёв - с 55 % съёмки до конца hold (раздувание после съёмки - малое)
           if (it.fin) { const x = Math.min(1, it.age / it.fin); a *= x * x * (3 - 2 * x); }
-          const tEnd = TM[n - 1] / it.fps, tt = it.t, e0 = tEnd * (it.e0 == null ? 0.55 : it.e0), e1 = (TM[n - 1] + (HD || 0)) / it.fps, x = Math.min(1, Math.max(0, (tt - e0) / Math.max(0.1, e1 - e0))), e = x * x * (3 - 2 * x);
-          gk = (1 + 0.12 * hk) * (1 + it.gr * Math.min(it.age, 6)); a = it.a * (1 - e * e) * (it.fin ? Math.min(1, it.age / it.fin) : 1); // к удалению - ровно ноль (раньше клуб убирался видимым наполовину)
-          aR.setXYZW(c, it.r, it.fl * (1 + (it.sh || 0)), it.du, it.fi); aE.setXY(c, e, it.ht ? 0.42 + 0.58 * (x => x * x * (3 - 2 * x))(Math.min(1, Math.max(0, ((it.y - it.by) / it.ht + 0.05) / 0.9))) : 1); } aPos.setXYZ(c, it.x, it.y + hk * it.h * 0.04, it.z); aSize.setXY(c, it.w * gk, it.h * gk); aF.setXYZW(c, f0, f1, f - f0, a); if (aC) aC.setXYZ(c, it.c[0], it.c[1], it.c[2]); c++;
+          const tEnd = TM[n - 1] / it.fps, tt = it.t, e0 = tEnd * (it.e0 == null ? 0.55 : it.e0), e1 = (TM[n - 1] + (HD || 0)) / it.fps, x = Math.min(1, Math.max(0, (tt - e0) / Math.max(0.1, e1 - e0))), e0x = x * x * (3 - 2 * x);
+          // край облака (Mark 2026-11-26: «по краям идут отдельно друг от друга»): клуб на краю роя - вдали от оси взрыва или над шапкой - всегда тает сильнее,
+          // край облака - рваная дымка, а не цепочка шаров
+          const rr = it.ht ? Math.hypot(it.x - it.bx, it.z - it.bz) / (it.ht * 0.32) : 0, hy = it.ht ? (it.y - it.by) / it.ht : 0.5, ed = Math.min(1, Math.max(0, rr - 0.55, (hy - 0.78) * 2.5, (0.05 - hy) * 3)), e = Math.max(e0x, ed * 0.5);
+          gk = 1 + it.gr * Math.min(it.age, tEnd); // после съёмки клуб не раздувается (Mark: «висят с расширением без движения») a = it.a * (1 - e0x * e0x) * (1 - 0.3 * ed) * (it.fin ? Math.min(1, it.age / it.fin) : 1); // к удалению - ровно ноль (раньше клуб убирался видимым наполовину)
+          aR.setXYZW(c, it.r, it.fl * (1 + (it.sh || 0)), it.du, it.fi); aE.setXYZ(c, e, it.ht ? 0.42 + 0.58 * (x => x * x * (3 - 2 * x))(Math.min(1, Math.max(0, ((it.y - it.by) / it.ht + 0.05) / 0.9))) : 1, it.gnd); } aPos.setXYZ(c, it.x, it.y + hk * it.h * 0.04, it.z); aSize.setXY(c, it.w * gk, it.h * gk); aF.setXYZW(c, f0, f1, f - f0, a); if (aC) aC.setXYZ(c, it.c[0], it.c[1], it.c[2]); c++;
       }
       geo.instanceCount = c; mesh.visible = pre.visible = c > 0;
-      if (c) { aPos.needsUpdate = aSize.needsUpdate = aF.needsUpdate = true; if (aC) aC.needsUpdate = true; if (aR) { aR.needsUpdate = true; aE.needsUpdate = true; } }
+      if (c) { aPos.needsUpdate = aSize.needsUpdate = aF.needsUpdate = true; if (aC) aC.needsUpdate = true; if (aR) { aR.needsUpdate = true; aE.needsUpdate = true; } if (aEr) aEr.needsUpdate = true; }
       mat.uniforms.uLight.value.copy(light);
       if (fog) { mat.uniforms.uFog.value.copy(fog.color); mat.uniforms.uFogD.value = fog.density || 0; }
     },

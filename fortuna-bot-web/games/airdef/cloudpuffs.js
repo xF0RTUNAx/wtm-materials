@@ -4,17 +4,17 @@
 // цвет - сажа или пыль грунта, край рвётся шумом, у домов и земли - мягкий переход по глубине (как у частиц). Все клубы - один вызов отрисовки.
 /* global THREE */
 import { FXU, SOFT_GLSL } from '../drone/world.js?v=20261124a';
-const VS = `attribute vec4 iP; attribute vec4 iA; attribute vec4 iC;
-varying vec2 vUv; varying vec4 vA; varying vec3 vC; varying float vD;
+const VS = `attribute vec4 iP; attribute vec4 iA; attribute vec4 iC; attribute float iU;
+varying vec2 vUv; varying vec4 vA; varying vec3 vC; varying float vD, vU;
 void main() {
-  vUv = uv; vA = iA; vC = iC.rgb;
+  vUv = uv; vA = iA; vC = iC.rgb; vU = iU;
   vec3 cr = vec3(viewMatrix[0][0], viewMatrix[1][0], viewMatrix[2][0]), cu = vec3(viewMatrix[0][1], viewMatrix[1][1], viewMatrix[2][1]);
   vec3 w = iP.xyz + (cr * position.x + cu * position.y * iC.w) * iP.w; // iC.w - сплюснутость (пыль у земли - шире, чем выше)
   vec4 mv = viewMatrix * vec4(w, 1.0); vD = -mv.z; gl_Position = projectionMatrix * mv;
 }`;
 const FS = `uniform vec3 uSunV, uSunC, uSkyC, uGndC, uFog; uniform float uFogD, uT;
 ${SOFT_GLSL}
-varying vec2 vUv; varying vec4 vA; varying vec3 vC; varying float vD;
+varying vec2 vUv; varying vec4 vA; varying vec3 vC; varying float vD, vU;
 float h1(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 float n2(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(h1(i), h1(i + vec2(1, 0)), f.x), mix(h1(i + vec2(0, 1)), h1(i + vec2(1, 1)), f.x), f.y); }
 void main() {
@@ -22,7 +22,8 @@ void main() {
   // vA: x - прозрачность, y - зерно, z - доля пыли, w - возраст (медленное течение узора)
   vec2 p = q * 2.2 + vec2(vA.y * 37.0, vA.y * 11.0) + vec2(0.0, -vA.w * 0.05);
   float f = n2(p) * 0.5 + n2(p * 2.1 + 5.2) * 0.3 + n2(p * 4.7 + 1.3) * 0.2;
-  float den = smoothstep(1.0, 0.25, r + (f - 0.5) * 0.75) * smoothstep(0.15, 0.55, f + 0.25 * (1.0 - r));
+  // тает с краёв с самого появления (Mark 2026-11-26): с возрастом (vU - доля жизни) порог растёт - рваный край съедается к середине
+  float den = smoothstep(1.0, 0.25, r + (f - 0.5) * 0.75 + vU * 0.45) * smoothstep(0.15 + vU * 0.25, 0.55 + vU * 0.2, f + 0.25 * (1.0 - r));
   float a = vA.x * den * fxSoft(max(4.0, 0.0)); if (a < 0.004) discard;
   vec3 nV = normalize(vec3(q * 0.85 + (vec2(n2(p * 1.7), n2(p * 1.7 + 9.0)) - 0.5) * 0.5, sqrt(max(0.0, 1.0 - r * r)) + 0.25)); // нормаль клуба в осях камеры
   vec3 s = normalize((viewMatrix * vec4(uSunV, 0.0)).xyz), up = normalize((viewMatrix * vec4(0.0, 1.0, 0.0, 0.0)).xyz);
@@ -35,8 +36,9 @@ void main() {
 export function createCloudPuffs(scene, max = 400) {
   const geo = new THREE.InstancedBufferGeometry(), pl = new THREE.PlaneGeometry(1, 1);
   geo.setAttribute('position', pl.attributes.position); geo.setAttribute('uv', pl.attributes.uv); geo.setIndex(pl.index);
-  const aP = new THREE.InstancedBufferAttribute(new Float32Array(max * 4), 4), aA = new THREE.InstancedBufferAttribute(new Float32Array(max * 4), 4), aC = new THREE.InstancedBufferAttribute(new Float32Array(max * 4), 4);
-  for (const a of [aP, aA, aC]) { a.setUsage(THREE.DynamicDrawUsage); }
+  const aP = new THREE.InstancedBufferAttribute(new Float32Array(max * 4), 4), aA = new THREE.InstancedBufferAttribute(new Float32Array(max * 4), 4), aC = new THREE.InstancedBufferAttribute(new Float32Array(max * 4), 4), aU = new THREE.InstancedBufferAttribute(new Float32Array(max), 1);
+  for (const a of [aP, aA, aC, aU]) { a.setUsage(THREE.DynamicDrawUsage); }
+  geo.setAttribute('iU', aU);
   geo.setAttribute('iP', aP); geo.setAttribute('iA', aA); geo.setAttribute('iC', aC); geo.instanceCount = 0;
   const mat = new THREE.ShaderMaterial({ vertexShader: VS, fragmentShader: FS, transparent: true, depthWrite: false,
     uniforms: { ...FXU, uSunV: { value: new THREE.Vector3(0, 1, 0) }, uSunC: { value: new THREE.Color(1, 1, 1) }, uSkyC: { value: new THREE.Color(0.5, 0.55, 0.6) }, uGndC: { value: new THREE.Color(0.2, 0.2, 0.2) },
@@ -55,11 +57,11 @@ export function createCloudPuffs(scene, max = 400) {
       for (let i = live.length - 1; i >= 0; i--) {
         const q = live[i]; q.t += dt; if (q.t < 0) continue; if (q.t >= q.life) { live.splice(i, 1); continue; }
         const u = q.t / q.life, k = Math.min(1, q.t / q.tIn), a = q.a * k * k * (3 - 2 * k) * Math.pow(1 - u, 1.3), dr = Math.exp(-q.t * 0.08); // скорость гаснет (сопротивление воздуха)
-        q.x += q.vx * dr * dt; q.y += q.vy * dr * dt; q.z += q.vz * dr * dt; if (wind) { q.x += wind.x * dt; q.z += wind.z * dt; } // ветер карты
-        aP.setXYZW(c, q.x, q.y, q.z, q.s0 + (q.s1 - q.s0) * Math.sqrt(u)); aA.setXYZW(c, a, q.seed, q.dust, q.t); aC.setXYZW(c, q.c[0], q.c[1], q.c[2], q.flat); c++;
+        q.x += q.vx * dr * dt; q.y += q.vy * (0.5 + 0.5 * dr) * dt; q.z += q.vz * dr * dt; // вверх тёплый дым всплывает дольше, чем гаснет боковой разлёт (Mark: «идёт ровно по горизонтали») if (wind) { q.x += wind.x * dt; q.z += wind.z * dt; } // ветер карты
+        aP.setXYZW(c, q.x, q.y, q.z, q.s0 + (q.s1 - q.s0) * Math.sqrt(u)); aA.setXYZW(c, a, q.seed, q.dust, q.t); aC.setXYZW(c, q.c[0], q.c[1], q.c[2], q.flat); aU.setX(c, u); c++;
       }
       geo.instanceCount = c; mesh.visible = c > 0;
-      if (c) { aP.needsUpdate = aA.needsUpdate = aC.needsUpdate = true; }
+      if (c) { aP.needsUpdate = aA.needsUpdate = aC.needsUpdate = aU.needsUpdate = true; }
       if (fog) { mat.uniforms.uFog.value.copy(fog.color); mat.uniforms.uFogD.value = fog.density || 0; }
     },
   };
