@@ -1,16 +1,16 @@
 // Модели и эффекты «Воздушного превосходства»: зенитные комплексы (процедурные, по мотивам реальных машин),
 // бомбы и ракеты, взрывы, дымные следы ЗУР, трассы зенитных пушек, ловушки, пожары на разрушенных объектах.
 /* global THREE */
-import { part, mergeParts, M, latheZ, plateXZ, plateZY, buildMissileGeo } from '../drone/models.js?v=20261124a';
-import { makeParticles, radialTex } from '../drone/world.js?v=20261124a';
-import { createPlumes, makeFlame, flameTick, motorOf, setFlameLayer, setTrailPuffs, trailPuffsOn, PUFF_MIN, setIgnition } from './plume.js?v=20261124a';
-import { FLAME_KIND, makeJetFlame, setJetLayer } from './jetflame.js?v=20261124a';
-import { createCmFx } from './cmfx.js?v=20261124a';
-import { LNCH, mslView } from './launchers.js?v=20261124a';
-import { createBook } from './flipbook.js?v=20261124a';
-import { ktxOn } from './ktx.js?v=20261124a';
-import { createCloudPuffs } from './cloudpuffs.js?v=20261124a';
-import { makePuffs } from './puffs.js?v=20261124a';
+import { part, mergeParts, M, latheZ, plateXZ, plateZY, buildMissileGeo } from '../drone/models.js?v=20261126a';
+import { makeParticles, radialTex } from '../drone/world.js?v=20261126a';
+import { createPlumes, makeFlame, flameTick, motorOf, setFlameLayer, setTrailPuffs, trailPuffsOn, PUFF_MIN, setIgnition } from './plume.js?v=20261126a';
+import { FLAME_KIND, makeJetFlame, setJetLayer } from './jetflame.js?v=20261126a';
+import { createCmFx } from './cmfx.js?v=20261126a';
+import { LNCH, mslView } from './launchers.js?v=20261126a';
+import { createBook } from './flipbook.js?v=20261126a';
+import { ktxOn } from './ktx.js?v=20261126a';
+import { createCloudPuffs } from './cloudpuffs.js?v=20261126a';
+import { makePuffs } from './puffs.js?v=20261126a';
 
 const OLIVE = 0x4f5c3c, OLIVE_D = 0x3c4630, SAND = 0x6e6a4c, NATO = 0x3f4a35, DARK = 0x1d2024, WHITE = 0xd8d8d0, STEEL = 0x707478;
 
@@ -591,9 +591,9 @@ export function createFx(scene, P) {
   // столб дыма пожара (fx/ex_burn - снят в Blender как петля): высота - по размеру очага; начинается с разной фазы
   const colAdd = (b) => CB.add(b.pos, XJ.burn.height * Math.min(1.6, Math.max(0.35, b.r / XJ.burn.ref)), 1, { t0: -Math.random() * 4 });
   if (!(typeof location !== 'undefined' && /[?&]exnew=0/.test(location.search)) && typeof fetch === 'function' && typeof document !== 'undefined') {
-    fetch(new URL('./fx/explode.json?v=20261124a', import.meta.url)).then((r) => r.json()).then((J) => {
+    fetch(new URL('./fx/explode.json?v=20261126a', import.meta.url)).then((r) => r.json()).then((J) => {
       for (const [t, j] of Object.entries(J)) {
-        const u = (e) => new URL(`./fx/ex_${t}${P.fxLo || P.halfFx ? '_lo' : ''}.${e}?v=20261124a`, import.meta.url).href; // телефон и слабые пресеты - вдвое меньше (память)
+        const u = (e) => new URL(`./fx/ex_${t}${P.fxLo || P.halfFx ? '_lo' : ''}.${e}?v=20261126a`, import.meta.url).href; // телефон и слабые пресеты - вдвое меньше (память)
         if (t === 'puff') { // клубы дыма следов подбитых (tools/airdef-fx/explode/puff.py)
           // по умолчанию (2026-10-24: лист перепечён - клуб заполняет клетку, шаг следа fx.trailStep - «бусин» вдали нет); ?puff=0 - прежние пятна
           if (/[?&]puff=0/.test(location.search)) continue;
@@ -630,14 +630,14 @@ export function createFx(scene, P) {
     // взрывы со светом сцены (Mark 2026-11-26: «странная палитра… не взаимодействует со светом и окружением»; tools/airdef-fx/explode6): в листах -
     // отклик облака на свет с шести сторон, пыль/сажа и накал, цвет и свет даёт игра (солнце, небо, земля, грунт под взрывом). Нужен KTX2; пока не
     // пришли или ?ex6=0 - прежние листы
-    if (ktxOn() && !/[?&]ex6=0/.test(location.search)) fetch(new URL('./fx/explode6.json?v=20261124a', import.meta.url)).then((r) => r.json()).then((J) => {
+    if (ktxOn() && !/[?&]ex6=0/.test(location.search)) fetch(new URL('./fx/explode6.json?v=20261126a', import.meta.url)).then((r) => r.json()).then((J) => {
       for (const [t, j] of Object.entries(J)) {
         if (t === 'try' || (SWARM && !t.startsWith('clump') && t !== 'air' && !t.startsWith('jets')) || (!SWARM && t.startsWith('clump')) || (t.startsWith('jets') && (!JETS || t === 'jets_c' || t === 'jets_g'))) continue; // струи - только пробой ?jets=1 // рой - только клубы, ?swarm=0 - только прежние листы
-        const u = (n) => new URL(`./fx/ex6_${t}_${n}${P.fxLo || P.halfFx ? '_lo' : ''}.ktx2?v=20261124a`, import.meta.url).href;
+        const u = (n) => new URL(`./fx/ex6_${t}_${n}${P.fxLo || P.halfFx ? '_lo' : ''}.ktx2?v=20261126a`, import.meta.url).href;
         // clump - клуб роя (swarm): вращается, летит, пыль и огонь - свои у каждого; линии земли на листе нет
         const b = XB6[t] = t.startsWith('clump') ? createBook(scene, { six: [u('a'), u('b')], rot: true, dustY: -1, cols: j.cols, rows: j.rows, frames: j.frames, last: j.last, times: j.times, cell: [j.width / j.height, 1], anchor: j.anchor, gain: 2.4, soft: 0.22, hold: 3, onTex }, 320)  // soft шире: клуб пыли, ушедший в склон, не режется прямой линией рельефа
           : createBook(scene, { six: [u('a'), u('b')], cols: j.cols, rows: j.rows, frames: j.frames, last: j.last, times: j.times, cell: [j.width / j.height, 1], anchor: j.anchor, gain: 2.4, push: t === 'air' || t === 'plane' || t === 'jets_c' ? 0 : 0.06, soft: 0.04, hold: t === 'air' || t.startsWith('jets') ? 3 : 3.5, ...(t === 'air' || t.startsWith('jets') ? { dustY: -1, soot: true, holdGrow: 0.15 } : {}), ...(t.startsWith('jets') ? { erode: 0.25, holdGrow: 0.04 } : {}), /* струи тают с краёв с середины съёмки */ onTex }, t === 'light' || t === 'air' ? 48 : 24);
-        XJ6[t] = j; books.push(b); const sg = /^clump_(bu|bi|bg|du)/.exec(t); if (sg) { SWB[sg[1] === 'bg' ? 'bi' : sg[1]].push(b); b.upright = sg[1] === 'bg'; } // всплывающий клуб не переворачивать - ножкой вниз // bg - всплывающий клуб в уменьшенной сцене (clump.py G = 0,25) if (LY) b.mesh.layers.set(LY[0]); /* у листов со светом прохода глубины нет: порог плотности давал жёсткие края («лесенка», стопка шаров) */
+        XJ6[t] = j; books.push(b); const sg = /^clump_(bu|bi|bg|du)/.exec(t); if (sg) { SWB[sg[1] === 'bg' ? 'bi' : sg[1]].push(b); b.upright = sg[1] === 'bg'; } /* bg - всплывающий клуб в уменьшенной сцене (clump.py G = 0,25), не переворачивать - ножкой вниз. Листы со светом - в основном проходе (не в проходе дыма): там иное смешивание прозрачности, свет клубов выходил вдвое темнее; вид Mark принимал в основном */ /* у листов со светом прохода глубины нет: порог плотности давал жёсткие края («лесенка», стопка шаров) */
       }
       if (api && api.onNewMats) api.onNewMats();
     }).catch((e) => { console.warn('взрыв: листы света', e && e.message); /* нет листов света - прежние */ });
@@ -732,7 +732,7 @@ export function createFx(scene, P) {
     // порядок с облаками (у облаков 0,5): камера ниже облаков - дым и взрывы после них (облака - фон; было: у частиц дыма порядок 0 -
     // далёкое облако ложилось поверх близкого дыма белыми клубками); выше облаков - раньше них (облако между камерой и дымом закрывает его)
     setView(camY) { lo = camY < 2250; smoke.points.renderOrder = fire.points.renderOrder = linger.points.renderOrder = lo ? 1 : 0.46; if (PF) PF.points.renderOrder = lo ? 1 : 0.46; if (PT) PT.points.renderOrder = lo ? 1 : 0.46; PL.mesh.renderOrder = lo ? 2 : 0.47; for (const b of books) b.mesh.renderOrder = lo ? 0.8 : 0.44; }, // низ облаков - от 2300 м (city-render buildClouds)
-    setLayers(fxL, addL) { LY = [fxL, addL]; CP.mesh.layers.set(fxL); smoke.points.layers.set(fxL); linger.points.layers.set(fxL); if (PF) PF.points.layers.set(fxL); if (PT) PT.points.layers.set(fxL); fire.points.layers.set(addL); PL.mesh.layers.set(fxL); setFlameLayer(addL); setJetLayer(addL); CMF.setLayers(fxL, addL); for (const b of books) { b.mesh.layers.set(fxL); if (!b.mat.defines.SIX) b.pre.layers.set(fxL); } }, // раскадровки огня и взрывов - в проходе дыма: после облаков (фон), до дыма (он закрывает огонь) // дым - в половине разрешения, огонь - поверх (post.js); раскадровки - в основном проходе (там глубина кадра: дома их загораживают)
+    setLayers(fxL, addL) { LY = [fxL, addL]; CP.mesh.layers.set(fxL); smoke.points.layers.set(fxL); linger.points.layers.set(fxL); if (PF) PF.points.layers.set(fxL); if (PT) PT.points.layers.set(fxL); fire.points.layers.set(addL); PL.mesh.layers.set(fxL); setFlameLayer(addL); setJetLayer(addL); CMF.setLayers(fxL, addL); for (const b of books) { if (b.mat.defines.SIX) continue; b.mesh.layers.set(fxL); b.pre.layers.set(fxL); } }, // раскадровки огня и взрывов - в проходе дыма: после облаков (фон), до дыма (он закрывает огонь) // дым - в половине разрешения, огонь - поверх (post.js); раскадровки - в основном проходе (там глубина кадра: дома их загораживают)
     // kind: 'air' - в воздухе (подрыв ЗУР, сбитый самолёт), 'ground' - ракета, падение; 'bomb' - бомба (крупнее, вспышка с кольцом, пыль)
     explosion(p, R, kind) {
       if (R < 6) { // мелочь (обломки) - частицами

@@ -4,8 +4,8 @@
 // иначе превращаются в полоску. up: 'strict' (столб старта С-300) - всегда стоит вертикально в мире (иначе снизу и сверху лист
 // наклонялся к камере и расходился с ракетой), почти отвесно сверху или снизу - тает. Огонь светится сам, дым освещается сценой (небо + солнце) и тонет в дымке, как всё остальное.
 /* global THREE */
-import { FXU } from '../drone/world.js?v=20261124a';
-import { ktxOn, ktxLoadUrl } from './ktx.js?v=20261124a';
+import { FXU } from '../drone/world.js?v=20261126a';
+import { ktxOn, ktxLoadUrl } from './ktx.js?v=20261126a';
 const VS = `attribute vec3 iPos; attribute vec2 iSize; attribute vec4 iF;
 #ifdef SIX
 attribute vec3 iC; varying vec3 vC;
@@ -254,7 +254,8 @@ export function createBook(scene, cfg, max = 64) {
           // край облака (Mark 2026-11-26: «по краям идут отдельно друг от друга»): клуб на краю роя - вдали от оси взрыва или над шапкой - всегда тает сильнее,
           // край облака - рваная дымка, а не цепочка шаров
           const rr = it.ht ? Math.hypot(it.x - it.bx, it.z - it.bz) / (it.ht * 0.32) : 0, hy = it.ht ? (it.y - it.by) / it.ht : 0.5, ed = Math.min(1, Math.max(0, rr - 0.55, (hy - 0.78) * 2.5, (0.05 - hy) * 3)), e = Math.max(e0x, ed * 0.5);
-          gk = 1 + it.gr * Math.min(it.age, tEnd); // после съёмки клуб не раздувается (Mark: «висят с расширением без движения») a = it.a * (1 - e0x * e0x) * (1 - 0.3 * ed) * (it.fin ? Math.min(1, it.age / it.fin) : 1); // к удалению - ровно ноль (раньше клуб убирался видимым наполовину)
+          // после съёмки клуб не раздувается (Mark: «висят с расширением без движения»); прозрачность - затухание hold (так Mark и принял вид)
+          gk = 1 + it.gr * Math.min(it.age, tEnd);
           aR.setXYZW(c, it.r, it.fl * (1 + (it.sh || 0)), it.du, it.fi); aE.setXYZ(c, e, it.ht ? 0.42 + 0.58 * (x => x * x * (3 - 2 * x))(Math.min(1, Math.max(0, ((it.y - it.by) / it.ht + 0.05) / 0.9))) : 1, it.gnd); } aPos.setXYZ(c, it.x, it.y + hk * it.h * 0.04, it.z); aSize.setXY(c, it.w * gk, it.h * gk); aF.setXYZW(c, f0, f1, f - f0, a); if (aC) aC.setXYZ(c, it.c[0], it.c[1], it.c[2]); c++;
       }
       geo.instanceCount = c; mesh.visible = pre.visible = c > 0;

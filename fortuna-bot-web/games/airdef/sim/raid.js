@@ -5,15 +5,15 @@
 // carrier - носитель «Мульти-волны» (sim/combined.js): у края района пускает крылатые ракеты и ложные цели и уходит.
 // Уклонение: захват или пуск на СПО, датчик пуска - ловушки и диполи, отворот «траверзом» и снижение.
 /* global THREE */
-import { tr } from '../i18n.js?v=20261124a';
-import { AG, raidPlane, loadInBay } from '../arsenal.js?v=20261124a';
-import { flightModel, loadOf } from './flight.js?v=20261124a';
-import { initDamage, hitZones, burnRate } from './damage.js?v=20261124a';
-import { cmOf } from './cm.js?v=20261124a';
-import { setGround, makeCraft, flyStep, steerTo, fwdOf, clamp, angleBetween, D2R } from '../../drone/sim/core.js?v=20261124a';
-import { predictBomb, predictRocket } from './strike.js?v=20261124a';
-import { heliModel, heliStep, heliInit, touchVerdict } from './heli.js?v=20261124a';
-import { CITY, objAimXZ } from '../city.js?v=20261124a';
+import { tr } from '../i18n.js?v=20261126a';
+import { AG, raidPlane, loadInBay } from '../arsenal.js?v=20261126a';
+import { flightModel, loadOf } from './flight.js?v=20261126a';
+import { initDamage, hitZones, burnRate } from './damage.js?v=20261126a';
+import { cmOf } from './cm.js?v=20261126a';
+import { setGround, makeCraft, flyStep, steerTo, fwdOf, clamp, angleBetween, D2R } from '../../drone/sim/core.js?v=20261126a';
+import { predictBomb, predictRocket } from './strike.js?v=20261126a';
+import { heliModel, heliStep, heliInit, touchVerdict } from './heli.js?v=20261126a';
+import { CITY, objAimXZ } from '../city.js?v=20261126a';
 
 // Ударные самолёты (обобщённые образы эпохи; без названий конкретных машин): лётные данные для flyStep
 export const STRIKERS = {

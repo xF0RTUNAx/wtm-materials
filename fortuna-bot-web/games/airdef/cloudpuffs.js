@@ -3,7 +3,7 @@
 // клуб - мягкая шумовая «шапка» со сферическими нормалями (свет солнца с нужной стороны, небо сверху, земля снизу - как у листов explode6),
 // цвет - сажа или пыль грунта, край рвётся шумом, у домов и земли - мягкий переход по глубине (как у частиц). Все клубы - один вызов отрисовки.
 /* global THREE */
-import { FXU, SOFT_GLSL } from '../drone/world.js?v=20261124a';
+import { FXU, SOFT_GLSL } from '../drone/world.js?v=20261126a';
 const VS = `attribute vec4 iP; attribute vec4 iA; attribute vec4 iC; attribute float iU;
 varying vec2 vUv; varying vec4 vA; varying vec3 vC; varying float vD, vU;
 void main() {
@@ -57,7 +57,8 @@ export function createCloudPuffs(scene, max = 400) {
       for (let i = live.length - 1; i >= 0; i--) {
         const q = live[i]; q.t += dt; if (q.t < 0) continue; if (q.t >= q.life) { live.splice(i, 1); continue; }
         const u = q.t / q.life, k = Math.min(1, q.t / q.tIn), a = q.a * k * k * (3 - 2 * k) * Math.pow(1 - u, 1.3), dr = Math.exp(-q.t * 0.08); // скорость гаснет (сопротивление воздуха)
-        q.x += q.vx * dr * dt; q.y += q.vy * (0.5 + 0.5 * dr) * dt; q.z += q.vz * dr * dt; // вверх тёплый дым всплывает дольше, чем гаснет боковой разлёт (Mark: «идёт ровно по горизонтали») if (wind) { q.x += wind.x * dt; q.z += wind.z * dt; } // ветер карты
+        // вверх тёплый дым всплывает дольше, чем гаснет боковой разлёт (Mark: «идёт ровно по горизонтали»); ветер карты сносит
+        q.x += q.vx * dr * dt; q.y += q.vy * (0.5 + 0.5 * dr) * dt; q.z += q.vz * dr * dt; if (wind) { q.x += wind.x * dt; q.z += wind.z * dt; }
         aP.setXYZW(c, q.x, q.y, q.z, q.s0 + (q.s1 - q.s0) * Math.sqrt(u)); aA.setXYZW(c, a, q.seed, q.dust, q.t); aC.setXYZW(c, q.c[0], q.c[1], q.c[2], q.flat); aU.setX(c, u); c++;
       }
       geo.instanceCount = c; mesh.visible = c > 0;
