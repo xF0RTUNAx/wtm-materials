@@ -429,7 +429,7 @@ C.netBattle = function (N, o) {
   return S;
 };
 C.objLook = (id, ruin) => objLook(id, ruin);
-const OWN_UNITS = new Set(['gepard', 'roland', 'rapier', 'skyguard', 'kub', 'tunguska', 'strela1', 'strela10', 'zsu234', 'm163', 'tor', 'torm2', 'buk', 'pantsir', 's300', 's400', 'patriot', 'pac3', 'sampt', 'nasams', 'hawk21', 'avenger', 'chaparral', 'gpsjam', 'gpsjamw']); // свои и переделанные модели техники
+const OWN_UNITS = new Set(['zu23', 's75', 's125', 'gepard', 'roland', 'rapier', 'skyguard', 'kub', 'tunguska', 'strela1', 'strela10', 'zsu234', 'm163', 'tor', 'torm2', 'buk', 'pantsir', 's300', 's400', 'patriot', 'pac3', 'sampt', 'nasams', 'hawk21', 'avenger', 'chaparral', 'gpsjam', 'gpsjamw']); // свои и переделанные модели техники
 // модели комплексов - по списку боя (после расстановки или переезда)
 C.syncUnits = function () {
   const S = C.S; if (!S) return;

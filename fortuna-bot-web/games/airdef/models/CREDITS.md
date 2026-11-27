@@ -74,7 +74,6 @@
 - "Large Low Poly Building" (https://sketchfab.com/3d-models/large-low-poly-building-67b32912ff9d45c2a6ce5d32c72f69df) by jimbogies — CC-BY-4.0 — `o_block.glb`
 - "Shanty | Mansion | Wooden" (https://sketchfab.com/3d-models/shanty-mansion-wooden-cf93dfd6da1640f08ebe051ba280426d) by Erroratten — CC-BY-4.0 — `h_shanty.glb`
 - "LP Americans House Mobile" (https://sketchfab.com/3d-models/lp-americans-house-mobile-bdd2465e5ff54fe09701cd55b9543b25) by spaceparmesan — CC-BY-4.0 — `h_mobile.glb`
-- "ZU - 23, зенитная установка, ЗУ-23, зенитка" (https://sketchfab.com/3d-models/zu-23-23-fdae5a37901941fea3a02578506072a3) by LuckySkink9661 — CC-BY-4.0 — `zu23.glb`, `pk_zu23.glb`
 - "Phalanx CIWS (Close-in Weapons System)" (https://sketchfab.com/3d-models/phalanx-ciws-close-in-weapons-system-6c038d4e66634fc4832be5b2d8697a0d) by DenisGLabrecque — CC-BY-4.0 — `phalanx.glb`
 - "Buk-M3" (https://sketchfab.com/3d-models/buk-m3-45c5b29bbdd24177911df65eb825eb28) by Valera121 — CC-BY-4.0 — `bukm3.glb`, `msl_bukm3.glb`, `bukm3_lo.glb`
 - "Mi24" (https://sketchfab.com/3d-models/mi24-5d0b5d8dc985401685f217a775deadad) by manilov.ap — CC-BY-4.0 — `h_mi24.glb`, `pk_h_mi24.glb`

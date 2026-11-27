@@ -672,16 +672,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "ZU - 23, зенитная установка, ЗУ-23, зенитка",
-  "author": "LuckySkink9661",
-  "url": "https://sketchfab.com/3d-models/zu-23-23-fdae5a37901941fea3a02578506072a3",
-  "license": "CC-BY-4.0",
-  "files": [
-   "zu23",
-   "pk_zu23"
-  ]
- },
- {
   "title": "Phalanx CIWS (Close-in Weapons System)",
   "author": "DenisGLabrecque",
   "url": "https://sketchfab.com/3d-models/phalanx-ciws-close-in-weapons-system-6c038d4e66634fc4832be5b2d8697a0d",

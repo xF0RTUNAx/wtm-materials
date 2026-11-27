@@ -630,8 +630,11 @@ const CONFIG = {
   msl_buk: { src: `${DL}/Свои/9М38М1/msl_buk.glb`, scale: 1, nose: '-z', own: true, tex: () => 1024, nTex: () => 512, pickMesh: /./ },
   // ЗУ-23-2 — LuckySkink9661 (CC BY; 2026-10-19), в боевом положении (колёса подняты); без упрощения (256 тыс.); правила — в осях автора
   // (стволы — в +x, платформа y 0,26–0,38): верхний станок с сиденьями крутится, качающаяся часть — спарка с магазинами на цапфах y 1,05
-  zu23: { src: `${DL}/fdae5a37901941fea3a02578506072a3.glb`, scale: 1, nose: '+x', unit: true, tex: () => 512, hinge: [0.02, 1.05, 0],
-    groups: (c) => (c.min[1] > 0.6 && c.ctr[0] > -0.45 && Math.abs(c.ctr[2]) < 0.45 ? 'cradle' : c.min[1] > 0.42 && Math.abs(c.ctr[2]) < 1.0 && c.ctr[0] > -2.0 ? 'turret' : 'body') },
+  // ЗУ-23-2 - своя (Свои/ЗУ-23-2, ПАСПОРТ.json, 2026-11-27) вместо LuckySkink9661: body_ и wheel_ - нижний станок, turret_ - верхний (ось (0; 0,42; 0)),
+  // cradle_ - люлька (цапфы (0; 0,88; −0,25)), barrel_l / barrel_r - стволы (вблизи свои части - откат, вдали - в люльке), sight_head - визирный блок ЗАП-23
+  // (вблизи - dish: качается по углу места, launchers.js tdish gun), sight_link - тяга, на верхнем станке
+  zu23: { src: `${DL}/Свои/ЗУ-23-2/zu23.glb`, scale: 1, nose: '-z', rulesIn: 'game', unit: true, own: true, tex: () => 2048, nTex: () => 1024, pickMesh: /./,
+    axisX: 0, axisZ: 0, ground: 0, hinge: [0, 0.88, -0.25], tpFix: [0, 0.42, 0], pack0: 0, groups: (c) => zu23Part(c, true) },
   // Phalanx (наземный C-RAM «Центурион») — DenisGLabrecque (CC BY; 2026-10-19): тумба — корпус, вилка — башня, качается всё между
   // её щёк: пушка, магазин и купол РЛС (как у настоящего). Правила — в осях автора (стволы в +z, цапфы y 2,39)
   phalanx: { src: `${DL}/phalanx_ciws_close-in_weapons_system.glb`, scale: 1.15, nose: '+z', unit: true, tex: () => 256, hinge: [0, 2.39, 0], pack0: 0, /* стволы у автора горизонтальны (ось пакета по куполу считалась бы вертикальной) */
@@ -805,6 +808,11 @@ function rolandPart(c, near) {
   return /(^|\/)(radar|rfold)_/.test(p) ? 'radar' : /(^|\/)(turret|tnet|sight)_/.test(p) ? 'turret' : 'body';
 }
 // Skyguard 35 мм: вдали стволы - в люльке
+function zu23Part(c, near) {
+  const p = c.path, B = p.match(/(^|\/)barrel_(l|r)/); if (B) return near ? (B[2] === 'l' ? 'brl' : 'bru') : 'cradle';
+  if (/(^|\/)sight_head/.test(p)) return near ? 'dish' : 'turret';
+  return /(^|\/)cradle_/.test(p) ? 'cradle' : /(^|\/)(turret_|sight_link)/.test(p) ? 'turret' : 'body';
+}
 function skyguardPart(c, near) {
   const p = c.path, B = p.match(/(^|\/)barrel_(l|r)/); if (B) return near ? (B[2] === 'l' ? 'brl' : 'bru') : 'cradle';
   return /(^|\/)cradle/.test(p) ? 'cradle' : /(^|\/)(turret|tnet)_/.test(p) ? 'turret' : 'body';
@@ -885,6 +893,8 @@ CONFIG.buk_lo = { ...CONFIG.buk, src: `${DL}/Свои/Бук-М1/buk_lo.glb`, te
 // 9М38М1 на пусковой издали (дальше 400 м, как buk_lo; Mark 2026-11-03: «облегченные модели ракет бука для дальнего плана»): 8,9 тыс. → ≈ 1,2 тыс., цвет 256, без нормалей
 CONFIG.s75_lo = { ...CONFIG.s75, src: `${DL}/Свои/С-75 (СМ-90) + 5Я23/s75_lo.glb`, tex: () => 512, nTex: null }; // С-75: дальняя сборщика (11,5 тыс.)
 CONFIG.msl_s75_lo = { ...CONFIG.msl_s75, src: `${DL}/Свои/С-75 (СМ-90) + 5Я23/ракета/msl_s75_lo.glb`, tex: () => 256, nTex: null };
+CONFIG.zu23_lo = { ...CONFIG.zu23, src: `${DL}/Свои/ЗУ-23-2/zu23_lo.glb`, tex: () => 512, nTex: null, groups: (c) => zu23Part(c, false) }; // ЗУ-23-2: дальняя сборщика
+CONFIG.pk_zu23 = { ...CONFIG.zu23_lo, tex: () => 256 }; // стоянки объектов-сцен: дальняя сборщика целиком (bld)
 CONFIG.s125_lo = { ...CONFIG.s125, src: `${DL}/Свои/С-125 (5П73) + 5В27/s125_lo.glb`, tex: () => 512, nTex: null }; // С-125: дальняя сборщика (10 тыс.)
 CONFIG.msl_s125_lo = { ...CONFIG.msl_s125, src: `${DL}/Свои/С-125 (5П73) + 5В27/ракета/msl_s125_lo.glb`, tex: () => 256, nTex: null };
 CONFIG.kub_lo = { ...CONFIG.kub, src: `${DL}/Свои/2К12 Куб (2П25) + 3М9/kub_lo.glb`, tex: () => 512, nTex: null }; // «Куб»: дальняя сборщика (46 тыс.)
@@ -978,7 +988,7 @@ if (Deno.env.get('SITE_LO')) for (const k of Object.keys(CONFIG).filter((q) => /
 // машины: дальние копии (_lo, ~1000 треуг.) — для движения на дорогах дальше 250 м
 // самолёты, вертолёты и ЗУ-23 на стоянках объектов-сцен (SITES place, «Военный аэродром»): лёгкие копии pk_* ~4 тыс. треугольников (полные — 3–256 тыс.:
 // 16 самолётов, 2 вертолёта и 3 ЗУ-23 на аэродроме дали бы ~2 млн треугольников и сотни вызовов отрисовки вблизи)
-for (const k of ['su30', 'mig29', 'e_su24', 'e_su25', 'f16', 'f18', 'e_f15e', 'e_a10', 'e_su34', 'e_mig31', 'h_mi24', 'h_ah64', 'h_mi8', 'h_uh60', 'zu23']) CONFIG[`pk_${k}`] = { ...CONFIG[k], target: 4000, simpErr: 0.05, tex: () => 256, nTex: null, ...(k === 'e_mig31' ? { groups: undefined } : {}) };
+for (const k of ['su30', 'mig29', 'e_su24', 'e_su25', 'f16', 'f18', 'e_f15e', 'e_a10', 'e_su34', 'e_mig31', 'h_mi24', 'h_ah64', 'h_mi8', 'h_uh60']) CONFIG[`pk_${k}`] = { ...CONFIG[k], target: 4000, simpErr: 0.05, tex: () => 256, nTex: null, ...(k === 'e_mig31' ? { groups: undefined } : {}) };
 for (const k of ['compact', 'coupe', 'hatch', 'van', 'offroad', 'pickup', 'sedan', 'sport', 'suv', 'wagon', 'police']) CONFIG[`c_${k}_lo`] = { ...CONFIG[`c_${k}`], target: 1000, simpErr: 0.05, tex: () => 128 };
 // дальние копии противника «Летки» (_lo): вдали тонкие крылья можно упрощать сильнее — дефектов не видно, а треугольников в разы меньше
 for (const [k, t] of [['e_mig21', 3000], ['e_mig31', 9000], ['e_su57', 7000], ['e_tu22m3', 7000], ['e_gripen', 3000], ['e_f22', 4000], ['e_f35', 9000]]) CONFIG[k + '_lo'] = { ...CONFIG[k], target: t, simpErr: 0.05, tex: () => 256, nTex: null, ...(k === 'e_f35' || k === 'e_f22' || k === 'e_tu22m3' || k === 'e_mig31' ? { groups: undefined } : k === 'e_su57' ? { groups: (c) => (/(^|\/)pylon_/.test(c.path) ? null : 'body') } /* пилоны съёмные */ : {}) };

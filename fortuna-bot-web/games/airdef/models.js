@@ -347,7 +347,7 @@ const META = {
   msl_bukm3: { samMissile: ['bukm3'], matte: true, stations: [] }, // ракета 9М317М - из той же модели (Missile_1), светлая
   buk: { units: ['buk'], matte: true, stations: [] }, // «Бук-М1» - своя СОУ 9А310М1 на ГМ-569 (сборщик, Свои/Бук-М1, 2026-11-03): пакет на гидроцилиндре, окраска - побелка потёртая
   msl_buk: { samMissile: ['buk'], lazy: true, onRail: true, matte: true, stations: [] }, // ракета 9М38М1 - своя (Свои/9М38М1), 6,2 м, нос −Z; onRail - четыре на направляющих пусковой (машина пересобирается, когда пришла)
-  zu23: { units: ['zu23'], stations: [], matte: true }, // ЗУ-23-2 - LuckySkink9661
+  zu23: { units: ['zu23'], stations: [], matte: true, paint: true }, // ЗУ-23-2 - своя (Свои/ЗУ-23-2, 2026-11-27): окраска запечена, paint - карта ORM
   phalanx: { units: ['phalanx'], stations: [] }, // Phalanx - DenisGLabrecque
   // комплексы с ракетами на направляющих: ракета модели - в слотах и в полёте (у С-75 и С-125 - с отделяемым ускорителем)
   // С-75 и С-125 - свои (2026-11-27, Mark: «внедряй обе модели»): окраска запечена, подъёмник / уравновешивающий цилиндр, ракеты - свои с отделяемым ускорителем
@@ -542,11 +542,11 @@ const GLB_V_OWN = {
   pk_e_a10: '20261112c', // своя модель A-10A
   pk_e_su34: '20261115a', // своя модель Су-34
   e_su57: '20261124a', e_su57_gear: '20261124a', e_su57_lo: '20261124a', // свой Су-57
-  pk_e_mig31: '20261124a', e_mig31: '20261124a', e_mig31_gear: '20261124a', e_mig31_lo: '20261124a', m163: '20261124a', m163_lo: '20261124a', zsu234: '20261125a', zsu234_lo: '20261125a', skyguard: '20261125a', skyguard_lo: '20261125a', s75: '20261127a', s75_lo: '20261127a', msl_s75: '20261127a', msl_s75_lo: '20261127a', s125: '20261127a', s125_lo: '20261127a', msl_s125: '20261127a', msl_s125_lo: '20261127a', kub: '20261126a', kub_lo: '20261126a', msl_kub: '20261126a', msl_kub_lo: '20261126a', roland: '20261125a', roland_lo: '20261125a', msl_roland: '20261125a', msl_roland_lo: '20261125a', // свои МиГ-31БМ и M163
+  pk_e_mig31: '20261124a', e_mig31: '20261124a', e_mig31_gear: '20261124a', e_mig31_lo: '20261124a', m163: '20261124a', m163_lo: '20261124a', zsu234: '20261125a', zsu234_lo: '20261125a', skyguard: '20261125a', skyguard_lo: '20261125a', s75: '20261127a', s75_lo: '20261127a', msl_s75: '20261127a', msl_s75_lo: '20261127a', s125: '20261127a', s125_lo: '20261127a', zu23: '20261127a', zu23_lo: '20261127a', msl_s125: '20261127a', msl_s125_lo: '20261127a', kub: '20261126a', kub_lo: '20261126a', msl_kub: '20261126a', msl_kub_lo: '20261126a', roland: '20261125a', roland_lo: '20261125a', msl_roland: '20261125a', msl_roland_lo: '20261125a', // свои МиГ-31БМ и M163
 
   pk_h_mi24: '20261029b',
   pk_h_ah64: '20261029b',
-  pk_zu23: '20261029b',
+  pk_zu23: '20261127a',
   pk_h_mi8: '20261029c',
   pk_h_uh60: '20261029c',
   site_air_w: '20261029c', // «Авиабаза» (зима, своя сцена, аэродромный набор, 2026-10-29)
@@ -998,7 +998,7 @@ async function load(name, base) {
 // готовая модель комплекса: { body, turret, cradle } (копии) или null - тогда процедурная
 const UMODEL = Object.fromEntries(Object.entries(META).filter(([, m]) => m.units).flatMap(([n, m]) => m.units.map((k) => [k, n])));
 // у тяжёлых моделей ПВО - дальняя копия <имя>_lo: каждая часть (корпус, башня, пакет) - THREE.LOD, ближе 400 м - подробная
-const UNIT_LO = new Set(['s75', 'kub', 'strela10', 'nasams', 'buk', 'torm2', 'hawk21', 'bukm3', 's125', 'gepard', 'ew_e', 'ew_w', 's300', 's400', 'patriot', 'pac3', 'tor', 'pantsir', 'sampt', 'tunguska', 'skyguard', 'rapier', 'zsu234', 'm163', 'chaparral', 'avenger', 'strela1', 'roland']);
+const UNIT_LO = new Set(['zu23', 's75', 'kub', 'strela10', 'nasams', 'buk', 'torm2', 'hawk21', 'bukm3', 's125', 'gepard', 'ew_e', 'ew_w', 's300', 's400', 'patriot', 'pac3', 'tor', 'pantsir', 'sampt', 'tunguska', 'skyguard', 'rapier', 'zsu234', 'm163', 'chaparral', 'avenger', 'strela1', 'roland']);
 export function unitModelGlb(key) {
   const n = UMODEL[key], G = n && (LOADED[n] || LOADED[n + '_lo']), GL = n && LOADED[n] && LOADED[n + '_lo']; if (!G) return null;
   const find = (M, k) => M.children.find((c) => c.name === k);
