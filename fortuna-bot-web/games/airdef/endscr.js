@@ -4,12 +4,12 @@
 // Одиночный бой: 3D замирает (C.endFreeze), холст выцветает (CSS body.endCine), сверху и снизу - чёрные полосы, внизу - лента боя
 // (C.blog: { t, c: 'g' | 'r' | 'y' | '', l } - события, их пишут air.js и defense.js через C.bev). Онлайн - табло поверх затемнённой игры;
 // очки рейтинга и награда приходят позже (claimed / reward). Всё в единицах «u» - процент ширины экрана 16:9, вписанного по высоте.
-import { tr, LOCALE } from './i18n.js?v=20261126b';
-import { ico } from './icons.js?v=20261126b';
-import { WIN_K } from './sim/online.js?v=20261126b';
-import { activeAcc } from './account.js?v=20261126b';
-import { PREM_K } from './arsenal.js?v=20261126b';
-import { wings, nickMark } from './prem.js?v=20261126b';
+import { tr, LOCALE } from './i18n.js?v=20261127a';
+import { ico } from './icons.js?v=20261127a';
+import { WIN_K } from './sim/online.js?v=20261127a';
+import { activeAcc } from './account.js?v=20261127a';
+import { PREM_K } from './arsenal.js?v=20261127a';
+import { wings, nickMark } from './prem.js?v=20261127a';
 
 const LOC = LOCALE;
 const fmt = (v) => Math.round(v).toLocaleString(LOC);

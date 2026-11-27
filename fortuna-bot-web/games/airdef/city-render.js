@@ -11,18 +11,18 @@
 //    у домов (запечённое из сетки высот застройки); шум, чтобы не было плоской заливки.
 //  • Река с волнами и отражением неба, деревья в парках и вдоль улиц, облака-«пуховки» (один вызов отрисовки).
 /* global THREE */
-import { CITY, ZONE, KIND, AIRPORT, groundH, zoneAt, riverX, mulberry32, lineW, RN, RS, RURAL_HW, SITES, RELIEF, slopeAt, siteKeep } from './city.js?v=20261126b';
-import { part, mergeParts, M } from '../drone/models.js?v=20261126b';
-import { WEATHERS, ATMO, skyMaterial, skyUniforms, skyPano, SKY, FXU, FX_LAYER, FX_ADD_LAYER } from '../drone/world.js?v=20261126b';
-import { bakeTerrain, ROUGH_GLSL, groundLit } from './terrain-bake.js?v=20261126b';
-import { BU, BLAST_GLSL, tickBlast } from './blast.js?v=20261126b';
-import { createCliffs } from './cliffs.js?v=20261126b';
-import { createTreeFall, TF_ON } from './treefall.js?v=20261126b';
-import { setAir, tickAir, airUniforms, CLD_ON } from './atmo.js?v=20261126b';
-import { setPaintSky } from './paint.js?v=20261126b';
-import { ktxOn, ktxLoad, ktxMeta } from './ktx.js?v=20261126b';
-import { winterWeathers, winterZoneTex, winterNormalTex, winterTextures, winterGroundMaterial, winterTrees, makeSnowfall, winterRoads } from './winter-render.js?v=20261126b';
-import { autumnWeathers, autumnZoneTex, autumnTextures, autumnGroundMaterial, autumnTrees, autumnRoads, autumnWaterMask, autumnProps } from './autumn-render.js?v=20261126b';
+import { CITY, ZONE, KIND, AIRPORT, groundH, zoneAt, riverX, mulberry32, lineW, RN, RS, RURAL_HW, SITES, RELIEF, slopeAt, siteKeep } from './city.js?v=20261127a';
+import { part, mergeParts, M } from '../drone/models.js?v=20261127a';
+import { WEATHERS, ATMO, skyMaterial, skyUniforms, skyPano, SKY, FXU, FX_LAYER, FX_ADD_LAYER } from '../drone/world.js?v=20261127a';
+import { bakeTerrain, ROUGH_GLSL, groundLit } from './terrain-bake.js?v=20261127a';
+import { BU, BLAST_GLSL, tickBlast } from './blast.js?v=20261127a';
+import { createCliffs } from './cliffs.js?v=20261127a';
+import { createTreeFall, TF_ON } from './treefall.js?v=20261127a';
+import { setAir, tickAir, airUniforms, CLD_ON } from './atmo.js?v=20261127a';
+import { setPaintSky } from './paint.js?v=20261127a';
+import { ktxOn, ktxLoad, ktxMeta } from './ktx.js?v=20261127a';
+import { winterWeathers, winterZoneTex, winterNormalTex, winterTextures, winterGroundMaterial, winterTrees, makeSnowfall, winterRoads } from './winter-render.js?v=20261127a';
+import { autumnWeathers, autumnZoneTex, autumnTextures, autumnGroundMaterial, autumnTrees, autumnRoads, autumnWaterMask, autumnProps } from './autumn-render.js?v=20261127a';
 Object.assign(WEATHERS, winterWeathers(WEATHERS), autumnWeathers(WEATHERS)); // зимние и осенние погоды - только в «Воздушном превосходстве»
 // свет погод по стенду Mark (?lab=1, 2026-11-16, tools/airdef-light/lab-values.json): множители силы солнца (sunI) и неба (hemiI), плотности дымки (fogD),
 // цвета. Только здесь - общие погоды «Летки» (drone/world.js) не меняются: правки - копией объекта
@@ -38,15 +38,15 @@ Object.assign(WEATHERS, winterWeathers(WEATHERS), autumnWeathers(WEATHERS)); // 
     WEATHERS[k] = n; } }
 // высота земли и районы - у текущей карты (город - city.js, зима - map-winter.js); выставляет buildCityScene
 let GH = groundH, ZA = zoneAt, LAWNS = []; // LAWNS - объекты с травой на своём участке (o.lawn: склад боеприпасов)
-import { MeshoptSimplifier } from './vendor/meshopt_simplifier.module.js?v=20261126b'; // MIT, meshoptimizer 0.21
-import { bakeGroup, mergeLocal } from './merge.js?v=20261126b';
-import { NOISE_ON, NOISE_GLSL, noiseTex } from './noise-tex.js?v=20261126b';
-import { FAR_U, groundShadowChunk } from './ground-far.js?v=20261126b';
-import { FAC_ON, FAC_MAX, FACU, FAC_GLSL, FAC_MAIN, facadeRow, surfColors } from './facade.js?v=20261126b';
-import { NS_ON, NS_K, nearShadow, treeShadowGeo, tuftShadowGeo, shadowOnly } from './near-shadow.js?v=20261126b';
-import { BAKE_ON, createGroundBake } from './ground-bake.js?v=20261126b';
-import { GTILES as GT_OWN } from './ground-tiles.js?v=20261126b';
-import { GTILES_S } from './ground-tiles-scan.js?v=20261126b';
+import { MeshoptSimplifier } from './vendor/meshopt_simplifier.module.js?v=20261127a'; // MIT, meshoptimizer 0.21
+import { bakeGroup, mergeLocal } from './merge.js?v=20261127a';
+import { NOISE_ON, NOISE_GLSL, noiseTex } from './noise-tex.js?v=20261127a';
+import { FAR_U, groundShadowChunk } from './ground-far.js?v=20261127a';
+import { FAC_ON, FAC_MAX, FACU, FAC_GLSL, FAC_MAIN, facadeRow, surfColors } from './facade.js?v=20261127a';
+import { NS_ON, NS_K, nearShadow, treeShadowGeo, tuftShadowGeo, shadowOnly } from './near-shadow.js?v=20261127a';
+import { BAKE_ON, createGroundBake } from './ground-bake.js?v=20261127a';
+import { GTILES as GT_OWN } from './ground-tiles.js?v=20261127a';
+import { GTILES_S } from './ground-tiles-scan.js?v=20261127a';
 // проба «земля по сканам» (Mark 2026-11-25: сравнение Watch Dogs 2 и GTA 6): ?scan=1 - плитки сканов CC0 (tools/airdef-tex/scan-atlas.py), нормали в свете (а не
 // множителем цвета), тень мелочи от солнца, тон асфальта и травы - как у настоящих. Только город
 export const SCAN = typeof location !== 'undefined' && /[?&]scan=1/.test(location.search);
@@ -136,7 +136,7 @@ function loadCityTextures(aniso, hi, hills) {
     jpg(u, f, t);
   }
   function jpg(u, f, t) {
-    fetch(new URL(`./tex/${f}.jpg?v=20261126b`, import.meta.url)).then((r) => (r.ok ? r.blob() : Promise.reject(new Error(f))))
+    fetch(new URL(`./tex/${f}.jpg?v=20261127a`, import.meta.url)).then((r) => (r.ok ? r.blob() : Promise.reject(new Error(f))))
       .then((b) => createImageBitmap(b)).then((bmp) => { TEX[u].value = t; t.image = bmp; t.needsUpdate = true; const av = TEX['uAvg' + u.slice(1)]; if (av && !viaKtx) av.value.copy(avgColor(bmp)); done(); })
       .catch((e) => { texStats.done++; console.warn('текстура не загрузилась:', e.message); });
   }
@@ -2518,7 +2518,7 @@ function cloudTex(f, done) { // → uniform { value }: KTX2, иначе WebP
   if (typeof createImageBitmap !== 'function' || typeof fetch !== 'function') return U;
   texStats.req++;
   webp(); return U; // облака - WebP: в KTX2 светотень в кадре выходила площе (данные те же - разница в выборке мипов; не разобрались)
-  function webp() { fetch(new URL(`./tex/${f}.webp?v=20261126b`, import.meta.url)).then((r) => (r.ok ? r.blob() : Promise.reject(new Error(f))))
+  function webp() { fetch(new URL(`./tex/${f}.webp?v=20261127a`, import.meta.url)).then((r) => (r.ok ? r.blob() : Promise.reject(new Error(f))))
     .then((b) => createImageBitmap(b, { premultiplyAlpha: 'none', colorSpaceConversion: 'none' })).then((bmp) => { t.image = bmp; t.needsUpdate = true; texStats.done++; done(); })
     .catch((e) => { texStats.done++; console.warn('облака не загрузились:', e.message); }); }
 }

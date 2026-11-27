@@ -2,8 +2,8 @@
 // Атлас 4 × 4 (tools/airdef-tex/season-atlas.py, CC0): цвет (√) с высотой в альфе и нормали. Вблизи - плитка 3 м, дальше - средний цвет слоя с пятнами
 // шума 2-60 м (sMot), чтобы с высоты земля не становилась ровной заливкой. Слои складываются по высоте (камни из-под снега).
 /* global THREE */
-import { ktxLoad } from './ktx.js?v=20261126b';
-import { GTILES_SEASON } from './ground-tiles-season.js?v=20261126b';
+import { ktxLoad } from './ktx.js?v=20261127a';
+import { GTILES_SEASON } from './ground-tiles-season.js?v=20261127a';
 export const SCAN_S = typeof location !== 'undefined' && /[?&]scan=1/.test(location.search); // проба - только где есть KTX2
 export function scanTextures(k, aniso, hi, stats) {
   const U = {};

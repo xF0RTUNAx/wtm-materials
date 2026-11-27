@@ -3,8 +3,8 @@
 //  • тени облаков: бегущий шум вдоль солнца, считается в вершинах (ни одной выборки текстуры), гасит только прямой свет; ?cl=0 - без них
 //  • дымка - до тонмаппинга (в r128 штатно после: без HDR-буфера цвет дали был неверным)
 /* global THREE */
-import { ATMO } from '../drone/world.js?v=20261126b';
-import { AIR_SH } from './terrain-bake.js?v=20261126b';
+import { ATMO } from '../drone/world.js?v=20261127a';
+import { AIR_SH } from './terrain-bake.js?v=20261127a';
 const q = (k) => { try { return new URLSearchParams(location.search).get(k); } catch (_) { return null; } };
 export const HZ_ON = q('hz') !== '0', CLD_ON = q('cl') !== '0';
 // простые объекты: при клонировании uniform'ов остаётся общая ссылка. hz: x - линейная плотность, y - край прорисовки (м), z - 1 = включено; cld: xy - сдвиг ветром, z - сила, w - 1 / размер

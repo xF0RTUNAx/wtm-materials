@@ -4,9 +4,9 @@
 // Уступ: верх - материал земли (стыка с лугом нет), лицо - свой (глина / камень, три проекции), осыпь у подножия - снова земля; верх и осыпь - в высоте G.meshH
 // (деревья, трава, машины стоят на них).
 /* global THREE */
-import { ktxLoad, ktxOn } from './ktx.js?v=20261126b';
-import { CITY, mulberry32, smooth, clamp } from './city.js?v=20261126b';
-import { noiseTex } from './noise-tex.js?v=20261126b';
+import { ktxLoad, ktxOn } from './ktx.js?v=20261127a';
+import { CITY, mulberry32, smooth, clamp } from './city.js?v=20261127a';
+import { noiseTex } from './noise-tex.js?v=20261127a';
 export const CLIFF_ON = typeof location !== 'undefined' && !/[?&]cliff=0/.test(location.search);
 const CFG = { city: { H0: 8400, s0: 0.33, gap: 210, max: 30, h: [7, 17], L: [80, 240] }, autumn: { H0: 9800, s0: 0.32, gap: 300, max: 60, h: [7, 18], L: [80, 260] } };
 const hash2 = (i, j) => { const v = Math.sin(i * 127.1 + j * 311.7) * 43758.5453; return v - Math.floor(v); };

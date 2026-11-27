@@ -2,8 +2,8 @@
 // (больше суток - «6 д 14 ч» раз в минуту, меньше - «13:42:05» янтарным раз в секунду; без премиума - серая плашка «Премиум»), окно «Премиум закончился» (один раз
 // на срок - флаг в localStorage), уведомление «+1 кристалл за вход», лента «Премиум до …» в профиле. Срок хранит progress-net.js (premUntil / premLast), магазин -
 // shop-ui.js (вкладка «Премиум»), оплата - pay.js. Знак - своя картинка airdef/shop/prem/prem_wings_*.webp (в оригинале 1416×440, берём в 2× от показа).
-import { tr, LANG } from './i18n.js?v=20261126b';
-import { activeAcc } from './account.js?v=20261126b';
+import { tr, LANG } from './i18n.js?v=20261127a';
+import { activeAcc } from './account.js?v=20261127a';
 
 const WS = 'airdef/shop/prem/prem_wings_';
 // знак высотой h px (CSS): 64 px шириной - обычный экран, 120 - плотный (srcset)

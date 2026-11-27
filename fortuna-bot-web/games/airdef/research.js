@@ -2,11 +2,11 @@
 // ветки сверху, стороны слева (нейтрально), колонки - ранги I-IV, линии - от предыдущей единицы к следующей, карточка -
 // модель, название, ранг, цена; строка паритета над колонкой. Тап - досье: игровые ТТХ, аналог другой стороны,
 // «Исследовать» / «Сделать целью» / «Купить». Тратит сервер (progress-net.js → airdef-progress).
-import { NODE, BRANCHES, SIDES, SIDE_NAME, RANKS, RANK_NAME, nodesOf, owned, researched, rankOpen, rankBlock, canBuy, canResearch, cardStats, pairOf, unitType, treeLayout, ranked } from './progress.js?v=20261126b';
-import { SAM, AG, LOADOUTS } from './arsenal.js?v=20261126b';
-import { ico, capsHtml } from './icons.js?v=20261126b';
-import { XP, SV, trMsg } from './progress-net.js?v=20261126b';
-import { tr, trIf, LANG, XL, LOCALE, numLoc, L10N } from './i18n.js?v=20261126b';
+import { NODE, BRANCHES, SIDES, SIDE_NAME, RANKS, RANK_NAME, nodesOf, owned, researched, rankOpen, rankBlock, canBuy, canResearch, cardStats, pairOf, unitType, treeLayout, ranked } from './progress.js?v=20261127a';
+import { SAM, AG, LOADOUTS } from './arsenal.js?v=20261127a';
+import { ico, capsHtml } from './icons.js?v=20261127a';
+import { XP, SV, trMsg } from './progress-net.js?v=20261127a';
+import { tr, trIf, LANG, XL, LOCALE, numLoc, L10N } from './i18n.js?v=20261127a';
 
 // сцены категорий (рендеры сборщика, Mark 2026-11-04): файл ветка_сторона.jpg, у «Авиации» ещё вертолёты
 const BG_SCENE = {}; for (const k of ['air.east', 'air.west', 'air.heli', 'wpn.east', 'wpn.west', 'pvo.east', 'pvo.west', 'strike.east', 'strike.west']) BG_SCENE[k] = `airdef/ui/research/${k.replace('.', '_')}.jpg`;
@@ -84,13 +84,13 @@ const CSS = `
 const n2 = (v) => Math.round(v).toLocaleString(LOCALE);
 // значения карточки из progress.js (cardStats): «480 км/ч», «1,5-30 км», «2,5 т», «есть» - единицы и запятая на выбранном языке
 const trVal = (v) => (!XL ? v : LANG === 'en' ? numLoc(trIf(v).replace(/^none$/, 'no')) : numLoc(trIf(v)));
-const thumb = (n) => `airdef/thumbs/${n.branch}_${n.key}.webp?v=20261126b`;
+const thumb = (n) => `airdef/thumbs/${n.branch}_${n.key}.webp?v=20261127a`;
 // подпись строки карточки; «Обзор» у ЗРК без РЛС - дальность обзора оптикой (Detection), а в словаре «Обзор» - кнопка камеры (View)
 const statName = (k) => (XL && k === 'Обзор' ? L10N.detect : trIf(k));
 const GOAL_TAG = L10N.goal; // по-русски та же «ЦЕЛЬ», что кнопка захвата цели (словарь - один ключ на оба), по-английски это разные слова
 // подвески самолёта и вертолёта в досье - иконками вооружения (Mark 2026-11-27: «не текстом, а маленькими иконками упомянутого вооружения»):
 // подвеска - ряд картинок оружия (thumbs/wpn_<ключ>) с числом, название - в подсказке
-const wIco = (k, c) => `<span class="wi" title="${(trIf(AG[k]?.name || k) + (c > 1 ? ` ×${c}` : '')).replace(/"/g, '&quot;')}"><img src="airdef/thumbs/wpn_${k}.webp?v=20261126b" alt="" loading="lazy">${c > 1 ? `<i>×${c}</i>` : ''}</span>`;
+const wIco = (k, c) => `<span class="wi" title="${(trIf(AG[k]?.name || k) + (c > 1 ? ` ×${c}` : '')).replace(/"/g, '&quot;')}"><img src="airdef/thumbs/wpn_${k}.webp?v=20261127a" alt="" loading="lazy">${c > 1 ? `<i>×${c}</i>` : ''}</span>`;
 const loadIcons = (n) => { const ls = RANKS.flatMap((e) => (LOADOUTS[e] || []).filter((L) => L.plane === n.key)); return ls.length ? `<span class="ldh">${tr('Подвески')}</span><span class="lds">${ls.map((L) => `<span class="ld" title="${trIf(L.name).replace(/"/g, '&quot;')}">${L.items.map(([k, c]) => wIco(k, c)).join('')}</span>`).join('')}</span>` : ''; };
 const guide = (n) => (n.branch === 'pvo' ? trIf(SAM[n.key]?.guide) : n.branch === 'air' || n.branch === 'heli' ? loadIcons(n) : trIf(AG[n.item || n.key]?.guide)) || '';
 

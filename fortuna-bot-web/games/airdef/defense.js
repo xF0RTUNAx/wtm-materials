@@ -9,21 +9,21 @@
 // start(opts) - для обучения: { budget, waves, units: [[ключ, x, z, roof]], op: индекс комплекса, plan: false, wave(raid, rnd, n),
 //   noEnd, hold (волна не кончается сама - урок подаёт цели), onTick(dt), on: { place, waveStart, waveEnd, designate, track, launch, planeDown, arm, radar } }.
 /* global THREE */
-import { tr, trIf } from './i18n.js?v=20261126b';
-import { premById, drawWings, wingsW } from './prem.js?v=20261126b';
-import { trFmt } from './i18n-fmt.js?v=20261126b';
-import { CITY, mulberry32 } from './city.js?v=20261126b';
-import { weaponHasModel } from './models.js?v=20261126b';
-import { LNCH, lnchToWorld, trainable, yawGoal } from './launchers.js?v=20261126b';
-import { ico, iconize, capsHtml, tgtRowHtml, tgtLabel, tgtChoices } from './icons.js?v=20261126b';
-import { SAM, SAM_COST, SAM_TYPE, AG, eqOf, MULTI, CARRIERS, THREAT, COMBINED, DEFENSE, multiBudget, multiItems, MULTI_LINES, threatOf, multiCap, multiSamCost, multiSamCap, multiSamOk, multiSamFree } from './arsenal.js?v=20261126b';
-import { samClass, samCost, samCostFor, LIMIT1 } from './sim/online.js?v=20261126b';
-import { TEAM_NAME, TBM_RULE, TBM_EXCL, tbmOf, tbmCheck, sumN } from './sim/online-multi.js?v=20261126b';
+import { tr, trIf } from './i18n.js?v=20261127a';
+import { premById, drawWings, wingsW } from './prem.js?v=20261127a';
+import { trFmt } from './i18n-fmt.js?v=20261127a';
+import { CITY, mulberry32 } from './city.js?v=20261127a';
+import { weaponHasModel } from './models.js?v=20261127a';
+import { LNCH, lnchToWorld, trainable, yawGoal } from './launchers.js?v=20261127a';
+import { ico, iconize, capsHtml, tgtRowHtml, tgtLabel, tgtChoices } from './icons.js?v=20261127a';
+import { SAM, SAM_COST, SAM_TYPE, AG, eqOf, MULTI, CARRIERS, THREAT, COMBINED, DEFENSE, multiBudget, multiItems, MULTI_LINES, threatOf, multiCap, multiSamCost, multiSamCap, multiSamOk, multiSamFree } from './arsenal.js?v=20261127a';
+import { samClass, samCost, samCostFor, LIMIT1 } from './sim/online.js?v=20261127a';
+import { TEAM_NAME, TBM_RULE, TBM_EXCL, tbmOf, tbmCheck, sumN } from './sim/online-multi.js?v=20261127a';
 const esc = (x) => String(x ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-import { clamp, D2R, angleBetween, fwdOf } from '../drone/sim/core.js?v=20261126b';
-import { TGT_CATS, tgtCat } from './sim/strike.js?v=20261126b';
-import { freeGround, buildingAt, roofOk, pickTargets, placeDefense } from './mission.js?v=20261126b';
-import { createCombined, combinedOk, COMBINED_NAME, levelIn, levelOfPlan, levelOfSams, samKnown, planDefaults, unitCfg, carrierOf, CARRIER_WAIT, LAUNCH_R, LIM_ON } from './sim/combined.js?v=20261126b';
+import { clamp, D2R, angleBetween, fwdOf } from '../drone/sim/core.js?v=20261127a';
+import { TGT_CATS, tgtCat } from './sim/strike.js?v=20261127a';
+import { freeGround, buildingAt, roofOk, pickTargets, placeDefense } from './mission.js?v=20261127a';
+import { createCombined, combinedOk, COMBINED_NAME, levelIn, levelOfPlan, levelOfSams, samKnown, planDefaults, unitCfg, carrierOf, CARRIER_WAIT, LAUNCH_R, LIM_ON } from './sim/combined.js?v=20261127a';
 
 export const WAVES = 6;
 const WAVE_N = [3, 4, 6, 7, 9, 11];
@@ -478,7 +478,7 @@ export function createDefense(C) {
   function placeBlock() {
     if (!st.placing) return '';
     const k = st.placing, S = SAM[k], c = priceOf(k);
-    return `<div class="dph"><img class="dsi" src="airdef/thumbs/pvo_${k}.webp?v=20261126b" alt="" draggable="false" onerror="this.style.visibility='hidden'"><div class="dpn"><b>${S.name}</b><div class="dst">${raHtml(S)}${capsHtml(S, tmode())}</div></div></div>
+    return `<div class="dph"><img class="dsi" src="airdef/thumbs/pvo_${k}.webp?v=20261127a" alt="" draggable="false" onerror="this.style.visibility='hidden'"><div class="dpn"><b>${S.name}</b><div class="dst">${raHtml(S)}${capsHtml(S, tmode())}</div></div></div>
       <div class="dpb"><div class="dtx">${st.draft ? tr('место выбрано - коснитесь карты, чтобы сдвинуть') : tr(IS_TOUCH ? '<b>{0}:</b> коснитесь карты. <i class="gr">Зелёный</i> - можно, <i class="rd">красный</i> - нельзя.' : '<b>{0}:</b> щёлкните по карте. <i class="gr">Зелёный</i> - можно, <i class="rd">красный</i> - нельзя.', [S.short])}${S.hp <= 15 ? tr(' · можно на плоскую крышу') : ''}${IS_TOUCH ? '' : tr(' · Enter - подтвердить, Esc или правая кнопка - отмена')}</div>
         <div class="dpa"><button class="dsb alt" data-a="pno">${tr('Отмена')}</button><button class="dsb" data-a="pok" ${st.draft ? '' : 'disabled'}>${tr('Поставить · {0}', [c])}</button></div></div>`;
   }
@@ -567,7 +567,7 @@ export function createDefense(C) {
     if (!on) return;
     const mode = tmode(), list = shelfList(), anyCaps = list.some(({ s }) => capsHtml(s, mode)); // строка «что сбивает» нужна, только если она есть хоть у одной карточки (в «Обороне» у большинства комплексов её нет)
     const h = list.map(({ k, s, c, why }) => { const n = mineN(k), cl = samClass(k);
-      return `<div class="dsc${st.placing === k ? ' on' : ''}${why ? ' no' : ''}" data-buy="${k}"><img class="dsi" src="airdef/thumbs/pvo_${k}.webp?v=20261126b" alt="" draggable="false" onerror="this.style.visibility='hidden'"><div class="dsn">${s.short}</div><div class="dsr"><span class="dcl ${cl}">${CLS_SHORT[cl]}</span><span class="dpc">${c}</span></div><div class="dsm">${why ? `<span class="dsw">${ico('lock')}${why}</span>` : raHtml(s)}</div>${anyCaps ? `<div class="dsg">${capsHtml(s, mode)}</div>` : ''}${n ? `<span class="dsx">×${n}</span>` : ''}</div>`; }).join('');
+      return `<div class="dsc${st.placing === k ? ' on' : ''}${why ? ' no' : ''}" data-buy="${k}"><img class="dsi" src="airdef/thumbs/pvo_${k}.webp?v=20261127a" alt="" draggable="false" onerror="this.style.visibility='hidden'"><div class="dsn">${s.short}</div><div class="dsr"><span class="dcl ${cl}">${CLS_SHORT[cl]}</span><span class="dpc">${c}</span></div><div class="dsm">${why ? `<span class="dsw">${ico('lock')}${why}</span>` : raHtml(s)}</div>${anyCaps ? `<div class="dsg">${capsHtml(s, mode)}</div>` : ''}${n ? `<span class="dsx">×${n}</span>` : ''}</div>`; }).join('');
     if (h !== shelfH) { const x = shs.scrollLeft; shelfH = h; shs.innerHTML = h; shs.scrollLeft = x; }
     shelfLayout();
   }
@@ -761,8 +761,8 @@ export function createDefense(C) {
   const kistOn = () => !!C.S && atk() && !!st.plan && st.phase === 'plan' && st.view === 'map' && !st.over;
   const kistZ = () => (C.VW >= 1350 && C.VH >= 700 ? 1.5 : C.VW >= 1100 && C.VH >= 620 ? 1.25 : 1); // как масштабы #mkPlan в airdef.html
   const KST_S = { kh101: 1, kh55: 1, jassm: 1, storm: 1 }, KST_LT = { r17: 1, tochka: 1, iskander: 1, atacms: 1, prsm: 1, lance: 1 }; // _s - одна ракета без второй рядом; пусковые темнее - осветлить
-  const kistSrc = (k) => `airdef/thumbs/strike_${k}${KST_S[k] ? '_s' : ''}.webp?v=20261126b`;
-  const kistImg = (k) => `<img class="${KST_LT[k] ? 'lt' : ''}" src="${kistSrc(k)}" alt="" draggable="false" onerror="this.onerror=null;this.src='airdef/thumbs/wpn_${k}.webp?v=20261126b'">`;
+  const kistSrc = (k) => `airdef/thumbs/strike_${k}${KST_S[k] ? '_s' : ''}.webp?v=20261127a`;
+  const kistImg = (k) => `<img class="${KST_LT[k] ? 'lt' : ''}" src="${kistSrc(k)}" alt="" draggable="false" onerror="this.onerror=null;this.src='airdef/thumbs/wpn_${k}.webp?v=20261127a'">`;
   const kistHere = (key) => planComp().filter(([k]) => !AG[k].recon).map(([k]) => [k, idxOf(k, key).length]).filter(([, n]) => n);
   const kistGroups = () => (MULTI_LINES[attSide()] || []).map(([id, , it]) => [id, it.filter(([k]) => !st.opts.items || st.opts.items.has(k))]).filter(([, it]) => it.length);
   function kistInfo(k) { // состояние плитки: взято, цена, почему нельзя (lock | other | full | exp)
@@ -787,7 +787,7 @@ export function createDefense(C) {
   }
   // метки у целей: прогноз, голубое «+N» союзников; на большом экране - ещё мини-картинки состава. Снизу нет места или там подпись соседа - справа от цели
   const kistPic = {};
-  function kistPicOf(k) { if (!kistPic[k] && typeof Image !== 'undefined') { const im = kistPic[k] = new Image(); im.onerror = () => { im.onerror = null; im.src = `airdef/thumbs/wpn_${k}.webp?v=20261126b`; }; im.src = kistSrc(k); } return kistPic[k]; }
+  function kistPicOf(k) { if (!kistPic[k] && typeof Image !== 'undefined') { const im = kistPic[k] = new Image(); im.onerror = () => { im.onerror = null; im.src = `airdef/thumbs/wpn_${k}.webp?v=20261127a`; }; im.src = kistSrc(k); } return kistPic[k]; }
   const kistNW = {}; function kistNameW(n) { if (!kistNW[n]) { const f = tx.font; tx.font = '600 11px "Golos Text", -apple-system, Segoe UI, sans-serif'; kistNW[n] = (tx.measureText(n).width || 60) / 2 + 2; tx.font = f; } return kistNW[n]; } // половина ширины подписи цели
   function kistBadges() {
     const Z = kistZ(), big = Z > 1, N = st.net, me = N && N.me && N.me.id, AT = {}, ks = new Set(tKeys().filter((k) => k[0] === 'o'));
@@ -846,7 +846,7 @@ export function createDefense(C) {
     const go = N ? `<button class="mkgo${ready ? ' dn' : empty ? ' off' : ''}" data-a="ready">${tr('Готов')}${ready ? `<i>${ico('ok')}</i>` : ''}</button>` : `<button class="mkgo${empty ? ' off' : ''}" data-a="go" ${empty ? 'disabled' : ''}>${tr('Пуск')}</button>`;
     // оружие в руке и единицы без цели
     const hq = st.hand ? kistInfo(st.hand) : null, via = hq && (multiItems(attSide()).find(([q]) => q === st.hand) || [])[1];
-    const hand = hq ? `<span class="ncell mkh"><span class="im">${kistImg(st.hand)}</span><b>${AG[st.hand].short}</b><small>${hq.n}/${hq.cap}</small>${via ? `<img class="via" src="airdef/thumbs/air_${via}.webp?v=20261126b" alt="" onerror="this.style.display='none'">` : ''}</span>` : `<span class="ncell mkh none"><b>${tr('Выберите оружие, затем цель')}</b></span>`;
+    const hand = hq ? `<span class="ncell mkh"><span class="im">${kistImg(st.hand)}</span><b>${AG[st.hand].short}</b><small>${hq.n}/${hq.cap}</small>${via ? `<img class="via" src="airdef/thumbs/air_${via}.webp?v=20261127a" alt="" onerror="this.style.display='none'">` : ''}</span>` : `<span class="ncell mkh none"><b>${tr('Выберите оружие, затем цель')}</b></span>`;
     const fr = kistHere(null), freeH = fr.length ? `<button class="ncell mkfr" data-a="spread" title="${tr('Раздать поровну')}"><b class="q">?</b>${fr.slice(0, 3).map(mini).join('')}<i>${ico('target')}</i></button>` : '';
     const h = `<div class="mktop"><div class="nhead">${head}</div><div class="mkr2">${row2}</div></div><div class="mkright">${alH}${ord}</div><div class="mkmsg"></div>
       <div class="mklow">${freeH}<div class="mkr3"><button class="mksq" data-a="kfit" aria-label="${tr('Весь район')}">${ico('fullscreen')}</button>${hand}${freeH}${ord}</div><div class="mkbot"><div class="mkst${nAll > 11 ? ' many' : ''}" style="--n:${nAll};--g:${G.length}">${strip}</div>${go}</div></div>`;

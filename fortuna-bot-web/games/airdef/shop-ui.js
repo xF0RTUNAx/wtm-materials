@@ -7,12 +7,12 @@
 // Правила наград за сезон в игре не объявляются (Mark): в подсказке - только «за рейтинг, в конце сезона».
 // Вкладки «Премиум» и «Кристаллы» (Mark 2026-11-19, «Витрина над облаками», Магазин/Премиум/_чистовые/ПАСПОРТ.md): видео-фон с перекрёстным растворением, талоны бронза / серебро /
 // золото с ценой в Telegram Stars, блик, преимущества, согласие и «Купить». Оплата - pay.js (счёт Telegram, опрос заказа), срок премиума - progress-net.js.
-import { ico } from './icons.js?v=20261126b';
-import { tr, trIf, LANG, LOCALE } from './i18n.js?v=20261126b';
-import { activeAcc, callFn } from './account.js?v=20261126b';
-import { CAMOS, CAMO_PRICE, PLANES, AVA_SHOP, AVA_PRICE, avaKey, PAY, PREM_K } from './arsenal.js?v=20261126b';
-import { avaSrc } from './avatar.js?v=20261126b';
-import { wings, ddmmHm } from './prem.js?v=20261126b';
+import { ico } from './icons.js?v=20261127a';
+import { tr, trIf, LANG, LOCALE } from './i18n.js?v=20261127a';
+import { activeAcc, callFn } from './account.js?v=20261127a';
+import { CAMOS, CAMO_PRICE, PLANES, AVA_SHOP, AVA_PRICE, avaKey, PAY, PREM_K } from './arsenal.js?v=20261127a';
+import { avaSrc } from './avatar.js?v=20261127a';
+import { wings, ddmmHm } from './prem.js?v=20261127a';
 
 const LOC = LOCALE;
 const nf = (v) => Math.round(v).toLocaleString(LOC);

@@ -1,16 +1,16 @@
 // Модели и эффекты «Воздушного превосходства»: зенитные комплексы (процедурные, по мотивам реальных машин),
 // бомбы и ракеты, взрывы, дымные следы ЗУР, трассы зенитных пушек, ловушки, пожары на разрушенных объектах.
 /* global THREE */
-import { part, mergeParts, M, latheZ, plateXZ, plateZY, buildMissileGeo } from '../drone/models.js?v=20261126b';
-import { makeParticles, radialTex } from '../drone/world.js?v=20261126b';
-import { createPlumes, makeFlame, flameTick, motorOf, setFlameLayer, setTrailPuffs, trailPuffsOn, PUFF_MIN, setIgnition } from './plume.js?v=20261126b';
-import { FLAME_KIND, makeJetFlame, setJetLayer } from './jetflame.js?v=20261126b';
-import { createCmFx } from './cmfx.js?v=20261126b';
-import { LNCH, mslView } from './launchers.js?v=20261126b';
-import { createBook } from './flipbook.js?v=20261126b';
-import { ktxOn } from './ktx.js?v=20261126b';
-import { createCloudPuffs } from './cloudpuffs.js?v=20261126b';
-import { makePuffs } from './puffs.js?v=20261126b';
+import { part, mergeParts, M, latheZ, plateXZ, plateZY, buildMissileGeo } from '../drone/models.js?v=20261127a';
+import { makeParticles, radialTex } from '../drone/world.js?v=20261127a';
+import { createPlumes, makeFlame, flameTick, motorOf, setFlameLayer, setTrailPuffs, trailPuffsOn, PUFF_MIN, setIgnition } from './plume.js?v=20261127a';
+import { FLAME_KIND, makeJetFlame, setJetLayer } from './jetflame.js?v=20261127a';
+import { createCmFx } from './cmfx.js?v=20261127a';
+import { LNCH, mslView } from './launchers.js?v=20261127a';
+import { createBook } from './flipbook.js?v=20261127a';
+import { ktxOn } from './ktx.js?v=20261127a';
+import { createCloudPuffs } from './cloudpuffs.js?v=20261127a';
+import { makePuffs } from './puffs.js?v=20261127a';
 
 const OLIVE = 0x4f5c3c, OLIVE_D = 0x3c4630, SAND = 0x6e6a4c, NATO = 0x3f4a35, DARK = 0x1d2024, WHITE = 0xd8d8d0, STEEL = 0x707478;
 
@@ -591,9 +591,9 @@ export function createFx(scene, P) {
   // столб дыма пожара (fx/ex_burn - снят в Blender как петля): высота - по размеру очага; начинается с разной фазы
   const colAdd = (b) => CB.add(b.pos, XJ.burn.height * Math.min(1.6, Math.max(0.35, b.r / XJ.burn.ref)), 1, { t0: -Math.random() * 4 });
   if (!(typeof location !== 'undefined' && /[?&]exnew=0/.test(location.search)) && typeof fetch === 'function' && typeof document !== 'undefined') {
-    fetch(new URL('./fx/explode.json?v=20261126b', import.meta.url)).then((r) => r.json()).then((J) => {
+    fetch(new URL('./fx/explode.json?v=20261127a', import.meta.url)).then((r) => r.json()).then((J) => {
       for (const [t, j] of Object.entries(J)) {
-        const u = (e) => new URL(`./fx/ex_${t}${P.fxLo || P.halfFx ? '_lo' : ''}.${e}?v=20261126b`, import.meta.url).href; // телефон и слабые пресеты - вдвое меньше (память)
+        const u = (e) => new URL(`./fx/ex_${t}${P.fxLo || P.halfFx ? '_lo' : ''}.${e}?v=20261127a`, import.meta.url).href; // телефон и слабые пресеты - вдвое меньше (память)
         if (t === 'puff') { // клубы дыма следов подбитых (tools/airdef-fx/explode/puff.py)
           // по умолчанию (2026-10-24: лист перепечён - клуб заполняет клетку, шаг следа fx.trailStep - «бусин» вдали нет); ?puff=0 - прежние пятна
           if (/[?&]puff=0/.test(location.search)) continue;
@@ -632,11 +632,11 @@ export function createFx(scene, P) {
     // взрывы со светом сцены (Mark 2026-11-26: «странная палитра… не взаимодействует со светом и окружением»; tools/airdef-fx/explode6): в листах -
     // отклик облака на свет с шести сторон, пыль/сажа и накал, цвет и свет даёт игра (солнце, небо, земля, грунт под взрывом). Нужен KTX2; пока не
     // пришли или ?ex6=0 - прежние листы
-    if (ktxOn() && !/[?&]ex6=0/.test(location.search)) fetch(new URL('./fx/explode6.json?v=20261126b', import.meta.url)).then((r) => r.json()).then((J) => {
+    if (ktxOn() && !/[?&]ex6=0/.test(location.search)) fetch(new URL('./fx/explode6.json?v=20261127a', import.meta.url)).then((r) => r.json()).then((J) => {
       for (const [t, j] of Object.entries(J)) {
         if (t.endsWith('_top')) continue; // съёмка сверху - к своему листу (sixTop)
         if (t === 'try' || (SWARM && !t.startsWith('clump') && t !== 'air' && !t.startsWith('jets')) || (!SWARM && t.startsWith('clump')) || (t.startsWith('jets') && (!JETS || t === 'jets_c' || t === 'jets_g'))) continue; // струи - только пробой ?jets=1 // рой - только клубы, ?swarm=0 - только прежние листы
-        const u = (n, tt = t) => new URL(`./fx/ex6_${tt}_${n}${P.fxLo || P.halfFx ? '_lo' : ''}.ktx2?v=20261126b`, import.meta.url).href;
+        const u = (n, tt = t) => new URL(`./fx/ex6_${tt}_${n}${P.fxLo || P.halfFx ? '_lo' : ''}.ktx2?v=20261127a`, import.meta.url).href;
         // вид сверху: огненные клубы роя - съёмка сверху clump_bu5_top (та же сетка кадров), струи - своя; всплывающие клубы при взгляде сверху тают
         // (сверху столб закрыт шапкой, а снятые сбоку они читались бы столбами)
         const TK = J[`${t}_top`] ? `${t}_top` : /^clump_bu/.test(t) && J.clump_bu5_top ? 'clump_bu5_top' : null, TJ = TK && J[TK];
