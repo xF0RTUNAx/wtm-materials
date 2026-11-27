@@ -430,13 +430,14 @@ const CONFIG = {
   msl_rapier: { src: `${DL}/Свои/Rapier/msl_rapier.glb`, scale: 1, nose: '-z', own: true, tex: () => 512, pickMesh: /./ },
   // ЗИФ-122 «Оса-М» на береговой позиции — KoreanNavy (CC BY 4.0; прежняя модель «Оса-АКМ» Jeyhun1985 — с признаками рипа): двухбалочная корабельная пусковая на тумбе с диском (диск — бетонная площадка-основание),
   // две ракеты 4К33 висят под балками (длина по модели ≈ 2,64 → 3,16 м, как msl.L; масштаб 1,2). Лежит носом в +X, балки подняты на ≈10° (pack0 — угол ракет и балок, 10,2°); ось качания — цапфа (x 0, y 1,815 в единицах автора)
-  osa: { src: `${DL}/zif-122_osa-m_koreannavy.glb`, scale: 1.2, nose: '+x', rulesIn: 'game', unit: true, tex: () => 256, absorb: 0, hinge: [0, 2.178, 0], pack0: 0.178, colors: { '^Material\\.004#msl$': [0.25, 0.26, 0.24], '#msl$': [0.72, 0.72, 0.66], '#steel$': [0.17, 0.19, 0.16], '#conc$': [0.34, 0.33, 0.31] },
-    groups: (c) => {
-      if (/Cylinder\.001/.test(c.path)) return 'missile#msl'; // 4К33 на балках
-      if (/Cube\.00[12]/.test(c.path)) return 'cradle#steel'; // балки и проушины подвеса
-      if (c.max[1] < 1.3 * 1.2) return 'body#conc'; // диск, болты и тумба
-      return c.mat === 1 ? 'turret' : 'turret#steel'; // башня с осью-цапфой
-    } },
+  // 9К33М3 «Оса-АКМ» - своя (сборщик s300-builder, Свои/9К33М3 Оса-АКМ, ПАСПОРТ.json, 2026-11-27; Mark: «обе модели готовы») вместо береговой ЗИФ-122 (KoreanNavy):
+  // body_ - шасси БАЗ-5937, turret_ и mast_ - башня (ось (0; 2,04; 0)) с мачтой, radar_ - антенна обнаружения (крутится), trk_ - станция сопровождения (dish, качается
+  // по углу места цели), pack_ - два пакета ТПК на шарнире (0; 3,15; 1,3), lid_N - крышки ТПК (lid + номер слота по порядку пуска), ecyl_ / erod_ → cyl0 / cyl1 -
+  // гидроцилиндры подъёма (левый и правый на одной высоте - один подъёмник). Ракет в модели нет - 9М33М3 (msl_osa) летит из ТПК
+  osa: { src: `${DL}/Свои/9К33М3 Оса-АКМ/osa.glb`, scale: 1, nose: '-z', rulesIn: 'game', unit: true, own: true, tex: (m) => (/_R$/.test(m.name) ? 1024 : 2048), nTex: (m) => (/_R$/.test(m.name) ? 512 : 1024), pickMesh: /./,
+    axisX: 0, axisZ: 0, ground: 0, hinge: [0, 3.15, 1.3], tpFix: [0, 2.04, 0], pack0: 0, groups: (c) => osaPart(c, true) },
+  // ракета 9М33М3 - своя: 3,16 м, Ø 0,21, нос −Z, один двухрежимный двигатель, рули и концы крыльев - отдельными узлами (в игре неподвижны, летит раскрытой)
+  msl_osa: { src: `${DL}/Свои/9К33М3 Оса-АКМ/ракета/msl_osa.glb`, scale: 1, nose: '-z', own: true, tex: () => 1024, nTex: () => 512, pickMesh: /./ },
   // PAC-3 — своя пусковая (CONFIG.pac3 ниже, у Patriot); M901 Muhamad Mirza Arrafi (была у Patriot, потом у PAC-3) больше не нужна — 2026-11-02
   // ── комплексы с ракетами на направляющих: ракета модели — образец для слотов и полёта (missile), stage — доля маршевой ступени
   // С-75М3 «Волхов» - своя (сборщик hawk21-builder, Свои/С-75 (СМ-90) + 5Я23, 2026-11-27; Mark: «Модель С-75 готова»; раньше - manyakasia). Метры, нос −Z,
@@ -462,14 +463,13 @@ const CONFIG = {
     groups: (c) => kubPart(c) },
   // ракета 3М9 - своя (Свои/2К12 Куб (2П25) + 3М9/ракета): 5,8 м, Ø 0,335, нос −Z, срез сопла z 2,9175; рули отдельными узлами (в игре неподвижны)
   msl_kub: { src: `${DL}/Свои/2К12 Куб (2П25) + 3М9/ракета/msl_kub.glb`, scale: 1, nose: '-z', own: true, tex: () => 1024, nTex: () => 512, pickMesh: /./ },
-  hawk: { src: `${DL}/mim-23_hawk_sam_air_defence_system_game-ready.glb`, scale: 0.012, nose: '+z', rulesIn: 'game', unit: true, tex: () => 512, target: 55000, hinge: [0, 1.77, -0.19], absorb: 0, /* рули ракеты — уже в её детали; с «прилипанием» 0,9 м к ракете цеплялись 115 деталей пусковой (Mark 2026-10-22) */
-    groups: (c) => {
-      if (c.size[2] > 3.8 && axis(c, [-0.19, 1.77], [-0.985, 0.175], 1.2, -3.2, 3.6)) return 'missile';
-      if (c.min[1] > 1.55 && axis(c, [-0.19, 1.77], [-0.985, 0.175], 1.3, -3.2, 3.6)) return 'cradle';
-      return c.min[1] > 1.15 && c.ctr[2] > -0.7 && c.ctr[2] < 0.5 ? 'turret' : 'body';
-    } },
-  // M163 VADS — своя модель, ревизия 2 (сборщик s300-builder, Свои/M163 Vulcan своя, 2026-11-24; прежняя — Gorgytz): 178 тыс., трёхцветка НАТО и ORM запечены (шейдерный узор снят).
-  // Оси сборщика без центровки: погон tp (0; 1,845; 0,207), качание пушки (0; 2,244; −0,138); barrels_cluster — блок стволов (крутится, ось в cradle), dish_radar — тарелка дальномера
+  // MIM-23 Hawk - своя (Свои/MIM-23 Hawk (M192 + MIM-23B), ПАСПОРТ.json, 2026-11-27) вместо Dominik Biały: body_ и wheel_ - прицеп на опорах, turret_ - поворотная
+  // часть (ось (0; 0,96; 0)), cradle_ - три балки на шарнире (0; 2,0; −0,1), lift_cyl / lift_mid / lift_rod → cyl0…2 - подъёмник (launchers.js hawk.lift). Ракет в модели нет -
+  // своя MIM-23B (msl_hawk) в слотах
+  hawk: { src: `${DL}/Свои/MIM-23 Hawk (M192 + MIM-23B)/hawk.glb`, scale: 1, nose: '-z', rulesIn: 'game', unit: true, own: true, tex: () => 2048, nTex: () => 1024, pickMesh: /./,
+    axisX: 0, axisZ: 0, ground: 0, hinge: [0, 2.0, -0.1], tpFix: [0, 0.96, 0], pack0: 0, groups: (c) => kubPart(c) },
+  // ракета MIM-23B - своя: 5,08 м, нос −Z, один двигатель (ступеней нет), рули отдельными узлами (в игре неподвижны)
+  msl_hawk: { src: `${DL}/Свои/MIM-23 Hawk (M192 + MIM-23B)/ракета/msl_hawk.glb`, scale: 1, nose: '-z', own: true, tex: () => 1024, nTex: () => 512, pickMesh: /./ },
   m163: { src: new URL('./own/m163.glb', import.meta.url).pathname, scale: 1, nose: '-z', rulesIn: 'game', unit: true, own: true, tex: (m) => (m.name === 'VD_R' ? 1024 : 2048), nTex: (m) => (m.name === 'VD_R' ? 512 : 1024), pickMesh: /./,
     axisX: 0, axisZ: 0, ground: 0, hinge: [0, 2.2443, -0.1381], tpFix: [0, 1.8449, 0.2071], pack0: 0, groups: (c) => m163Part(c, true) },
   m163_old: { src: `${DL}/m163_vads.glb`, scale: 0.393, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, hinge: [0, 3.44, -1.29],
@@ -826,6 +826,14 @@ function s125Part(c) {
   const p = c.path, L = p.match(/(^|\/)bal_(cyl|rod)/); if (L) return 'cyl' + ['cyl', 'rod'].indexOf(L[2]);
   return /(^|\/)cradle_/.test(p) ? 'cradle' : /(^|\/)turret_/.test(p) ? 'turret' : 'body';
 }
+// «Оса-АКМ»: крышки lid_N - вблизи свои части в порядке пуска (lid + слот: правый наружный, левый наружный, правый средний…), вдали - в пакете
+const OSA_LID = [1, 3, 5, 4, 2, 0];
+function osaPart(c, near) {
+  const p = c.path, L = p.match(/(^|\/)lid_(\d)/); if (L) return near ? 'lid' + OSA_LID[+L[2]] : 'cradle';
+  if (/(^|\/)ecyl_/.test(p)) return 'cyl0'; if (/(^|\/)erod_/.test(p)) return 'cyl1';
+  if (/(^|\/)trk_/.test(p)) return near ? 'dish' : 'turret';
+  return /(^|\/)radar_/.test(p) ? 'radar' : /(^|\/)pack_/.test(p) ? 'cradle' : /(^|\/)(turret|mast)_/.test(p) ? 'turret' : 'body';
+}
 function kubPart(c) {
   const p = c.path, L = p.match(/(^|\/)lift_(cyl|mid|rod)/); if (L) return 'cyl' + ['cyl', 'mid', 'rod'].indexOf(L[2]);
   return /(^|\/)(cradle|sector)_/.test(p) ? 'cradle' : /(^|\/)turret_/.test(p) ? 'turret' : 'body';
@@ -898,6 +906,10 @@ CONFIG.pk_zu23 = { ...CONFIG.zu23_lo, tex: () => 256 }; // стоянки объ
 CONFIG.s125_lo = { ...CONFIG.s125, src: `${DL}/Свои/С-125 (5П73) + 5В27/s125_lo.glb`, tex: () => 512, nTex: null }; // С-125: дальняя сборщика (10 тыс.)
 CONFIG.msl_s125_lo = { ...CONFIG.msl_s125, src: `${DL}/Свои/С-125 (5П73) + 5В27/ракета/msl_s125_lo.glb`, tex: () => 256, nTex: null };
 CONFIG.kub_lo = { ...CONFIG.kub, src: `${DL}/Свои/2К12 Куб (2П25) + 3М9/kub_lo.glb`, tex: () => 512, nTex: null }; // «Куб»: дальняя сборщика (46 тыс.)
+CONFIG.osa_lo = { ...CONFIG.osa, src: `${DL}/Свои/9К33М3 Оса-АКМ/osa_lo.glb`, tex: () => 512, nTex: null, groups: (c) => osaPart(c, false) }; // «Оса»: дальняя сборщика
+CONFIG.msl_osa_lo = { ...CONFIG.msl_osa, src: `${DL}/Свои/9К33М3 Оса-АКМ/ракета/msl_osa_lo.glb`, tex: () => 256, nTex: null };
+CONFIG.hawk_lo = { ...CONFIG.hawk, src: `${DL}/Свои/MIM-23 Hawk (M192 + MIM-23B)/hawk_lo.glb`, tex: () => 512, nTex: null }; // Hawk: дальняя сборщика
+CONFIG.msl_hawk_lo = { ...CONFIG.msl_hawk, src: `${DL}/Свои/MIM-23 Hawk (M192 + MIM-23B)/ракета/msl_hawk_lo.glb`, tex: () => 256, nTex: null };
 CONFIG.msl_kub_lo = { ...CONFIG.msl_kub, src: `${DL}/Свои/2К12 Куб (2П25) + 3М9/ракета/msl_kub_lo.glb`, target: 1500, simpErr: 0.01, tex: () => 256, nTex: null }; // 3М9 на пусковой издали
 CONFIG.msl_buk_lo = { ...CONFIG.msl_buk, target: 1200, simpErr: 0.01, tex: () => 256, nTex: null };
 CONFIG.chaparral_lo = { ...CONFIG.chaparral, src: `${DL}/Свои/Chaparral/chaparral_lo.glb`, tex: () => 512, nTex: null }; // Chaparral: дальняя сборщика

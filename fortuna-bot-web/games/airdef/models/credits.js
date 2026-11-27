@@ -381,25 +381,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "ZIF-122 & 4K33 Osa-M Missile",
-  "author": "KoreanNavy",
-  "url": "https://sketchfab.com/3d-models/zif-122-4k33-osa-m-missile-5cd6b3ec8b9d4e798f662dd9aefefb43",
-  "license": "CC-BY-4.0",
-  "files": [
-   "osa",
-   "osa_lo"
-  ]
- },
- {
-  "title": "Mim-23 Hawk SAM air defence system (game-ready)",
-  "author": "Dominik Biały",
-  "url": "https://sketchfab.com/3d-models/mim-23-hawk-sam-air-defence-system-game-ready-8728909b6ce24ef8baeffabbf5bae8f4",
-  "license": "CC-BY-4.0",
-  "files": [
-   "hawk"
-  ]
- },
- {
   "title": "Humvee Transport (кузов, прицеп и антенна AN/MPQ-64 — свои)",
   "author": "karmy2k",
   "url": "https://sketchfab.com/3d-models/humvee-transport-48336bc41caf4fa1bdf147823a774111",

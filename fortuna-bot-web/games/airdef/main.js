@@ -429,7 +429,7 @@ C.netBattle = function (N, o) {
   return S;
 };
 C.objLook = (id, ruin) => objLook(id, ruin);
-const OWN_UNITS = new Set(['zu23', 's75', 's125', 'gepard', 'roland', 'rapier', 'skyguard', 'kub', 'tunguska', 'strela1', 'strela10', 'zsu234', 'm163', 'tor', 'torm2', 'buk', 'pantsir', 's300', 's400', 'patriot', 'pac3', 'sampt', 'nasams', 'hawk21', 'avenger', 'chaparral', 'gpsjam', 'gpsjamw']); // свои и переделанные модели техники
+const OWN_UNITS = new Set(['osa', 'hawk', 'zu23', 's75', 's125', 'gepard', 'roland', 'rapier', 'skyguard', 'kub', 'tunguska', 'strela1', 'strela10', 'zsu234', 'm163', 'tor', 'torm2', 'buk', 'pantsir', 's300', 's400', 'patriot', 'pac3', 'sampt', 'nasams', 'hawk21', 'avenger', 'chaparral', 'gpsjam', 'gpsjamw']); // свои и переделанные модели техники
 // модели комплексов - по списку боя (после расстановки или переезда)
 C.syncUnits = function () {
   const S = C.S; if (!S) return;
@@ -499,7 +499,7 @@ C.syncUnits = function () {
         if (gm && gm.lids.length && md.LN.lids) {
           const LD = md.LN.lids, H = LD.hinge; g.userData.lids = gm.lids.map((lid, i) => {
             const sp = Ld.slots[i], pv = new THREE.Group(); obj(lid, pv);
-            if (LD.piv) { const q = LD.piv[i]; pv.position.fromArray(q); lid.position.set(-q[0], -q[1], -q[2]); }
+            if (LD.piv) { const q = LD.piv[i], c0 = LD.onPack ? Ld.cp : [0, 0, 0]; pv.position.fromArray(q); lid.position.set(-q[0] - c0[0], -q[1] - c0[1], -q[2] - c0[2]); } // prepare.js кладёт крышки в оси башни; на пакете (onPack) - ещё сдвиг на −cp («Оса»; у С-300 cp = 0)
             else { const sx = Math.sign(sp[0]); pv.position.set(sx * H[0], H[1], sp[1]); lid.position.set(-sx * H[0], -H[1], -sp[1]); pv.userData.sx = sx; }
             (LD.onPack ? cg : tg).add(pv); return pv;
           });
@@ -566,6 +566,8 @@ function torLids(u, g, dt) {
     const tgt = st.hold[k] > 0 ? 1 : k === next ? st.v : 0;
     st.a[k] = k === next && !(st.hold[k] > 0) ? tgt : clamp(st.a[k] + clamp(tgt - st.a[k], -dt / LD.tClose, dt / LD.tOpen), 0, 1);
     const a = LD.open * sstep(st.a[k]);
+    if (LD.minEl && LD.minEl[k] && (u.lel || 0) < LD.minEl[k]) { L[k].rotation.set(0, 0, 0); L[k].visible = tgt === 0 && st.a[k] < 0.01; continue; } // «Оса»: внутренние крышки при низком пакете упёрлись бы в станцию - срываются
+    L[k].visible = true;
     if (LD.axis === 'y') L[k].rotation.y = LD.sgn[k] * a; else if (LD.piv) L[k].rotation.x = a; else L[k].rotation.z = L[k].userData.sx * a; // С-300 - наружу вокруг оси пакета, NASAMS - вокруг X, «Тор» - вбок
   }
 }

@@ -358,7 +358,8 @@ const META = {
   kub: { units: ['kub'], matte: true, paint: true, metalK: { KB_R: 0.3 }, aoK: { KB_R: 0 }, stations: [] }, // metalK - траки и катки: металл карты ×0,3 (в Blender их освещало окружение, у нас металл без отражений выходил чёрным, Mark 2026-11-26)
   // 2П25 «Куб» - своя (Свои/2К12 Куб (2П25) + 3М9, 2026-11-26): окраска запечена, подъёмник пакета
   msl_kub: { samMissile: ['kub'], lazy: true, onRail: true, matte: true, paint: true, stations: [] }, // ракета 3М9 - своя, 5,8 м, нос −Z; три на направляющих
-  hawk: { units: ['hawk'], stations: [] }, // MIM-23 Hawk - Dominik Biały
+  hawk: { units: ['hawk'], matte: true, paint: true, stations: [] }, // MIM-23 Hawk - своя M192 (Свои/MIM-23 Hawk, 2026-11-27)
+  msl_hawk: { samMissile: ['hawk'], lazy: true, onRail: true, matte: true, paint: true, stations: [] }, // MIM-23B, 5,08 м, три на балках
   hawk21: { units: ['hawk21'], matte: true, stations: [] }, // Hawk XXI - своя пусковая на прицепе M192 с восемью AIM-120 (сборщик, Свои/Hawk XXI, 2026-11-03); раньше - пусковая Hawk
   m163: { units: ['m163'], stations: [], matte: true, paint: true }, // M163 VADS - своя модель, ревизия 2 (Свои/M163 Vulcan своя, 2026-11-24): трёхцветка НАТО запечена; paint - материал с картой ORM (paint.js), у наземных её иначе не читает никто
   zsu234: { units: ['zsu234'], stations: [], matte: true, paint: true }, // ЗСУ-23-4М «Шилка» - своя модель (Свои/ЗСУ-23-4 Шилка, 2026-11-25): окраска запечена, paint - карта ORM
@@ -381,7 +382,8 @@ const META = {
   ew_w: { units: ['gpsjamw'], matte: true, stations: [] }, // станция РЭБ (запад) - AN/MPQ-64 Sentinel, своя (Свои/Sentinel): «Хамви» karmy2k (CC BY 4.0) + прицеп с антенной (radar - крутится); камуфляж запечён
   strela1: { units: ['strela1'], matte: true, stations: [] }, // «Стрела-1» - своя пусковая 9П31 и ракеты на БРДМ-2 zhek (CC BY 4.0), Свои/Стрела-1; окраска - текстуры основы и запечённый атлас (без камуфляжа шейдером)
   msl_strela1: { samMissile: ['strela1'], matte: true, stations: [] }, // ракета 9М31 - своя (Свои/Стрела-1), 1,8 м, нос −Z
-  osa: { units: ['osa'], matte: true, stations: [] }, // ЗИФ-122 «Оса-М» на береговой позиции - KoreanNavy (CC BY)
+  osa: { units: ['osa'], matte: true, paint: true, stations: [] }, // 9К33М3 «Оса-АКМ» - своя (Свои/9К33М3 Оса-АКМ, 2026-11-27) вместо береговой ЗИФ-122
+  msl_osa: { samMissile: ['osa'], lazy: true, matte: true, paint: true, stations: [] }, // 9М33М3, 3,16 м, в шести ТПК (в слотах не видна)
   tor: { units: ['tor'], matte: true, stations: [] }, // «Тор-М1» - своя модель, ревизия 2 (сборщик, Свои/Тор-М1, 2026-11-03): устроена как «Тор-М2», 8 ячеек в два модуля
   msl_tor: { samMissile: ['tor'], matte: true, stations: [] }, // ракета 9М331 - своя (Свои/9М331), 2,9 м, нос −Z
   torm2: { units: ['torm2'], matte: true, stations: [] }, // «Тор-М2» - своя БМ (сборщик, Свои/Тор-М2, 2026-11-03), натуральный размер: 16 ячеек с крышками, антенна обнаружения складывается, шторки окон
@@ -542,7 +544,7 @@ const GLB_V_OWN = {
   pk_e_a10: '20261112c', // своя модель A-10A
   pk_e_su34: '20261115a', // своя модель Су-34
   e_su57: '20261124a', e_su57_gear: '20261124a', e_su57_lo: '20261124a', // свой Су-57
-  pk_e_mig31: '20261124a', e_mig31: '20261124a', e_mig31_gear: '20261124a', e_mig31_lo: '20261124a', m163: '20261124a', m163_lo: '20261124a', zsu234: '20261125a', zsu234_lo: '20261125a', skyguard: '20261125a', skyguard_lo: '20261125a', s75: '20261127a', s75_lo: '20261127a', msl_s75: '20261127a', msl_s75_lo: '20261127a', s125: '20261127b', s125_lo: '20261127b', zu23: '20261127a', zu23_lo: '20261127a', msl_s125: '20261127a', msl_s125_lo: '20261127a', kub: '20261126a', kub_lo: '20261126a', msl_kub: '20261126a', msl_kub_lo: '20261126a', roland: '20261125a', roland_lo: '20261125a', msl_roland: '20261125a', msl_roland_lo: '20261125a', // свои МиГ-31БМ и M163
+  pk_e_mig31: '20261124a', e_mig31: '20261124a', e_mig31_gear: '20261124a', e_mig31_lo: '20261124a', m163: '20261124a', m163_lo: '20261124a', zsu234: '20261125a', zsu234_lo: '20261125a', skyguard: '20261125a', skyguard_lo: '20261125a', s75: '20261127a', s75_lo: '20261127a', msl_s75: '20261127a', msl_s75_lo: '20261127a', s125: '20261127b', s125_lo: '20261127b', zu23: '20261127a', zu23_lo: '20261127a', hawk: '20261127a', hawk_lo: '20261127a', osa: '20261127a', osa_lo: '20261127a', msl_osa: '20261127a', msl_osa_lo: '20261127a', msl_hawk: '20261127a', msl_hawk_lo: '20261127a', msl_s125: '20261127a', msl_s125_lo: '20261127a', kub: '20261126a', kub_lo: '20261126a', msl_kub: '20261126a', msl_kub_lo: '20261126a', roland: '20261125a', roland_lo: '20261125a', msl_roland: '20261125a', msl_roland_lo: '20261125a', // свои МиГ-31БМ и M163
 
   pk_h_mi24: '20261029b',
   pk_h_ah64: '20261029b',
@@ -633,7 +635,7 @@ GLB_V.e_typhoon = GLB_V.e_typhoon_gear = '20261106b'; // своя модель �
 GLB_V.e_mirage = GLB_V.e_mirage_gear = GLB_V.e_etendard = GLB_V.e_etendard_gear = GLB_V.e_viggen = GLB_V.e_viggen_gear = '20261107a'; // свои модели и стойки
 GLB_V.e_f15e = '20261105a'; GLB_V.e_f15e_gear = '20261105a'; // своя модель и стойки
 // «Оса-М» ЗИФ-122 (KoreanNavy) и «Бук-М3» (Valera121) вместо моделей Jeyhun1985 (2026-10-22): новые файлы
-Object.assign(GLB_V, Object.fromEntries(['osa', 'osa_lo'].map((n) => [n, '20261024e'])));
+
 Object.assign(GLB_V, Object.fromEntries(['bukm3', 'bukm3_lo', 'msl_bukm3'].map((n) => [n, '20261024f'])));
 // трубы ПЗРК перекрашены, в настоящий размер, Stinger развёрнут; расчёты ПЗРК вместо процедурных солдат (2026-10-27)
 Object.assign(GLB_V, Object.fromEntries(['igla', 'iglas', 'verba', 'strela2', 'stinger', 'redeye'].flatMap((k) => ['mp_' + k, 'crew_' + k, 'msl_' + k]).map((n) => [n, '20261124a']))); // свои ПЗРК и стрелок
@@ -998,7 +1000,7 @@ async function load(name, base) {
 // готовая модель комплекса: { body, turret, cradle } (копии) или null - тогда процедурная
 const UMODEL = Object.fromEntries(Object.entries(META).filter(([, m]) => m.units).flatMap(([n, m]) => m.units.map((k) => [k, n])));
 // у тяжёлых моделей ПВО - дальняя копия <имя>_lo: каждая часть (корпус, башня, пакет) - THREE.LOD, ближе 400 м - подробная
-const UNIT_LO = new Set(['zu23', 's75', 'kub', 'strela10', 'nasams', 'buk', 'torm2', 'hawk21', 'bukm3', 's125', 'gepard', 'ew_e', 'ew_w', 's300', 's400', 'patriot', 'pac3', 'tor', 'pantsir', 'sampt', 'tunguska', 'skyguard', 'rapier', 'zsu234', 'm163', 'chaparral', 'avenger', 'strela1', 'roland']);
+const UNIT_LO = new Set(['osa', 'hawk', 'zu23', 's75', 'kub', 'strela10', 'nasams', 'buk', 'torm2', 'hawk21', 'bukm3', 's125', 'gepard', 'ew_e', 'ew_w', 's300', 's400', 'patriot', 'pac3', 'tor', 'pantsir', 'sampt', 'tunguska', 'skyguard', 'rapier', 'zsu234', 'm163', 'chaparral', 'avenger', 'strela1', 'roland']);
 export function unitModelGlb(key) {
   const n = UMODEL[key], G = n && (LOADED[n] || LOADED[n + '_lo']), GL = n && LOADED[n] && LOADED[n + '_lo']; if (!G) return null;
   const find = (M, k) => M.children.find((c) => c.name === k);
