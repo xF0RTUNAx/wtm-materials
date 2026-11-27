@@ -447,10 +447,10 @@ const CONFIG = {
   // ракета 5Я23 - своя: ускоритель v7_booster - часть booster (отделяется в полёте), остальное - missile; начало - середина ракеты
   msl_s75: { src: `${DL}/Свои/С-75 (СМ-90) + 5Я23/ракета/msl_s75.glb`, scale: 1, nose: '-z', own: true, tex: () => 1024, nTex: () => 512, pickMesh: /./, groups: (c) => (/(^|\/)v7_booster/.test(c.path) ? 'booster' : 'missile') },
   // С-125 «Нева-М» - своя (сборщик s300-builder, Свои/С-125 (5П73) + 5В27, 2026-11-27; Mark: «внедряй обе модели»; раньше - teanid). Части - s125Part:
-  // base_ - основание, turret_ - поворотная часть, cradle_ - пакет четырёх направляющих на шарнире (0; 1,1; −1,0), bal_cyl / bal_rod → cyl0, cyl1 -
+  // base_ - основание, turret_ - поворотная часть, cradle_ - пакет четырёх направляющих на шарнире (0; 0,792; −0,72) (ревизия 2, 2026-11-27: пусковая под ракету 1:1), bal_cyl / bal_rod → cyl0, cyl1 -
   // уравновешивающий цилиндр (launchers.js s125.lift). Ракет в модели нет - своя 5В27 (msl_s125)
-  s125: { src: `${DL}/Свои/С-125 (5П73) + 5В27/s125.glb`, scale: 0.69, nose: '-z', rulesIn: 'game', unit: true, own: true, tex: () => 2048, nTex: () => 1024, pickMesh: /./,
-    axisX: 0, axisZ: 0, ground: 0, hinge: [0, 0.759, -0.69], tpFix: [0, 0.414, 0], pack0: 0, groups: (c) => s125Part(c) },
+  s125: { src: `${DL}/Свои/С-125 (5П73) + 5В27/s125.glb`, scale: 1, nose: '-z', rulesIn: 'game', unit: true, own: true, tex: () => 2048, nTex: () => 1024, pickMesh: /./,
+    axisX: 0, axisZ: 0, ground: 0, hinge: [0, 0.792, -0.72], tpFix: [0, 0.432, 0], pack0: 0, groups: (c) => s125Part(c) },
   // ракета 5В27 - своя: ускоритель с переходником v27_boost - booster, маршевая и рули - missile
   msl_s125: { src: `${DL}/Свои/С-125 (5П73) + 5В27/ракета/msl_s125.glb`, scale: 1, nose: '-z', own: true, tex: () => 1024, nTex: () => 512, pickMesh: /./, groups: (c) => (/(^|\/)v27_boost/.test(c.path) ? 'booster' : 'missile') },
 
