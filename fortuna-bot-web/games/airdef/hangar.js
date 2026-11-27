@@ -70,7 +70,7 @@ export function createHangar(C, renderer) {
   let nFrames = 0, baseZ = 1, az = AZ0, tAz = AZ0, vel = 0, drag = null, moved = 0, z = 1, tZ = 1, cx = 0.5, cy = 0.5, tCx = 0.5, tCy = 0.5, hw = 0.5, hh = 0.5;
   let want = null, cur = null, wantT = 0, built = false, groups = [], focusKey = null, panelW = () => 0;
   const tmp = new THREE.Vector3(), UP = new THREE.Vector3(0, 1, 0), TOUCH = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
-  const NYF = NY_STILL ? 0 : TOUCH ? 24 : 30; // темп новогоднего фона, кадров/с
+  const NYF = NY_STILL ? 0 : 60; // темп новогоднего фона, кадров/с: снег - на 60 (Mark 2026-11-27: «снег идёт словно в маленьком фпс»; гирлянды и снег считаются по времени, не по кадрам)
 
   function texOf(key) {
     if (TEX[key]) return TEX[key];

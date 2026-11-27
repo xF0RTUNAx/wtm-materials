@@ -200,7 +200,7 @@ try {
   check('без билета при MP_SECRET — отказ', !none.some((m) => m.t === 'welcome'));
   srv2.kill(); await srv2.status;
 
-  // ── награды: «Реализм» только с открытыми ракетами, подписанный итог боя (сервер с MP_SECRET и коротким боем) ──
+  // ── награды: «Про» только с открытыми ракетами, подписанный итог боя (сервер с MP_SECRET и коротким боем) ──
   const P3 = 8797;
   const srv3 = new Deno.Command('deno', { args: ['run', '--allow-net', '--allow-read', '--allow-env', new URL('./server.js', import.meta.url).pathname],
     env: { PORT: String(P3), MP_SECRET: SECRET, MATCH_T: '5' }, stdout: 'null', stderr: 'inherit' }).spawn();
@@ -228,10 +228,10 @@ try {
   flier(r1, { x: 0, y: 4000, z: 9000, yaw: 0 }); flier(r2, { x: 0, y: 4000, z: -9000, yaw: Math.PI });
   r1.msgs.length = 0;
   r1.send({ t: 'load', l: ['aim9b', 'aim120c', null, null, null, null, null, null] }); await sleep(150);
-  check('«Реализм»: закрытая ракета на подвеске — отказ', r1.msgs.some((m) => m.t === 'err' && /открытые/.test(m.msg)));
+  check('«Про»: закрытая ракета на подвеске — отказ', r1.msgs.some((m) => m.t === 'err' && /открытые/.test(m.msg)));
   r1.msgs.length = 0;
   r1.send({ t: 'load', l: ['aim9b', 'aim7e', null, null, null, null, 'r73', 'firestreak'] }); await sleep(150);
-  check('«Реализм»: базовые и купленные — можно', !r1.msgs.some((m) => m.t === 'err'));
+  check('«Про»: базовые и купленные — можно', !r1.msgs.some((m) => m.t === 'err'));
   await waitFor(() => r1.last.result && r2.last.result, 12000);
   const res = r1.last.result;
   // проверяем той же функцией, что и edge-функция drone-claim

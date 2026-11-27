@@ -51,13 +51,13 @@ export function createDefense(C) {
   const samLeft = (k) => (st.multi ? multiSamCap(k) - C.S.units.filter((u) => mine(u) && !u.dead && u.key === k).length : null);
   const samCapSay = (k) => tr('{0} - не больше {1}', [SAM[k].short, multiSamCap(k)]);
   const capDeny = (k) => ((st.plan.n[k] || 0) >= multiCap(k) ? tr('{0} - не больше {1}', [AG[k].short, multiCap(k)]) : null);
-  // прокачка: в «Реализме» (одиночном и онлайн) - только купленное в «Исследованиях»; аркада и уроки - всё
+  // прокачка: в «Про» (одиночном и онлайн) - только купленное в «Исследованиях»; аркада и уроки - всё
   const realMode = () => !(st.opts || {}).allow && !(st.opts || {}).items && (st.net ? !!(st.net.room && st.net.room.mode === 'real') : C.setup.diff === 'real');
   const lockedSam = (k) => realMode() && C.progress && C.progress.ready() && !C.progress.samOk(k) && !(st.multi && multiSamFree(k)); // «Мульти-волна»: эпоха I - без исследования
   const lockedStrike = (k) => realMode() && C.progress && C.progress.ready() && !C.progress.strikeOk(k);
-  const LOCK_SAY = tr('В «Реализме» - только купленное в «Исследованиях»');
+  const LOCK_SAY = tr('В «Про» - только купленное в «Исследованиях»');
   // скрытый уровень ИИ в «Мульти-волне» (правила - sim/combined.js): уроки держат эпоху урока; иначе ИИ-ПВО выбирается по плану игрока-атакующего,
-  // ИИ-волна - по комплексам, доступным игроку-ПВО (в «Реализме» купленным); игроку уровень не показывается
+  // ИИ-волна - по комплексам, доступным игроку-ПВО (в «Про» купленным); игроку уровень не показывается
   const lesson = () => (st.opts || {}).lastGame === 'training';
   const aiDefLevel = () => levelIn(DEFENSE[dside()], lesson() ? C.setup.era : levelOfPlan(attSide(), st.plan ? st.plan.n : {}));
   const aiWaveLevel = () => levelIn(COMBINED[attSide()], lesson() ? C.setup.era : levelOfSams(dside(), Object.keys(SAM).filter((k) => !lockedSam(k))));
@@ -1089,14 +1089,14 @@ export function createDefense(C) {
       const win = dmg >= 0.5, score = Math.round((dmg * 1000 + st.lostUnits * 60) * real);
       C.showEnd({ title: win ? tr('Волна прорвалась') : tr('Волна отражена'), reason: tr('Цели разрушены на {0} % (нужно 50 %)', [Math.round(dmg * 100)]), win,
         stats: [[r.launched, tr('пущено')], [r.down, tr('сбито ПВО')], [`${Math.round(dmg * 100)}%`, tr('цели разрушены')], [score, tr('очков')]],
-        note: tr('Уничтожено комплексов ПВО: {0}. Носителей потеряно: {1}. {2}', [st.lostUnits, r.carriers, real > 1 ? tr('Реализм - очки ×1,5.') : '']) });
+        note: tr('Уничтожено комплексов ПВО: {0}. Носителей потеряно: {1}. {2}', [st.lostUnits, r.carriers, real > 1 ? tr('Про - очки ×1,5.') : '']) });
       C.menu.record('multi', score, {}); claim({ mwObj: Math.round(dmg * 50), mwSam: st.lostUnits, win }, usedStrikes()); return;
     }
     st.lostUnits = C.S.units.filter((u) => u.dead).length;
     const win = dmg < 0.5, score = Math.round(((1 - dmg) * 1000 + st.downs * 40) * real);
     C.showEnd({ title: win ? tr('Волна отражена') : tr('Волна прорвалась'), reason: tr('Цели разрушены на {0} % (поражение - от 50 %)', [Math.round(dmg * 100)]), win,
       stats: [[st.downs, tr('сбито')], [`${Math.round((1 - dmg) * 100)}%`, tr('цели целы')], [st.lostUnits, tr('потеряно ЗРК')], [score, tr('очков')]],
-      note: real > 1 ? tr('Реализм - очки ×1,5.') : '' });
+      note: real > 1 ? tr('Про - очки ×1,5.') : '' });
     C.menu.record('multi', score, {}); claim({ mwInt: st.downs * 3, win }, usedSams()); // перехват: ≈ 3 очка угрозы на цель
   }
   function finish(why, win) {
@@ -1106,7 +1106,7 @@ export function createDefense(C) {
     C.bev(win === true ? 'g' : win === false ? 'r' : '', win === true ? tr('город отстоял') : win === false ? tr('оборона прорвана') : tr('бой завершён'));
     C.showEnd({ title: win ? tr('Город отстоял') : win === false ? tr('Оборона прорвана') : tr('Бой завершён'), reason: why, win,
       stats: [[st.downs, tr('самолётов сбито')], [`${st.wave}/${st.waves}`, tr('волн')], [`${Math.round(cityValue() * 100)}%`, tr('объекты целы')], [st.score, tr('очков')]],
-      note: tr('Потеряно комплексов: {0}. {1}', [st.lostUnits, C.setup.diff === 'real' ? tr('Реализм - очки ×1,5.') : '']) });
+      note: tr('Потеряно комплексов: {0}. {1}', [st.lostUnits, C.setup.diff === 'real' ? tr('Про - очки ×1,5.') : '']) });
     C.menu.record('defense', st.score, { waves: win ? st.waves : st.wave - 1 });
     const held = win ? st.waves : st.wave - 1; claim({ downs: st.downs, waves: Array.from({ length: Math.max(0, held) }, (_, i) => i + 1), win: !!win }, usedSams());
   }
@@ -1159,7 +1159,7 @@ export function createDefense(C) {
     const ev = C.S.wpns.filter((w) => !w.dead && w.ev && w.t > 1.5 && (w.W.kind !== 'tbm' || (u.S.abm && w.vel.y < 0)));
     return u.S.antiMun ? [...air, ...C.S.wpns.filter((w) => !w.dead && w.t > 1.5 && w.W.kind !== 'decoy' && !w.ev), ...ev] : [...air, ...ev];
   };
-  // класс отметки по траектории, скорости и ЭПР: «Аркада» - сразу, «Реализм» - после ~2,5 с наблюдения (до этого «?»).
+  // класс отметки по траектории, скорости и ЭПР: «Аркада» - сразу, «Про» - после ~2,5 с наблюдения (до этого «?»).
   // Ложная цель для РЛС - самолёт (в этом её смысл); летящее оружие вообще видят только комплексы с antiMun
   const obs = new Map(); // цель → секунд под наблюдением оператора
   const CLS = { bomb: tr('Бомба'), lgb: tr('Бомба'), tvb: tr('Бомба'), gps: tr('Бомба'), agm: tr('УР'), arm: tr('ПРР'), cruise: tr('КР') };

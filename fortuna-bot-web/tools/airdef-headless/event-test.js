@@ -1,5 +1,5 @@
 // Стенд события «Туманная топь» (games/airdef/event.js): страница на осенней карте (?map=autumn) в безголовом прогоне, как ui-test.js.
-// Проверяет: меню без вертолётных подвесок, экран события (вкладки, замки «Реализма», «Взлёт» на каждом вертолёте), оборона на осенней
+// Проверяет: меню без вертолётных подвесок, экран события (вкладки, замки «Про», «Взлёт» на каждом вертолёте), оборона на осенней
 // карте - все волны до конца боя (вертолёты со 2-й волны, последняя - «Мульти-волна»).
 //   deno run -A tools/airdef-headless/event-test.js
 const dir = new URL('.', import.meta.url).pathname;
@@ -70,13 +70,13 @@ check('событие: экран открыт, вкладка «Вылет на
 click({ tab: 'def' }); check('событие: вкладка «Оборона» - «К расстановке»', root.innerHTML.includes('К расстановке')); click({ tab: 'fly' });
 click({ v: 'west' }, { dataset: { seg: 'hside' } }); check('событие: сторона «Запад» - AH-64D в ленте', root.innerHTML.includes('AH-64D') && !root.innerHTML.includes('Ми-28Н'));
 click({ v: 'east' }, { dataset: { seg: 'hside' } });
-{ // «Реализм»: закрытые - с замком, нажатие ведёт в «Исследования»
+{ // «Про»: закрытые - с замком, нажатие ведёт в «Исследования»
   const pg = C.progress, saved = [pg.ready, pg.loadoutOk, pg.loadoutMissing], opened = [], ro = C.research.open;
   pg.ready = () => true; pg.loadoutOk = (L) => L.plane === 'h_mi24'; pg.loadoutMissing = (L) => (L.plane === 'h_mi24' ? [] : [{ id: 'heli:' + L.plane }]); C.research.open = (id) => opened.push(id);
   C.setup.diff = 'real'; click({ v: 'real' }, { dataset: { seg: 'diff' } }); // перерисовать
   // у Востока 5 вертолётов (Ми-24В, Ми-8МТВ, Ка-50, Ми-28Н, Ка-52): открыт только Ми-24В - закрытых 4
-  check('событие, «Реализм»: закрытые карточки с замком и «исследовать»', (root.innerHTML.match(/class="ec [^"]*lk/g) || []).length === 4 && root.innerHTML.includes('исследовать'));
-  click({ need: 'heli:h_mi28' }); check(`событие, «Реализм»: нажатие на закрытую - «Исследования» на узле (${opened[0]})`, opened[0] === 'heli:h_mi28');
+  check('событие, «Про»: закрытые карточки с замком и «исследовать»', (root.innerHTML.match(/class="ec [^"]*lk/g) || []).length === 4 && root.innerHTML.includes('исследовать'));
+  click({ need: 'heli:h_mi28' }); check(`событие, «Про»: нажатие на закрытую - «Исследования» на узле (${opened[0]})`, opened[0] === 'heli:h_mi28');
   [pg.ready, pg.loadoutOk, pg.loadoutMissing] = saved; C.research.open = ro; C.setup.diff = 'arcade'; click({ v: 'arcade' }, { dataset: { seg: 'diff' } });
 }
 // «Взлёт» на каждом вертолёте: тут уже осенняя карта и нужная погода - старт сразу, без перезагрузки; своя модель и подвеска

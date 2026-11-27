@@ -51,7 +51,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
   const stats = () => { try { return JSON.parse(ls.get('fortuna_airdef_stats') || '{}') || {}; } catch (_) { return {}; } };
   const seg = (id, cur, items) => `<div class="seg" data-seg="${id}">${items.map(([v, l]) => `<button data-v="${v}" class="${String(v) === String(cur) ? 'on' : ''}">${l}</button>`).join('')}</div>`;
   const tags = (k, t) => `<span class="tag ${k}">${t}</span>`;
-  const realLock = () => setup.diff === 'real' && C.progress && C.progress.ready(); // прокачка ограничивает только «Реализм»
+  const realLock = () => setup.diff === 'real' && C.progress && C.progress.ready(); // прокачка ограничивает только «Про»
   // ангар (hangar.js): какой самолёт смотрим в ленте; настройки вылета свёрнуты в одну строку над подвеской
   let hgPlane = null, hgSet = false, opSlot = 1, hgSam = null; // hgSam - комплекс, открытый крупно в «Обороне» ангара // opSlot - какой вылет «Операции» выбирается в ленте ангара (1 - охота за ПВО, 2 - штурмовка)
   // таблички подвесок (Mark 2026-11-10, вариант «Таблички»): миниатюра, название и количество; описаний оружия здесь нет - они в «Арсенале»
@@ -131,13 +131,13 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
       const segs = h; if (!hg) h += `${setRow}<div class="cat-h">${tr('Подвеска')}</div>`;
       // подвески стороны, которая атакует выбранную ПВО; у каждой - свой самолёт
       const att = setup.side === 'east' ? 'west' : 'east', mine = loadoutsOf(setup.era, att).filter(([L, i]) => !L.heli && (!retiredHidden(C.progress && C.progress.P, L.plane) || (!(C.progress && C.progress.P) && i === setup.lo))); // вертолёты - в событии «Туманная топь» (event.js); снятые с продажи - только у купивших
-      // «Реализм»: только подвески, у которых куплены самолёт и всё оружие (прокачка); закрытая - с замком и «нужно: …»
+      // «Про»: только подвески, у которых куплены самолёт и всё оружие (прокачка); закрытая - с замком и «нужно: …»
       const can = ([L]) => !realLock() || C.progress.loadoutOk(L), open = mine.filter(can);
       if (!open.some(([, i]) => i === setup.lo)) setup.lo = (open[0] || mine[0])[1];
       const loBtn = ([L, i], attr, on) => { const miss = can([L]) ? [] : C.progress.loadoutMissing(L);
         return `<button class="opt ${on && !miss.length ? 'on' : ''} ${miss.length ? 'lock' : ''}" ${miss.length ? `data-need="${miss[0].id}"` : `${attr}="${i}"`}><div class="nm"><b>${miss.length ? ico('lock') + ' ' : ''}${trIf(PLANES[L.plane])} · ${trIf(L.name)}</b><span class="role ${loadoutRole(L)}">${trIf(ROLE_NAME[loadoutRole(L)])}</span><span>${L.items.map(([k, n]) => `${trIf(AG[k].short)} ×${n}`).join(' · ')}${L.pod ? (podBuiltIn(L.plane) ? tr(' · прицел') : tr(' · контейнер')) : ''}</span>${loadoutRole(L) !== 'sead' ? `<span class="tgn">${tr('целей: {0} - по силе подвески', [loadoutTargets(L)])}</span>` : ''}${miss.length ? `<span class="need">${tr('{0} - открыть в «Исследованиях»', [C.progress.needText(miss)])}</span>` : ''}</div>${L.items.map(([k]) => tags(AG[k].kind, trIf(AG_KIND[AG[k].kind]).split(',')[0].split(' ')[0])).filter((v, j, a) => a.indexOf(v) === j).join(' ')}</button>`; };
       C.realBlock = !open.length; C.realNeed = null;
-      const noneHint = !open.length ? `<p class="hint need">${tr('В «Реализме» ранга {0} нет подвески за эту сторону. Купите самолёт и оружие в «Исследованиях» или играйте в «Аркаде».', [ERAS[setup.era - 1].short])}</p>` : '';
+      const noneHint = !open.length ? `<p class="hint need">${tr('В «Про» ранга {0} нет подвески за эту сторону. Купите самолёт и оружие в «Исследованиях» или играйте в «Аркаде».', [ERAS[setup.era - 1].short])}</p>` : '';
       if (!hg) h += noneHint;
       // «Операция»: два вылета - сначала охота за ПВО, потом удар (у стороны нет охотничьей подвески - только одиночный вылет)
       const sead = mine.filter(([L]) => loadoutRole(L) === 'sead'), strike = mine.filter(([L]) => loadoutRole(L) !== 'sead');
@@ -167,7 +167,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
           h += `<div class="cat-h">${tr('Вылет 2 - штурмовка')}</div>` + strike.map((x) => loBtn(x, 'data-lo2', x[1] === setup.lo2)).join('');
         }
       } else if (hg) {
-        // лента внизу - самолёты стороны; в панели - подвески выбранного. Закрытый в «Реализме» самолёт можно смотреть, «Взлёт» ведёт в «Исследования»
+        // лента внизу - самолёты стороны; в панели - подвески выбранного. Закрытый в «Про» самолёт можно смотреть, «Взлёт» ведёт в «Исследования»
         const planes = mine.map(([L]) => L.plane).filter((p, i, a) => a.indexOf(p) === i), loPlane = LOADOUTS[setup.era][setup.lo].plane;
         if (!planes.includes(hgPlane)) hgPlane = planes.includes(loPlane) ? loPlane : planes[0];
         const own = mine.filter(([L]) => L.plane === hgPlane), ownOpen = own.filter(can);
@@ -194,7 +194,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
       h += `<div class="opt hgl on dsam${lk ? ' lock' : ''}" ${lk ? `data-need="pvo:${hgSam}"` : ''}><span class="hgh2"><b>${lk ? ico('lock') + ' ' : ''}${trIf(S.short || S.name)}</b>${capsHtml(S, 'def')}<i class="cost">${SAM_COST[hgSam]}</i></span>
         <img class="dpic" src="airdef/thumbs/pvo_${hgSam}.webp?v=20261126b" alt="" onerror="this.style.visibility='hidden'">
         <span class="dst"><span><b>${km(S.rmax)}</b><small>${tr('дальность')}</small></span><span><b>${km(S.hmax)}</b><small>${tr('высота')}</small></span><span class="t-${S.type}"><b>${TT[S.type] || ''}</b><small>${tr('наведение')}</small></span></span>
-        ${lk ? `<i class="need">${tr('в «Реализме» - после покупки в «Исследованиях»')}</i>` : ''}</div>`;
+        ${lk ? `<i class="need">${tr('в «Про» - после покупки в «Исследованиях»')}</i>` : ''}</div>`;
       $('hgStrip').innerHTML = list.map(([k, s]) => { const l = lockOf(k);
         return `<button class="hgc sam${k === hgSam ? ' on' : ''}${l ? ' lock' : ''}" data-sam="${k}"><b>${l ? ico('lock') + ' ' : ''}${trIf(s.short || s.name)}</b><img src="airdef/thumbs/pvo_${k}.webp?v=20261126b" alt="" loading="lazy"><span class="dft"><i class="t-${s.type}">${TT[s.type] || ''}</i><u>${SAM_COST[k]}</u></span></button>`; }).join('');
       const sel = $('hgStrip').querySelector && $('hgStrip').querySelector('.hgc.on'); if (sel && sel.scrollIntoView) sel.scrollIntoView({ block: 'nearest', inline: 'nearest' });
@@ -207,7 +207,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
       }
       const list = Object.entries(SAM).filter(([, s]) => s.side === setup.side && s.era <= setup.era);
       h += `<div class="cat-h">${tr('Комплексы в вашем распоряжении')}</div>` + list.map(([k, s]) => { const lk = realLock() && !C.progress.samOk(k);
-        return `<div class="opt ${lk ? 'lock' : ''}" ${lk ? `data-need="pvo:${k}"` : ''}><div class="nm"><b>${lk ? ico('lock') + ' ' : ''}${trIf(s.name)}${capsHtml(s, setup.game === 'multi' ? 'multi' : 'def')}</b><span>${tr('{0} · до {1} км, высота до {2} км', [trIf(SAM_TYPE[s.type]), (s.rmax / 1000).toFixed(1), (s.hmax / 1000).toFixed(1)])}</span>${lk ? `<span class="need">${tr('в «Реализме» - после покупки в «Исследованиях»')}</span>` : ''}</div><span class="pr">${tr('{0} очк', [SAM_COST[k]])}</span></div>`; }).join('') +
+        return `<div class="opt ${lk ? 'lock' : ''}" ${lk ? `data-need="pvo:${k}"` : ''}><div class="nm"><b>${lk ? ico('lock') + ' ' : ''}${trIf(s.name)}${capsHtml(s, setup.game === 'multi' ? 'multi' : 'def')}</b><span>${tr('{0} · до {1} км, высота до {2} км', [trIf(SAM_TYPE[s.type]), (s.rmax / 1000).toFixed(1), (s.hmax / 1000).toFixed(1)])}</span>${lk ? `<span class="need">${tr('в «Про» - после покупки в «Исследованиях»')}</span>` : ''}</div><span class="pr">${tr('{0} очк', [SAM_COST[k]])}</span></div>`; }).join('') +
         `<p class="hint">${tr('Перед каждой волной расставьте комплексы за очки обороны; между волнами можно докупить, перевезти и продать. Волн: {0}. Поражение - если потеряно 75 % ценности военных объектов. В бою можно сесть в любой комплекс оператором.', [C.WAVES])}</p>`;
         }
     el.innerHTML = h;
@@ -350,7 +350,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
     const ops = e.target.closest('[data-ops]'); if (ops) { const n = +ops.dataset.ops; if (n !== opSlot) { snd.click(); opSlot = n; render(); } return; } // «Операция»: какой вылет выбирать в ленте // оружие выбранной подвески - камера подлетает
     const ts = e.target.closest('[data-trsec]'); if (ts) { const secs = [...new Set(LESSONS[setup.tside].map((l) => l.sec))]; snd.click(); trSec = secs[+ts.dataset.trsec]; render(); return; }
     const f = e.target.closest('[data-fs]'); if (f) { firstClick(f.dataset.fs); snd.click(); render(); return; }
-    const nd = e.target.closest('[data-need]'); if (nd) { snd.click(); C.research.open(nd.dataset.need); return; } // закрыто в «Реализме» - к нужной единице дерева
+    const nd = e.target.closest('[data-need]'); if (nd) { snd.click(); C.research.open(nd.dataset.need); return; } // закрыто в «Про» - к нужной единице дерева
     const b = e.target.closest('[data-v]'), lo = e.target.closest('[data-lo]'), lo1 = e.target.closest('[data-lo1]'), lo2 = e.target.closest('[data-lo2]'), tl = e.target.closest('[data-tl]');
     if (b) {
       const id = b.parentNode.dataset.seg, v = b.dataset.v;
@@ -599,7 +599,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
   $('lobbyTip').onclick = () => { tipT = 0; showTip(true); };
   setInterval(() => { if (C.state === 'menu' && (tipT += 1) > 12) { tipT = 0; showTip(true); } }, 1000);
   $('startBtn').onclick = () => orientGate(() => { if (setup.game === 'online') { C.online.primary(); return; }
-    if (C.realBlock && setup.game === 'air') { snd.deny && snd.deny(); C.research.open(C.realNeed || undefined); return; } // «Реализм»: нет купленной подвески - в «Исследования»
+    if (C.realBlock && setup.game === 'air') { snd.deny && snd.deny(); C.research.open(C.realNeed || undefined); return; } // «Про»: нет купленной подвески - в «Исследования»
     setup.evd = false; C.lastGame = setup.game; C.doors.run(() => C.start(setup.game)); }); // на телефоне вертикально - сначала совет повернуть; вход в бой - за створками
   // опыт и серебро над режимами (тап - «Исследования»); гость - пусто (вход - в строке аккаунта выше)
   function renderPg() {

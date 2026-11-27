@@ -8,11 +8,11 @@ import { owned as owned0, RETIRED } from '../../games/airdef/progress.js';
 const sold = (n) => !(n.branch === 'air' && RETIRED.has(n.key)); // снятые с продажи (2026-11-05) новый игрок не покупает
 const readLate = () => Deno.readTextFileSync(new URL('../../games/airdef/progress.js', import.meta.url)).split('\n').filter((l) => /^const LATE|^  '/.test(l)).join('');
 let bad = 0; const ok = (t, c) => { console.log((c ? 'OK   ' : 'FAIL ') + t); if (!c) bad++; };
-// темп: типичный вылет «Реализма» ≈ 8 мин - 160 основа + 2 цели + 1 комплекс + возврат → ×1,5
+// темп: типичный вылет «Про» ≈ 8 мин - 160 основа + 2 цели + 1 комплекс + возврат → ×1,5
 const strikeNodeId = (k) => 'strike:' + (['jassm', 'storm', 'kh55', 'kh101'].includes(k) ? k + '_s' : k); // как DUAL в progress.js
 const sortie = battleReward({ min: 8, targets: [1, 1], sams: 1, back: true }, { real: true }).xp;
 const PER_H = Math.round(sortie * 60 / 9); // с меню и загрузкой ≈ 9 мин на бой
-console.log(`Темп: вылет «Реализма» 8 мин ≈ ${sortie} опыта → ≈ ${PER_H} опыта/ч (серебра столько же)\n`);
+console.log(`Темп: вылет «Про» 8 мин ≈ ${sortie} опыта → ≈ ${PER_H} опыта/ч (серебра столько же)\n`);
 
 console.log('Дерево (★ - стартовое, цена - опыт = серебро):');
 for (const b of BRANCHES) {

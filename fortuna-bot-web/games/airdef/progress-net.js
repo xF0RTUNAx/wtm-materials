@@ -1,7 +1,7 @@
 // Прокачка на клиенте: состояние игрока с сервера (функция airdef-progress), действия (исследовать / купить / цель), номер
 // одиночного боя и его итог (airdef-solo), строки награды на экране итогов. Тратит и начисляет только сервер - здесь
 // только запросы и показ. Без входа (нет аккаунта игры fortuna_airdef_acc; аккаунт сайта fortuna_web_player считается, только если у него уже есть прогресс игры -
-// account.js legacySite) - как у новичка: в «Реализме» только стартовый набор, опыт не копится; «Аркада» и обучение открыты целиком (AIRDEF_PROGRESSION.md §5).
+// account.js legacySite) - как у новичка: в «Про» только стартовый набор, опыт не копится; «Аркада» и обучение открыты целиком (AIRDEF_PROGRESSION.md §5).
 import { NODE, newProgress, owned, loadoutMissing, samOk, strikeOk, strikeId, RANK_NAME } from './progress.js?v=20261126b';
 import { LOADOUTS } from './arsenal.js?v=20261126b';
 import { ico } from './icons.js?v=20261126b';
@@ -143,7 +143,7 @@ export function createProgress(C) {
       changed();
     },
 
-    // ── «Реализм»: что доступно ──
+    // ── «Про»: что доступно ──
     loadoutMissing: (L) => (G.P ? loadoutMissing(G.P, L) : []),
     loadoutOk: (L) => !G.P || loadoutMissing(G.P, L).length === 0,
     samOk: (key) => !G.P || !NODE['pvo:' + key] || samOk(G.P, key),
@@ -185,7 +185,7 @@ export function createProgress(C) {
       const mult = (d.mult || []).map(([t, k]) => `<span>${trLine(t)}</span><b>×${String(k).replace('.', LANG === 'en' ? '.' : ',')}</b>`).join('');
       const auto = (d.auto || []).map((id) => NODE[id] ? trIf(NODE[id].short) : id);
       return `<div class="pgSum"><span class="xp">${XP(d.xp)}</span><span class="sv">${SV(d.silver)}</span></div><div class="pgLines">${lines}${mult}</div>`
-        + (d.real === false && d.real_asked ? '<div class="dim">' + tr('«Реализм» на некупленной технике - засчитано как «Аркада».') + '</div>' : '')
+        + (d.real === false && d.real_asked ? '<div class="dim">' + tr('«Про» на некупленной технике - засчитано как «Аркада».') + '</div>' : '')
         + (auto.length ? '<div class="pgAuto">' + tr('Исследовано: <b>{0}</b> - купить в «Исследованиях».', [auto.join(', ')]) + '</div>' : '');
     },
     // узлы, на которых играли: самолёт и оружие подвески / комплексы / удары

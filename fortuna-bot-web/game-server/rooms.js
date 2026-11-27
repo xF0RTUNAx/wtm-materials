@@ -447,7 +447,7 @@ export function createRooms({ log = () => {}, auth, sign = async () => null, mat
     },
     load(c, m) { // подвеска на эту жизнь — один раз после старта/возрождения (иначе ракеты можно было бы «перезаряжать»)
       if (!c.room || !validLoadout(m.l)) return;
-      if (c.owned && m.l.some((k) => k && lockedIn(c.room.mode, k, c.owned))) return send(c, { t: 'err', msg: 'В «Реализме» — только открытые ракеты' });
+      if (c.owned && m.l.some((k) => k && lockedIn(c.room.mode, k, c.owned))) return send(c, { t: 'err', msg: 'В «Про» — только открытые ракеты' });
       c.load = m.l.slice(); // её же возьмёт ИИ, если игрок пропадёт до возрождения
       if (c.craft && c.craft.human && !c.craft.load) c.craft.load = m.l.slice();
     },

@@ -1,5 +1,5 @@
 // Стенд цен «Мульти-волны» (2026-10-28, Mark: «цена = измеренная сила», один бюджет на все бои): без браузера, как combined-test.js,
-// бой «волна против ПВО» на «Северном рубеже» по правилам онлайна (sim/combined.js LIM_ON, strike game 'multi', «Реализм»).
+// бой «волна против ПВО» на «Северном рубеже» по правилам онлайна (sim/combined.js LIM_ON, strike game 'multi', «Про»).
 //   deno run -A tools/airdef-headless/multi-price-stand.js atk  [N=40] [J=4]   - сила каждой единицы удара
 //   deno run -A tools/airdef-headless/multi-price-stand.js sam  [N=40] [J=4]   - сила каждого ЗРК
 //   deno run -A tools/airdef-headless/multi-price-stand.js sam  N=40 NA=100     - (NA - боёв для вклада в ослабленной ПВО); SAMK=hawk21 OUT=… - только эти ЗРК

@@ -22,7 +22,7 @@ export const share = (n) => (n <= 1 ? 1 : 0.5 + 0.5 / n);
 // без эпох (Mark 2026-10-25): бюджет один на обе стороны и любой состав, очки обороны - одни
 export const atkBudget = (n) => Math.round(multiBudget() * share(n));
 export const defBudget = (n, mode) => Math.round(MULTI.sam * (mode === 'arcade' ? 1.2 : 1) * share(n));
-// комплекс ПВО своей стороны: эпоха не ограничивает; «Реализм» - сервер сверяет с купленным (airdef-own.js realDeny / samIds);
+// комплекс ПВО своей стороны: эпоха не ограничивает; «Про» - сервер сверяет с купленным (airdef-own.js realDeny / samIds);
 // почти бесполезные в режиме (MULTI.samOff: РЭБ, «Стрела-1», ЗУ-23, «Шилка», Redeye) - не продаются (Mark 2026-10-28)
 export const samOk = (k, side) => multiSamOk(k) && SAM[k].side === side;
 // потолки нагрузки (сервер - ноутбук, клиенты - телефоны)

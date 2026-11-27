@@ -1,5 +1,5 @@
 // Тест серверной прокачки «Воздушного превосходства» (supabase/functions/_shared/airdef-progress.ts) на поддельной базе:
-// действия, начисление за бой, пределы одиночной игры, «Реализм» без купленного, гонка двух запросов (версия строки),
+// действия, начисление за бой, пределы одиночной игры, «Про» без купленного, гонка двух запросов (версия строки),
 // и что копия правил в _shared/airdef совпадает с игрой (sync-shared.js).
 //   deno run -A tools/airdef-headless/progress-server-test.js
 import { act, credit, cleanEvents, mutate, load, toProgress, extraOf, view } from '../../supabase/functions/_shared/airdef-progress.ts';
@@ -58,12 +58,12 @@ const xp1 = o.P.xp;
 // 4. второй бой тот же день - без ×2
 o = await mutate(db, PID, (P, x) => { const c = credit(P, x, ev, { real: false, online: false, today: DAY }); globalThis.c2 = c; return { ok: true, extra: c.extra }; });
 ok('вторая победа - без ×2', !globalThis.c2.reward.mult.some(([n]) => /Первая победа/.test(n)) && globalThis.c2.reward.xp < globalThis.c1.reward.xp);
-// 5. «Реализм» на некупленном самолёте - множителя нет
+// 5. «Про» на некупленном самолёте - множителя нет
 { const P = toProgress(db.T.airdef_progress[0]), x = extraOf(db.T.airdef_progress[0]);
   const a = credit(structuredClone(P), x, ev, { real: true, online: false, today: DAY, used: ['air:e_su24'] });
   const b = credit(structuredClone(P), x, ev, { real: true, online: false, today: DAY, used: ['air:e_su17', 'wpn:fab500'] });
-  ok('Реализм на некупленном - как Аркада', !a.realOk && !a.reward.mult.some(([n]) => n === 'Реализм'));
-  ok('Реализм на стартовом - ×1,5', b.realOk && b.reward.mult.some(([n]) => n === 'Реализм') && b.reward.xp > a.reward.xp); }
+  ok('Про на некупленном - как Аркада', !a.realOk && !a.reward.mult.some(([n]) => n === 'Про'));
+  ok('Про на стартовом - ×1,5', b.realOk && b.reward.mult.some(([n]) => n === 'Про') && b.reward.xp > a.reward.xp); }
 // 6. исследовать и купить; паритет покупки
 { db.T.airdef_progress[0].xp = 50000; db.T.airdef_progress[0].silver = 50000; }
 o = await mutate(db, PID, (P) => act(P, 'research', r1)); ok('исследовано за опыт', o.ok && o.P.res.includes(r1) && o.P.xp === 50000 - NODE[r1].cost);
@@ -100,7 +100,7 @@ o = await mutate(db, PID, (P) => act(P, 'research', 'air:nope')); ok('нет т�
   ok('чужая цель ветки и неизвестный узел - отброшены', P.res.length === 0 && !P.goal.air); }
 ok('дерево на сервере - то же', TREE.length > 100);
 const v = view(toProgress(db.T.airdef_progress[0]), extraOf(db.T.airdef_progress[0]), DAY); ok('состояние для клиента', typeof v.xp === 'number' && v.first_win_today === true);
-// 12. онлайн (игровой сервер): замки «Реализма» по билету и эпоха быстрой комнаты
+// 12. онлайн (игровой сервер): замки «Про» по билету и эпоха быстрой комнаты
 { const { adProgress, adRank, realDeny, loadoutIds, samIds, strikeIds, quickEra } = await import('../../game-server/airdef-own.js');
   const { LOADOUTS } = await import('../../games/airdef/arsenal.js');
   const newbie = { adP: adProgress([]) }, dev = { adP: adProgress(null) };
@@ -112,7 +112,7 @@ const v = view(toProgress(db.T.airdef_progress[0]), extraOf(db.T.airdef_progress
   ok('комплекс: стартовый / нет', !realDeny('real', newbie, samIds('s75')) && !!realDeny('real', newbie, samIds('s300')));
   ok('удар по ключу JASSM - узел jassm_s', strikeIds({ jassm: 2, r17: 1, kh55: 0 }).join() === 'strike:jassm_s,strike:r17');
   ok('ранг новичка - I', adRank(newbie.adP) === 1 && adRank(null) === 4);
-  ok('эпоха быстрой комнаты «Реализма» - по самому младшему', [...Array(20)].every(() => quickEra('real', [newbie, dev]) === 1) && quickEra('arcade', [newbie]) === null);
+  ok('эпоха быстрой комнаты «Про» - по самому младшему', [...Array(20)].every(() => quickEra('real', [newbie, dev]) === 1) && quickEra('arcade', [newbie]) === null);
   ok('«Мульти-волна» - не ниже II', quickEra('real', [newbie], 2) === 2); }
 // 13. правило «только аккаунт игры» (Mark 2026-10-25): аккаунт сайта без прогресса игры - needGame; с прогрессом или боями - работает как раньше
 { const ndb = fakeDb({ players: [{ id: 'p-game001', kind: 'airdef' }, { id: 'p-site-new', kind: 'site' }, { id: 'p-site-res', kind: 'site' }, { id: 'p-site-prog', kind: 'site' }],

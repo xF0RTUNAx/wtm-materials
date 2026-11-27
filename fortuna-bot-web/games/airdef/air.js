@@ -31,7 +31,7 @@ export function createAir(C) {
   const game = { targets: [], score: 0, kills: 0, done: false, over: false, t: 0, opts: {} };
   const loadout = [];
   let sel = 0, hasPod = false, flashT = 0, laserSpot = null;
-  const home = new THREE.Vector3(); let homeT = 0, homeLeft = 1; // точка вылета (пополнение в «Реализме») и время над ней
+  const home = new THREE.Vector3(); let homeT = 0, homeLeft = 1; // точка вылета (пополнение в «Про») и время над ней
   // вертолёт вместо самолёта подвески - для проверки (?heli=h_mi24 …), пока у вертолётов нет своих подвесок
   const HELI_Q = typeof location !== 'undefined' ? new URLSearchParams(location.search).get('heli') : null;
 
@@ -394,7 +394,7 @@ export function createAir(C) {
   // ═════════════ Подскок (вертолёт; Mark 2026-10-22) ═════════════
   // E / «ПОДСКОК»: «Аркада» - сам вверх, пока контейнер не увидит цель, захват, пуск ПТУР (НАР - когда круг на цели), висит, пока
   // ПТУР летит (его ведут до попадания), и вниз на прежнюю высоту; взялись за высоту или поворот - управление у игрока.
-  // «Реализм» - только подсказка: на сколько подняться, чтобы цель показалась. st: 0 - нет, 1 - вверх, 2 - захват и пуск, 3 - ведёт ПТУР, 4 - вниз
+  // «Про» - только подсказка: на сколько подняться, чтобы цель показалась. st: 0 - нет, 1 - вверх, 2 - захват и пуск, 3 - ведёт ПТУР, 4 - вниз
   const pop = { st: 0, t: 0, agl0: 0, fired: false, tgt: null, seeT: 0 };
   const aglNow = () => craft.pos.y - city.topAt(craft.pos.x, craft.pos.z);
   // цель подскока: цель контейнера (выбранная R / «ЦЕЛЬ»), если она впереди (±40°) и в досягаемости выбранного оружия, иначе ближайшая
@@ -412,7 +412,7 @@ export function createAir(C) {
   const noseOn = (p, deg) => angleBetween(fwdOf(craft, NV), LP.copy(p).sub(craft.pos)) < deg * D2R;
   // видна ли цель с высоты dh над нынешней: луч из носа на высшую точку объекта (у вертолёта центр объекта закрыт его же постройками)
   function popSees(t, dh = 0) { const P = t.S ? tgtPos(t, TP) : hiPoint(t, TP); return city.los(craft.pos.x, craft.pos.y - 1.5 + dh, craft.pos.z, P.x, P.y + 2, P.z, 4); }
-  function popNeed() { // «Реализм»: сколько метров вверх до видимости цели
+  function popNeed() { // «Про»: сколько метров вверх до видимости цели
     const t = popPick(); if (!t) return tr('Подскок: нет цели впереди в досягаемости - доверните на цель');
     for (let dh = 0; dh <= 80; dh += 5) if (popSees(t, dh)) return dh ? tr('Подскок: поднимитесь на +{0} м - {1} покажется; пуск - и вниз', [dh, tgtName(t)]) : tr('{0} видна - пуск, затем вниз', [tgtName(t)]);
     return tr('Цель не покажется и с +80 м - смените позицию');
@@ -981,7 +981,7 @@ export function createAir(C) {
       hx.fillText(`${o.name} ${(d / 1000).toFixed(1)}`, p[0], p[1] - 13);
     }
     const M = C.MODE();
-    // «Реализм»: подвеска пуста (или мало ловушек/топлива) - метка точки вылета, где пополняются
+    // «Про»: подвеска пуста (или мало ловушек/топлива) - метка точки вылета, где пополняются
     if (M.reload === 'home' && reloadable() && homeLeft > 0 && (needsRearm() || cmLow(0.5) || craft.fuel < 0.6)) {
       const p = proj(LP.set(home.x, home.y + 30, home.z));
       const dh = Math.hypot(craft.pos.x - home.x, craft.pos.z - home.z), z0 = game.net ? game.net.zone : zn.Z;
@@ -1340,7 +1340,7 @@ export function createAir(C) {
       })();
       game.targets = opts.targets ? opts.targets.map((k) => S.objects.find((o) => o.key === k)).filter(Boolean) : pickTargets(S, rnd, game.tgtN || 3);
       const kn = setup.game === 'air' && C.diff ? C.diff.knobs('air', setup.diff) : null; // сложность: режим + скрытая подстройка (не в обучении и «Съёмке»)
-      // против вертолёта (craft.heli тут ещё от прошлого вылета): только ближние комплексы и реже - «Аркада» ×0,35, «Реализм» ×0,5 (Mark 2026-10-22: было ×0,6 и весь набор эпохи)
+      // против вертолёта (craft.heli тут ещё от прошлого вылета): только ближние комплексы и реже - «Аркада» ×0,35, «Про» ×0,5 (Mark 2026-10-22: было ×0,6 и весь набор эпохи)
       const vsHeli = !opts.items && (isHeli(HELI_Q) || (LOADOUTS[setup.era][setup.lo] || {}).heli);
       // ПВО - у трёх объектов, как раньше: цели задания и ещё объекты карты до трёх (при одной цели всё ближнее стояло бы у неё - втрое плотнее)
       const defT = !game.tgtN || game.targets.length >= 3 ? game.targets : [...game.targets, ...pickTargets({ objects: S.objects.filter((o) => !game.targets.includes(o)) }, rnd, 3 - game.targets.length)];
@@ -1390,14 +1390,14 @@ export function createAir(C) {
     if (!opts.items && (LOADOUTS[setup.era][setup.lo].side !== att || RETIRED_PLANES.has(LOADOUTS[setup.era][setup.lo].plane))) setup.lo = loadoutsOf(setup.era, att)[0][1]; // выведенный самолёт в сохранённых настройках - первый доступный
     const L0 = opts.items ? { items: opts.items, pod: opts.pod, side: att, plane: opts.plane } : LOADOUTS[setup.era][setup.lo];
     const L = !opts.items && isHeli(HELI_Q) ? HELI_LOADOUTS.find((q) => q.plane === HELI_Q) || { ...L0, plane: HELI_Q, side: heliModel(HELI_Q).s.side } : L0;
-    // вертолёт (sim/heli.js): своя лётная модель; «Реализм» - честное управление, остальное - «Аркада»
-    craft.hm = isHeli(L.plane) ? heliModel(L.plane, { arcade: true }) : null; craft.heli = !!craft.hm; // вертолёт - аркадное управление и в «Реализме» (Mark 2026-10-25: «чтобы не усложнять»)
+    // вертолёт (sim/heli.js): своя лётная модель; «Про» - честное управление, остальное - «Аркада»
+    craft.hm = isHeli(L.plane) ? heliModel(L.plane, { arcade: true }) : null; craft.heli = !!craft.hm; // вертолёт - аркадное управление и в «Про» (Mark 2026-10-25: «чтобы не усложнять»)
     if (craft.irBase === undefined) craft.irBase = craft.ir;
     craft.ir = craft.heli ? craft.irBase * 0.55 : craft.irBase; // вертолёт: турбовальные двигатели с экранами выхлопа - тепловым ГСН труднее
-    game.used = [(L.heli || craft.heli ? 'heli:' : 'air:') + L.plane, ...L.items.map(([k]) => 'wpn:' + k)]; // прокачка: на чём летали (в «Реализме» - должно быть куплено)
+    game.used = [(L.heli || craft.heli ? 'heli:' : 'air:') + L.plane, ...L.items.map(([k]) => 'wpn:' + k)]; // прокачка: на чём летали (в «Про» - должно быть куплено)
     hasPod = !!L.pod; for (const [k] of L.items) wantWeapon(k); // модели подвески (оружие «Мульти-волны» и новое - грузятся по запросу)
     const pmL = !craft.heli && L.plane && planeMeta(L.plane) ? stationsFor(L.plane, L.items.map(([k]) => k)) : null, order = stOrder(pmL ? pmL.stations.length : 8); let oi = 0; // у самолёта с шестью точками порядок свой (models.js stOrder)
-    // запас на борт (ошибки, промахи): «Аркада» - ещё 2 полных комплекта (пополняются сами), «Реализм» - 1 пополнение на точке вылета;
+    // запас на борт (ошибки, промахи): «Аркада» - ещё 2 полных комплекта (пополняются сами), «Про» - 1 пополнение на точке вылета;
     // обучение (opts.reload) - без ограничений
     const sets = opts.reload ? Infinity : (C.MODE().rearms ?? 1); homeLeft = sets;
     // вертолёт: ПТУР - в рамы внешних пилонов (по 4, слева-справа по очереди), блоки НАР - на внутренние (heliStations)
@@ -1413,7 +1413,7 @@ export function createAir(C) {
     buildPylons();
     craft.jam = Math.max(0, ...loadout.map((l) => AG[l.key].jam || 0)); // станция помех на подвеске
     if (!usable(loadout[sel])) nextWeapon();
-    // свои ТТХ самолёта (sim/flight.js): модель - из подвески; режим (Аркада/Реализм) - мягкость виража
+    // свои ТТХ самолёта (sim/flight.js): модель - из подвески; режим (Аркада/Про) - мягкость виража
     craft.model = L.plane || (att === 'east' ? 'su30' : 'f16'); craft.inBay = loadInBay(L.plane, L.items); craft.revealT = 0; craft.cmSide = att; // ключ модели - точки ловушек (sim/cm.js)
     craft.fm = craft.heli ? null : flightModel(L.plane || (att === 'east' ? 'su30' : 'f16'), { ind: (C.MODE() || {}).ind });
     updLoad();
@@ -1510,11 +1510,11 @@ export function createAir(C) {
       const s1 = C.op.s1 || { score: 0, kills: 0, alive: false, hunt: null }, bonus = s1.alive && !craft.dead ? 300 : 0, total = s1.score + game.score + bonus;
       C.showEnd({ title: tr('Операция завершена'), reason: why, win: game.done ? true : craft.dead ? false : null, again: tr('Новая операция'),
         stats: [[s1.hunt ? `${Math.min(s1.hunt.n, s1.hunt.need)}/${s1.hunt.need}` : '-', tr('РЛС (вылет 1)')], [`${dead}/${game.targets.length}`, tr('целей (вылет 2)')], [s1.kills + game.kills, tr('комплексов ПВО')], [total, tr('очков')]],
-        note: tr('Очки: {0} + {1}{2}. {3}, ранг {4}.', [s1.score, game.score, bonus ? tr(' + {0} за два возвращения', [bonus]) : '', real ? tr('Реализм') : tr('Аркада'), ERAS[C.setup.era - 1].short]) });
+        note: tr('Очки: {0} + {1}{2}. {3}, ранг {4}.', [s1.score, game.score, bonus ? tr(' + {0} за два возвращения', [bonus]) : '', real ? tr('Про') : tr('Аркада'), ERAS[C.setup.era - 1].short]) });
       C.op = null; C.menu.record('air', total); setTimeout(claim, 950); return;
     }
     C.showEnd({ title: craft.dead ? tr('Самолёт потерян') : tr('Вылет завершён'), reason: why, win: craft.dead ? false : game.done ? true : null,
-      stats: [game.hunt ? [`${Math.min(game.hunt.n, game.hunt.need)}/${game.hunt.need}`, tr('РЛС уничтожено')] : [`${dead}/${game.targets.length}`, tr('целей уничтожено')], [game.kills, tr('комплексов ПВО')], [game.score, tr('очков')], [real ? tr('Реализм') : tr('Аркада'), tr('ранг {0}', [ERAS[C.setup.era - 1].short])]],
+      stats: [game.hunt ? [`${Math.min(game.hunt.n, game.hunt.need)}/${game.hunt.need}`, tr('РЛС уничтожено')] : [`${dead}/${game.targets.length}`, tr('целей уничтожено')], [game.kills, tr('комплексов ПВО')], [game.score, tr('очков')], [real ? tr('Про') : tr('Аркада'), tr('ранг {0}', [ERAS[C.setup.era - 1].short])]],
       note: game.done ? tr('Задание выполнено.') : '' });
     C.menu.record('air', game.score); setTimeout(claim, 950); // итоги появляются через 0,9 с
   }
@@ -1522,7 +1522,7 @@ export function createAir(C) {
   // ═════════════ Кадр ═════════════
   // ═════════════ Пополнение подвески (одиночный вылет; онлайн - новый вылет за очки, обучение - своё) ═════════════
   // «Аркада»: опустевший пилон пополняется сам - по одной единице, тяжёлое дольше (20-60 с);
-  // «Реализм»: только у точки вылета - ниже 1500 м в 2,5 км от неё 12 с: подвеска, ловушки и топливо целиком
+  // «Про»: только у точки вылета - ниже 1500 м в 2,5 км от неё 12 с: подвеска, ловушки и топливо целиком
   const relT = (l) => clamp(20 + AG[l.key].mass / 30, 20, 60);
   const reloadable = () => !game.net && (!game.opts.items || game.opts.reload) && !craft.dead && !game.over;
   const needsRearm = () => loadout.some((l) => AG[l.key].kind !== 'ecm' && l.n < l.n0 && l.res > 0);
@@ -1589,7 +1589,7 @@ export function createAir(C) {
     hx.fillText(label, ax - Math.cos(ang) * 30, ay - Math.sin(ang) * 22 + 4); hx.shadowBlur = 0;
   }
   // кнопка «ПУСК» (телефон; сброс бомб и пуск ракет): готово сейчас × до следующей единицы (с), заливка по часовой - ход перезарядки; пусто и пополнять
-  // нечем - кнопка полупрозрачная. Перезарядка сама - только в «Аркаде» (l.rt); в «Реализме» и онлайне - число
+  // нечем - кнопка полупрозрачная. Перезарядка сама - только в «Аркаде» (l.rt); в «Про» и онлайне - число
   let fbT = 0, fbS = '';
   function fireBtn(dt) {
     if (!IS_TOUCH || (fbT -= dt) > 0) return; fbT = 0.12;
@@ -1758,7 +1758,7 @@ export function createAir(C) {
   }
   // «Аркада» (Mark 2026-10-21 - «как набирать скорость?»; одинаково на телефоне и ПК): заданная скорость держится сама - ручка или W/S
   // вперёд/назад плавно меняют её, кнопка «газ» листает ступени, A/D и ручка вбок - поворот (на скорости - вираж с креном), ↑/↓ и кнопки - высота,
-  // ←/→ и кнопки вбок - шаг в сторону. «Реализм» - как раньше: ручка - наклон диска, педали, шаг винта
+  // ←/→ и кнопки вбок - шаг в сторону. «Про» - как раньше: ручка - наклон диска, педали, шаг винта
   function heliFly(dt) {
     padTick(); const k = (...c) => (c.some((q) => keys.has(q)) ? 1 : 0), st = stick.id !== null, arc = craft.hm.arcade;
     const vh = Math.hypot(craft.vel.x, craft.vel.z), fast = clamp((vh - 15) / 20, 0, 1);

@@ -98,14 +98,14 @@ export function createEvent(C) {
   if (!AUTUMN_KEYS.includes(S.wx)) S.wx = 'a_dusk';
   const save = () => ls.set(KEY, JSON.stringify(S));
   const seg = (id, cur, items) => `<div class="sg" data-seg="${id}">${items.map(([v, l]) => `<button data-v="${v}" class="${String(v) === String(cur) ? 'on' : ''}">${l}</button>`).join('')}</div>`;
-  const realLock = () => setup.diff === 'real' && C.progress && C.progress.ready(); // прокачка ограничивает только «Реализм»
+  const realLock = () => setup.diff === 'real' && C.progress && C.progress.ready(); // прокачка ограничивает только «Про»
   const open0 = (L) => !realLock() || C.progress.loadoutOk(L);
   const thumb = (L) => `airdef/thumbs/heli_${L.plane}.webp?v=20261126b`;
   const idOf = (L) => `${L.era}:${L.i}`;
   const list = () => HELI_LOADOUTS.filter((L) => L.side === S.hside);
   const cur = () => { const l = list(); return l.find((L) => idOf(L) === S.sel) || l[0]; };
   const tagsOf = (L) => L.items.map(([k, n]) => `<span class="tg">${trIf(AG[k].short)} ×${n}</span>`).join('');
-  // выбранный вертолёт - всегда открытый, если такой есть (в «Реализме» закрытые выбрать нельзя)
+  // выбранный вертолёт - всегда открытый, если такой есть (в «Про» закрытые выбрать нельзя)
   function fixSel() { const l = list(), L = cur(); if (L && !open0(L)) { const o = l.find(open0); if (o) S.sel = idOf(o); } else if (L) S.sel = idOf(L); }
 
   const left = () => eventLeft();
@@ -162,11 +162,11 @@ export function createEvent(C) {
     snd.click();
     if (t.dataset.close) { api.close(); return; }
     if (t.dataset.tab) { S.tab = t.dataset.tab; save(); draw(); return; }
-    if (t.dataset.need) { C.research.open(t.dataset.need); return; } // закрыто в «Реализме» - к нужному узлу дерева
+    if (t.dataset.need) { C.research.open(t.dataset.need); return; } // закрыто в «Про» - к нужному узлу дерева
     if (t.dataset.sel) { S.sel = t.dataset.sel; save(); draw(); return; }
     if (t.dataset.go === 'fly') {
       const L = cur();
-      if (!open0(L)) { C.research.open(C.progress.loadoutMissing(L)[0].id); return; } // «Реализм»: ни одного купленного вертолёта - в «Исследования»
+      if (!open0(L)) { C.research.open(C.progress.loadoutMissing(L)[0].id); return; } // «Про»: ни одного купленного вертолёта - в «Исследования»
       // сторона ПВО города - противоположная стороне вертолёта; вылет один, без «Операции»
       Object.assign(setup, { game: 'air', era: L.era, lo: L.i, op: false, side: S.hside === 'east' ? 'west' : 'east' });
       orientGate(() => launch('air'), C.IS_TOUCH); return;

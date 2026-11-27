@@ -114,7 +114,7 @@ function printTable(rows) {
 // ═════════════ loads: готовые подвески - сколько подвесок на задание «Вылета» ═════════════
 // 3 случайные цели одной карты; оружие подвески - по очереди, сильное раньше, каждое - в живую цель (разлёт как в table); ПРР, помехи и
 // ложные цели по объектам не идут. Пишем, после скольких подвесок погибла 1-я, 2-я, 3-я цель: loads - на 3 цели, mission - на задание
-// по силе подвески (arsenal.js loadoutTargets: 1-3). «Реализм» даёт 2 подвески (своя + пополнение), «Аркада» - 3.
+// по силе подвески (arsenal.js loadoutTargets: 1-3). «Про» даёт 2 подвески (своя + пополнение), «Аркада» - 3.
 const LCAP = 8;
 function loadsFor(L, T) {
   const items = L.items.filter(([k]) => KINDS.includes(AG[k].kind) && AG[k].dmg > 0).map(([k, n]) => {
@@ -157,7 +157,7 @@ function loads(T) {
   return out;
 }
 function printLoads(rows) {
-  console.log('\nГотовые подвески: ЕУ подвески · целей за подвеску (разлёт) · подвесок на 3 цели · целей задания и подвесок на него (Реализм - 2, Аркада - 3)');
+  console.log('\nГотовые подвески: ЕУ подвески · целей за подвеску (разлёт) · подвесок на 3 цели · целей задания и подвесок на него (Про - 2, Аркада - 3)');
   const f = (v) => (v >= LCAP ? '>' + LCAP : v.toFixed(2));
   for (const r of rows) console.log(`  ${(r.raid ? '' : 'ранг ' + r.era + ' ') + r.name}`.slice(0, 64).padEnd(66) + `${String(r.eu).padStart(5)} · ${r.first.toFixed(2).padStart(5)} · ${f(r.loads).padStart(5)} · ${r.raid ? '' : r.nT + ': ' + f(r.mission)}`);
 }

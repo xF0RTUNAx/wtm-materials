@@ -82,7 +82,7 @@ export function createCliffs({ scene, city, gh, P, sh, ground, waterY }) {
 function faceMaterial(kind) {
   const U = { tC: { value: null }, tN: { value: null }, tM: { value: null }, tNoise: { value: noiseTex() }, uOn: { value: 0 } };
   const m = new THREE.MeshPhongMaterial({ color: 0xffffff, specular: 0x000000, shininess: 1, vertexColors: true, side: THREE.DoubleSide });
-  if (ktxOn()) Promise.all([ktxLoad('cl_clay_c'), ktxLoad('cl_clay_n'), ktxLoad('cl_macro_n')]).then(([c, nn, mm]) => { for (const t of [c, nn, mm]) { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 4; } U.tC.value = c; U.tN.value = nn; U.tM.value = mm; U.uOn.value = 1; }).catch((e) => console.warn('текстуры обрывов', e.message));
+  if (ktxOn()) Promise.all(['cl_clay_c', 'cl_clay_n', 'cl_macro_n'].map((n) => ktxLoad(n).then((t) => { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 4; return t; }))).then(([c, nn, mm]) => { U.tC.value = c; U.tN.value = nn; U.tM.value = mm; U.uOn.value = 1; }).catch((e) => console.warn('текстуры обрывов', e.message));
   m.onBeforeCompile = (s) => {
     Object.assign(s.uniforms, U);
     s.vertexShader = 'varying vec3 vWp, vGN;\n' + s.vertexShader.replace('#include <project_vertex>', '#include <project_vertex>\n vWp = (modelMatrix * vec4(transformed, 1.0)).xyz; vGN = mat3(modelMatrix) * normal;');

@@ -1,6 +1,6 @@
 // Задания: пул ежедневных и еженедельных, очки маршрута недели, награды и правила счёта (экран - quests.js). Без DOM: те же правила у игры и у функций Supabase
 // (копия в supabase/functions/_shared/airdef, tools/airdef-headless/sync-shared.js).
-// Ориентир наград: час в «Реализме» ≈ 4300 опыта и столько же серебра, в «Аркаде» - вдвое меньше (progress.js battleReward).
+// Ориентир наград: час в «Про» ≈ 4300 опыта и столько же серебра, в «Аркаде» - вдвое меньше (progress.js battleReward).
 // Mark 2026-11-04: всё засчитывается только в быстрых онлайн-боях (итог подписан игровым сервером, своя комната не считается), кроме заданий на «Оборону» (solo).
 // g - откуда задание: any - любая сторона, pvo - за ПВО, air - за авиацию и удар. c - счётчик боя (onlineCounters, questApply).
 export const DAILY_N = 3, WEEKLY_N = 5, PTS_DAILY = 10, PTS_WEEKLY = 20;
@@ -17,7 +17,7 @@ export const DAILY = {
   play3: { g: 'any', c: 'play', ic: 'menu-checklist', t: 'Сыграть 3 боя', d: 'Онлайн, любая сторона', of: 3, r: { silver: 90, xp: 50 } },
   time: { g: 'any', c: 'min', ic: 'timer-stopwatch', t: 'Провести 30 минут в боях', d: 'Онлайн, любая сторона', of: 30, u: 'min', r: { silver: 130, xp: 80 } },
   xp: { g: 'any', c: 'xp', ic: 'task-xp-sergeant', t: 'Набрать 2 000 опыта', d: 'Онлайн, любая сторона', of: 2000, r: { silver: 130 } },
-  real: { g: 'any', c: 'real', ic: 'task-streak-fire', t: 'Два боя в «Реализме»', d: 'Онлайн в «Реализме»', of: 2, r: { silver: 150, xp: 90 } },
+  real: { g: 'any', c: 'real', ic: 'task-streak-fire', t: 'Два боя в «Про»', d: 'Онлайн в «Про»', of: 2, r: { silver: 150, xp: 90 } },
   top: { g: 'any', c: 'top', ic: 'task-online-trophy', t: 'Стать лучшим в команде', d: 'Онлайн: больше всех очков в своей команде', of: 1, r: { silver: 160, xp: 90 } },
   kills: { g: 'pvo', c: 'downs', ic: 'task-kills-crosshair', t: 'Сбить 10 воздушных целей', d: 'Онлайн за ПВО, «Мульти-волна» за ПВО', of: 10, r: { silver: 140, xp: 80 } },
   waves: { g: 'pvo', c: 'waves', solo: 1, ic: 'task-defense-shield', t: 'Отразить 5 волн обороны', d: '«Оборона», любая карта', of: 5, r: { silver: 120, xp: 70 } },
@@ -35,7 +35,7 @@ export const WEEKLY = {
   play: { g: 'any', c: 'play', ic: 'menu-checklist', t: 'Сыграть 25 боёв', d: 'Онлайн, любая сторона', of: 25, r: { silver: 400, xp: 250 } },
   time: { g: 'any', c: 'min', ic: 'timer-stopwatch', t: 'Провести 4 часа в боях', d: 'Онлайн, любая сторона', of: 240, u: 'h', r: { silver: 500, xp: 300 } },
   xp: { g: 'any', c: 'xp', ic: 'task-xp-rank-3', t: 'Набрать 20 000 опыта', d: 'Онлайн, любая сторона', of: 20000, r: { silver: 500 } },
-  real: { g: 'any', c: 'real', ic: 'task-streak-fire', t: '8 боёв в «Реализме»', d: 'Онлайн в «Реализме»', of: 8, r: { silver: 450, xp: 250 } },
+  real: { g: 'any', c: 'real', ic: 'task-streak-fire', t: '8 боёв в «Про»', d: 'Онлайн в «Про»', of: 8, r: { silver: 450, xp: 250 } },
   daily: { g: 'any', c: 'dailyDone', ic: 'done-check-mark', t: 'Выполнить 15 ежедневных заданий', d: 'Раздел «Задания», вкладка «Ежедневно»', of: 15, r: { silver: 400, gem: 1 } },
   days: { g: 'any', c: 'day', ic: 'weekly-calendar', t: 'Играть 5 дней из 7', d: 'Хотя бы один онлайн-бой в день', of: 5, r: { silver: 300, xp: 200 } },
   downs: { g: 'pvo', c: 'downs', ic: 'task-kills-crosshair', t: 'Сбить 80 воздушных целей', d: 'Онлайн за ПВО, «Мульти-волна» за ПВО', of: 80, r: { silver: 300, xp: 200 } },

@@ -305,7 +305,7 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, s
     r.state = 'end'; r.t = 0; r.phaseT = RESULTS_T;
     const list = [...r.players.values()].map((p) => ({ id: p.id, name: p.name, team: p.team, bot: !!p.bot, kills: p.kills || 0, deaths: p.deaths || 0, score: Math.round(p.score || 0) }));
     // итог для наград (функция airdef-claim проверяет подпись MP_SECRET): g - игра, m - бой, w - победа, k - сбито/уничтожено,
-    // s - очки, hm - людей больше половины (тогда награды «Реализма» полные), exp - срок
+    // s - очки, hm - людей больше половины (тогда награды «Про» полные), exp - срок
     const hm = humans(r).length * 2 > r.players.size ? 1 : 0, deadT = Math.round((r.valueK || 0) * (r.targets || []).length); // разрушено целей (по доле ценности)
     for (const p of humans(r)) {
       // ev - события для прокачки (airdef-claim → опыт и серебро): длительность боя, сбитые / уничтоженные комплексы, доля разрушенных целей команды
@@ -615,7 +615,7 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, s
     if (m.t === 'hello') {
       const who = await auth(m); if (!who) return send(c, { t: 'err', msg: 'Не удалось войти: обновите страницу' });
       if (who.needGame) return send(c, { t: 'err', msg: 'Создайте аккаунт игры - новым игрокам прогресс копится только на нём', need_game: true }); // аккаунт сайта без прогресса игры (билет с ng)
-      Object.assign(c, { name: who.name, pid: who.pid, adP: adProgress(who.ad), worn: who.worn || {}, prem: who.prem === true, maps: m.maps === 1 }); clients.add(c); // adP - купленное в прокачке (замки «Реализма»)
+      Object.assign(c, { name: who.name, pid: who.pid, adP: adProgress(who.ad), worn: who.worn || {}, prem: who.prem === true, maps: m.maps === 1 }); clients.add(c); // adP - купленное в прокачке (замки «Про»)
       // возвращение в идущий бой тем же аккаунтом
       for (const r of rooms.values()) { const old = [...r.players.values()].find((p) => !p.bot && p.pid && p.pid === c.pid && p !== c); if (old) { takeSeat(r, old, c); return; } } // и когда старое соединение ещё не закрылось
       return send(c, { t: 'welcome', id: c.id, name: c.name, search: searching() });

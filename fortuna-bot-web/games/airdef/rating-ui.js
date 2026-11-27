@@ -306,7 +306,7 @@ export function createRating(C) {
   // «Мои бои»: дата, режим, роль, итог, разбор «итог + вклад + соперники», множители ≠ 1, очки, засчитан ли в сезон (2 + 2 + 2 + 1, sql/025)
   function battleRow(b) {
     const p = b.rp || {}, multi = !!b.multi;
-    const mode = (multi ? tr('Мульти-волна') : tr('Вылет и оборона')) + ' · ' + (b.mode === 'real' ? tr('реализм') : tr('аркада')) + (multi ? '' : ' · ' + tr('ранг {0}', [rankOf(p.k || 1)]));
+    const mode = (multi ? tr('Мульти-волна') : tr('Вылет и оборона')) + ' · ' + (b.mode === 'real' ? tr('Про') : tr('аркада')) + (multi ? '' : ' · ' + tr('ранг {0}', [rankOf(p.k || 1)]));
     const role = b.team === 'pvo' ? [ico('radar'), tr('ПВО')] : multi ? [ico('players'), tr('волна')] : [ico('fire'), tr('лётчик')];
     const res = b.draw ? tr('ничья') : b.win ? tr('победа') : tr('поражение');
     const chips = [];
@@ -366,7 +366,7 @@ export function createRating(C) {
     const fav = `<div class="sec"><div class="sh"><b>${tr('Любимое')}</b><small>${per === 'season' ? tr('за сезон') : tr('за всё время')}</small></div>${favs ? `<div class="fav">${favs}</div>` : `<span class="empty">${tr('Появится после онлайн-боёв.')}</span>`}</div>`;
     const ROLE = { air: ['fire', tr('лётчик')], pvo: ['radar', tr('ПВО')], multi: ['players', tr('волна')] };
     const bl = (P.best || []).map((b) => { const r = ROLE[b.kind] || ROLE.air, res = b.draw ? tr('ничья') : b.win ? tr('победа') : tr('поражение');
-      const md = (b.kind === 'multi' ? tr('Мульти-волна') : tr('Вылет и оборона')) + ' · ' + (b.mode === 'real' ? tr('реализм') : tr('аркада')) + (b.kind === 'multi' ? '' : ' · ' + tr('ранг {0}', [rankOf(b.k || 1)]));
+      const md = (b.kind === 'multi' ? tr('Мульти-волна') : tr('Вылет и оборона')) + ' · ' + (b.mode === 'real' ? tr('Про') : tr('аркада')) + (b.kind === 'multi' ? '' : ' · ' + tr('ранг {0}', [rankOf(b.k || 1)]));
       return `<div class="br"><span class="d">${ddmm(b.at)}<br>${hhmm(b.at)}</span><span class="r">${ico(r[0])}${r[1]} · ${res}<small>${esc(md)}</small></span><span class="v">${nf(b.rating || 0)}</span></div>`; }).join('');
     const best = `<div class="sec"><div class="sh"><b>${tr('Лучшие бои сезона')}</b><small>${tr('засчитано {0} из {1} · сумма {2}', [P.n || 0, SLOTS, nf(P.points || 0)])}</small></div>${bl ? `<div class="bl">${bl}</div>` : `<span class="empty">${tr('В этом сезоне боёв пока нет.')}</span>`}</div>`;
     const aw = (P.awards || []).map((a) => { const c = a.place <= 3 ? 'g' + a.place : a.place <= 10 ? 't10' : 'pl';

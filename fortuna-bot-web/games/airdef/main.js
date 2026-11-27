@@ -237,7 +237,7 @@ const W = WEATHERS[W_KEY];
 if (CINEMA) { W.hazeK = (W.hazeK || 0) * 0.45; W.fogD = (W.fogD || 0) * 0.55; } // ролик: даль чище - высотки Сити не тонут в дымке
 
 // ═════════════ Настройки боя (сохраняются) ═════════════
-// game: 'air' - вылет, 'defense' - оборона, 'training'; diff - Аркада/Реализм; era; side - сторона ПВО города; lo - подвеска;
+// game: 'air' - вылет, 'defense' - оборона, 'training'; diff - Аркада/Про; era; side - сторона ПВО города; lo - подвеска;
 // tside - ветка обучения ('air' | 'def'), tl - урок
 // op - «Операция» из 2 вылетов: lo1 - охота за ПВО, lo2 - удар
 const setup = { game: 'air', diff: 'arcade', era: 2, side: 'east', lo: 0, op: false, lo1: 0, lo2: 0, tside: 'air', tl: 0 };
@@ -1594,7 +1594,7 @@ setInterval(() => {
   C.quests = createQuests(C); // «Задания»: кнопка #qstBtn, экран и счёт на сервере (quests.js, quests-data.js)
   C.online = createOnline(C, ctrls); // до меню: оно спрашивает у онлайна текст кнопки и раздел
   C.menu = createMenu(C, { PRESETS, WEATHER_KEYS });
-  C.progress.on(() => { if (C.state === 'menu') C.menu.render(); }); C.progress.refresh(); // замки «Реализма» - по купленному
+  C.progress.on(() => { if (C.state === 'menu') C.menu.render(); }); C.progress.refresh(); // замки «Про» - по купленному
   resize();
   C.buildMs = Math.round(performance.now() - t0);
   await ldStep(tr('Готовим графику (шейдеры)…'), 0.85);

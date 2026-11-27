@@ -60,7 +60,7 @@
   .screen { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 30;
     padding: calc(max(16px, var(--sa-t)) + var(--tg-t)) max(16px, var(--sa-r)) max(16px, var(--sa-b)) max(16px, var(--sa-l)); }
   .screen.on { display: flex; animation: scrIn .22s ease-out; }
-  /* прокачка: закрытое в «Реализме», награда за бой, опыт и серебро в меню */
+  /* прокачка: закрытое в «Про», награда за бой, опыт и серебро в меню */
   .opt.lock { opacity: .62; } .opt.lock b .ic, .dcard .ic { width: 1em; height: 1em; vertical-align: -0.12em; }
   .opt .need, .hint.need { display: block; color: #f3c96f; font-size: 11.5px; margin-top: 2px; }
   .opt .nm .tgn { display: block; margin-top: 1px; } /* «целей: N - по силе подвески» (2026-11-01) - строкой под оружием */
@@ -364,7 +364,7 @@
   #tPad { left: max(16px, var(--sa-l)); bottom: 120px; width: auto; height: auto; background: transparent; border: 0; display: grid; grid-template: repeat(3, 48px) / repeat(3, 48px); gap: 3px; align-items: stretch; justify-items: stretch; }
   #tPad i { font-style: normal; display: flex; align-items: center; justify-content: center; border-radius: 10px; border: 2px solid rgba(255,255,255,.5); background: rgba(255,255,255,.14); font-size: 18px; pointer-events: none; }
   #tPad .pu { grid-area: 1 / 2; } #tPad .pl { grid-area: 2 / 1; } #tPad .pr { grid-area: 2 / 3; } #tPad .pd { grid-area: 3 / 2; } #tPad i.on { background: rgba(255,120,60,.55); }
-  body.nopad:not(.layoutEdit) #tPad { display: none; } body.heli.nopad #tPad { display: grid; } /* вертолёт: ▲▼ - высота, ◀▶ - шаг вбок («Аркада»; в «Реализме» ⟲⟳ - педали) - нужна всегда */ body.short #tPad { bottom: 10px; grid-template: repeat(3, 42px) / repeat(3, 42px); } /* низкий экран: под панелью оружия */
+  body.nopad:not(.layoutEdit) #tPad { display: none; } body.heli.nopad #tPad { display: grid; } /* вертолёт: ▲▼ - высота, ◀▶ - шаг вбок («Аркада»; в «Про» ⟲⟳ - педали) - нужна всегда */ body.short #tPad { bottom: 10px; grid-template: repeat(3, 42px) / repeat(3, 42px); } /* низкий экран: под панелью оружия */
   #tAuto.on, #opAuto.on { background: rgba(34,140,70,.6); border-color: #86efac; }
   /* «Ещё» (#tMore, значок «⋯»): редкие кнопки «Обзор», «Карта», «Бинокль», «Авто» - в ряду справа вверху под рядом «полный экран / звук / пауза»; ряд открывает #tMore (air.js moreShow),
      по нажатию на кнопку ряда или через 4 с закрывается. Ряд - фиксированный (в редакторе кнопок не двигается и не виден). #tMore.mk - «Авто» включён: золотой уголок */

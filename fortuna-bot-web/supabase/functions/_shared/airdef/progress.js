@@ -2,7 +2,7 @@
 // Прокачка «Воздушного превосходства» (AIRDEF_PROGRESSION.md): дерево из арсенала, ранги, цены, паритет сторон, награда
 // за бой. Чистый модуль - общий для клиента, игрового сервера и функций Supabase (тратит и начисляет только сервер).
 // Опыт - исследование, серебро - покупка. Ранг единицы = её эпоха. Аркада и обучение открывают всё - прокачка только
-// для «Реализма». Ветки: air - самолёты вылета, wpn - оружие подвесок, pvo - комплексы, strike - удары «Мульти-волны».
+// для «Про». Ветки: air - самолёты вылета, wpn - оружие подвесок, pvo - комплексы, strike - удары «Мульти-волны».
 // «Удары» - без рангов (Mark 2026-10-25): ветки по нации (баллистика, крылатые…) от начальной до самой современной, первый в ветке - стартовый;
 // ступень (3-е поле MULTI.items) задаёт только цену и опыт, напрямую не показывается; рангов и паритета сторон у этой ветки нет.
 import { AG, SAM, LOADOUTS, MULTI, MULTI_LINES, SAM_COST, CARRIERS, PLANES, AG_KIND, SAM_TYPE, THREAT, loadoutRole, eqOf, RETIRED_PLANES } from './arsenal.js';
@@ -176,7 +176,7 @@ export function canBuy(P, id) {
 export function research(P, id) { const c = canResearch(P, id); if (!c.ok) return c; P.xp -= NODE[id].cost; P.res.push(id); return { ok: true }; }
 export function buy(P, id) { const c = canBuy(P, id); if (!c.ok) return c; P.silver -= NODE[id].cost; P.own.push(id); return { ok: true }; }
 
-// доступность в «Реализме»: подвеска - самолёт и всё её оружие куплены; что не хватает - список узлов
+// доступность в «Про»: подвеска - самолёт и всё её оружие куплены; что не хватает - список узлов
 export function loadoutMissing(P, L) {
   const need = [craftId(L), ...L.items.map(([k]) => 'wpn:' + k)];
   return need.filter((id) => NODE[id] && !owned(P, id)).map((id) => NODE[id]);
@@ -255,7 +255,7 @@ export function cardStats(n) {
 // ev: { min - минут в бою, targets: [ценность 0,5…2], sams, samsLong, back, downs, kills (перехваты), waves: [номера],
 //   mwObj (очки угрозы разрушенного), mwSam, mwInt (очки угрозы перехваченного), win }
 // o: { real, arcade, online, training, firstWin, dayXp - опыт за сегодня (все бои, для дневного предела) }
-// Темп (Mark 2026-10-20): линия I→IV вместе с паритетом (≈ 62 500) - около недели. «Реализм» ≈ 4300 опыта в час, «Аркада» - вдвое
+// Темп (Mark 2026-10-20): линия I→IV вместе с паритетом (≈ 62 500) - около недели. «Про» ≈ 4300 опыта в час, «Аркада» - вдвое
 // меньше; за день полным темпом - до DAY_FULL, дальше - ×DAY_OVER (неделя - и для того, кто играет весь день)
 export const BASE_MIN = 20, BASE_MAX_MIN = 15, REAL_K = 1.5, FIRST_WIN_K = 1.5, ARCADE_K = 0.5;
 export const DAY_FULL = 9000, DAY_OVER = 0.3, SOLO_MIN_CAP = 400, SOLO_BATTLE_CAP = 6000;
@@ -274,7 +274,7 @@ export function battleReward(ev, o = {}) {
   if (o.online && ev.win) add('Победа команды', 200);
   let xp = L.reduce((s, [, v]) => s + v, 0);
   if (ev.back) { add('Вернулся живым +20 %', xp * 0.2); xp *= 1.2; }
-  const K = []; if (o.real) K.push(['Реализм', REAL_K]); else if (o.arcade) K.push(['Аркада', ARCADE_K]); if (o.firstWin && ev.win) K.push(['Первая победа дня', FIRST_WIN_K]);
+  const K = []; if (o.real) K.push(['Про', REAL_K]); else if (o.arcade) K.push(['Аркада', ARCADE_K]); if (o.firstWin && ev.win) K.push(['Первая победа дня', FIRST_WIN_K]);
   for (const [, k] of K) xp *= k;
   if (!o.online) xp = Math.min(xp, SOLO_BATTLE_CAP, SOLO_MIN_CAP * Math.max(1, min) * (o.real ? REAL_K : 1) * (o.firstWin ? FIRST_WIN_K : 1)); // одиночная: браузеру верим в пределах разумного
   // дневной предел - только одиночные бои (Mark 2026-11-19: «убери ежедневный лимит по серебру и опыту в онлайне»): онлайн считает сервер боя

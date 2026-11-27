@@ -115,7 +115,7 @@ try {
   // фильтр целей комплекса: ПВО покупает, ставит фильтр (с мусором в списке); чужая команда фильтр не меняет; вернулся тем же аккаунтом - в состоянии фильтр на месте
   {
     let x0 = 0, z0 = 0; for (let k = 0; k < 400; k++) { const a = k * 2.399, d = 1500 + (k % 9) * 300, x = Math.cos(a) * d, z = Math.sin(a) * d; if (freeGround(city, x, z, 9)) { x0 = x; z0 = z; break; } }
-    defC.send({ t: 'buyUnit', k: s2.atk === 'east' ? 'hawk' : 's75', x: x0, z: z0 }); // стартовый комплекс (в «Реализме» купленное в исследованиях)
+    defC.send({ t: 'buyUnit', k: s2.atk === 'east' ? 'hawk' : 's75', x: x0, z: z0 }); // стартовый комплекс (в «Про» купленное в исследованиях)
     const ua = await defC.wait((m) => m.t === 'ev' && m.e.some((e) => e[0] === 'ua' && Math.abs(e[3] - x0) < 1 && Math.abs(e[4] - z0) < 1), 5000), id = ua && ua.e.find((e) => e[0] === 'ua' && Math.abs(e[3] - x0) < 1)[1];
     if (!id) console.log('  фильтр целей: комплекс не куплен', JSON.stringify(defC.msgs.filter((m) => m.t === 'deny').slice(-2)));
     if (id) { atkC.send({ t: 'tgt', id, c: ['bomb'] }); defC.send({ t: 'tgt', id, c: ['drone', 'zzz', 'cruise'] }); }

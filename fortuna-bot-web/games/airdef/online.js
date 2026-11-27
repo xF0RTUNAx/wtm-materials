@@ -193,7 +193,7 @@ export function createOnline(C, ctrls) {
     const allies = r.players.filter((p) => p.team === 'air' && p.id !== me.id), others = allies.map((p) => (p.choice !== null ? LO[p.choice] : null)), nAir = allies.length + 1;
     const cur = me.choice !== null ? LO[me.choice] : null, back = cur ? O.loadoutCostFor(cur, r.lead) : 0;
     const list = LO.map((L, i) => ({ L, i })).filter(({ L }) => L.side === B.sideAir && O.netOk(L) && !retiredHidden(C.progress && C.progress.P, L.plane)).map((q) => { // вертолёты - пока только одиночная игра (НАР в онлайне - с 2026-10-22)
-      const cost = O.loadoutCostFor(q.L, r.lead), miss = r.mode === 'real' && C.progress && C.progress.ready() ? C.progress.loadoutMissing(q.L) : []; // «Реализм»: только купленное
+      const cost = O.loadoutCostFor(q.L, r.lead), miss = r.mode === 'real' && C.progress && C.progress.ready() ? C.progress.loadoutMissing(q.L) : []; // «Про»: только купленное
       return { ...q, cost, role: loadoutRole(q.L), need: miss.length ? C.progress.needText(miss) : '', why: miss.length ? 'lock' : O.roleDeny(q.L, others, nAir) ? 'hunt' : cost > me.budget + back ? 'exp' : '' };
     });
     const planes = []; for (const q of list) { let p = planes.find((x) => x.k === q.L.plane); if (!p) planes.push(p = { k: q.L.plane, lo: [] }); p.lo.push(q); }

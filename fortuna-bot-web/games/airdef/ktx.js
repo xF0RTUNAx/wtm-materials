@@ -8,6 +8,7 @@ const V = '20261022c';
 const VN = Object.fromEntries(['tr_city_a', 'tr_city_n', 'tr_city_a_lo', 'tr_city_n_lo', 'tr_winter_a', 'tr_winter_n', 'tr_winter_a_lo', 'tr_winter_n_lo'].map((n) => [n, '20261108h']).concat(['city2', 'winter2', 'autumn2'].flatMap((n) => ['a', 'n', 'a_lo', 'n_lo'].map((q) => [`tr_${n}_${q}`, '20261125d']))).concat(['sgt_c', 'sgt_n', 'spt_c', 'spt_n', 'sga_c', 'sga_n', 'sgw_c', 'sgw_n'].flatMap((n) => [`${n}_hi`, `${n}_lo`]).map((n) => [n, '20261125f'])).concat(['gt_c', 'gt_n', 'pt_c', 'pt_n', 'dc', 'dn', 'mt'].flatMap((n) => [`${n}_hi`, `${n}_lo`]).map((n) => [n, '20261116a']))); // свои атласы земли и дорог (city-render.js GT_V)
 let L = null, META = null;
 export function ktxInit(renderer) {
+  R = renderer;
   if (L || !renderer || typeof Worker === 'undefined' || typeof WebAssembly === 'undefined') return;
   if (typeof location !== 'undefined' && /[?&]ktx=0/.test(location.search)) return;
   try { L = new KTX2Loader().setTranscoderPath(new URL('./vendor/basis/', import.meta.url).href).detectSupport(renderer); } catch (e) { L = null; console.warn('KTX2 недоступен:', e.message); }
@@ -19,9 +20,17 @@ const TOUCH = typeof matchMedia === 'function' && typeof location !== 'undefined
 // again() - та же текстура заново (из кэша): после потери контекста WebGL в бою three грузит текстуры на видеокарту снова - из пустых уровней
 // вышли бы чёрные земля, деревья и листы взрывов (ktxRestore возвращает уровни в тот же объект: ссылки материалов не меняются)
 const KEEP = new Set();
+// телефон: текстура, которая ещё не рисовалась (листы взрывов до первого взрыва, текстуры моделей в кэше, земля до боя), держала уровни в памяти JS
+// до первого показа - в меню и в начале боя это ~170 МБ сверх видеокарты (Mark 2026-11-27: вылеты в «Исследованиях» и в начале боя). Через PRIME мс
+// после загрузки - сразу на видеокарту (настройки повтора и фильтров вызывающие ставят в then() сразу, до этого срока), onUpdate освобождает уровни
+const PRIME = 2500;
+let R = null;
 export function ktxFree(t, again) { // ktxBytes - для замеров
   t.ktxBytes = (t.mipmaps || []).reduce((s, m) => s + (m.data ? m.data.byteLength : 0), 0);
-  if (TOUCH) { t.onUpdate = () => { t.mipmaps = []; }; if (again) KEEP.add({ t, again }); }
+  if (TOUCH) {
+    t.onUpdate = () => { t.mipmaps = []; }; if (again) KEEP.add({ t, again });
+    setTimeout(() => { if (R && R.initTexture && t.mipmaps && t.mipmaps.length && !(R.properties && R.properties.get(t).__webglTexture)) try { R.initTexture(t); } catch (_) { /* потеря контекста - three загрузит при показе */ } }, PRIME);
+  }
   return t;
 }
 // по одной и сразу на видеокарту (initTexture → onUpdate снова освобождает): разом - пик памяти в сотни МБ на телефоне, который только что потерял

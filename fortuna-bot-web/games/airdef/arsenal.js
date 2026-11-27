@@ -763,7 +763,7 @@ export const multiCap = (k) => MULTI.cap[k] ?? 99;                              
 export const multiSamCost = (k) => MULTI.samCost[k] ?? SAM_COST[k] ?? 100;
 export const multiSamCap = (k) => MULTI.samCap[k] ?? 6;
 export const multiSamOk = (k) => !!SAM[k] && !MULTI.samOff.includes(k);
-// в «Реализме» «Мульти-волны» комплексы эпохи I - без исследования (Mark 2026-10-29: «Шилку» и Redeye из режима убрали - новичок за ПВО со
+// в «Про» «Мульти-волны» комплексы эпохи I - без исследования (Mark 2026-10-29: «Шилку» и Redeye из режима убрали - новичок за ПВО со
 // стартовыми С-75 и «Стрелой-2» тратил максимум 480 из 2500, за запад - 920; с С-125 / Chaparral - 1140 / 1400); в «Обороне» и в «Исследованиях» - как было
 export const multiSamFree = (k) => multiSamOk(k) && SAM[k].era === 1;
 

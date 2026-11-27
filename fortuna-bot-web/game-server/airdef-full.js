@@ -30,7 +30,7 @@ ws.onmessage = (e) => {
 };
 send({ t: 'ping', i: 1 }); send({ t: 'hello', ticket: await ticket(PIDS[0], 'зенитчик') });
 const pinger = setInterval(() => { try { send({ t: 'ping', i: 2 }); } catch (_) { /* закрыт */ } }, 2000); // как игра: пинг раз в 2 с (молчащее соединение сервер закрывает)
-// быстрый поиск: ещё четверо в очереди «Реализма» (двое - авиация, двое - любая) → комната 2 на 2 без ботов
+// быстрый поиск: ещё четверо в очереди «Про» (двое - авиация, двое - любая) → комната 2 на 2 без ботов
 const qc = [];
 for (const [i, role] of [[1, 'air'], [2, 'air'], [3, 'any'], [4, 'any']].map(([i, r]) => [i, r])) {
   const w = new WebSocket(`ws://127.0.0.1:${PORT}/ad`); await new Promise((ok) => (w.onopen = ok)); const c = { w, got: [] };

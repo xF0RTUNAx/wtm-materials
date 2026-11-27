@@ -299,7 +299,7 @@ export function createMulti(ctx) {
       let raw; try { raw = JSON.parse(m.json); } catch (_) { return; }
       const ids = new Set(r.S.objects.filter((o) => !o.noTarget).map((o) => o.id));
       const plan = M.cleanPlan(raw, r.atk, ids, CITY.HALF); if (!plan) return;
-      { const rw = realDeny(r.mode, c, strikeIds(plan.n)); if (rw) return send(c, { t: 'deny', msg: rw }); } // «Реализм» - только купленные удары
+      { const rw = realDeny(r.mode, c, strikeIds(plan.n)); if (rw) return send(c, { t: 'deny', msg: rw }); } // «Про» - только купленные удары
       const cost = M.planCost(plan.n);
       if (cost > c.budget) return send(c, { t: 'deny', msg: 'Не хватает очков угрозы' });
       { const others = M.sumN(...atkTeam(r).filter((p) => p !== c).map((p) => p.plan && p.plan.n)), old = (c.plan && c.plan.n) || {};

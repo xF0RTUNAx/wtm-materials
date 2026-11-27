@@ -3,7 +3,7 @@
 // модель, название, ранг, цена; строка паритета над колонкой. Тап - досье: игровые ТТХ, аналог другой стороны,
 // «Исследовать» / «Сделать целью» / «Купить». Тратит сервер (progress-net.js → airdef-progress).
 import { NODE, BRANCHES, SIDES, SIDE_NAME, RANKS, RANK_NAME, nodesOf, owned, researched, rankOpen, rankBlock, canBuy, canResearch, cardStats, pairOf, unitType, treeLayout, ranked } from './progress.js?v=20261126b';
-import { SAM, AG, ERAS, LOADOUTS } from './arsenal.js?v=20261126b';
+import { SAM, AG, LOADOUTS } from './arsenal.js?v=20261126b';
 import { ico, capsHtml } from './icons.js?v=20261126b';
 import { XP, SV, trMsg } from './progress-net.js?v=20261126b';
 import { tr, trIf, LANG, XL, LOCALE, numLoc, L10N } from './i18n.js?v=20261126b';
@@ -15,6 +15,10 @@ const CSS = `
 #research { position: fixed; inset: 0; z-index: 40; display: none; background: #10140f; color: #e9e6dc; font: 13px 'Golos Text', -apple-system, sans-serif; overflow: hidden;
   --rt: calc(var(--sa-t, 0px) + var(--tg-t, 0px)); --hh: 58px; --cw: 184px; --ch: 82px; --gx: 26px; --gy: 14px; --line: #39422f; --line2: #2c3426; --ac: #e8b04a; --ac2: #f3c96f; --dim: #b3baa5; --dim2: #8f9884; --ok: #86c06c; --xp: #9fd3ff; }
 #research.on { display: block; }
+#research .ldh { display: block; font: 500 11px 'Golos Text'; color: var(--dim2); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
+#research .lds { display: flex; flex-wrap: wrap; gap: 6px; } #research .ld { display: inline-flex; gap: 2px; padding: 3px 5px; background: rgba(233,230,220,.07); border: 1px solid rgba(233,230,220,.12); border-radius: 4px; }
+#research .wi { position: relative; display: inline-flex; width: 52px; height: 30px; } #research .wi img { width: 100%; height: 100%; object-fit: contain; }
+#research .wi i { position: absolute; right: 1px; bottom: 0; font: 600 10px 'JetBrains Mono', monospace; font-style: normal; color: #e9e6dc; text-shadow: 0 0 3px #000, 0 0 2px #000; }
 #research .ic { width: 1.15em; height: 1.15em; vertical-align: -0.17em; flex: none; }
 #research .rbg { position: absolute; left: -3%; right: -3%; top: -6%; bottom: -6%; background: center / cover no-repeat; opacity: 0; transition: opacity .8s ease; will-change: transform; } #research .rbg.on { opacity: 1; } #research .rui { position: absolute; inset: 0; } /* запас сверх экрана - на сдвиг фона при прокрутке */
 @media (max-height: 460px) { #research .rbg { top: -12%; bottom: -12%; } }
@@ -84,8 +88,11 @@ const thumb = (n) => `airdef/thumbs/${n.branch}_${n.key}.webp?v=20261126b`;
 // подпись строки карточки; «Обзор» у ЗРК без РЛС - дальность обзора оптикой (Detection), а в словаре «Обзор» - кнопка камеры (View)
 const statName = (k) => (XL && k === 'Обзор' ? L10N.detect : trIf(k));
 const GOAL_TAG = L10N.goal; // по-русски та же «ЦЕЛЬ», что кнопка захвата цели (словарь - один ключ на оба), по-английски это разные слова
-const era = (r) => (ERAS[r - 1] ? trIf(ERAS[r - 1].name).split('- ')[1] || '' : '');
-const guide = (n) => (n.branch === 'pvo' ? trIf(SAM[n.key]?.guide) : n.branch === 'air' || n.branch === 'heli' ? tr('Подвески: {0}.', [RANKS.flatMap((e) => (LOADOUTS[e] || []).filter((L) => L.plane === n.key).map((L) => trIf(L.name))).join(' · ')]) : trIf(AG[n.item || n.key]?.guide)) || '';
+// подвески самолёта и вертолёта в досье - иконками вооружения (Mark 2026-11-27: «не текстом, а маленькими иконками упомянутого вооружения»):
+// подвеска - ряд картинок оружия (thumbs/wpn_<ключ>) с числом, название - в подсказке
+const wIco = (k, c) => `<span class="wi" title="${(trIf(AG[k]?.name || k) + (c > 1 ? ` ×${c}` : '')).replace(/"/g, '&quot;')}"><img src="airdef/thumbs/wpn_${k}.webp?v=20261126b" alt="" loading="lazy">${c > 1 ? `<i>×${c}</i>` : ''}</span>`;
+const loadIcons = (n) => { const ls = RANKS.flatMap((e) => (LOADOUTS[e] || []).filter((L) => L.plane === n.key)); return ls.length ? `<span class="ldh">${tr('Подвески')}</span><span class="lds">${ls.map((L) => `<span class="ld" title="${trIf(L.name).replace(/"/g, '&quot;')}">${L.items.map(([k, c]) => wIco(k, c)).join('')}</span>`).join('')}</span>` : ''; };
+const guide = (n) => (n.branch === 'pvo' ? trIf(SAM[n.key]?.guide) : n.branch === 'air' || n.branch === 'heli' ? loadIcons(n) : trIf(AG[n.item || n.key]?.guide)) || '';
 
 export function createResearch(C, PG) {
   const style = document.createElement('style'); style.textContent = CSS; if (document.head) document.head.appendChild(style); // (заглушка DOM стенда - без head/body)
@@ -137,7 +144,7 @@ export function createResearch(C, PG) {
       if (x2 <= x1) return `<path class="${st(NODE[b]).k === 'lock' ? 'lock' : ''}" d="M${x1} ${ya} H${x1 - 11} V${yb} H${x2}"/>`; // тот же ранг (Ил-28 → Ту-16 → Ту-22): скобкой слева от колонки
       return `<path class="${st(NODE[b]).k === 'lock' ? 'lock' : ''}" d="M${xa} ${ya} H${xm} V${yb} H${x2}"/>`; }).join('');
     const shade = RANKS.filter((r) => rk && !rankOpen(p, EB(), r)).map((r) => `<div class="shade" style="left:${(r - 1) * (cw + gx) + 18 - gx / 2}px;width:${cw + gx}px"></div>`).join('');
-    return `<div class="tree" style="width:${W + 30}px;height:${H}px">${rk ? `<div class="ranks">${RANKS.map((r) => `<div class="rh"><b>${tr('Ранг {0}', [RANK_NAME[r]])}</b><span>${era(r)}</span>${parity(r)}</div>`).join('')}</div>` : ''}
+    return `<div class="tree" style="width:${W + 30}px;height:${H}px">${rk ? `<div class="ranks">${RANKS.map((r) => `<div class="rh"><b>${tr('Ранг {0}', [RANK_NAME[r]])}</b>${parity(r)}</div>`).join('')}</div>` : ''}
       ${shade}${grp.join('')}<svg class="links" width="${W}" height="${H}">${links}</svg>${L.cells.map((c) => card(c, ...pos[c.n.id])).join('')}</div>`;
   }
   function dossier() {
@@ -148,11 +155,11 @@ export function createResearch(C, PG) {
       : s.k === 'buy' ? `<button class="rbtn" data-act="buy" ${s.can && !busy ? '' : 'disabled'}>${tr('Купить')} ${SV(n.cost)}</button>${why}`
       : s.k === 'res' ? `<button class="rbtn" data-act="research" ${s.can && !busy ? '' : 'disabled'}>${tr('Исследовать')} ${XP(n.cost)}</button><button class="rbtn alt" data-act="goal" ${busy ? 'disabled' : ''}>${goal ? ico('ok', 'ii') + tr('Цель исследования (снять)') : tr('Сделать целью - опыт за бой пойдёт сюда')}</button>${why}`
       : s.k === 'lock' ? (n.parent && !researched(P(), n.parent) ? `<button class="rbtn alt" data-act="goal" ${busy ? 'disabled' : ''}>${goal ? ico('ok', 'ii') + tr('Цель (снять)') : tr('Сделать целью')}</button>` : '') + why
-      : `<div class="why">${tr('Доступно в «Реализме».')}</div>`;
+      : `<div class="why">${tr('Доступно в «Про».')}</div>`;
     const stats = `<div class="st">${cardStats(n).map(([k, v]) => `<span>${statName(k)}</span><b>${trVal(v)}</b>`).join('')}</div>`;
     const an = p ? `<div class="an" data-id="${p.id}" data-side="${p.side}"><img src="${thumb(p)}" alt=""><div><span class="mk">${tr('аналог · {0}', [trIf(SIDE_NAME[p.side])])}</span><div style="font:500 13px 'Oswald'">${trIf(p.short)}</div><div style="font-size:11px;color:var(--dim)">${sp.k === 'own' ? ico('ok', 'ii') + tr('Куплен') : sp.k === 'start' ? ico('star', 'ii') + tr('Стартовый') : sp.k === 'lock' ? ico('lock') + tr(' закрыт') : sp.k === 'buy' ? tr('исследован') : tr('не исследован')}</div></div></div>` : '';
     return `<div class="veil" data-close="1"></div><div class="dos"><div class="sc"><div class="hero"><img src="${thumb(n)}" alt=""></div>
-      <span class="mk">${ranked(n.branch) ? tr('{0} · ранг {1} · {2}', [trIf(SIDE_NAME[n.side]), RANK_NAME[n.rank], era(n.rank)]) : `${trIf(SIDE_NAME[n.side])} · ${trIf(n.lineName)}`}</span><h3>${trIf(n.name)}</h3><div class="ty">${trIf(unitType(n))}${n.branch === 'pvo' ? capsHtml(SAM[n.key]) : ''}</div>
+      <span class="mk">${ranked(n.branch) ? tr('{0} · ранг {1}', [trIf(SIDE_NAME[n.side]), RANK_NAME[n.rank]]) : `${trIf(SIDE_NAME[n.side])} · ${trIf(n.lineName)}`}</span><h3>${trIf(n.name)}</h3><div class="ty">${trIf(unitType(n))}${n.branch === 'pvo' ? capsHtml(SAM[n.key]) : ''}</div>
       ${stats}<p>${guide(n)}</p>${an}</div><div class="acts">${act}</div></div>`;
   }
   // фон категории (Mark 2026-11-04): у каждой ветки и стороны своя сцена, при смене - плавный переход двух слоёв; новая картинка показывается, когда загрузилась
@@ -184,7 +191,7 @@ export function createResearch(C, PG) {
     setBg(); ui.innerHTML = `<div class="top"><button class="back" data-close-all="1" aria-label="${tr('Назад')}">«</button><h1>${tr('Исследования')}</h1><div class="btabs">${BRANCHES.filter((b) => !b.sub).map((b) => `<button data-b="${b.id}" class="${b.id === S.B ? 'on' : ''}">${trIf(b.name)}${ranked(b.id) ? `<i>${RANKS.filter((r) => rankOpen(p, b.id, r)).length}/4</i>` : ''}</button>`).join('')}</div>
       <div class="cur"><span class="xp" title="${tr('Опыт - исследовать')}">${XP(p.xp)}</span><span title="${tr('Серебро - покупать')}">${SV(p.silver)}</span></div></div>
       <div class="sides">${SIDES.map((s) => `<button data-s="${s}" class="${s === S.side ? 'on' : ''}">${trIf(SIDE_NAME[s])}<small>${tr('куплено {0} из {1}', [nodesOf(S.B, s).filter((n) => owned(p, n.id)).length, nodesOf(S.B, s).length])}</small></button>`).join('')}${S.B === 'air' ? `<button data-s="heli" class="${S.side === 'heli' ? 'on' : ''}">${tr('Вертолёты')}<small>${tr('куплено {0} из {1}', [nodesOf('heli').filter((n) => owned(p, n.id)).length, nodesOf('heli').length])}</small></button>` : ''}</div>
-      <div class="note">${tr('Только для <b>«Реализма»</b>. Аркада и обучение - всё открыто.')}</div>
+      <div class="note">${tr('Только для <b>«Про»</b>. Аркада и обучение - всё открыто.')}</div>
       ${PG.guest ? `<div class="guest">${tr('Вы не вошли: показан стартовый набор. Опыт и серебро копятся в аккаунте.')}</div>` : PG.err ? `<div class="guest">${tr('Нет связи с сайтом: {0}', [trMsg(PG.err)])}</div>` : ''}
       <div class="wrap">${tree()}</div>${S.open || !phone() ? dossier() : ''}`;
     if (scroll && !S.reset) { const w = root.querySelector('.wrap'); w.scrollLeft = scroll[0]; w.scrollTop = scroll[1]; } // выбор единицы, покупка - дерево стоит на месте
@@ -200,7 +207,7 @@ export function createResearch(C, PG) {
       const n = NODE[S.sel]; if (!n) return;
       const goal = P().goal[n.branch] === n.id; const dsc = root.querySelector('.dos .sc'); S.dosScroll = dsc ? dsc.scrollTop : null;
       const r = await PG.act(t.dataset.act, t.dataset.act === 'goal' ? (goal ? null : n.id) : n.id, n.branch);
-      S.msg = r.ok ? (t.dataset.act === 'buy' ? tr('Куплено: {0} - доступно в «Реализме»', [trIf(n.short)]) : t.dataset.act === 'research' ? tr('Исследовано: {0}', [trIf(n.short)]) : goal ? tr('Цель снята') : tr('Цель выбрана')) : trMsg(r.why);
+      S.msg = r.ok ? (t.dataset.act === 'buy' ? tr('Куплено: {0} - доступно в «Про»', [trIf(n.short)]) : t.dataset.act === 'research' ? tr('Исследовано: {0}', [trIf(n.short)]) : goal ? tr('Цель снята') : tr('Цель выбрана')) : trMsg(r.why);
       S.msgErr = !r.ok; if (r.ok && C.snd) C.snd.click && C.snd.click();
       draw(); return;
     }
