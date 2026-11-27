@@ -439,18 +439,21 @@ const CONFIG = {
     } },
   // PAC-3 — своя пусковая (CONFIG.pac3 ниже, у Patriot); M901 Muhamad Mirza Arrafi (была у Patriot, потом у PAC-3) больше не нужна — 2026-11-02
   // ── комплексы с ракетами на направляющих: ракета модели — образец для слотов и полёта (missile), stage — доля маршевой ступени
-  s75: { src: `${DL}/sam_s-75_dvina.glb`, scale: 2.83, nose: '+x', rulesIn: 'game', unit: true, tex: () => 256, hinge: [0, 1.65, 4.06], stage: 0.64,
-    groups: (c) => {
-      if (axis(c, [5.61, 1.85], [-0.926, 0.376], 0.45, -0.6, 10)) return 'missile';
-      if (c.min[1] > 0.5 && axis(c, [4.06, 1.65], [-0.926, 0.376], 0.7, -1.2, 9)) return 'cradle';
-      return c.min[1] > 0.25 && c.ctr[2] > 0.3 && c.ctr[2] < 4.7 ? 'turret' : 'body';
-    } },
-  s125: { src: `${DL}/-125___sam_s-125_neva.glb`, scale: 1.26, nose: '+x', rulesIn: 'game', unit: true, tex: () => 512, target: 110000, hinge: [0, 1.13, -0.95], stage: 0.66,
-    groups: (c) => {
-      if (axis(c, [-1.05, 1.34], [-0.931, 0.366], 0.22, -0.4, 6.2) && c.size[0] < 0.9) return 'missile';
-      if (c.ctr[2] < -0.6 && c.min[1] > 0.6 && axis(c, [-0.95, 1.13], [-0.931, 0.366], 1.0, -0.6, 6)) return 'cradle';
-      return c.min[1] > 0.25 ? 'turret' : 'body';
-    } },
+  // С-75М3 «Волхов» - своя (сборщик hawk21-builder, Свои/С-75 (СМ-90) + 5Я23, 2026-11-27; Mark: «Модель С-75 готова»; раньше - manyakasia). Метры, нос −Z,
+  // земля y = 0; части - s75Part: turret_ / defl_ - платформа с кузовом и газоотражателем (щит в игре неподвижен: ход 3°), cradle_ - балка на шарнире
+  // (0; 1,7; 1,75), lift_cyl / lift_mid / lift_rod → cyl0…2 - подъёмник (launchers.js s75.lift). Ракеты в модели нет - своя 5Я23 (msl_s75)
+  s75: { src: `${DL}/Свои/С-75 (СМ-90) + 5Я23/s75.glb`, scale: 1, nose: '-z', rulesIn: 'game', unit: true, own: true, tex: () => 2048, nTex: () => 1024, pickMesh: /./,
+    axisX: 0, axisZ: 0, ground: 0, hinge: [0, 1.7, 1.75], tpFix: [0, 0.52, 0], pack0: 0, groups: (c) => s75Part(c) },
+  // ракета 5Я23 - своя: ускоритель v7_booster - часть booster (отделяется в полёте), остальное - missile; начало - середина ракеты
+  msl_s75: { src: `${DL}/Свои/С-75 (СМ-90) + 5Я23/ракета/msl_s75.glb`, scale: 1, nose: '-z', own: true, tex: () => 1024, nTex: () => 512, pickMesh: /./, groups: (c) => (/(^|\/)v7_booster/.test(c.path) ? 'booster' : 'missile') },
+  // С-125 «Нева-М» - своя (сборщик s300-builder, Свои/С-125 (5П73) + 5В27, 2026-11-27; Mark: «внедряй обе модели»; раньше - teanid). Части - s125Part:
+  // base_ - основание, turret_ - поворотная часть, cradle_ - пакет четырёх направляющих на шарнире (0; 1,1; −1,0), bal_cyl / bal_rod → cyl0, cyl1 -
+  // уравновешивающий цилиндр (launchers.js s125.lift). Ракет в модели нет - своя 5В27 (msl_s125)
+  s125: { src: `${DL}/Свои/С-125 (5П73) + 5В27/s125.glb`, scale: 0.69, nose: '-z', rulesIn: 'game', unit: true, own: true, tex: () => 2048, nTex: () => 1024, pickMesh: /./,
+    axisX: 0, axisZ: 0, ground: 0, hinge: [0, 0.759, -0.69], tpFix: [0, 0.414, 0], pack0: 0, groups: (c) => s125Part(c) },
+  // ракета 5В27 - своя: ускоритель с переходником v27_boost - booster, маршевая и рули - missile
+  msl_s125: { src: `${DL}/Свои/С-125 (5П73) + 5В27/ракета/msl_s125.glb`, scale: 1, nose: '-z', own: true, tex: () => 1024, nTex: () => 512, pickMesh: /./, groups: (c) => (/(^|\/)v27_boost/.test(c.path) ? 'booster' : 'missile') },
+
   // 2П25 «Куб» - своя (сборщик s300-builder, Свои/2К12 Куб (2П25) + 3М9, 2026-11-26; Mark: «куб готов»; раньше - UltraKill). Метры, нос −Z, земля y = 0, оси без
   // центровки; части - kubPart: turret_ - башня (ось tp (0; 1,8256; −0,25)), cradle_ / sector_ - пакет трёх направляющих на шарнире (0; 2,1225; 0,5766),
   // lift_cyl / lift_mid / lift_rod → cyl0…2 - подъёмник (launchers.js kub.lift). Ракет в модели нет - своя 3М9 (msl_kub), игра ставит её в слоты
@@ -807,6 +810,14 @@ function skyguardPart(c, near) {
   return /(^|\/)cradle/.test(p) ? 'cradle' : /(^|\/)(turret|tnet)_/.test(p) ? 'turret' : 'body';
 }
 // «Куб»: подъёмник пакета - три звена (как цилиндр «Бука»), сектор - с пакетом
+function s75Part(c) {
+  const p = c.path, L = p.match(/(^|\/)lift_(cyl|mid|rod)/); if (L) return 'cyl' + ['cyl', 'mid', 'rod'].indexOf(L[2]);
+  return /(^|\/)cradle_/.test(p) ? 'cradle' : /(^|\/)(turret_|defl_)/.test(p) ? 'turret' : 'body';
+}
+function s125Part(c) {
+  const p = c.path, L = p.match(/(^|\/)bal_(cyl|rod)/); if (L) return 'cyl' + ['cyl', 'rod'].indexOf(L[2]);
+  return /(^|\/)cradle_/.test(p) ? 'cradle' : /(^|\/)turret_/.test(p) ? 'turret' : 'body';
+}
 function kubPart(c) {
   const p = c.path, L = p.match(/(^|\/)lift_(cyl|mid|rod)/); if (L) return 'cyl' + ['cyl', 'mid', 'rod'].indexOf(L[2]);
   return /(^|\/)(cradle|sector)_/.test(p) ? 'cradle' : /(^|\/)turret_/.test(p) ? 'turret' : 'body';
@@ -872,6 +883,10 @@ CONFIG.tor_lo = { ...CONFIG.tor, src: `${DL}/Свои/Тор-М1/tor_lo.glb`, te
 CONFIG.torm2_lo = { ...CONFIG.torm2, src: `${DL}/Свои/Тор-М2/torm2_lo.glb`, tex: () => 512, nTex: null, groups: (c) => torm2Part(c, false) }; // «Тор-М2»: дальняя сборщика (60 тыс.)
 CONFIG.buk_lo = { ...CONFIG.buk, src: `${DL}/Свои/Бук-М1/buk_lo.glb`, tex: () => 512, nTex: null }; // «Бук-М1»: дальняя сборщика (69 тыс.)
 // 9М38М1 на пусковой издали (дальше 400 м, как buk_lo; Mark 2026-11-03: «облегченные модели ракет бука для дальнего плана»): 8,9 тыс. → ≈ 1,2 тыс., цвет 256, без нормалей
+CONFIG.s75_lo = { ...CONFIG.s75, src: `${DL}/Свои/С-75 (СМ-90) + 5Я23/s75_lo.glb`, tex: () => 512, nTex: null }; // С-75: дальняя сборщика (11,5 тыс.)
+CONFIG.msl_s75_lo = { ...CONFIG.msl_s75, src: `${DL}/Свои/С-75 (СМ-90) + 5Я23/ракета/msl_s75_lo.glb`, tex: () => 256, nTex: null };
+CONFIG.s125_lo = { ...CONFIG.s125, src: `${DL}/Свои/С-125 (5П73) + 5В27/s125_lo.glb`, tex: () => 512, nTex: null }; // С-125: дальняя сборщика (10 тыс.)
+CONFIG.msl_s125_lo = { ...CONFIG.msl_s125, src: `${DL}/Свои/С-125 (5П73) + 5В27/ракета/msl_s125_lo.glb`, tex: () => 256, nTex: null };
 CONFIG.kub_lo = { ...CONFIG.kub, src: `${DL}/Свои/2К12 Куб (2П25) + 3М9/kub_lo.glb`, tex: () => 512, nTex: null }; // «Куб»: дальняя сборщика (46 тыс.)
 CONFIG.msl_kub_lo = { ...CONFIG.msl_kub, src: `${DL}/Свои/2К12 Куб (2П25) + 3М9/ракета/msl_kub_lo.glb`, target: 1500, simpErr: 0.01, tex: () => 256, nTex: null }; // 3М9 на пусковой издали
 CONFIG.msl_buk_lo = { ...CONFIG.msl_buk, target: 1200, simpErr: 0.01, tex: () => 256, nTex: null };

@@ -391,25 +391,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "SAM S-75 \"Dvina\"",
-  "author": "manyakasia",
-  "url": "https://sketchfab.com/3d-models/sam-s-75-dvina-ed7d4831832d499482a6aa9620a858e4",
-  "license": "CC-BY-4.0",
-  "files": [
-   "s75"
-  ]
- },
- {
-  "title": "ЗРК С-125 «Нева / SAM S-125 \"Neva\"",
-  "author": "teanid",
-  "url": "https://sketchfab.com/3d-models/125-sam-s-125-neva-4482f05be23b49099c2cf553a2f38dcd",
-  "license": "CC-BY-4.0",
-  "files": [
-   "s125",
-   "s125_lo"
-  ]
- },
- {
   "title": "Mim-23 Hawk SAM air defence system (game-ready)",
   "author": "Dominik Biały",
   "url": "https://sketchfab.com/3d-models/mim-23-hawk-sam-air-defence-system-game-ready-8728909b6ce24ef8baeffabbf5bae8f4",
